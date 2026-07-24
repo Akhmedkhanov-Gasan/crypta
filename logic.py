@@ -58,6 +58,39 @@ def update_enemy_aggro(enemy, player_column, player_row):
         enemy["is_aggro"] = True
 
 
+def ordered_neighboring_positions(
+    column,
+    row,
+    target_column,
+    target_row,
+):
+    neighboring_positions = [
+        (column, row - 1),
+        (column, row + 1),
+        (column - 1, row),
+        (column + 1, row),
+    ]
+    horizontal_distance = abs(target_column - column)
+    vertical_distance = abs(target_row - row)
+    prefer_horizontal = horizontal_distance >= vertical_distance
+
+    def position_priority(position):
+        next_column, next_row = position
+        distance_to_target = distance_between(
+            next_column,
+            next_row,
+            target_column,
+            target_row,
+        )
+        move_is_horizontal = next_row == row
+        preferred_axis = move_is_horizontal == prefer_horizontal
+
+        return distance_to_target, not preferred_axis
+
+    neighboring_positions.sort(key=position_priority)
+    return neighboring_positions
+
+
 def move_enemy(
     dungeon_map,
     enemy,
@@ -85,12 +118,12 @@ def move_enemy(
         if (current_column, current_row) == player_position:
             break
 
-        neighboring_positions = [
-            (current_column, current_row - 1),
-            (current_column, current_row + 1),
-            (current_column - 1, current_row),
-            (current_column + 1, current_row),
-        ]
+        neighboring_positions = ordered_neighboring_positions(
+            current_column,
+            current_row,
+            player_column,
+            player_row,
+        )
 
         for next_position in neighboring_positions:
             if next_position in previous_position:

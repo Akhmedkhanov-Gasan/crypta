@@ -1,38 +1,48 @@
 import pygame
 
-from levels import FLOORS
+from levels import FLOOR_CONFIGS
 from settings import (
+    ATTACK_WARNING_COLOR,
+    CHEST_BAND_COLOR,
+    CHEST_COLOR,
+    DANGER_BORDER_COLOR,
+    DANGER_TILE_COLOR,
     ENEMY_COLOR,
     FLOOR_COLOR,
+    GAME_HEIGHT,
+    GAME_WIDTH,
+    GOLD_COLOR,
     GRID_COLOR,
     HEALTH_BAR_BACKGROUND,
     HEALTH_BAR_COLOR,
+    KEY_COLOR,
     LOCKED_COLOR,
+    MAP_COLUMNS,
+    MAP_ROWS,
+    OPEN_CHEST_COLOR,
     PANEL_BORDER_COLOR,
     PANEL_COLOR,
     PLAYER_COLOR,
     PLAYER_DAMAGE_MAX,
     PLAYER_DAMAGE_MIN,
     PLAYER_HEALTH_BAR_COLOR,
-    PLAYER_MAX_HEALTH,
     POTION_COLOR,
+    PLAYER_MAX_HEALTH,
     SLEEPING_ENEMY_COLOR,
     STAIRS_COLOR,
     TEXT_COLOR,
     TILE_SIZE,
     WALL_COLOR,
-    WINDOW_HEIGHT,
-    WINDOW_WIDTH,
 )
 
 
-MAP_WIDTH = len(FLOORS[0]["map"][0]) * TILE_SIZE
-MAP_HEIGHT = len(FLOORS[0]["map"]) * TILE_SIZE
+MAP_WIDTH = MAP_COLUMNS * TILE_SIZE
+MAP_HEIGHT = MAP_ROWS * TILE_SIZE
 MAP_OFFSET_X = 40
-MAP_OFFSET_Y = (WINDOW_HEIGHT - MAP_HEIGHT) // 2
+MAP_OFFSET_Y = (GAME_HEIGHT - MAP_HEIGHT) // 2
 SIDEBAR_X = MAP_OFFSET_X + MAP_WIDTH + 40
 SIDEBAR_Y = MAP_OFFSET_Y
-SIDEBAR_WIDTH = WINDOW_WIDTH - SIDEBAR_X - 40
+SIDEBAR_WIDTH = GAME_WIDTH - SIDEBAR_X - 40
 SIDEBAR_HEIGHT = MAP_HEIGHT
 
 
@@ -46,6 +56,29 @@ def draw_dungeon(screen, dungeon_map):
 
             pygame.draw.rect(screen, color, tile_rectangle)
             pygame.draw.rect(screen, GRID_COLOR, tile_rectangle, 1)
+
+
+def draw_attack_markers(screen, enemies):
+    for enemy in enemies:
+        attack_target = enemy["attack_target"]
+
+        if enemy["health"] <= 0 or attack_target is None:
+            continue
+
+        column, row = attack_target
+        target_rectangle = pygame.Rect(
+            MAP_OFFSET_X + column * TILE_SIZE,
+            MAP_OFFSET_Y + row * TILE_SIZE,
+            TILE_SIZE,
+            TILE_SIZE,
+        )
+        pygame.draw.rect(screen, DANGER_TILE_COLOR, target_rectangle)
+        pygame.draw.rect(
+            screen,
+            DANGER_BORDER_COLOR,
+            target_rectangle,
+            width=3,
+        )
 
 
 def draw_player(screen, column, row, health):
@@ -108,34 +141,142 @@ def draw_enemy(screen, enemy):
         (bar_x, bar_y, int(bar_width * health_ratio), bar_height),
     )
 
+    if enemy["attack_target"] is not None:
+        warning_x = MAP_OFFSET_X + column * TILE_SIZE + TILE_SIZE // 2
+        warning_top = MAP_OFFSET_Y + row * TILE_SIZE + 8
+        pygame.draw.line(
+            screen,
+            ATTACK_WARNING_COLOR,
+            (warning_x, warning_top),
+            (warning_x, warning_top + 9),
+            3,
+        )
+        pygame.draw.circle(
+            screen,
+            ATTACK_WARNING_COLOR,
+            (warning_x, warning_top + 14),
+            2,
+        )
 
-def draw_potion(screen, column, row):
+
+def draw_key(screen, column, row):
     center_x = MAP_OFFSET_X + column * TILE_SIZE + TILE_SIZE // 2
     center_y = MAP_OFFSET_Y + row * TILE_SIZE + TILE_SIZE // 2
-    bottle_width = TILE_SIZE // 3
-    bottle_height = TILE_SIZE // 2
+
+    pygame.draw.circle(
+        screen,
+        KEY_COLOR,
+        (center_x - 8, center_y),
+        6,
+        width=3,
+    )
+    pygame.draw.line(
+        screen,
+        KEY_COLOR,
+        (center_x - 2, center_y),
+        (center_x + 13, center_y),
+        4,
+    )
+    pygame.draw.line(
+        screen,
+        KEY_COLOR,
+        (center_x + 7, center_y),
+        (center_x + 7, center_y + 6),
+        3,
+    )
+    pygame.draw.line(
+        screen,
+        KEY_COLOR,
+        (center_x + 12, center_y),
+        (center_x + 12, center_y + 5),
+        3,
+    )
+
+
+def draw_potion(screen, column, row):
+    cell_x = MAP_OFFSET_X + column * TILE_SIZE
+    cell_y = MAP_OFFSET_Y + row * TILE_SIZE
     bottle_rectangle = pygame.Rect(
-        center_x - bottle_width // 2,
-        center_y - bottle_height // 2,
-        bottle_width,
-        bottle_height,
+        cell_x + TILE_SIZE // 2 - 6,
+        cell_y + 12,
+        12,
+        15,
     )
 
     pygame.draw.rect(
         screen,
         POTION_COLOR,
         bottle_rectangle,
-        border_radius=5,
+        border_radius=4,
     )
     pygame.draw.rect(
         screen,
         TEXT_COLOR,
-        (
-            center_x - bottle_width // 4,
-            bottle_rectangle.top - 5,
-            bottle_width // 2,
-            7,
-        ),
+        (cell_x + TILE_SIZE // 2 - 3, cell_y + 8, 6, 6),
+        border_radius=2,
+    )
+
+
+def draw_coin(screen, column, row):
+    center_x = MAP_OFFSET_X + column * TILE_SIZE + TILE_SIZE // 2
+    center_y = MAP_OFFSET_Y + row * TILE_SIZE + TILE_SIZE // 2
+
+    pygame.draw.circle(
+        screen,
+        GOLD_COLOR,
+        (center_x, center_y),
+        7,
+    )
+    pygame.draw.circle(
+        screen,
+        KEY_COLOR,
+        (center_x, center_y),
+        7,
+        width=2,
+    )
+    pygame.draw.line(
+        screen,
+        KEY_COLOR,
+        (center_x, center_y - 3),
+        (center_x, center_y + 3),
+        2,
+    )
+
+
+def draw_chest(screen, chest):
+    cell_x = MAP_OFFSET_X + chest["column"] * TILE_SIZE
+    cell_y = MAP_OFFSET_Y + chest["row"] * TILE_SIZE
+
+    if chest["is_open"]:
+        pygame.draw.rect(
+            screen,
+            OPEN_CHEST_COLOR,
+            (cell_x + 4, cell_y + 17, TILE_SIZE - 8, 11),
+            border_radius=3,
+        )
+        pygame.draw.rect(
+            screen,
+            CHEST_COLOR,
+            (cell_x + 4, cell_y + 6, TILE_SIZE - 8, 7),
+            border_radius=3,
+        )
+        return
+
+    pygame.draw.rect(
+        screen,
+        CHEST_COLOR,
+        (cell_x + 4, cell_y + 9, TILE_SIZE - 8, 19),
+        border_radius=4,
+    )
+    pygame.draw.rect(
+        screen,
+        CHEST_BAND_COLOR,
+        (cell_x + TILE_SIZE // 2 - 3, cell_y + 9, 6, 19),
+    )
+    pygame.draw.rect(
+        screen,
+        KEY_COLOR,
+        (cell_x + TILE_SIZE // 2 - 2, cell_y + 17, 4, 7),
         border_radius=2,
     )
 
@@ -167,7 +308,7 @@ def draw_status(
     total_enemy_count = len(enemies)
     stairs_are_open = living_enemy_count == 0
     status = (
-        f"Floor {floor_index + 1}/{len(FLOORS)}  |  "
+        f"Floor {floor_index + 1}/{len(FLOOR_CONFIGS)}  |  "
         f"Enemies {living_enemy_count}/{total_enemy_count}  |  "
         f"Stairs {'open' if stairs_are_open else 'locked'}"
     )
@@ -191,7 +332,7 @@ def draw_status(
         message_rectangle = message_surface.get_rect(
             center=(
                 MAP_OFFSET_X + MAP_WIDTH // 2,
-                WINDOW_HEIGHT - 38,
+                GAME_HEIGHT - 38,
             )
         )
         screen.blit(message_surface, message_rectangle)
@@ -204,6 +345,8 @@ def draw_sidebar(
     combat_log,
     player_health,
     potion_count,
+    gold_count,
+    has_key,
     enemies_defeated,
 ):
     panel_rectangle = pygame.Rect(
@@ -228,6 +371,8 @@ def draw_sidebar(
         f"Health: {player_health}/{PLAYER_MAX_HEALTH}",
         f"Damage: {PLAYER_DAMAGE_MIN}-{PLAYER_DAMAGE_MAX}",
         f"Potions: {potion_count}",
+        f"Gold: {gold_count}",
+        f"Key: {'yes' if has_key else 'no'}",
         f"Enemies defeated: {enemies_defeated}",
     ]
 
@@ -238,7 +383,7 @@ def draw_sidebar(
         screen.blit(line_surface, (SIDEBAR_X + 18, line_y))
         line_y += 25
 
-    divider_y = SIDEBAR_Y + 165
+    divider_y = SIDEBAR_Y + 215
     pygame.draw.line(
         screen,
         PANEL_BORDER_COLOR,
@@ -257,10 +402,20 @@ def draw_sidebar(
         screen.blit(message_surface, (SIDEBAR_X + 18, line_y))
         line_y += 26
 
-    controls_y = SIDEBAR_Y + SIDEBAR_HEIGHT - 62
+    controls_y = SIDEBAR_Y + SIDEBAR_HEIGHT - 68
     controls_surface = log_font.render(
-        "Move: WASD / arrows    Potion: H",
+        "Move: WASD/arrows  |  Wait: Space",
         True,
         PANEL_BORDER_COLOR,
     )
     screen.blit(controls_surface, (SIDEBAR_X + 18, controls_y))
+
+    fullscreen_surface = log_font.render(
+        "Potion: H  |  Fullscreen: F11",
+        True,
+        PANEL_BORDER_COLOR,
+    )
+    screen.blit(
+        fullscreen_surface,
+        (SIDEBAR_X + 18, controls_y + 24),
+    )
