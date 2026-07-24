@@ -10,12 +10,28 @@ MAX_ROOM_WIDTH = 7
 MIN_ROOM_HEIGHT = 4
 MAX_ROOM_HEIGHT = 6
 MAX_ROOM_ATTEMPTS = 250
+BOSS_ROOM_WIDTH = 9
+BOSS_ROOM_HEIGHT = 9
 
 
 def room_center(room):
     return (
         room["x"] + room["width"] // 2,
         room["y"] + room["height"] // 2,
+    )
+
+
+def position_is_in_room(position, room):
+    return (
+        room["x"] <= position[0] < room["x"] + room["width"]
+        and room["y"] <= position[1] < room["y"] + room["height"]
+    )
+
+
+def position_is_in_room_interior(position, room):
+    return (
+        room["x"] < position[0] < room["x"] + room["width"] - 1
+        and room["y"] < position[1] < room["y"] + room["height"] - 1
     )
 
 
@@ -60,6 +76,7 @@ def carve_vertical_corridor(dungeon_map, first_row, second_row, column):
 def connect_rooms(dungeon_map, first_room, second_room):
     first_column, first_row = room_center(first_room)
     second_column, second_row = room_center(second_room)
+    corridor_path = []
 
     if random.choice((True, False)):
         carve_horizontal_corridor(
@@ -74,6 +91,24 @@ def connect_rooms(dungeon_map, first_room, second_room):
             second_row,
             second_column,
         )
+        horizontal_step = 1 if second_column >= first_column else -1
+        vertical_step = 1 if second_row >= first_row else -1
+        corridor_path.extend(
+            (column, first_row)
+            for column in range(
+                first_column,
+                second_column + horizontal_step,
+                horizontal_step,
+            )
+        )
+        corridor_path.extend(
+            (second_column, row)
+            for row in range(
+                first_row + vertical_step,
+                second_row + vertical_step,
+                vertical_step,
+            )
+        )
     else:
         carve_vertical_corridor(
             dungeon_map,
@@ -87,10 +122,46 @@ def connect_rooms(dungeon_map, first_room, second_room):
             second_column,
             second_row,
         )
+        vertical_step = 1 if second_row >= first_row else -1
+        horizontal_step = 1 if second_column >= first_column else -1
+        corridor_path.extend(
+            (first_column, row)
+            for row in range(
+                first_row,
+                second_row + vertical_step,
+                vertical_step,
+            )
+        )
+        corridor_path.extend(
+            (column, second_row)
+            for column in range(
+                first_column + horizontal_step,
+                second_column + horizontal_step,
+                horizontal_step,
+            )
+        )
+
+    for position_index, position in enumerate(corridor_path):
+        if not position_is_in_room_interior(position, second_room):
+            continue
+
+        if position_index > 0:
+            previous_position = corridor_path[position_index - 1]
+
+            if position_is_in_room(
+                previous_position,
+                second_room,
+            ):
+                return previous_position
+
+        return position
+
+    return room_center(second_room)
 
 
-def create_rooms(dungeon_map, room_count):
+def create_rooms(dungeon_map, room_count, blocked_rooms=None):
     rooms = []
+    blocked_rooms = blocked_rooms or []
 
     for _ in range(MAX_ROOM_ATTEMPTS):
         if len(rooms) >= room_count:
@@ -105,17 +176,128 @@ def create_rooms(dungeon_map, room_count):
             "height": height,
         }
 
-        if any(rooms_overlap(room, other_room) for other_room in rooms):
+        unavailable_rooms = [*rooms, *blocked_rooms]
+
+        if any(
+            rooms_overlap(room, other_room)
+            for other_room in unavailable_rooms
+        ):
             continue
 
         carve_room(dungeon_map, room)
 
         if rooms:
-            connect_rooms(dungeon_map, rooms[-1], room)
+            room["entrance"] = connect_rooms(
+                dungeon_map,
+                rooms[-1],
+                room,
+            )
 
         rooms.append(room)
 
     return rooms
+
+
+def create_reserved_boss_room():
+    maximum_x = MAP_COLUMNS - BOSS_ROOM_WIDTH - 2
+    maximum_y = MAP_ROWS - BOSS_ROOM_HEIGHT - 2
+
+    return {
+        "x": random.choice((1, maximum_x)),
+        "y": random.randint(1, maximum_y),
+        "width": BOSS_ROOM_WIDTH,
+        "height": BOSS_ROOM_HEIGHT,
+    }
+
+
+def seal_room_except_door(dungeon_map, room, door_position):
+    left = room["x"]
+    right = room["x"] + room["width"] - 1
+    top = room["y"]
+    bottom = room["y"] + room["height"] - 1
+
+    for column in range(left, right + 1):
+        dungeon_map[top][column] = "#"
+        dungeon_map[bottom][column] = "#"
+
+    for row in range(top, bottom + 1):
+        dungeon_map[row][left] = "#"
+        dungeon_map[row][right] = "#"
+
+    door_column, door_row = door_position
+    dungeon_map[door_row][door_column] = "."
+
+
+def create_boss_room_entrance(
+    dungeon_map,
+    previous_room,
+    boss_room,
+):
+    previous_column, previous_row = room_center(previous_room)
+    boss_column, boss_row = room_center(boss_room)
+    horizontal_distance = previous_column - boss_column
+    vertical_distance = previous_row - boss_row
+    left = boss_room["x"]
+    right = boss_room["x"] + boss_room["width"] - 1
+    top = boss_room["y"]
+    bottom = boss_room["y"] + boss_room["height"] - 1
+
+    if abs(horizontal_distance) >= abs(vertical_distance):
+        door_column = left if horizontal_distance < 0 else right
+        door_row = boss_row
+        outside_column = (
+            door_column - 1
+            if door_column == left
+            else door_column + 1
+        )
+        outside_row = door_row
+
+        seal_room_except_door(
+            dungeon_map,
+            boss_room,
+            (door_column, door_row),
+        )
+        carve_vertical_corridor(
+            dungeon_map,
+            previous_row,
+            outside_row,
+            previous_column,
+        )
+        carve_horizontal_corridor(
+            dungeon_map,
+            previous_column,
+            outside_column,
+            outside_row,
+        )
+    else:
+        door_column = boss_column
+        door_row = top if vertical_distance < 0 else bottom
+        outside_column = door_column
+        outside_row = (
+            door_row - 1
+            if door_row == top
+            else door_row + 1
+        )
+
+        seal_room_except_door(
+            dungeon_map,
+            boss_room,
+            (door_column, door_row),
+        )
+        carve_horizontal_corridor(
+            dungeon_map,
+            previous_column,
+            outside_column,
+            previous_row,
+        )
+        carve_vertical_corridor(
+            dungeon_map,
+            previous_row,
+            outside_row,
+            outside_column,
+        )
+
+    return door_column, door_row
 
 
 def positions_inside_room(room):
@@ -144,20 +326,48 @@ def choose_free_position(candidate_positions, occupied_positions):
 
 def generate_floor(floor_index):
     config = FLOOR_CONFIGS[floor_index]
+    boss_enemy_types = config.get("boss_enemy_types", [])
     dungeon_map = [
         ["#" for _ in range(MAP_COLUMNS)]
         for _ in range(MAP_ROWS)
     ]
-    rooms = create_rooms(dungeon_map, config["room_count"])
+    boss_room = (
+        create_reserved_boss_room()
+        if boss_enemy_types
+        else None
+    )
+    rooms = create_rooms(
+        dungeon_map,
+        config["room_count"],
+        blocked_rooms=[boss_room] if boss_room else None,
+    )
+
+    if boss_enemy_types:
+        carve_room(dungeon_map, boss_room)
+        boss_door = create_boss_room_entrance(
+            dungeon_map,
+            rooms[-1],
+            boss_room,
+        )
+    else:
+        boss_door = None
 
     player_start = room_center(rooms[0])
-    stairs = room_center(rooms[-1])
+    stairs = room_center(boss_room or rooms[-1])
     occupied_positions = {player_start, stairs}
     all_floor_positions = [
         (column, row)
         for row in range(MAP_ROWS)
         for column in range(MAP_COLUMNS)
         if dungeon_map[row][column] == "."
+    ]
+    non_boss_floor_positions = [
+        position
+        for position in all_floor_positions
+        if (
+            boss_room is None
+            or not position_is_in_room(position, boss_room)
+        )
     ]
 
     enemy_candidate_positions = [
@@ -187,7 +397,7 @@ def generate_floor(floor_index):
 
         if enemy_position is None:
             enemy_position = choose_free_position(
-                all_floor_positions,
+                non_boss_floor_positions,
                 occupied_positions,
             )
 
@@ -199,10 +409,36 @@ def generate_floor(floor_index):
             {
                 "position": enemy_position,
                 "type": enemy_type,
+                "boss_group": False,
             }
         )
 
-    chest_rooms = rooms[1:-1] or rooms[1:]
+    if boss_enemy_types:
+        boss_positions = positions_inside_room(boss_room)
+
+        for enemy_type in boss_enemy_types:
+            enemy_position = choose_free_position(
+                boss_positions,
+                occupied_positions,
+            )
+
+            if enemy_position is None:
+                break
+
+            occupied_positions.add(enemy_position)
+            enemies.append(
+                {
+                    "position": enemy_position,
+                    "type": enemy_type,
+                    "boss_group": True,
+                }
+            )
+
+    chest_rooms = (
+        rooms[1:]
+        if boss_enemy_types
+        else rooms[1:-1] or rooms[1:]
+    )
     chest_positions = [
         position
         for room in chest_rooms
@@ -218,7 +454,7 @@ def generate_floor(floor_index):
 
         if chest_position is None:
             chest_position = choose_free_position(
-                all_floor_positions,
+                non_boss_floor_positions,
                 occupied_positions,
             )
 
@@ -233,11 +469,13 @@ def generate_floor(floor_index):
             }
         )
 
+    potion_positions = non_boss_floor_positions
+
     potions = []
 
     for _ in range(config["potion_count"]):
         potion_position = choose_free_position(
-            all_floor_positions,
+            potion_positions,
             occupied_positions,
         )
 
@@ -254,4 +492,8 @@ def generate_floor(floor_index):
         "chests": chests,
         "potions": potions,
         "stairs": stairs,
+        "boss_door": (
+            boss_door
+        ),
+        "boss_room": boss_room,
     }

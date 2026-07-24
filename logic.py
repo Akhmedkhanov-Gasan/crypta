@@ -1,14 +1,8 @@
 import random
 from collections import deque
 
-from settings import (
-    PLAYER_DAMAGE_MAX,
-    PLAYER_DAMAGE_MIN,
-)
-
-
-def roll_player_damage():
-    return random.randint(PLAYER_DAMAGE_MIN, PLAYER_DAMAGE_MAX)
+def roll_player_damage(damage_minimum, damage_maximum):
+    return random.randint(damage_minimum, damage_maximum)
 
 
 def roll_enemy_damage(enemy, attack_mode):
@@ -186,6 +180,93 @@ def get_enemy_attack_targets(
         player_row,
     )
 
+    if attack_kind == "boss":
+        if (
+            distance_to_player > enemy["attack_range"]
+            or not has_line_of_sight(
+                dungeon_map,
+                enemy_column,
+                enemy_row,
+                player_column,
+                player_row,
+            )
+        ):
+            return []
+
+        second_phase = enemy["health"] <= enemy["max_health"] // 2
+        available_attack_modes = [
+            mode
+            for mode in ("cross", "sweep", "runes")
+            if mode != enemy["last_attack_mode"]
+        ]
+        attack_mode = random.choice(available_attack_modes)
+        enemy["selected_attack_mode"] = attack_mode
+        enemy["last_attack_mode"] = attack_mode
+
+        if attack_mode == "cross":
+            arm_length = 3 if second_phase else 2
+            potential_targets = [
+                (player_column, player_row),
+                *[
+                    (player_column + distance, player_row)
+                    for distance in range(-arm_length, arm_length + 1)
+                    if abs(distance) >= 2
+                ],
+                *[
+                    (player_column, player_row + distance)
+                    for distance in range(-arm_length, arm_length + 1)
+                    if abs(distance) >= 2
+                ],
+            ]
+        elif attack_mode == "sweep":
+            half_length = 3 if second_phase else 2
+
+            if random.choice((True, False)):
+                potential_targets = [
+                    (player_column + distance, player_row)
+                    for distance in range(-half_length, half_length + 1)
+                ]
+            else:
+                potential_targets = [
+                    (player_column, player_row + distance)
+                    for distance in range(-half_length, half_length + 1)
+                ]
+        else:
+            neighboring_targets = [
+                (player_column - 1, player_row - 1),
+                (player_column + 1, player_row - 1),
+                (player_column - 1, player_row + 1),
+                (player_column + 1, player_row + 1),
+            ]
+            potential_targets = [
+                (player_column, player_row),
+                *neighboring_targets,
+            ]
+
+            if second_phase:
+                potential_targets.extend(
+                    [
+                        (player_column - 2, player_row),
+                        (player_column + 2, player_row),
+                        (player_column, player_row - 2),
+                        (player_column, player_row + 2),
+                    ]
+                )
+
+        return [
+            position
+            for position in potential_targets
+            if (
+                0 <= position[1] < len(dungeon_map)
+                and 0 <= position[0] < len(dungeon_map[0])
+                and can_move_to(
+                    dungeon_map,
+                    position[0],
+                    position[1],
+                )
+            )
+        ]
+
     if attack_kind == "ranged":
         if distance_to_player == 1:
             return [(player_column, player_row)]
@@ -262,6 +343,9 @@ def get_enemy_attack_targets(
 
 
 def get_enemy_attack_mode(enemy, player_column, player_row):
+    if enemy["type"] == "warden":
+        return enemy["selected_attack_mode"]
+
     if (
         enemy["type"] == "archer"
         and distance_between(

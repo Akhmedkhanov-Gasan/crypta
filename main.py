@@ -19,27 +19,45 @@ from logic import (
 )
 from rendering import (
     draw_attack_markers,
+    draw_boss_door,
     draw_chest,
+    draw_class_selection_screen,
     draw_coin,
     draw_dungeon,
     draw_enemy,
     draw_key,
     draw_player,
+    draw_player_attack_markers,
     draw_potion,
     draw_sidebar,
     draw_stairs,
     draw_status,
+    draw_upgrade_screen,
+    load_act_two_sprites,
 )
 from settings import (
     BACKGROUND_COLOR,
     COMBAT_LOG_LIMIT,
+    CRIT_UPGRADE_AMOUNT,
+    DODGE_UPGRADE_AMOUNT,
     FPS,
     GAME_HEIGHT,
     GAME_WIDTH,
     INITIAL_WINDOW_SCALE,
+    MAX_CRIT_CHANCE,
+    MAX_DODGE_CHANCE,
+    PLAYER_DAMAGE_MAX,
+    PLAYER_DAMAGE_MIN,
     PLAYER_MAX_HEALTH,
     POTION_HEALING,
 )
+
+FIRST_ACT_FINAL_FLOOR = 2
+CLASS_ABILITY_KILLS = 2
+ROGUE_INVISIBILITY_TURNS = 5
+MAGE_SPELL_RANGE = 5
+MAGE_SPELL_DAMAGE_BONUS = 2
+WARRIOR_STRIKE_DAMAGE_BONUS = 2
 
 
 def create_floor_state(floor_index):
@@ -51,11 +69,20 @@ def create_floor_state(floor_index):
     for enemy_data in floor["enemies"]:
         enemy_column, enemy_row = enemy_data["position"]
         enemy_type = enemy_data["type"]
+        belongs_to_boss_group = enemy_data.get(
+            "boss_group",
+            False,
+        )
         enemy_config = ENEMY_TYPES[enemy_type]
         enemy_type_counts[enemy_type] = (
             enemy_type_counts.get(enemy_type, 0) + 1
         )
         enemy_number = enemy_type_counts[enemy_type]
+        enemy_name = (
+            enemy_config["display_name"]
+            if enemy_config.get("is_unique", False)
+            else f"{enemy_config['display_name']} {enemy_number}"
+        )
         enemies.append(
             {
                 "type": enemy_type,
@@ -64,9 +91,7 @@ def create_floor_state(floor_index):
                 "health": enemy_config["max_health"],
                 "max_health": enemy_config["max_health"],
                 "is_aggro": False,
-                "name": (
-                    f"{enemy_config['display_name']} {enemy_number}"
-                ),
+                "name": enemy_name,
                 "has_key": False,
                 "attack_targets": [],
                 "aggro_radius": enemy_config["aggro_radius"],
@@ -82,13 +107,21 @@ def create_floor_state(floor_index):
                     enemy_config["retreat_jump_chance"]
                 ),
                 "prepared_attack_mode": None,
+                "selected_attack_mode": None,
+                "last_attack_mode": None,
+                "second_phase_announced": False,
+                "boss_group": belongs_to_boss_group,
+                "is_active": not belongs_to_boss_group,
             }
         )
 
     eligible_key_carriers = [
         enemy
         for enemy in enemies
-        if (enemy["column"], enemy["row"]) != floor["stairs"]
+        if (
+            (enemy["column"], enemy["row"]) != floor["stairs"]
+            and not enemy["boss_group"]
+        )
     ]
 
     possible_key_carriers = eligible_key_carriers or enemies
@@ -128,6 +161,9 @@ def create_floor_state(floor_index):
         "dropped_key": None,
         "stairs_column": floor["stairs"][0],
         "stairs_row": floor["stairs"][1],
+        "boss_door": floor["boss_door"],
+        "boss_room": floor["boss_room"],
+        "boss_fight_started": floor["boss_door"] is None,
     }
 
 
@@ -136,6 +172,94 @@ def add_log_message(combat_log, message):
 
     if len(combat_log) > COMBAT_LOG_LIMIT:
         combat_log.pop(0)
+
+
+def attack_enemy(
+    enemy,
+    damage_minimum,
+    damage_maximum,
+    critical_chance,
+    combat_log,
+    damage_bonus=0,
+    force_critical=False,
+):
+    damage = (
+        roll_player_damage(damage_minimum, damage_maximum)
+        + damage_bonus
+    )
+    critical_hit = (
+        force_critical
+        or random.random() < critical_chance
+    )
+
+    if critical_hit:
+        damage *= 2
+
+    enemy["health"] = max(0, enemy["health"] - damage)
+
+    if critical_hit:
+        add_log_message(
+            combat_log,
+            f"Critical hit on {enemy['name']} for {damage}!",
+        )
+    else:
+        add_log_message(
+            combat_log,
+            f"Hero hits {enemy['name']} for {damage}.",
+        )
+
+    if (
+        enemy["type"] == "warden"
+        and enemy["health"] > 0
+        and enemy["health"] <= enemy["max_health"] // 2
+        and not enemy["second_phase_announced"]
+    ):
+        enemy["second_phase_announced"] = True
+        add_log_message(
+            combat_log,
+            "The Warden enters phase two!",
+        )
+
+    if enemy["health"] <= 0:
+        add_log_message(
+            combat_log,
+            f"{enemy['name']} is defeated.",
+        )
+        return True
+
+    return False
+
+
+def get_directional_line(
+    dungeon_map,
+    start_column,
+    start_row,
+    column_change,
+    row_change,
+    maximum_range,
+    blocking_positions,
+):
+    positions = []
+    map_height = len(dungeon_map)
+    map_width = len(dungeon_map[0])
+
+    for distance in range(1, maximum_range + 1):
+        column = start_column + column_change * distance
+        row = start_row + row_change * distance
+
+        if not (
+            0 <= column < map_width
+            and 0 <= row < map_height
+            and can_move_to(dungeon_map, column, row)
+        ):
+            break
+
+        if (column, row) in blocking_positions:
+            break
+
+        positions.append((column, row))
+
+    return positions
 
 
 def get_initial_window_size():
@@ -188,17 +312,32 @@ def main():
     game_surface = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
     pygame.display.set_caption("Crypta")
     clock = pygame.time.Clock()
+    title_font = pygame.font.Font(None, 44)
     font = pygame.font.Font(None, 24)
     log_font = pygame.font.Font(None, 22)
+    act_two_sprites = load_act_two_sprites()
 
     floor_index = 0
     floor_state = create_floor_state(floor_index)
-    player_health = PLAYER_MAX_HEALTH
+    player_max_health = PLAYER_MAX_HEALTH
+    player_health = player_max_health
+    player_damage_min = PLAYER_DAMAGE_MIN
+    player_damage_max = PLAYER_DAMAGE_MAX
+    player_crit_chance = 0.0
+    player_dodge_chance = 0.0
     potion_count = 0
     gold_count = 0
     has_key = False
     enemies_defeated = 0
     game_won = False
+    upgrade_screen_open = False
+    class_selection_open = False
+    upgrade_message = ""
+    player_class = None
+    player_attack_targets = []
+    ability_kill_charge = 0
+    invisibility_turns = 0
+    directional_ability_aiming = False
     combat_log = ["The descent begins."]
     fullscreen = False
     running = True
@@ -233,17 +372,184 @@ def main():
                     fullscreen = not fullscreen
                     continue
 
+                if event.key == pygame.K_F2:
+                    floor_index = FIRST_ACT_FINAL_FLOOR
+                    floor_state = create_floor_state(floor_index)
+                    player_max_health = PLAYER_MAX_HEALTH
+                    player_health = player_max_health
+                    player_damage_min = PLAYER_DAMAGE_MIN
+                    player_damage_max = PLAYER_DAMAGE_MAX
+                    player_crit_chance = 0.0
+                    player_dodge_chance = 0.0
+                    potion_count = 0
+                    gold_count = 0
+                    has_key = False
+                    enemies_defeated = 0
+                    game_won = False
+                    upgrade_screen_open = False
+                    class_selection_open = True
+                    upgrade_message = ""
+                    player_class = None
+                    player_attack_targets = []
+                    ability_kill_charge = 0
+                    invisibility_turns = 0
+                    directional_ability_aiming = False
+                    combat_log = [
+                        "Debug jump: choose an Act II class."
+                    ]
+                    continue
+
                 if player_health <= 0 or game_won:
                     if event.key == pygame.K_r:
                         floor_index = 0
                         floor_state = create_floor_state(floor_index)
-                        player_health = PLAYER_MAX_HEALTH
+                        player_max_health = PLAYER_MAX_HEALTH
+                        player_health = player_max_health
+                        player_damage_min = PLAYER_DAMAGE_MIN
+                        player_damage_max = PLAYER_DAMAGE_MAX
+                        player_crit_chance = 0.0
+                        player_dodge_chance = 0.0
                         potion_count = 0
                         gold_count = 0
                         has_key = False
                         enemies_defeated = 0
                         game_won = False
+                        upgrade_screen_open = False
+                        class_selection_open = False
+                        upgrade_message = ""
+                        player_class = None
+                        player_attack_targets = []
+                        ability_kill_charge = 0
+                        invisibility_turns = 0
+                        directional_ability_aiming = False
                         combat_log = ["The descent begins."]
+                    continue
+
+                if class_selection_open:
+                    chosen_class = None
+
+                    if event.key in (pygame.K_1, pygame.K_KP1):
+                        chosen_class = "warrior"
+                    elif event.key in (pygame.K_2, pygame.K_KP2):
+                        chosen_class = "rogue"
+                    elif event.key in (pygame.K_3, pygame.K_KP3):
+                        chosen_class = "mage"
+
+                    if chosen_class is None:
+                        continue
+
+                    player_class = chosen_class
+
+                    if player_class == "warrior":
+                        player_max_health += 4
+                        player_health += 4
+                    elif player_class == "rogue":
+                        player_max_health = max(
+                            1,
+                            player_max_health - 2,
+                        )
+                        player_health = max(
+                            1,
+                            player_health - 2,
+                        )
+                        player_crit_chance = min(
+                            MAX_CRIT_CHANCE,
+                            player_crit_chance + 0.10,
+                        )
+                        player_dodge_chance = min(
+                            MAX_DODGE_CHANCE,
+                            player_dodge_chance + 0.10,
+                        )
+
+                    floor_index += 1
+                    floor_state = create_floor_state(floor_index)
+                    has_key = False
+                    class_selection_open = False
+                    player_attack_targets = []
+                    add_log_message(
+                        combat_log,
+                        f"The hero becomes a {player_class}.",
+                    )
+                    add_log_message(
+                        combat_log,
+                        "Act II begins. The world gains shape.",
+                    )
+                    continue
+
+                if upgrade_screen_open:
+                    if event.key in (pygame.K_1, pygame.K_KP1):
+                        if gold_count <= 0:
+                            upgrade_message = "Not enough gold."
+                        else:
+                            gold_count -= 1
+                            player_max_health += 2
+                            player_health += 2
+                            upgrade_message = "Maximum HP increased by 2."
+                            add_log_message(
+                                combat_log,
+                                upgrade_message,
+                            )
+                    elif event.key in (pygame.K_2, pygame.K_KP2):
+                        if gold_count <= 0:
+                            upgrade_message = "Not enough gold."
+                        else:
+                            gold_count -= 1
+                            player_damage_min += 1
+                            player_damage_max += 1
+                            upgrade_message = "Damage increased by 1."
+                            add_log_message(
+                                combat_log,
+                                upgrade_message,
+                            )
+                    elif event.key in (pygame.K_3, pygame.K_KP3):
+                        if gold_count <= 0:
+                            upgrade_message = "Not enough gold."
+                        elif player_crit_chance >= MAX_CRIT_CHANCE:
+                            upgrade_message = "Critical chance is capped."
+                        else:
+                            gold_count -= 1
+                            player_crit_chance = min(
+                                MAX_CRIT_CHANCE,
+                                player_crit_chance
+                                + CRIT_UPGRADE_AMOUNT,
+                            )
+                            upgrade_message = "Critical chance increased by 5%."
+                            add_log_message(
+                                combat_log,
+                                upgrade_message,
+                            )
+                    elif event.key in (pygame.K_4, pygame.K_KP4):
+                        if gold_count <= 0:
+                            upgrade_message = "Not enough gold."
+                        elif player_dodge_chance >= MAX_DODGE_CHANCE:
+                            upgrade_message = "Dodge chance is capped."
+                        else:
+                            gold_count -= 1
+                            player_dodge_chance = min(
+                                MAX_DODGE_CHANCE,
+                                player_dodge_chance
+                                + DODGE_UPGRADE_AMOUNT,
+                            )
+                            upgrade_message = "Dodge chance increased by 5%."
+                            add_log_message(
+                                combat_log,
+                                upgrade_message,
+                            )
+                    elif event.key in (
+                        pygame.K_RETURN,
+                        pygame.K_KP_ENTER,
+                    ):
+                        floor_index += 1
+                        floor_state = create_floor_state(floor_index)
+                        has_key = False
+                        upgrade_screen_open = False
+                        upgrade_message = ""
+                        player_attack_targets = []
+                        add_log_message(
+                            combat_log,
+                            f"Hero descends to floor {floor_index + 1}.",
+                        )
+
                     continue
 
                 column_change = 0
@@ -258,9 +564,65 @@ def main():
                 elif event.key in (pygame.K_d, pygame.K_RIGHT):
                     column_change = 1
 
+                player_tried_to_move = (
+                    column_change != 0 or row_change != 0
+                )
+                rogue_ability_activated = False
+                directional_ability_cast = (
+                    player_class in ("warrior", "mage")
+                    and directional_ability_aiming
+                    and player_tried_to_move
+                )
+
+                if event.key == pygame.K_e:
+                    if (
+                        player_class is not None
+                        and ability_kill_charge
+                        < CLASS_ABILITY_KILLS
+                    ):
+                        add_log_message(
+                            combat_log,
+                            "Class ability is not charged.",
+                        )
+                        continue
+
+                    if player_class == "rogue":
+                        ability_kill_charge = 0
+                        invisibility_turns = (
+                            ROGUE_INVISIBILITY_TURNS
+                        )
+                        rogue_ability_activated = True
+                    elif player_class in ("warrior", "mage"):
+                        directional_ability_aiming = (
+                            not directional_ability_aiming
+                        )
+                        add_log_message(
+                            combat_log,
+                            (
+                                "Choose an ability direction."
+                                if directional_ability_aiming
+                                else "Ability aiming cancelled."
+                            ),
+                        )
+                        continue
+
+                if (
+                    directional_ability_aiming
+                    and not player_tried_to_move
+                ):
+                    if event.key == pygame.K_ESCAPE:
+                        directional_ability_aiming = False
+                        add_log_message(
+                            combat_log,
+                            "Ability aiming cancelled.",
+                        )
+                    continue
+
+                if directional_ability_cast:
+                    directional_ability_aiming = False
+
                 new_column = floor_state["player_column"] + column_change
                 new_row = floor_state["player_row"] + row_change
-                player_tried_to_move = column_change != 0 or row_change != 0
                 player_waited = event.key == pygame.K_SPACE
                 living_enemies = [
                     enemy
@@ -297,16 +659,137 @@ def main():
                         floor_state["stairs_row"],
                     )
                 )
+                target_is_boss_door = (
+                    floor_state["boss_door"] is not None
+                    and (new_column, new_row)
+                    == floor_state["boss_door"]
+                )
+                target_is_inside_boss_room = (
+                    floor_state["boss_room"] is not None
+                    and floor_state["boss_room"]["x"]
+                    <= new_column
+                    < (
+                        floor_state["boss_room"]["x"]
+                        + floor_state["boss_room"]["width"]
+                    )
+                    and floor_state["boss_room"]["y"]
+                    <= new_row
+                    < (
+                        floor_state["boss_room"]["y"]
+                        + floor_state["boss_room"]["height"]
+                    )
+                )
                 player_acted = False
+                player_attack_targets = []
 
-                if (
+                if rogue_ability_activated:
+                    for enemy in floor_state["enemies"]:
+                        enemy["is_aggro"] = False
+                        enemy["attack_targets"] = []
+                        enemy["prepared_attack_mode"] = None
+
+                    add_log_message(
+                        combat_log,
+                        "The rogue vanishes from sight.",
+                    )
+                    player_acted = True
+                elif directional_ability_cast:
+                    ability_kill_charge = 0
+                    blocking_positions = {
+                        (chest["column"], chest["row"])
+                        for chest in floor_state["chests"]
+                        if not chest["is_open"]
+                    }
+                    if player_class == "warrior":
+                        player_attack_targets = (
+                            get_directional_line(
+                                floor_state["map"],
+                                floor_state["player_column"],
+                                floor_state["player_row"],
+                                column_change,
+                                row_change,
+                                1,
+                                blocking_positions,
+                            )
+                        )
+                        ability_damage_bonus = (
+                            WARRIOR_STRIKE_DAMAGE_BONUS
+                        )
+                        ability_name = "power strike"
+                    else:
+                        player_attack_targets = (
+                            get_directional_line(
+                                floor_state["map"],
+                                floor_state["player_column"],
+                                floor_state["player_row"],
+                                column_change,
+                                row_change,
+                                MAGE_SPELL_RANGE,
+                                blocking_positions,
+                            )
+                        )
+                        ability_damage_bonus = (
+                            MAGE_SPELL_DAMAGE_BONUS
+                        )
+                        ability_name = "arcane burst"
+
+                    ability_targets = [
+                        enemy
+                        for position in player_attack_targets
+                        for enemy in living_enemies
+                        if (
+                            enemy["column"],
+                            enemy["row"],
+                        )
+                        == position
+                    ]
+
+                    if not ability_targets:
+                        add_log_message(
+                            combat_log,
+                            f"The {ability_name} hits nothing.",
+                        )
+
+                    for ability_target in ability_targets:
+                        enemy_was_defeated = attack_enemy(
+                            ability_target,
+                            player_damage_min,
+                            player_damage_max,
+                            player_crit_chance,
+                            combat_log,
+                            damage_bonus=ability_damage_bonus,
+                        )
+
+                        if enemy_was_defeated:
+                            enemies_defeated += 1
+                            ability_kill_charge = min(
+                                CLASS_ABILITY_KILLS,
+                                ability_kill_charge + 1,
+                            )
+
+                            if ability_target["has_key"]:
+                                floor_state["dropped_key"] = (
+                                    ability_target["column"],
+                                    ability_target["row"],
+                                )
+                                ability_target["has_key"] = False
+                                add_log_message(
+                                    combat_log,
+                                    (
+                                        f"{ability_target['name']} "
+                                        "drops a key."
+                                    ),
+                                )
+
+                    player_acted = True
+                elif (
                     event.key == pygame.K_h
                     and potion_count > 0
-                    and player_health < PLAYER_MAX_HEALTH
+                    and player_health < player_max_health
                 ):
                     previous_health = player_health
                     player_health = min(
-                        PLAYER_MAX_HEALTH,
+                        player_max_health,
                         player_health + POTION_HEALING,
                     )
                     potion_count -= 1
@@ -320,32 +803,78 @@ def main():
                     player_acted = True
                 elif player_tried_to_move:
                     if target_enemy:
-                        damage = roll_player_damage()
-                        target_enemy["health"] = max(
-                            0,
-                            target_enemy["health"] - damage,
-                        )
-                        add_log_message(
-                            combat_log,
-                            f"Hero hits {target_enemy['name']} for {damage}.",
+                        attack_was_from_invisibility = (
+                            player_class == "rogue"
+                            and invisibility_turns > 0
                         )
 
-                        if target_enemy["health"] <= 0:
-                            enemies_defeated += 1
+                        if attack_was_from_invisibility:
+                            invisibility_turns = 0
                             add_log_message(
                                 combat_log,
-                                f"{target_enemy['name']} is defeated.",
+                                "The rogue emerges to attack.",
                             )
 
-                            if target_enemy["has_key"]:
-                                floor_state["dropped_key"] = (
-                                    target_enemy["column"],
-                                    target_enemy["row"],
+                        blocking_positions = {
+                            (chest["column"], chest["row"])
+                            for chest in floor_state["chests"]
+                            if not chest["is_open"]
+                        }
+                        player_attack_targets = get_directional_line(
+                            floor_state["map"],
+                            floor_state["player_column"],
+                            floor_state["player_row"],
+                            column_change,
+                            row_change,
+                            1,
+                            blocking_positions,
+                        )
+                        enemies_hit = [
+                            enemy
+                            for position in player_attack_targets
+                            for enemy in living_enemies
+                            if (
+                                enemy["column"],
+                                enemy["row"],
+                            )
+                            == position
+                        ]
+
+                        for hit_enemy in enemies_hit:
+                            enemy_was_defeated = attack_enemy(
+                                hit_enemy,
+                                player_damage_min,
+                                player_damage_max,
+                                player_crit_chance,
+                                combat_log,
+                                force_critical=(
+                                    attack_was_from_invisibility
+                                ),
+                            )
+
+                            if not enemy_was_defeated:
+                                continue
+
+                            enemies_defeated += 1
+
+                            if player_class is not None:
+                                ability_kill_charge = min(
+                                    CLASS_ABILITY_KILLS,
+                                    ability_kill_charge + 1,
                                 )
-                                target_enemy["has_key"] = False
+
+                            if hit_enemy["has_key"]:
+                                floor_state["dropped_key"] = (
+                                    hit_enemy["column"],
+                                    hit_enemy["row"],
+                                )
+                                hit_enemy["has_key"] = False
                                 add_log_message(
                                     combat_log,
-                                    f"{target_enemy['name']} drops a key.",
+                                    (
+                                        f"{hit_enemy['name']} "
+                                        "drops a key."
+                                    ),
                                 )
 
                         player_acted = True
@@ -378,6 +907,31 @@ def main():
                         floor_state["player_column"] = new_column
                         floor_state["player_row"] = new_row
                         player_acted = True
+
+                        if (
+                            (
+                                target_is_boss_door
+                                or target_is_inside_boss_room
+                            )
+                            and not floor_state[
+                                "boss_fight_started"
+                            ]
+                        ):
+                            floor_state["boss_fight_started"] = True
+
+                            for enemy in floor_state["enemies"]:
+                                if enemy["boss_group"]:
+                                    enemy["is_active"] = True
+                                    enemy["is_aggro"] = True
+
+                            add_log_message(
+                                combat_log,
+                                "The boss chamber opens!",
+                            )
+                            add_log_message(
+                                combat_log,
+                                "The Crypt Warden awakens.",
+                            )
 
                         found_potion = next(
                             (
@@ -456,19 +1010,36 @@ def main():
                                     combat_log,
                                     "The Crypta is conquered.",
                                 )
-                            else:
-                                floor_index += 1
-                                floor_state = create_floor_state(floor_index)
-                                has_key = False
+                            elif (
+                                floor_index
+                                == FIRST_ACT_FINAL_FLOOR
+                                and player_class is None
+                            ):
+                                class_selection_open = True
                                 player_acted = False
                                 add_log_message(
                                     combat_log,
-                                    f"Hero descends to floor {floor_index + 1}.",
+                                    "The first veil falls.",
+                                )
+                            else:
+                                upgrade_screen_open = True
+                                upgrade_message = ""
+                                player_acted = False
+                                add_log_message(
+                                    combat_log,
+                                    "The descent altar opens.",
                                 )
 
                 if player_acted:
                     for enemy in floor_state["enemies"]:
                         if enemy["health"] <= 0:
+                            continue
+                        if not enemy["is_active"]:
+                            continue
+                        if invisibility_turns > 0:
+                            enemy["is_aggro"] = False
+                            enemy["attack_targets"] = []
+                            enemy["prepared_attack_mode"] = None
                             continue
 
                         if enemy["attack_targets"]:
@@ -481,21 +1052,33 @@ def main():
                                 floor_state["player_column"],
                                 floor_state["player_row"],
                             ) in attack_targets:
-                                damage = roll_enemy_damage(
-                                    enemy,
-                                    attack_mode,
-                                )
-                                player_health = max(
-                                    0,
-                                    player_health - damage,
-                                )
-                                add_log_message(
-                                    combat_log,
-                                    (
-                                        f"{enemy['name']} hits hero "
-                                        f"for {damage}."
-                                    ),
-                                )
+                                if (
+                                    random.random()
+                                    < player_dodge_chance
+                                ):
+                                    add_log_message(
+                                        combat_log,
+                                        (
+                                            f"Hero dodges "
+                                            f"{enemy['name']}'s attack."
+                                        ),
+                                    )
+                                else:
+                                    damage = roll_enemy_damage(
+                                        enemy,
+                                        attack_mode,
+                                    )
+                                    player_health = max(
+                                        0,
+                                        player_health - damage,
+                                    )
+                                    add_log_message(
+                                        combat_log,
+                                        (
+                                            f"{enemy['name']} hits hero "
+                                            f"for {damage}."
+                                        ),
+                                    )
                             else:
                                 add_log_message(
                                     combat_log,
@@ -695,12 +1278,41 @@ def main():
                                 ),
                             )
 
+                    if (
+                        invisibility_turns > 0
+                        and not rogue_ability_activated
+                    ):
+                        invisibility_turns -= 1
+
+                        if invisibility_turns == 0:
+                            add_log_message(
+                                combat_log,
+                                "The rogue becomes visible.",
+                            )
+
+        current_act = FLOOR_CONFIGS[floor_index]["act"]
         game_surface.fill(BACKGROUND_COLOR)
-        draw_dungeon(game_surface, floor_state["map"])
+        draw_dungeon(
+            game_surface,
+            floor_state["map"],
+            current_act,
+            act_two_sprites,
+        )
+        draw_player_attack_markers(
+            game_surface,
+            player_attack_targets,
+        )
         draw_attack_markers(
             game_surface,
             floor_state["enemies"],
         )
+        if floor_state["boss_door"] is not None:
+            draw_boss_door(
+                game_surface,
+                floor_state["boss_door"][0],
+                floor_state["boss_door"][1],
+                floor_state["boss_fight_started"],
+            )
         draw_stairs(
             game_surface,
             floor_state["stairs_column"],
@@ -709,36 +1321,59 @@ def main():
                 enemy["health"] > 0
                 for enemy in floor_state["enemies"]
             ),
+            current_act,
+            act_two_sprites,
         )
         for potion in floor_state["potions"]:
             draw_potion(
                 game_surface,
                 potion["column"],
                 potion["row"],
+                current_act,
+                act_two_sprites,
             )
         for chest in floor_state["chests"]:
-            draw_chest(game_surface, chest)
+            draw_chest(
+                game_surface,
+                chest,
+                current_act,
+                act_two_sprites,
+            )
             if chest["loot_available"]:
                 draw_coin(
                     game_surface,
                     chest["column"],
                     chest["row"],
+                    current_act,
+                    act_two_sprites,
                 )
         if floor_state["dropped_key"] is not None:
             draw_key(
                 game_surface,
                 floor_state["dropped_key"][0],
                 floor_state["dropped_key"][1],
+                current_act,
+                act_two_sprites,
             )
         draw_player(
             game_surface,
             floor_state["player_column"],
             floor_state["player_row"],
             player_health,
+            player_max_health,
+            player_class,
+            current_act,
+            act_two_sprites,
+            invisibility_turns,
         )
         for enemy in floor_state["enemies"]:
             if enemy["health"] > 0:
-                draw_enemy(game_surface, enemy)
+                draw_enemy(
+                    game_surface,
+                    enemy,
+                    current_act,
+                    act_two_sprites,
+                )
         draw_status(
             game_surface,
             font,
@@ -753,11 +1388,40 @@ def main():
             log_font,
             combat_log,
             player_health,
+            player_max_health,
+            player_damage_min,
+            player_damage_max,
+            player_crit_chance,
+            player_dodge_chance,
             potion_count,
             gold_count,
             has_key,
             enemies_defeated,
+            player_class,
+            ability_kill_charge,
+            invisibility_turns,
+            directional_ability_aiming,
         )
+        if upgrade_screen_open:
+            draw_upgrade_screen(
+                game_surface,
+                title_font,
+                font,
+                gold_count,
+                player_health,
+                player_max_health,
+                player_damage_min,
+                player_damage_max,
+                player_crit_chance,
+                player_dodge_chance,
+                upgrade_message,
+            )
+        if class_selection_open:
+            draw_class_selection_screen(
+                game_surface,
+                title_font,
+                font,
+            )
         present_game(screen, game_surface)
         clock.tick(FPS)
 
