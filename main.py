@@ -6,6 +6,8 @@ from logic import (
     move_enemy,
     move_enemy_randomly,
     positions_are_adjacent,
+    roll_enemy_damage,
+    roll_player_damage,
     update_enemy_aggro,
 )
 from rendering import (
@@ -13,14 +15,14 @@ from rendering import (
     draw_enemy,
     draw_player,
     draw_potion,
+    draw_sidebar,
     draw_stairs,
     draw_status,
 )
 from settings import (
     BACKGROUND_COLOR,
-    ENEMY_DAMAGE,
+    COMBAT_LOG_LIMIT,
     FPS,
-    PLAYER_DAMAGE,
     PLAYER_MAX_HEALTH,
     POTION_HEALING,
     WINDOW_HEIGHT,
@@ -33,7 +35,7 @@ def create_floor_state(floor_index):
     player_column, player_row = floor["player_start"]
     enemies = []
 
-    for enemy_data in floor["enemies"]:
+    for enemy_number, enemy_data in enumerate(floor["enemies"], start=1):
         enemy_column, enemy_row = enemy_data["position"]
         enemy_health = enemy_data["health"]
         enemies.append(
@@ -43,6 +45,7 @@ def create_floor_state(floor_index):
                 "health": enemy_health,
                 "max_health": enemy_health,
                 "is_aggro": False,
+                "name": f"Enemy {enemy_number}",
             }
         )
 
@@ -59,6 +62,13 @@ def create_floor_state(floor_index):
     }
 
 
+def add_log_message(combat_log, message):
+    combat_log.append(message)
+
+    if len(combat_log) > COMBAT_LOG_LIMIT:
+        combat_log.pop(0)
+
+
 def main():
     pygame.init()
 
@@ -66,12 +76,15 @@ def main():
     pygame.display.set_caption("Crypta")
     clock = pygame.time.Clock()
     font = pygame.font.Font(None, 24)
+    log_font = pygame.font.Font(None, 22)
 
     floor_index = 0
     floor_state = create_floor_state(floor_index)
     player_health = PLAYER_MAX_HEALTH
     potion_count = 0
+    enemies_defeated = 0
     game_won = False
+    combat_log = ["The descent begins."]
     running = True
 
     while running:
@@ -85,7 +98,9 @@ def main():
                         floor_state = create_floor_state(floor_index)
                         player_health = PLAYER_MAX_HEALTH
                         potion_count = 0
+                        enemies_defeated = 0
                         game_won = False
+                        combat_log = ["The descent begins."]
                     continue
 
                 column_change = 0
@@ -133,18 +148,37 @@ def main():
                     and potion_count > 0
                     and player_health < PLAYER_MAX_HEALTH
                 ):
+                    previous_health = player_health
                     player_health = min(
                         PLAYER_MAX_HEALTH,
                         player_health + POTION_HEALING,
                     )
                     potion_count -= 1
                     player_acted = True
+                    healed_health = player_health - previous_health
+                    add_log_message(
+                        combat_log,
+                        f"Hero heals {healed_health} HP.",
+                    )
                 elif player_tried_to_move:
                     if target_enemy:
+                        damage = roll_player_damage()
                         target_enemy["health"] = max(
                             0,
-                            target_enemy["health"] - PLAYER_DAMAGE,
+                            target_enemy["health"] - damage,
                         )
+                        add_log_message(
+                            combat_log,
+                            f"Hero hits {target_enemy['name']} for {damage}.",
+                        )
+
+                        if target_enemy["health"] <= 0:
+                            enemies_defeated += 1
+                            add_log_message(
+                                combat_log,
+                                f"{target_enemy['name']} is defeated.",
+                            )
+
                         player_acted = True
                     elif (
                         not target_is_locked_stairs
@@ -168,6 +202,10 @@ def main():
                         ):
                             potion_count += 1
                             floor_state["potion_is_on_map"] = False
+                            add_log_message(
+                                combat_log,
+                                "Hero picks up a potion.",
+                            )
 
                         reached_open_stairs = (
                             not any(
@@ -184,21 +222,36 @@ def main():
                         if reached_open_stairs:
                             if floor_index == len(FLOORS) - 1:
                                 game_won = True
+                                add_log_message(
+                                    combat_log,
+                                    "The Crypta is conquered.",
+                                )
                             else:
                                 floor_index += 1
                                 floor_state = create_floor_state(floor_index)
                                 player_acted = False
+                                add_log_message(
+                                    combat_log,
+                                    f"Hero descends to floor {floor_index + 1}.",
+                                )
 
                 if player_acted:
                     for enemy in floor_state["enemies"]:
                         if enemy["health"] <= 0:
                             continue
 
+                        enemy_was_aggro = enemy["is_aggro"]
                         update_enemy_aggro(
                             enemy,
                             floor_state["player_column"],
                             floor_state["player_row"],
                         )
+
+                        if not enemy_was_aggro and enemy["is_aggro"]:
+                            add_log_message(
+                                combat_log,
+                                f"{enemy['name']} spots the hero.",
+                            )
 
                         occupied_positions = {
                             (other_enemy["column"], other_enemy["row"])
@@ -228,11 +281,21 @@ def main():
                                 floor_state["player_row"],
                                 occupied_positions,
                             )
+                            enemy_was_aggro = enemy["is_aggro"]
                             update_enemy_aggro(
                                 enemy,
                                 floor_state["player_column"],
                                 floor_state["player_row"],
                             )
+
+                            if (
+                                not enemy_was_aggro
+                                and enemy["is_aggro"]
+                            ):
+                                add_log_message(
+                                    combat_log,
+                                    f"{enemy['name']} spots the hero.",
+                                )
 
                         if (
                             enemy["is_aggro"]
@@ -243,12 +306,21 @@ def main():
                                 enemy["row"],
                             )
                         ):
+                            damage = roll_enemy_damage()
                             player_health = max(
                                 0,
-                                player_health - ENEMY_DAMAGE,
+                                player_health - damage,
+                            )
+                            add_log_message(
+                                combat_log,
+                                f"{enemy['name']} hits hero for {damage}.",
                             )
 
                         if player_health <= 0:
+                            add_log_message(
+                                combat_log,
+                                "The hero has fallen.",
+                            )
                             break
 
         screen.fill(BACKGROUND_COLOR)
@@ -272,6 +344,7 @@ def main():
             screen,
             floor_state["player_column"],
             floor_state["player_row"],
+            player_health,
         )
         for enemy in floor_state["enemies"]:
             if enemy["health"] > 0:
@@ -282,8 +355,16 @@ def main():
             floor_index,
             player_health,
             floor_state["enemies"],
-            potion_count,
             game_won,
+        )
+        draw_sidebar(
+            screen,
+            font,
+            log_font,
+            combat_log,
+            player_health,
+            potion_count,
+            enemies_defeated,
         )
         pygame.display.flip()
         clock.tick(FPS)

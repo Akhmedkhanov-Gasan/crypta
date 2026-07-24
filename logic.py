@@ -1,7 +1,26 @@
 import random
 from collections import deque
 
-from settings import ENEMY_AGGRO_RADIUS, ENEMY_WANDER_CHANCE
+from settings import (
+    ENEMY_AGGRO_RADIUS,
+    ENEMY_DAMAGE_VALUES,
+    ENEMY_DAMAGE_WEIGHTS,
+    ENEMY_WANDER_CHANCE,
+    PLAYER_DAMAGE_MAX,
+    PLAYER_DAMAGE_MIN,
+)
+
+
+def roll_player_damage():
+    return random.randint(PLAYER_DAMAGE_MIN, PLAYER_DAMAGE_MAX)
+
+
+def roll_enemy_damage():
+    return random.choices(
+        ENEMY_DAMAGE_VALUES,
+        weights=ENEMY_DAMAGE_WEIGHTS,
+        k=1,
+    )[0]
 
 
 def can_move_to(dungeon_map, column, row):
