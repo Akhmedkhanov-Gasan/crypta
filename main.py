@@ -10,14 +10,17 @@ from logic import (
     distance_between,
     get_enemy_attack_mode,
     get_enemy_attack_targets,
+    has_line_of_sight,
     move_enemy,
     move_enemy_away,
     move_enemy_randomly,
+    move_enemy_toward_position,
     roll_enemy_damage,
     roll_player_damage,
     update_enemy_aggro,
 )
 from rendering import (
+    CLASS_SELECTION_READY_MS,
     draw_attack_markers,
     draw_boss_door,
     draw_chest,
@@ -34,6 +37,7 @@ from rendering import (
     draw_stairs,
     draw_status,
     draw_upgrade_screen,
+    get_class_selection_rectangles,
     load_act_one_fonts,
     load_act_two_fonts,
     load_act_two_sprites,
@@ -115,6 +119,31 @@ def create_floor_state(floor_index):
                 "second_phase_announced": False,
                 "boss_group": belongs_to_boss_group,
                 "is_active": not belongs_to_boss_group,
+                "shield_turns": 0,
+                "shield_direction": None,
+                "shield_cooldown": 0,
+                "shield_duration": enemy_config.get(
+                    "shield_duration",
+                    0,
+                ),
+                "shield_cooldown_duration": enemy_config.get(
+                    "shield_cooldown",
+                    0,
+                ),
+                "heal_target": None,
+                "heal_cooldown": 0,
+                "heal_amount": enemy_config.get(
+                    "heal_amount",
+                    0,
+                ),
+                "heal_cooldown_duration": enemy_config.get(
+                    "heal_cooldown",
+                    0,
+                ),
+                "heal_range": enemy_config.get(
+                    "heal_range",
+                    0,
+                ),
             }
         )
 
@@ -191,6 +220,68 @@ def add_log_message(combat_log, message):
         combat_log.pop(0)
 
 
+def direction_toward(
+    start_column,
+    start_row,
+    target_column,
+    target_row,
+):
+    column_distance = target_column - start_column
+    row_distance = target_row - start_row
+
+    if abs(column_distance) >= abs(row_distance):
+        return (1 if column_distance > 0 else -1, 0)
+
+    return (0, 1 if row_distance > 0 else -1)
+
+
+def get_priest_heal_candidate(priest, enemies):
+    reserved_targets = {
+        id(other_priest["heal_target"])
+        for other_priest in enemies
+        if (
+            other_priest is not priest
+            and other_priest["type"] == "priest"
+            and other_priest["health"] > 0
+            and other_priest["heal_target"] is not None
+        )
+    }
+    candidates = [
+        enemy
+        for enemy in enemies
+        if (
+            enemy is not priest
+            and enemy["health"] > 0
+            and enemy["health"] < enemy["max_health"]
+            and enemy["is_active"]
+            and id(enemy) not in reserved_targets
+            and distance_between(
+                priest["column"],
+                priest["row"],
+                enemy["column"],
+                enemy["row"],
+            )
+            <= priest["heal_range"]
+        )
+    ]
+
+    if not candidates:
+        return None
+
+    return min(
+        candidates,
+        key=lambda enemy: (
+            enemy["health"] / enemy["max_health"],
+            distance_between(
+                priest["column"],
+                priest["row"],
+                enemy["column"],
+                enemy["row"],
+            ),
+        ),
+    )
+
+
 def attack_enemy(
     enemy,
     damage_minimum,
@@ -199,7 +290,32 @@ def attack_enemy(
     combat_log,
     damage_bonus=0,
     force_critical=False,
+    attacker_position=None,
 ):
+    if (
+        enemy["type"] == "sentinel"
+        and enemy["shield_turns"] > 0
+        and attacker_position is not None
+    ):
+        attack_direction = direction_toward(
+            enemy["column"],
+            enemy["row"],
+            attacker_position[0],
+            attacker_position[1],
+        )
+        shield_direction = enemy["shield_direction"]
+        vulnerable_direction = (
+            -shield_direction[0],
+            -shield_direction[1],
+        )
+
+        if attack_direction != vulnerable_direction:
+            add_log_message(
+                combat_log,
+                f"{enemy['name']}'s shield blocks the attack.",
+            )
+            return False
+
     damage = (
         roll_player_damage(damage_minimum, damage_maximum)
         + damage_bonus
@@ -318,6 +434,30 @@ def present_game(window, game_surface):
     pygame.display.flip()
 
 
+def window_to_game_position(window, window_position):
+    window_width, window_height = window.get_size()
+    scale = min(
+        window_width / GAME_WIDTH,
+        window_height / GAME_HEIGHT,
+    )
+    scaled_width = int(GAME_WIDTH * scale)
+    scaled_height = int(GAME_HEIGHT * scale)
+    offset_x = (window_width - scaled_width) // 2
+    offset_y = (window_height - scaled_height) // 2
+    mouse_x, mouse_y = window_position
+
+    if not (
+        offset_x <= mouse_x < offset_x + scaled_width
+        and offset_y <= mouse_y < offset_y + scaled_height
+    ):
+        return None
+
+    return (
+        int((mouse_x - offset_x) / scale),
+        int((mouse_y - offset_y) / scale),
+    )
+
+
 def main():
     pygame.init()
 
@@ -351,6 +491,7 @@ def main():
     game_won = False
     upgrade_screen_open = False
     class_selection_open = False
+    class_transition_started_at = 0
     upgrade_message = ""
     player_class = None
     player_attack_targets = []
@@ -374,6 +515,52 @@ def main():
                     windowed_size,
                     pygame.RESIZABLE,
                 )
+            elif (
+                event.type == pygame.MOUSEBUTTONDOWN
+                and event.button == 1
+                and class_selection_open
+            ):
+                current_time = pygame.time.get_ticks()
+                transition_elapsed = (
+                    current_time - class_transition_started_at
+                )
+
+                if transition_elapsed < CLASS_SELECTION_READY_MS:
+                    class_transition_started_at = (
+                        current_time
+                        - CLASS_SELECTION_READY_MS
+                        - 500
+                    )
+                    continue
+
+                game_mouse_position = window_to_game_position(
+                    screen,
+                    event.pos,
+                )
+
+                if game_mouse_position is None:
+                    continue
+
+                class_keys = {
+                    "warrior": pygame.K_1,
+                    "rogue": pygame.K_2,
+                    "mage": pygame.K_3,
+                }
+
+                for (
+                    class_name,
+                    class_rectangle,
+                ) in get_class_selection_rectangles().items():
+                    if class_rectangle.collidepoint(
+                        game_mouse_position
+                    ):
+                        pygame.event.post(
+                            pygame.event.Event(
+                                pygame.KEYDOWN,
+                                key=class_keys[class_name],
+                            )
+                        )
+                        break
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_F11:
                     if fullscreen:
@@ -407,6 +594,9 @@ def main():
                     game_won = False
                     upgrade_screen_open = False
                     class_selection_open = True
+                    class_transition_started_at = (
+                        pygame.time.get_ticks()
+                    )
                     upgrade_message = ""
                     player_class = None
                     player_attack_targets = []
@@ -435,6 +625,7 @@ def main():
                         game_won = False
                         upgrade_screen_open = False
                         class_selection_open = False
+                        class_transition_started_at = 0
                         upgrade_message = ""
                         player_class = None
                         player_attack_targets = []
@@ -445,6 +636,24 @@ def main():
                     continue
 
                 if class_selection_open:
+                    transition_elapsed = (
+                        pygame.time.get_ticks()
+                        - class_transition_started_at
+                    )
+
+                    if transition_elapsed < CLASS_SELECTION_READY_MS:
+                        if event.key in (
+                            pygame.K_SPACE,
+                            pygame.K_RETURN,
+                            pygame.K_KP_ENTER,
+                        ):
+                            class_transition_started_at = (
+                                pygame.time.get_ticks()
+                                - CLASS_SELECTION_READY_MS
+                                - 500
+                            )
+                        continue
+
                     chosen_class = None
 
                     if event.key in (pygame.K_1, pygame.K_KP1):
@@ -484,6 +693,7 @@ def main():
                     floor_state = create_floor_state(floor_index)
                     key_count = 0
                     class_selection_open = False
+                    class_transition_started_at = 0
                     player_attack_targets = []
                     add_log_message(
                         combat_log,
@@ -710,6 +920,7 @@ def main():
                         enemy["is_aggro"] = False
                         enemy["attack_targets"] = []
                         enemy["prepared_attack_mode"] = None
+                        enemy["heal_target"] = None
 
                     add_log_message(
                         combat_log,
@@ -781,6 +992,10 @@ def main():
                             player_crit_chance,
                             combat_log,
                             damage_bonus=ability_damage_bonus,
+                            attacker_position=(
+                                floor_state["player_column"],
+                                floor_state["player_row"],
+                            ),
                         )
 
                         if enemy_was_defeated:
@@ -874,6 +1089,10 @@ def main():
                                 combat_log,
                                 force_critical=(
                                     attack_was_from_invisibility
+                                ),
+                                attacker_position=(
+                                    floor_state["player_column"],
+                                    floor_state["player_row"],
                                 ),
                             )
 
@@ -1052,6 +1271,9 @@ def main():
                                 and player_class is None
                             ):
                                 class_selection_open = True
+                                class_transition_started_at = (
+                                    pygame.time.get_ticks()
+                                )
                                 player_acted = False
                                 add_log_message(
                                     combat_log,
@@ -1076,6 +1298,7 @@ def main():
                             enemy["is_aggro"] = False
                             enemy["attack_targets"] = []
                             enemy["prepared_attack_mode"] = None
+                            enemy["heal_target"] = None
                             continue
 
                         if enemy["attack_targets"]:
@@ -1131,6 +1354,73 @@ def main():
                                     "The hero has fallen.",
                                 )
                                 break
+
+                            continue
+
+                        if (
+                            enemy["type"] == "priest"
+                            and enemy["heal_target"] is not None
+                        ):
+                            heal_target = enemy["heal_target"]
+                            enemy["heal_target"] = None
+
+                            if (
+                                heal_target["health"] > 0
+                                and heal_target["health"]
+                                < heal_target["max_health"]
+                                and distance_between(
+                                    enemy["column"],
+                                    enemy["row"],
+                                    heal_target["column"],
+                                    heal_target["row"],
+                                )
+                                == 1
+                            ):
+                                previous_health = heal_target["health"]
+                                heal_target["health"] = min(
+                                    heal_target["max_health"],
+                                    heal_target["health"]
+                                    + enemy["heal_amount"],
+                                )
+                                healed_amount = (
+                                    heal_target["health"]
+                                    - previous_health
+                                )
+                                enemy["heal_cooldown"] = (
+                                    enemy[
+                                        "heal_cooldown_duration"
+                                    ]
+                                )
+                                add_log_message(
+                                    combat_log,
+                                    (
+                                        f"{enemy['name']} heals "
+                                        f"{heal_target['name']} "
+                                        f"for {healed_amount}."
+                                    ),
+                                )
+                                continue
+
+                        if (
+                            enemy["type"] == "sentinel"
+                            and enemy["shield_turns"] > 0
+                        ):
+                            enemy["shield_turns"] -= 1
+
+                            if enemy["shield_turns"] == 0:
+                                enemy["shield_direction"] = None
+                                enemy["shield_cooldown"] = (
+                                    enemy[
+                                        "shield_cooldown_duration"
+                                    ]
+                                )
+                                add_log_message(
+                                    combat_log,
+                                    (
+                                        f"{enemy['name']} "
+                                        "lowers its shield."
+                                    ),
+                                )
 
                             continue
 
@@ -1204,12 +1494,122 @@ def main():
                         if not enemy["is_aggro"]:
                             continue
 
+                        shield_is_ready = (
+                            enemy["shield_cooldown"] == 0
+                        )
+                        heal_is_ready = (
+                            enemy["heal_cooldown"] == 0
+                        )
+
+                        if enemy["shield_cooldown"] > 0:
+                            enemy["shield_cooldown"] -= 1
+
+                        if enemy["heal_cooldown"] > 0:
+                            enemy["heal_cooldown"] -= 1
+
                         distance_to_player = distance_between(
                             enemy["column"],
                             enemy["row"],
                             floor_state["player_column"],
                             floor_state["player_row"],
                         )
+
+                        if (
+                            enemy["type"] == "sentinel"
+                            and shield_is_ready
+                            and distance_to_player <= 3
+                            and has_line_of_sight(
+                                floor_state["map"],
+                                enemy["column"],
+                                enemy["row"],
+                                floor_state["player_column"],
+                                floor_state["player_row"],
+                            )
+                        ):
+                            enemy["shield_direction"] = direction_toward(
+                                enemy["column"],
+                                enemy["row"],
+                                floor_state["player_column"],
+                                floor_state["player_row"],
+                            )
+                            enemy["shield_turns"] = enemy[
+                                "shield_duration"
+                            ]
+                            add_log_message(
+                                combat_log,
+                                (
+                                    f"{enemy['name']} raises "
+                                    "its shield."
+                                ),
+                            )
+                            continue
+
+                        if (
+                            enemy["type"] == "priest"
+                            and heal_is_ready
+                        ):
+                            heal_candidate = (
+                                get_priest_heal_candidate(
+                                    enemy,
+                                    floor_state["enemies"],
+                                )
+                            )
+
+                            if heal_candidate is not None:
+                                distance_to_ally = distance_between(
+                                    enemy["column"],
+                                    enemy["row"],
+                                    heal_candidate["column"],
+                                    heal_candidate["row"],
+                                )
+                                priest_started_healing = False
+
+                                if distance_to_ally == 1:
+                                    enemy["heal_target"] = (
+                                        heal_candidate
+                                    )
+                                    priest_started_healing = True
+                                    add_log_message(
+                                        combat_log,
+                                        (
+                                            f"{enemy['name']} prepares "
+                                            f"to heal "
+                                            f"{heal_candidate['name']}."
+                                        ),
+                                    )
+                                else:
+                                    enemy["move_counter"] += 1
+
+                                    if (
+                                        enemy["move_counter"]
+                                        >= enemy["move_every"]
+                                    ):
+                                        enemy["move_counter"] = 0
+                                        previous_priest_position = (
+                                            enemy["column"],
+                                            enemy["row"],
+                                        )
+                                        (
+                                            enemy["column"],
+                                            enemy["row"],
+                                        ) = move_enemy_toward_position(
+                                            floor_state["map"],
+                                            enemy,
+                                            heal_candidate["column"],
+                                            heal_candidate["row"],
+                                            occupied_positions,
+                                        )
+                                        priest_started_healing = (
+                                            (
+                                                enemy["column"],
+                                                enemy["row"],
+                                            )
+                                            != previous_priest_position
+                                        )
+
+                                if priest_started_healing:
+                                    continue
+
                         archer_should_retreat = (
                             enemy["type"] == "archer"
                             and distance_to_player == 2
@@ -1494,10 +1894,22 @@ def main():
                 upgrade_message,
             )
         if class_selection_open:
+            class_mouse_position = window_to_game_position(
+                screen,
+                pygame.mouse.get_pos(),
+            )
             draw_class_selection_screen(
                 game_surface,
                 title_font,
                 font,
+                act_two_fonts["heading"],
+                act_two_fonts["text"],
+                act_two_sprites,
+                (
+                    pygame.time.get_ticks()
+                    - class_transition_started_at
+                ),
+                class_mouse_position,
             )
         present_game(screen, game_surface)
         clock.tick(FPS)

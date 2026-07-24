@@ -46,6 +46,11 @@ SIDEBAR_WIDTH = GAME_WIDTH - SIDEBAR_X - 40
 SIDEBAR_HEIGHT = MAP_HEIGHT
 ASSET_ROOT = Path(__file__).resolve().parent / "assets" / "sprites"
 FONT_ROOT = Path(__file__).resolve().parent / "assets" / "fonts"
+AWAKENING_OPEN_START_MS = 300
+AWAKENING_OPEN_END_MS = 1500
+AWAKENING_HOLD_END_MS = 2500
+AWAKENING_FADE_END_MS = 3100
+CLASS_SELECTION_READY_MS = 6600
 
 
 def load_act_one_fonts():
@@ -76,6 +81,7 @@ def load_act_two_fonts():
 
 def load_act_two_sprites():
     asset_directory = ASSET_ROOT / "act_2"
+    ui_directory = ASSET_ROOT / "ui" / "act_2"
     sprite_names = (
         "player_warrior",
         "player_rogue",
@@ -92,6 +98,10 @@ def load_act_two_sprites():
         "stairs_open",
         "floor",
         "wall",
+        "sentinel_idle",
+        "sentinel_guard",
+        "priest_idle",
+        "priest_cast",
     )
 
     sprites = {
@@ -111,6 +121,58 @@ def load_act_two_sprites():
         (10, 12, 16),
         special_flags=pygame.BLEND_RGB_ADD,
     )
+    awakening_source = pygame.image.load(
+        str(ui_directory / "awakening.png")
+    ).convert()
+    source_width, source_height = awakening_source.get_size()
+    target_ratio = GAME_WIDTH / GAME_HEIGHT
+    source_ratio = source_width / source_height
+
+    if source_ratio > target_ratio:
+        crop_width = int(source_height * target_ratio)
+        crop_rectangle = pygame.Rect(
+            (source_width - crop_width) // 2,
+            0,
+            crop_width,
+            source_height,
+        )
+    else:
+        crop_height = int(source_width / target_ratio)
+        crop_rectangle = pygame.Rect(
+            0,
+            (source_height - crop_height) // 2,
+            source_width,
+            crop_height,
+        )
+
+    awakening_small = pygame.transform.smoothscale(
+        awakening_source.subsurface(crop_rectangle),
+        (320, 180),
+    )
+
+    if hasattr(pygame.transform, "grayscale"):
+        awakening_gray = pygame.transform.grayscale(
+            awakening_small
+        )
+        awakening_gray.set_alpha(75)
+        awakening_small.blit(awakening_gray, (0, 0))
+
+    awakening_small.fill(
+        (145, 140, 160),
+        special_flags=pygame.BLEND_RGB_MULT,
+    )
+    sprites["awakening"] = pygame.transform.scale(
+        awakening_small,
+        (GAME_WIDTH, GAME_HEIGHT),
+    )
+
+    for class_name in ("warrior", "rogue", "mage"):
+        sprites[f"{class_name}_portrait"] = pygame.image.load(
+            str(
+                ui_directory
+                / f"{class_name}_portrait.png"
+            )
+        ).convert_alpha()
 
     return sprites
 
@@ -265,15 +327,113 @@ def draw_enemy(screen, enemy, act_number, sprites):
 
     if (
         act_number >= 2
-        and enemy["type"] in ("goblin", "brute", "archer")
+        and enemy["type"] in (
+            "goblin",
+            "brute",
+            "archer",
+            "sentinel",
+            "priest",
+        )
     ):
+        sprite_name = enemy["type"]
+
+        if enemy["type"] == "sentinel":
+            sprite_name = (
+                "sentinel_guard"
+                if enemy["shield_turns"] > 0
+                else "sentinel_idle"
+            )
+        elif enemy["type"] == "priest":
+            sprite_name = (
+                "priest_cast"
+                if (
+                    enemy["attack_targets"]
+                    or enemy["heal_target"] is not None
+                )
+                else "priest_idle"
+            )
+
+        enemy_sprite = sprites[sprite_name]
+
         screen.blit(
-            sprites[enemy["type"]],
+            enemy_sprite,
             (
                 MAP_OFFSET_X + column * TILE_SIZE,
                 MAP_OFFSET_Y + row * TILE_SIZE,
             ),
         )
+
+        if (
+            enemy["type"] == "sentinel"
+            and enemy["shield_turns"] > 0
+        ):
+            opening_color = (235, 185, 75)
+            tile_left = MAP_OFFSET_X + column * TILE_SIZE
+            tile_top = MAP_OFFSET_Y + row * TILE_SIZE
+            shield_direction = enemy["shield_direction"]
+            vulnerable_direction = (
+                -shield_direction[0],
+                -shield_direction[1],
+            )
+            opening_lines = {
+                (0, -1): (
+                    (tile_left + 5, tile_top + 3),
+                    (tile_left + TILE_SIZE - 5, tile_top + 3),
+                ),
+                (0, 1): (
+                    (tile_left + 5, tile_top + TILE_SIZE - 3),
+                    (
+                        tile_left + TILE_SIZE - 5,
+                        tile_top + TILE_SIZE - 3,
+                    ),
+                ),
+                (-1, 0): (
+                    (tile_left + 3, tile_top + 5),
+                    (tile_left + 3, tile_top + TILE_SIZE - 5),
+                ),
+                (1, 0): (
+                    (tile_left + TILE_SIZE - 3, tile_top + 5),
+                    (
+                        tile_left + TILE_SIZE - 3,
+                        tile_top + TILE_SIZE - 5,
+                    ),
+                ),
+            }
+            opening_line = opening_lines.get(
+                vulnerable_direction
+            )
+
+            if opening_line is not None:
+                pygame.draw.line(
+                    screen,
+                    opening_color,
+                    opening_line[0],
+                    opening_line[1],
+                    3,
+                )
+
+        if (
+            enemy["type"] == "priest"
+            and enemy["heal_target"] is not None
+            and enemy["heal_target"]["health"] > 0
+        ):
+            heal_target = enemy["heal_target"]
+            pygame.draw.rect(
+                screen,
+                (80, 220, 130),
+                (
+                    MAP_OFFSET_X
+                    + heal_target["column"] * TILE_SIZE
+                    + 3,
+                    MAP_OFFSET_Y
+                    + heal_target["row"] * TILE_SIZE
+                    + 3,
+                    TILE_SIZE - 6,
+                    TILE_SIZE - 6,
+                ),
+                width=2,
+                border_radius=4,
+            )
 
         if enemy["is_aggro"]:
             pygame.draw.rect(
@@ -754,6 +914,52 @@ def fit_text_to_width(font, text, maximum_width):
         shortened_text = shortened_text[:-1]
 
     return shortened_text.rstrip() + ellipsis
+
+
+def wrap_text(font, text, maximum_width):
+    words = text.split()
+    lines = []
+    current_line = ""
+
+    for word in words:
+        candidate = (
+            f"{current_line} {word}"
+            if current_line
+            else word
+        )
+
+        if font.size(candidate)[0] <= maximum_width:
+            current_line = candidate
+        else:
+            if current_line:
+                lines.append(current_line)
+            current_line = word
+
+    if current_line:
+        lines.append(current_line)
+
+    return lines
+
+
+def get_class_selection_rectangles():
+    card_width = 330
+    card_height = 370
+    gap = 20
+    total_width = card_width * 3 + gap * 2
+    start_x = (GAME_WIDTH - total_width) // 2
+    card_y = 270
+
+    return {
+        class_name: pygame.Rect(
+            start_x + index * (card_width + gap),
+            card_y,
+            card_width,
+            card_height,
+        )
+        for index, class_name in enumerate(
+            ("warrior", "rogue", "mage")
+        )
+    }
 
 
 def draw_act_two_sidebar(
@@ -1337,80 +1543,321 @@ def draw_upgrade_screen(
         screen.blit(message_surface, message_rectangle)
 
 
-def draw_class_selection_screen(screen, title_font, text_font):
-    dark_overlay = pygame.Surface(
+def draw_class_selection_screen(
+    screen,
+    intro_title_font,
+    intro_text_font,
+    class_title_font,
+    class_text_font,
+    sprites,
+    elapsed_ms,
+    mouse_position,
+):
+    screen.fill((3, 2, 4))
+
+    if elapsed_ms < AWAKENING_FADE_END_MS:
+        if elapsed_ms >= AWAKENING_OPEN_START_MS:
+            screen.blit(sprites["awakening"], (0, 0))
+            opening_progress = max(
+                0,
+                min(
+                    1,
+                    (
+                        elapsed_ms - AWAKENING_OPEN_START_MS
+                    )
+                    / (
+                        AWAKENING_OPEN_END_MS
+                        - AWAKENING_OPEN_START_MS
+                    ),
+                ),
+            )
+            opening_progress = (
+                opening_progress
+                * opening_progress
+                * (3 - 2 * opening_progress)
+            )
+            aperture_height = max(
+                2,
+                int(
+                    GAME_HEIGHT
+                    * 1.8
+                    * opening_progress
+                ),
+            )
+            eyelids = pygame.Surface(
+                (GAME_WIDTH, GAME_HEIGHT),
+                pygame.SRCALPHA,
+            )
+            eyelids.fill((2, 1, 3, 255))
+            pygame.draw.ellipse(
+                eyelids,
+                (0, 0, 0, 0),
+                (
+                    -GAME_WIDTH // 4,
+                    GAME_HEIGHT // 2
+                    - aperture_height // 2,
+                    GAME_WIDTH * 3 // 2,
+                    aperture_height,
+                ),
+            )
+            screen.blit(eyelids, (0, 0))
+
+            if elapsed_ms > AWAKENING_HOLD_END_MS:
+                fade_progress = min(
+                    1,
+                    (
+                        elapsed_ms - AWAKENING_HOLD_END_MS
+                    )
+                    / (
+                        AWAKENING_FADE_END_MS
+                        - AWAKENING_HOLD_END_MS
+                    ),
+                )
+                fade_overlay = pygame.Surface(
+                    (GAME_WIDTH, GAME_HEIGHT),
+                    pygame.SRCALPHA,
+                )
+                fade_overlay.fill(
+                    (3, 2, 4, int(255 * fade_progress))
+                )
+                screen.blit(fade_overlay, (0, 0))
+
+        return
+
+    narrative = [
+        (
+            3250,
+            intro_title_font,
+            "THE FIRST VEIL FALLS",
+            PLAYER_ATTACK_BORDER_COLOR,
+            62,
+        ),
+        (
+            3850,
+            intro_text_font,
+            "Something changes within you.",
+            TEXT_COLOR,
+            120,
+        ),
+        (
+            4450,
+            intro_text_font,
+            "The world around you begins to transform.",
+            TEXT_COLOR,
+            158,
+        ),
+        (
+            5050,
+            intro_text_font,
+            "You begin to understand your place within it.",
+            TEXT_COLOR,
+            196,
+        ),
+        (
+            5650,
+            intro_text_font,
+            "Choose your fate.",
+            PLAYER_ATTACK_BORDER_COLOR,
+            236,
+        ),
+    ]
+
+    for start_time, font, text, color, center_y in narrative:
+        text_alpha = max(
+            0,
+            min(255, int((elapsed_ms - start_time) * 255 / 450)),
+        )
+
+        if text_alpha <= 0:
+            continue
+
+        line_surface = font.render(text, True, color)
+        line_surface.set_alpha(text_alpha)
+        screen.blit(
+            line_surface,
+            line_surface.get_rect(
+                center=(GAME_WIDTH // 2, center_y)
+            ),
+        )
+
+    if elapsed_ms < CLASS_SELECTION_READY_MS:
+        return
+
+    class_data = {
+        "warrior": {
+            "number": "1",
+            "title": "WARRIOR",
+            "color": (205, 75, 68),
+            "bonuses": (
+                "+4 maximum HP",
+                "Highest survivability",
+            ),
+            "ability": "POWER STRIKE",
+            "description": (
+                "After 2 kills, press E and choose a direction. "
+                "Strike an adjacent enemy with +2 damage."
+            ),
+        },
+        "rogue": {
+            "number": "2",
+            "title": "ROGUE",
+            "color": (145, 78, 190),
+            "bonuses": (
+                "-2 maximum HP",
+                "+10% critical and dodge chance",
+            ),
+            "ability": "INVISIBILITY",
+            "description": (
+                "After 2 kills, press E to vanish for 5 turns. "
+                "Your first attack from invisibility is a sure critical."
+            ),
+        },
+        "mage": {
+            "number": "3",
+            "title": "MAGE",
+            "color": (75, 115, 205),
+            "bonuses": (
+                "No passive stat bonuses",
+                "Attacks several enemies at once",
+            ),
+            "ability": "ARCANE BURST",
+            "description": (
+                "After 2 kills, press E and choose a direction. "
+                "Magic hits every enemy in a line up to 5 cells "
+                "away with +2 damage."
+            ),
+        },
+    }
+    cards_surface = pygame.Surface(
         (GAME_WIDTH, GAME_HEIGHT),
         pygame.SRCALPHA,
     )
-    dark_overlay.fill((0, 0, 0, 210))
-    screen.blit(dark_overlay, (0, 0))
+    rectangles = get_class_selection_rectangles()
 
-    panel_rectangle = pygame.Rect(180, 70, 920, 580)
-    pygame.draw.rect(
-        screen,
-        PANEL_COLOR,
-        panel_rectangle,
-        border_radius=12,
-    )
-    pygame.draw.rect(
-        screen,
-        PLAYER_ATTACK_BORDER_COLOR,
-        panel_rectangle,
-        width=3,
-        border_radius=12,
-    )
-
-    title_surface = title_font.render(
-        "THE FIRST VEIL FALLS",
-        True,
-        PLAYER_ATTACK_BORDER_COLOR,
-    )
-    screen.blit(
-        title_surface,
-        title_surface.get_rect(center=(GAME_WIDTH // 2, 120)),
-    )
-
-    narrative_lines = [
-        "The Warden is gone. Shapes become bodies. Stone gains texture.",
-        "For the first time, you begin to see the Crypta as it is.",
-        "Choose what the descent will make of you.",
-    ]
-    line_y = 170
-
-    for line in narrative_lines:
-        line_surface = text_font.render(line, True, TEXT_COLOR)
-        screen.blit(
-            line_surface,
-            line_surface.get_rect(center=(GAME_WIDTH // 2, line_y)),
+    for class_name, card_rectangle in rectangles.items():
+        data = class_data[class_name]
+        is_hovered = (
+            mouse_position is not None
+            and card_rectangle.collidepoint(mouse_position)
         )
-        line_y += 30
+        border_color = (
+            data["color"]
+            if is_hovered
+            else (82, 75, 86)
+        )
+        background_color = (
+            (34, 28, 38)
+            if is_hovered
+            else (20, 17, 23)
+        )
+        pygame.draw.rect(
+            cards_surface,
+            background_color,
+            card_rectangle,
+            border_radius=10,
+        )
+        pygame.draw.rect(
+            cards_surface,
+            border_color,
+            card_rectangle,
+            width=3,
+            border_radius=10,
+        )
 
-    choices = [
-        (
-            "[1] WARRIOR",
-            "+4 max HP; two kills charge one powerful melee strike",
-            (190, 70, 65),
-        ),
-        (
-            "[2] ROGUE",
-            "-2 max HP, +10% crit/dodge; invisibility enables a sure crit",
-            (125, 75, 165),
-        ),
-        (
-            "[3] MAGE",
-            "Two kills charge a powerful spell in a straight line",
-            (70, 105, 185),
-        ),
-    ]
-    choice_y = 300
+        portrait = pygame.transform.scale(
+            sprites[f"{class_name}_portrait"],
+            (96, 96),
+        )
+        portrait_rectangle = portrait.get_rect(
+            center=(card_rectangle.centerx, card_rectangle.y + 58)
+        )
+        cards_surface.blit(portrait, portrait_rectangle)
 
-    for heading, description, color in choices:
-        heading_surface = title_font.render(heading, True, color)
-        description_surface = text_font.render(
-            description,
+        heading = class_title_font.render(
+            f"[{data['number']}] {data['title']}",
             True,
-            TEXT_COLOR,
+            data["color"],
         )
-        screen.blit(heading_surface, (270, choice_y))
-        screen.blit(description_surface, (270, choice_y + 38))
-        choice_y += 105
+        cards_surface.blit(
+            heading,
+            heading.get_rect(
+                center=(card_rectangle.centerx, card_rectangle.y + 120)
+            ),
+        )
+
+        text_y = card_rectangle.y + 151
+
+        for bonus in data["bonuses"]:
+            bonus_surface = class_text_font.render(
+                bonus,
+                True,
+                TEXT_COLOR,
+            )
+            cards_surface.blit(
+                bonus_surface,
+                bonus_surface.get_rect(
+                    center=(card_rectangle.centerx, text_y)
+                ),
+            )
+            text_y += 23
+
+        ability_surface = class_title_font.render(
+            data["ability"],
+            True,
+            data["color"],
+        )
+        cards_surface.blit(
+            ability_surface,
+            ability_surface.get_rect(
+                center=(card_rectangle.centerx, text_y + 13)
+            ),
+        )
+        text_y += 43
+
+        description_lines = wrap_text(
+            class_text_font,
+            data["description"],
+            card_rectangle.width - 34,
+        )
+
+        for description_line in description_lines:
+            description_surface = class_text_font.render(
+                description_line,
+                True,
+                TEXT_COLOR,
+            )
+            cards_surface.blit(
+                description_surface,
+                (
+                    card_rectangle.x + 17,
+                    text_y,
+                ),
+            )
+            text_y += 21
+
+        if is_hovered:
+            select_surface = class_text_font.render(
+                "CLICK TO CHOOSE",
+                True,
+                data["color"],
+            )
+            cards_surface.blit(
+                select_surface,
+                select_surface.get_rect(
+                    center=(
+                        card_rectangle.centerx,
+                        card_rectangle.bottom - 18,
+                    )
+                ),
+            )
+
+    card_alpha = min(
+        255,
+        int(
+            (elapsed_ms - CLASS_SELECTION_READY_MS)
+            * 255
+            / 450
+        ),
+    )
+    cards_surface.set_alpha(card_alpha)
+    screen.blit(cards_surface, (0, 0))

@@ -312,6 +312,25 @@ def get_enemy_attack_targets(
 
         return []
 
+    if attack_kind == "priest_magic":
+        if distance_to_player == 1:
+            return [(player_column, player_row)]
+
+        if (
+            2 <= distance_to_player <= enemy["attack_range"]
+            and has_clear_line(
+                dungeon_map,
+                enemy_column,
+                enemy_row,
+                player_column,
+                player_row,
+                blocking_positions,
+            )
+        ):
+            return [(player_column, player_row)]
+
+        return []
+
     if distance_to_player != 1:
         return []
 
@@ -347,7 +366,7 @@ def get_enemy_attack_mode(enemy, player_column, player_row):
         return enemy["selected_attack_mode"]
 
     if (
-        enemy["type"] == "archer"
+        enemy["type"] in ("archer", "priest")
         and distance_between(
             enemy["column"],
             enemy["row"],
@@ -358,7 +377,83 @@ def get_enemy_attack_mode(enemy, player_column, player_row):
     ):
         return "melee"
 
+    if enemy["type"] == "priest":
+        return "magic"
+
     return enemy["attack_kind"]
+
+
+def move_enemy_toward_position(
+    dungeon_map,
+    enemy,
+    target_column,
+    target_row,
+    occupied_positions,
+):
+    start_position = (enemy["column"], enemy["row"])
+    target_position = (target_column, target_row)
+
+    if positions_are_adjacent(
+        enemy["column"],
+        enemy["row"],
+        target_column,
+        target_row,
+    ):
+        return start_position
+
+    positions_to_visit = deque([start_position])
+    previous_position = {start_position: None}
+    destination = None
+
+    while positions_to_visit:
+        current_position = positions_to_visit.popleft()
+        current_column, current_row = current_position
+
+        if positions_are_adjacent(
+            current_column,
+            current_row,
+            target_column,
+            target_row,
+        ):
+            destination = current_position
+            break
+
+        neighboring_positions = ordered_neighboring_positions(
+            current_column,
+            current_row,
+            target_column,
+            target_row,
+        )
+
+        for next_position in neighboring_positions:
+            if (
+                next_position in previous_position
+                or next_position == target_position
+                or next_position in occupied_positions
+            ):
+                continue
+
+            next_column, next_row = next_position
+
+            if not can_move_to(
+                dungeon_map,
+                next_column,
+                next_row,
+            ):
+                continue
+
+            previous_position[next_position] = current_position
+            positions_to_visit.append(next_position)
+
+    if destination is None:
+        return start_position
+
+    next_step = destination
+
+    while previous_position[next_step] != start_position:
+        next_step = previous_position[next_step]
+
+    return next_step
 
 
 def ordered_neighboring_positions(
