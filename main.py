@@ -26,6 +26,7 @@ from rendering import (
     draw_dungeon,
     draw_enemy,
     draw_key,
+    draw_map_frame,
     draw_player,
     draw_player_attack_markers,
     draw_potion,
@@ -33,6 +34,8 @@ from rendering import (
     draw_stairs,
     draw_status,
     draw_upgrade_screen,
+    load_act_one_fonts,
+    load_act_two_fonts,
     load_act_two_sprites,
 )
 from settings import (
@@ -124,10 +127,24 @@ def create_floor_state(floor_index):
         )
     ]
 
-    possible_key_carriers = eligible_key_carriers or enemies
+    other_key_carriers = [
+        enemy
+        for enemy in enemies
+        if enemy not in eligible_key_carriers
+    ]
+    possible_key_carriers = (
+        eligible_key_carriers + other_key_carriers
+    )
+    key_carrier_count = min(
+        len(floor["chests"]),
+        len(possible_key_carriers),
+    )
 
-    if possible_key_carriers:
-        random.choice(possible_key_carriers)["has_key"] = True
+    for key_carrier in random.sample(
+        possible_key_carriers,
+        key_carrier_count,
+    ):
+        key_carrier["has_key"] = True
 
     chests = []
 
@@ -158,7 +175,7 @@ def create_floor_state(floor_index):
         "enemies": enemies,
         "chests": chests,
         "potions": potions,
-        "dropped_key": None,
+        "dropped_keys": [],
         "stairs_column": floor["stairs"][0],
         "stairs_row": floor["stairs"][1],
         "boss_door": floor["boss_door"],
@@ -312,9 +329,11 @@ def main():
     game_surface = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
     pygame.display.set_caption("Crypta")
     clock = pygame.time.Clock()
-    title_font = pygame.font.Font(None, 44)
-    font = pygame.font.Font(None, 24)
-    log_font = pygame.font.Font(None, 22)
+    act_one_fonts = load_act_one_fonts()
+    title_font = act_one_fonts["title"]
+    font = act_one_fonts["status"]
+    log_font = act_one_fonts["text"]
+    act_two_fonts = load_act_two_fonts()
     act_two_sprites = load_act_two_sprites()
 
     floor_index = 0
@@ -327,7 +346,7 @@ def main():
     player_dodge_chance = 0.0
     potion_count = 0
     gold_count = 0
-    has_key = False
+    key_count = 0
     enemies_defeated = 0
     game_won = False
     upgrade_screen_open = False
@@ -383,7 +402,7 @@ def main():
                     player_dodge_chance = 0.0
                     potion_count = 0
                     gold_count = 0
-                    has_key = False
+                    key_count = 0
                     enemies_defeated = 0
                     game_won = False
                     upgrade_screen_open = False
@@ -411,7 +430,7 @@ def main():
                         player_dodge_chance = 0.0
                         potion_count = 0
                         gold_count = 0
-                        has_key = False
+                        key_count = 0
                         enemies_defeated = 0
                         game_won = False
                         upgrade_screen_open = False
@@ -463,7 +482,7 @@ def main():
 
                     floor_index += 1
                     floor_state = create_floor_state(floor_index)
-                    has_key = False
+                    key_count = 0
                     class_selection_open = False
                     player_attack_targets = []
                     add_log_message(
@@ -541,7 +560,7 @@ def main():
                     ):
                         floor_index += 1
                         floor_state = create_floor_state(floor_index)
-                        has_key = False
+                        key_count = 0
                         upgrade_screen_open = False
                         upgrade_message = ""
                         player_attack_targets = []
@@ -621,6 +640,10 @@ def main():
                 if directional_ability_cast:
                     directional_ability_aiming = False
 
+                player_position_before_action = (
+                    floor_state["player_column"],
+                    floor_state["player_row"],
+                )
                 new_column = floor_state["player_column"] + column_change
                 new_row = floor_state["player_row"] + row_change
                 player_waited = event.key == pygame.K_SPACE
@@ -768,9 +791,11 @@ def main():
                             )
 
                             if ability_target["has_key"]:
-                                floor_state["dropped_key"] = (
-                                    ability_target["column"],
-                                    ability_target["row"],
+                                floor_state["dropped_keys"].append(
+                                    (
+                                        ability_target["column"],
+                                        ability_target["row"],
+                                    )
                                 )
                                 ability_target["has_key"] = False
                                 add_log_message(
@@ -864,9 +889,11 @@ def main():
                                 )
 
                             if hit_enemy["has_key"]:
-                                floor_state["dropped_key"] = (
-                                    hit_enemy["column"],
-                                    hit_enemy["row"],
+                                floor_state["dropped_keys"].append(
+                                    (
+                                        hit_enemy["column"],
+                                        hit_enemy["row"],
+                                    )
                                 )
                                 hit_enemy["has_key"] = False
                                 add_log_message(
@@ -879,9 +906,9 @@ def main():
 
                         player_acted = True
                     elif target_chest:
-                        if has_key:
+                        if key_count > 0:
                             target_chest["is_open"] = True
-                            has_key = False
+                            key_count -= 1
 
                             if target_chest["contains"] == "gold":
                                 target_chest["loot_available"] = True
@@ -979,16 +1006,25 @@ def main():
                                 "Hero picks up one gold.",
                             )
 
-                        if (
-                            floor_state["dropped_key"] is not None
-                            and (new_column, new_row)
-                            == floor_state["dropped_key"]
-                        ):
-                            has_key = True
-                            floor_state["dropped_key"] = None
+                        found_key = next(
+                            (
+                                key_position
+                                for key_position
+                                in floor_state["dropped_keys"]
+                                if key_position
+                                == (new_column, new_row)
+                            ),
+                            None,
+                        )
+
+                        if found_key is not None:
+                            key_count += 1
+                            floor_state["dropped_keys"].remove(
+                                found_key
+                            )
                             add_log_message(
                                 combat_log,
-                                "Hero picks up the key.",
+                                "Hero picks up a key.",
                             )
 
                         reached_open_stairs = (
@@ -1086,6 +1122,10 @@ def main():
                                 )
 
                             if player_health <= 0:
+                                (
+                                    floor_state["player_column"],
+                                    floor_state["player_row"],
+                                ) = player_position_before_action
                                 add_log_message(
                                     combat_log,
                                     "The hero has fallen.",
@@ -1291,12 +1331,36 @@ def main():
                             )
 
         current_act = FLOOR_CONFIGS[floor_index]["act"]
+        active_status_font = (
+            act_two_fonts["status"]
+            if current_act >= 2
+            else font
+        )
+        active_heading_font = (
+            act_two_fonts["heading"]
+            if current_act >= 2
+            else font
+        )
+        active_text_font = (
+            act_two_fonts["text"]
+            if current_act >= 2
+            else log_font
+        )
+        active_controls_font = (
+            act_two_fonts["controls"]
+            if current_act >= 2
+            else act_one_fonts["controls"]
+        )
         game_surface.fill(BACKGROUND_COLOR)
         draw_dungeon(
             game_surface,
             floor_state["map"],
             current_act,
             act_two_sprites,
+        )
+        draw_map_frame(
+            game_surface,
+            current_act,
         )
         draw_player_attack_markers(
             game_surface,
@@ -1347,11 +1411,11 @@ def main():
                     current_act,
                     act_two_sprites,
                 )
-        if floor_state["dropped_key"] is not None:
+        for dropped_key in floor_state["dropped_keys"]:
             draw_key(
                 game_surface,
-                floor_state["dropped_key"][0],
-                floor_state["dropped_key"][1],
+                dropped_key[0],
+                dropped_key[1],
                 current_act,
                 act_two_sprites,
             )
@@ -1376,7 +1440,7 @@ def main():
                 )
         draw_status(
             game_surface,
-            font,
+            active_status_font,
             floor_index,
             player_health,
             floor_state["enemies"],
@@ -1384,8 +1448,9 @@ def main():
         )
         draw_sidebar(
             game_surface,
-            font,
-            log_font,
+            active_heading_font,
+            active_text_font,
+            active_controls_font,
             combat_log,
             player_health,
             player_max_health,
@@ -1395,18 +1460,30 @@ def main():
             player_dodge_chance,
             potion_count,
             gold_count,
-            has_key,
+            key_count,
             enemies_defeated,
             player_class,
             ability_kill_charge,
             invisibility_turns,
             directional_ability_aiming,
+            current_act,
+            act_two_sprites,
         )
         if upgrade_screen_open:
+            active_upgrade_title_font = (
+                act_two_fonts["title"]
+                if current_act >= 2
+                else title_font
+            )
+            active_upgrade_text_font = (
+                act_two_fonts["status"]
+                if current_act >= 2
+                else font
+            )
             draw_upgrade_screen(
                 game_surface,
-                title_font,
-                font,
+                active_upgrade_title_font,
+                active_upgrade_text_font,
                 gold_count,
                 player_health,
                 player_max_health,
