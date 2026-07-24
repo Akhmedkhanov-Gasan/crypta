@@ -2,13 +2,17 @@ import random
 
 import pygame
 
+from enemies import ENEMY_TYPES
 from generation import generate_floor
 from levels import FLOOR_CONFIGS
 from logic import (
     can_move_to,
+    distance_between,
+    get_enemy_attack_mode,
+    get_enemy_attack_targets,
     move_enemy,
+    move_enemy_away,
     move_enemy_randomly,
-    positions_are_adjacent,
     roll_enemy_damage,
     roll_player_damage,
     update_enemy_aggro,
@@ -42,20 +46,42 @@ def create_floor_state(floor_index):
     floor = generate_floor(floor_index)
     player_column, player_row = floor["player_start"]
     enemies = []
+    enemy_type_counts = {}
 
-    for enemy_number, enemy_data in enumerate(floor["enemies"], start=1):
+    for enemy_data in floor["enemies"]:
         enemy_column, enemy_row = enemy_data["position"]
-        enemy_health = enemy_data["health"]
+        enemy_type = enemy_data["type"]
+        enemy_config = ENEMY_TYPES[enemy_type]
+        enemy_type_counts[enemy_type] = (
+            enemy_type_counts.get(enemy_type, 0) + 1
+        )
+        enemy_number = enemy_type_counts[enemy_type]
         enemies.append(
             {
+                "type": enemy_type,
                 "column": enemy_column,
                 "row": enemy_row,
-                "health": enemy_health,
-                "max_health": enemy_health,
+                "health": enemy_config["max_health"],
+                "max_health": enemy_config["max_health"],
                 "is_aggro": False,
-                "name": f"Enemy {enemy_number}",
+                "name": (
+                    f"{enemy_config['display_name']} {enemy_number}"
+                ),
                 "has_key": False,
-                "attack_target": None,
+                "attack_targets": [],
+                "aggro_radius": enemy_config["aggro_radius"],
+                "wander_chance": enemy_config["wander_chance"],
+                "move_every": enemy_config["move_every"],
+                "move_counter": 0,
+                "attack_kind": enemy_config["attack_kind"],
+                "attack_range": enemy_config["attack_range"],
+                "damage_by_mode": enemy_config["damage_by_mode"],
+                "color": enemy_config["color"],
+                "sleeping_color": enemy_config["sleeping_color"],
+                "retreat_jump_chance": (
+                    enemy_config["retreat_jump_chance"]
+                ),
+                "prepared_attack_mode": None,
             }
         )
 
@@ -445,15 +471,20 @@ def main():
                         if enemy["health"] <= 0:
                             continue
 
-                        if enemy["attack_target"] is not None:
-                            attack_target = enemy["attack_target"]
-                            enemy["attack_target"] = None
+                        if enemy["attack_targets"]:
+                            attack_targets = enemy["attack_targets"]
+                            attack_mode = enemy["prepared_attack_mode"]
+                            enemy["attack_targets"] = []
+                            enemy["prepared_attack_mode"] = None
 
-                            if attack_target == (
+                            if (
                                 floor_state["player_column"],
                                 floor_state["player_row"],
-                            ):
-                                damage = roll_enemy_damage()
+                            ) in attack_targets:
+                                damage = roll_enemy_damage(
+                                    enemy,
+                                    attack_mode,
+                                )
                                 player_health = max(
                                     0,
                                     player_health - damage,
@@ -482,6 +513,7 @@ def main():
 
                         enemy_was_aggro = enemy["is_aggro"]
                         update_enemy_aggro(
+                            floor_state["map"],
                             enemy,
                             floor_state["player_column"],
                             floor_state["player_row"],
@@ -512,16 +544,13 @@ def main():
                                 floor_state["stairs_row"],
                             )
                         )
+                        attack_blocking_positions = {
+                            (chest["column"], chest["row"])
+                            for chest in floor_state["chests"]
+                            if not chest["is_open"]
+                        }
 
-                        if enemy["is_aggro"]:
-                            enemy["column"], enemy["row"] = move_enemy(
-                                floor_state["map"],
-                                enemy,
-                                floor_state["player_column"],
-                                floor_state["player_row"],
-                                occupied_positions,
-                            )
-                        else:
+                        if not enemy["is_aggro"]:
                             (
                                 enemy["column"],
                                 enemy["row"],
@@ -534,6 +563,7 @@ def main():
                             )
                             enemy_was_aggro = enemy["is_aggro"]
                             update_enemy_aggro(
+                                floor_state["map"],
                                 enemy,
                                 floor_state["player_column"],
                                 floor_state["player_row"],
@@ -548,22 +578,121 @@ def main():
                                     f"{enemy['name']} spots the hero.",
                                 )
 
-                        if (
-                            enemy["is_aggro"]
-                            and positions_are_adjacent(
+                        if not enemy["is_aggro"]:
+                            continue
+
+                        distance_to_player = distance_between(
+                            enemy["column"],
+                            enemy["row"],
+                            floor_state["player_column"],
+                            floor_state["player_row"],
+                        )
+                        archer_should_retreat = (
+                            enemy["type"] == "archer"
+                            and distance_to_player == 2
+                        )
+                        attack_targets = []
+
+                        if not archer_should_retreat:
+                            attack_targets = get_enemy_attack_targets(
+                                floor_state["map"],
+                                enemy,
                                 floor_state["player_column"],
                                 floor_state["player_row"],
+                                attack_blocking_positions,
+                            )
+
+                        if attack_targets:
+                            attack_mode = get_enemy_attack_mode(
+                                enemy,
+                                floor_state["player_column"],
+                                floor_state["player_row"],
+                            )
+                            enemy["attack_targets"] = attack_targets
+                            enemy["prepared_attack_mode"] = attack_mode
+                            add_log_message(
+                                combat_log,
+                                (
+                                    f"{enemy['name']} prepares "
+                                    f"{attack_mode} attack."
+                                ),
+                            )
+                            continue
+
+                        enemy["move_counter"] += 1
+
+                        if enemy["move_counter"] < enemy["move_every"]:
+                            continue
+
+                        enemy["move_counter"] = 0
+
+                        if archer_should_retreat:
+                            previous_enemy_position = (
                                 enemy["column"],
                                 enemy["row"],
                             )
-                        ):
-                            enemy["attack_target"] = (
+                            maximum_steps = (
+                                2
+                                if random.random()
+                                < enemy["retreat_jump_chance"]
+                                else 1
+                            )
+                            (
+                                enemy["column"],
+                                enemy["row"],
+                            ) = move_enemy_away(
+                                floor_state["map"],
+                                enemy,
+                                floor_state["player_column"],
+                                floor_state["player_row"],
+                                occupied_positions,
+                                maximum_steps,
+                            )
+
+                            if (
+                                distance_between(
+                                    previous_enemy_position[0],
+                                    previous_enemy_position[1],
+                                    enemy["column"],
+                                    enemy["row"],
+                                )
+                                == 2
+                            ):
+                                add_log_message(
+                                    combat_log,
+                                    f"{enemy['name']} leaps away.",
+                                )
+                        else:
+                            enemy["column"], enemy["row"] = move_enemy(
+                                floor_state["map"],
+                                enemy,
+                                floor_state["player_column"],
+                                floor_state["player_row"],
+                                occupied_positions,
+                            )
+
+                        attack_targets = get_enemy_attack_targets(
+                            floor_state["map"],
+                            enemy,
+                            floor_state["player_column"],
+                            floor_state["player_row"],
+                            attack_blocking_positions,
+                        )
+
+                        if attack_targets:
+                            attack_mode = get_enemy_attack_mode(
+                                enemy,
                                 floor_state["player_column"],
                                 floor_state["player_row"],
                             )
+                            enemy["attack_targets"] = attack_targets
+                            enemy["prepared_attack_mode"] = attack_mode
                             add_log_message(
                                 combat_log,
-                                f"{enemy['name']} prepares an attack.",
+                                (
+                                    f"{enemy['name']} prepares "
+                                    f"{attack_mode} attack."
+                                ),
                             )
 
         game_surface.fill(BACKGROUND_COLOR)

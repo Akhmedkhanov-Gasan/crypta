@@ -2,10 +2,6 @@ import random
 from collections import deque
 
 from settings import (
-    ENEMY_AGGRO_RADIUS,
-    ENEMY_DAMAGE_VALUES,
-    ENEMY_DAMAGE_WEIGHTS,
-    ENEMY_WANDER_CHANCE,
     PLAYER_DAMAGE_MAX,
     PLAYER_DAMAGE_MIN,
 )
@@ -15,10 +11,12 @@ def roll_player_damage():
     return random.randint(PLAYER_DAMAGE_MIN, PLAYER_DAMAGE_MAX)
 
 
-def roll_enemy_damage():
+def roll_enemy_damage(enemy, attack_mode):
+    damage_values, damage_weights = enemy["damage_by_mode"][attack_mode]
+
     return random.choices(
-        ENEMY_DAMAGE_VALUES,
-        weights=ENEMY_DAMAGE_WEIGHTS,
+        damage_values,
+        weights=damage_weights,
         k=1,
     )[0]
 
@@ -43,7 +41,77 @@ def positions_are_adjacent(first_column, first_row, second_column, second_row):
     )
 
 
-def update_enemy_aggro(enemy, player_column, player_row):
+def has_line_of_sight(
+    dungeon_map,
+    start_column,
+    start_row,
+    target_column,
+    target_row,
+):
+    current_column = start_column
+    current_row = start_row
+    column_distance = abs(target_column - start_column)
+    row_distance = abs(target_row - start_row)
+    column_step = 1 if start_column < target_column else -1
+    row_step = 1 if start_row < target_row else -1
+    error = column_distance - row_distance
+
+    while (current_column, current_row) != (
+        target_column,
+        target_row,
+    ):
+        previous_column = current_column
+        previous_row = current_row
+        doubled_error = error * 2
+
+        if doubled_error > -row_distance:
+            error -= row_distance
+            current_column += column_step
+
+        if doubled_error < column_distance:
+            error += column_distance
+            current_row += row_step
+
+        moved_diagonally = (
+            current_column != previous_column
+            and current_row != previous_row
+        )
+
+        if moved_diagonally:
+            horizontal_side_is_wall = not can_move_to(
+                dungeon_map,
+                current_column,
+                previous_row,
+            )
+            vertical_side_is_wall = not can_move_to(
+                dungeon_map,
+                previous_column,
+                current_row,
+            )
+
+            if horizontal_side_is_wall and vertical_side_is_wall:
+                return False
+
+        if (
+            (current_column, current_row)
+            != (target_column, target_row)
+            and not can_move_to(
+                dungeon_map,
+                current_column,
+                current_row,
+            )
+        ):
+            return False
+
+    return True
+
+
+def update_enemy_aggro(
+    dungeon_map,
+    enemy,
+    player_column,
+    player_row,
+):
     if enemy["is_aggro"]:
         return
 
@@ -54,8 +122,159 @@ def update_enemy_aggro(enemy, player_column, player_row):
         player_row,
     )
 
-    if distance_to_player <= ENEMY_AGGRO_RADIUS:
+    if (
+        distance_to_player <= enemy["aggro_radius"]
+        and has_line_of_sight(
+            dungeon_map,
+            enemy["column"],
+            enemy["row"],
+            player_column,
+            player_row,
+        )
+    ):
         enemy["is_aggro"] = True
+
+
+def has_clear_line(
+    dungeon_map,
+    start_column,
+    start_row,
+    target_column,
+    target_row,
+    blocking_positions,
+):
+    if start_row == target_row:
+        line_positions = [
+            (column, start_row)
+            for column in range(
+                min(start_column, target_column) + 1,
+                max(start_column, target_column),
+            )
+        ]
+    elif start_column == target_column:
+        line_positions = [
+            (start_column, row)
+            for row in range(
+                min(start_row, target_row) + 1,
+                max(start_row, target_row),
+            )
+        ]
+    else:
+        return False
+
+    return all(
+        position not in blocking_positions
+        and can_move_to(dungeon_map, position[0], position[1])
+        for position in line_positions
+    )
+
+
+def get_enemy_attack_targets(
+    dungeon_map,
+    enemy,
+    player_column,
+    player_row,
+    blocking_positions,
+):
+    enemy_column = enemy["column"]
+    enemy_row = enemy["row"]
+    attack_kind = enemy["attack_kind"]
+    distance_to_player = distance_between(
+        enemy_column,
+        enemy_row,
+        player_column,
+        player_row,
+    )
+
+    if attack_kind == "ranged":
+        if distance_to_player == 1:
+            return [(player_column, player_row)]
+
+        if (
+            2 <= distance_to_player <= enemy["attack_range"]
+            and has_clear_line(
+                dungeon_map,
+                enemy_column,
+                enemy_row,
+                player_column,
+                player_row,
+                blocking_positions,
+            )
+        ):
+            neighboring_targets = [
+                (player_column, player_row - 1),
+                (player_column, player_row + 1),
+                (player_column - 1, player_row),
+                (player_column + 1, player_row),
+            ]
+            valid_neighboring_targets = [
+                position
+                for position in neighboring_targets
+                if can_move_to(
+                    dungeon_map,
+                    position[0],
+                    position[1],
+                )
+            ]
+            extra_target_count = min(
+                2,
+                len(valid_neighboring_targets),
+            )
+
+            return [
+                (player_column, player_row),
+                *random.sample(
+                    valid_neighboring_targets,
+                    extra_target_count,
+                ),
+            ]
+
+        return []
+
+    if distance_to_player != 1:
+        return []
+
+    if attack_kind == "cleave":
+        if random.choice((True, False)):
+            potential_targets = [
+                (player_column - 1, player_row),
+                (player_column, player_row),
+                (player_column + 1, player_row),
+            ]
+        else:
+            potential_targets = [
+                (player_column, player_row - 1),
+                (player_column, player_row),
+                (player_column, player_row + 1),
+            ]
+
+        return [
+            position
+            for position in potential_targets
+            if can_move_to(
+                dungeon_map,
+                position[0],
+                position[1],
+            )
+        ]
+
+    return [(player_column, player_row)]
+
+
+def get_enemy_attack_mode(enemy, player_column, player_row):
+    if (
+        enemy["type"] == "archer"
+        and distance_between(
+            enemy["column"],
+            enemy["row"],
+            player_column,
+            player_row,
+        )
+        == 1
+    ):
+        return "melee"
+
+    return enemy["attack_kind"]
 
 
 def ordered_neighboring_positions(
@@ -165,7 +384,7 @@ def move_enemy_randomly(
     enemy_column = enemy["column"]
     enemy_row = enemy["row"]
 
-    if random.random() >= ENEMY_WANDER_CHANCE:
+    if random.random() >= enemy["wander_chance"]:
         return enemy_column, enemy_row
 
     possible_moves = [
@@ -187,3 +406,73 @@ def move_enemy_randomly(
             return new_column, new_row
 
     return enemy_column, enemy_row
+
+
+def move_enemy_away(
+    dungeon_map,
+    enemy,
+    player_column,
+    player_row,
+    occupied_positions,
+    maximum_steps=1,
+):
+    enemy_column = enemy["column"]
+    enemy_row = enemy["row"]
+    directions = [
+        (0, -1),
+        (0, 1),
+        (-1, 0),
+        (1, 0),
+    ]
+    valid_moves = []
+
+    for column_change, row_change in directions:
+        last_valid_position = None
+
+        for step_count in range(1, maximum_steps + 1):
+            position = (
+                enemy_column + column_change * step_count,
+                enemy_row + row_change * step_count,
+            )
+
+            if (
+                position == (player_column, player_row)
+                or position in occupied_positions
+                or not can_move_to(
+                    dungeon_map,
+                    position[0],
+                    position[1],
+                )
+            ):
+                break
+
+            last_valid_position = position
+
+        if last_valid_position is not None:
+            valid_moves.append(last_valid_position)
+
+    if not valid_moves:
+        return enemy_column, enemy_row
+
+    greatest_distance = max(
+        distance_between(
+            position[0],
+            position[1],
+            player_column,
+            player_row,
+        )
+        for position in valid_moves
+    )
+    best_moves = [
+        position
+        for position in valid_moves
+        if distance_between(
+            position[0],
+            position[1],
+            player_column,
+            player_row,
+        )
+        == greatest_distance
+    ]
+
+    return random.choice(best_moves)

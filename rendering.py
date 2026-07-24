@@ -28,7 +28,6 @@ from settings import (
     PLAYER_HEALTH_BAR_COLOR,
     POTION_COLOR,
     PLAYER_MAX_HEALTH,
-    SLEEPING_ENEMY_COLOR,
     STAIRS_COLOR,
     TEXT_COLOR,
     TILE_SIZE,
@@ -60,25 +59,23 @@ def draw_dungeon(screen, dungeon_map):
 
 def draw_attack_markers(screen, enemies):
     for enemy in enemies:
-        attack_target = enemy["attack_target"]
-
-        if enemy["health"] <= 0 or attack_target is None:
+        if enemy["health"] <= 0:
             continue
 
-        column, row = attack_target
-        target_rectangle = pygame.Rect(
-            MAP_OFFSET_X + column * TILE_SIZE,
-            MAP_OFFSET_Y + row * TILE_SIZE,
-            TILE_SIZE,
-            TILE_SIZE,
-        )
-        pygame.draw.rect(screen, DANGER_TILE_COLOR, target_rectangle)
-        pygame.draw.rect(
-            screen,
-            DANGER_BORDER_COLOR,
-            target_rectangle,
-            width=3,
-        )
+        for column, row in enemy["attack_targets"]:
+            target_rectangle = pygame.Rect(
+                MAP_OFFSET_X + column * TILE_SIZE,
+                MAP_OFFSET_Y + row * TILE_SIZE,
+                TILE_SIZE,
+                TILE_SIZE,
+            )
+            pygame.draw.rect(screen, DANGER_TILE_COLOR, target_rectangle)
+            pygame.draw.rect(
+                screen,
+                DANGER_BORDER_COLOR,
+                target_rectangle,
+                width=3,
+            )
 
 
 def draw_player(screen, column, row, health):
@@ -116,13 +113,45 @@ def draw_enemy(screen, enemy):
     x = MAP_OFFSET_X + column * TILE_SIZE + padding
     y = MAP_OFFSET_Y + row * TILE_SIZE + padding
     size = TILE_SIZE - padding * 2
-    color = ENEMY_COLOR if enemy["is_aggro"] else SLEEPING_ENEMY_COLOR
-    pygame.draw.rect(
-        screen,
-        color,
-        (x, y, size, size),
-        border_radius=6,
+    color = (
+        enemy["color"]
+        if enemy["is_aggro"]
+        else enemy["sleeping_color"]
     )
+
+    if enemy["type"] == "brute":
+        corner = 4
+        pygame.draw.polygon(
+            screen,
+            color,
+            [
+                (x + corner, y),
+                (x + size - corner, y),
+                (x + size, y + corner),
+                (x + size, y + size - corner),
+                (x + size - corner, y + size),
+                (x + corner, y + size),
+                (x, y + size - corner),
+                (x, y + corner),
+            ],
+        )
+    elif enemy["type"] == "archer":
+        pygame.draw.polygon(
+            screen,
+            color,
+            [
+                (x + size // 2, y),
+                (x + size, y + size),
+                (x, y + size),
+            ],
+        )
+    else:
+        pygame.draw.rect(
+            screen,
+            color,
+            (x, y, size, size),
+            border_radius=6,
+        )
 
     health_ratio = enemy["health"] / enemy["max_health"]
     bar_x = MAP_OFFSET_X + column * TILE_SIZE + 5
@@ -141,7 +170,7 @@ def draw_enemy(screen, enemy):
         (bar_x, bar_y, int(bar_width * health_ratio), bar_height),
     )
 
-    if enemy["attack_target"] is not None:
+    if enemy["attack_targets"]:
         warning_x = MAP_OFFSET_X + column * TILE_SIZE + TILE_SIZE // 2
         warning_top = MAP_OFFSET_Y + row * TILE_SIZE + 8
         pygame.draw.line(

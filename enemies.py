@@ -1,0 +1,58 @@
+from settings import (
+    ARCHER_COLOR,
+    BRUTE_COLOR,
+    ENEMY_COLOR,
+    SLEEPING_ARCHER_COLOR,
+    SLEEPING_BRUTE_COLOR,
+    SLEEPING_ENEMY_COLOR,
+)
+
+
+ENEMY_TYPES = {
+    "goblin": {
+        "display_name": "Goblin",
+        "max_health": 4,
+        "aggro_radius": 5,
+        "wander_chance": 0.35,
+        "move_every": 1,
+        "attack_kind": "melee",
+        "attack_range": 1,
+        "damage_by_mode": {
+            "melee": ((1, 2, 3), (75, 20, 5)),
+        },
+        "color": ENEMY_COLOR,
+        "sleeping_color": SLEEPING_ENEMY_COLOR,
+        "retreat_jump_chance": 0.0,
+    },
+    "brute": {
+        "display_name": "Brute",
+        "max_health": 8,
+        "aggro_radius": 4,
+        "wander_chance": 0.15,
+        "move_every": 2,
+        "attack_kind": "cleave",
+        "attack_range": 1,
+        "damage_by_mode": {
+            "cleave": ((2, 3), (80, 20)),
+        },
+        "color": BRUTE_COLOR,
+        "sleeping_color": SLEEPING_BRUTE_COLOR,
+        "retreat_jump_chance": 0.0,
+    },
+    "archer": {
+        "display_name": "Archer",
+        "max_health": 4,
+        "aggro_radius": 10,
+        "wander_chance": 0.25,
+        "move_every": 1,
+        "attack_kind": "ranged",
+        "attack_range": 10,
+        "damage_by_mode": {
+            "ranged": ((3,), (1,)),
+            "melee": ((1,), (1,)),
+        },
+        "color": ARCHER_COLOR,
+        "sleeping_color": SLEEPING_ARCHER_COLOR,
+        "retreat_jump_chance": 0.35,
+    },
+}

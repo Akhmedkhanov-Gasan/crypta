@@ -1,7 +1,8 @@
 import random
 
+from enemies import ENEMY_TYPES
 from levels import FLOOR_CONFIGS
-from settings import ENEMY_AGGRO_RADIUS, MAP_COLUMNS, MAP_ROWS
+from settings import MAP_COLUMNS, MAP_ROWS
 
 
 MIN_ROOM_WIDTH = 4
@@ -159,21 +160,26 @@ def generate_floor(floor_index):
         if dungeon_map[row][column] == "."
     ]
 
-    distant_positions = [
+    enemy_candidate_positions = [
         position
         for room in rooms[1:]
         for position in positions_inside_room(room)
-        if (
-            abs(position[0] - player_start[0])
-            + abs(position[1] - player_start[1])
-            > ENEMY_AGGRO_RADIUS
-        )
     ]
-    random.shuffle(distant_positions)
+    random.shuffle(enemy_candidate_positions)
 
     enemies = []
 
-    for _ in range(config["enemy_count"]):
+    for enemy_type in config["enemy_types"]:
+        aggro_radius = ENEMY_TYPES[enemy_type]["aggro_radius"]
+        distant_positions = [
+            position
+            for position in enemy_candidate_positions
+            if (
+                abs(position[0] - player_start[0])
+                + abs(position[1] - player_start[1])
+                > aggro_radius
+            )
+        ]
         enemy_position = choose_free_position(
             distant_positions,
             occupied_positions,
@@ -192,7 +198,7 @@ def generate_floor(floor_index):
         enemies.append(
             {
                 "position": enemy_position,
-                "health": config["enemy_health"],
+                "type": enemy_type,
             }
         )
 
