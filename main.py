@@ -4,6 +4,7 @@ from levels import FLOORS
 from logic import (
     can_move_to,
     move_enemy,
+    move_enemy_randomly,
     positions_are_adjacent,
     update_enemy_aggro,
 )
@@ -199,9 +200,6 @@ def main():
                             floor_state["player_row"],
                         )
 
-                        if not enemy["is_aggro"]:
-                            continue
-
                         occupied_positions = {
                             (other_enemy["column"], other_enemy["row"])
                             for other_enemy in floor_state["enemies"]
@@ -210,19 +208,40 @@ def main():
                                 and other_enemy["health"] > 0
                             )
                         }
-                        enemy["column"], enemy["row"] = move_enemy(
-                            floor_state["map"],
-                            enemy,
-                            floor_state["player_column"],
-                            floor_state["player_row"],
-                            occupied_positions,
-                        )
 
-                        if positions_are_adjacent(
-                            floor_state["player_column"],
-                            floor_state["player_row"],
-                            enemy["column"],
-                            enemy["row"],
+                        if enemy["is_aggro"]:
+                            enemy["column"], enemy["row"] = move_enemy(
+                                floor_state["map"],
+                                enemy,
+                                floor_state["player_column"],
+                                floor_state["player_row"],
+                                occupied_positions,
+                            )
+                        else:
+                            (
+                                enemy["column"],
+                                enemy["row"],
+                            ) = move_enemy_randomly(
+                                floor_state["map"],
+                                enemy,
+                                floor_state["player_column"],
+                                floor_state["player_row"],
+                                occupied_positions,
+                            )
+                            update_enemy_aggro(
+                                enemy,
+                                floor_state["player_column"],
+                                floor_state["player_row"],
+                            )
+
+                        if (
+                            enemy["is_aggro"]
+                            and positions_are_adjacent(
+                                floor_state["player_column"],
+                                floor_state["player_row"],
+                                enemy["column"],
+                                enemy["row"],
+                            )
                         ):
                             player_health = max(
                                 0,
