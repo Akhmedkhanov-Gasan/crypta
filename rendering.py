@@ -102,6 +102,12 @@ def load_act_two_sprites():
         "sentinel_guard",
         "priest_idle",
         "priest_cast",
+        "oracle_idle",
+        "oracle_awake",
+        "oracle_projectile",
+        "oracle_projectile_homing",
+        "pillar",
+        "charged_pillar",
     )
 
     sprites = {
@@ -113,6 +119,16 @@ def load_act_two_sprites():
         )
         for name in sprite_names
     }
+    for oracle_sprite_name in ("oracle_idle", "oracle_awake"):
+        sprites[oracle_sprite_name] = pygame.transform.scale(
+            pygame.image.load(
+                str(
+                    asset_directory
+                    / f"{oracle_sprite_name}.png"
+                )
+            ).convert_alpha(),
+            (TILE_SIZE * 3, TILE_SIZE * 3),
+        )
     sprites["floor"].fill(
         (150, 145, 160),
         special_flags=pygame.BLEND_RGB_MULT,
@@ -186,6 +202,12 @@ def draw_dungeon(screen, dungeon_map, act_number, sprites):
             if act_number >= 2:
                 texture_name = "wall" if tile == "#" else "floor"
                 screen.blit(sprites[texture_name], tile_rectangle)
+
+                if tile == "C":
+                    screen.blit(
+                        sprites["pillar"],
+                        tile_rectangle,
+                    )
             else:
                 color = WALL_COLOR if tile == "#" else FLOOR_COLOR
                 pygame.draw.rect(screen, color, tile_rectangle)
@@ -259,6 +281,47 @@ def draw_player_attack_markers(screen, attack_targets):
         )
 
 
+def draw_oracle_projectiles(
+    screen,
+    projectiles,
+    sprites,
+):
+    for projectile in projectiles:
+        sprite_name = (
+            "oracle_projectile_homing"
+            if projectile["kind"] == "homing"
+            else "oracle_projectile"
+        )
+        projectile_left = (
+            MAP_OFFSET_X + projectile["column"] * TILE_SIZE
+        )
+        projectile_top = (
+            MAP_OFFSET_Y + projectile["row"] * TILE_SIZE
+        )
+        screen.blit(
+            sprites[sprite_name],
+            (projectile_left, projectile_top),
+        )
+
+
+def draw_oracle_emitters(
+    screen,
+    emitters,
+    is_active,
+    sprites,
+):
+    if not is_active:
+        return
+
+    for column, row in emitters:
+        left = MAP_OFFSET_X + column * TILE_SIZE
+        top = MAP_OFFSET_Y + row * TILE_SIZE
+        screen.blit(
+            sprites["charged_pillar"],
+            (left, top),
+        )
+
+
 def draw_player(
     screen,
     column,
@@ -325,6 +388,74 @@ def draw_enemy(screen, enemy, act_number, sprites):
         else enemy["sleeping_color"]
     )
 
+    if act_number >= 2 and enemy["type"] == "oracle":
+        body_size = TILE_SIZE * 3
+        body_left = MAP_OFFSET_X + (column - 1) * TILE_SIZE
+        body_top = MAP_OFFSET_Y + (row - 1) * TILE_SIZE
+        sprite_name = (
+            "oracle_awake"
+            if enemy["oracle_awakened"]
+            else "oracle_idle"
+        )
+        screen.blit(
+            sprites[sprite_name],
+            (body_left, body_top),
+        )
+
+        if enemy["is_active"]:
+            pygame.draw.rect(
+                screen,
+                DANGER_BORDER_COLOR,
+                (
+                    body_left + 2,
+                    body_top + 2,
+                    body_size - 4,
+                    body_size - 4,
+                ),
+                width=2,
+                border_radius=5,
+            )
+
+        health_ratio = enemy["health"] / enemy["max_health"]
+        bar_x = body_left + 8
+        bar_y = body_top + body_size - 7
+        bar_width = body_size - 16
+        bar_height = 5
+        pygame.draw.rect(
+            screen,
+            HEALTH_BAR_BACKGROUND,
+            (bar_x, bar_y, bar_width, bar_height),
+        )
+        pygame.draw.rect(
+            screen,
+            HEALTH_BAR_COLOR,
+            (
+                bar_x,
+                bar_y,
+                int(bar_width * health_ratio),
+                bar_height,
+            ),
+        )
+
+        if enemy["attack_targets"]:
+            warning_x = body_left + body_size // 2
+            warning_top = body_top + 8
+            pygame.draw.line(
+                screen,
+                ATTACK_WARNING_COLOR,
+                (warning_x, warning_top),
+                (warning_x, warning_top + 12),
+                4,
+            )
+            pygame.draw.circle(
+                screen,
+                ATTACK_WARNING_COLOR,
+                (warning_x, warning_top + 19),
+                3,
+            )
+
+        return
+
     if (
         act_number >= 2
         and enemy["type"] in (
@@ -352,7 +483,6 @@ def draw_enemy(screen, enemy, act_number, sprites):
                 )
                 else "priest_idle"
             )
-
         enemy_sprite = sprites[sprite_name]
 
         screen.blit(
@@ -798,14 +928,14 @@ def draw_status(
         f"Enemies {living_enemy_count}/{total_enemy_count}  |  "
         f"Stairs {'open' if stairs_are_open else 'locked'}"
     )
-    screen.blit(font.render(status, True, TEXT_COLOR), (MAP_OFFSET_X, 28))
+    screen.blit(font.render(status, True, TEXT_COLOR), (MAP_OFFSET_X, 8))
 
-    living_warden = next(
+    living_boss = next(
         (
             enemy
             for enemy in enemies
             if (
-                enemy["type"] == "warden"
+                enemy["type"] in ("warden", "oracle")
                 and enemy["health"] > 0
                 and enemy["is_active"]
             )
@@ -813,26 +943,118 @@ def draw_status(
         None,
     )
 
-    if living_warden:
+    if living_boss:
         phase = (
             2
-            if living_warden["health"]
-            <= living_warden["max_health"] // 2
+            if living_boss["health"]
+            <= living_boss["max_health"] // 2
             else 1
         )
-        boss_status = (
-            f"CRYPT WARDEN  "
-            f"{living_warden['health']}/{living_warden['max_health']} HP  "
-            f"|  Phase {phase}"
-        )
-        screen.blit(
-            font.render(
-                boss_status,
+
+        if living_boss["type"] == "oracle":
+            boss_state = (
+                "AWAKENED"
+                if living_boss["oracle_awakened"]
+                else "DORMANT"
+            )
+            boss_label = (
+                f"ORACLE - {boss_state}  |  PHASE {phase}"
+            )
+            label_surface = font.render(
+                boss_label,
                 True,
-                living_warden["color"],
-            ),
-            (MAP_OFFSET_X, 55),
-        )
+                living_boss["color"],
+            )
+            screen.blit(
+                label_surface,
+                label_surface.get_rect(
+                    center=(
+                        MAP_OFFSET_X + MAP_WIDTH // 2,
+                        55,
+                    )
+                ),
+            )
+            boss_bar_width = min(640, MAP_WIDTH - 120)
+            boss_bar_height = 22
+            boss_bar_left = (
+                MAP_OFFSET_X
+                + (MAP_WIDTH - boss_bar_width) // 2
+            )
+            boss_bar_top = 75
+            boss_health_ratio = (
+                living_boss["health"]
+                / living_boss["max_health"]
+            )
+            pygame.draw.rect(
+                screen,
+                (24, 20, 27),
+                (
+                    boss_bar_left,
+                    boss_bar_top,
+                    boss_bar_width,
+                    boss_bar_height,
+                ),
+            )
+            pygame.draw.rect(
+                screen,
+                (
+                    (65, 175, 225)
+                    if living_boss["oracle_awakened"]
+                    else (72, 108, 138)
+                ),
+                (
+                    boss_bar_left + 3,
+                    boss_bar_top + 3,
+                    int(
+                        (boss_bar_width - 6)
+                        * boss_health_ratio
+                    ),
+                    boss_bar_height - 6,
+                ),
+            )
+            pygame.draw.rect(
+                screen,
+                (130, 142, 158),
+                (
+                    boss_bar_left,
+                    boss_bar_top,
+                    boss_bar_width,
+                    boss_bar_height,
+                ),
+                width=2,
+            )
+            health_surface = font.render(
+                (
+                    f"{living_boss['health']} / "
+                    f"{living_boss['max_health']}"
+                ),
+                True,
+                (235, 238, 242),
+            )
+            screen.blit(
+                health_surface,
+                health_surface.get_rect(
+                    center=(
+                        boss_bar_left + boss_bar_width // 2,
+                        boss_bar_top + boss_bar_height // 2,
+                    )
+                ),
+            )
+        else:
+            boss_status = (
+                f"{living_boss['name'].upper()}  "
+                f"{living_boss['health']}/"
+                f"{living_boss['max_health']} HP  "
+                f"|  Phase {phase}"
+            )
+            screen.blit(
+                font.render(
+                    boss_status,
+                    True,
+                    living_boss["color"],
+                ),
+                (MAP_OFFSET_X, 55),
+            )
 
     message = None
     message_color = TEXT_COLOR
