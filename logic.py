@@ -31,6 +31,53 @@ def distance_between(first_column, first_row, second_column, second_row):
     return abs(first_column - second_column) + abs(first_row - second_row)
 
 
+def direction_toward(
+    start_column,
+    start_row,
+    target_column,
+    target_row,
+):
+    column_distance = target_column - start_column
+    row_distance = target_row - start_row
+
+    if abs(column_distance) >= abs(row_distance):
+        return (1 if column_distance > 0 else -1, 0)
+
+    return (0, 1 if row_distance > 0 else -1)
+
+
+def get_directional_line(
+    dungeon_map,
+    start_column,
+    start_row,
+    column_change,
+    row_change,
+    maximum_range,
+    blocking_positions,
+):
+    positions = []
+    map_height = len(dungeon_map)
+    map_width = len(dungeon_map[0])
+
+    for distance in range(1, maximum_range + 1):
+        column = start_column + column_change * distance
+        row = start_row + row_change * distance
+
+        if not (
+            0 <= column < map_width
+            and 0 <= row < map_height
+            and can_move_to(dungeon_map, column, row)
+        ):
+            break
+
+        if (column, row) in blocking_positions:
+            break
+
+        positions.append((column, row))
+
+    return positions
+
+
 def get_enemy_occupied_positions(enemy):
     half_width = enemy.get("footprint_width", 1) // 2
     half_height = enemy.get("footprint_height", 1) // 2
