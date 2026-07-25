@@ -198,15 +198,18 @@ def create_rooms(dungeon_map, room_count, blocked_rooms=None):
     return rooms
 
 
-def create_reserved_boss_room():
-    maximum_x = MAP_COLUMNS - BOSS_ROOM_WIDTH - 2
-    maximum_y = MAP_ROWS - BOSS_ROOM_HEIGHT - 2
+def create_reserved_boss_room(
+    width=BOSS_ROOM_WIDTH,
+    height=BOSS_ROOM_HEIGHT,
+):
+    maximum_x = MAP_COLUMNS - width - 2
+    maximum_y = MAP_ROWS - height - 2
 
     return {
         "x": random.choice((1, maximum_x)),
         "y": random.randint(1, maximum_y),
-        "width": BOSS_ROOM_WIDTH,
-        "height": BOSS_ROOM_HEIGHT,
+        "width": width,
+        "height": height,
     }
 
 
@@ -311,6 +314,78 @@ def positions_inside_room(room):
     ]
 
 
+def create_oracle_arena(dungeon_map, boss_room):
+    center_column, center_row = room_center(boss_room)
+    columns = [
+        (
+            center_column + column_offset,
+            center_row + row_offset,
+        )
+        for row_offset in (-3, 3)
+        for column_offset in (-6, -2, 2, 6)
+    ]
+
+    for column, row in columns:
+        dungeon_map[row][column] = "C"
+
+    return columns
+
+
+def generate_oracle_floor(config):
+    dungeon_map = [
+        ["#" for _ in range(MAP_COLUMNS)]
+        for _ in range(MAP_ROWS)
+    ]
+    boss_room = {
+        "x": 5,
+        "y": 1,
+        "width": config["boss_room_width"],
+        "height": config["boss_room_height"],
+    }
+    carve_room(dungeon_map, boss_room)
+    boss_column, boss_row = room_center(boss_room)
+    boss_door = (boss_room["x"], boss_row)
+    seal_room_except_door(
+        dungeon_map,
+        boss_room,
+        boss_door,
+    )
+
+    for row in range(boss_row - 2, boss_row + 3):
+        for column in range(1, boss_room["x"]):
+            dungeon_map[row][column] = "."
+
+    boss_columns = create_oracle_arena(
+        dungeon_map,
+        boss_room,
+    )
+    boss_emitters = [
+        position
+        for position in boss_columns
+        if abs(position[0] - boss_column) == 6
+    ]
+
+    return {
+        "map": ["".join(row) for row in dungeon_map],
+        "player_start": (2, boss_row),
+        "enemies": [
+            {
+                "position": (boss_column, boss_row),
+                "type": "oracle",
+                "boss_group": True,
+            }
+        ],
+        "chests": [],
+        "potions": [],
+        "stairs": (boss_column, boss_row),
+        "boss_door": boss_door,
+        "boss_room": boss_room,
+        "boss_columns": boss_columns,
+        "boss_emitters": boss_emitters,
+        "seal_boss_door_during_fight": True,
+    }
+
+
 def choose_free_position(candidate_positions, occupied_positions):
     available_positions = [
         position
@@ -327,12 +402,20 @@ def choose_free_position(candidate_positions, occupied_positions):
 def generate_floor(floor_index):
     config = FLOOR_CONFIGS[floor_index]
     boss_enemy_types = config.get("boss_enemy_types", [])
+    boss_room_layout = config.get("boss_room_layout")
+
+    if boss_room_layout == "oracle_arena":
+        return generate_oracle_floor(config)
+
     dungeon_map = [
         ["#" for _ in range(MAP_COLUMNS)]
         for _ in range(MAP_ROWS)
     ]
     boss_room = (
-        create_reserved_boss_room()
+        create_reserved_boss_room(
+            config.get("boss_room_width", BOSS_ROOM_WIDTH),
+            config.get("boss_room_height", BOSS_ROOM_HEIGHT),
+        )
         if boss_enemy_types
         else None
     )
@@ -349,8 +432,14 @@ def generate_floor(floor_index):
             rooms[-1],
             boss_room,
         )
+        boss_columns = (
+            create_oracle_arena(dungeon_map, boss_room)
+            if boss_room_layout == "oracle_arena"
+            else []
+        )
     else:
         boss_door = None
+        boss_columns = []
 
     player_start = room_center(rooms[0])
     stairs = room_center(boss_room or rooms[-1])
@@ -414,13 +503,20 @@ def generate_floor(floor_index):
         )
 
     if boss_enemy_types:
-        boss_positions = positions_inside_room(boss_room)
+        boss_positions = [
+            position
+            for position in positions_inside_room(boss_room)
+            if dungeon_map[position[1]][position[0]] == "."
+        ]
 
         for enemy_type in boss_enemy_types:
-            enemy_position = choose_free_position(
-                boss_positions,
-                occupied_positions,
-            )
+            if enemy_type == "oracle":
+                enemy_position = room_center(boss_room)
+            else:
+                enemy_position = choose_free_position(
+                    boss_positions,
+                    occupied_positions,
+                )
 
             if enemy_position is None:
                 break
@@ -496,4 +592,10 @@ def generate_floor(floor_index):
             boss_door
         ),
         "boss_room": boss_room,
+        "boss_columns": boss_columns,
+        "boss_emitters": [],
+        "seal_boss_door_during_fight": config.get(
+            "seal_boss_door_during_fight",
+            False,
+        ),
     }

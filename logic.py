@@ -6,7 +6,15 @@ def roll_player_damage(damage_minimum, damage_maximum):
 
 
 def roll_enemy_damage(enemy, attack_mode):
-    damage_values, damage_weights = enemy["damage_by_mode"][attack_mode]
+    damage_by_mode = enemy["damage_by_mode"]
+
+    if (
+        enemy.get("oracle_awakened", False)
+        and enemy.get("phase_two_damage_by_mode")
+    ):
+        damage_by_mode = enemy["phase_two_damage_by_mode"]
+
+    damage_values, damage_weights = damage_by_mode[attack_mode]
 
     return random.choices(
         damage_values,
@@ -16,11 +24,28 @@ def roll_enemy_damage(enemy, attack_mode):
 
 
 def can_move_to(dungeon_map, column, row):
-    return dungeon_map[row][column] != "#"
+    return dungeon_map[row][column] not in ("#", "C")
 
 
 def distance_between(first_column, first_row, second_column, second_row):
     return abs(first_column - second_column) + abs(first_row - second_row)
+
+
+def get_enemy_occupied_positions(enemy):
+    half_width = enemy.get("footprint_width", 1) // 2
+    half_height = enemy.get("footprint_height", 1) // 2
+
+    return {
+        (column, row)
+        for row in range(
+            enemy["row"] - half_height,
+            enemy["row"] + half_height + 1,
+        )
+        for column in range(
+            enemy["column"] - half_width,
+            enemy["column"] + half_width + 1,
+        )
+    }
 
 
 def positions_are_adjacent(first_column, first_row, second_column, second_row):
@@ -163,6 +188,62 @@ def has_clear_line(
     )
 
 
+def get_oracle_ray(
+    dungeon_map,
+    start_column,
+    start_row,
+    target_column,
+    target_row,
+    blocking_positions,
+):
+    column_direction = target_column - start_column
+    row_direction = target_row - start_row
+
+    if column_direction == 0 and row_direction == 0:
+        return []
+
+    ray_scale = len(dungeon_map) + len(dungeon_map[0])
+    end_column = start_column + column_direction * ray_scale
+    end_row = start_row + row_direction * ray_scale
+    column = start_column
+    row = start_row
+    column_distance = abs(end_column - start_column)
+    row_distance = abs(end_row - start_row)
+    column_step = 1 if start_column < end_column else -1
+    row_step = 1 if start_row < end_row else -1
+    error = column_distance - row_distance
+    ray_positions = []
+
+    while True:
+        doubled_error = error * 2
+
+        if doubled_error > -row_distance:
+            error -= row_distance
+            column += column_step
+
+        if doubled_error < column_distance:
+            error += column_distance
+            row += row_step
+
+        if not (
+            0 <= row < len(dungeon_map)
+            and 0 <= column < len(dungeon_map[0])
+        ):
+            break
+
+        position = (column, row)
+
+        if (
+            position in blocking_positions
+            or not can_move_to(dungeon_map, column, row)
+        ):
+            break
+
+        ray_positions.append(position)
+
+    return ray_positions
+
+
 def get_enemy_attack_targets(
     dungeon_map,
     enemy,
@@ -179,6 +260,76 @@ def get_enemy_attack_targets(
         player_column,
         player_row,
     )
+
+    if attack_kind == "oracle":
+        second_phase = enemy["health"] <= enemy["max_health"] // 2
+        available_attack_modes = [
+            mode
+            for mode in ("gaze", "revelation", "shockwave")
+            if mode != enemy["last_attack_mode"]
+        ]
+        attack_mode = random.choice(available_attack_modes)
+        enemy["selected_attack_mode"] = attack_mode
+        enemy["last_attack_mode"] = attack_mode
+
+        if attack_mode == "gaze":
+            return get_oracle_ray(
+                dungeon_map,
+                enemy_column,
+                enemy_row,
+                player_column,
+                player_row,
+                blocking_positions,
+            )
+
+        if attack_mode == "revelation":
+            ray_directions = [
+                (-1, 0),
+                (1, 0),
+                (0, -1),
+                (0, 1),
+            ]
+
+            if second_phase:
+                ray_directions.extend(
+                    [
+                        (-1, -1),
+                        (1, -1),
+                        (-1, 1),
+                        (1, 1),
+                    ]
+                )
+
+            revelation_targets = []
+
+            for column_change, row_change in ray_directions:
+                revelation_targets.extend(
+                    get_oracle_ray(
+                        dungeon_map,
+                        enemy_column,
+                        enemy_row,
+                        enemy_column + column_change,
+                        enemy_row + row_change,
+                        blocking_positions,
+                    )
+                )
+
+            return revelation_targets
+
+        return [
+            (column, row)
+            for row in range(len(dungeon_map))
+            for column in range(len(dungeon_map[0]))
+            if (
+                max(
+                    abs(column - enemy_column),
+                    abs(row - enemy_row),
+                )
+                == 2
+                and (column, row) not in blocking_positions
+                and can_move_to(dungeon_map, column, row)
+            )
+        ]
 
     if attack_kind == "boss":
         if (
@@ -362,7 +513,7 @@ def get_enemy_attack_targets(
 
 
 def get_enemy_attack_mode(enemy, player_column, player_row):
-    if enemy["type"] == "warden":
+    if enemy["type"] in ("warden", "oracle"):
         return enemy["selected_attack_mode"]
 
     if (
