@@ -7,6 +7,9 @@ from levels import FLOOR_CONFIGS
 from logic import get_enemy_occupied_positions
 from rendering import (
     CLASS_SELECTION_READY_MS,
+    draw_act_three_awakening,
+    draw_act_three_debug_class_selection,
+    draw_act_three_gameplay,
     draw_attack_markers,
     draw_boss_door,
     draw_chest,
@@ -24,11 +27,22 @@ from rendering import (
     draw_sidebar,
     draw_stairs,
     draw_status,
+    draw_subclass_selection_screen,
     draw_upgrade_screen,
     get_class_selection_rectangles,
+    get_act_three_debug_class_rectangles,
+    get_subclass_selection_rectangles,
     load_act_one_fonts,
+    load_act_three_fonts,
+    load_act_three_gameplay_assets,
+    load_act_three_transition_assets,
     load_act_two_fonts,
     load_act_two_sprites,
+)
+from presentation.layout import (
+    ACT_THREE_AWAKENING_END_MS,
+    ACT_THREE_MUSIC_PATH,
+    ACT_THREE_NARRATIVE_READY_MS,
 )
 from settings import (
     BACKGROUND_COLOR,
@@ -59,6 +73,11 @@ from systems.player_abilities import (
 from systems.enemy_turn import resolve_enemy_turn
 
 FIRST_ACT_FINAL_FLOOR = 2
+SECOND_ACT_FINAL_FLOOR = max(
+    index
+    for index, floor_config in enumerate(FLOOR_CONFIGS)
+    if floor_config["act"] == 2
+)
 
 
 def get_initial_window_size():
@@ -124,6 +143,108 @@ def window_to_game_position(window, window_position):
     )
 
 
+def create_oracle_debug_state(
+    player_class,
+    opening_message,
+):
+    debug_state = create_game_state(
+        floor_index=SECOND_ACT_FINAL_FLOOR,
+        opening_message=opening_message,
+    )
+    debug_player = debug_state.player
+    debug_player.player_class = player_class
+
+    if debug_player.player_class == "warrior":
+        debug_player.max_health += 4
+    elif debug_player.player_class == "rogue":
+        debug_player.max_health = max(
+            1,
+            debug_player.max_health - 2,
+        )
+        debug_player.crit_chance = 0.10
+        debug_player.dodge_chance = 0.10
+
+    debug_player.health = debug_player.max_health
+    debug_player.damage_min = 5
+    debug_player.damage_max = 6
+    debug_player.potion_count = 2
+    debug_player.ability_kill_charge = CLASS_ABILITY_KILLS
+
+    return debug_state
+
+
+def advance_act_three_transition(game_state, current_time):
+    narrative_elapsed = (
+        current_time
+        - game_state.act_three_transition_started_at
+    )
+
+    if game_state.act_three_visual_started_at == 0:
+        if narrative_elapsed < ACT_THREE_NARRATIVE_READY_MS:
+            game_state.act_three_transition_started_at = (
+                current_time - ACT_THREE_NARRATIVE_READY_MS
+            )
+        else:
+            game_state.act_three_visual_started_at = current_time
+        return
+
+    game_state.act_three_visual_started_at = (
+        current_time - ACT_THREE_AWAKENING_END_MS
+    )
+
+
+def create_act_three_debug_transition(
+    player_class,
+    current_time,
+):
+    debug_state = create_oracle_debug_state(
+        player_class,
+        (
+            "Debug jump: "
+            f"{player_class.title()} Act III awakening."
+        ),
+    )
+
+    for enemy in debug_state.floor.enemies:
+        enemy.health = 0
+
+    debug_state.floor.projectiles.clear()
+    debug_state.act_three_transition_open = True
+    debug_state.act_three_transition_started_at = current_time
+
+    return debug_state
+
+
+def choose_subclass(game_state, subclass):
+    game_state.player.subclass = subclass
+    game_state.floor_index += 1
+    game_state.floor = create_floor_state(
+        game_state.floor_index
+    )
+    game_state.player.key_count = 0
+    game_state.player_attack_targets = []
+    game_state.subclass_selection_open = False
+    display_name = {
+        "berserker": "Berserker",
+        "paladin": "Paladin",
+        "assassin": "Assassin",
+        "archer": "Archer",
+        "warlock": "Warlock",
+    }[subclass]
+    class_name = game_state.player.player_class
+    add_log_message(
+        game_state.combat_log,
+        (
+            f"The {class_name} chooses the path "
+            f"of the {display_name}."
+        ),
+    )
+    add_log_message(
+        game_state.combat_log,
+        "Act III begins. The world is alive.",
+    )
+
+
 def main():
     pygame.init()
 
@@ -141,8 +262,16 @@ def main():
     log_font = act_one_fonts["text"]
     act_two_fonts = load_act_two_fonts()
     act_two_sprites = load_act_two_sprites()
+    act_three_fonts = load_act_three_fonts()
+    act_three_gameplay_assets = (
+        load_act_three_gameplay_assets()
+    )
+    act_three_transition_assets = (
+        load_act_three_transition_assets()
+    )
 
     game_state = create_game_state()
+    act_three_music_attempted = False
     fullscreen = False
     running = True
 
@@ -159,6 +288,88 @@ def main():
                     windowed_size,
                     pygame.RESIZABLE,
                 )
+            elif (
+                event.type == pygame.MOUSEBUTTONDOWN
+                and event.button == 1
+                and game_state.act_three_debug_class_selection_open
+            ):
+                game_mouse_position = window_to_game_position(
+                    screen,
+                    event.pos,
+                )
+
+                if game_mouse_position is None:
+                    continue
+
+                class_keys = {
+                    "warrior": pygame.K_1,
+                    "rogue": pygame.K_2,
+                    "mage": pygame.K_3,
+                }
+
+                for (
+                    class_name,
+                    class_rectangle,
+                ) in (
+                    get_act_three_debug_class_rectangles().items()
+                ):
+                    if class_rectangle.collidepoint(
+                        game_mouse_position
+                    ):
+                        pygame.event.post(
+                            pygame.event.Event(
+                                pygame.KEYDOWN,
+                                key=class_keys[class_name],
+                            )
+                        )
+                        break
+            elif (
+                event.type == pygame.MOUSEBUTTONDOWN
+                and event.button == 1
+                and game_state.act_three_transition_open
+            ):
+                advance_act_three_transition(
+                    game_state,
+                    pygame.time.get_ticks(),
+                )
+            elif (
+                event.type == pygame.MOUSEBUTTONDOWN
+                and event.button == 1
+                and game_state.subclass_selection_open
+            ):
+                game_mouse_position = window_to_game_position(
+                    screen,
+                    event.pos,
+                )
+
+                if (
+                    game_mouse_position is not None
+                    and game_state.player.subclass is None
+                ):
+                    subclass_keys = {
+                        "berserker": pygame.K_1,
+                        "paladin": pygame.K_2,
+                        "assassin": pygame.K_1,
+                        "archer": pygame.K_2,
+                        "warlock": pygame.K_1,
+                    }
+
+                    for (
+                        subclass,
+                        subclass_rectangle,
+                    ) in get_subclass_selection_rectangles(
+                        game_state.player.player_class
+                    ).items():
+                        if subclass_rectangle.collidepoint(
+                            game_mouse_position
+                        ):
+                            pygame.event.post(
+                                pygame.event.Event(
+                                    pygame.KEYDOWN,
+                                    key=subclass_keys[subclass],
+                                )
+                            )
+                            break
             elif (
                 event.type == pygame.MOUSEBUTTONDOWN
                 and event.button == 1
@@ -223,53 +434,107 @@ def main():
                     continue
 
                 if event.key == pygame.K_F2:
-                    debug_state = create_game_state(
-                        floor_index=FIRST_ACT_FINAL_FLOOR,
-                        opening_message=(
-                            "Debug jump: choose an Act II class."
-                        ),
+                    if (
+                        act_three_music_attempted
+                        and pygame.mixer.get_init() is not None
+                    ):
+                        pygame.mixer.music.stop()
+                    act_three_music_attempted = False
+                    game_state = create_oracle_debug_state(
+                        game_state.player.player_class or "warrior",
+                        "Debug jump: Oracle arena.",
                     )
-                    debug_state.class_selection_open = True
-                    debug_state.class_transition_started_at = (
-                        pygame.time.get_ticks()
-                    )
-                    game_state = debug_state
                     continue
 
                 if event.key == pygame.K_F3:
-                    debug_state = create_game_state(
-                        floor_index=len(FLOOR_CONFIGS) - 1,
+                    if (
+                        act_three_music_attempted
+                        and pygame.mixer.get_init() is not None
+                    ):
+                        pygame.mixer.music.stop()
+                    act_three_music_attempted = False
+                    game_state = create_game_state(
                         opening_message=(
-                            "Debug jump: Oracle arena."
-                        ),
-                    )
-                    debug_player = debug_state.player
-                    debug_player.player_class = (
-                        game_state.player.player_class or "warrior"
-                    )
-
-                    if debug_player.player_class == "warrior":
-                        debug_player.max_health += 4
-                    elif debug_player.player_class == "rogue":
-                        debug_player.max_health = max(
-                            1,
-                            debug_player.max_health - 2,
+                            "Debug: choose an Act III class."
                         )
-                        debug_player.crit_chance = 0.10
-                        debug_player.dodge_chance = 0.10
-
-                    debug_player.health = debug_player.max_health
-                    debug_player.damage_min = 5
-                    debug_player.damage_max = 6
-                    debug_player.potion_count = 2
-                    debug_player.ability_kill_charge = (
-                        CLASS_ABILITY_KILLS
                     )
-                    game_state = debug_state
+                    game_state.act_three_debug_class_selection_open = (
+                        True
+                    )
+                    continue
+
+                if game_state.act_three_debug_class_selection_open:
+                    class_by_key = {
+                        pygame.K_1: "warrior",
+                        pygame.K_KP1: "warrior",
+                        pygame.K_2: "rogue",
+                        pygame.K_KP2: "rogue",
+                        pygame.K_3: "mage",
+                        pygame.K_KP3: "mage",
+                    }
+                    player_class = class_by_key.get(event.key)
+
+                    if player_class is not None:
+                        game_state = (
+                            create_act_three_debug_transition(
+                                player_class,
+                                pygame.time.get_ticks(),
+                            )
+                        )
+                    continue
+
+                if game_state.act_three_transition_open:
+                    if event.key in (
+                        pygame.K_SPACE,
+                        pygame.K_RETURN,
+                        pygame.K_KP_ENTER,
+                    ):
+                        advance_act_three_transition(
+                            game_state,
+                            pygame.time.get_ticks(),
+                        )
+                    continue
+
+                if game_state.subclass_selection_open:
+                    if game_state.player.player_class == "rogue":
+                        subclass_keys = {
+                            pygame.K_1: "assassin",
+                            pygame.K_KP1: "assassin",
+                            pygame.K_2: "archer",
+                            pygame.K_KP2: "archer",
+                        }
+                    elif game_state.player.player_class == "mage":
+                        subclass_keys = {
+                            pygame.K_1: "warlock",
+                            pygame.K_KP1: "warlock",
+                        }
+                    else:
+                        subclass_keys = {
+                            pygame.K_1: "berserker",
+                            pygame.K_KP1: "berserker",
+                            pygame.K_2: "paladin",
+                            pygame.K_KP2: "paladin",
+                        }
+                    subclass = subclass_keys.get(event.key)
+
+                    if (
+                        game_state.player.subclass is None
+                        and subclass is not None
+                    ):
+                        choose_subclass(
+                            game_state,
+                            subclass,
+                        )
                     continue
 
                 if game_state.player.health <= 0 or game_state.game_won:
                     if event.key == pygame.K_r:
+                        if (
+                            act_three_music_attempted
+                            and pygame.mixer.get_init() is not None
+                        ):
+                            pygame.mixer.music.stop()
+                        act_three_music_attempted = False
                         game_state = create_game_state()
                     continue
 
@@ -546,6 +811,64 @@ def main():
                         player_position_before_action,
                         rogue_ability_activated,
                     )
+        current_time = pygame.time.get_ticks()
+
+        if (
+            game_state.act_three_transition_open
+            and game_state.act_three_transition_started_at == 0
+        ):
+            game_state.act_three_transition_started_at = (
+                current_time
+            )
+
+        if (
+            game_state.act_three_transition_open
+            and not act_three_music_attempted
+        ):
+            act_three_music_attempted = True
+
+            try:
+                if pygame.mixer.get_init() is None:
+                    pygame.mixer.init()
+
+                pygame.mixer.music.load(
+                    str(ACT_THREE_MUSIC_PATH)
+                )
+                pygame.mixer.music.set_volume(0.65)
+                pygame.mixer.music.play(-1, fade_ms=1800)
+            except pygame.error as audio_error:
+                add_log_message(
+                    game_state.combat_log,
+                    f"Act III music unavailable: {audio_error}",
+                )
+
+        if game_state.act_three_transition_open:
+            visual_elapsed = None
+
+            if game_state.act_three_visual_started_at != 0:
+                visual_elapsed = (
+                    current_time
+                    - game_state.act_three_visual_started_at
+                )
+
+            if (
+                visual_elapsed is not None
+                and visual_elapsed
+                >= ACT_THREE_AWAKENING_END_MS
+            ):
+                game_state.act_three_transition_open = False
+
+                if game_state.player.player_class in (
+                    "warrior",
+                    "rogue",
+                    "mage",
+                ):
+                    game_state.subclass_selection_open = True
+                else:
+                    game_state.act_three_debug_class_selection_open = (
+                        True
+                    )
+
         current_act = FLOOR_CONFIGS[game_state.floor_index]["act"]
         active_status_font = (
             act_two_fonts["status"]
@@ -726,16 +1049,32 @@ def main():
             current_act,
             act_two_sprites,
         )
+        if current_act >= 3:
+            draw_act_three_gameplay(
+                game_surface,
+                game_state,
+                act_three_fonts,
+                act_three_gameplay_assets,
+                current_time,
+            )
         if game_state.upgrade_screen_open:
             active_upgrade_title_font = (
-                act_two_fonts["title"]
-                if current_act >= 2
-                else title_font
+                act_three_fonts["title"]
+                if current_act >= 3
+                else (
+                    act_two_fonts["title"]
+                    if current_act >= 2
+                    else title_font
+                )
             )
             active_upgrade_text_font = (
-                act_two_fonts["status"]
-                if current_act >= 2
-                else font
+                act_three_fonts["text"]
+                if current_act >= 3
+                else (
+                    act_two_fonts["status"]
+                    if current_act >= 2
+                    else font
+                )
             )
             draw_upgrade_screen(
                 game_surface,
@@ -767,6 +1106,52 @@ def main():
                     - game_state.class_transition_started_at
                 ),
                 class_mouse_position,
+            )
+        if game_state.act_three_debug_class_selection_open:
+            debug_mouse_position = window_to_game_position(
+                screen,
+                pygame.mouse.get_pos(),
+            )
+            draw_act_three_debug_class_selection(
+                game_surface,
+                act_three_fonts["title"],
+                act_three_fonts["heading"],
+                act_three_fonts["text"],
+                debug_mouse_position,
+            )
+        elif game_state.act_three_transition_open:
+            draw_act_three_awakening(
+                game_surface,
+                act_three_transition_assets,
+                act_three_fonts["narrative"],
+                (
+                    current_time
+                    - game_state.act_three_transition_started_at
+                ),
+                (
+                    None
+                    if game_state.act_three_visual_started_at == 0
+                    else (
+                        current_time
+                        - game_state.act_three_visual_started_at
+                    )
+                ),
+                game_state.player.player_class,
+            )
+        elif game_state.subclass_selection_open:
+            subclass_mouse_position = window_to_game_position(
+                screen,
+                pygame.mouse.get_pos(),
+            )
+            draw_subclass_selection_screen(
+                game_surface,
+                act_three_fonts["title"],
+                act_three_fonts["heading"],
+                act_three_fonts["text"],
+                act_three_transition_assets,
+                subclass_mouse_position,
+                game_state.player.subclass,
+                game_state.player.player_class,
             )
         present_game(screen, game_surface)
         clock.tick(FPS)

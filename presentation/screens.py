@@ -5,6 +5,17 @@ from presentation.hud import (
     wrap_text,
 )
 from presentation.layout import (
+    ACT_THREE_AWAKENING_END_MS,
+    ACT_THREE_CAMERA_END_MS,
+    ACT_THREE_CLENCH_END_MS,
+    ACT_THREE_EYES_OPEN_END_MS,
+    ACT_THREE_EYES_OPEN_START_MS,
+    ACT_THREE_FINAL_HOLD_END_MS,
+    ACT_THREE_HANDS_HOLD_END_MS,
+    ACT_THREE_HANDS_RISE_END_MS,
+    ACT_THREE_HANDS_RISE_START_MS,
+    ACT_THREE_NARRATIVE_READY_MS,
+    ACT_THREE_NARRATIVE_START_MS,
     AWAKENING_FADE_END_MS,
     AWAKENING_HOLD_END_MS,
     AWAKENING_OPEN_END_MS,
@@ -468,3 +479,697 @@ def draw_class_selection_screen(
     )
     cards_surface.set_alpha(card_alpha)
     screen.blit(cards_surface, (0, 0))
+
+
+def _smooth_progress(elapsed_ms, start_ms, end_ms):
+    progress = max(
+        0.0,
+        min(1.0, (elapsed_ms - start_ms) / (end_ms - start_ms)),
+    )
+    return progress * progress * (3 - 2 * progress)
+
+
+def _blit_with_alpha(screen, image, position, alpha):
+    if alpha >= 255:
+        screen.blit(image, position)
+        return
+
+    faded_image = image.copy()
+    faded_image.set_alpha(max(0, min(255, round(alpha))))
+    screen.blit(faded_image, position)
+
+
+def _draw_act_three_narrative(
+    screen,
+    narrative_font,
+    elapsed_ms,
+):
+    lines = (
+        "THE SECOND VEIL FALLS.",
+        "The world returns sharper than before.",
+        "You begin to see what was hidden.",
+        "Again, a silhouette waits at the end of the Crypta.",
+        "Who is it?",
+        "Who are you?",
+    )
+    line_delay_ms = 1400
+    character_delay_ms = 55
+    active_lines = [
+        (index, line)
+        for index, line in enumerate(lines)
+        if (
+            elapsed_ms
+            >= ACT_THREE_NARRATIVE_START_MS
+            + index * line_delay_ms
+        )
+    ]
+
+    if not active_lines:
+        return
+
+    page_rectangle = pygame.Rect(140, 72, 1000, 575)
+    page_shadow = page_rectangle.move(8, 10)
+    pygame.draw.rect(
+        screen,
+        (6, 4, 3),
+        page_shadow,
+        border_radius=6,
+    )
+    pygame.draw.rect(
+        screen,
+        (27, 21, 17),
+        page_rectangle,
+        border_radius=6,
+    )
+    pygame.draw.rect(
+        screen,
+        (104, 76, 48),
+        page_rectangle,
+        width=2,
+        border_radius=6,
+    )
+    inner_rectangle = page_rectangle.inflate(-22, -22)
+    pygame.draw.rect(
+        screen,
+        (61, 46, 34),
+        inner_rectangle,
+        width=1,
+        border_radius=4,
+    )
+    ornament_y = page_rectangle.y + 92
+    pygame.draw.line(
+        screen,
+        (83, 58, 39),
+        (page_rectangle.x + 60, ornament_y),
+        (page_rectangle.right - 60, ornament_y),
+        1,
+    )
+    pygame.draw.polygon(
+        screen,
+        (151, 64, 48),
+        (
+            (GAME_WIDTH // 2, ornament_y - 5),
+            (GAME_WIDTH // 2 + 5, ornament_y),
+            (GAME_WIDTH // 2, ornament_y + 5),
+            (GAME_WIDTH // 2 - 5, ornament_y),
+        ),
+    )
+
+    for visible_index, (line_index, line) in enumerate(active_lines):
+        line_started_at = (
+            ACT_THREE_NARRATIVE_START_MS
+            + line_index * line_delay_ms
+        )
+        visible_character_count = max(
+            0,
+            int(
+                (elapsed_ms - line_started_at)
+                / character_delay_ms
+            ),
+        )
+        visible_text = line[:visible_character_count]
+
+        if not visible_text:
+            continue
+
+        color = (
+            (205, 67, 59)
+            if line_index == 0
+            else TEXT_COLOR
+        )
+        line_surface = narrative_font.render(
+            visible_text,
+            True,
+            color,
+        )
+        line_y = (
+            page_rectangle.y + 47
+            if line_index == 0
+            else page_rectangle.y + 135 + (line_index - 1) * 67
+        )
+        screen.blit(
+            line_surface,
+            (page_rectangle.x + 60, line_y),
+        )
+
+    if elapsed_ms >= ACT_THREE_NARRATIVE_READY_MS:
+        prompt_alpha = (
+            255
+            if (elapsed_ms // 650) % 2 == 0
+            else 115
+        )
+        prompt = narrative_font.render(
+            "CLICK / SPACE TO OPEN YOUR EYES",
+            True,
+            (171, 129, 83),
+        )
+        prompt.set_alpha(prompt_alpha)
+        screen.blit(
+            prompt,
+            prompt.get_rect(
+                bottomright=(
+                    page_rectangle.right - 58,
+                    page_rectangle.bottom - 34,
+                )
+            ),
+        )
+
+
+def get_act_three_debug_class_rectangles():
+    button_width = 280
+    button_height = 94
+    gap = 34
+    total_width = button_width * 3 + gap * 2
+    left = (GAME_WIDTH - total_width) // 2
+    top = 335
+
+    return {
+        "warrior": pygame.Rect(
+            left,
+            top,
+            button_width,
+            button_height,
+        ),
+        "rogue": pygame.Rect(
+            left + button_width + gap,
+            top,
+            button_width,
+            button_height,
+        ),
+        "mage": pygame.Rect(
+            left + (button_width + gap) * 2,
+            top,
+            button_width,
+            button_height,
+        ),
+    }
+
+
+def draw_act_three_debug_class_selection(
+    screen,
+    title_font,
+    heading_font,
+    text_font,
+    mouse_position,
+):
+    screen.fill((5, 4, 8))
+    title = title_font.render(
+        "ACT III AWAKENING",
+        True,
+        TEXT_COLOR,
+    )
+    screen.blit(
+        title,
+        title.get_rect(center=(GAME_WIDTH // 2, 165)),
+    )
+    subtitle = text_font.render(
+        "DEBUG: CHOOSE THE CLASS TO PREVIEW",
+        True,
+        (143, 134, 151),
+    )
+    screen.blit(
+        subtitle,
+        subtitle.get_rect(center=(GAME_WIDTH // 2, 235)),
+    )
+
+    class_colors = {
+        "warrior": (190, 57, 52),
+        "rogue": (137, 75, 175),
+        "mage": (67, 110, 190),
+    }
+    class_labels = {
+        "warrior": "[1] WARRIOR",
+        "rogue": "[2] ROGUE",
+        "mage": "[3] MAGE",
+    }
+
+    for class_name, rectangle in (
+        get_act_three_debug_class_rectangles().items()
+    ):
+        hovered = (
+            mouse_position is not None
+            and rectangle.collidepoint(mouse_position)
+        )
+        color = class_colors[class_name]
+        pygame.draw.rect(
+            screen,
+            (22, 17, 25) if hovered else (13, 11, 16),
+            rectangle,
+            border_radius=8,
+        )
+        pygame.draw.rect(
+            screen,
+            color,
+            rectangle,
+            width=3 if hovered else 2,
+            border_radius=8,
+        )
+        label = heading_font.render(
+            class_labels[class_name],
+            True,
+            color if not hovered else TEXT_COLOR,
+        )
+        screen.blit(
+            label,
+            label.get_rect(center=rectangle.center),
+        )
+
+    hint = text_font.render(
+        "CLICK A BUTTON OR PRESS 1 / 2 / 3",
+        True,
+        (117, 108, 125),
+    )
+    screen.blit(
+        hint,
+        hint.get_rect(center=(GAME_WIDTH // 2, 510)),
+    )
+
+
+def draw_act_three_awakening(
+    screen,
+    assets,
+    narrative_font,
+    narrative_elapsed_ms,
+    visual_elapsed_ms,
+    player_class,
+):
+    screen.fill((0, 0, 0))
+
+    if visual_elapsed_ms is None:
+        _draw_act_three_narrative(
+            screen,
+            narrative_font,
+            narrative_elapsed_ms,
+        )
+        return
+
+    elapsed_ms = visual_elapsed_ms
+
+    background = assets["background"]
+    camera_progress = _smooth_progress(
+        elapsed_ms,
+        ACT_THREE_EYES_OPEN_END_MS,
+        ACT_THREE_CAMERA_END_MS,
+    )
+    background_overflow = max(
+        0,
+        background.get_height() - GAME_HEIGHT,
+    )
+    background_position = (
+        (GAME_WIDTH - background.get_width()) // 2,
+        -round(background_overflow * camera_progress),
+    )
+    screen.blit(background, background_position)
+
+    hands_progress = _smooth_progress(
+        elapsed_ms,
+        ACT_THREE_HANDS_RISE_START_MS,
+        ACT_THREE_HANDS_RISE_END_MS,
+    )
+
+    if hands_progress > 0:
+        hands_class = (
+            player_class
+            if player_class in ("warrior", "rogue", "mage")
+            else "warrior"
+        )
+        open_hands = assets[f"{hands_class}_hands_open"]
+        clenched_hands = assets[
+            f"{hands_class}_hands_clenched"
+        ]
+        hands_final_y = GAME_HEIGHT - open_hands.get_height()
+        hands_start_y = hands_final_y + 300
+        hands_y = round(
+            hands_start_y
+            + (hands_final_y - hands_start_y) * hands_progress
+        )
+        hands_position = (
+            (GAME_WIDTH - open_hands.get_width()) // 2,
+            hands_y,
+        )
+
+        if elapsed_ms < ACT_THREE_HANDS_HOLD_END_MS:
+            _blit_with_alpha(
+                screen,
+                open_hands,
+                hands_position,
+                255 * hands_progress,
+            )
+        elif elapsed_ms < ACT_THREE_CLENCH_END_MS:
+            clench_progress = _smooth_progress(
+                elapsed_ms,
+                ACT_THREE_HANDS_HOLD_END_MS,
+                ACT_THREE_CLENCH_END_MS,
+            )
+
+            if clench_progress < 0.5:
+                screen.blit(open_hands, hands_position)
+            else:
+                screen.blit(clenched_hands, hands_position)
+
+            crossfade_darkness = pygame.Surface(
+                (GAME_WIDTH, GAME_HEIGHT),
+                pygame.SRCALPHA,
+            )
+            crossfade_darkness.fill(
+                (
+                    0,
+                    0,
+                    0,
+                    round(225 * (1 - abs(2 * clench_progress - 1))),
+                )
+            )
+            screen.blit(crossfade_darkness, (0, 0))
+        else:
+            screen.blit(clenched_hands, hands_position)
+
+    opening_progress = _smooth_progress(
+        elapsed_ms,
+        ACT_THREE_EYES_OPEN_START_MS,
+        ACT_THREE_EYES_OPEN_END_MS,
+    )
+
+    if opening_progress < 1:
+        aperture_height = max(
+            2,
+            round(GAME_HEIGHT * 1.8 * opening_progress),
+        )
+        eyelids = pygame.Surface(
+            (GAME_WIDTH, GAME_HEIGHT),
+            pygame.SRCALPHA,
+        )
+        eyelids.fill((0, 0, 0, 255))
+        pygame.draw.ellipse(
+            eyelids,
+            (0, 0, 0, 0),
+            (
+                -GAME_WIDTH // 4,
+                GAME_HEIGHT // 2 - aperture_height // 2,
+                GAME_WIDTH * 3 // 2,
+                aperture_height,
+            ),
+        )
+        screen.blit(eyelids, (0, 0))
+
+    if elapsed_ms > ACT_THREE_FINAL_HOLD_END_MS:
+        fade_progress = _smooth_progress(
+            elapsed_ms,
+            ACT_THREE_FINAL_HOLD_END_MS,
+            ACT_THREE_AWAKENING_END_MS,
+        )
+        fade_overlay = pygame.Surface(
+            (GAME_WIDTH, GAME_HEIGHT),
+            pygame.SRCALPHA,
+        )
+        fade_overlay.fill((0, 0, 0, round(255 * fade_progress)))
+        screen.blit(fade_overlay, (0, 0))
+
+
+def _subclass_card_rectangles():
+    card_width = 410
+    card_height = 475
+    gap = 50
+    total_width = card_width * 2 + gap
+    left = (GAME_WIDTH - total_width) // 2
+    top = 155
+
+    return (
+        pygame.Rect(
+            left,
+            top,
+            card_width,
+            card_height,
+        ),
+        pygame.Rect(
+            left + card_width + gap,
+            top,
+            card_width,
+            card_height,
+        ),
+    )
+
+
+def get_subclass_selection_rectangles(
+    player_class="warrior",
+):
+    first_rectangle, second_rectangle = (
+        _subclass_card_rectangles()
+    )
+
+    if player_class == "rogue":
+        return {
+            "assassin": first_rectangle,
+            "archer": second_rectangle,
+        }
+    if player_class == "mage":
+        return {"warlock": first_rectangle}
+
+    return {
+        "berserker": first_rectangle,
+        "paladin": second_rectangle,
+    }
+
+
+def draw_subclass_selection_screen(
+    screen,
+    title_font,
+    heading_font,
+    text_font,
+    assets,
+    mouse_position,
+    selected_subclass,
+    player_class,
+):
+    background = assets["background"]
+    screen.blit(
+        background,
+        (
+            (GAME_WIDTH - background.get_width()) // 2,
+            GAME_HEIGHT - background.get_height(),
+        ),
+    )
+    veil = pygame.Surface(
+        (GAME_WIDTH, GAME_HEIGHT),
+        pygame.SRCALPHA,
+    )
+    veil.fill((3, 2, 5, 205))
+    screen.blit(veil, (0, 0))
+
+    is_rogue = player_class == "rogue"
+    is_mage = player_class == "mage"
+    title_color = (
+        (70, 137, 230)
+        if is_rogue
+        else (163, 88, 221)
+        if is_mage
+        else (214, 70, 62)
+    )
+    title = title_font.render(
+        "THE SECOND VEIL FALLS",
+        True,
+        title_color,
+    )
+    screen.blit(
+        title,
+        title.get_rect(center=(GAME_WIDTH // 2, 60)),
+    )
+    prompt = text_font.render(
+        (
+            "Choose what the rogue will become."
+            if is_rogue
+            else "Choose what the mage will become."
+            if is_mage
+            else "Choose what the warrior will become."
+        ),
+        True,
+        TEXT_COLOR,
+    )
+    screen.blit(
+        prompt,
+        prompt.get_rect(center=(GAME_WIDTH // 2, 112)),
+    )
+
+    if is_rogue:
+        card_configs = (
+            {
+                "name": "assassin",
+                "number": 1,
+                "title": "ASSASSIN",
+                "description": (
+                    "One blade. One breath. No witness."
+                ),
+                "portrait": "assassin_portrait",
+                "color": (75, 143, 238),
+                "dim_color": (39, 72, 116),
+                "background": (9, 13, 22),
+            },
+            {
+                "name": "archer",
+                "number": 2,
+                "title": "ARCHER",
+                "description": (
+                    "One arrow. One heartbeat. No escape."
+                ),
+                "portrait": "archer_portrait",
+                "color": (105, 151, 76),
+                "dim_color": (55, 79, 47),
+                "background": (11, 17, 13),
+            },
+        )
+    elif is_mage:
+        card_configs = (
+            {
+                "name": "warlock",
+                "number": 1,
+                "title": "WARLOCK",
+                "description": (
+                    "One pact. Endless consequence."
+                ),
+                "portrait": "warlock_portrait",
+                "color": (176, 91, 232),
+                "dim_color": (88, 51, 111),
+                "background": (17, 10, 22),
+            },
+        )
+    else:
+        card_configs = (
+            {
+                "name": "berserker",
+                "number": 1,
+                "title": "BERSERKER",
+                "description": "Two blades. No restraint.",
+                "portrait": "berserker_portrait",
+                "color": (225, 78, 62),
+                "dim_color": (112, 54, 50),
+                "background": (24, 13, 15),
+            },
+            {
+                "name": "paladin",
+                "number": 2,
+                "title": "PALADIN",
+                "description": "Sword. Shield. Unbroken oath.",
+                "portrait": "paladin_portrait",
+                "color": (218, 178, 86),
+                "dim_color": (103, 87, 55),
+                "background": (15, 16, 18),
+            },
+        )
+
+    card_rectangles = _subclass_card_rectangles()
+
+    for card_config, rectangle in zip(
+        card_configs,
+        card_rectangles,
+    ):
+        subclass = card_config["name"]
+        hovered = (
+            selected_subclass is None
+            and mouse_position is not None
+            and rectangle.collidepoint(mouse_position)
+        )
+        border_color = (
+            card_config["color"]
+            if hovered or selected_subclass == subclass
+            else card_config["dim_color"]
+        )
+        pygame.draw.rect(
+            screen,
+            card_config["background"],
+            rectangle,
+            border_radius=12,
+        )
+        pygame.draw.rect(
+            screen,
+            border_color,
+            rectangle,
+            width=3,
+            border_radius=12,
+        )
+        portrait = assets[card_config["portrait"]]
+        screen.blit(
+            portrait,
+            portrait.get_rect(
+                center=(rectangle.centerx, 285)
+            ),
+        )
+        card_title = heading_font.render(
+            (
+                f"[{card_config['number']}] "
+                f"{card_config['title']}"
+            ),
+            True,
+            card_config["color"],
+        )
+        screen.blit(
+            card_title,
+            card_title.get_rect(
+                center=(rectangle.centerx, 445)
+            ),
+        )
+        description = text_font.render(
+            card_config["description"],
+            True,
+            TEXT_COLOR,
+        )
+        screen.blit(
+            description,
+            description.get_rect(
+                center=(rectangle.centerx, 490)
+            ),
+        )
+        action_label = (
+            "PATH CHOSEN"
+            if selected_subclass == subclass
+            else "CLICK TO CHOOSE"
+            if hovered
+            else f"PRESS {card_config['number']}"
+        )
+        action_surface = text_font.render(
+            action_label,
+            True,
+            border_color,
+        )
+        screen.blit(
+            action_surface,
+            action_surface.get_rect(
+                center=(rectangle.centerx, 585)
+            ),
+        )
+
+    if is_mage:
+        locked_rectangle = card_rectangles[1]
+        pygame.draw.rect(
+            screen,
+            (8, 9, 12),
+            locked_rectangle,
+            border_radius=12,
+        )
+        pygame.draw.rect(
+            screen,
+            (49, 51, 60),
+            locked_rectangle,
+            width=3,
+            border_radius=12,
+        )
+        unknown_title = heading_font.render(
+            "UNKNOWN",
+            True,
+            (79, 80, 90),
+        )
+        screen.blit(
+            unknown_title,
+            unknown_title.get_rect(
+                center=(locked_rectangle.centerx, 445)
+            ),
+        )
+        unknown_description = text_font.render(
+            "This path has not revealed itself.",
+            True,
+            (91, 91, 101),
+        )
+        screen.blit(
+            unknown_description,
+            unknown_description.get_rect(
+                center=(locked_rectangle.centerx, 490)
+            ),
+        )

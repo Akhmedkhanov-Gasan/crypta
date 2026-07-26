@@ -202,6 +202,10 @@ class FloorState(AttributeMapping):
     boss_emitters: list[tuple[int, int]]
     seal_boss_door_during_fight: bool
     boss_fight_started: bool
+    torches: list[tuple[int, int]] = field(
+        default_factory=list
+    )
+    visual_seed: int = 0
     dropped_keys: list[tuple[int, int]] = field(
         default_factory=list
     )
@@ -219,6 +223,7 @@ class PlayerState:
     crit_chance: float = 0.0
     dodge_chance: float = 0.0
     player_class: str | None = None
+    subclass: str | None = None
     potion_count: int = 0
     gold_count: int = 0
     key_count: int = 0
@@ -238,6 +243,11 @@ class GameState:
     upgrade_screen_open: bool = False
     class_selection_open: bool = False
     class_transition_started_at: int = 0
+    act_three_transition_open: bool = False
+    act_three_transition_started_at: int = 0
+    act_three_visual_started_at: int = 0
+    act_three_debug_class_selection_open: bool = False
+    subclass_selection_open: bool = False
     upgrade_message: str = ""
     player_attack_targets: list[tuple[int, int]] = field(
         default_factory=list

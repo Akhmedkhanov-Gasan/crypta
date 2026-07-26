@@ -1,8 +1,12 @@
 from presentation.assets import (
     load_act_one_fonts,
+    load_act_three_fonts,
+    load_act_three_gameplay_assets,
+    load_act_three_transition_assets,
     load_act_two_fonts,
     load_act_two_sprites,
 )
+from presentation.act_three import draw_act_three_gameplay
 from presentation.hud import (
     draw_sidebar,
     draw_status,
@@ -10,8 +14,13 @@ from presentation.hud import (
 )
 from presentation.layout import CLASS_SELECTION_READY_MS
 from presentation.screens import (
+    draw_act_three_debug_class_selection,
+    draw_act_three_awakening,
     draw_class_selection_screen,
+    draw_subclass_selection_screen,
     draw_upgrade_screen,
+    get_act_three_debug_class_rectangles,
+    get_subclass_selection_rectangles,
 )
 from presentation.world import (
     draw_attack_markers,
@@ -33,6 +42,9 @@ from presentation.world import (
 
 __all__ = [
     "CLASS_SELECTION_READY_MS",
+    "draw_act_three_awakening",
+    "draw_act_three_debug_class_selection",
+    "draw_act_three_gameplay",
     "draw_attack_markers",
     "draw_boss_door",
     "draw_chest",
@@ -50,9 +62,15 @@ __all__ = [
     "draw_sidebar",
     "draw_stairs",
     "draw_status",
+    "draw_subclass_selection_screen",
     "draw_upgrade_screen",
     "get_class_selection_rectangles",
+    "get_act_three_debug_class_rectangles",
+    "get_subclass_selection_rectangles",
     "load_act_one_fonts",
+    "load_act_three_fonts",
+    "load_act_three_gameplay_assets",
+    "load_act_three_transition_assets",
     "load_act_two_fonts",
     "load_act_two_sprites",
 ]

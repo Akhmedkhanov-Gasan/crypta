@@ -198,4 +198,6 @@ def generate_oracle_floor(config):
         "boss_columns": boss_columns,
         "boss_emitters": boss_emitters,
         "seal_boss_door_during_fight": True,
+        "torches": [],
+        "visual_seed": random.randrange(1, 2**31),
     }
