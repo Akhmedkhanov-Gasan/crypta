@@ -46,6 +46,25 @@ def load_act_two_fonts():
     }
 
 
+def load_act_three_fonts():
+    regular_path = FONT_ROOT / "AlphaSpikeRegular.ttf"
+
+    return {
+        "title": pygame.font.Font(str(regular_path), 46),
+        "heading": pygame.font.Font(str(regular_path), 28),
+        "narrative": pygame.font.Font(str(regular_path), 27),
+        "text": pygame.font.Font(str(regular_path), 20),
+        "sidebar_heading": pygame.font.Font(
+            str(regular_path),
+            23,
+        ),
+        "sidebar_text": pygame.font.Font(
+            str(regular_path),
+            16,
+        ),
+    }
+
+
 def load_act_two_sprites():
     asset_directory = ASSET_ROOT / "act_2"
     ui_directory = ASSET_ROOT / "ui" / "act_2"
@@ -158,3 +177,373 @@ def load_act_two_sprites():
         ).convert_alpha()
 
     return sprites
+
+
+def _scale_to_width(source, target_width):
+    source_width, source_height = source.get_size()
+    target_height = round(
+        source_height * target_width / source_width
+    )
+    return pygame.transform.smoothscale(
+        source,
+        (target_width, target_height),
+    )
+
+
+def load_act_three_transition_assets():
+    ui_directory = ASSET_ROOT / "ui" / "act_3"
+    player_directory = ASSET_ROOT / "act_3" / "player"
+    berserker_path = (
+        player_directory
+        / "berserker"
+        / "idle"
+        / "idle_00_original.png"
+    )
+    paladin_path = (
+        player_directory
+        / "paladin"
+        / "idle"
+        / "idle_00_original.png"
+    )
+    assassin_path = (
+        player_directory
+        / "assassin"
+        / "idle"
+        / "idle_00_original.png"
+    )
+    archer_path = (
+        player_directory
+        / "archer"
+        / "idle"
+        / "idle_00_original.png"
+    )
+    warlock_path = (
+        player_directory
+        / "warlock"
+        / "idle"
+        / "idle_00_original.png"
+    )
+    background_source = pygame.image.load(
+        str(ui_directory / "awakening_background_v2.png")
+    ).convert()
+    background_width = round(GAME_WIDTH * 1.12)
+    hands_width = GAME_WIDTH
+
+    assets = {
+        "background": _scale_to_width(
+            background_source,
+            background_width,
+        ),
+        "berserker_portrait": pygame.transform.smoothscale(
+            pygame.image.load(
+                str(berserker_path)
+            ).convert_alpha(),
+            (230, 230),
+        ),
+        "paladin_portrait": pygame.transform.smoothscale(
+            pygame.image.load(
+                str(paladin_path)
+            ).convert_alpha(),
+            (230, 230),
+        ),
+        "assassin_portrait": pygame.transform.smoothscale(
+            pygame.image.load(
+                str(assassin_path)
+            ).convert_alpha(),
+            (230, 230),
+        ),
+        "archer_portrait": pygame.transform.smoothscale(
+            pygame.image.load(
+                str(archer_path)
+            ).convert_alpha(),
+            (230, 230),
+        ),
+        "warlock_portrait": pygame.transform.smoothscale(
+            pygame.image.load(
+                str(warlock_path)
+            ).convert_alpha(),
+            (230, 230),
+        ),
+    }
+
+    for player_class in ("warrior", "rogue", "mage"):
+        for pose in ("open", "clenched"):
+            hands = _scale_to_width(
+                pygame.image.load(
+                    str(
+                        ui_directory
+                        / f"{player_class}_hands_{pose}.png"
+                    )
+                ).convert_alpha(),
+                hands_width,
+            )
+            hands.fill(
+                (185, 190, 200, 255),
+                special_flags=pygame.BLEND_RGBA_MULT,
+            )
+            assets[f"{player_class}_hands_{pose}"] = hands
+
+    return assets
+
+
+def _load_scaled_image(path, size, use_alpha=True):
+    source = pygame.image.load(str(path))
+    source = (
+        source.convert_alpha()
+        if use_alpha
+        else source.convert()
+    )
+    return pygame.transform.smoothscale(source, size)
+
+
+def _load_pixel_scaled_image(path, size):
+    source = pygame.image.load(str(path)).convert_alpha()
+    return pygame.transform.scale(source, size)
+
+
+def _load_cropped_ui_image(path, size):
+    source = pygame.image.load(str(path)).convert_alpha()
+    content_rectangle = source.get_bounding_rect(min_alpha=1)
+    cropped_source = source.subsurface(
+        content_rectangle
+    ).copy()
+    return pygame.transform.smoothscale(cropped_source, size)
+
+
+def load_act_three_gameplay_assets():
+    act_directory = ASSET_ROOT / "act_3"
+    environment_directory = act_directory / "environment"
+    act_two_directory = ASSET_ROOT / "act_2"
+    ui_directory = ASSET_ROOT / "ui" / "act_3"
+    tile_size = 64
+    assets = {
+        "floor_base": _load_scaled_image(
+            environment_directory / "floor" / "floor_base.png",
+            (tile_size, tile_size),
+            use_alpha=False,
+        ),
+        "floor_cracked": _load_scaled_image(
+            environment_directory
+            / "floor"
+            / "floor_cracked.png",
+            (tile_size, tile_size),
+            use_alpha=False,
+        ),
+        "floor_damp": _load_scaled_image(
+            environment_directory / "floor" / "floor_damp.png",
+            (tile_size, tile_size),
+            use_alpha=False,
+        ),
+        "wall_top": _load_scaled_image(
+            environment_directory
+            / "walls"
+            / "wall_top_original.png",
+            (tile_size, tile_size),
+            use_alpha=False,
+        ),
+        "wall_top_variant": _load_scaled_image(
+            environment_directory
+            / "walls"
+            / "wall_top_variant_01_original.png",
+            (tile_size, tile_size),
+            use_alpha=False,
+        ),
+        "wall_top_turn_left": _load_scaled_image(
+            environment_directory
+            / "walls"
+            / "wall_top_turn_left.png",
+            (tile_size, tile_size),
+        ),
+        "wall_top_turn_right": _load_scaled_image(
+            environment_directory
+            / "walls"
+            / "wall_top_turn_right.png",
+            (tile_size, tile_size),
+        ),
+        "wall_bottom": _load_scaled_image(
+            environment_directory
+            / "walls"
+            / "wall_bottom.png",
+            (tile_size, tile_size),
+        ),
+        "wall_left": _load_scaled_image(
+            environment_directory / "walls" / "wall_left.png",
+            (tile_size, tile_size),
+        ),
+        "wall_right": _load_scaled_image(
+            environment_directory / "walls" / "wall_right.png",
+            (tile_size, tile_size),
+        ),
+        "wall_corner_bottom_left": _load_scaled_image(
+            environment_directory
+            / "walls"
+            / "wall_corner_bottom_left.png",
+            (tile_size, tile_size),
+        ),
+        "wall_corner_bottom_right": _load_scaled_image(
+            environment_directory
+            / "walls"
+            / "wall_corner_bottom_right.png",
+            (tile_size, tile_size),
+        ),
+        "wall_corner_top_left": _load_scaled_image(
+            environment_directory
+            / "walls"
+            / "wall_corner_top_left.png",
+            (tile_size, tile_size),
+        ),
+        "wall_corner_top_right": _load_scaled_image(
+            environment_directory
+            / "walls"
+            / "wall_corner_top_right.png",
+            (tile_size, tile_size),
+        ),
+        "chest_closed": _load_scaled_image(
+            environment_directory
+            / "chests"
+            / "chest_closed.png",
+            (tile_size, tile_size),
+        ),
+        "chest_open": _load_scaled_image(
+            environment_directory
+            / "chests"
+            / "chest_open.png",
+            (tile_size, tile_size),
+        ),
+        "coin": _load_scaled_image(
+            environment_directory / "items" / "coin.png",
+            (tile_size, tile_size),
+        ),
+        "key": _load_scaled_image(
+            environment_directory / "items" / "key.png",
+            (tile_size, tile_size),
+        ),
+        "potion": _load_scaled_image(
+            environment_directory
+            / "items"
+            / "potion_health.png",
+            (tile_size, tile_size),
+        ),
+        "stairs_locked": _load_scaled_image(
+            environment_directory
+            / "stairs"
+            / "stairs_locked_original.png",
+            (tile_size, tile_size),
+        ),
+        "stairs_open": _load_scaled_image(
+            environment_directory
+            / "stairs"
+            / "stairs_open_original.png",
+            (tile_size, tile_size),
+        ),
+        "torch_base": _load_scaled_image(
+            environment_directory
+            / "torches"
+            / "torch_base_v2.png",
+            (tile_size, tile_size),
+        ),
+        "gameplay_frame": _load_cropped_ui_image(
+            ui_directory / "gameplay_frame_source.png",
+            (928, 656),
+        ),
+        "sidebar_panel": _load_cropped_ui_image(
+            ui_directory / "sidebar_panel_source.png",
+            (304, 640),
+        ),
+    }
+
+    for frame_index in range(3):
+        assets[f"torch_flame_{frame_index}"] = (
+            _load_scaled_image(
+                environment_directory
+                / "torches"
+                / f"torch_flame_0{frame_index}_v2.png",
+                (tile_size, tile_size),
+            )
+        )
+
+    idle_filenames = (
+        "idle_00.png",
+        "idle_01.png",
+        "idle_02.png",
+    )
+
+    for subclass in (
+        "berserker",
+        "paladin",
+        "assassin",
+        "archer",
+        "warlock",
+    ):
+        idle_directory = (
+            act_directory / "player" / subclass / "idle"
+        )
+
+        for frame_index, filename in enumerate(
+            idle_filenames
+        ):
+            assets[
+                f"player_{subclass}_idle_{frame_index}"
+            ] = (
+                _load_scaled_image(
+                    idle_directory / filename,
+                    (tile_size, tile_size),
+                )
+            )
+
+    for enemy_type in (
+        "archer",
+        "brute",
+        "sentinel",
+        "priest",
+    ):
+        enemy_idle_directory = (
+            act_directory
+            / "enemies"
+            / enemy_type
+            / "idle"
+        )
+
+        for frame_index in range(3):
+            assets[
+                f"enemy_{enemy_type}_idle_{frame_index}"
+            ] = _load_pixel_scaled_image(
+                enemy_idle_directory
+                / f"idle_{frame_index:02d}.png",
+                (tile_size, tile_size),
+            )
+
+    assets["sentinel_guard"] = (
+        _load_pixel_scaled_image(
+            act_directory
+            / "enemies"
+            / "sentinel"
+            / "guard.png",
+            (tile_size, tile_size),
+        )
+    )
+    assets["priest_heal_cast"] = (
+        _load_pixel_scaled_image(
+            act_directory
+            / "enemies"
+            / "priest"
+            / "heal_cast.png",
+            (tile_size, tile_size),
+        )
+    )
+
+    fallback_enemy_sprites = {
+        "goblin": "goblin",
+        "brute": "brute",
+        "sentinel": "sentinel_idle",
+    }
+
+    for enemy_type, sprite_name in fallback_enemy_sprites.items():
+        assets[f"enemy_{enemy_type}"] = (
+            _load_pixel_scaled_image(
+                act_two_directory / f"{sprite_name}.png",
+                (tile_size, tile_size),
+            )
+        )
+
+    return assets

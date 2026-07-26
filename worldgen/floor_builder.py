@@ -18,6 +18,7 @@ from worldgen.geometry import (
     position_is_in_room,
     room_center,
 )
+from worldgen.act_three import generate_act_three_floor
 
 
 def choose_free_position(candidate_positions, occupied_positions):
@@ -35,6 +36,10 @@ def choose_free_position(candidate_positions, occupied_positions):
 
 def generate_floor(floor_index):
     config = FLOOR_CONFIGS[floor_index]
+
+    if config.get("generator") == "act_three":
+        return generate_act_three_floor(config)
+
     boss_enemy_types = config.get("boss_enemy_types", [])
     boss_room_layout = config.get("boss_room_layout")
 
@@ -232,4 +237,6 @@ def generate_floor(floor_index):
             "seal_boss_door_during_fight",
             False,
         ),
+        "torches": [],
+        "visual_seed": random.randrange(1, 2**31),
     }

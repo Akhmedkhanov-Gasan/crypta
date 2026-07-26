@@ -139,6 +139,19 @@ def resolve_enemy_defeat(
     if enemy.type == "oracle":
         floor.projectiles.clear()
 
+        if (
+            player.player_class in ("warrior", "rogue")
+            and player.subclass is None
+        ):
+            game_state.act_three_transition_open = True
+            game_state.act_three_transition_started_at = 0
+            game_state.act_three_visual_started_at = 0
+            game_state.player_attack_targets = []
+            add_log_message(
+                game_state.combat_log,
+                "The second veil begins to fall.",
+            )
+
     if player.player_class is not None:
         player.ability_kill_charge = min(
             CLASS_ABILITY_KILLS,

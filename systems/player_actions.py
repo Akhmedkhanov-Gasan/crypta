@@ -206,6 +206,41 @@ def _resolve_stairs(
     if not reached_open_stairs:
         return True
 
+    current_floor_config = FLOOR_CONFIGS[
+        game_state.floor_index
+    ]
+    next_act = (
+        FLOOR_CONFIGS[game_state.floor_index + 1]["act"]
+        if game_state.floor_index + 1 < len(FLOOR_CONFIGS)
+        else None
+    )
+    reached_end_of_act_two = (
+        current_floor_config["act"] == 2
+        and next_act != 2
+    )
+
+    if reached_end_of_act_two:
+        if (
+            game_state.player.player_class
+            in ("warrior", "rogue")
+            and game_state.player.subclass is None
+        ):
+            game_state.act_three_transition_open = True
+            game_state.act_three_visual_started_at = 0
+            game_state.player_attack_targets = []
+            add_log_message(
+                game_state.combat_log,
+                "The second veil begins to fall.",
+            )
+            return False
+
+        game_state.game_won = True
+        add_log_message(
+            game_state.combat_log,
+            "The Crypta is conquered.",
+        )
+        return True
+
     if game_state.floor_index == len(FLOOR_CONFIGS) - 1:
         game_state.game_won = True
         add_log_message(
@@ -329,6 +364,11 @@ def try_move_player(
 
     if game_state.class_selection_open:
         game_state.class_transition_started_at = (
+            transition_started_at
+        )
+
+    if game_state.act_three_transition_open:
+        game_state.act_three_transition_started_at = (
             transition_started_at
         )
 

@@ -121,6 +121,8 @@ def create_floor_state(floor_index: int) -> FloorState:
             "seal_boss_door_during_fight"
         ],
         boss_fight_started=floor["boss_door"] is None,
+        torches=floor.get("torches", []),
+        visual_seed=floor.get("visual_seed", 0),
     )
 
 
