@@ -31,6 +31,9 @@ from settings import (
 _TORCH_LIGHT_SURFACE = None
 _IDLE_FRAME_SEQUENCE = (0, 1, 2, 1)
 _IDLE_TIMELINE_CYCLE_COUNT = 4
+_MOVE_FRAME_COUNT = 2
+_MOVE_FRAME_DURATION_MS = 90
+_ATTACK_FRAME_DURATION_MS = 240
 _TOP_VOID_CORNER_Y_OFFSET = 47
 _TOP_VOID_CORNER_X_OFFSETS = {
     "wall_corner_top_left": -18,
@@ -346,6 +349,56 @@ def _idle_frame(current_time, identity_seed):
         elapsed -= duration
 
     return 0
+
+
+def _movement_frame(current_time, started_at):
+    return (
+        (current_time - started_at) // _MOVE_FRAME_DURATION_MS
+    ) % _MOVE_FRAME_COUNT
+
+
+def _draw_attack_impact_flash(
+    surface,
+    position,
+    current_time,
+    started_at,
+    flash_color,
+):
+    elapsed = current_time - started_at
+    if not 0 <= elapsed < _ATTACK_FRAME_DURATION_MS:
+        return
+
+    progress = elapsed / _ATTACK_FRAME_DURATION_MS
+    visibility = math.sin(math.pi * progress)
+    center = (
+        position[0] + ACT_THREE_TILE_SIZE // 2,
+        position[1] + ACT_THREE_TILE_SIZE // 2,
+    )
+    radius = round(7 + visibility * 9)
+    alpha = round(190 * visibility)
+    flash_surface = pygame.Surface(
+        (ACT_THREE_TILE_SIZE, ACT_THREE_TILE_SIZE),
+        pygame.SRCALPHA,
+    )
+    local_center = (
+        center[0] - position[0],
+        center[1] - position[1],
+    )
+    pygame.draw.circle(
+        flash_surface,
+        (*flash_color, alpha),
+        local_center,
+        radius,
+        width=2,
+    )
+    pygame.draw.line(
+        flash_surface,
+        (235, 255, 235, alpha),
+        (local_center[0] - radius, local_center[1] + radius // 2),
+        (local_center[0] + radius, local_center[1] - radius // 2),
+        width=2,
+    )
+    surface.blit(flash_surface, position)
 
 
 def _enemy_sprite(
@@ -1108,25 +1161,58 @@ def _draw_act_three_world(
     ):
         player_subclass = "berserker"
 
-    player_frame = _idle_frame(
-        current_time,
-        (
-            floor.visual_seed
-            ^ _stable_text_seed(
-                f"player:{player_subclass}"
-            )
-        ),
+    movement_elapsed = (
+        current_time
+        - game_state.player.movement_animation_started_at
     )
+    attack_elapsed = (
+        current_time
+        - game_state.player.attack_animation_started_at
+    )
+    if (
+        player_subclass in (
+            "assassin",
+            "archer",
+            "berserker",
+        )
+        and 0 <= attack_elapsed < _ATTACK_FRAME_DURATION_MS
+    ):
+        player_sprite = assets[
+            f"player_{player_subclass}_attack"
+        ]
+    elif (
+        player_subclass in (
+            "assassin",
+            "archer",
+            "berserker",
+        )
+        and 0 <= movement_elapsed < (
+            _MOVE_FRAME_COUNT * _MOVE_FRAME_DURATION_MS
+        )
+    ):
+        player_sprite = assets[
+            f"player_{player_subclass}_walk_"
+            f"{_movement_frame(current_time, game_state.player.movement_animation_started_at)}"
+        ]
+    else:
+        player_frame = _idle_frame(
+            current_time,
+            (
+                floor.visual_seed
+                ^ _stable_text_seed(
+                    f"player:{player_subclass}"
+                )
+            ),
+        )
+        player_sprite = assets[
+            f"player_{player_subclass}_idle_{player_frame}"
+        ]
     player_position = _view_position(
         floor.player_column,
         floor.player_row,
         camera_x,
         camera_y,
     )
-    player_sprite = assets[
-        f"player_{player_subclass}_idle_{player_frame}"
-    ]
-
     if player_subclass in ("archer", "assassin"):
         player_sprite = player_sprite.copy()
         light_color = (
@@ -1144,6 +1230,29 @@ def _draw_act_three_world(
         player_sprite.set_alpha(105)
 
     view_surface.blit(player_sprite, player_position)
+
+    if (
+        player_subclass in ("assassin", "archer")
+        and 0 <= attack_elapsed < _ATTACK_FRAME_DURATION_MS
+    ):
+        flash_color = (
+            (80, 230, 120)
+            if player_subclass == "archer"
+            else (155, 215, 255)
+        )
+        for column, row in game_state.player_attack_targets:
+            _draw_attack_impact_flash(
+                view_surface,
+                _view_position(
+                    column,
+                    row,
+                    camera_x,
+                    camera_y,
+                ),
+                current_time,
+                game_state.player.attack_animation_started_at,
+                flash_color,
+            )
 
     if player_subclass in ("archer", "assassin"):
         _draw_rogue_idle_particles(

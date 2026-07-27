@@ -73,6 +73,7 @@ from systems.player_abilities import (
 from systems.enemy_turn import resolve_enemy_turn
 
 FIRST_ACT_FINAL_FLOOR = 2
+ACT_THREE_MUSIC_ENABLED = False
 SECOND_ACT_FINAL_FLOOR = max(
     index
     for index, floor_config in enumerate(FLOOR_CONFIGS)
@@ -793,6 +794,9 @@ def main():
                             row_change,
                             resolve_oracle_hit_reaction,
                         )
+                        game_state.player.attack_animation_started_at = (
+                            pygame.time.get_ticks()
+                        )
 
                         player_acted = True
                     elif target_chest:
@@ -827,6 +831,7 @@ def main():
 
         if (
             game_state.act_three_transition_open
+            and ACT_THREE_MUSIC_ENABLED
             and not act_three_music_attempted
         ):
             act_three_music_attempted = True
