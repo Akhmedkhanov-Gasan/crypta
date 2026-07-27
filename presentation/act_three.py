@@ -641,6 +641,53 @@ def _draw_warlock_idle_flashes(
     )
 
 
+def _draw_summoner_idle_lights(
+    surface,
+    left,
+    top,
+    current_time,
+    identity_seed,
+):
+    margin = 7
+    effect_surface = pygame.Surface(
+        (
+            ACT_THREE_TILE_SIZE + margin * 2,
+            ACT_THREE_TILE_SIZE + margin * 2,
+        ),
+        pygame.SRCALPHA,
+    )
+    center_x = margin + ACT_THREE_TILE_SIZE // 2
+    center_y = margin + ACT_THREE_TILE_SIZE // 2 - 5
+
+    for light_index in range(5):
+        phase = (
+            current_time / 1050
+            + light_index * math.tau / 5
+            + (identity_seed % 127) / 127
+        )
+        light_x = center_x + round(math.cos(phase) * 27)
+        light_y = center_y + round(math.sin(phase) * 22)
+        pulse = (math.sin(phase * 1.7) + 1) / 2
+        alpha = round(115 + pulse * 80)
+        pygame.draw.circle(
+            effect_surface,
+            (35, 126, 137, alpha // 3),
+            (light_x, light_y),
+            3,
+        )
+        pygame.draw.circle(
+            effect_surface,
+            (105, 229, 231, alpha),
+            (light_x, light_y),
+            1,
+        )
+
+    surface.blit(
+        effect_surface,
+        (left - margin, top - margin),
+    )
+
+
 def _draw_sentinel_vulnerable_side(
     surface,
     enemy,
@@ -1057,6 +1104,7 @@ def _draw_act_three_world(
         "assassin",
         "archer",
         "warlock",
+        "summoner",
     ):
         player_subclass = "berserker"
 
@@ -1121,6 +1169,19 @@ def _draw_act_three_world(
                 floor.visual_seed
                 ^ _stable_text_seed(
                     "player:warlock:flashes"
+                )
+            ),
+        )
+    elif player_subclass == "summoner":
+        _draw_summoner_idle_lights(
+            view_surface,
+            player_position[0],
+            player_position[1],
+            current_time,
+            (
+                floor.visual_seed
+                ^ _stable_text_seed(
+                    "player:summoner:lights"
                 )
             ),
         )
@@ -1223,6 +1284,7 @@ def _draw_act_three_sidebar(
         "assassin": ("ASSASSIN", (69, 130, 221)),
         "archer": ("ARCHER", (105, 151, 76)),
         "warlock": ("WARLOCK", (176, 91, 232)),
+        "summoner": ("SUMMONER", (77, 184, 193)),
         "berserker": ("BERSERKER", (205, 68, 58)),
     }.get(
         player.subclass,

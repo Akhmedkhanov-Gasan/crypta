@@ -223,6 +223,12 @@ def load_act_three_transition_assets():
         / "idle"
         / "idle_00_original.png"
     )
+    summoner_path = (
+        player_directory
+        / "summoner"
+        / "idle"
+        / "idle_00_original.png"
+    )
     background_source = pygame.image.load(
         str(ui_directory / "awakening_background_v2.png")
     ).convert()
@@ -261,6 +267,12 @@ def load_act_three_transition_assets():
         "warlock_portrait": pygame.transform.smoothscale(
             pygame.image.load(
                 str(warlock_path)
+            ).convert_alpha(),
+            (230, 230),
+        ),
+        "summoner_portrait": pygame.transform.smoothscale(
+            pygame.image.load(
+                str(summoner_path)
             ).convert_alpha(),
             (230, 230),
         ),
@@ -474,6 +486,7 @@ def load_act_three_gameplay_assets():
         "assassin",
         "archer",
         "warlock",
+        "summoner",
     ):
         idle_directory = (
             act_directory / "player" / subclass / "idle"

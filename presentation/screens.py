@@ -922,7 +922,10 @@ def get_subclass_selection_rectangles(
             "archer": second_rectangle,
         }
     if player_class == "mage":
-        return {"warlock": first_rectangle}
+        return {
+            "warlock": first_rectangle,
+            "summoner": second_rectangle,
+        }
 
     return {
         "berserker": first_rectangle,
@@ -1030,6 +1033,18 @@ def draw_subclass_selection_screen(
                 "dim_color": (88, 51, 111),
                 "background": (17, 10, 22),
             },
+            {
+                "name": "summoner",
+                "number": 2,
+                "title": "SUMMONER",
+                "description": (
+                    "One call. Another world answers."
+                ),
+                "portrait": "summoner_portrait",
+                "color": (77, 184, 193),
+                "dim_color": (46, 94, 101),
+                "background": (8, 18, 21),
+            },
         )
     else:
         card_configs = (
@@ -1136,40 +1151,3 @@ def draw_subclass_selection_screen(
             ),
         )
 
-    if is_mage:
-        locked_rectangle = card_rectangles[1]
-        pygame.draw.rect(
-            screen,
-            (8, 9, 12),
-            locked_rectangle,
-            border_radius=12,
-        )
-        pygame.draw.rect(
-            screen,
-            (49, 51, 60),
-            locked_rectangle,
-            width=3,
-            border_radius=12,
-        )
-        unknown_title = heading_font.render(
-            "UNKNOWN",
-            True,
-            (79, 80, 90),
-        )
-        screen.blit(
-            unknown_title,
-            unknown_title.get_rect(
-                center=(locked_rectangle.centerx, 445)
-            ),
-        )
-        unknown_description = text_font.render(
-            "This path has not revealed itself.",
-            True,
-            (91, 91, 101),
-        )
-        screen.blit(
-            unknown_description,
-            unknown_description.get_rect(
-                center=(locked_rectangle.centerx, 490)
-            ),
-        )

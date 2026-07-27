@@ -230,6 +230,7 @@ def choose_subclass(game_state, subclass):
         "assassin": "Assassin",
         "archer": "Archer",
         "warlock": "Warlock",
+        "summoner": "Summoner",
     }[subclass]
     class_name = game_state.player.player_class
     add_log_message(
@@ -352,6 +353,7 @@ def main():
                         "assassin": pygame.K_1,
                         "archer": pygame.K_2,
                         "warlock": pygame.K_1,
+                        "summoner": pygame.K_2,
                     }
 
                     for (
@@ -507,6 +509,8 @@ def main():
                         subclass_keys = {
                             pygame.K_1: "warlock",
                             pygame.K_KP1: "warlock",
+                            pygame.K_2: "summoner",
+                            pygame.K_KP2: "summoner",
                         }
                     else:
                         subclass_keys = {
