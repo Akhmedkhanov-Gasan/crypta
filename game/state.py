@@ -231,6 +231,8 @@ class PlayerState:
     ability_kill_charge: int = 0
     invisibility_turns: int = 0
     directional_ability_aiming: bool = False
+    movement_animation_started_at: int = 0
+    attack_animation_started_at: int = 0
 
 
 @dataclass

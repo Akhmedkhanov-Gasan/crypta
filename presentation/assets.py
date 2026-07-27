@@ -504,6 +504,66 @@ def load_act_three_gameplay_assets():
                 )
             )
 
+    walk_directory = (
+        act_directory / "player" / "assassin" / "walk"
+    )
+    for frame_index in range(2):
+        assets[f"player_assassin_walk_{frame_index}"] = (
+            _load_pixel_scaled_image(
+                walk_directory / f"walk_{frame_index:02d}.png",
+                (tile_size, tile_size),
+            )
+        )
+
+    archer_walk_directory = (
+        act_directory / "player" / "archer" / "walk"
+    )
+    for frame_index in range(2):
+        assets[f"player_archer_walk_{frame_index}"] = (
+            _load_pixel_scaled_image(
+                archer_walk_directory
+                / f"walk_{frame_index:02d}.png",
+                (tile_size, tile_size),
+            )
+        )
+
+    berserker_walk_directory = (
+        act_directory / "player" / "berserker" / "walk"
+    )
+    for frame_index in range(2):
+        assets[f"player_berserker_walk_{frame_index}"] = (
+            _load_pixel_scaled_image(
+                berserker_walk_directory
+                / f"walk_{frame_index:02d}.png",
+                (tile_size, tile_size),
+            )
+        )
+
+    assets["player_assassin_attack"] = _load_pixel_scaled_image(
+        act_directory
+        / "player"
+        / "assassin"
+        / "attack"
+        / "attack_00.png",
+        (tile_size, tile_size),
+    )
+    assets["player_archer_attack"] = _load_pixel_scaled_image(
+        act_directory
+        / "player"
+        / "archer"
+        / "attack"
+        / "attack_00.png",
+        (tile_size, tile_size),
+    )
+    assets["player_berserker_attack"] = _load_pixel_scaled_image(
+        act_directory
+        / "player"
+        / "berserker"
+        / "attack"
+        / "attack_00.png",
+        (tile_size, tile_size),
+    )
+
     for enemy_type in (
         "archer",
         "brute",

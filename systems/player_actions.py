@@ -326,6 +326,9 @@ def try_move_player(
     )
     floor.player_column = new_column
     floor.player_row = new_row
+    game_state.player.movement_animation_started_at = (
+        transition_started_at
+    )
     game_state.emit(
         GameEvent(
             type=GameEventType.MOVE,
