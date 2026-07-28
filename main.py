@@ -2,6 +2,7 @@ import pygame
 
 from bosses.oracle import resolve_oracle_hit_reaction
 from game.combat_log import add_log_message
+from game.events import GameEventType
 from game.factories import create_floor_state, create_game_state
 from levels import FLOOR_CONFIGS
 from logic import get_enemy_occupied_positions
@@ -218,10 +219,9 @@ def create_act_three_debug_transition(
 
 def choose_subclass(game_state, subclass):
     game_state.player.subclass = subclass
-    game_state.floor_index += 1
-    game_state.floor = create_floor_state(
-        game_state.floor_index
-    )
+    if not game_state.act_three_test_mode:
+        game_state.floor_index += 1
+        game_state.floor = create_floor_state(game_state.floor_index)
     game_state.player.key_count = 0
     game_state.player_attack_targets = []
     game_state.subclass_selection_open = False
@@ -466,6 +466,15 @@ def main():
                     )
                     continue
 
+                if event.key == pygame.K_F1:
+                    game_state = create_game_state(
+                        floor_index=len(FLOOR_CONFIGS) - 1,
+                        opening_message="Act III test room: choose a class.",
+                    )
+                    game_state.act_three_test_mode = True
+                    game_state.act_three_debug_class_selection_open = True
+                    continue
+
                 if game_state.act_three_debug_class_selection_open:
                     class_by_key = {
                         pygame.K_1: "warrior",
@@ -478,12 +487,24 @@ def main():
                     player_class = class_by_key.get(event.key)
 
                     if player_class is not None:
-                        game_state = (
-                            create_act_three_debug_transition(
-                                player_class,
-                                pygame.time.get_ticks(),
-                            )
-                        )
+                        if game_state.act_three_test_mode:
+                            game_state.player.player_class = player_class
+                            if player_class == "warrior":
+                                game_state.player.max_health += 4
+                                game_state.player.health += 4
+                            elif player_class == "rogue":
+                                game_state.player.max_health = max(
+                                    1, game_state.player.max_health - 2
+                                )
+                                game_state.player.health = max(
+                                    1, game_state.player.health - 2
+                                )
+                                game_state.player.crit_chance = 0.10
+                                game_state.player.dodge_chance = 0.10
+                            game_state.act_three_debug_class_selection_open = False
+                            game_state.subclass_selection_open = True
+                        else:
+                            game_state = create_act_three_debug_transition(player_class, pygame.time.get_ticks())
                     continue
 
                 if game_state.act_three_transition_open:
@@ -819,6 +840,36 @@ def main():
                         player_position_before_action,
                         rogue_ability_activated,
                     )
+                    enemy_movement_started_at = (
+                        pygame.time.get_ticks()
+                    )
+                    moved_enemy_names = {
+                        emitted_event.actor
+                        for emitted_event in game_state.events
+                        if emitted_event.type is GameEventType.MOVE
+                    }
+                    attacked_enemy_names = {
+                        emitted_event.actor
+                        for emitted_event in game_state.events
+                        if emitted_event.type is GameEventType.ATTACK
+                    }
+                    healed_enemy_names = {
+                        emitted_event.actor
+                        for emitted_event in game_state.events
+                        if emitted_event.type is GameEventType.HEAL
+                    }
+                    for enemy in game_state.floor["enemies"]:
+                        if enemy.name in moved_enemy_names:
+                            enemy.movement_animation_started_at = (
+                                enemy_movement_started_at
+                            )
+                        if (
+                            enemy.name in attacked_enemy_names
+                            or enemy.name in healed_enemy_names
+                        ):
+                            enemy.attack_animation_started_at = (
+                                enemy_movement_started_at
+                            )
         current_time = pygame.time.get_ticks()
 
         if (

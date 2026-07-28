@@ -539,6 +539,42 @@ def load_act_three_gameplay_assets():
             )
         )
 
+    paladin_walk_directory = (
+        act_directory / "player" / "paladin" / "walk"
+    )
+    for frame_index in range(2):
+        assets[f"player_paladin_walk_{frame_index}"] = (
+            _load_pixel_scaled_image(
+                paladin_walk_directory
+                / f"walk_{frame_index:02d}.png",
+                (tile_size, tile_size),
+            )
+        )
+
+    warlock_walk_directory = (
+        act_directory / "player" / "warlock" / "walk"
+    )
+    for frame_index in range(2):
+        assets[f"player_warlock_walk_{frame_index}"] = (
+            _load_pixel_scaled_image(
+                warlock_walk_directory
+                / f"walk_{frame_index:02d}.png",
+                (tile_size, tile_size),
+            )
+        )
+
+    summoner_walk_directory = (
+        act_directory / "player" / "summoner" / "walk"
+    )
+    for frame_index in range(2):
+        assets[f"player_summoner_walk_{frame_index}"] = (
+            _load_pixel_scaled_image(
+                summoner_walk_directory
+                / f"walk_{frame_index:02d}.png",
+                (tile_size, tile_size),
+            )
+        )
+
     assets["player_assassin_attack"] = _load_pixel_scaled_image(
         act_directory
         / "player"
@@ -559,6 +595,30 @@ def load_act_three_gameplay_assets():
         act_directory
         / "player"
         / "berserker"
+        / "attack"
+        / "attack_00.png",
+        (tile_size, tile_size),
+    )
+    assets["player_paladin_attack"] = _load_pixel_scaled_image(
+        act_directory
+        / "player"
+        / "paladin"
+        / "attack"
+        / "attack_00.png",
+        (tile_size, tile_size),
+    )
+    assets["player_warlock_attack"] = _load_pixel_scaled_image(
+        act_directory
+        / "player"
+        / "warlock"
+        / "attack"
+        / "attack_00.png",
+        (tile_size, tile_size),
+    )
+    assets["player_summoner_attack"] = _load_pixel_scaled_image(
+        act_directory
+        / "player"
+        / "summoner"
         / "attack"
         / "attack_00.png",
         (tile_size, tile_size),
@@ -585,6 +645,43 @@ def load_act_three_gameplay_assets():
                 / f"idle_{frame_index:02d}.png",
                 (tile_size, tile_size),
             )
+
+    for enemy_type in (
+        "archer",
+        "brute",
+        "priest",
+        "sentinel",
+    ):
+        enemy_walk_directory = (
+            act_directory
+            / "enemies"
+            / enemy_type
+            / "walk"
+        )
+        for frame_index in range(2):
+            assets[
+                f"enemy_{enemy_type}_walk_{frame_index}"
+            ] = _load_pixel_scaled_image(
+                enemy_walk_directory
+                / f"walk_{frame_index:02d}.png",
+                (tile_size, tile_size),
+            )
+
+    for enemy_type in (
+        "archer",
+        "brute",
+        "sentinel",
+    ):
+        assets[
+            f"enemy_{enemy_type}_attack"
+        ] = _load_pixel_scaled_image(
+            act_directory
+            / "enemies"
+            / enemy_type
+            / "attack"
+            / "attack_00.png",
+            (tile_size, tile_size),
+        )
 
     assets["sentinel_guard"] = (
         _load_pixel_scaled_image(

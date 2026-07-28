@@ -126,6 +126,9 @@ class EnemyState(AttributeMapping):
     heal_amount: int = 0
     heal_cooldown_duration: int = 0
     heal_range: int = 0
+    movement_animation_started_at: int = 0
+    attack_animation_started_at: int = 0
+    movement_bounds: tuple[int, int, int, int] | None = None
 
     @classmethod
     def from_config(
@@ -250,6 +253,7 @@ class GameState:
     act_three_visual_started_at: int = 0
     act_three_debug_class_selection_open: bool = False
     subclass_selection_open: bool = False
+    act_three_test_mode: bool = False
     upgrade_message: str = ""
     player_attack_targets: list[tuple[int, int]] = field(
         default_factory=list

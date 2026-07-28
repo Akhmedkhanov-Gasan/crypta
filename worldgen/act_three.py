@@ -328,3 +328,83 @@ def generate_act_three_floor(config):
         "torches": torches,
         "visual_seed": random.randrange(1, 2**31),
     }
+
+
+def generate_act_three_test_floor(config):
+    columns = config.get("map_columns", 35)
+    rows = config.get("map_rows", 21)
+    dungeon_map = [["#" for _ in range(columns)] for _ in range(rows)]
+
+    def carve_room(left, top, width=7, height=7):
+        for room_row in range(top, top + height):
+            for room_column in range(left, left + width):
+                dungeon_map[room_row][room_column] = "."
+
+    rooms = [(2, 2), (10, 2), (18, 2), (26, 2)]
+    for room in rooms:
+        carve_room(*room)
+
+    center_column = columns // 2
+    center_row = rows // 2
+    for row in range(9, rows - 1):
+        for column in range(1, columns - 1):
+            dungeon_map[row][column] = "."
+
+    # One opening at the bottom of each top arena.
+    doorways = [(5, 8), (13, 8), (21, 8), (29, 8)]
+    for left, top in rooms:
+        for column in range(left, left + 7):
+            dungeon_map[top][column] = "#"
+            dungeon_map[top + 6][column] = "#"
+        for row in range(top, top + 7):
+            dungeon_map[row][left] = "#"
+            dungeon_map[row][left + 6] = "#"
+    for column, row in doorways:
+        dungeon_map[row][column] = "."
+
+    dungeon_map = ["".join(row) for row in dungeon_map]
+    player_start = (center_column, center_row)
+    stairs = (center_column, center_row - 3)
+    positions = [
+        (4, 4), (7, 7),
+        (12, 4), (15, 7),
+        (20, 4), (23, 7),
+        (28, 4), (31, 7),
+    ]
+    enemies = [
+        {
+            "position": position,
+            "type": enemy_type,
+            "boss_group": False,
+            "movement_bounds": (
+                rooms[index // 2][0],
+                rooms[index // 2][1],
+                rooms[index // 2][0] + 6,
+                rooms[index // 2][1] + 6,
+            ),
+        }
+        for index, (enemy_type, position) in enumerate(
+            zip(config["enemy_types"], positions)
+        )
+    ]
+    occupied = {player_start, stairs, *positions}
+    potions = []
+    for position in ((columns // 3, rows // 2), (columns // 2, rows // 2), (columns * 2 // 3, rows // 2)):
+        if position not in occupied:
+            potions.append(position)
+            occupied.add(position)
+    return {
+        "map": dungeon_map,
+        "player_start": player_start,
+        "enemies": enemies,
+        "chests": [],
+        "potions": potions,
+        "stairs": stairs,
+        "boss_door": None,
+        "boss_room": None,
+        "boss_columns": [],
+        "boss_emitters": [],
+        "seal_boss_door_during_fight": False,
+        "torches": [],
+        "visual_seed": random.randrange(1, 2**31),
+    }

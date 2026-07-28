@@ -18,7 +18,7 @@ from worldgen.geometry import (
     position_is_in_room,
     room_center,
 )
-from worldgen.act_three import generate_act_three_floor
+from worldgen.act_three import generate_act_three_floor, generate_act_three_test_floor
 
 
 def choose_free_position(candidate_positions, occupied_positions):
@@ -39,6 +39,8 @@ def generate_floor(floor_index):
 
     if config.get("generator") == "act_three":
         return generate_act_three_floor(config)
+    if config.get("generator") == "act_three_test":
+        return generate_act_three_test_floor(config)
 
     boss_enemy_types = config.get("boss_enemy_types", [])
     boss_room_layout = config.get("boss_room_layout")

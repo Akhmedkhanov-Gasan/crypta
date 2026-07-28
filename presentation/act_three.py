@@ -408,6 +408,41 @@ def _enemy_sprite(
     visual_seed,
 ):
     if (
+        enemy.type in (
+            "archer",
+            "brute",
+            "sentinel",
+        )
+        and 0 <= current_time - enemy.attack_animation_started_at
+        < _ATTACK_FRAME_DURATION_MS
+    ):
+        return assets[f"enemy_{enemy.type}_attack"]
+
+    if (
+        enemy.type == "priest"
+        and 0 <= current_time - enemy.attack_animation_started_at
+        < _ATTACK_FRAME_DURATION_MS
+    ):
+        return assets["priest_heal_cast"]
+
+    if (
+        enemy.type in (
+            "archer",
+            "brute",
+            "priest",
+            "sentinel",
+        )
+        and 0 <= current_time - enemy.movement_animation_started_at
+        < _MOVE_FRAME_COUNT * _MOVE_FRAME_DURATION_MS
+    ):
+        return assets[
+            f"enemy_{enemy.type}_walk_{_movement_frame(
+                current_time,
+                enemy.movement_animation_started_at,
+            )}"
+        ]
+
+    if (
         enemy.type == "sentinel"
         and enemy.shield_turns > 0
     ):
@@ -1174,6 +1209,9 @@ def _draw_act_three_world(
             "assassin",
             "archer",
             "berserker",
+            "paladin",
+            "warlock",
+            "summoner",
         )
         and 0 <= attack_elapsed < _ATTACK_FRAME_DURATION_MS
     ):
@@ -1185,6 +1223,9 @@ def _draw_act_three_world(
             "assassin",
             "archer",
             "berserker",
+            "paladin",
+            "warlock",
+            "summoner",
         )
         and 0 <= movement_elapsed < (
             _MOVE_FRAME_COUNT * _MOVE_FRAME_DURATION_MS
