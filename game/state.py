@@ -232,7 +232,25 @@ class PlayerState:
     key_count: int = 0
     enemies_defeated: int = 0
     ability_kill_charge: int = 0
+    archer_empowered_shot_charge: int = 0
+    archer_leap_charge: int = 0
+    archer_barrage_zone_charge: int = 0
+    archer_attack_target: tuple[int, int] | None = None
+    archer_empowered_shot_aiming: bool = False
+    archer_empowered_shot_target: tuple[int, int] | None = None
+    archer_empowered_shot_started_at: int = 0
+    teleport_charge: int = 0
     invisibility_turns: int = 0
+    teleport_aiming: bool = False
+    teleport_target: tuple[int, int] | None = None
+    teleport_camera_origin: tuple[int, int] | None = None
+    teleport_transition_started_at: int = 0
+    ultimate_charge: int = 0
+    ultimate_aiming: bool = False
+    ultimate_targets: list[str] = field(default_factory=list)
+    ultimate_visual_variants: list[int] = field(default_factory=list)
+    ultimate_animation_started_at: int = 0
+    ultimate_animation_active: bool = False
     directional_ability_aiming: bool = False
     movement_animation_started_at: int = 0
     attack_animation_started_at: int = 0
@@ -254,6 +272,8 @@ class GameState:
     act_three_debug_class_selection_open: bool = False
     subclass_selection_open: bool = False
     act_three_test_mode: bool = False
+    sidebar_tab: str = "stats"
+    log_scroll_offset: int = 0
     upgrade_message: str = ""
     player_attack_targets: list[tuple[int, int]] = field(
         default_factory=list

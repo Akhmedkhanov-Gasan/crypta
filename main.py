@@ -2,7 +2,7 @@ import pygame
 
 from bosses.oracle import resolve_oracle_hit_reaction
 from game.combat_log import add_log_message
-from game.events import GameEventType
+from game.events import GameEvent, GameEventType
 from game.factories import create_floor_state, create_game_state
 from levels import FLOOR_CONFIGS
 from logic import get_enemy_occupied_positions
@@ -30,8 +30,12 @@ from rendering import (
     draw_status,
     draw_subclass_selection_screen,
     draw_upgrade_screen,
+    get_act_three_cell_from_position,
     get_class_selection_rectangles,
     get_act_three_debug_class_rectangles,
+    get_act_three_log_arrow_rectangles,
+    get_act_three_log_panel_rect,
+    get_act_three_sidebar_tab_rectangles,
     get_subclass_selection_rectangles,
     load_act_one_fonts,
     load_act_three_fonts,
@@ -48,6 +52,10 @@ from presentation.layout import (
 from settings import (
     BACKGROUND_COLOR,
     CLASS_ABILITY_KILLS,
+    ASSASSIN_ULTIMATE_OUTRO_MS,
+    ASSASSIN_ULTIMATE_PRELUDE_MS,
+    ASSASSIN_ULTIMATE_STEP_MS,
+    ARCHER_EMPOWERED_SHOT_PROJECTILE_MS,
     CRIT_UPGRADE_AMOUNT,
     DODGE_UPGRADE_AMOUNT,
     FPS,
@@ -63,13 +71,27 @@ from systems.player_actions import (
     try_use_potion,
 )
 from systems.player_combat import (
+    is_valid_archer_attack_target,
+    perform_archer_attack,
     perform_basic_attack,
 )
 from systems.player_abilities import (
     AbilityRequestResult,
+    cancel_assassin_teleport,
+    cancel_assassin_ultimate,
     cancel_ability_aiming,
+    cancel_archer_empowered_shot,
     cast_directional_ability,
+    begin_assassin_ultimate,
+    is_valid_assassin_teleport_target,
+    select_assassin_ultimate_target,
+    resolve_assassin_ultimate,
+    request_assassin_teleport,
+    request_assassin_ultimate,
     request_class_ability,
+    request_archer_empowered_shot,
+    is_valid_archer_empowered_shot_target,
+    perform_archer_empowered_shot,
 )
 from systems.enemy_turn import resolve_enemy_turn
 
@@ -142,6 +164,82 @@ def window_to_game_position(window, window_position):
     return (
         int((mouse_x - offset_x) / scale),
         int((mouse_y - offset_y) / scale),
+    )
+
+
+def set_assassin_target_cursor(cursor_kind=None):
+    if cursor_kind is None:
+        pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+        return
+
+    cursor_surface = pygame.Surface((24, 24), pygame.SRCALPHA)
+    center = (12, 12)
+    if cursor_kind == "teleport":
+        color = (105, 195, 255, 235)
+        pygame.draw.polygon(
+            cursor_surface,
+            color,
+            ((12, 2), (22, 12), (12, 22), (2, 12)),
+            width=2,
+        )
+        pygame.draw.circle(cursor_surface, (220, 245, 255, 240), center, 2)
+    else:
+        color = (235, 75, 85, 240)
+        pygame.draw.circle(cursor_surface, color, center, 8, width=2)
+        pygame.draw.line(cursor_surface, color, (1, 12), (23, 12), width=2)
+        pygame.draw.line(cursor_surface, color, (12, 1), (12, 23), width=2)
+
+    pygame.mouse.set_cursor(
+        pygame.cursors.Cursor(center, cursor_surface)
+    )
+
+
+def set_archer_attack_cursor(active=False):
+    if not active:
+        pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+        return
+
+    cursor_surface = pygame.Surface((22, 22), pygame.SRCALPHA)
+    edge_color = (215, 222, 226, 255)
+    steel_color = (125, 137, 148, 255)
+    pygame.draw.line(
+        cursor_surface,
+        steel_color,
+        (3, 18),
+        (17, 4),
+        width=3,
+    )
+    pygame.draw.polygon(
+        cursor_surface,
+        edge_color,
+        ((19, 1), (16, 9), (12, 5)),
+    )
+    pygame.draw.line(
+        cursor_surface,
+        (75, 83, 91, 255),
+        (3, 18),
+        (14, 7),
+        width=1,
+    )
+    pygame.mouse.set_cursor(
+        pygame.cursors.Cursor((1, 1), cursor_surface)
+    )
+
+
+def set_archer_empowered_cursor(active=False):
+    if not active:
+        pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+        return
+
+    cursor_surface = pygame.Surface((26, 26), pygame.SRCALPHA)
+    color = (105, 235, 135, 245)
+    center = (13, 13)
+    pygame.draw.circle(cursor_surface, color, center, 9, width=2)
+    pygame.draw.line(cursor_surface, color, (2, 13), (24, 13), width=2)
+    pygame.draw.line(cursor_surface, color, (13, 2), (13, 24), width=2)
+    pygame.draw.circle(cursor_surface, (220, 255, 225, 255), center, 2)
+    pygame.mouse.set_cursor(
+        pygame.cursors.Cursor(center, cursor_surface)
     )
 
 
@@ -374,6 +472,69 @@ def main():
                             )
                             break
             elif (
+                event.type == pygame.MOUSEMOTION
+                and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
+                and not game_state.act_three_transition_open
+                and not game_state.subclass_selection_open
+                and game_state.player.subclass == "archer"
+            ):
+                if (
+                    game_state.player.teleport_aiming
+                    or game_state.player.ultimate_aiming
+                    or game_state.player.ultimate_animation_active
+                ):
+                    continue
+                game_mouse_position = window_to_game_position(
+                    screen,
+                    event.pos,
+                )
+                target_cell = (
+                    get_act_three_cell_from_position(
+                        game_state,
+                        game_mouse_position,
+                    )
+                    if game_mouse_position is not None
+                    else None
+                )
+                if game_state.player.archer_empowered_shot_aiming:
+                    set_archer_empowered_cursor(True)
+                else:
+                    set_archer_attack_cursor(
+                        target_cell is not None
+                        and is_valid_archer_attack_target(
+                            game_state,
+                            target_cell,
+                        )
+                    )
+            elif (
+                event.type == pygame.MOUSEWHEEL
+                and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
+                and not game_state.act_three_transition_open
+                and not game_state.subclass_selection_open
+            ):
+                mouse_position = getattr(event, "pos", pygame.mouse.get_pos())
+                game_mouse_position = window_to_game_position(
+                    screen,
+                    mouse_position,
+                )
+                if (
+                    game_mouse_position is not None
+                    and get_act_three_log_panel_rect().collidepoint(
+                        game_mouse_position
+                    )
+                ):
+                    maximum_scroll = max(
+                        0,
+                        len(game_state.combat_log) - 4,
+                    )
+                    game_state.log_scroll_offset = max(
+                        0,
+                        min(
+                            maximum_scroll,
+                            game_state.log_scroll_offset + event.y,
+                        ),
+                    )
+            elif (
                 event.type == pygame.MOUSEBUTTONDOWN
                 and event.button == 1
                 and game_state.class_selection_open
@@ -419,6 +580,146 @@ def main():
                             )
                         )
                         break
+            elif (
+                event.type == pygame.MOUSEBUTTONDOWN
+                and event.button == 1
+                and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
+                and not game_state.act_three_transition_open
+                and not game_state.subclass_selection_open
+            ):
+                game_mouse_position = window_to_game_position(
+                    screen,
+                    event.pos,
+                )
+                if game_mouse_position is not None:
+                    if game_state.player.ultimate_animation_active:
+                        continue
+                    elif game_state.player.teleport_aiming:
+                        target_cell = get_act_three_cell_from_position(
+                            game_state,
+                            game_mouse_position,
+                        )
+                        if target_cell is not None and is_valid_assassin_teleport_target(
+                            game_state,
+                            *target_cell,
+                        ):
+                            game_state.player.teleport_target = target_cell
+                            pygame.event.post(
+                                pygame.event.Event(
+                                    pygame.KEYDOWN,
+                                    key=pygame.K_RETURN,
+                                )
+                            )
+                    elif game_state.player.ultimate_aiming:
+                        target_cell = get_act_three_cell_from_position(
+                            game_state,
+                            game_mouse_position,
+                        )
+                        if target_cell is not None:
+                            selected_enemy = next(
+                                (
+                                    enemy
+                                    for enemy in game_state.floor.enemies
+                                    if enemy.health > 0
+                                    and target_cell
+                                    in get_enemy_occupied_positions(enemy)
+                                ),
+                                None,
+                            )
+                            if selected_enemy is not None:
+                                select_assassin_ultimate_target(
+                                    game_state,
+                                    selected_enemy.name,
+                                )
+                                if len(game_state.player.ultimate_targets) >= 5:
+                                    begin_assassin_ultimate(
+                                        game_state,
+                                        pygame.time.get_ticks(),
+                                    )
+                                    set_assassin_target_cursor()
+                    elif game_state.player.archer_empowered_shot_aiming:
+                        target_cell = get_act_three_cell_from_position(
+                            game_state,
+                            game_mouse_position,
+                        )
+                        if (
+                            target_cell is not None
+                            and is_valid_archer_empowered_shot_target(
+                                game_state,
+                                target_cell,
+                            )
+                        ):
+                            game_state.player.archer_empowered_shot_target = (
+                                target_cell
+                            )
+                            pygame.event.post(
+                                pygame.event.Event(
+                                    pygame.KEYDOWN,
+                                    key=pygame.K_RETURN,
+                                )
+                            )
+                    else:
+                        archer_target_cell = (
+                            get_act_three_cell_from_position(
+                                game_state,
+                                game_mouse_position,
+                            )
+                            if game_state.player.subclass == "archer"
+                            else None
+                        )
+                        if (
+                            archer_target_cell is not None
+                            and is_valid_archer_attack_target(
+                                game_state,
+                                archer_target_cell,
+                            )
+                        ):
+                            game_state.player.archer_attack_target = (
+                                archer_target_cell
+                            )
+                            pygame.event.post(
+                                pygame.event.Event(
+                                    pygame.KEYDOWN,
+                                    key=pygame.K_RETURN,
+                                )
+                            )
+                            continue
+
+                        log_arrow_clicked = False
+                        if get_act_three_log_panel_rect().collidepoint(
+                            game_mouse_position
+                        ):
+                            for arrow_name, arrow_rectangle in (
+                                get_act_three_log_arrow_rectangles().items()
+                            ):
+                                if arrow_rectangle.collidepoint(
+                                    game_mouse_position
+                                ):
+                                    maximum_scroll = max(
+                                        0,
+                                        len(game_state.combat_log) - 4,
+                                    )
+                                    if arrow_name == "older":
+                                        game_state.log_scroll_offset = min(
+                                            maximum_scroll,
+                                            game_state.log_scroll_offset + 1,
+                                        )
+                                    else:
+                                        game_state.log_scroll_offset = max(
+                                            0,
+                                            game_state.log_scroll_offset - 1,
+                                        )
+                                    log_arrow_clicked = True
+                                    break
+                        if not log_arrow_clicked:
+                            for tab_name, tab_rectangle in (
+                                get_act_three_sidebar_tab_rectangles().items()
+                            ):
+                                if tab_rectangle.collidepoint(
+                                    game_mouse_position
+                                ):
+                                    game_state.sidebar_tab = tab_name
+                                    break
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_F11:
                     if fullscreen:
@@ -447,6 +748,81 @@ def main():
                         game_state.player.player_class or "warrior",
                         "Debug jump: Oracle arena.",
                     )
+                    continue
+
+                if event.key == pygame.K_ESCAPE and game_state.player.teleport_aiming:
+                    cancel_assassin_teleport(game_state)
+                    set_assassin_target_cursor()
+                    continue
+
+                if (
+                    event.key == pygame.K_ESCAPE
+                    and game_state.player.archer_empowered_shot_aiming
+                ):
+                    cancel_archer_empowered_shot(game_state)
+                    set_archer_empowered_cursor()
+                    continue
+
+                if event.key == pygame.K_ESCAPE and game_state.player.ultimate_aiming:
+                    cancel_assassin_ultimate(game_state)
+                    set_assassin_target_cursor()
+                    continue
+
+                if (
+                    event.key in (pygame.K_1, pygame.K_KP1)
+                    and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
+                    and game_state.player.subclass == "archer"
+                ):
+                    request_archer_empowered_shot(game_state)
+                    set_archer_empowered_cursor(
+                        game_state.player.archer_empowered_shot_aiming
+                    )
+                    continue
+
+                if (
+                    event.key == pygame.K_2
+                    and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
+                    and game_state.player.subclass == "assassin"
+                ):
+                    request_assassin_teleport(game_state)
+                    set_assassin_target_cursor(
+                        "teleport"
+                        if game_state.player.teleport_aiming
+                        else None
+                    )
+                    continue
+
+                if (
+                    event.key == pygame.K_3
+                    and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
+                    and game_state.player.subclass == "assassin"
+                ):
+                    request_assassin_ultimate(game_state)
+                    set_assassin_target_cursor(
+                        "ultimate"
+                        if game_state.player.ultimate_aiming
+                        else None
+                    )
+                    continue
+
+                if (
+                    event.key in (pygame.K_RETURN, pygame.K_KP_ENTER)
+                    and game_state.player.ultimate_aiming
+                ):
+                    if begin_assassin_ultimate(
+                        game_state,
+                        pygame.time.get_ticks(),
+                    ):
+                        set_assassin_target_cursor()
+                    continue
+
+                if (
+                    game_state.player.teleport_aiming
+                    and game_state.player.teleport_target is None
+                ):
+                    continue
+
+                if game_state.player.ultimate_aiming:
                     continue
 
                 if event.key == pygame.K_F3:
@@ -733,7 +1109,12 @@ def main():
                 )
                 rogue_ability_activated = False
 
-                if event.key == pygame.K_e:
+                assassin_ability_pressed = (
+                    event.key == pygame.K_1
+                    and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
+                    and game_state.player.subclass == "assassin"
+                )
+                if event.key == pygame.K_e or assassin_ability_pressed:
                     ability_request = request_class_ability(
                         game_state
                     )
@@ -794,7 +1175,68 @@ def main():
                 player_acted = False
                 game_state.player_attack_targets = []
 
-                if rogue_ability_activated:
+                if game_state.player.archer_empowered_shot_target is not None:
+                    empowered_target = (
+                        game_state.player.archer_empowered_shot_target
+                    )
+                    game_state.player.archer_empowered_shot_target = None
+                    player_acted = perform_archer_empowered_shot(
+                        game_state,
+                        empowered_target,
+                        resolve_oracle_hit_reaction,
+                    )
+                    if player_acted:
+                        game_state.player.attack_animation_started_at = (
+                            pygame.time.get_ticks()
+                        )
+                        game_state.player.archer_empowered_shot_started_at = (
+                            pygame.time.get_ticks()
+                        )
+                    set_archer_empowered_cursor()
+                elif game_state.player.archer_attack_target is not None:
+                    archer_target = game_state.player.archer_attack_target
+                    game_state.player.archer_attack_target = None
+                    player_acted = perform_archer_attack(
+                        game_state,
+                        archer_target,
+                        resolve_oracle_hit_reaction,
+                    )
+                    if player_acted:
+                        game_state.player.attack_animation_started_at = (
+                            pygame.time.get_ticks()
+                        )
+                    set_archer_attack_cursor()
+                elif rogue_ability_activated:
+                    player_acted = True
+                elif game_state.player.teleport_target is not None:
+                    teleport_target = game_state.player.teleport_target
+                    teleport_origin = (
+                        game_state.floor.player_column,
+                        game_state.floor.player_row,
+                    )
+                    game_state.floor.player_column = teleport_target[0]
+                    game_state.floor.player_row = teleport_target[1]
+                    game_state.player.teleport_target = None
+                    game_state.player.teleport_aiming = False
+                    set_assassin_target_cursor()
+                    game_state.player.teleport_charge = 0
+                    game_state.player.teleport_camera_origin = teleport_origin
+                    game_state.player.teleport_transition_started_at = (
+                        pygame.time.get_ticks()
+                    )
+                    game_state.emit(
+                        GameEvent(
+                            type=GameEventType.MOVE,
+                            actor="hero",
+                            origin=teleport_origin,
+                            destination=teleport_target,
+                            data={"kind": "teleport"},
+                        )
+                    )
+                    add_log_message(
+                        game_state.combat_log,
+                        "The assassin teleports through the shadows.",
+                    )
                     player_acted = True
                 elif directional_ability_cast:
                     player_acted = cast_directional_ability(
@@ -871,6 +1313,25 @@ def main():
                                 enemy_movement_started_at
                             )
         current_time = pygame.time.get_ticks()
+
+        if game_state.player.ultimate_animation_active:
+            animation_duration = (
+                ASSASSIN_ULTIMATE_PRELUDE_MS
+                + len(game_state.player.ultimate_targets)
+                * ASSASSIN_ULTIMATE_STEP_MS
+                + ASSASSIN_ULTIMATE_OUTRO_MS
+            )
+            if (
+                current_time
+                - game_state.player.ultimate_animation_started_at
+                >= animation_duration
+            ):
+                resolve_assassin_ultimate(
+                    game_state,
+                    resolve_oracle_hit_reaction,
+                )
+                game_state.player.ultimate_animation_active = False
+                game_state.player.ultimate_animation_started_at = 0
 
         if (
             game_state.act_three_transition_open

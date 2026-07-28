@@ -13,15 +13,105 @@ from logic import (
     direction_toward,
     get_directional_line,
     get_enemy_occupied_positions,
+    has_line_of_sight,
     roll_player_damage,
 )
-from settings import CLASS_ABILITY_KILLS
+from settings import (
+    ARCHER_BASIC_ATTACK_RANGE,
+    ARCHER_BASIC_DAMAGE_MAX,
+    ARCHER_BASIC_DAMAGE_MIN,
+    ARCHER_EMPOWERED_SHOT_CHARGES,
+    CLASS_ABILITY_KILLS,
+)
+from settings import ASSASSIN_TELEPORT_CHARGES
+from settings import ASSASSIN_ULTIMATE_CHARGES
 
 
 OracleHitReaction = Callable[
     [EnemyState, FloorState, list[str]],
     None,
 ]
+
+
+def is_valid_archer_attack_target(
+    game_state: GameState,
+    target_cell: tuple[int, int],
+) -> bool:
+    player = game_state.player
+    floor = game_state.floor
+    if player.subclass != "archer":
+        return False
+
+    target_enemy = next(
+        (
+            enemy
+            for enemy in floor.enemies
+            if enemy.health > 0
+            and target_cell in get_enemy_occupied_positions(enemy)
+        ),
+        None,
+    )
+    if target_enemy is None:
+        return False
+
+    distance = abs(target_cell[0] - floor.player_column) + abs(
+        target_cell[1] - floor.player_row
+    )
+    return (
+        distance <= ARCHER_BASIC_ATTACK_RANGE
+        and has_line_of_sight(
+            floor.map,
+            floor.player_column,
+            floor.player_row,
+            target_cell[0],
+            target_cell[1],
+        )
+    )
+
+
+def perform_archer_attack(
+    game_state: GameState,
+    target_cell: tuple[int, int],
+    oracle_hit_reaction: OracleHitReaction,
+) -> bool:
+    if not is_valid_archer_attack_target(game_state, target_cell):
+        return False
+
+    player = game_state.player
+    floor = game_state.floor
+    hit_enemy = next(
+        enemy
+        for enemy in floor.enemies
+        if enemy.health > 0
+        and target_cell in get_enemy_occupied_positions(enemy)
+    )
+    game_state.player_attack_targets = [target_cell]
+    game_state.emit(
+        GameEvent(
+            type=GameEventType.ATTACK,
+            actor="hero",
+            origin=(floor.player_column, floor.player_row),
+            positions=(target_cell,),
+            data={"kind": "archer_basic"},
+        )
+    )
+    enemy_was_defeated = attack_enemy(
+        game_state,
+        hit_enemy,
+        ARCHER_BASIC_DAMAGE_MIN,
+        ARCHER_BASIC_DAMAGE_MAX,
+        player.crit_chance,
+        attacker_position=(floor.player_column, floor.player_row),
+    )
+    if hit_enemy.type == "oracle":
+        oracle_hit_reaction(
+            hit_enemy,
+            floor,
+            game_state.combat_log,
+        )
+    if enemy_was_defeated:
+        resolve_enemy_defeat(game_state, hit_enemy)
+    return True
 
 
 def attack_enemy(
@@ -34,6 +124,7 @@ def attack_enemy(
     force_critical: bool = False,
     attacker_position: tuple[int, int] | None = None,
 ) -> bool:
+    player = game_state.player
     if (
         enemy.type == "sentinel"
         and enemy.shield_turns > 0
@@ -71,6 +162,24 @@ def attack_enemy(
         damage *= 2
 
     enemy.health = max(0, enemy.health - damage)
+    if player.subclass == "assassin" and not player.ultimate_animation_active:
+        player.ability_kill_charge = min(
+            CLASS_ABILITY_KILLS,
+            player.ability_kill_charge + 1,
+        )
+        player.teleport_charge = min(
+            ASSASSIN_TELEPORT_CHARGES,
+            player.teleport_charge + 1,
+        )
+        player.ultimate_charge = min(
+            ASSASSIN_ULTIMATE_CHARGES,
+            player.ultimate_charge + 1,
+        )
+    elif player.subclass == "archer":
+        player.archer_empowered_shot_charge = min(
+            ARCHER_EMPOWERED_SHOT_CHARGES,
+            player.archer_empowered_shot_charge + 1,
+        )
     game_state.emit(
         GameEvent(
             type=GameEventType.HIT,
@@ -152,7 +261,7 @@ def resolve_enemy_defeat(
                 "The second veil begins to fall.",
             )
 
-    if player.player_class is not None:
+    if player.player_class is not None and player.subclass != "assassin":
         player.ability_kill_charge = min(
             CLASS_ABILITY_KILLS,
             player.ability_kill_charge + 1,
