@@ -8,6 +8,9 @@ from presentation.assets import (
 )
 from presentation.act_three import (
     draw_act_three_gameplay,
+    get_act_three_cell_from_position,
+    get_act_three_log_arrow_rectangles,
+    get_act_three_log_panel_rect,
     get_act_three_sidebar_tab_rectangles,
 )
 from presentation.hud import (
@@ -69,6 +72,9 @@ __all__ = [
     "draw_upgrade_screen",
     "get_class_selection_rectangles",
     "get_act_three_debug_class_rectangles",
+    "get_act_three_cell_from_position",
+    "get_act_three_log_arrow_rectangles",
+    "get_act_three_log_panel_rect",
     "get_act_three_sidebar_tab_rectangles",
     "get_subclass_selection_rectangles",
     "load_act_one_fonts",

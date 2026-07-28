@@ -118,6 +118,12 @@ def resolve_enemy_turn(
                         0,
                         game_state.player.health - damage,
                     )
+                    if game_state.player.invisibility_turns > 0:
+                        game_state.player.invisibility_turns = 0
+                        add_log_message(
+                            game_state.combat_log,
+                            "The rogue becomes visible after taking damage.",
+                        )
                     game_state.emit(
                         GameEvent(
                             type=GameEventType.HIT,

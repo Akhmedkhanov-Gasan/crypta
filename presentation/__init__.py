@@ -8,6 +8,7 @@ from presentation.assets import (
 )
 from presentation.act_three import (
     draw_act_three_gameplay,
+    get_act_three_cell_from_position,
     get_act_three_sidebar_tab_rectangles,
 )
 from presentation.hud import draw_sidebar, draw_status
@@ -25,6 +26,7 @@ __all__ = [
     "draw_act_three_awakening",
     "draw_act_three_debug_class_selection",
     "draw_act_three_gameplay",
+    "get_act_three_cell_from_position",
     "get_act_three_sidebar_tab_rectangles",
     "draw_sidebar",
     "draw_status",

@@ -5,7 +5,7 @@ import pygame
 
 from game.state import EnemyBehaviorState
 from levels import FLOOR_CONFIGS
-from presentation.hud import fit_text_to_width
+from presentation.hud import get_event_color, wrap_text
 from presentation.layout import (
     ACT_THREE_FRAME_X,
     ACT_THREE_FRAME_Y,
@@ -20,10 +20,17 @@ from presentation.layout import (
     ACT_THREE_VIEW_Y,
 )
 from settings import (
+    CLASS_ABILITY_KILLS,
+    ASSASSIN_ULTIMATE_OUTRO_MS,
+    ASSASSIN_ULTIMATE_PRELUDE_MS,
+    ASSASSIN_TELEPORT_CHARGES,
+    ASSASSIN_ULTIMATE_CHARGES,
+    ASSASSIN_ULTIMATE_STEP_MS,
+    ARCHER_EMPOWERED_SHOT_PROJECTILE_MS,
+    ARCHER_EMPOWERED_SHOT_CHARGES,
     DANGER_BORDER_COLOR,
     HEALTH_BAR_BACKGROUND,
     HEALTH_BAR_COLOR,
-    PLAYER_HEALTH_BAR_COLOR,
     TEXT_COLOR,
 )
 
@@ -34,6 +41,8 @@ _IDLE_TIMELINE_CYCLE_COUNT = 4
 _MOVE_FRAME_COUNT = 2
 _MOVE_FRAME_DURATION_MS = 90
 _ATTACK_FRAME_DURATION_MS = 240
+_TELEPORT_CAMERA_DURATION_MS = 480
+_TELEPORT_EFFECT_DURATION_MS = 600
 _TOP_VOID_CORNER_Y_OFFSET = 47
 _TOP_VOID_CORNER_X_OFFSETS = {
     "wall_corner_top_left": -18,
@@ -196,16 +205,21 @@ def _top_void_corner_sprite_names(
     return ()
 
 
-def _camera_position(floor):
+def _camera_position(floor, player_position=None):
     world_width = len(floor.map[0]) * ACT_THREE_TILE_SIZE
     world_height = len(floor.map) * ACT_THREE_TILE_SIZE
+    player_column, player_row = (
+        (floor.player_column, floor.player_row)
+        if player_position is None
+        else player_position
+    )
     target_x = (
-        floor.player_column * ACT_THREE_TILE_SIZE
+        player_column * ACT_THREE_TILE_SIZE
         + ACT_THREE_TILE_SIZE // 2
         - ACT_THREE_VIEW_WIDTH // 2
     )
     target_y = (
-        floor.player_row * ACT_THREE_TILE_SIZE
+        player_row * ACT_THREE_TILE_SIZE
         + ACT_THREE_TILE_SIZE // 2
         - ACT_THREE_VIEW_HEIGHT // 2
     )
@@ -399,6 +413,191 @@ def _draw_attack_impact_flash(
         width=2,
     )
     surface.blit(flash_surface, position)
+
+
+def _draw_archer_projectile(
+    surface,
+    arrow_sprite,
+    origin,
+    destination,
+    progress,
+    empowered=False,
+    current_time=0,
+):
+    direction = math.atan2(
+        destination[1] - origin[1],
+        destination[0] - origin[0],
+    )
+    rotation = -math.degrees(direction) - 45
+    arrow_position = (
+        round(origin[0] + (destination[0] - origin[0]) * progress),
+        round(origin[1] + (destination[1] - origin[1]) * progress),
+    )
+
+    for trail_progress, trail_alpha in (
+        (progress - 0.18, 38),
+        (progress - 0.10, 78),
+    ):
+        if trail_progress <= 0:
+            continue
+        trail_position = (
+            round(origin[0] + (destination[0] - origin[0]) * trail_progress),
+            round(origin[1] + (destination[1] - origin[1]) * trail_progress),
+        )
+        trail = pygame.transform.rotate(arrow_sprite, rotation).copy()
+        trail.set_alpha(trail_alpha)
+        surface.blit(trail, trail.get_rect(center=trail_position))
+
+    if empowered:
+        effect_surface = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+        travel_dx = destination[0] - origin[0]
+        travel_dy = destination[1] - origin[1]
+        travel_length = max(1, math.hypot(travel_dx, travel_dy))
+        normal_x = -travel_dy / travel_length
+        normal_y = travel_dx / travel_length
+        for wave_index, alpha in ((0, 120), (1, 75)):
+            points = []
+            for point_index in range(13):
+                wave_progress = max(
+                    0,
+                    progress - 0.22 + point_index * 0.018,
+                )
+                wave_x = origin[0] + travel_dx * wave_progress
+                wave_y = origin[1] + travel_dy * wave_progress
+                wave = math.sin(
+                    current_time * 0.018
+                    + point_index * 0.95
+                    + wave_index * 1.8
+                ) * (5 + wave_index * 3)
+                points.append(
+                    (
+                        round(wave_x + normal_x * wave),
+                        round(wave_y + normal_y * wave),
+                    )
+                )
+            if len(points) > 1:
+                pygame.draw.lines(
+                    effect_surface,
+                    (105, 245, 150, alpha),
+                    False,
+                    points,
+                    width=2,
+                )
+
+        arc_rect = pygame.Rect(0, 0, 34, 34)
+        arc_rect.center = arrow_position
+        arc_alpha = round(120 + 70 * math.sin(current_time * 0.02))
+        pygame.draw.arc(
+            effect_surface,
+            (140, 255, 175, arc_alpha),
+            arc_rect,
+            direction - 1.8,
+            direction - 0.15,
+            width=2,
+        )
+        arc_rect.inflate_ip(-8, -8)
+        pygame.draw.arc(
+            effect_surface,
+            (80, 210, 135, max(35, arc_alpha - 45)),
+            arc_rect,
+            direction + 1.1,
+            direction + 2.7,
+            width=2,
+        )
+        surface.blit(effect_surface, (0, 0))
+
+    arrow = pygame.transform.rotate(arrow_sprite, rotation)
+    surface.blit(arrow, arrow.get_rect(center=arrow_position))
+
+
+def _draw_assassin_slash_particles(
+    surface,
+    position,
+    progress,
+    identity_seed,
+    strike_index,
+):
+    particle_surface = pygame.Surface(
+        (ACT_THREE_TILE_SIZE, ACT_THREE_TILE_SIZE),
+        pygame.SRCALPHA,
+    )
+    center = ACT_THREE_TILE_SIZE // 2
+    visibility = math.sin(math.pi * progress)
+    alpha = round(245 * visibility)
+    slash_patterns = (
+        ((-1.10, 25, -5), (-0.28, 19, 4), (0.62, 22, 0)),
+        ((-0.55, 22, -7), (0.38, 28, 4), (1.18, 18, 1)),
+        ((-1.38, 18, 3), (-0.72, 27, -4), (0.20, 24, 5)),
+        ((-0.92, 29, 5), (0.02, 18, -5), (0.82, 26, 2)),
+        ((-0.35, 20, -4), (0.56, 25, 5), (1.36, 19, -1)),
+    )
+    slash_pattern = slash_patterns[strike_index % len(slash_patterns)]
+    for slash_index, (base_angle, length, offset) in enumerate(
+        slash_pattern
+    ):
+        angle = (
+            base_angle
+            + math.sin(progress * math.tau + slash_index) * 0.16
+            + (identity_seed % 11) * 0.01
+        )
+        bend = 5 + slash_index * 2
+        start = (
+            round(center + math.cos(angle) * offset - math.cos(angle) * length / 2),
+            round(center + math.sin(angle) * offset - math.sin(angle) * length / 2),
+        )
+        end = (
+            round(center + math.cos(angle) * offset + math.cos(angle) * length / 2),
+            round(center + math.sin(angle) * offset + math.sin(angle) * length / 2),
+        )
+        middle = (
+            round((start[0] + end[0]) / 2 - math.sin(angle) * bend),
+            round((start[1] + end[1]) / 2 + math.cos(angle) * bend),
+        )
+        pygame.draw.line(
+            particle_surface,
+            (65, 145, 255, alpha // 3),
+            start,
+            middle,
+            width=8,
+        )
+        pygame.draw.line(
+            particle_surface,
+            (65, 145, 255, alpha // 3),
+            middle,
+            end,
+            width=8,
+        )
+        pygame.draw.line(
+            particle_surface,
+            (185, 230, 255, alpha),
+            start,
+            middle,
+            width=2,
+        )
+        pygame.draw.line(
+            particle_surface,
+            (220, 245, 255, alpha),
+            middle,
+            end,
+            width=2,
+        )
+        for shard_index, shard_side in enumerate((-1, 1)):
+            shard_origin = (
+                end[0] + round(math.cos(angle + math.pi / 2) * shard_side * 4),
+                end[1] + round(math.sin(angle + math.pi / 2) * shard_side * 4),
+            )
+            shard_end = (
+                shard_origin[0] + round(math.cos(angle + shard_side) * (5 + shard_index * 2)),
+                shard_origin[1] + round(math.sin(angle + shard_side) * (5 + shard_index * 2)),
+            )
+            pygame.draw.line(
+                particle_surface,
+                (125, 205, 255, alpha),
+                shard_origin,
+                shard_end,
+                width=2,
+            )
+    surface.blit(particle_surface, position)
 
 
 def _enemy_sprite(
@@ -648,6 +847,208 @@ def _draw_rogue_idle_particles(
     surface.blit(effect_surface, (left, top))
 
 
+def _draw_assassin_invisibility_effect(
+    surface,
+    left,
+    top,
+    current_time,
+    identity_seed,
+):
+    margin = 7
+    effect_size = ACT_THREE_TILE_SIZE + margin * 2
+    effect_surface = pygame.Surface(
+        (effect_size, effect_size),
+        pygame.SRCALPHA,
+    )
+    center_x = margin + ACT_THREE_TILE_SIZE // 2
+    center_y = margin + ACT_THREE_TILE_SIZE // 2 - 5
+
+    for spark_index in range(5):
+        phase = (
+            current_time / 1050
+            + spark_index * math.tau / 5
+            + (identity_seed % 127) / 127
+        )
+        spark_x = center_x + round(math.cos(phase) * 27)
+        spark_y = center_y + round(math.sin(phase) * 22)
+        pulse = (math.sin(phase * 1.7) + 1) / 2
+        spark_alpha = round(115 + pulse * 80)
+        pygame.draw.circle(
+            effect_surface,
+            (35, 92, 164, spark_alpha // 3),
+            (spark_x, spark_y),
+            3,
+        )
+        pygame.draw.circle(
+            effect_surface,
+            (105, 195, 255, spark_alpha),
+            (spark_x, spark_y),
+            1,
+        )
+
+    surface.blit(
+        effect_surface,
+        (left - margin, top - margin),
+    )
+
+
+def get_act_three_cell_from_position(game_state, game_position):
+    mouse_x, mouse_y = game_position
+    if not (
+        ACT_THREE_VIEW_X <= mouse_x < ACT_THREE_VIEW_X + ACT_THREE_VIEW_WIDTH
+        and ACT_THREE_VIEW_Y <= mouse_y < ACT_THREE_VIEW_Y + ACT_THREE_VIEW_HEIGHT
+    ):
+        return None
+
+    camera_x, camera_y = _camera_position(game_state.floor)
+    column = (
+        mouse_x - ACT_THREE_VIEW_X + camera_x
+    ) // ACT_THREE_TILE_SIZE
+    row = (
+        mouse_y - ACT_THREE_VIEW_Y + camera_y
+    ) // ACT_THREE_TILE_SIZE
+    return (column, row)
+
+
+def _draw_assassin_ultimate_effect(
+    surface,
+    origin_position,
+    target_position,
+    current_time,
+    started_at,
+    identity_seed,
+):
+    elapsed = current_time - started_at
+    if not 0 <= elapsed < ASSASSIN_ULTIMATE_STEP_MS:
+        return
+
+    progress = elapsed / ASSASSIN_ULTIMATE_STEP_MS
+    visibility = math.sin(math.pi * progress)
+    origin = (
+        origin_position[0] + ACT_THREE_TILE_SIZE // 2,
+        origin_position[1] + ACT_THREE_TILE_SIZE // 2,
+    )
+    target = (
+        target_position[0] + ACT_THREE_TILE_SIZE // 2,
+        target_position[1] + ACT_THREE_TILE_SIZE // 2,
+    )
+    effect_surface = pygame.Surface(
+        surface.get_size(),
+        pygame.SRCALPHA,
+    )
+    trail_end = (
+        round(origin[0] + (target[0] - origin[0]) * min(1, progress * 1.35)),
+        round(origin[1] + (target[1] - origin[1]) * min(1, progress * 1.35)),
+    )
+    alpha = round(220 * visibility)
+    pygame.draw.line(
+        effect_surface,
+        (72, 155, 255, alpha // 3),
+        origin,
+        trail_end,
+        width=9,
+    )
+    pygame.draw.line(
+        effect_surface,
+        (170, 225, 255, alpha),
+        origin,
+        trail_end,
+        width=2,
+    )
+    for spark_index in range(4):
+        phase = (
+            progress * math.tau * 2
+            + spark_index * math.tau / 4
+            + (identity_seed % 31) / 31
+        )
+        spark_progress = min(1, progress * 1.4)
+        spark_x = round(
+            origin[0]
+            + (target[0] - origin[0]) * spark_progress
+            + math.cos(phase) * 8
+        )
+        spark_y = round(
+            origin[1]
+            + (target[1] - origin[1]) * spark_progress
+            + math.sin(phase) * 8
+        )
+        pygame.draw.circle(
+            effect_surface,
+            (115, 205, 255, alpha),
+            (spark_x, spark_y),
+            2,
+        )
+
+    surface.blit(effect_surface, (0, 0))
+
+
+def _draw_teleport_effect(
+    surface,
+    position,
+    current_time,
+    started_at,
+    identity_seed,
+):
+    elapsed = current_time - started_at
+    if not 0 <= elapsed < _TELEPORT_EFFECT_DURATION_MS:
+        return
+
+    margin = 18
+    effect_size = ACT_THREE_TILE_SIZE + margin * 2
+    effect_surface = pygame.Surface(
+        (effect_size, effect_size),
+        pygame.SRCALPHA,
+    )
+    center = (effect_size // 2, effect_size // 2)
+    progress = elapsed / _TELEPORT_EFFECT_DURATION_MS
+    pulse = math.sin(math.pi * progress)
+    radius = round(12 + progress * 23)
+    alpha = round(210 * pulse)
+    pygame.draw.circle(
+        effect_surface,
+        (40, 92, 185, alpha // 3),
+        center,
+        radius,
+        width=5,
+    )
+    pygame.draw.circle(
+        effect_surface,
+        (115, 205, 255, alpha),
+        center,
+        max(4, radius - 6),
+        width=2,
+    )
+
+    for spark_index in range(6):
+        angle = (
+            spark_index * math.tau / 6
+            + progress * math.tau * 1.5
+            + (identity_seed % 17) / 17
+        )
+        inner_radius = max(3, radius - 8)
+        outer_radius = radius + 5 + spark_index % 3 * 3
+        start = (
+            center[0] + round(math.cos(angle) * inner_radius),
+            center[1] + round(math.sin(angle) * inner_radius),
+        )
+        end = (
+            center[0] + round(math.cos(angle) * outer_radius),
+            center[1] + round(math.sin(angle) * outer_radius),
+        )
+        pygame.draw.line(
+            effect_surface,
+            (102, 190, 255, alpha),
+            start,
+            end,
+            width=2,
+        )
+
+    surface.blit(
+        effect_surface,
+        (position[0] - margin, position[1] - margin),
+    )
+
+
 def _draw_warlock_idle_flashes(
     surface,
     left,
@@ -889,6 +1290,28 @@ def _draw_act_three_world(
     )
     view_surface.fill((5, 5, 8))
     camera_x, camera_y = _camera_position(floor)
+    teleport_origin = game_state.player.teleport_camera_origin
+    transition_started_at = (
+        game_state.player.teleport_transition_started_at
+    )
+    if teleport_origin is not None and transition_started_at:
+        transition_elapsed = current_time - transition_started_at
+        if transition_elapsed < _TELEPORT_CAMERA_DURATION_MS:
+            transition_progress = transition_elapsed / _TELEPORT_CAMERA_DURATION_MS
+            transition_progress = (
+                transition_progress
+                * transition_progress
+                * (3 - 2 * transition_progress)
+            )
+            start_camera = _camera_position(floor, teleport_origin)
+            camera_x = round(
+                start_camera[0]
+                + (camera_x - start_camera[0]) * transition_progress
+            )
+            camera_y = round(
+                start_camera[1]
+                + (camera_y - start_camera[1]) * transition_progress
+            )
     first_column = max(0, camera_x // ACT_THREE_TILE_SIZE)
     first_row = max(0, camera_y // ACT_THREE_TILE_SIZE)
     last_column = min(
@@ -1269,8 +1692,163 @@ def _draw_act_three_world(
     if game_state.player.invisibility_turns > 0:
         player_sprite = player_sprite.copy()
         player_sprite.set_alpha(105)
+    else:
+        player_sprite = player_sprite.copy()
+        player_sprite.set_alpha(255)
+
+    if (
+        player_subclass == "assassin"
+        and game_state.player.ultimate_animation_active
+    ):
+        ultimate_elapsed_for_player = (
+            current_time - game_state.player.ultimate_animation_started_at
+        )
+        player_sprite = assets["player_assassin_attack"].copy()
+        fade_progress = min(1, max(0, ultimate_elapsed_for_player) / 700)
+        player_sprite.set_alpha(round(220 * (1 - fade_progress)))
+
+    ultimate_target_enemies = []
+    ultimate_step_started_at = 0
+    ultimate_elapsed = 0
+    if (
+        player_subclass == "assassin"
+        and game_state.player.ultimate_targets
+    ):
+        ultimate_target_enemies = [
+            enemy
+            for target_name in game_state.player.ultimate_targets
+            for enemy in floor.enemies
+            if enemy.name == target_name
+        ]
+        if game_state.player.ultimate_animation_active:
+            ultimate_elapsed = (
+                current_time
+                - game_state.player.ultimate_animation_started_at
+            )
+            ultimate_step_started_at = (
+                game_state.player.ultimate_animation_started_at
+            )
+
+    if (
+        player_subclass == "assassin"
+        and game_state.player.invisibility_turns > 0
+    ):
+        _draw_assassin_invisibility_effect(
+            view_surface,
+            player_position[0],
+            player_position[1],
+            current_time,
+            floor.visual_seed
+            ^ _stable_text_seed("assassin:invisibility"),
+        )
 
     view_surface.blit(player_sprite, player_position)
+
+    empowered_target = game_state.player.archer_empowered_shot_target
+    empowered_started_at = game_state.player.archer_empowered_shot_started_at
+    empowered_elapsed = current_time - empowered_started_at
+    ordinary_target = (
+        game_state.player_attack_targets[0]
+        if game_state.player_attack_targets
+        else None
+    )
+    ordinary_elapsed = current_time - game_state.player.attack_animation_started_at
+    if (
+        player_subclass == "archer"
+        and empowered_target is not None
+        and empowered_started_at
+        and 0 <= empowered_elapsed < ARCHER_EMPOWERED_SHOT_PROJECTILE_MS
+    ):
+        target_position = _view_position(
+            empowered_target[0],
+            empowered_target[1],
+            camera_x,
+            camera_y,
+        )
+        origin = (
+            player_position[0] + ACT_THREE_TILE_SIZE // 2,
+            player_position[1] + ACT_THREE_TILE_SIZE // 2,
+        )
+        destination = (
+            target_position[0] + ACT_THREE_TILE_SIZE // 2,
+            target_position[1] + ACT_THREE_TILE_SIZE // 2,
+        )
+        progress = min(1, empowered_elapsed / ARCHER_EMPOWERED_SHOT_PROJECTILE_MS)
+        _draw_archer_projectile(
+            view_surface,
+            assets["archer_empowered_shot_arrow"],
+            origin,
+            destination,
+            progress,
+            empowered=True,
+            current_time=current_time,
+        )
+    elif (
+        player_subclass == "archer"
+        and empowered_target is not None
+        and empowered_started_at
+        and empowered_elapsed >= ARCHER_EMPOWERED_SHOT_PROJECTILE_MS
+    ):
+        game_state.player.archer_empowered_shot_target = None
+        game_state.player.archer_empowered_shot_started_at = 0
+
+    if (
+        player_subclass == "archer"
+        and empowered_target is None
+        and ordinary_target is not None
+        and 0 <= ordinary_elapsed < _ATTACK_FRAME_DURATION_MS
+    ):
+        target_position = _view_position(
+            ordinary_target[0],
+            ordinary_target[1],
+            camera_x,
+            camera_y,
+        )
+        origin = (
+            player_position[0] + ACT_THREE_TILE_SIZE // 2,
+            player_position[1] + ACT_THREE_TILE_SIZE // 2,
+        )
+        destination = (
+            target_position[0] + ACT_THREE_TILE_SIZE // 2,
+            target_position[1] + ACT_THREE_TILE_SIZE // 2,
+        )
+        _draw_archer_projectile(
+            view_surface,
+            assets["archer_empowered_shot_arrow"],
+            origin,
+            destination,
+            min(1, ordinary_elapsed / _ATTACK_FRAME_DURATION_MS),
+        )
+
+    if (
+        teleport_origin is not None
+        and transition_started_at
+    ):
+        _draw_teleport_effect(
+            view_surface,
+            _view_position(
+                teleport_origin[0],
+                teleport_origin[1],
+                camera_x,
+                camera_y,
+            ),
+            current_time,
+            transition_started_at,
+            floor.visual_seed ^ _stable_text_seed("teleport:origin"),
+        )
+        _draw_teleport_effect(
+            view_surface,
+            player_position,
+            current_time,
+            transition_started_at,
+            floor.visual_seed ^ _stable_text_seed("teleport:arrival"),
+        )
+        if (
+            current_time - transition_started_at
+            >= _TELEPORT_EFFECT_DURATION_MS
+        ):
+            game_state.player.teleport_camera_origin = None
+            game_state.player.teleport_transition_started_at = 0
 
     if (
         player_subclass in ("assassin", "archer")
@@ -1294,6 +1872,108 @@ def _draw_act_three_world(
                 game_state.player.attack_animation_started_at,
                 flash_color,
             )
+
+    ultimate_target_counts = {}
+    for target_name in game_state.player.ultimate_targets:
+        ultimate_target_counts[target_name] = (
+            ultimate_target_counts.get(target_name, 0) + 1
+        )
+    if (
+        player_subclass == "assassin"
+        and (game_state.player.ultimate_aiming
+             or game_state.player.ultimate_animation_active)
+    ):
+        mark_font = pygame.font.Font(None, 22)
+        for enemy in floor.enemies:
+            mark_count = ultimate_target_counts.get(enemy.name, 0)
+            if enemy.health <= 0 or not mark_count:
+                continue
+            enemy_position = _view_position(
+                enemy.column,
+                enemy.row,
+                camera_x,
+                camera_y,
+            )
+            mark_surface = mark_font.render(
+                f"\u00d7{mark_count}",
+                True,
+                (245, 210, 120),
+            )
+            mark_rectangle = mark_surface.get_rect(
+                midbottom=(
+                    enemy_position[0] + ACT_THREE_TILE_SIZE // 2,
+                    enemy_position[1] - 3,
+                ),
+            )
+            view_surface.blit(mark_surface, mark_rectangle)
+
+    if (
+        player_subclass == "assassin"
+        and game_state.player.ultimate_animation_active
+        and ultimate_target_enemies
+    ):
+        impact_elapsed = (
+            current_time - game_state.player.ultimate_animation_started_at
+        )
+        darkness_fade_out_start = (
+            ASSASSIN_ULTIMATE_PRELUDE_MS
+            + len(ultimate_target_enemies) * ASSASSIN_ULTIMATE_STEP_MS
+        )
+        fade_in = min(1, impact_elapsed / ASSASSIN_ULTIMATE_PRELUDE_MS)
+        fade_out = min(
+            1,
+            max(0, (impact_elapsed - darkness_fade_out_start)
+                / ASSASSIN_ULTIMATE_OUTRO_MS),
+        )
+        ultimate_darkness = pygame.Surface(
+            (ACT_THREE_VIEW_WIDTH, ACT_THREE_VIEW_HEIGHT),
+            pygame.SRCALPHA,
+        )
+        darkness_alpha = round(110 * fade_in * (1 - fade_out))
+        ultimate_darkness.fill((0, 0, 0, darkness_alpha))
+        view_surface.blit(ultimate_darkness, (0, 0))
+
+        slash_elapsed = impact_elapsed - ASSASSIN_ULTIMATE_PRELUDE_MS
+        if 0 <= slash_elapsed < (
+            len(ultimate_target_enemies) * ASSASSIN_ULTIMATE_STEP_MS
+        ):
+            target_index = min(
+                len(ultimate_target_enemies) - 1,
+                slash_elapsed // ASSASSIN_ULTIMATE_STEP_MS,
+            )
+            target_enemy = ultimate_target_enemies[target_index]
+            target_position = _view_position(
+                target_enemy.column,
+                target_enemy.row,
+                camera_x,
+                camera_y,
+            )
+            step_elapsed = slash_elapsed % ASSASSIN_ULTIMATE_STEP_MS
+            slash_progress = step_elapsed / ASSASSIN_ULTIMATE_STEP_MS
+            variant_index = (
+                game_state.player.ultimate_visual_variants[target_index]
+                if target_index
+                < len(game_state.player.ultimate_visual_variants)
+                else target_index % 3
+            )
+            slash_sprite = assets[
+                f"assassin_ultimate_slash_{variant_index}"
+            ].copy()
+            slash_visibility = min(
+                1,
+                slash_progress * 5,
+                (1 - slash_progress) * 5,
+            )
+            slash_sprite.set_alpha(round(255 * slash_visibility))
+            slash_position = (
+                target_position[0]
+                + ACT_THREE_TILE_SIZE // 2
+                - slash_sprite.get_width() // 2,
+                target_position[1]
+                + ACT_THREE_TILE_SIZE // 2
+                - slash_sprite.get_height() // 2,
+            )
+            view_surface.blit(slash_sprite, slash_position)
 
     if player_subclass in ("archer", "assassin"):
         _draw_rogue_idle_particles(
@@ -1335,15 +2015,6 @@ def _draw_act_three_world(
                 )
             ),
         )
-
-    _draw_health_bar(
-        view_surface,
-        player_position[0],
-        player_position[1],
-        game_state.player.health,
-        game_state.player.max_health,
-        PLAYER_HEALTH_BAR_COLOR,
-    )
 
     darkness = pygame.Surface(
         (ACT_THREE_VIEW_WIDTH, ACT_THREE_VIEW_HEIGHT),
@@ -1430,6 +2101,34 @@ def get_act_three_sidebar_tab_rectangles():
     }
 
 
+def get_act_three_log_panel_rect():
+    return pygame.Rect(
+        ACT_THREE_SIDEBAR_X + 35,
+        ACT_THREE_SIDEBAR_Y + 524,
+        ACT_THREE_SIDEBAR_WIDTH - 70,
+        90,
+    )
+
+
+def get_act_three_log_arrow_rectangles():
+    log_panel = get_act_three_log_panel_rect()
+    arrow_size = 18
+    return {
+        "older": pygame.Rect(
+            log_panel.right - arrow_size - 6,
+            log_panel.y + 10,
+            arrow_size,
+            arrow_size,
+        ),
+        "newer": pygame.Rect(
+            log_panel.right - arrow_size - 6,
+            log_panel.bottom - arrow_size - 10,
+            arrow_size,
+            arrow_size,
+        ),
+    }
+
+
 def _draw_act_three_sidebar(
     screen,
     game_state,
@@ -1443,6 +2142,7 @@ def _draw_act_three_sidebar(
     player = game_state.player
     content_x = ACT_THREE_SIDEBAR_X + 30
     content_width = ACT_THREE_SIDEBAR_WIDTH - 60
+    display_font = fonts["sidebar_display"]
     heading_font = fonts["sidebar_heading"]
     text_font = fonts["sidebar_text"]
     numbers_font = fonts["sidebar_numbers"]
@@ -1463,7 +2163,7 @@ def _draw_act_three_sidebar(
 
     header_x = ACT_THREE_SIDEBAR_X + 34
     header_y = ACT_THREE_SIDEBAR_Y + 21
-    class_surface = heading_font.render(
+    class_surface = display_font.render(
         subclass_name,
         True,
         accent_color,
@@ -1474,13 +2174,19 @@ def _draw_act_three_sidebar(
         ACT_THREE_SIDEBAR_X + ACT_THREE_SIDEBAR_WIDTH - 66,
     )
     level_label = text_font.render("LVL", True, dim_color)
-    screen.blit(level_label, (level_x, header_y + 7))
-    _draw_label(
-        screen,
-        numbers_font,
-        "1",
-        TEXT_COLOR,
-        (level_x + level_label.get_width() + 5, header_y + 5),
+    level_label_rectangle = level_label.get_rect(
+        topleft=(level_x, header_y + 7),
+    )
+    screen.blit(level_label, level_label_rectangle)
+    level_number = numbers_font.render("1", True, TEXT_COLOR)
+    screen.blit(
+        level_number,
+        level_number.get_rect(
+            midleft=(
+                level_label_rectangle.right + 5,
+                level_label_rectangle.centery,
+            ),
+        ),
     )
     hp_bar_position = (
         ACT_THREE_SIDEBAR_X + 23,
@@ -1518,8 +2224,8 @@ def _draw_act_three_sidebar(
 
     tab_rectangles = get_act_three_sidebar_tab_rectangles()
     tab_labels = {
-        "stats": "STATS",
-        "inventory": "INVENTORY",
+        "stats": "Stats",
+        "inventory": "Inventory",
     }
     for tab_name, tab_rectangle in tab_rectangles.items():
         is_active = game_state.sidebar_tab == tab_name
@@ -1547,6 +2253,7 @@ def _draw_act_three_sidebar(
                     2,
                 ),
             )
+
         tab_surface = text_font.render(
             tab_labels[tab_name],
             True,
@@ -1557,21 +2264,40 @@ def _draw_act_three_sidebar(
             tab_surface.get_rect(center=tab_rectangle.center),
         )
 
-    tab_content_top = tab_rectangles["stats"].bottom + 11
+    tab_content_panel = pygame.Rect(
+        content_x,
+        tab_rectangles["stats"].bottom + 8,
+        content_width,
+        108,
+    )
+    pygame.draw.rect(
+        screen,
+        (12, 11, 16),
+        tab_content_panel,
+        border_radius=4,
+    )
+    pygame.draw.rect(
+        screen,
+        (50, 45, 56),
+        tab_content_panel,
+        width=1,
+        border_radius=4,
+    )
+    tab_content_top = tab_content_panel.y + 7
     if game_state.sidebar_tab == "inventory":
         inventory = (
             ("sidebar_potion", player.potion_count),
             ("sidebar_coin", player.gold_count),
             ("sidebar_key", player.key_count),
         )
-        slot_size = 54
-        slot_gap = 11
+        slot_size = 48
+        slot_gap = 10
         grid_width = slot_size * 3 + slot_gap * 2
         grid_x = content_x + (content_width - grid_width) // 2
         for slot_index in range(6):
             slot = pygame.Rect(
                 grid_x + (slot_index % 3) * (slot_size + slot_gap),
-                tab_content_top + (slot_index // 3) * (slot_size + 8),
+                tab_content_top + (slot_index // 3) * (slot_size + 5),
                 slot_size,
                 slot_size,
             )
@@ -1614,9 +2340,9 @@ def _draw_act_three_sidebar(
             )
     else:
         stats = (
-            ("DAMAGE", f"{player.damage_min}-{player.damage_max}"),
-            ("CRITICAL CHANCE", f"{round(player.crit_chance * 100)}%"),
-            ("DODGE CHANCE", f"{round(player.dodge_chance * 100)}%"),
+            ("Damage", f"{player.damage_min}-{player.damage_max}"),
+            ("Critical chance", f"{round(player.crit_chance * 100)}%"),
+            ("Dodge chance", f"{round(player.dodge_chance * 100)}%"),
         )
         for stat_index, (label, value) in enumerate(stats):
             stat_y = tab_content_top + stat_index * 29
@@ -1643,11 +2369,11 @@ def _draw_act_three_sidebar(
                     (content_x + content_width - 5, stat_y + 23),
                 )
 
-    ability_y = ACT_THREE_SIDEBAR_Y + 288
+    ability_y = ACT_THREE_SIDEBAR_Y + 270
     _draw_label(
         screen,
         heading_font,
-        "ABILITIES",
+        "Abilities",
         TEXT_COLOR,
         (content_x, ability_y),
     )
@@ -1655,18 +2381,77 @@ def _draw_act_three_sidebar(
     pygame.draw.line(
         screen,
         muted_border,
-        (content_x + 112, ability_y + 15),
+        (content_x + 92, ability_y + 13),
         (content_x + content_width, ability_y + 15),
     )
-    abilities = (
-        ("assassin_invisibility", "INVISIBILITY", 1.0),
-        ("assassin_teleport", "TELEPORT", 0.5),
-        ("assassin_killing_spree", "KILLING SPREE", 0.0),
+    invisibility_charge_ratio = max(
+        0,
+        min(1, player.ability_kill_charge / CLASS_ABILITY_KILLS),
     )
-    card_y = ability_y + 34
+    teleport_charge_ratio = max(
+        0,
+        min(1, player.teleport_charge / ASSASSIN_TELEPORT_CHARGES),
+    )
+    ultimate_charge_ratio = max(
+        0,
+        min(1, player.ultimate_charge / ASSASSIN_ULTIMATE_CHARGES),
+    )
+    if player.subclass == "archer":
+        empowered_charge_ratio = max(
+            0,
+            min(
+                1,
+                player.archer_empowered_shot_charge
+                / ARCHER_EMPOWERED_SHOT_CHARGES,
+            ),
+        )
+        regular_abilities = (
+            (
+                "archer_empowered_shot",
+                "Empowered Shot",
+                empowered_charge_ratio,
+                accent_color,
+            ),
+            (
+                "archer_leap",
+                "Leap",
+                0.0,
+                accent_color,
+            ),
+            (
+                "archer_barrage_zone",
+                "Barrage Zone",
+                0.0,
+                accent_color,
+            ),
+        )
+    else:
+        regular_abilities = (
+            (
+                "assassin_invisibility",
+                "Invisibility",
+                invisibility_charge_ratio,
+                accent_color,
+            ),
+            (
+                "assassin_teleport",
+                "Teleport",
+                teleport_charge_ratio,
+                accent_color,
+            ),
+            (
+                "assassin_killing_spree",
+                "Killing Spree",
+                ultimate_charge_ratio,
+                (205, 68, 74),
+            ),
+        )
+    card_y = ability_y + 30
     card_width = content_width
-    card_height = 82
-    for index, (asset_name, name, charge_ratio) in enumerate(abilities):
+    card_height = 64
+    for index, (asset_name, name, charge_ratio, ability_color) in enumerate(
+        regular_abilities
+    ):
         card = pygame.Rect(
             content_x,
             card_y + index * (card_height + 7),
@@ -1682,16 +2467,16 @@ def _draw_act_three_sidebar(
             border_radius=4,
         )
         icon = assets[asset_name]
-        screen.blit(icon, (card.x + 8, card.y + 8))
-        text_x = card.x + 76
+        screen.blit(icon, (card.x + 7, card.y + 6))
+        text_x = card.x + 61
         _draw_label(
             screen,
             text_font,
             name,
-            accent_color,
-            (text_x, card.y + 10),
+            ability_color,
+            (text_x, card.y + 7),
         )
-        key_badge = pygame.Rect(card.right - 32, card.y + 8, 22, 22)
+        key_badge = pygame.Rect(card.right - 29, card.y + 7, 20, 20)
         pygame.draw.rect(screen, (32, 28, 38), key_badge, border_radius=3)
         pygame.draw.rect(
             screen,
@@ -1712,9 +2497,14 @@ def _draw_act_three_sidebar(
             text_font if charge_ratio >= 1 else numbers_font,
             status,
             dim_color,
-            (text_x, card.y + 34),
+            (text_x, card.y + 27),
         )
-        charge_bar = pygame.Rect(text_x, card.y + 59, card.width - 88, 7)
+        charge_bar = pygame.Rect(
+            text_x,
+            card.y + 48,
+            card.right - text_x - 10,
+            6,
+        )
         pygame.draw.rect(screen, (43, 37, 48), charge_bar, border_radius=2)
         if charge_ratio > 0:
             pygame.draw.rect(
@@ -1728,6 +2518,98 @@ def _draw_act_three_sidebar(
                 ),
                 border_radius=2,
             )
+
+    log_panel = get_act_three_log_panel_rect()
+    pygame.draw.rect(screen, (12, 11, 16), log_panel, border_radius=4)
+    pygame.draw.rect(
+        screen,
+        (50, 45, 56),
+        log_panel,
+        width=1,
+        border_radius=4,
+    )
+    log_font = fonts.get("sidebar_log", text_font)
+    visible_line_count = 4
+    max_log_scroll = max(
+        0,
+        len(game_state.combat_log) - visible_line_count,
+    )
+    game_state.log_scroll_offset = max(
+        0,
+        min(game_state.log_scroll_offset, max_log_scroll),
+    )
+    end_index = len(game_state.combat_log) - game_state.log_scroll_offset
+    start_index = max(0, end_index - visible_line_count)
+    log_messages = game_state.combat_log[start_index:end_index]
+    arrow_rectangles = get_act_three_log_arrow_rectangles()
+    for arrow_name, arrow_rectangle in arrow_rectangles.items():
+        pygame.draw.rect(
+            screen,
+            (25, 22, 31),
+            arrow_rectangle,
+            border_radius=3,
+        )
+        pygame.draw.rect(
+            screen,
+            (70, 63, 76),
+            arrow_rectangle,
+            width=1,
+            border_radius=3,
+        )
+        center_x = arrow_rectangle.centerx
+        center_y = arrow_rectangle.centery
+        if arrow_name == "older":
+            points = (
+                (center_x, center_y - 5),
+                (center_x - 5, center_y + 3),
+                (center_x + 5, center_y + 3),
+            )
+        else:
+            points = (
+                (center_x - 5, center_y - 3),
+                (center_x + 5, center_y - 3),
+                (center_x, center_y + 5),
+            )
+        pygame.draw.polygon(screen, (177, 166, 184), points)
+
+    rendered_lines = []
+    for message in log_messages:
+        compact_message = message
+        if "Hero hits " in compact_message and " for " in compact_message:
+            attacker, amount = compact_message.rstrip(".").split(
+                " for ",
+                1,
+            )
+            compact_message = (
+                attacker.replace("Hero hits ", "Hit ")
+                + " "
+                + amount
+            )
+        compact_message = compact_message.replace(
+            " prepares melee at ",
+            " prepares ",
+        )
+        compact_message = compact_message.replace(
+            " is defeated.",
+            " defeated",
+        )
+        for wrapped_line in wrap_text(
+            log_font,
+            compact_message,
+            log_panel.width - 48,
+        ):
+            rendered_lines.append((wrapped_line, get_event_color(message)))
+
+    for line_index, (visible_message, message_color) in enumerate(
+        rendered_lines[:4]
+    ):
+        _draw_label(
+            screen,
+            log_font,
+            visible_message,
+            message_color,
+            (log_panel.x + 10, log_panel.y + 8 + line_index * 17),
+        )
 
 
 def draw_act_three_gameplay(

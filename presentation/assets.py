@@ -47,24 +47,33 @@ def load_act_two_fonts():
 
 
 def load_act_three_fonts():
-    regular_path = FONT_ROOT / "Sandey Molse DEMO.ttf"
-    numbers_path = FONT_ROOT / "PixelOperator-Bold.ttf"
+    display_path = FONT_ROOT / "Sandey Molse DEMO.ttf"
+    interface_path = FONT_ROOT / "PixelOperator.ttf"
+    interface_bold_path = FONT_ROOT / "PixelOperator-Bold.ttf"
 
     return {
-        "title": pygame.font.Font(str(regular_path), 46),
-        "heading": pygame.font.Font(str(regular_path), 28),
-        "narrative": pygame.font.Font(str(regular_path), 27),
-        "text": pygame.font.Font(str(regular_path), 20),
-        "sidebar_heading": pygame.font.Font(
-            str(regular_path),
+        "title": pygame.font.Font(str(display_path), 46),
+        "heading": pygame.font.Font(str(display_path), 28),
+        "narrative": pygame.font.Font(str(display_path), 27),
+        "text": pygame.font.Font(str(interface_path), 20),
+        "sidebar_display": pygame.font.Font(
+            str(display_path),
             23,
         ),
+        "sidebar_heading": pygame.font.Font(
+            str(interface_bold_path),
+            22,
+        ),
         "sidebar_text": pygame.font.Font(
-            str(regular_path),
+            str(interface_path),
+            19,
+        ),
+        "sidebar_log": pygame.font.Font(
+            str(interface_path),
             16,
         ),
         "sidebar_numbers": pygame.font.Font(
-            str(numbers_path),
+            str(interface_bold_path),
             18,
         ),
     }
@@ -472,16 +481,52 @@ def load_act_three_gameplay_assets():
             (258, 42),
         ),
         "assassin_invisibility": _load_scaled_image(
-            ui_directory / "assassin_invisibility.png",
-            (58, 66),
+            act_directory
+            / "player"
+            / "assassin"
+            / "assassin_invisibility"
+            / "assassin_invisibility.png",
+            (46, 52),
         ),
         "assassin_teleport": _load_scaled_image(
-            ui_directory / "assassin_teleport.png",
-            (58, 66),
+            act_directory
+            / "player"
+            / "assassin"
+            / "assassin_teleport"
+            / "assassin_teleport.png",
+            (46, 52),
         ),
         "assassin_killing_spree": _load_scaled_image(
-            ui_directory / "assassin_killing_spree.png",
-            (58, 66),
+            act_directory
+            / "player"
+            / "assassin"
+            / "assassin_killing_spree"
+            / "assassin_killing_spree.png",
+            (46, 52),
+        ),
+        "archer_empowered_shot": _load_scaled_image(
+            act_directory
+            / "player"
+            / "archer"
+            / "archer_empowered_shot"
+            / "archer_empowered_shot.png",
+            (46, 52),
+        ),
+        "archer_leap": _load_scaled_image(
+            act_directory
+            / "player"
+            / "archer"
+            / "archer_leap"
+            / "archer_leap.png",
+            (46, 52),
+        ),
+        "archer_barrage_zone": _load_scaled_image(
+            act_directory
+            / "player"
+            / "archer"
+            / "archer_barrage_zone"
+            / "archer_barrage_zone.png",
+            (46, 52),
         ),
         "sidebar_potion": _load_scaled_image(
             environment_directory / "items" / "potion_health.png",
@@ -616,6 +661,20 @@ def load_act_three_gameplay_assets():
         / "attack_00.png",
         (tile_size, tile_size),
     )
+    ultimate_directory = (
+        act_directory / "player" / "assassin" / "ultimate"
+    )
+    for variant_index, filename in enumerate(
+        (
+            "chain_slash_01.png",
+            "chain_slash_02.png",
+            "chain_slash_03.png",
+        )
+    ):
+        slash_path = ultimate_directory / filename
+        assets[f"assassin_ultimate_slash_{variant_index}"] = (
+            _load_pixel_scaled_image(slash_path, (96, 96))
+        )
     assets["player_archer_attack"] = _load_pixel_scaled_image(
         act_directory
         / "player"
@@ -623,6 +682,14 @@ def load_act_three_gameplay_assets():
         / "attack"
         / "attack_00.png",
         (tile_size, tile_size),
+    )
+    assets["archer_empowered_shot_arrow"] = _load_scaled_image(
+        act_directory
+        / "player"
+        / "archer"
+        / "empowered_shot"
+        / "empowered_shot_arrow.png",
+        (64, 64),
     )
     assets["player_berserker_attack"] = _load_pixel_scaled_image(
         act_directory
