@@ -123,4 +123,20 @@ FLOOR_CONFIGS = [
         "potion_count": 3,
         "torch_count": 24,
     },
+    {
+        "act": 3,
+        "act_floor": 4,
+        "generator": "act_three_test",
+        "map_columns": 35,
+        "map_rows": 21,
+        "enemy_types": [
+            "brute", "brute",
+            "archer", "archer",
+            "sentinel", "sentinel",
+            "priest", "priest",
+        ],
+        "chest_count": 0,
+        "potion_count": 3,
+        "torch_count": 30,
+    },
 ]

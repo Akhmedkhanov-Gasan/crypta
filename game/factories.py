@@ -51,6 +51,7 @@ def create_floor_state(floor_index: int) -> FloorState:
                 belongs_to_boss_group=belongs_to_boss_group,
             )
         )
+        enemies[-1].movement_bounds = enemy_data.get("movement_bounds")
 
     eligible_key_carriers = [
         enemy

@@ -84,6 +84,13 @@ def move_toward_player(
         floor.player_row,
         occupied_positions,
     )
+    if enemy.movement_bounds is not None:
+        left, top, right, bottom = enemy.movement_bounds
+        if not (
+            left <= enemy.column <= right
+            and top <= enemy.row <= bottom
+        ):
+            enemy.column, enemy.row = previous_position
     new_position = (enemy.column, enemy.row)
 
     if new_position != previous_position:
