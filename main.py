@@ -32,6 +32,7 @@ from rendering import (
     draw_upgrade_screen,
     get_class_selection_rectangles,
     get_act_three_debug_class_rectangles,
+    get_act_three_sidebar_tab_rectangles,
     get_subclass_selection_rectangles,
     load_act_one_fonts,
     load_act_three_fonts,
@@ -419,6 +420,26 @@ def main():
                             )
                         )
                         break
+            elif (
+                event.type == pygame.MOUSEBUTTONDOWN
+                and event.button == 1
+                and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
+                and not game_state.act_three_transition_open
+                and not game_state.subclass_selection_open
+            ):
+                game_mouse_position = window_to_game_position(
+                    screen,
+                    event.pos,
+                )
+                if game_mouse_position is not None:
+                    for tab_name, tab_rectangle in (
+                        get_act_three_sidebar_tab_rectangles().items()
+                    ):
+                        if tab_rectangle.collidepoint(
+                            game_mouse_position
+                        ):
+                            game_state.sidebar_tab = tab_name
+                            break
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_F11:
                     if fullscreen:

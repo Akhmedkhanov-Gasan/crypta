@@ -47,7 +47,8 @@ def load_act_two_fonts():
 
 
 def load_act_three_fonts():
-    regular_path = FONT_ROOT / "AlphaSpikeRegular.ttf"
+    regular_path = FONT_ROOT / "Sandey Molse DEMO.ttf"
+    numbers_path = FONT_ROOT / "PixelOperator-Bold.ttf"
 
     return {
         "title": pygame.font.Font(str(regular_path), 46),
@@ -61,6 +62,10 @@ def load_act_three_fonts():
         "sidebar_text": pygame.font.Font(
             str(regular_path),
             16,
+        ),
+        "sidebar_numbers": pygame.font.Font(
+            str(numbers_path),
+            18,
         ),
     }
 
@@ -461,6 +466,34 @@ def load_act_three_gameplay_assets():
         "sidebar_panel": _load_cropped_ui_image(
             ui_directory / "sidebar_panel_source.png",
             (304, 640),
+        ),
+        "assassin_hp_bar": _load_scaled_image(
+            ui_directory / "assassin_hp_bar.png",
+            (258, 42),
+        ),
+        "assassin_invisibility": _load_scaled_image(
+            ui_directory / "assassin_invisibility.png",
+            (58, 66),
+        ),
+        "assassin_teleport": _load_scaled_image(
+            ui_directory / "assassin_teleport.png",
+            (58, 66),
+        ),
+        "assassin_killing_spree": _load_scaled_image(
+            ui_directory / "assassin_killing_spree.png",
+            (58, 66),
+        ),
+        "sidebar_potion": _load_scaled_image(
+            environment_directory / "items" / "potion_health.png",
+            (34, 34),
+        ),
+        "sidebar_coin": _load_scaled_image(
+            environment_directory / "items" / "coin.png",
+            (34, 34),
+        ),
+        "sidebar_key": _load_scaled_image(
+            environment_directory / "items" / "key.png",
+            (34, 34),
         ),
     }
 

@@ -1412,6 +1412,24 @@ def _draw_label(surface, font, text, color, position):
     surface.blit(font.render(text, True, color), position)
 
 
+def get_act_three_sidebar_tab_rectangles():
+    tabs_x = ACT_THREE_SIDEBAR_X + 30
+    tabs_y = ACT_THREE_SIDEBAR_Y + 118
+    tabs_width = ACT_THREE_SIDEBAR_WIDTH - 60
+    gap = 6
+    tab_width = (tabs_width - gap) // 2
+
+    return {
+        "stats": pygame.Rect(tabs_x, tabs_y, tab_width, 30),
+        "inventory": pygame.Rect(
+            tabs_x + tab_width + gap,
+            tabs_y,
+            tab_width,
+            30,
+        ),
+    }
+
+
 def _draw_act_three_sidebar(
     screen,
     game_state,
@@ -1423,12 +1441,14 @@ def _draw_act_three_sidebar(
         (ACT_THREE_SIDEBAR_X, ACT_THREE_SIDEBAR_Y),
     )
     player = game_state.player
-    floor_config = FLOOR_CONFIGS[game_state.floor_index]
-    content_x = ACT_THREE_SIDEBAR_X + 24
-    content_width = ACT_THREE_SIDEBAR_WIDTH - 48
+    content_x = ACT_THREE_SIDEBAR_X + 30
+    content_width = ACT_THREE_SIDEBAR_WIDTH - 60
     heading_font = fonts["sidebar_heading"]
     text_font = fonts["sidebar_text"]
+    numbers_font = fonts["sidebar_numbers"]
     dim_color = (139, 132, 142)
+    muted_border = (70, 63, 76)
+    panel_fill = (18, 16, 23)
     subclass_name, accent_color = {
         "paladin": ("PALADIN", (206, 168, 80)),
         "assassin": ("ASSASSIN", (69, 130, 221)),
@@ -1441,172 +1461,273 @@ def _draw_act_three_sidebar(
         ("BERSERKER", (205, 68, 58)),
     )
 
-    _draw_label(
-        screen,
-        heading_font,
+    header_x = ACT_THREE_SIDEBAR_X + 34
+    header_y = ACT_THREE_SIDEBAR_Y + 21
+    class_surface = heading_font.render(
         subclass_name,
+        True,
         accent_color,
-        (content_x, ACT_THREE_SIDEBAR_Y + 18),
     )
-    floor_label = (
-        f"ACT III  /  FLOOR {floor_config['act_floor']}"
+    screen.blit(class_surface, (header_x, header_y))
+    level_x = min(
+        header_x + class_surface.get_width() + 12,
+        ACT_THREE_SIDEBAR_X + ACT_THREE_SIDEBAR_WIDTH - 66,
     )
+    level_label = text_font.render("LVL", True, dim_color)
+    screen.blit(level_label, (level_x, header_y + 7))
     _draw_label(
         screen,
-        text_font,
-        floor_label,
-        dim_color,
-        (content_x, ACT_THREE_SIDEBAR_Y + 52),
-    )
-    health_bar = pygame.Rect(
-        content_x,
-        ACT_THREE_SIDEBAR_Y + 75,
-        content_width,
-        12,
-    )
-    pygame.draw.rect(
-        screen,
-        (29, 16, 20),
-        health_bar,
-        border_radius=3,
-    )
-    pygame.draw.rect(
-        screen,
-        (168, 48, 50),
-        (
-            health_bar.x,
-            health_bar.y,
-            round(
-                health_bar.width
-                * player.health
-                / player.max_health
-            ),
-            health_bar.height,
-        ),
-        border_radius=3,
-    )
-
-    section_y = ACT_THREE_SIDEBAR_Y + 122
-    _draw_label(
-        screen,
-        heading_font,
-        "CHARACTER",
+        numbers_font,
+        "1",
         TEXT_COLOR,
-        (content_x, section_y),
+        (level_x + level_label.get_width() + 5, header_y + 5),
     )
-    stats = (
-        f"HP       {player.health}/{player.max_health}",
-        f"DAMAGE   {player.damage_min}-{player.damage_max}",
-        f"CRIT     {round(player.crit_chance * 100)}%",
-        f"DODGE    {round(player.dodge_chance * 100)}%",
+    hp_bar_position = (
+        ACT_THREE_SIDEBAR_X + 23,
+        ACT_THREE_SIDEBAR_Y + 48,
+    )
+    screen.blit(assets["assassin_hp_bar"], hp_bar_position)
+    hp_ratio = max(0, min(1, player.health / player.max_health))
+    hp_inner_left = hp_bar_position[0] + 27
+    hp_inner_top = hp_bar_position[1] + 14
+    hp_inner_width = 204
+    hp_inner_height = 14
+    missing_hp_rectangle = pygame.Rect(
+        hp_inner_left + round(hp_inner_width * hp_ratio),
+        hp_inner_top,
+        round(hp_inner_width * (1 - hp_ratio)),
+        hp_inner_height,
+    )
+    if missing_hp_rectangle.width > 0:
+        pygame.draw.rect(
+            screen,
+            (42, 20, 27),
+            missing_hp_rectangle,
+        )
+    hp_text = f"HP {player.health}/{player.max_health}"
+    hp_surface = numbers_font.render(hp_text, True, TEXT_COLOR)
+    screen.blit(
+        hp_surface,
+        hp_surface.get_rect(
+            center=(
+                hp_bar_position[0] + 129,
+                hp_bar_position[1] + 21,
+            ),
+        ),
     )
 
-    for line_index, line in enumerate(stats):
-        _draw_label(
+    tab_rectangles = get_act_three_sidebar_tab_rectangles()
+    tab_labels = {
+        "stats": "STATS",
+        "inventory": "INVENTORY",
+    }
+    for tab_name, tab_rectangle in tab_rectangles.items():
+        is_active = game_state.sidebar_tab == tab_name
+        pygame.draw.rect(
             screen,
-            text_font,
-            line,
-            dim_color,
-            (content_x, section_y + 35 + line_index * 25),
+            (27, 23, 32) if is_active else (16, 14, 20),
+            tab_rectangle,
+            border_radius=3,
+        )
+        pygame.draw.rect(
+            screen,
+            accent_color if is_active else muted_border,
+            tab_rectangle,
+            width=1,
+            border_radius=3,
+        )
+        if is_active:
+            pygame.draw.rect(
+                screen,
+                accent_color,
+                (
+                    tab_rectangle.x + 8,
+                    tab_rectangle.bottom - 3,
+                    tab_rectangle.width - 16,
+                    2,
+                ),
+            )
+        tab_surface = text_font.render(
+            tab_labels[tab_name],
+            True,
+            TEXT_COLOR if is_active else dim_color,
+        )
+        screen.blit(
+            tab_surface,
+            tab_surface.get_rect(center=tab_rectangle.center),
         )
 
-    inventory_y = section_y + 145
-    _draw_label(
-        screen,
-        heading_font,
-        "INVENTORY",
-        TEXT_COLOR,
-        (content_x, inventory_y),
-    )
-    inventory_line = (
-        f"Potions {player.potion_count}   "
-        f"Gold {player.gold_count}   "
-        f"Keys {player.key_count}"
-    )
-    _draw_label(
-        screen,
-        text_font,
-        inventory_line,
-        dim_color,
-        (content_x, inventory_y + 35),
-    )
+    tab_content_top = tab_rectangles["stats"].bottom + 11
+    if game_state.sidebar_tab == "inventory":
+        inventory = (
+            ("sidebar_potion", player.potion_count),
+            ("sidebar_coin", player.gold_count),
+            ("sidebar_key", player.key_count),
+        )
+        slot_size = 54
+        slot_gap = 11
+        grid_width = slot_size * 3 + slot_gap * 2
+        grid_x = content_x + (content_width - grid_width) // 2
+        for slot_index in range(6):
+            slot = pygame.Rect(
+                grid_x + (slot_index % 3) * (slot_size + slot_gap),
+                tab_content_top + (slot_index // 3) * (slot_size + 8),
+                slot_size,
+                slot_size,
+            )
+            pygame.draw.rect(screen, panel_fill, slot, border_radius=3)
+            pygame.draw.rect(
+                screen,
+                muted_border,
+                slot,
+                width=1,
+                border_radius=3,
+            )
+            if slot_index >= len(inventory):
+                continue
+            asset_name, count = inventory[slot_index]
+            item = assets[asset_name]
+            screen.blit(
+                item,
+                item.get_rect(center=slot.center),
+            )
+            count_badge = pygame.Rect(
+                slot.right - 19,
+                slot.bottom - 18,
+                16,
+                15,
+            )
+            pygame.draw.rect(
+                screen,
+                (12, 11, 15),
+                count_badge,
+                border_radius=3,
+            )
+            count_surface = numbers_font.render(
+                str(count),
+                True,
+                TEXT_COLOR,
+            )
+            screen.blit(
+                count_surface,
+                count_surface.get_rect(center=count_badge.center),
+            )
+    else:
+        stats = (
+            ("DAMAGE", f"{player.damage_min}-{player.damage_max}"),
+            ("CRITICAL CHANCE", f"{round(player.crit_chance * 100)}%"),
+            ("DODGE CHANCE", f"{round(player.dodge_chance * 100)}%"),
+        )
+        for stat_index, (label, value) in enumerate(stats):
+            stat_y = tab_content_top + stat_index * 29
+            _draw_label(
+                screen,
+                text_font,
+                label,
+                dim_color,
+                (content_x + 5, stat_y),
+            )
+            value_surface = numbers_font.render(value, True, TEXT_COLOR)
+            screen.blit(
+                value_surface,
+                (
+                    content_x + content_width - value_surface.get_width() - 5,
+                    stat_y,
+                ),
+            )
+            if stat_index < len(stats) - 1:
+                pygame.draw.line(
+                    screen,
+                    (51, 46, 56),
+                    (content_x + 5, stat_y + 23),
+                    (content_x + content_width - 5, stat_y + 23),
+                )
 
-    ability_y = inventory_y + 76
+    ability_y = ACT_THREE_SIDEBAR_Y + 288
     _draw_label(
         screen,
         heading_font,
-        {
-            "rogue": "INVISIBILITY",
-            "mage": "ARCANE BURST",
-            "warrior": "POWER STRIKE",
-        }.get(player.player_class, "ABILITY"),
-        accent_color,
+        "ABILITIES",
+        TEXT_COLOR,
         (content_x, ability_y),
     )
-    if (
-        player.player_class == "rogue"
-        and player.invisibility_turns > 0
-    ):
-        ability_status = (
-            f"ACTIVE  {player.invisibility_turns} TURNS"
-        )
-    else:
-        ability_status = (
-            "READY"
-            if player.ability_kill_charge >= 2
-            else f"{player.ability_kill_charge}/2 KILLS"
-        )
-    _draw_label(
-        screen,
-        text_font,
-        ability_status,
-        dim_color,
-        (content_x, ability_y + 35),
-    )
 
-    events_y = ability_y + 78
-    _draw_label(
+    pygame.draw.line(
         screen,
-        heading_font,
-        "RECENT EVENTS",
-        TEXT_COLOR,
-        (content_x, events_y),
+        muted_border,
+        (content_x + 112, ability_y + 15),
+        (content_x + content_width, ability_y + 15),
     )
-
-    for line_index, message in enumerate(
-        game_state.combat_log[-4:]
-    ):
-        visible_message = fit_text_to_width(
-            text_font,
-            message,
-            content_width,
+    abilities = (
+        ("assassin_invisibility", "INVISIBILITY", 1.0),
+        ("assassin_teleport", "TELEPORT", 0.5),
+        ("assassin_killing_spree", "KILLING SPREE", 0.0),
+    )
+    card_y = ability_y + 34
+    card_width = content_width
+    card_height = 82
+    for index, (asset_name, name, charge_ratio) in enumerate(abilities):
+        card = pygame.Rect(
+            content_x,
+            card_y + index * (card_height + 7),
+            card_width,
+            card_height,
         )
+        pygame.draw.rect(screen, panel_fill, card, border_radius=4)
+        pygame.draw.rect(
+            screen,
+            muted_border,
+            card,
+            width=1,
+            border_radius=4,
+        )
+        icon = assets[asset_name]
+        screen.blit(icon, (card.x + 8, card.y + 8))
+        text_x = card.x + 76
         _draw_label(
             screen,
             text_font,
-            visible_message,
-            dim_color,
-            (
-                content_x,
-                events_y + 34 + line_index * 23,
-            ),
+            name,
+            accent_color,
+            (text_x, card.y + 10),
         )
-
-    controls_y = ACT_THREE_SIDEBAR_Y + 548
-    controls = (
-        "MOVE  WASD / ARROWS",
-        "ABILITY  E     POTION  H",
-        "WAIT  SPACE",
-    )
-
-    for line_index, line in enumerate(controls):
+        key_badge = pygame.Rect(card.right - 32, card.y + 8, 22, 22)
+        pygame.draw.rect(screen, (32, 28, 38), key_badge, border_radius=3)
+        pygame.draw.rect(
+            screen,
+            muted_border,
+            key_badge,
+            width=1,
+            border_radius=3,
+        )
+        key_surface = numbers_font.render(
+            str(index + 1),
+            True,
+            TEXT_COLOR,
+        )
+        screen.blit(key_surface, key_surface.get_rect(center=key_badge.center))
+        status = "READY" if charge_ratio >= 1 else f"{round(charge_ratio * 100)}%"
         _draw_label(
             screen,
-            text_font,
-            line,
+            text_font if charge_ratio >= 1 else numbers_font,
+            status,
             dim_color,
-            (content_x, controls_y + line_index * 24),
+            (text_x, card.y + 34),
         )
+        charge_bar = pygame.Rect(text_x, card.y + 59, card.width - 88, 7)
+        pygame.draw.rect(screen, (43, 37, 48), charge_bar, border_radius=2)
+        if charge_ratio > 0:
+            pygame.draw.rect(
+                screen,
+                accent_color,
+                (
+                    charge_bar.x,
+                    charge_bar.y,
+                    round(charge_bar.width * charge_ratio),
+                    charge_bar.height,
+                ),
+                border_radius=2,
+            )
 
 
 def draw_act_three_gameplay(
@@ -1617,6 +1738,17 @@ def draw_act_three_gameplay(
     current_time,
 ):
     screen.fill((7, 6, 10))
+    floor_config = FLOOR_CONFIGS[game_state.floor_index]
+    floor_label = (
+        f"ACT III  /  FLOOR {floor_config['act_floor']}"
+    )
+    _draw_label(
+        screen,
+        fonts["sidebar_text"],
+        floor_label,
+        (139, 132, 142),
+        (ACT_THREE_VIEW_X, 62),
+    )
     _draw_act_three_world(
         screen,
         game_state,

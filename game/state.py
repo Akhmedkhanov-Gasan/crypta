@@ -254,6 +254,7 @@ class GameState:
     act_three_debug_class_selection_open: bool = False
     subclass_selection_open: bool = False
     act_three_test_mode: bool = False
+    sidebar_tab: str = "stats"
     upgrade_message: str = ""
     player_attack_targets: list[tuple[int, int]] = field(
         default_factory=list

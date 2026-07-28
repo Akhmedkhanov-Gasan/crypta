@@ -6,7 +6,10 @@ from presentation.assets import (
     load_act_two_fonts,
     load_act_two_sprites,
 )
-from presentation.act_three import draw_act_three_gameplay
+from presentation.act_three import (
+    draw_act_three_gameplay,
+    get_act_three_sidebar_tab_rectangles,
+)
 from presentation.hud import (
     draw_sidebar,
     draw_status,
@@ -66,6 +69,7 @@ __all__ = [
     "draw_upgrade_screen",
     "get_class_selection_rectangles",
     "get_act_three_debug_class_rectangles",
+    "get_act_three_sidebar_tab_rectangles",
     "get_subclass_selection_rectangles",
     "load_act_one_fonts",
     "load_act_three_fonts",
