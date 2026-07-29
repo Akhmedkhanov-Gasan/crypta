@@ -627,5 +627,3 @@ def resolve_oracle_hit_reaction(
             floor_state,
             combat_log,
         )
-
-

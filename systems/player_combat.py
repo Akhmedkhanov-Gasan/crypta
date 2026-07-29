@@ -1,5 +1,6 @@
 import random
 from collections.abc import Callable
+from math import ceil
 
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
@@ -21,7 +22,27 @@ from settings import (
     ARCHER_BASIC_DAMAGE_MAX,
     ARCHER_BASIC_DAMAGE_MIN,
     ARCHER_EMPOWERED_SHOT_CHARGES,
+    ARCHER_BARRAGE_ZONE_CHARGES,
+    ARCHER_LEAP_CHARGES,
+    BERSERKER_RAGE_CRITICAL_DAMAGE_MULTIPLIER,
+    BERSERKER_RAGE_CRITICAL_HEALTH_RATIO,
+    BERSERKER_CRUSHING_LEAP_CHARGES,
+    BERSERKER_LAST_RAGE_CHARGES,
+    BERSERKER_RAGE_INJURED_DAMAGE_MULTIPLIER,
+    BERSERKER_RAGE_INJURED_HEALTH_RATIO,
     CLASS_ABILITY_KILLS,
+    PALADIN_HOLY_HAND_CHARGES,
+    PALADIN_HOLY_SHIELD_CHARGES,
+    PALADIN_HOLY_SHIELD_DAMAGE_BONUS,
+    PALADIN_HOLY_SHIELD_HEALING_PER_HIT,
+    PALADIN_SHIELD_CHARGE_CHARGES,
+    WARLOCK_BASIC_ATTACK_RANGE,
+    WARLOCK_BASIC_DAMAGE_MAX,
+    WARLOCK_BASIC_DAMAGE_MIN,
+    WARLOCK_DEMON_FORM_DAMAGE_MULTIPLIER,
+    WARLOCK_CURSE_CHARGES,
+    WARLOCK_CURSE_DAMAGE_MULTIPLIER,
+    WARLOCK_SOUL_EXCHANGE_CHARGES,
 )
 from settings import ASSASSIN_TELEPORT_CHARGES
 from settings import ASSASSIN_ULTIMATE_CHARGES
@@ -31,6 +52,44 @@ OracleHitReaction = Callable[
     [EnemyState, FloorState, list[str]],
     None,
 ]
+
+
+def damage_player(
+    game_state: GameState,
+    damage: int,
+) -> int:
+    player = game_state.player
+    if (
+        player.subclass == "paladin"
+        and player.paladin_holy_shield_turns > 0
+    ):
+        damage = ceil(damage / 2)
+    previous_health = player.health
+    minimum_health = (
+        1
+        if (
+            player.subclass == "berserker"
+            and player.berserker_last_rage_turns > 0
+        )
+        else 0
+    )
+    player.health = max(
+        minimum_health,
+        player.health - damage,
+    )
+    damage_dealt = previous_health - player.health
+
+    if (
+        damage_dealt > 0
+        and player.subclass == "berserker"
+        and player.berserker_last_rage_turns <= 0
+    ):
+        player.berserker_last_rage_charge = min(
+            BERSERKER_LAST_RAGE_CHARGES,
+            player.berserker_last_rage_charge + 1,
+        )
+
+    return damage_dealt
 
 
 def is_valid_archer_attack_target(
@@ -67,6 +126,112 @@ def is_valid_archer_attack_target(
             target_cell[1],
         )
     )
+
+
+def is_valid_warlock_attack_target(
+    game_state: GameState,
+    target_cell: tuple[int, int],
+) -> bool:
+    player = game_state.player
+    floor = game_state.floor
+    if player.subclass != "warlock":
+        return False
+
+    target_enemy = next(
+        (
+            enemy
+            for enemy in floor.enemies
+            if enemy.health > 0
+            and target_cell in get_enemy_occupied_positions(enemy)
+        ),
+        None,
+    )
+    if target_enemy is None:
+        return False
+
+    distance = abs(
+        target_cell[0] - floor.player_column
+    ) + abs(
+        target_cell[1] - floor.player_row
+    )
+    return (
+        distance <= WARLOCK_BASIC_ATTACK_RANGE
+        and has_line_of_sight(
+            floor.map,
+            floor.player_column,
+            floor.player_row,
+            target_cell[0],
+            target_cell[1],
+        )
+    )
+
+
+def perform_warlock_attack(
+    game_state: GameState,
+    target_cell: tuple[int, int],
+    oracle_hit_reaction: OracleHitReaction,
+) -> bool:
+    if not is_valid_warlock_attack_target(
+        game_state,
+        target_cell,
+    ):
+        return False
+
+    player = game_state.player
+    floor = game_state.floor
+    hit_enemy = next(
+        enemy
+        for enemy in floor.enemies
+        if enemy.health > 0
+        and target_cell in get_enemy_occupied_positions(enemy)
+    )
+    game_state.player_attack_targets = [target_cell]
+    game_state.emit(
+        GameEvent(
+            type=GameEventType.ATTACK,
+            actor="hero",
+            origin=(
+                floor.player_column,
+                floor.player_row,
+            ),
+            positions=(target_cell,),
+            data={"kind": "warlock_orb"},
+        )
+    )
+    enemy_was_defeated = attack_enemy(
+        game_state,
+        hit_enemy,
+        ceil(
+            WARLOCK_BASIC_DAMAGE_MIN
+            * (
+                WARLOCK_DEMON_FORM_DAMAGE_MULTIPLIER
+                if player.warlock_demon_form_active
+                else 1
+            )
+        ),
+        ceil(
+            WARLOCK_BASIC_DAMAGE_MAX
+            * (
+                WARLOCK_DEMON_FORM_DAMAGE_MULTIPLIER
+                if player.warlock_demon_form_active
+                else 1
+            )
+        ),
+        player.crit_chance,
+        attacker_position=(
+            floor.player_column,
+            floor.player_row,
+        ),
+    )
+    if hit_enemy.type == "oracle":
+        oracle_hit_reaction(
+            hit_enemy,
+            floor,
+            game_state.combat_log,
+        )
+    if enemy_was_defeated:
+        resolve_enemy_defeat(game_state, hit_enemy)
+    return True
 
 
 def perform_archer_attack(
@@ -123,6 +288,7 @@ def attack_enemy(
     damage_bonus: int = 0,
     force_critical: bool = False,
     attacker_position: tuple[int, int] | None = None,
+    grant_ability_charge: bool = True,
 ) -> bool:
     player = game_state.player
     if (
@@ -153,6 +319,31 @@ def attack_enemy(
         roll_player_damage(damage_minimum, damage_maximum)
         + damage_bonus
     )
+    if enemy.curse_turns > 0:
+        damage = ceil(
+            damage * WARLOCK_CURSE_DAMAGE_MULTIPLIER
+        )
+    if player.subclass == "berserker" and player.health > 0:
+        health_ratio = player.health / player.max_health
+        if (
+            player.berserker_last_rage_turns > 0
+            or health_ratio
+            <= BERSERKER_RAGE_CRITICAL_HEALTH_RATIO
+        ):
+            damage = ceil(
+                damage
+                * BERSERKER_RAGE_CRITICAL_DAMAGE_MULTIPLIER
+            )
+        elif health_ratio <= BERSERKER_RAGE_INJURED_HEALTH_RATIO:
+            damage = ceil(
+                damage
+                * BERSERKER_RAGE_INJURED_DAMAGE_MULTIPLIER
+            )
+    elif (
+        player.subclass == "paladin"
+        and player.paladin_holy_shield_turns > 0
+    ):
+        damage += PALADIN_HOLY_SHIELD_DAMAGE_BONUS
     critical_hit = (
         force_critical
         or random.random() < critical_chance
@@ -162,7 +353,37 @@ def attack_enemy(
         damage *= 2
 
     enemy.health = max(0, enemy.health - damage)
-    if player.subclass == "assassin" and not player.ultimate_animation_active:
+    if (
+        player.subclass == "paladin"
+        and player.paladin_holy_shield_turns > 0
+        and player.health < player.max_health
+    ):
+        previous_health = player.health
+        player.health = min(
+            player.max_health,
+            player.health
+            + PALADIN_HOLY_SHIELD_HEALING_PER_HIT,
+        )
+        healing = player.health - previous_health
+        game_state.emit(
+            GameEvent(
+                type=GameEventType.HEAL,
+                actor="hero",
+                target="hero",
+                destination=attacker_position,
+                amount=healing,
+                data={"kind": "paladin_holy_shield"},
+            )
+        )
+        add_log_message(
+            game_state.combat_log,
+            f"Holy Shield restores {healing} health.",
+        )
+    if (
+        grant_ability_charge
+        and player.subclass == "assassin"
+        and not player.ultimate_animation_active
+    ):
         player.ability_kill_charge = min(
             CLASS_ABILITY_KILLS,
             player.ability_kill_charge + 1,
@@ -175,10 +396,51 @@ def attack_enemy(
             ASSASSIN_ULTIMATE_CHARGES,
             player.ultimate_charge + 1,
         )
-    elif player.subclass == "archer":
+    elif grant_ability_charge and player.subclass == "archer":
         player.archer_empowered_shot_charge = min(
             ARCHER_EMPOWERED_SHOT_CHARGES,
             player.archer_empowered_shot_charge + 1,
+        )
+        player.archer_leap_charge = min(
+            ARCHER_LEAP_CHARGES,
+            player.archer_leap_charge + 1,
+        )
+        player.archer_barrage_zone_charge = min(
+            ARCHER_BARRAGE_ZONE_CHARGES,
+            player.archer_barrage_zone_charge + 1,
+        )
+    elif grant_ability_charge and player.subclass == "berserker":
+        player.berserker_crushing_leap_charge = min(
+            BERSERKER_CRUSHING_LEAP_CHARGES,
+            player.berserker_crushing_leap_charge + 1,
+        )
+        if player.berserker_last_rage_turns <= 0:
+            player.berserker_last_rage_charge = min(
+                BERSERKER_LAST_RAGE_CHARGES,
+                player.berserker_last_rage_charge + 1,
+            )
+    elif grant_ability_charge and player.subclass == "paladin":
+        player.paladin_holy_hand_charge = min(
+            PALADIN_HOLY_HAND_CHARGES,
+            player.paladin_holy_hand_charge + 1,
+        )
+        player.paladin_shield_charge_charge = min(
+            PALADIN_SHIELD_CHARGE_CHARGES,
+            player.paladin_shield_charge_charge + 1,
+        )
+        if player.paladin_holy_shield_turns <= 0:
+            player.paladin_holy_shield_charge = min(
+                PALADIN_HOLY_SHIELD_CHARGES,
+                player.paladin_holy_shield_charge + 1,
+            )
+    elif grant_ability_charge and player.subclass == "warlock":
+        player.warlock_curse_charge = min(
+            WARLOCK_CURSE_CHARGES,
+            player.warlock_curse_charge + 1,
+        )
+        player.warlock_soul_exchange_charge = min(
+            WARLOCK_SOUL_EXCHANGE_CHARGES,
+            player.warlock_soul_exchange_charge + 1,
         )
     game_state.emit(
         GameEvent(

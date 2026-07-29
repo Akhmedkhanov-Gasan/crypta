@@ -18,6 +18,10 @@ from systems.enemy_ai import (
     try_raise_shield,
     try_start_healing,
 )
+from systems.player_abilities import (
+    resolve_archer_barrage_zone_entry,
+)
+from systems.player_combat import damage_player
 
 
 def resolve_enemy_turn(
@@ -114,9 +118,9 @@ def resolve_enemy_turn(
                             attack_mode,
                         )
                     )
-                    game_state.player.health = max(
-                        0,
-                        game_state.player.health - damage,
+                    damage = damage_player(
+                        game_state,
+                        damage,
                     )
                     if game_state.player.invisibility_turns > 0:
                         game_state.player.invisibility_turns = 0
@@ -183,6 +187,22 @@ def resolve_enemy_turn(
             heal_target = enemy["heal_target"]
             enemy["heal_target"] = None
             enemy.behavior_state = EnemyBehaviorState.CHASING
+
+            if (
+                heal_target.health > 0
+                and heal_target.curse_turns > 0
+            ):
+                enemy.heal_cooldown = (
+                    enemy.heal_cooldown_duration
+                )
+                add_log_message(
+                    game_state.combat_log,
+                    (
+                        f"The curse prevents healing "
+                        f"{heal_target.name}."
+                    ),
+                )
+                continue
 
             if (
                 heal_target["health"] > 0
@@ -299,6 +319,17 @@ def resolve_enemy_turn(
                 game_state.floor["stairs_row"],
             )
         )
+        occupied_positions.add(
+            (
+                game_state.floor.player_column,
+                game_state.floor.player_row,
+            )
+        )
+        reserved_leap_target = (
+            game_state.player.berserker_crushing_leap_target
+        )
+        if reserved_leap_target is not None:
+            occupied_positions.add(reserved_leap_target)
         attack_blocking_positions = {
             (chest["column"], chest["row"])
             for chest in game_state.floor["chests"]
@@ -330,6 +361,13 @@ def resolve_enemy_turn(
                         data={"kind": "wander"},
                     )
                 )
+                resolve_archer_barrage_zone_entry(
+                    game_state,
+                    enemy,
+                    previous_position,
+                )
+                if enemy.health <= 0:
+                    continue
             enemy_was_aggro = enemy["is_aggro"]
             update_enemy_aggro(
                 game_state.floor["map"],

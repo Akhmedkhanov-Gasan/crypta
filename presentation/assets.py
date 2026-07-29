@@ -528,6 +528,94 @@ def load_act_three_gameplay_assets():
             / "archer_barrage_zone.png",
             (46, 52),
         ),
+        "berserker_rage": _load_scaled_image(
+            act_directory
+            / "player"
+            / "berserker"
+            / "berserker_rage"
+            / "berserker_rage.png",
+            (46, 52),
+        ),
+        "berserker_crushing_leap": _load_scaled_image(
+            act_directory
+            / "player"
+            / "berserker"
+            / "berserker_crushing_leap"
+            / "berserker_crushing_leap.png",
+            (46, 52),
+        ),
+        "berserker_last_rage": _load_scaled_image(
+            act_directory
+            / "player"
+            / "berserker"
+            / "berserker_last_rage"
+            / "berserker_last_rage.png",
+            (46, 52),
+        ),
+        "paladin_holy_hand": _load_scaled_image(
+            act_directory
+            / "player"
+            / "paladin"
+            / "paladin_holy_hand"
+            / "paladin_holy_hand.png",
+            (46, 52),
+        ),
+        "paladin_shield_charge": _load_scaled_image(
+            act_directory
+            / "player"
+            / "paladin"
+            / "paladin_shield_charge"
+            / "paladin_shield_charge.png",
+            (46, 52),
+        ),
+        "paladin_holy_shield": _load_scaled_image(
+            act_directory
+            / "player"
+            / "paladin"
+            / "paladin_holy_shield"
+            / "paladin_holy_shield.png",
+            (46, 52),
+        ),
+        "warlock_curse": _load_scaled_image(
+            act_directory
+            / "player"
+            / "warlock"
+            / "warlock_curse"
+            / "warlock_curse.png",
+            (46, 52),
+        ),
+        "warlock_soul_exchange": _load_scaled_image(
+            act_directory
+            / "player"
+            / "warlock"
+            / "warlock_soul_exchange"
+            / "warlock_soul_exchange.png",
+            (46, 52),
+        ),
+        "warlock_demon_form": _load_scaled_image(
+            act_directory
+            / "player"
+            / "warlock"
+            / "warlock_demon_form"
+            / "warlock_demon_form.png",
+            (46, 52),
+        ),
+        "warlock_demon_edge_left": _load_scaled_image(
+            act_directory
+            / "player"
+            / "warlock"
+            / "warlock_demon_form"
+            / "demon_form_edge_left_original.png",
+            (273, 512),
+        ),
+        "warlock_demon_edge_right": _load_scaled_image(
+            act_directory
+            / "player"
+            / "warlock"
+            / "warlock_demon_form"
+            / "demon_form_edge_right_original.png",
+            (273, 512),
+        ),
         "sidebar_potion": _load_scaled_image(
             environment_directory / "items" / "potion_health.png",
             (34, 34),
@@ -581,6 +669,35 @@ def load_act_three_gameplay_assets():
                     (tile_size, tile_size),
                 )
             )
+
+    demon_idle_directory = (
+        act_directory
+        / "player"
+        / "warlock"
+        / "warlock_demon_form"
+    )
+    for frame_index in range(3):
+        assets[f"player_warlock_demon_idle_{frame_index}"] = (
+            _load_pixel_scaled_image(
+                demon_idle_directory
+                / f"idle_{frame_index:02d}.png",
+                (tile_size, tile_size),
+            )
+        )
+    for frame_index in range(2):
+        assets[f"player_warlock_demon_walk_{frame_index}"] = (
+            _load_pixel_scaled_image(
+                demon_idle_directory
+                / f"walk_{frame_index:02d}.png",
+                (tile_size, tile_size),
+            )
+        )
+    assets["player_warlock_demon_attack"] = (
+        _load_pixel_scaled_image(
+            demon_idle_directory / "attack_00.png",
+            (tile_size, tile_size),
+        )
+    )
 
     walk_directory = (
         act_directory / "player" / "assassin" / "walk"
@@ -691,6 +808,24 @@ def load_act_three_gameplay_assets():
         / "empowered_shot_arrow.png",
         (64, 64),
     )
+    assets["player_archer_leap"] = _load_pixel_scaled_image(
+        act_directory
+        / "player"
+        / "archer"
+        / "leap"
+        / "leap_00.png",
+        (tile_size, tile_size),
+    )
+    assets["archer_barrage_zone_cell"] = (
+        _load_pixel_scaled_image(
+            act_directory
+            / "player"
+            / "archer"
+            / "barrage_zone"
+            / "barrage_zone_cell.png",
+            (tile_size, tile_size),
+        )
+    )
     assets["player_berserker_attack"] = _load_pixel_scaled_image(
         act_directory
         / "player"
@@ -699,6 +834,36 @@ def load_act_three_gameplay_assets():
         / "attack_00.png",
         (tile_size, tile_size),
     )
+    assets["player_berserker_crushing_leap"] = (
+        _load_pixel_scaled_image(
+            act_directory
+            / "player"
+            / "berserker"
+            / "crushing_leap"
+            / "leap_00_original.png",
+            (tile_size, tile_size),
+        )
+    )
+    assets["player_berserker_crushing_leap_impact"] = (
+        _load_pixel_scaled_image(
+            act_directory
+            / "player"
+            / "berserker"
+            / "crushing_leap"
+            / "leap_impact_00_original.png",
+            (tile_size, tile_size),
+        )
+    )
+    assets["berserker_crushing_leap_area"] = (
+        _load_pixel_scaled_image(
+            act_directory
+            / "player"
+            / "berserker"
+            / "crushing_leap"
+            / "crushing_leap_area_original.png",
+            (tile_size, tile_size),
+        )
+    )
     assets["player_paladin_attack"] = _load_pixel_scaled_image(
         act_directory
         / "player"
@@ -706,6 +871,16 @@ def load_act_three_gameplay_assets():
         / "attack"
         / "attack_00.png",
         (tile_size, tile_size),
+    )
+    assets["player_paladin_shield_charge"] = (
+        _load_pixel_scaled_image(
+            act_directory
+            / "player"
+            / "paladin"
+            / "shield_charge"
+            / "shield_charge_00.png",
+            (tile_size, tile_size),
+        )
     )
     assets["player_warlock_attack"] = _load_pixel_scaled_image(
         act_directory
