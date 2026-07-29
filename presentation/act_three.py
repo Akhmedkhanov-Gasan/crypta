@@ -264,6 +264,95 @@ def _view_position(column, row, camera_x, camera_y):
     )
 
 
+def _line_of_sight(dungeon_map, origin, target, blockers=()):
+    """Return whether a grid ray can reach target without crossing a wall."""
+    x0, y0 = origin
+    x1, y1 = target
+    dx = abs(x1 - x0)
+    dy = abs(y1 - y0)
+    step_x = 1 if x0 < x1 else -1
+    step_y = 1 if y0 < y1 else -1
+    error = dx - dy
+
+    while (x0, y0) != (x1, y1):
+        if (
+            (x0, y0) != origin
+            and (
+                dungeon_map[y0][x0] == "#"
+                or (x0, y0) in blockers
+            )
+        ):
+            return False
+        doubled_error = error * 2
+        if doubled_error > -dy:
+            error -= dy
+            x0 += step_x
+        if doubled_error < dx:
+            error += dx
+            y0 += step_y
+
+    return True
+
+
+def _get_act_three_visibility(floor):
+    """Calculate current sight and remember cells seen earlier."""
+    origin = (floor.player_column, floor.player_row)
+    visible = set()
+    map_height = len(floor.map)
+    map_width = len(floor.map[0])
+    closed_doors = set()
+    if floor.boss_door is not None and not floor.boss_fight_started:
+        closed_doors.add(floor.boss_door)
+
+    for row in range(map_height):
+        for column in range(map_width):
+            if _line_of_sight(
+                floor.map,
+                origin,
+                (column, row),
+                closed_doors,
+            ):
+                visible.add((column, row))
+
+    floor.explored_cells.update(visible)
+    floor.visible_cells = visible
+    return visible
+
+
+def _draw_fog_of_war(
+    view_surface,
+    floor,
+    camera_x,
+    camera_y,
+):
+    visible = floor.visible_cells
+    fog = pygame.Surface(
+        (ACT_THREE_VIEW_WIDTH, ACT_THREE_VIEW_HEIGHT),
+        pygame.SRCALPHA,
+    )
+    fog.fill((0, 0, 0, 255))
+
+    for row in range(len(floor.map)):
+        for column in range(len(floor.map[0])):
+            position = (column, row)
+            if position in visible:
+                pygame.draw.rect(
+                    fog,
+                    (0, 0, 0, 0),
+                    (*_view_position(column, row, camera_x, camera_y),
+                     ACT_THREE_TILE_SIZE, ACT_THREE_TILE_SIZE),
+                )
+            elif position in floor.explored_cells:
+                pygame.draw.rect(
+                    fog,
+                    (0, 0, 0, 178),
+                    (*_view_position(column, row, camera_x, camera_y),
+                     ACT_THREE_TILE_SIZE, ACT_THREE_TILE_SIZE),
+                )
+
+    view_surface.blit(fog, (0, 0))
+
+
 def _draw_tile_markers(
     view_surface,
     positions,
@@ -2043,6 +2132,7 @@ def _draw_act_three_world(
 ):
     floor = game_state.floor
     dungeon_map = floor.map
+    _get_act_three_visibility(floor)
     view_surface = pygame.Surface(
         (ACT_THREE_VIEW_WIDTH, ACT_THREE_VIEW_HEIGHT)
     )
@@ -2306,7 +2396,10 @@ def _draw_act_three_world(
     living_enemies = [
         enemy
         for enemy in floor.enemies
-        if enemy.health > 0
+        if (
+            enemy.health > 0
+            and (enemy.column, enemy.row) in floor.visible_cells
+        )
     ]
     healing_aura_seeds = {}
 
@@ -3578,6 +3671,13 @@ def _draw_act_three_world(
                 camera_y,
             ),
         )
+
+    _draw_fog_of_war(
+        view_surface,
+        floor,
+        camera_x,
+        camera_y,
+    )
 
     screen.blit(
         view_surface,

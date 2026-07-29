@@ -223,6 +223,12 @@ class FloorState(AttributeMapping):
     projectiles: list[ProjectileState] = field(
         default_factory=list
     )
+    explored_cells: set[tuple[int, int]] = field(
+        default_factory=set
+    )
+    visible_cells: set[tuple[int, int]] = field(
+        default_factory=set
+    )
 
 
 @dataclass
