@@ -9,6 +9,9 @@ from systems.enemy_ai.common import (
     movement_is_ready,
     try_prepare_attack,
 )
+from systems.player_abilities import (
+    resolve_archer_barrage_zone_entry,
+)
 
 
 def take_archer_turn(
@@ -60,6 +63,14 @@ def take_archer_turn(
                     data={"kind": "retreat"},
                 )
             )
+            resolve_archer_barrage_zone_entry(
+                game_state,
+                enemy,
+                previous_position,
+            )
+
+            if enemy.health <= 0:
+                return
 
         if (
             distance_between(
@@ -80,6 +91,8 @@ def take_archer_turn(
             enemy,
             occupied_positions,
         )
+        if enemy.health <= 0:
+            return
 
     try_prepare_attack(
         game_state,

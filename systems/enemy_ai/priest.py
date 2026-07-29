@@ -2,6 +2,9 @@ from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from game.state import EnemyBehaviorState, EnemyState, GameState
 from logic import distance_between, move_enemy_toward_position
+from systems.player_abilities import (
+    resolve_archer_barrage_zone_entry,
+)
 
 
 def get_heal_candidate(
@@ -25,6 +28,7 @@ def get_heal_candidate(
             enemy is not priest
             and enemy.health > 0
             and enemy.health < enemy.max_health
+            and enemy.curse_turns <= 0
             and enemy.is_active
             and id(enemy) not in reserved_targets
             and distance_between(
@@ -120,5 +124,10 @@ def try_start_healing(
             destination=new_position,
             data={"kind": "move_to_heal"},
         )
+    )
+    resolve_archer_barrage_zone_entry(
+        game_state,
+        priest,
+        previous_position,
     )
     return True

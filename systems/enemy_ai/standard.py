@@ -27,6 +27,8 @@ def take_standard_turn(
         enemy,
         occupied_positions,
     )
+    if enemy.health <= 0:
+        return
     try_prepare_attack(
         game_state,
         enemy,

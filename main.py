@@ -56,6 +56,9 @@ from settings import (
     ASSASSIN_ULTIMATE_PRELUDE_MS,
     ASSASSIN_ULTIMATE_STEP_MS,
     ARCHER_EMPOWERED_SHOT_PROJECTILE_MS,
+    ARCHER_LEAP_DURATION_MS,
+    BERSERKER_CRUSHING_LEAP_IMPACT_MS,
+    BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
     CRIT_UPGRADE_AMOUNT,
     DODGE_UPGRADE_AMOUNT,
     FPS,
@@ -64,6 +67,8 @@ from settings import (
     INITIAL_WINDOW_SCALE,
     MAX_CRIT_CHANCE,
     MAX_DODGE_CHANCE,
+    PALADIN_SHIELD_CHARGE_TRAVEL_MS,
+    WARLOCK_SOUL_EXCHANGE_TRAVEL_MS,
 )
 from systems.player_actions import (
     open_chest,
@@ -72,15 +77,27 @@ from systems.player_actions import (
 )
 from systems.player_combat import (
     is_valid_archer_attack_target,
+    is_valid_warlock_attack_target,
     perform_archer_attack,
     perform_basic_attack,
+    perform_warlock_attack,
 )
 from systems.player_abilities import (
     AbilityRequestResult,
+    advance_berserker_last_rage,
+    advance_paladin_holy_shield,
+    advance_warlock_curses,
+    advance_warlock_demon_form,
     cancel_assassin_teleport,
     cancel_assassin_ultimate,
     cancel_ability_aiming,
     cancel_archer_empowered_shot,
+    cancel_archer_barrage_zone,
+    cancel_archer_leap,
+    cancel_berserker_crushing_leap,
+    cancel_paladin_shield_charge,
+    cancel_warlock_curse,
+    cancel_warlock_soul_exchange,
     cast_directional_ability,
     begin_assassin_ultimate,
     is_valid_assassin_teleport_target,
@@ -91,7 +108,30 @@ from systems.player_abilities import (
     request_class_ability,
     request_archer_empowered_shot,
     is_valid_archer_empowered_shot_target,
+    is_valid_archer_barrage_zone_anchor,
+    is_valid_archer_leap_target,
+    is_valid_berserker_crushing_leap_target,
+    is_valid_paladin_shield_charge_target,
+    is_valid_warlock_curse_target,
+    is_valid_warlock_soul_exchange_target,
+    place_archer_barrage_zone,
     perform_archer_empowered_shot,
+    perform_berserker_crushing_leap,
+    perform_paladin_shield_charge,
+    perform_warlock_curse,
+    perform_warlock_soul_exchange,
+    request_archer_barrage_zone,
+    request_archer_leap,
+    request_berserker_crushing_leap,
+    request_berserker_last_rage,
+    request_paladin_holy_hand,
+    request_paladin_holy_shield,
+    request_paladin_shield_charge,
+    request_warlock_curse,
+    request_warlock_soul_exchange,
+    update_archer_barrage_zone_preview,
+    update_berserker_crushing_leap_preview,
+    update_paladin_shield_charge_preview,
 )
 from systems.enemy_turn import resolve_enemy_turn
 
@@ -226,6 +266,54 @@ def set_archer_attack_cursor(active=False):
     )
 
 
+def set_warlock_staff_cursor(active=False):
+    if not active:
+        pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+        return
+
+    cursor_surface = pygame.Surface((26, 26), pygame.SRCALPHA)
+    wood_color = (116, 83, 91, 255)
+    edge_color = (198, 158, 213, 255)
+    magic_color = (190, 75, 255, 255)
+    pygame.draw.line(
+        cursor_surface,
+        wood_color,
+        (5, 23),
+        (17, 6),
+        width=4,
+    )
+    pygame.draw.line(
+        cursor_surface,
+        edge_color,
+        (5, 23),
+        (17, 6),
+        width=1,
+    )
+    pygame.draw.arc(
+        cursor_surface,
+        edge_color,
+        (13, 1, 11, 12),
+        0.4,
+        4.9,
+        width=2,
+    )
+    pygame.draw.circle(
+        cursor_surface,
+        (92, 24, 135, 220),
+        (19, 6),
+        5,
+    )
+    pygame.draw.circle(
+        cursor_surface,
+        magic_color,
+        (19, 6),
+        2,
+    )
+    pygame.mouse.set_cursor(
+        pygame.cursors.Cursor((4, 23), cursor_surface)
+    )
+
+
 def set_archer_empowered_cursor(active=False):
     if not active:
         pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
@@ -240,6 +328,127 @@ def set_archer_empowered_cursor(active=False):
     pygame.draw.circle(cursor_surface, (220, 255, 225, 255), center, 2)
     pygame.mouse.set_cursor(
         pygame.cursors.Cursor(center, cursor_surface)
+    )
+
+
+def set_archer_leap_cursor(active=False):
+    if not active:
+        pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+        return
+
+    cursor_surface = pygame.Surface((24, 24), pygame.SRCALPHA)
+    color = (105, 235, 175, 245)
+    pygame.draw.polygon(
+        cursor_surface,
+        color,
+        ((12, 2), (22, 12), (12, 22), (2, 12)),
+        width=2,
+    )
+    pygame.draw.circle(
+        cursor_surface,
+        (225, 255, 235, 255),
+        (12, 12),
+        2,
+    )
+    pygame.mouse.set_cursor(
+        pygame.cursors.Cursor((12, 12), cursor_surface)
+    )
+
+
+def set_berserker_crushing_leap_cursor(active=False):
+    if not active:
+        pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+        return
+
+    cursor_surface = pygame.Surface((26, 26), pygame.SRCALPHA)
+    color = (238, 64, 48, 245)
+    pygame.draw.circle(
+        cursor_surface,
+        color,
+        (13, 13),
+        10,
+        width=2,
+    )
+    pygame.draw.line(
+        cursor_surface,
+        color,
+        (4, 13),
+        (22, 13),
+        width=2,
+    )
+    pygame.draw.line(
+        cursor_surface,
+        color,
+        (13, 4),
+        (13, 22),
+        width=2,
+    )
+    pygame.draw.circle(
+        cursor_surface,
+        (255, 205, 185, 255),
+        (13, 13),
+        2,
+    )
+    pygame.mouse.set_cursor(
+        pygame.cursors.Cursor((13, 13), cursor_surface)
+    )
+
+
+def set_paladin_shield_charge_cursor(active=False):
+    if not active:
+        pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+        return
+
+    cursor_surface = pygame.Surface((26, 26), pygame.SRCALPHA)
+    color = (246, 198, 76, 245)
+    pygame.draw.polygon(
+        cursor_surface,
+        color,
+        ((13, 2), (22, 7), (20, 19), (13, 24), (6, 19), (4, 7)),
+        width=2,
+    )
+    pygame.draw.line(
+        cursor_surface,
+        (255, 239, 174, 255),
+        (13, 6),
+        (13, 20),
+        width=2,
+    )
+    pygame.draw.line(
+        cursor_surface,
+        (255, 239, 174, 255),
+        (8, 12),
+        (18, 12),
+        width=2,
+    )
+    pygame.mouse.set_cursor(
+        pygame.cursors.Cursor((13, 13), cursor_surface)
+    )
+
+
+def set_archer_barrage_zone_cursor(active=False):
+    if not active:
+        pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+        return
+
+    cursor_surface = pygame.Surface((26, 26), pygame.SRCALPHA)
+    color = (115, 245, 155, 245)
+    pygame.draw.rect(
+        cursor_surface,
+        color,
+        (3, 6, 20, 15),
+        width=2,
+        border_radius=3,
+    )
+    pygame.draw.circle(
+        cursor_surface,
+        (225, 255, 230, 255),
+        (13, 13),
+        3,
+        width=1,
+    )
+    pygame.mouse.set_cursor(
+        pygame.cursors.Cursor((13, 13), cursor_surface)
     )
 
 
@@ -320,6 +529,8 @@ def choose_subclass(game_state, subclass):
     if not game_state.act_three_test_mode:
         game_state.floor_index += 1
         game_state.floor = create_floor_state(game_state.floor_index)
+        clear_archer_barrage_zone(game_state)
+        clear_berserker_crushing_leap(game_state)
     game_state.player.key_count = 0
     game_state.player_attack_targets = []
     game_state.subclass_selection_open = False
@@ -343,6 +554,24 @@ def choose_subclass(game_state, subclass):
         game_state.combat_log,
         "Act III begins. The world is alive.",
     )
+
+
+def clear_archer_barrage_zone(game_state):
+    player = game_state.player
+    player.archer_barrage_zone_aiming = False
+    player.archer_barrage_zone_anchor = None
+    player.archer_barrage_zone_preview_cells.clear()
+    player.archer_barrage_zone_cells.clear()
+    player.archer_barrage_shots.clear()
+
+
+def clear_berserker_crushing_leap(game_state):
+    player = game_state.player
+    player.berserker_crushing_leap_aiming = False
+    player.berserker_crushing_leap_target = None
+    player.berserker_crushing_leap_preview_cells.clear()
+    player.berserker_crushing_leap_origin = None
+    player.berserker_crushing_leap_started_at = 0
 
 
 def main():
@@ -476,7 +705,12 @@ def main():
                 and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
                 and not game_state.act_three_transition_open
                 and not game_state.subclass_selection_open
-                and game_state.player.subclass == "archer"
+                and game_state.player.subclass in (
+                    "archer",
+                    "berserker",
+                    "paladin",
+                    "warlock",
+                )
             ):
                 if (
                     game_state.player.teleport_aiming
@@ -496,12 +730,89 @@ def main():
                     if game_mouse_position is not None
                     else None
                 )
-                if game_state.player.archer_empowered_shot_aiming:
+                if game_state.player.warlock_curse_aiming:
+                    set_warlock_staff_cursor(
+                        target_cell is not None
+                        and is_valid_warlock_curse_target(
+                            game_state,
+                            target_cell,
+                        )
+                    )
+                elif game_state.player.warlock_soul_exchange_aiming:
+                    set_warlock_staff_cursor(
+                        target_cell is not None
+                        and is_valid_warlock_soul_exchange_target(
+                            game_state,
+                            target_cell,
+                        )
+                    )
+                elif game_state.player.paladin_shield_charge_aiming:
+                    preview_is_valid = (
+                        target_cell is not None
+                        and is_valid_paladin_shield_charge_target(
+                            game_state,
+                            target_cell,
+                        )
+                    )
+                    update_paladin_shield_charge_preview(
+                        game_state,
+                        target_cell if preview_is_valid else None,
+                    )
+                    set_paladin_shield_charge_cursor(
+                        preview_is_valid
+                    )
+                elif game_state.player.berserker_crushing_leap_aiming:
+                    preview_is_valid = (
+                        target_cell is not None
+                        and is_valid_berserker_crushing_leap_target(
+                            game_state,
+                            target_cell,
+                        )
+                    )
+                    update_berserker_crushing_leap_preview(
+                        game_state,
+                        target_cell if preview_is_valid else None,
+                    )
+                    set_berserker_crushing_leap_cursor(
+                        preview_is_valid
+                    )
+                elif game_state.player.archer_barrage_zone_aiming:
+                    preview_is_valid = (
+                        target_cell is not None
+                        and is_valid_archer_barrage_zone_anchor(
+                            game_state,
+                            target_cell,
+                        )
+                    )
+                    update_archer_barrage_zone_preview(
+                        game_state,
+                        target_cell if preview_is_valid else None,
+                    )
+                    set_archer_barrage_zone_cursor(
+                        preview_is_valid
+                    )
+                elif game_state.player.archer_leap_aiming:
+                    set_archer_leap_cursor(
+                        target_cell is not None
+                        and is_valid_archer_leap_target(
+                            game_state,
+                            *target_cell,
+                        )
+                    )
+                elif game_state.player.archer_empowered_shot_aiming:
                     set_archer_empowered_cursor(True)
-                else:
+                elif game_state.player.subclass == "archer":
                     set_archer_attack_cursor(
                         target_cell is not None
                         and is_valid_archer_attack_target(
+                            game_state,
+                            target_cell,
+                        )
+                    )
+                elif game_state.player.subclass == "warlock":
+                    set_warlock_staff_cursor(
+                        target_cell is not None
+                        and is_valid_warlock_attack_target(
                             game_state,
                             target_cell,
                         )
@@ -587,6 +898,47 @@ def main():
                 and not game_state.act_three_transition_open
                 and not game_state.subclass_selection_open
             ):
+                if (
+                    game_state.player.archer_leap_origin is not None
+                    and game_state.player.archer_leap_started_at > 0
+                    and pygame.time.get_ticks()
+                    - game_state.player.archer_leap_started_at
+                    < ARCHER_LEAP_DURATION_MS
+                ):
+                    continue
+                if (
+                    game_state.player.berserker_crushing_leap_origin
+                    is not None
+                    and game_state.player.berserker_crushing_leap_started_at
+                    > 0
+                    and pygame.time.get_ticks()
+                    - game_state.player.berserker_crushing_leap_started_at
+                    < (
+                        BERSERKER_CRUSHING_LEAP_TRAVEL_MS
+                        + BERSERKER_CRUSHING_LEAP_IMPACT_MS
+                    )
+                ):
+                    continue
+                if (
+                    game_state.player.paladin_shield_charge_origin
+                    is not None
+                    and game_state.player.paladin_shield_charge_started_at
+                    > 0
+                    and pygame.time.get_ticks()
+                    - game_state.player.paladin_shield_charge_started_at
+                    < PALADIN_SHIELD_CHARGE_TRAVEL_MS
+                ):
+                    continue
+                if (
+                    game_state.player.warlock_soul_exchange_player_origin
+                    is not None
+                    and game_state.player.warlock_soul_exchange_started_at
+                    > 0
+                    and pygame.time.get_ticks()
+                    - game_state.player.warlock_soul_exchange_started_at
+                    < WARLOCK_SOUL_EXCHANGE_TRAVEL_MS
+                ):
+                    continue
                 game_mouse_position = window_to_game_position(
                     screen,
                     event.pos,
@@ -594,6 +946,48 @@ def main():
                 if game_mouse_position is not None:
                     if game_state.player.ultimate_animation_active:
                         continue
+                    elif game_state.player.warlock_curse_aiming:
+                        target_cell = get_act_three_cell_from_position(
+                            game_state,
+                            game_mouse_position,
+                        )
+                        if (
+                            target_cell is not None
+                            and is_valid_warlock_curse_target(
+                                game_state,
+                                target_cell,
+                            )
+                        ):
+                            game_state.player.warlock_curse_target = (
+                                target_cell
+                            )
+                            pygame.event.post(
+                                pygame.event.Event(
+                                    pygame.KEYDOWN,
+                                    key=pygame.K_RETURN,
+                                )
+                            )
+                    elif game_state.player.warlock_soul_exchange_aiming:
+                        target_cell = get_act_three_cell_from_position(
+                            game_state,
+                            game_mouse_position,
+                        )
+                        if (
+                            target_cell is not None
+                            and is_valid_warlock_soul_exchange_target(
+                                game_state,
+                                target_cell,
+                            )
+                        ):
+                            game_state.player.warlock_soul_exchange_target = (
+                                target_cell
+                            )
+                            pygame.event.post(
+                                pygame.event.Event(
+                                    pygame.KEYDOWN,
+                                    key=pygame.K_RETURN,
+                                )
+                            )
                     elif game_state.player.teleport_aiming:
                         target_cell = get_act_three_cell_from_position(
                             game_state,
@@ -604,6 +998,68 @@ def main():
                             *target_cell,
                         ):
                             game_state.player.teleport_target = target_cell
+                            pygame.event.post(
+                                pygame.event.Event(
+                                    pygame.KEYDOWN,
+                                    key=pygame.K_RETURN,
+                                )
+                            )
+                    elif game_state.player.paladin_shield_charge_aiming:
+                        target_cell = get_act_three_cell_from_position(
+                            game_state,
+                            game_mouse_position,
+                        )
+                        if update_paladin_shield_charge_preview(
+                            game_state,
+                            target_cell,
+                        ):
+                            pygame.event.post(
+                                pygame.event.Event(
+                                    pygame.KEYDOWN,
+                                    key=pygame.K_RETURN,
+                                )
+                            )
+                    elif game_state.player.berserker_crushing_leap_aiming:
+                        target_cell = get_act_three_cell_from_position(
+                            game_state,
+                            game_mouse_position,
+                        )
+                        if update_berserker_crushing_leap_preview(
+                            game_state,
+                            target_cell,
+                        ):
+                            pygame.event.post(
+                                pygame.event.Event(
+                                    pygame.KEYDOWN,
+                                    key=pygame.K_RETURN,
+                                )
+                            )
+                    elif game_state.player.archer_barrage_zone_aiming:
+                        target_cell = get_act_three_cell_from_position(
+                            game_state,
+                            game_mouse_position,
+                        )
+                        if update_archer_barrage_zone_preview(
+                            game_state,
+                            target_cell,
+                        ):
+                            place_archer_barrage_zone(game_state)
+                            set_archer_barrage_zone_cursor()
+                    elif game_state.player.archer_leap_aiming:
+                        target_cell = get_act_three_cell_from_position(
+                            game_state,
+                            game_mouse_position,
+                        )
+                        if (
+                            target_cell is not None
+                            and is_valid_archer_leap_target(
+                                game_state,
+                                *target_cell,
+                            )
+                        ):
+                            game_state.player.archer_leap_target = (
+                                target_cell
+                            )
                             pygame.event.post(
                                 pygame.event.Event(
                                     pygame.KEYDOWN,
@@ -685,6 +1141,32 @@ def main():
                             )
                             continue
 
+                        warlock_target_cell = (
+                            get_act_three_cell_from_position(
+                                game_state,
+                                game_mouse_position,
+                            )
+                            if game_state.player.subclass == "warlock"
+                            else None
+                        )
+                        if (
+                            warlock_target_cell is not None
+                            and is_valid_warlock_attack_target(
+                                game_state,
+                                warlock_target_cell,
+                            )
+                        ):
+                            game_state.player.warlock_attack_target = (
+                                warlock_target_cell
+                            )
+                            pygame.event.post(
+                                pygame.event.Event(
+                                    pygame.KEYDOWN,
+                                    key=pygame.K_RETURN,
+                                )
+                            )
+                            continue
+
                         log_arrow_clicked = False
                         if get_act_three_log_panel_rect().collidepoint(
                             game_mouse_position
@@ -750,6 +1232,50 @@ def main():
                     )
                     continue
 
+                if (
+                    game_state.player.archer_leap_origin is not None
+                    and game_state.player.archer_leap_started_at > 0
+                    and pygame.time.get_ticks()
+                    - game_state.player.archer_leap_started_at
+                    < ARCHER_LEAP_DURATION_MS
+                ):
+                    continue
+                if (
+                    game_state.player.berserker_crushing_leap_origin
+                    is not None
+                    and game_state.player.berserker_crushing_leap_started_at
+                    > 0
+                    and pygame.time.get_ticks()
+                    - game_state.player.berserker_crushing_leap_started_at
+                    < (
+                        BERSERKER_CRUSHING_LEAP_TRAVEL_MS
+                        + BERSERKER_CRUSHING_LEAP_IMPACT_MS
+                    )
+                ):
+                    continue
+
+                if (
+                    game_state.player.paladin_shield_charge_origin
+                    is not None
+                    and game_state.player.paladin_shield_charge_started_at
+                    > 0
+                    and pygame.time.get_ticks()
+                    - game_state.player.paladin_shield_charge_started_at
+                    < PALADIN_SHIELD_CHARGE_TRAVEL_MS
+                ):
+                    continue
+
+                if (
+                    game_state.player.warlock_soul_exchange_player_origin
+                    is not None
+                    and game_state.player.warlock_soul_exchange_started_at
+                    > 0
+                    and pygame.time.get_ticks()
+                    - game_state.player.warlock_soul_exchange_started_at
+                    < WARLOCK_SOUL_EXCHANGE_TRAVEL_MS
+                ):
+                    continue
+
                 if event.key == pygame.K_ESCAPE and game_state.player.teleport_aiming:
                     cancel_assassin_teleport(game_state)
                     set_assassin_target_cursor()
@@ -761,6 +1287,30 @@ def main():
                 ):
                     cancel_archer_empowered_shot(game_state)
                     set_archer_empowered_cursor()
+                    continue
+
+                if (
+                    event.key == pygame.K_ESCAPE
+                    and game_state.player.archer_leap_aiming
+                ):
+                    cancel_archer_leap(game_state)
+                    set_archer_leap_cursor()
+                    continue
+
+                if (
+                    event.key == pygame.K_ESCAPE
+                    and game_state.player.archer_barrage_zone_aiming
+                ):
+                    cancel_archer_barrage_zone(game_state)
+                    set_archer_barrage_zone_cursor()
+                    continue
+
+                if (
+                    event.key == pygame.K_ESCAPE
+                    and game_state.player.berserker_crushing_leap_aiming
+                ):
+                    cancel_berserker_crushing_leap(game_state)
+                    set_berserker_crushing_leap_cursor()
                     continue
 
                 if event.key == pygame.K_ESCAPE and game_state.player.ultimate_aiming:
@@ -776,6 +1326,137 @@ def main():
                     request_archer_empowered_shot(game_state)
                     set_archer_empowered_cursor(
                         game_state.player.archer_empowered_shot_aiming
+                    )
+                    continue
+
+                if (
+                    event.key == pygame.K_ESCAPE
+                    and game_state.player.paladin_shield_charge_aiming
+                ):
+                    cancel_paladin_shield_charge(game_state)
+                    set_paladin_shield_charge_cursor()
+                    continue
+
+                if (
+                    event.key == pygame.K_ESCAPE
+                    and game_state.player.warlock_curse_aiming
+                ):
+                    cancel_warlock_curse(game_state)
+                    set_warlock_staff_cursor()
+                    continue
+
+                if (
+                    event.key == pygame.K_ESCAPE
+                    and game_state.player.warlock_soul_exchange_aiming
+                ):
+                    cancel_warlock_soul_exchange(game_state)
+                    set_warlock_staff_cursor()
+                    continue
+
+                if (
+                    event.key in (pygame.K_2, pygame.K_KP2)
+                    and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
+                    and game_state.player.subclass == "archer"
+                ):
+                    request_archer_leap(game_state)
+                    set_archer_leap_cursor(
+                        game_state.player.archer_leap_aiming
+                    )
+                    continue
+
+                if (
+                    event.key in (pygame.K_2, pygame.K_KP2)
+                    and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
+                    and game_state.player.subclass == "berserker"
+                ):
+                    request_berserker_crushing_leap(game_state)
+                    set_berserker_crushing_leap_cursor(
+                        game_state.player.berserker_crushing_leap_aiming
+                    )
+                    continue
+
+                if (
+                    event.key in (pygame.K_1, pygame.K_KP1)
+                    and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
+                    and game_state.player.subclass == "paladin"
+                ):
+                    request_paladin_holy_hand(
+                        game_state,
+                        pygame.time.get_ticks(),
+                    )
+                    continue
+
+                if (
+                    event.key in (pygame.K_1, pygame.K_KP1)
+                    and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
+                    and game_state.player.subclass == "warlock"
+                ):
+                    request_warlock_curse(game_state)
+                    set_warlock_staff_cursor(
+                        game_state.player.warlock_curse_aiming
+                    )
+                    continue
+
+                if (
+                    event.key in (pygame.K_2, pygame.K_KP2)
+                    and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
+                    and game_state.player.subclass == "warlock"
+                ):
+                    request_warlock_soul_exchange(game_state)
+                    set_warlock_staff_cursor(
+                        game_state.player.warlock_soul_exchange_aiming
+                    )
+                    continue
+
+                if (
+                    event.key in (pygame.K_3, pygame.K_KP3)
+                    and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
+                    and game_state.player.subclass == "warlock"
+                ):
+                    game_state.player.warlock_demon_form_active = not (
+                        game_state.player.warlock_demon_form_active
+                    )
+                    continue
+
+                if (
+                    event.key in (pygame.K_2, pygame.K_KP2)
+                    and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
+                    and game_state.player.subclass == "paladin"
+                ):
+                    request_paladin_shield_charge(game_state)
+                    set_paladin_shield_charge_cursor(
+                        game_state.player.paladin_shield_charge_aiming
+                    )
+                    continue
+
+                if (
+                    event.key in (pygame.K_3, pygame.K_KP3)
+                    and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
+                    and game_state.player.subclass == "paladin"
+                ):
+                    request_paladin_holy_shield(game_state)
+                    set_paladin_shield_charge_cursor()
+                    continue
+
+                if (
+                    event.key in (pygame.K_3, pygame.K_KP3)
+                    and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
+                    and game_state.player.subclass == "archer"
+                ):
+                    request_archer_barrage_zone(game_state)
+                    set_archer_barrage_zone_cursor(
+                        game_state.player.archer_barrage_zone_aiming
+                    )
+                    continue
+
+                if (
+                    event.key in (pygame.K_3, pygame.K_KP3)
+                    and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
+                    and game_state.player.subclass == "berserker"
+                ):
+                    request_berserker_last_rage(game_state)
+                    set_berserker_crushing_leap_cursor(
+                        game_state.player.berserker_crushing_leap_aiming
                     )
                     continue
 
@@ -819,6 +1500,19 @@ def main():
                 if (
                     game_state.player.teleport_aiming
                     and game_state.player.teleport_target is None
+                ):
+                    continue
+
+                if (
+                    game_state.player.archer_leap_aiming
+                    and game_state.player.archer_leap_target is None
+                ):
+                    continue
+
+                if (
+                    game_state.player.berserker_crushing_leap_aiming
+                    and game_state.player.berserker_crushing_leap_target
+                    is None
                 ):
                     continue
 
@@ -996,6 +1690,8 @@ def main():
 
                     game_state.floor_index += 1
                     game_state.floor = create_floor_state(game_state.floor_index)
+                    clear_archer_barrage_zone(game_state)
+                    clear_berserker_crushing_leap(game_state)
                     game_state.player.key_count = 0
                     game_state.class_selection_open = False
                     game_state.class_transition_started_at = 0
@@ -1075,6 +1771,8 @@ def main():
                     ):
                         game_state.floor_index += 1
                         game_state.floor = create_floor_state(game_state.floor_index)
+                        clear_archer_barrage_zone(game_state)
+                        clear_berserker_crushing_leap(game_state)
                         game_state.player.key_count = 0
                         game_state.upgrade_screen_open = False
                         game_state.upgrade_message = ""
@@ -1175,7 +1873,104 @@ def main():
                 player_acted = False
                 game_state.player_attack_targets = []
 
-                if game_state.player.archer_empowered_shot_target is not None:
+                if (
+                    game_state.player.warlock_soul_exchange_target
+                    is not None
+                ):
+                    exchange_target = (
+                        game_state.player.warlock_soul_exchange_target
+                    )
+                    player_acted = perform_warlock_soul_exchange(
+                        game_state,
+                        exchange_target,
+                        pygame.time.get_ticks(),
+                    )
+                    set_warlock_staff_cursor()
+                elif game_state.player.warlock_curse_target is not None:
+                    curse_target = (
+                        game_state.player.warlock_curse_target
+                    )
+                    player_acted = perform_warlock_curse(
+                        game_state,
+                        curse_target,
+                    )
+                    if player_acted:
+                        game_state.player.attack_animation_started_at = (
+                            pygame.time.get_ticks()
+                        )
+                    set_warlock_staff_cursor()
+                elif game_state.player.warlock_attack_target is not None:
+                    warlock_target = (
+                        game_state.player.warlock_attack_target
+                    )
+                    game_state.player.warlock_attack_target = None
+                    player_acted = perform_warlock_attack(
+                        game_state,
+                        warlock_target,
+                        resolve_oracle_hit_reaction,
+                    )
+                    if player_acted:
+                        game_state.player.attack_animation_started_at = (
+                            pygame.time.get_ticks()
+                        )
+                    set_warlock_staff_cursor()
+                elif (
+                    game_state.player.paladin_shield_charge_target
+                    is not None
+                ):
+                    player_acted = perform_paladin_shield_charge(
+                        game_state,
+                        pygame.time.get_ticks(),
+                        resolve_oracle_hit_reaction,
+                    )
+                    if player_acted:
+                        set_paladin_shield_charge_cursor()
+                elif (
+                    game_state.player.berserker_crushing_leap_target
+                    is not None
+                ):
+                    player_acted = perform_berserker_crushing_leap(
+                        game_state,
+                        pygame.time.get_ticks(),
+                        resolve_oracle_hit_reaction,
+                    )
+                    if player_acted:
+                        set_berserker_crushing_leap_cursor()
+                elif game_state.player.archer_leap_target is not None:
+                    leap_target = game_state.player.archer_leap_target
+                    leap_origin = (
+                        game_state.floor.player_column,
+                        game_state.floor.player_row,
+                    )
+                    leap_started_at = pygame.time.get_ticks()
+                    game_state.floor.player_column = leap_target[0]
+                    game_state.floor.player_row = leap_target[1]
+                    game_state.player.archer_leap_target = None
+                    game_state.player.archer_leap_aiming = False
+                    game_state.player.archer_leap_charge = 0
+                    game_state.player.archer_leap_origin = leap_origin
+                    game_state.player.archer_leap_started_at = (
+                        leap_started_at
+                    )
+                    game_state.emit(
+                        GameEvent(
+                            type=GameEventType.MOVE,
+                            actor="hero",
+                            origin=leap_origin,
+                            destination=leap_target,
+                            data={"kind": "archer_leap"},
+                        )
+                    )
+                    add_log_message(
+                        game_state.combat_log,
+                        "The archer leaps backward.",
+                    )
+                    set_archer_leap_cursor()
+                    player_acted = True
+                elif (
+                    game_state.player.archer_empowered_shot_target
+                    is not None
+                ):
                     empowered_target = (
                         game_state.player.archer_empowered_shot_target
                     )
@@ -1251,12 +2046,19 @@ def main():
                     player_acted = True
                 elif player_tried_to_move:
                     if target_enemy:
-                        perform_basic_attack(
-                            game_state,
-                            column_change,
-                            row_change,
-                            resolve_oracle_hit_reaction,
-                        )
+                        if game_state.player.subclass == "warlock":
+                            perform_warlock_attack(
+                                game_state,
+                                (new_column, new_row),
+                                resolve_oracle_hit_reaction,
+                            )
+                        else:
+                            perform_basic_attack(
+                                game_state,
+                                column_change,
+                                row_change,
+                                resolve_oracle_hit_reaction,
+                            )
                         game_state.player.attack_animation_started_at = (
                             pygame.time.get_ticks()
                         )
@@ -1282,9 +2084,20 @@ def main():
                         player_position_before_action,
                         rogue_ability_activated,
                     )
+                    advance_berserker_last_rage(game_state)
+                    advance_paladin_holy_shield(game_state)
+                    advance_warlock_curses(game_state)
+                    advance_warlock_demon_form(game_state)
                     enemy_movement_started_at = (
                         pygame.time.get_ticks()
                     )
+                    for barrage_shot in (
+                        game_state.player.archer_barrage_shots
+                    ):
+                        if barrage_shot.started_at == 0:
+                            barrage_shot.started_at = (
+                                enemy_movement_started_at
+                            )
                     moved_enemy_names = {
                         emitted_event.actor
                         for emitted_event in game_state.events

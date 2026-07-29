@@ -6,6 +6,9 @@ from logic import (
     get_enemy_attack_targets,
     move_enemy,
 )
+from systems.player_abilities import (
+    resolve_archer_barrage_zone_entry,
+)
 
 
 def prepare_enemy_attack(
@@ -101,4 +104,9 @@ def move_toward_player(
                 origin=previous_position,
                 destination=new_position,
             )
+        )
+        resolve_archer_barrage_zone_entry(
+            game_state,
+            enemy,
+            previous_position,
         )
