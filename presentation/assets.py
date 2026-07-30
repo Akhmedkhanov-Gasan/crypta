@@ -1,21 +1,8 @@
 import pygame
 
 from presentation.layout import (
-    AWAKENING_FADE_END_MS,
-    AWAKENING_HOLD_END_MS,
-    AWAKENING_OPEN_END_MS,
-    AWAKENING_OPEN_START_MS,
     ASSET_ROOT,
-    CLASS_SELECTION_READY_MS,
     FONT_ROOT,
-    MAP_HEIGHT,
-    MAP_OFFSET_X,
-    MAP_OFFSET_Y,
-    MAP_WIDTH,
-    SIDEBAR_HEIGHT,
-    SIDEBAR_WIDTH,
-    SIDEBAR_X,
-    SIDEBAR_Y,
 )
 from settings import GAME_HEIGHT, GAME_WIDTH, TILE_SIZE
 

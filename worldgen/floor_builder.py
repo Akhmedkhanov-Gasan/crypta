@@ -18,7 +18,10 @@ from worldgen.geometry import (
     position_is_in_room,
     room_center,
 )
-from worldgen.act_three import generate_act_three_floor, generate_act_three_test_floor
+from acts.act_three.generation import (
+    generate_act_three_floor,
+    generate_act_three_test_floor,
+)
 
 
 def choose_free_position(candidate_positions, occupied_positions):

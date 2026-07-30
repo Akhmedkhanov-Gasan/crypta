@@ -14,13 +14,9 @@ from logic import (
     direction_toward,
     get_directional_line,
     get_enemy_occupied_positions,
-    has_line_of_sight,
     roll_player_damage,
 )
 from settings import (
-    ARCHER_BASIC_ATTACK_RANGE,
-    ARCHER_BASIC_DAMAGE_MAX,
-    ARCHER_BASIC_DAMAGE_MIN,
     ARCHER_EMPOWERED_SHOT_CHARGES,
     ARCHER_BARRAGE_ZONE_CHARGES,
     ARCHER_LEAP_CHARGES,
@@ -36,16 +32,10 @@ from settings import (
     PALADIN_HOLY_SHIELD_DAMAGE_BONUS,
     PALADIN_HOLY_SHIELD_HEALING_PER_HIT,
     PALADIN_SHIELD_CHARGE_CHARGES,
-    WARLOCK_BASIC_ATTACK_RANGE,
-    WARLOCK_BASIC_DAMAGE_MAX,
-    WARLOCK_BASIC_DAMAGE_MIN,
-    WARLOCK_DEMON_FORM_DAMAGE_MULTIPLIER,
     WARLOCK_CURSE_CHARGES,
     WARLOCK_CURSE_DAMAGE_MULTIPLIER,
     WARLOCK_SOUL_EXCHANGE_CHARGES,
     SUMMONER_FAMILIAR_CHARGES,
-    SUMMONER_ATTACK_RANGE,
-    SUMMONER_ATTACK_RANGE_WITH_FAMILIAR,
     SUMMONER_BOND_CHARGES,
     SUMMONER_BOND_DAMAGE_BONUS,
     SUMMONER_TRUE_FORM_CHARGES,
@@ -118,193 +108,6 @@ def damage_player(
         )
 
     return damage_dealt
-
-
-def is_valid_archer_attack_target(
-    game_state: GameState,
-    target_cell: tuple[int, int],
-) -> bool:
-    player = game_state.player
-    floor = game_state.floor
-    if player.subclass != "archer":
-        return False
-
-    target_enemy = next(
-        (
-            enemy
-            for enemy in floor.enemies
-            if enemy.health > 0
-            and target_cell in get_enemy_occupied_positions(enemy)
-        ),
-        None,
-    )
-    if target_enemy is None:
-        return False
-
-    distance = abs(target_cell[0] - floor.player_column) + abs(
-        target_cell[1] - floor.player_row
-    )
-    return (
-        distance <= ARCHER_BASIC_ATTACK_RANGE
-        and has_line_of_sight(
-            floor.map,
-            floor.player_column,
-            floor.player_row,
-            target_cell[0],
-            target_cell[1],
-        )
-    )
-
-
-def is_valid_warlock_attack_target(
-    game_state: GameState,
-    target_cell: tuple[int, int],
-) -> bool:
-    player = game_state.player
-    floor = game_state.floor
-    if player.subclass != "warlock":
-        return False
-
-    target_enemy = next(
-        (
-            enemy
-            for enemy in floor.enemies
-            if enemy.health > 0
-            and target_cell in get_enemy_occupied_positions(enemy)
-        ),
-        None,
-    )
-    if target_enemy is None:
-        return False
-
-    distance = abs(
-        target_cell[0] - floor.player_column
-    ) + abs(
-        target_cell[1] - floor.player_row
-    )
-    return (
-        distance <= WARLOCK_BASIC_ATTACK_RANGE
-        and has_line_of_sight(
-            floor.map,
-            floor.player_column,
-            floor.player_row,
-            target_cell[0],
-            target_cell[1],
-        )
-    )
-
-
-def perform_warlock_attack(
-    game_state: GameState,
-    target_cell: tuple[int, int],
-    oracle_hit_reaction: OracleHitReaction,
-) -> bool:
-    if not is_valid_warlock_attack_target(
-        game_state,
-        target_cell,
-    ):
-        return False
-
-    player = game_state.player
-    floor = game_state.floor
-    hit_enemy = next(
-        enemy
-        for enemy in floor.enemies
-        if enemy.health > 0
-        and target_cell in get_enemy_occupied_positions(enemy)
-    )
-    game_state.player_attack_targets = [target_cell]
-    game_state.emit(
-        GameEvent(
-            type=GameEventType.ATTACK,
-            actor="hero",
-            origin=(
-                floor.player_column,
-                floor.player_row,
-            ),
-            positions=(target_cell,),
-            data={"kind": "warlock_orb"},
-        )
-    )
-    enemy_was_defeated = attack_enemy(
-        game_state,
-        hit_enemy,
-        ceil(
-            WARLOCK_BASIC_DAMAGE_MIN
-            * (
-                WARLOCK_DEMON_FORM_DAMAGE_MULTIPLIER
-                if player.warlock_demon_form_active
-                else 1
-            )
-        ),
-        ceil(
-            WARLOCK_BASIC_DAMAGE_MAX
-            * (
-                WARLOCK_DEMON_FORM_DAMAGE_MULTIPLIER
-                if player.warlock_demon_form_active
-                else 1
-            )
-        ),
-        player.crit_chance,
-        attacker_position=(
-            floor.player_column,
-            floor.player_row,
-        ),
-    )
-    if hit_enemy.type == "oracle":
-        oracle_hit_reaction(
-            hit_enemy,
-            floor,
-            game_state.combat_log,
-        )
-    if enemy_was_defeated:
-        resolve_enemy_defeat(game_state, hit_enemy)
-    return True
-
-
-def perform_archer_attack(
-    game_state: GameState,
-    target_cell: tuple[int, int],
-    oracle_hit_reaction: OracleHitReaction,
-) -> bool:
-    if not is_valid_archer_attack_target(game_state, target_cell):
-        return False
-
-    player = game_state.player
-    floor = game_state.floor
-    hit_enemy = next(
-        enemy
-        for enemy in floor.enemies
-        if enemy.health > 0
-        and target_cell in get_enemy_occupied_positions(enemy)
-    )
-    game_state.player_attack_targets = [target_cell]
-    game_state.emit(
-        GameEvent(
-            type=GameEventType.ATTACK,
-            actor="hero",
-            origin=(floor.player_column, floor.player_row),
-            positions=(target_cell,),
-            data={"kind": "archer_basic"},
-        )
-    )
-    enemy_was_defeated = attack_enemy(
-        game_state,
-        hit_enemy,
-        ARCHER_BASIC_DAMAGE_MIN,
-        ARCHER_BASIC_DAMAGE_MAX,
-        player.crit_chance,
-        attacker_position=(floor.player_column, floor.player_row),
-    )
-    if hit_enemy.type == "oracle":
-        oracle_hit_reaction(
-            hit_enemy,
-            floor,
-            game_state.combat_log,
-        )
-    if enemy_was_defeated:
-        resolve_enemy_defeat(game_state, hit_enemy)
-    return True
 
 
 def attack_enemy(
@@ -567,92 +370,6 @@ def attack_enemy(
     return False
 
 
-def is_valid_summoner_attack_target(
-    game_state: GameState,
-    target_cell: tuple[int, int],
-) -> bool:
-    player = game_state.player
-    floor = game_state.floor
-    if player.subclass != "summoner":
-        return False
-
-    target_enemy = next(
-        (
-            enemy
-            for enemy in floor.enemies
-            if enemy.health > 0
-            and target_cell in get_enemy_occupied_positions(enemy)
-        ),
-        None,
-    )
-    if target_enemy is None:
-        return False
-
-    attack_range = (
-        SUMMONER_ATTACK_RANGE_WITH_FAMILIAR
-        if player.summoner_familiar_active
-        else SUMMONER_ATTACK_RANGE
-    )
-    distance = max(
-        abs(target_cell[0] - floor.player_column),
-        abs(target_cell[1] - floor.player_row),
-    )
-    return (
-        distance <= attack_range
-        and has_line_of_sight(
-            floor.map,
-            floor.player_column,
-            floor.player_row,
-            target_cell[0],
-            target_cell[1],
-        )
-    )
-
-
-def perform_summoner_attack(
-    game_state: GameState,
-    target_cell: tuple[int, int],
-    oracle_hit_reaction: OracleHitReaction,
-) -> bool:
-    if not is_valid_summoner_attack_target(game_state, target_cell):
-        return False
-
-    floor = game_state.floor
-    hit_enemy = next(
-        enemy
-        for enemy in floor.enemies
-        if enemy.health > 0
-        and target_cell in get_enemy_occupied_positions(enemy)
-    )
-    game_state.player_attack_targets = [target_cell]
-    game_state.emit(
-        GameEvent(
-            type=GameEventType.ATTACK,
-            actor="hero",
-            origin=(floor.player_column, floor.player_row),
-            positions=(target_cell,),
-            data={"kind": "summoner_magic"},
-        )
-    )
-    enemy_was_defeated = attack_enemy(
-        game_state,
-        hit_enemy,
-        game_state.player.damage_min,
-        game_state.player.damage_max,
-        game_state.player.crit_chance,
-        attacker_position=(floor.player_column, floor.player_row),
-    )
-    if hit_enemy.type == "oracle":
-        oracle_hit_reaction(
-            hit_enemy,
-            floor,
-            game_state.combat_log,
-        )
-    if enemy_was_defeated:
-        resolve_enemy_defeat(game_state, hit_enemy)
-    return True
-
-
 def resolve_enemy_defeat(
     game_state: GameState,
     enemy: EnemyState,
@@ -777,3 +494,26 @@ def perform_basic_attack(
                 game_state,
                 hit_enemy,
             )
+
+from acts.act_three.combat import (
+    is_valid_archer_attack_target,
+    is_valid_warlock_attack_target,
+    perform_warlock_attack,
+    perform_archer_attack,
+    is_valid_summoner_attack_target,
+    perform_summoner_attack,
+)
+
+
+__all__ = [
+    "attack_enemy",
+    "damage_player",
+    "is_valid_archer_attack_target",
+    "is_valid_summoner_attack_target",
+    "is_valid_warlock_attack_target",
+    "perform_archer_attack",
+    "perform_basic_attack",
+    "perform_summoner_attack",
+    "perform_warlock_attack",
+    "resolve_enemy_defeat",
+]
