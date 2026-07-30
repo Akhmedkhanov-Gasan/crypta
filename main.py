@@ -77,9 +77,11 @@ from systems.player_actions import (
 )
 from systems.player_combat import (
     is_valid_archer_attack_target,
+    is_valid_summoner_attack_target,
     is_valid_warlock_attack_target,
     perform_archer_attack,
     perform_basic_attack,
+    perform_summoner_attack,
     perform_warlock_attack,
 )
 from systems.player_abilities import (
@@ -129,6 +131,9 @@ from systems.player_abilities import (
     request_paladin_shield_charge,
     request_warlock_curse,
     request_warlock_soul_exchange,
+    request_summoner_bond,
+    request_summoner_true_form,
+    release_summoner_familiar,
     update_archer_barrage_zone_preview,
     update_berserker_crushing_leap_preview,
     update_paladin_shield_charge_preview,
@@ -312,6 +317,23 @@ def set_warlock_staff_cursor(active=False):
     pygame.mouse.set_cursor(
         pygame.cursors.Cursor((4, 23), cursor_surface)
     )
+
+
+def set_summoner_staff_cursor(active=False):
+    if not active:
+        pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+        return
+
+    cursor_surface = pygame.Surface((26, 26), pygame.SRCALPHA)
+    wood_color = (116, 83, 91, 255)
+    edge_color = (198, 158, 213, 255)
+    magic_color = (74, 240, 224, 255)
+    pygame.draw.line(cursor_surface, wood_color, (5, 23), (17, 6), width=4)
+    pygame.draw.line(cursor_surface, edge_color, (5, 23), (17, 6), width=1)
+    pygame.draw.arc(cursor_surface, edge_color, (13, 1, 11, 12), 0.4, 4.9, width=2)
+    pygame.draw.circle(cursor_surface, (26, 139, 145, 220), (19, 6), 5)
+    pygame.draw.circle(cursor_surface, magic_color, (19, 6), 2)
+    pygame.mouse.set_cursor(pygame.cursors.Cursor((4, 23), cursor_surface))
 
 
 def set_archer_empowered_cursor(active=False):
@@ -710,6 +732,7 @@ def main():
                     "berserker",
                     "paladin",
                     "warlock",
+                    "summoner",
                 )
             ):
                 if (
@@ -813,6 +836,14 @@ def main():
                     set_warlock_staff_cursor(
                         target_cell is not None
                         and is_valid_warlock_attack_target(
+                            game_state,
+                            target_cell,
+                        )
+                    )
+                elif game_state.player.subclass == "summoner":
+                    set_summoner_staff_cursor(
+                        target_cell is not None
+                        and is_valid_summoner_attack_target(
                             game_state,
                             target_cell,
                         )
@@ -1167,6 +1198,32 @@ def main():
                             )
                             continue
 
+                        summoner_target_cell = (
+                            get_act_three_cell_from_position(
+                                game_state,
+                                game_mouse_position,
+                            )
+                            if game_state.player.subclass == "summoner"
+                            else None
+                        )
+                        if (
+                            summoner_target_cell is not None
+                            and is_valid_summoner_attack_target(
+                                game_state,
+                                summoner_target_cell,
+                            )
+                        ):
+                            game_state.player.summoner_attack_target = (
+                                summoner_target_cell
+                            )
+                            pygame.event.post(
+                                pygame.event.Event(
+                                    pygame.KEYDOWN,
+                                    key=pygame.K_RETURN,
+                                )
+                            )
+                            continue
+
                         log_arrow_clicked = False
                         if get_act_three_log_panel_rect().collidepoint(
                             game_mouse_position
@@ -1398,6 +1455,15 @@ def main():
                     continue
 
                 if (
+                    event.key in (pygame.K_1, pygame.K_KP1)
+                    and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
+                    and game_state.player.subclass == "summoner"
+                ):
+                    release_summoner_familiar(game_state)
+                    set_summoner_staff_cursor()
+                    continue
+
+                if (
                     event.key in (pygame.K_2, pygame.K_KP2)
                     and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
                     and game_state.player.subclass == "warlock"
@@ -1409,6 +1475,14 @@ def main():
                     continue
 
                 if (
+                    event.key in (pygame.K_2, pygame.K_KP2)
+                    and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
+                    and game_state.player.subclass == "summoner"
+                ):
+                    request_summoner_bond(game_state)
+                    continue
+
+                if (
                     event.key in (pygame.K_3, pygame.K_KP3)
                     and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
                     and game_state.player.subclass == "warlock"
@@ -1416,6 +1490,14 @@ def main():
                     game_state.player.warlock_demon_form_active = not (
                         game_state.player.warlock_demon_form_active
                     )
+                    continue
+
+                if (
+                    event.key in (pygame.K_3, pygame.K_KP3)
+                    and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
+                    and game_state.player.subclass == "summoner"
+                ):
+                    request_summoner_true_form(game_state)
                     continue
 
                 if (
@@ -1790,12 +1872,16 @@ def main():
 
                 if event.key in (pygame.K_w, pygame.K_UP):
                     row_change = -1
+                    game_state.player.facing_direction = (0, -1)
                 elif event.key in (pygame.K_s, pygame.K_DOWN):
                     row_change = 1
+                    game_state.player.facing_direction = (0, 1)
                 elif event.key in (pygame.K_a, pygame.K_LEFT):
                     column_change = -1
+                    game_state.player.facing_direction = (-1, 0)
                 elif event.key in (pygame.K_d, pygame.K_RIGHT):
                     column_change = 1
+                    game_state.player.facing_direction = (1, 0)
 
                 player_tried_to_move = (
                     column_change != 0 or row_change != 0
@@ -1914,6 +2000,21 @@ def main():
                             pygame.time.get_ticks()
                         )
                     set_warlock_staff_cursor()
+                elif game_state.player.summoner_attack_target is not None:
+                    summoner_target = (
+                        game_state.player.summoner_attack_target
+                    )
+                    game_state.player.summoner_attack_target = None
+                    player_acted = perform_summoner_attack(
+                        game_state,
+                        summoner_target,
+                        resolve_oracle_hit_reaction,
+                    )
+                    if player_acted:
+                        game_state.player.attack_animation_started_at = (
+                            pygame.time.get_ticks()
+                        )
+                    set_summoner_staff_cursor()
                 elif (
                     game_state.player.paladin_shield_charge_target
                     is not None
@@ -2079,6 +2180,9 @@ def main():
                         )
 
                 if player_acted:
+                    game_state.player.familiar_turn_started_at = (
+                        pygame.time.get_ticks()
+                    )
                     resolve_enemy_turn(
                         game_state,
                         player_position_before_action,

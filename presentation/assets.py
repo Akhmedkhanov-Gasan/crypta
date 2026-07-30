@@ -616,6 +616,96 @@ def load_act_three_gameplay_assets():
             / "demon_form_edge_right_original.png",
             (273, 512),
         ),
+        "summoner_familiar": _load_scaled_image(
+            act_directory
+            / "player"
+            / "summoner"
+            / "summoner_familiar"
+            / "summoner_familiar_original.png",
+            (46, 52),
+        ),
+        "summoner_bond": _load_scaled_image(
+            act_directory
+            / "player"
+            / "summoner"
+            / "summoner_bond"
+            / "summoner_bond_original.png",
+            (46, 52),
+        ),
+        "summoner_true_form": _load_scaled_image(
+            act_directory
+            / "player"
+            / "summoner"
+            / "summoner_true_form"
+            / "summoner_true_form_original.png",
+            (46, 52),
+        ),
+        "summoner_familiar_idle_0": _load_pixel_scaled_image(
+            act_directory
+            / "player"
+            / "summoner"
+            / "summoner_familiar"
+            / "idle_00.png",
+            (tile_size, tile_size),
+        ),
+        "summoner_familiar_idle_1": _load_pixel_scaled_image(
+            act_directory
+            / "player"
+            / "summoner"
+            / "summoner_familiar"
+            / "idle_01.png",
+            (tile_size, tile_size),
+        ),
+        "summoner_familiar_idle_2": _load_pixel_scaled_image(
+            act_directory
+            / "player"
+            / "summoner"
+            / "summoner_familiar"
+            / "idle_02.png",
+            (tile_size, tile_size),
+        ),
+        "summoner_familiar_attack": _load_pixel_scaled_image(
+            act_directory
+            / "player"
+            / "summoner"
+            / "summoner_familiar"
+            / "attack"
+            / "attack_00.png",
+            (tile_size, tile_size),
+        ),
+        "summoner_true_form_idle_0": _load_pixel_scaled_image(
+            act_directory
+            / "player"
+            / "summoner"
+            / "summoner_true_form"
+            / "idle_00.png",
+            (tile_size, tile_size),
+        ),
+        "summoner_true_form_idle_1": _load_pixel_scaled_image(
+            act_directory
+            / "player"
+            / "summoner"
+            / "summoner_true_form"
+            / "idle_01.png",
+            (tile_size, tile_size),
+        ),
+        "summoner_true_form_idle_2": _load_pixel_scaled_image(
+            act_directory
+            / "player"
+            / "summoner"
+            / "summoner_true_form"
+            / "idle_02.png",
+            (tile_size, tile_size),
+        ),
+        "summoner_true_form_attack": _load_pixel_scaled_image(
+            act_directory
+            / "player"
+            / "summoner"
+            / "summoner_true_form"
+            / "attack"
+            / "attack_00.png",
+            (tile_size, tile_size),
+        ),
         "sidebar_potion": _load_scaled_image(
             environment_directory / "items" / "potion_health.png",
             (34, 34),
@@ -669,6 +759,21 @@ def load_act_three_gameplay_assets():
                     (tile_size, tile_size),
                 )
             )
+
+    summoner_no_familiar_idle_directory = (
+        act_directory
+        / "player"
+        / "summoner"
+        / "idle_no_familiar"
+    )
+    for frame_index in range(3):
+        assets[
+            f"player_summoner_no_familiar_idle_{frame_index}"
+        ] = _load_pixel_scaled_image(
+            summoner_no_familiar_idle_directory
+            / f"idle_{frame_index:02d}.png",
+            (tile_size, tile_size),
+        )
 
     demon_idle_directory = (
         act_directory
@@ -768,6 +873,21 @@ def load_act_three_gameplay_assets():
                 / f"walk_{frame_index:02d}.png",
                 (tile_size, tile_size),
             )
+        )
+
+    summoner_no_familiar_walk_directory = (
+        act_directory
+        / "player"
+        / "summoner"
+        / "walk_no_familiar"
+    )
+    for frame_index in range(2):
+        assets[
+            f"player_summoner_no_familiar_walk_{frame_index}"
+        ] = _load_pixel_scaled_image(
+            summoner_no_familiar_walk_directory
+            / f"walk_{frame_index:02d}.png",
+            (tile_size, tile_size),
         )
 
     assets["player_assassin_attack"] = _load_pixel_scaled_image(
@@ -897,6 +1017,16 @@ def load_act_three_gameplay_assets():
         / "attack"
         / "attack_00.png",
         (tile_size, tile_size),
+    )
+    assets["player_summoner_no_familiar_attack"] = (
+        _load_pixel_scaled_image(
+            act_directory
+            / "player"
+            / "summoner"
+            / "attack_no_familiar"
+            / "attack_00.png",
+            (tile_size, tile_size),
+        )
     )
 
     for enemy_type in (

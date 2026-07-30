@@ -6,7 +6,10 @@ from game.events import GameEvent, GameEventType
 from game.state import EnemyBehaviorState, GameState
 from logic import (
     distance_between,
+    get_enemy_attack_mode,
+    get_enemy_attack_targets,
     get_enemy_occupied_positions,
+    move_enemy_toward_position,
     move_enemy_randomly,
     roll_enemy_damage,
     update_enemy_aggro,
@@ -19,9 +22,133 @@ from systems.enemy_ai import (
     try_start_healing,
 )
 from systems.player_abilities import (
+    damage_summoner_familiar,
     resolve_archer_barrage_zone_entry,
+    resolve_summoner_familiar_turn,
 )
 from systems.player_combat import damage_player
+from systems.enemy_ai.common import movement_is_ready
+
+
+def _familiar_is_preferred_target(
+    game_state: GameState,
+    enemy,
+) -> bool:
+    familiar_position = game_state.player.summoner_familiar_position
+    if (
+        enemy.type == "oracle"
+        or not game_state.player.summoner_familiar_active
+        or familiar_position is None
+        or game_state.player.summoner_familiar_health <= 0
+    ):
+        return False
+
+    familiar_distance = distance_between(
+        enemy.column,
+        enemy.row,
+        familiar_position[0],
+        familiar_position[1],
+    )
+    player_distance = distance_between(
+        enemy.column,
+        enemy.row,
+        game_state.floor.player_column,
+        game_state.floor.player_row,
+    )
+    return familiar_distance <= max(1, enemy.attack_range) or (
+        familiar_distance < player_distance
+    )
+
+
+def _prepare_attack_against_familiar(
+    game_state: GameState,
+    enemy,
+    attack_blocking_positions: set[tuple[int, int]],
+) -> bool:
+    familiar_position = game_state.player.summoner_familiar_position
+    if familiar_position is None:
+        return False
+
+    attack_targets = get_enemy_attack_targets(
+        game_state.floor.map,
+        enemy,
+        familiar_position[0],
+        familiar_position[1],
+        attack_blocking_positions,
+    )
+    if not attack_targets:
+        return False
+
+    enemy.attack_targets = attack_targets
+    enemy.prepared_attack_mode = get_enemy_attack_mode(
+        enemy,
+        familiar_position[0],
+        familiar_position[1],
+    )
+    enemy.prepared_attack_target = "familiar"
+    enemy.behavior_state = EnemyBehaviorState.PREPARING_ATTACK
+    add_log_message(
+        game_state.combat_log,
+        (
+            f"{enemy.name} prepares "
+            f"{enemy.prepared_attack_mode.replace('_', ' ')} "
+            "attack on the familiar."
+        ),
+    )
+    return True
+
+
+def _take_familiar_target_turn(
+    game_state: GameState,
+    enemy,
+    occupied_positions: set[tuple[int, int]],
+    attack_blocking_positions: set[tuple[int, int]],
+) -> None:
+    if _prepare_attack_against_familiar(
+        game_state,
+        enemy,
+        attack_blocking_positions,
+    ):
+        return
+
+    if enemy.is_immobile or not movement_is_ready(enemy):
+        return
+
+    familiar_position = game_state.player.summoner_familiar_position
+    if familiar_position is None:
+        return
+    previous_position = (enemy.column, enemy.row)
+    enemy.column, enemy.row = move_enemy_toward_position(
+        game_state.floor.map,
+        enemy,
+        familiar_position[0],
+        familiar_position[1],
+        occupied_positions,
+    )
+    new_position = (enemy.column, enemy.row)
+    if new_position != previous_position:
+        game_state.emit(
+            GameEvent(
+                type=GameEventType.MOVE,
+                actor=enemy.name,
+                origin=previous_position,
+                destination=new_position,
+                data={"kind": "pursue_familiar"},
+            )
+        )
+        resolve_archer_barrage_zone_entry(
+            game_state,
+            enemy,
+            previous_position,
+        )
+        if enemy.health <= 0:
+            return
+
+    _prepare_attack_against_familiar(
+        game_state,
+        enemy,
+        attack_blocking_positions,
+    )
 
 
 def resolve_enemy_turn(
@@ -30,6 +157,7 @@ def resolve_enemy_turn(
     rogue_ability_activated: bool,
 ) -> None:
     update_oracle_projectiles(game_state)
+    resolve_summoner_familiar_turn(game_state)
 
     if game_state.player.health <= 0:
         game_state.emit(
@@ -87,6 +215,49 @@ def resolve_enemy_turn(
                     data={"mode": attack_mode},
                 )
             )
+
+            if enemy.prepared_attack_target == "familiar":
+                enemy.prepared_attack_target = "hero"
+                familiar_position = (
+                    game_state.player.summoner_familiar_position
+                )
+                if (
+                    familiar_position is not None
+                    and game_state.player.summoner_familiar_active
+                    and familiar_position in attack_targets
+                ):
+                    damage = roll_enemy_damage(
+                        enemy,
+                        attack_mode,
+                    )
+                    damage = damage_summoner_familiar(
+                        game_state,
+                        damage,
+                    )
+                    game_state.emit(
+                        GameEvent(
+                            type=GameEventType.HIT,
+                            actor=enemy.name,
+                            target="familiar",
+                            origin=(enemy.column, enemy.row),
+                            destination=familiar_position,
+                            amount=damage,
+                            data={"mode": attack_mode},
+                        )
+                    )
+                    add_log_message(
+                        game_state.combat_log,
+                        (
+                            f"{enemy.name} hits the familiar "
+                            f"for {damage}."
+                        ),
+                    )
+                else:
+                    add_log_message(
+                        game_state.combat_log,
+                        f"{enemy.name} misses the familiar.",
+                    )
+                continue
 
             if (
                 game_state.floor["player_column"],
@@ -325,6 +496,14 @@ def resolve_enemy_turn(
                 game_state.floor.player_row,
             )
         )
+        if (
+            game_state.player.summoner_familiar_active
+            and game_state.player.summoner_familiar_position
+            is not None
+        ):
+            occupied_positions.add(
+                game_state.player.summoner_familiar_position
+            )
         reserved_leap_target = (
             game_state.player.berserker_crushing_leap_target
         )
@@ -335,6 +514,17 @@ def resolve_enemy_turn(
             for chest in game_state.floor["chests"]
             if not chest["is_open"]
         }
+
+        if _familiar_is_preferred_target(game_state, enemy):
+            enemy.is_aggro = True
+            enemy.behavior_state = EnemyBehaviorState.CHASING
+            _take_familiar_target_turn(
+                game_state,
+                enemy,
+                occupied_positions,
+                attack_blocking_positions,
+            )
+            continue
 
         if not enemy["is_aggro"]:
             enemy.behavior_state = EnemyBehaviorState.IDLE

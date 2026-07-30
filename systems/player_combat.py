@@ -43,6 +43,13 @@ from settings import (
     WARLOCK_CURSE_CHARGES,
     WARLOCK_CURSE_DAMAGE_MULTIPLIER,
     WARLOCK_SOUL_EXCHANGE_CHARGES,
+    SUMMONER_FAMILIAR_CHARGES,
+    SUMMONER_ATTACK_RANGE,
+    SUMMONER_ATTACK_RANGE_WITH_FAMILIAR,
+    SUMMONER_BOND_CHARGES,
+    SUMMONER_BOND_DAMAGE_BONUS,
+    SUMMONER_TRUE_FORM_CHARGES,
+    SUMMONER_TRUE_FORM_DAMAGE_BONUS,
 )
 from settings import ASSASSIN_TELEPORT_CHARGES
 from settings import ASSASSIN_ULTIMATE_CHARGES
@@ -77,7 +84,28 @@ def damage_player(
         minimum_health,
         player.health - damage,
     )
+    if player.summoner_bond_active:
+        player.summoner_familiar_health = player.health
+        if player.health <= 0:
+            player.summoner_familiar_active = False
+            player.summoner_familiar_position = None
+            player.summoner_true_form_active = False
+            player.summoner_true_form_charge = 0
+            player.summoner_true_form_base_max_health = 0
+            player.summoner_bond_active = False
+            player.summoner_familiar_death_penalty = True
     damage_dealt = previous_health - player.health
+
+    if damage_dealt > 0 and player.subclass == "summoner":
+        player.summoner_bond_charge = min(
+            SUMMONER_BOND_CHARGES,
+            player.summoner_bond_charge + 1,
+        )
+        if not player.summoner_true_form_active:
+            player.summoner_true_form_charge = min(
+                SUMMONER_TRUE_FORM_CHARGES,
+                player.summoner_true_form_charge + 1,
+            )
 
     if (
         damage_dealt > 0
@@ -289,6 +317,7 @@ def attack_enemy(
     force_critical: bool = False,
     attacker_position: tuple[int, int] | None = None,
     grant_ability_charge: bool = True,
+    attacker_name: str = "hero",
 ) -> bool:
     player = game_state.player
     if (
@@ -319,6 +348,17 @@ def attack_enemy(
         roll_player_damage(damage_minimum, damage_maximum)
         + damage_bonus
     )
+    if (
+        player.subclass == "summoner"
+        and player.summoner_bond_active
+    ):
+        damage += SUMMONER_BOND_DAMAGE_BONUS
+    if (
+        player.subclass == "summoner"
+        and player.summoner_true_form_active
+        and attacker_name == "familiar"
+    ):
+        damage += SUMMONER_TRUE_FORM_DAMAGE_BONUS
     if enemy.curse_turns > 0:
         damage = ceil(
             damage * WARLOCK_CURSE_DAMAGE_MULTIPLIER
@@ -442,10 +482,34 @@ def attack_enemy(
             WARLOCK_SOUL_EXCHANGE_CHARGES,
             player.warlock_soul_exchange_charge + 1,
         )
+    elif grant_ability_charge and player.subclass == "summoner":
+        if not player.summoner_true_form_active:
+            player.summoner_true_form_charge = min(
+                SUMMONER_TRUE_FORM_CHARGES,
+                player.summoner_true_form_charge + 1,
+            )
+        player.summoner_bond_charge = min(
+            SUMMONER_BOND_CHARGES,
+            player.summoner_bond_charge + 1,
+        )
+        charge_gain = (
+            0.5
+            if player.summoner_familiar_death_penalty
+            else 1.0
+        )
+        player.summoner_familiar_charge = min(
+            SUMMONER_FAMILIAR_CHARGES,
+            player.summoner_familiar_charge + charge_gain,
+        )
+        if (
+            player.summoner_familiar_charge
+            >= SUMMONER_FAMILIAR_CHARGES
+        ):
+            player.summoner_familiar_death_penalty = False
     game_state.emit(
         GameEvent(
             type=GameEventType.HIT,
-            actor="hero",
+            actor=attacker_name,
             target=enemy.name,
             origin=attacker_position,
             destination=(enemy.column, enemy.row),
@@ -454,15 +518,19 @@ def attack_enemy(
         )
     )
 
+    attacker_label = (
+        "Hero" if attacker_name == "hero" else "Familiar"
+    )
     if critical_hit:
         add_log_message(
             game_state.combat_log,
-            f"Critical hit on {enemy.name} for {damage}!",
+            f"{attacker_label} critically hits "
+            f"{enemy.name} for {damage}!",
         )
     else:
         add_log_message(
             game_state.combat_log,
-            f"Hero hits {enemy.name} for {damage}.",
+            f"{attacker_label} hits {enemy.name} for {damage}.",
         )
 
     if (
@@ -497,6 +565,92 @@ def attack_enemy(
         return True
 
     return False
+
+
+def is_valid_summoner_attack_target(
+    game_state: GameState,
+    target_cell: tuple[int, int],
+) -> bool:
+    player = game_state.player
+    floor = game_state.floor
+    if player.subclass != "summoner":
+        return False
+
+    target_enemy = next(
+        (
+            enemy
+            for enemy in floor.enemies
+            if enemy.health > 0
+            and target_cell in get_enemy_occupied_positions(enemy)
+        ),
+        None,
+    )
+    if target_enemy is None:
+        return False
+
+    attack_range = (
+        SUMMONER_ATTACK_RANGE_WITH_FAMILIAR
+        if player.summoner_familiar_active
+        else SUMMONER_ATTACK_RANGE
+    )
+    distance = max(
+        abs(target_cell[0] - floor.player_column),
+        abs(target_cell[1] - floor.player_row),
+    )
+    return (
+        distance <= attack_range
+        and has_line_of_sight(
+            floor.map,
+            floor.player_column,
+            floor.player_row,
+            target_cell[0],
+            target_cell[1],
+        )
+    )
+
+
+def perform_summoner_attack(
+    game_state: GameState,
+    target_cell: tuple[int, int],
+    oracle_hit_reaction: OracleHitReaction,
+) -> bool:
+    if not is_valid_summoner_attack_target(game_state, target_cell):
+        return False
+
+    floor = game_state.floor
+    hit_enemy = next(
+        enemy
+        for enemy in floor.enemies
+        if enemy.health > 0
+        and target_cell in get_enemy_occupied_positions(enemy)
+    )
+    game_state.player_attack_targets = [target_cell]
+    game_state.emit(
+        GameEvent(
+            type=GameEventType.ATTACK,
+            actor="hero",
+            origin=(floor.player_column, floor.player_row),
+            positions=(target_cell,),
+            data={"kind": "summoner_magic"},
+        )
+    )
+    enemy_was_defeated = attack_enemy(
+        game_state,
+        hit_enemy,
+        game_state.player.damage_min,
+        game_state.player.damage_max,
+        game_state.player.crit_chance,
+        attacker_position=(floor.player_column, floor.player_row),
+    )
+    if hit_enemy.type == "oracle":
+        oracle_hit_reaction(
+            hit_enemy,
+            floor,
+            game_state.combat_log,
+        )
+    if enemy_was_defeated:
+        resolve_enemy_defeat(game_state, hit_enemy)
+    return True
 
 
 def resolve_enemy_defeat(
