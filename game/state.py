@@ -2,6 +2,13 @@ from dataclasses import dataclass, field, fields
 from enum import Enum, auto
 from typing import Any, Iterator
 
+from acts.act_three.state import (
+    ACT_THREE_PLAYER_FIELD_NAMES,
+    ACT_THREE_SESSION_FIELD_NAMES,
+    ActThreePlayerState,
+    ActThreeSessionState,
+    ArcherBarrageShotState,
+)
 from game.events import GameEvent
 
 
@@ -74,13 +81,6 @@ class ProjectileState(AttributeMapping):
     kind: str
     direction: tuple[int, int]
     damage: int
-
-
-@dataclass(eq=False)
-class ArcherBarrageShotState(AttributeMapping):
-    origin: tuple[int, int]
-    target: tuple[int, int]
-    started_at: int = 0
 
 
 @dataclass(eq=False)
@@ -247,103 +247,26 @@ class PlayerState:
     key_count: int = 0
     enemies_defeated: int = 0
     ability_kill_charge: int = 0
-    archer_empowered_shot_charge: int = 0
-    archer_leap_charge: int = 0
-    archer_barrage_zone_charge: int = 0
-    archer_attack_target: tuple[int, int] | None = None
-    archer_empowered_shot_aiming: bool = False
-    archer_empowered_shot_target: tuple[int, int] | None = None
-    archer_empowered_shot_started_at: int = 0
-    archer_leap_aiming: bool = False
-    archer_leap_target: tuple[int, int] | None = None
-    archer_leap_origin: tuple[int, int] | None = None
-    archer_leap_started_at: int = 0
-    archer_barrage_zone_aiming: bool = False
-    archer_barrage_zone_anchor: tuple[int, int] | None = None
-    archer_barrage_zone_preview_cells: list[
-        tuple[int, int]
-    ] = field(default_factory=list)
-    archer_barrage_zone_cells: list[
-        tuple[int, int]
-    ] = field(default_factory=list)
-    archer_barrage_shots: list[
-        ArcherBarrageShotState
-    ] = field(default_factory=list)
-    berserker_crushing_leap_charge: int = 0
-    berserker_crushing_leap_aiming: bool = False
-    berserker_crushing_leap_target: tuple[int, int] | None = None
-    berserker_crushing_leap_preview_cells: list[
-        tuple[int, int]
-    ] = field(default_factory=list)
-    berserker_crushing_leap_origin: tuple[int, int] | None = None
-    berserker_crushing_leap_started_at: int = 0
-    berserker_last_rage_charge: int = 0
-    berserker_last_rage_turns: int = 0
-    paladin_holy_hand_charge: int = 0
-    paladin_holy_hand_started_at: int = 0
-    paladin_shield_charge_charge: int = 0
-    paladin_shield_charge_aiming: bool = False
-    paladin_shield_charge_target: tuple[int, int] | None = None
-    paladin_shield_charge_preview_cells: list[
-        tuple[int, int]
-    ] = field(default_factory=list)
-    paladin_shield_charge_origin: tuple[int, int] | None = None
-    paladin_shield_charge_started_at: int = 0
-    paladin_holy_shield_charge: int = 0
-    paladin_holy_shield_turns: int = 0
-    warlock_attack_target: tuple[int, int] | None = None
-    warlock_curse_charge: int = 0
-    warlock_curse_aiming: bool = False
-    warlock_curse_target: tuple[int, int] | None = None
-    warlock_newly_cursed_enemy: str | None = None
-    warlock_soul_exchange_charge: int = 0
-    warlock_soul_exchange_aiming: bool = False
-    warlock_soul_exchange_target: tuple[int, int] | None = None
-    warlock_soul_exchange_player_origin: (
-        tuple[int, int] | None
-    ) = None
-    warlock_soul_exchange_enemy_origin: (
-        tuple[int, int] | None
-    ) = None
-    warlock_soul_exchange_enemy_name: str | None = None
-    warlock_soul_exchange_started_at: int = 0
-    warlock_demon_form_active: bool = False
-    summoner_familiar_active: bool = False
-    summoner_familiar_position: tuple[int, int] | None = None
-    summoner_familiar_max_health: int = 0
-    summoner_familiar_health: int = 0
-    summoner_familiar_charge: float = 0.0
-    summoner_familiar_death_penalty: bool = False
-    summoner_true_form_active: bool = False
-    summoner_true_form_charge: int = 0
-    summoner_true_form_base_max_health: int = 0
-    summoner_bond_charge: int = 0
-    summoner_bond_active: bool = False
-    summoner_bond_player_max_health: int = 0
-    summoner_bond_familiar_max_health: int = 0
-    summoner_bond_familiar_health: int = 0
-    summoner_familiar_movement_origin: tuple[int, int] | None = None
-    summoner_familiar_movement_started_at: int = 0
-    summoner_familiar_attack_started_at: int = 0
-    familiar_turn_started_at: int = 0
-    summoner_attack_target: tuple[int, int] | None = None
-    facing_direction: tuple[int, int] = (0, 1)
-    teleport_charge: int = 0
     invisibility_turns: int = 0
-    teleport_aiming: bool = False
-    teleport_target: tuple[int, int] | None = None
-    teleport_camera_origin: tuple[int, int] | None = None
-    teleport_transition_started_at: int = 0
-    ultimate_charge: int = 0
-    ultimate_aiming: bool = False
-    ultimate_targets: list[str] = field(default_factory=list)
-    ultimate_visual_variants: list[int] = field(default_factory=list)
-    ultimate_animation_started_at: int = 0
-    ultimate_animation_active: bool = False
     directional_ability_aiming: bool = False
-    movement_animation_started_at: int = 0
-    attack_animation_started_at: int = 0
+    act_three: ActThreePlayerState = field(
+        default_factory=ActThreePlayerState,
+    )
 
+    def __getattr__(self, name: str) -> Any:
+        if name in ACT_THREE_PLAYER_FIELD_NAMES:
+            return getattr(self.act_three, name)
+        raise AttributeError(name)
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        act_three_state = self.__dict__.get("act_three")
+        if (
+            act_three_state is not None
+            and name in ACT_THREE_PLAYER_FIELD_NAMES
+        ):
+            setattr(act_three_state, name, value)
+            return
+        object.__setattr__(self, name, value)
 
 @dataclass
 class GameState:
@@ -355,22 +278,47 @@ class GameState:
     upgrade_screen_open: bool = False
     class_selection_open: bool = False
     class_transition_started_at: int = 0
-    act_three_transition_open: bool = False
-    act_three_transition_started_at: int = 0
-    act_three_visual_started_at: int = 0
-    act_three_debug_class_selection_open: bool = False
-    subclass_selection_open: bool = False
-    act_three_test_mode: bool = False
-    sidebar_tab: str = "stats"
-    log_scroll_offset: int = 0
     upgrade_message: str = ""
     player_attack_targets: list[tuple[int, int]] = field(
         default_factory=list
     )
     events: list[GameEvent] = field(default_factory=list)
+    act_three: ActThreeSessionState = field(
+        default_factory=ActThreeSessionState,
+    )
+
+    def __getattr__(self, name: str) -> Any:
+        if name in ACT_THREE_SESSION_FIELD_NAMES:
+            return getattr(self.act_three, name)
+        raise AttributeError(name)
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        act_three_state = self.__dict__.get("act_three")
+        if (
+            act_three_state is not None
+            and name in ACT_THREE_SESSION_FIELD_NAMES
+        ):
+            setattr(act_three_state, name, value)
+            return
+        object.__setattr__(self, name, value)
 
     def emit(self, event: GameEvent) -> None:
         self.events.append(event)
 
     def clear_events(self) -> None:
         self.events.clear()
+
+
+__all__ = [
+    "ArcherBarrageShotState",
+    "AttributeMapping",
+    "ChestState",
+    "EnemyBehaviorState",
+    "EnemyState",
+    "FloorState",
+    "GameState",
+    "PlayerState",
+    "PotionState",
+    "ProjectileState",
+    "RoomState",
+]

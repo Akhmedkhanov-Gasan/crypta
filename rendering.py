@@ -6,7 +6,7 @@ from presentation.assets import (
     load_act_two_fonts,
     load_act_two_sprites,
 )
-from presentation.act_three import (
+from acts.act_three.presentation import (
     draw_act_three_gameplay,
     get_act_three_cell_from_position,
     get_act_three_log_arrow_rectangles,
