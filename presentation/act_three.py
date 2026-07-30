@@ -52,6 +52,9 @@ from settings import (
     WARLOCK_CURSE_CHARGES,
     WARLOCK_SOUL_EXCHANGE_CHARGES,
     WARLOCK_SOUL_EXCHANGE_TRAVEL_MS,
+    SUMMONER_FAMILIAR_CHARGES,
+    SUMMONER_BOND_CHARGES,
+    SUMMONER_TRUE_FORM_CHARGES,
 )
 
 
@@ -61,6 +64,7 @@ _IDLE_TIMELINE_CYCLE_COUNT = 4
 _MOVE_FRAME_COUNT = 2
 _MOVE_FRAME_DURATION_MS = 90
 _ATTACK_FRAME_DURATION_MS = 240
+_FAMILIAR_MOVE_DURATION_MS = 180
 _TELEPORT_CAMERA_DURATION_MS = 480
 _TELEPORT_EFFECT_DURATION_MS = 600
 _ARCHER_BARRAGE_SHOT_EFFECT_MS = 360
@@ -2024,6 +2028,108 @@ def _draw_summoner_idle_lights(
     )
 
 
+def _draw_summoner_bond_pentagram(
+    surface,
+    left,
+    top,
+    current_time,
+):
+    margin = 22
+    effect_surface = pygame.Surface(
+        (
+            ACT_THREE_TILE_SIZE + margin * 2,
+            ACT_THREE_TILE_SIZE + margin * 2,
+        ),
+        pygame.SRCALPHA,
+    )
+    center = (
+        margin + ACT_THREE_TILE_SIZE // 2,
+        margin + ACT_THREE_TILE_SIZE // 2 + 8,
+    )
+    pulse = 0.5 + 0.5 * math.sin(current_time / 260)
+    radius = 27 + round(pulse * 2)
+    glow_color = (54, 239, 227, round(55 + pulse * 35))
+    line_color = (109, 255, 244, round(175 + pulse * 65))
+    pygame.draw.circle(
+        effect_surface,
+        glow_color,
+        center,
+        radius + 4,
+        width=3,
+    )
+    pygame.draw.circle(
+        effect_surface,
+        line_color,
+        center,
+        radius,
+        width=1,
+    )
+    surface.blit(effect_surface, (left - margin, top - margin))
+
+
+def _draw_summoner_familiar_attack_glow(
+    surface,
+    left,
+    top,
+    current_time,
+):
+    margin = 12
+    effect_surface = pygame.Surface(
+        (
+            ACT_THREE_TILE_SIZE + margin * 2,
+            ACT_THREE_TILE_SIZE + margin * 2,
+        ),
+        pygame.SRCALPHA,
+    )
+    center = (
+        margin + ACT_THREE_TILE_SIZE // 2,
+        margin + 35,
+    )
+    pulse = 0.5 + 0.5 * math.sin(current_time / 55)
+    alpha = round(90 + pulse * 85)
+    pygame.draw.circle(
+        effect_surface,
+        (26, 238, 225, alpha // 4),
+        center,
+        15 + round(pulse * 3),
+    )
+    pygame.draw.circle(
+        effect_surface,
+        (92, 255, 243, alpha),
+        center,
+        10 + round(pulse * 2),
+        width=2,
+    )
+    pygame.draw.arc(
+        effect_surface,
+        (188, 255, 250, min(255, alpha + 45)),
+        (
+            center[0] - 16,
+            center[1] - 16,
+            32,
+            32,
+        ),
+        0.25,
+        2.4,
+        width=2,
+    )
+    for spark_index in range(5):
+        phase = current_time / 90 + spark_index * math.tau / 5
+        spark_x = center[0] + round(math.cos(phase) * 14)
+        spark_y = center[1] + round(math.sin(phase) * 10)
+        pygame.draw.line(
+            effect_surface,
+            (164, 255, 248, alpha),
+            (spark_x, spark_y),
+            (spark_x + round(math.cos(phase) * 3), spark_y + round(math.sin(phase) * 3)),
+            width=2,
+        )
+    surface.blit(
+        effect_surface,
+        (left - margin, top - margin),
+    )
+
+
 def _draw_sentinel_vulnerable_side(
     surface,
     enemy,
@@ -2718,6 +2824,13 @@ def _draw_act_three_world(
             and game_state.player.warlock_demon_form_active
         ):
             player_sprite = assets["player_warlock_demon_attack"]
+        elif (
+            player_subclass == "summoner"
+            and game_state.player.summoner_familiar_active
+        ):
+            player_sprite = assets[
+                "player_summoner_no_familiar_attack"
+            ]
         else:
             player_sprite = assets[
                 f"player_{player_subclass}_attack"
@@ -2746,6 +2859,13 @@ def _draw_act_three_world(
             player_sprite = assets[
                 f"player_warlock_demon_walk_{movement_frame}"
             ]
+        elif (
+            player_subclass == "summoner"
+            and game_state.player.summoner_familiar_active
+        ):
+            player_sprite = assets[
+                f"player_summoner_no_familiar_walk_{movement_frame}"
+            ]
         else:
             player_sprite = assets[
                 f"player_{player_subclass}_walk_{movement_frame}"
@@ -2766,6 +2886,13 @@ def _draw_act_three_world(
         ):
             player_sprite = assets[
                 f"player_warlock_demon_idle_{player_frame}"
+            ]
+        elif (
+            player_subclass == "summoner"
+            and game_state.player.summoner_familiar_active
+        ):
+            player_sprite = assets[
+                f"player_summoner_no_familiar_idle_{player_frame}"
             ]
         else:
             player_sprite = assets[
@@ -3179,6 +3306,120 @@ def _draw_act_three_world(
             )
 
     view_surface.blit(player_sprite, player_position)
+
+    familiar_position = game_state.player.summoner_familiar_position
+    if (
+        player_subclass == "summoner"
+        and game_state.player.summoner_familiar_active
+        and familiar_position is not None
+    ):
+        familiar_attack_elapsed = (
+            current_time
+            - game_state.player.summoner_familiar_attack_started_at
+        )
+        if (
+            game_state.player.summoner_true_form_active
+            and 0 <= familiar_attack_elapsed < _ATTACK_FRAME_DURATION_MS
+        ):
+            familiar_sprite = assets[
+                "summoner_true_form_attack"
+            ]
+        elif game_state.player.summoner_true_form_active:
+            familiar_frame = (current_time // 180) % 3
+            familiar_sprite = assets[
+                f"summoner_true_form_idle_{familiar_frame}"
+            ]
+        elif 0 <= familiar_attack_elapsed < _ATTACK_FRAME_DURATION_MS:
+            familiar_sprite = assets[
+                "summoner_familiar_attack"
+            ]
+        else:
+            familiar_frame = (current_time // 180) % 3
+            familiar_asset_frame = (0, 1, 2)[familiar_frame]
+            familiar_sprite = assets[
+                f"summoner_familiar_idle_{familiar_asset_frame}"
+            ]
+        familiar_render_position = _view_position(
+            familiar_position[0],
+            familiar_position[1],
+            camera_x,
+            camera_y,
+        )
+        familiar_origin = (
+            game_state.player.summoner_familiar_movement_origin
+        )
+        familiar_move_elapsed = (
+            current_time
+            - game_state.player.summoner_familiar_movement_started_at
+        )
+        if (
+            familiar_origin is not None
+            and 0 <= familiar_move_elapsed < _FAMILIAR_MOVE_DURATION_MS
+        ):
+            move_progress = familiar_move_elapsed / _FAMILIAR_MOVE_DURATION_MS
+            move_progress = (
+                move_progress
+                * move_progress
+                * (3 - 2 * move_progress)
+            )
+            origin_position = _view_position(
+                familiar_origin[0],
+                familiar_origin[1],
+                camera_x,
+                camera_y,
+            )
+            familiar_render_position = (
+                round(
+                    origin_position[0]
+                    + (
+                        familiar_render_position[0]
+                        - origin_position[0]
+                    )
+                    * move_progress
+                ),
+                round(
+                    origin_position[1]
+                    + (
+                        familiar_render_position[1]
+                        - origin_position[1]
+                    )
+                    * move_progress
+                ),
+            )
+        view_surface.blit(
+            familiar_sprite,
+            familiar_render_position,
+        )
+        if 0 <= familiar_attack_elapsed < _ATTACK_FRAME_DURATION_MS:
+            _draw_summoner_familiar_attack_glow(
+                view_surface,
+                familiar_render_position[0],
+                familiar_render_position[1],
+                current_time,
+            )
+        if game_state.player.summoner_familiar_max_health > 0:
+            _draw_health_bar(
+                view_surface,
+                familiar_render_position[0],
+                familiar_render_position[1],
+                game_state.player.summoner_familiar_health,
+                game_state.player.summoner_familiar_max_health,
+                HEALTH_BAR_COLOR,
+            )
+
+        if game_state.player.summoner_bond_active:
+            _draw_summoner_bond_pentagram(
+                view_surface,
+                player_position[0],
+                player_position[1],
+                current_time,
+            )
+            _draw_summoner_bond_pentagram(
+                view_surface,
+                familiar_render_position[0],
+                familiar_render_position[1],
+                current_time + 180,
+            )
 
     active_barrage_shots = []
     for barrage_shot in game_state.player.archer_barrage_shots:
@@ -3802,11 +4043,11 @@ def _draw_act_three_sidebar(
         ACT_THREE_SIDEBAR_X + 23,
         ACT_THREE_SIDEBAR_Y + 48,
     )
-    screen.blit(assets["assassin_hp_bar"], hp_bar_position)
+    hp_inner_width = 204
     hp_ratio = max(0, min(1, player.health / player.max_health))
+    screen.blit(assets["assassin_hp_bar"], hp_bar_position)
     hp_inner_left = hp_bar_position[0] + 27
     hp_inner_top = hp_bar_position[1] + 14
-    hp_inner_width = 204
     hp_inner_height = 14
     missing_hp_rectangle = pygame.Rect(
         hp_inner_left + round(hp_inner_width * hp_ratio),
@@ -4255,6 +4496,49 @@ def _draw_act_three_sidebar(
                 "Demon Form",
                 0.0,
                 (220, 67, 194),
+            ),
+        )
+    elif player.subclass == "summoner":
+        summoner_familiar_charge_ratio = max(
+            0,
+            min(
+                1,
+                player.summoner_familiar_charge
+                / SUMMONER_FAMILIAR_CHARGES,
+            ),
+        )
+        regular_abilities = (
+            (
+                "summoner_familiar",
+                "Release Familiar",
+                summoner_familiar_charge_ratio,
+                (74, 207, 202),
+            ),
+            (
+                "summoner_bond",
+                "Bond",
+                max(
+                    0,
+                    min(
+                        1,
+                        player.summoner_bond_charge
+                        / SUMMONER_BOND_CHARGES,
+                    ),
+                ),
+                (74, 207, 202),
+            ),
+            (
+                "summoner_true_form",
+                "True Form",
+                max(
+                    0,
+                    min(
+                        1,
+                        player.summoner_true_form_charge
+                        / SUMMONER_TRUE_FORM_CHARGES,
+                    ),
+                ),
+                (91, 224, 238),
             ),
         )
     else:
