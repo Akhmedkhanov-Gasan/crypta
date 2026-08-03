@@ -7,7 +7,7 @@ from game.state import (
     RoomState,
 )
 from levels import FLOOR_CONFIGS
-from logic import can_move_to
+from logic import can_move_between
 from settings import POTION_HEALING
 
 
@@ -316,7 +316,14 @@ def try_move_player(
 
     if (
         target_is_locked_stairs
-        or not can_move_to(floor.map, new_column, new_row)
+        or not can_move_between(
+            floor.map,
+            floor.player_column,
+            floor.player_row,
+            new_column,
+            new_row,
+            floor.barriers,
+        )
     ):
         return False
 

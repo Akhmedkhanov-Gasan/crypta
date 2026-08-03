@@ -419,6 +419,7 @@ def resolve_enemy_turn(
                 game_state.floor["player_column"],
                 game_state.floor["player_row"],
                 occupied_positions,
+                game_state.floor.barriers,
             )
             new_position = (enemy.column, enemy.row)
 

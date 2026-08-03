@@ -1,5 +1,7 @@
 import pygame
+import xml.etree.ElementTree as ET
 
+from levels import FLOOR_CONFIGS
 from presentation.layout import (
     ASSET_ROOT,
     FONT_ROOT,
@@ -325,7 +327,12 @@ def _load_cropped_ui_image(path, size):
 
 def load_act_three_gameplay_assets():
     act_directory = ASSET_ROOT / "act_3"
-    environment_directory = act_directory / "environment"
+    act_three_config = next(
+        config for config in FLOOR_CONFIGS if config["act"] == 3
+    )
+    project_root = ASSET_ROOT.parent.parent
+    map_path = project_root / act_three_config["map_path"]
+    environment_directory = map_path.parent
     act_two_directory = ASSET_ROOT / "act_2"
     ui_directory = ASSET_ROOT / "ui" / "act_3"
     tile_size = 64
@@ -350,6 +357,7 @@ def load_act_three_gameplay_assets():
         "wall_top": _load_scaled_image(
             environment_directory
             / "walls"
+            / "original"
             / "wall_top_original.png",
             (tile_size, tile_size),
             use_alpha=False,
@@ -357,7 +365,7 @@ def load_act_three_gameplay_assets():
         "wall_top_variant": _load_scaled_image(
             environment_directory
             / "walls"
-            / "wall_top_variant_01_original.png",
+            / "wall_top_variant_01.png",
             (tile_size, tile_size),
             use_alpha=False,
         ),
@@ -706,6 +714,28 @@ def load_act_three_gameplay_assets():
             (34, 34),
         ),
     }
+    map_root = ET.parse(map_path).getroot()
+    tileset_reference = map_root.find("tileset")
+    if tileset_reference is None or not tileset_reference.get("source"):
+        raise ValueError(f"TMX map has no external tileset: {map_path}")
+    tileset_path = map_path.parent / tileset_reference.get("source")
+    tmx_tiles = {}
+    if tileset_path.exists():
+        tileset_root = ET.parse(tileset_path).getroot()
+        for tile in tileset_root.findall("tile"):
+            image = tile.find("image")
+            if image is None or not image.get("source"):
+                continue
+            image_path = tileset_path.parent / image.get("source")
+            if not image_path.exists():
+                raise FileNotFoundError(
+                    f"Missing TMX tile image: {image_path}"
+                )
+            tmx_tiles[int(tile.get("id", 0)) + 1] = _load_scaled_image(
+                image_path,
+                (tile_size, tile_size),
+            )
+    assets["tmx_tiles"] = tmx_tiles
 
     for frame_index in range(3):
         assets[f"torch_flame_{frame_index}"] = (

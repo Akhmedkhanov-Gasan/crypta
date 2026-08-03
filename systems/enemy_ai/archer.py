@@ -50,6 +50,7 @@ def take_archer_turn(
             game_state.floor.player_row,
             occupied_positions,
             maximum_steps,
+            game_state.floor.barriers,
         )
         new_position = (enemy.column, enemy.row)
 

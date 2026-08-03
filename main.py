@@ -105,6 +105,11 @@ from systems.player_abilities import (
     perform_warlock_soul_exchange,
 )
 FIRST_ACT_FINAL_FLOOR = 2
+FIRST_ACT_THREE_FLOOR = next(
+    index
+    for index, floor_config in enumerate(FLOOR_CONFIGS)
+    if floor_config["act"] == 3
+)
 ACT_THREE_MUSIC_ENABLED = False
 
 
@@ -310,22 +315,15 @@ def main():
                         pygame.mixer.music.stop()
                     act_three_music_attempted = False
                     game_state = create_game_state(
+                        floor_index=FIRST_ACT_THREE_FLOOR,
                         opening_message=(
                             "Debug: choose an Act III class."
                         )
                     )
+                    game_state.act_three_test_mode = True
                     game_state.act_three_debug_class_selection_open = (
                         True
                     )
-                    continue
-
-                if event.key == pygame.K_F1:
-                    game_state = create_game_state(
-                        floor_index=len(FLOOR_CONFIGS) - 1,
-                        opening_message="Act III test room: choose a class.",
-                    )
-                    game_state.act_three_test_mode = True
-                    game_state.act_three_debug_class_selection_open = True
                     continue
 
                 if game_state.act_three_debug_class_selection_open:

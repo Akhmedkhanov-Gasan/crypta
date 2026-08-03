@@ -217,6 +217,13 @@ class FloorState(AttributeMapping):
     torches: list[tuple[int, int]] = field(
         default_factory=list
     )
+    tile_layers: dict[str, list[list[int]]] = field(
+        default_factory=dict
+    )
+    barriers: set[
+        tuple[tuple[int, int], tuple[int, int]]
+    ] = field(default_factory=set)
+    connectors: list[dict[str, Any]] = field(default_factory=list)
     visual_seed: int = 0
     dropped_keys: list[tuple[int, int]] = field(
         default_factory=list

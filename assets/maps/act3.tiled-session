@@ -1,0 +1,85 @@
+{
+    "activeFile": "act_3/environment_v1/corridor_straight_01.tmx",
+    "expandedProjectPaths": [
+        "act_3/environment_v1",
+        "act_3",
+        ".",
+        "act_3/environment_v2"
+    ],
+    "fileStates": {
+        "act_3/environment_v1/act_3_environment_v1.tsx": {
+            "dynamicWrapping": true,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "act_3/environment_v1/corridor_straight_01.tmx": {
+            "expandedObjectLayers": [
+                5,
+                6,
+                4,
+                3
+            ],
+            "scale": 1,
+            "selectedLayer": 2,
+            "viewCenter": {
+                "x": 670.5,
+                "y": 403
+            }
+        },
+        "act_3/environment_v1/room_spawn_01.tmx": {
+            "expandedObjectLayers": [
+                6,
+                7,
+                8,
+                9
+            ],
+            "scale": 1,
+            "selectedLayer": 6,
+            "viewCenter": {
+                "x": 731.5,
+                "y": 214
+            }
+        },
+        "act_3/environment_v1/test_room_01.tmx": {
+            "expandedObjectLayers": [
+                5,
+                6,
+                4,
+                3
+            ],
+            "scale": 1.5,
+            "selectedLayer": 4,
+            "viewCenter": {
+                "x": 451,
+                "y": 432.6666666666667
+            }
+        },
+        "act_3/environment_v2/My.tsx": {
+            "scaleInDock": 1
+        },
+        "act_3/environment_v2/act_3_environment.tmx": {
+            "scale": 1.898858173076923,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 415.7761812830332,
+                "y": 288.06785454315286
+            }
+        }
+    },
+    "map.height": 15,
+    "map.lastUsedFormat": "tmx",
+    "map.tileHeight": 64,
+    "map.tileWidth": 64,
+    "map.width": 15,
+    "openFiles": [
+        "act_3/environment_v1/room_spawn_01.tmx",
+        "act_3/environment_v1/corridor_straight_01.tmx"
+    ],
+    "project": "act3.tiled-project",
+    "recentFiles": [
+        "act_3/environment_v1/act_3_environment_v1.tsx",
+        "act_3/environment_v1/room_spawn_01.tmx",
+        "act_3/environment_v1/corridor_straight_01.tmx",
+        "act_3/environment_v2/act_3_environment.tmx"
+    ]
+}
