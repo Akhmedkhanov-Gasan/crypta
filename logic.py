@@ -24,7 +24,40 @@ def roll_enemy_damage(enemy, attack_mode):
 
 
 def can_move_to(dungeon_map, column, row):
+    if not (
+        0 <= row < len(dungeon_map)
+        and 0 <= column < len(dungeon_map[row])
+    ):
+        return False
     return dungeon_map[row][column] not in ("#", "C")
+
+
+def can_move_between(
+    dungeon_map,
+    start_column,
+    start_row,
+    target_column,
+    target_row,
+    barriers=(),
+):
+    if (
+        abs(target_column - start_column)
+        + abs(target_row - start_row)
+        != 1
+    ):
+        return False
+    if not can_move_to(dungeon_map, target_column, target_row):
+        return False
+
+    edge = tuple(
+        sorted(
+            (
+                (start_column, start_row),
+                (target_column, target_row),
+            )
+        )
+    )
+    return edge not in barriers
 
 
 def distance_between(first_column, first_row, second_column, second_row):
@@ -693,6 +726,7 @@ def move_enemy(
     player_column,
     player_row,
     occupied_positions,
+    barriers=(),
 ):
     start_position = (enemy["column"], enemy["row"])
     player_position = (player_column, player_row)
@@ -728,10 +762,17 @@ def move_enemy(
             next_column, next_row = next_position
             target_is_player = next_position == player_position
 
-            if not target_is_player and (
-                next_position in occupied_positions
-                or not can_move_to(dungeon_map, next_column, next_row)
+            if not can_move_between(
+                dungeon_map,
+                current_column,
+                current_row,
+                next_column,
+                next_row,
+                barriers,
             ):
+                continue
+
+            if not target_is_player and next_position in occupied_positions:
                 continue
 
             previous_position[next_position] = (
@@ -757,6 +798,7 @@ def move_enemy_randomly(
     player_column,
     player_row,
     occupied_positions,
+    barriers=(),
 ):
     enemy_column = enemy["column"]
     enemy_row = enemy["row"]
@@ -778,7 +820,14 @@ def move_enemy_randomly(
         if (
             target_position != (player_column, player_row)
             and target_position not in occupied_positions
-            and can_move_to(dungeon_map, new_column, new_row)
+            and can_move_between(
+                dungeon_map,
+                enemy_column,
+                enemy_row,
+                new_column,
+                new_row,
+                barriers,
+            )
         ):
             return new_column, new_row
 
@@ -792,6 +841,7 @@ def move_enemy_away(
     player_row,
     occupied_positions,
     maximum_steps=1,
+    barriers=(),
 ):
     enemy_column = enemy["column"]
     enemy_row = enemy["row"]
@@ -815,10 +865,13 @@ def move_enemy_away(
             if (
                 position == (player_column, player_row)
                 or position in occupied_positions
-                or not can_move_to(
+                or not can_move_between(
                     dungeon_map,
+                    enemy_column + column_change * (step_count - 1),
+                    enemy_row + row_change * (step_count - 1),
                     position[0],
                     position[1],
+                    barriers,
                 )
             ):
                 break

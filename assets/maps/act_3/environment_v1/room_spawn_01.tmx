@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="13" height="9" tilewidth="64" tileheight="64" infinite="0" nextlayerid="10" nextobjectid="25">
+ <tileset firstgid="1" source="act_3_environment_v1.tsx"/>
+ <layer id="1" name="Ground" width="13" height="9">
+  <data encoding="csv">
+2,2,2,2,2,2,2,2,2,2,2,2,2,
+2,4,2,2,2,2,2,2,2,2,2,2,2,
+2,4,2,2,2,4,4,2,2,2,2,2,2,
+2,2,2,2,4,4,4,2,2,4,2,2,2,
+2,2,2,4,4,4,4,2,2,4,4,2,2,
+2,2,2,4,4,4,4,2,2,2,2,2,2,
+2,2,2,4,4,4,2,2,2,2,2,2,2,
+2,2,2,4,2,2,2,2,2,2,2,2,2,
+2,2,2,2,2,2,2,2,2,2,2,2,2
+</data>
+ </layer>
+ <objectgroup id="7" name="Entities">
+  <object id="5" name="Spawn" x="418.667" y="294">
+   <point/>
+  </object>
+  <object id="6" name="Torch" x="95.3333" y="30.6667">
+   <ellipse/>
+  </object>
+  <object id="7" name="Torch" x="225.333" y="35.3333">
+   <ellipse/>
+  </object>
+  <object id="8" name="Torch" x="353.333" y="28">
+   <ellipse/>
+  </object>
+  <object id="9" name="Torch" x="483.333" y="29.3333">
+   <ellipse/>
+  </object>
+  <object id="10" name="Torch" x="608" y="26.6667">
+   <ellipse/>
+  </object>
+  <object id="11" name="Torch" x="732" y="31.3333">
+   <ellipse/>
+  </object>
+ </objectgroup>
+ <layer id="4" name="Walls" width="13" height="9">
+  <data encoding="csv">
+45,43,43,43,43,43,43,43,43,43,43,43,44,
+12,0,0,0,0,0,0,0,0,0,0,0,14,
+12,0,0,0,0,0,0,0,0,0,0,0,14,
+12,0,0,0,0,0,0,0,0,0,0,0,14,
+12,0,0,0,0,0,0,0,0,0,0,0,14,
+12,0,0,0,0,0,0,0,0,0,0,0,14,
+12,0,0,0,0,0,0,0,0,0,0,0,14,
+12,0,0,0,0,0,0,0,0,0,0,0,14,
+39,22,22,22,22,22,0,22,22,22,22,22,38
+</data>
+ </layer>
+ <layer id="5" name="Decor" width="13" height="9">
+  <data encoding="csv">
+0,49,40,49,40,49,40,49,40,49,40,49,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <objectgroup id="6" name="Blocked">
+  <object id="18" x="9.33333" y="3.33333" width="816.667" height="52.6667"/>
+ </objectgroup>
+ <objectgroup id="8" name="Barriers">
+  <object id="19" x="3.33333" y="60.6667" width="10" height="512"/>
+  <object id="20" x="2.66667" y="562.667" width="381.333" height="6.66667"/>
+  <object id="21" x="454.667" y="562" width="375.333" height="7.33333"/>
+  <object id="22" x="819.333" y="7.33333" width="8.66667" height="558.667"/>
+ </objectgroup>
+ <objectgroup id="9" name="Connectors">
+  <object id="24" name="exit" x="393.333" y="552.667">
+   <properties>
+    <property name="direction" value="south"/>
+    <property name="width" type="int" value="1"/>
+   </properties>
+   <polygon points="0,0 20.6667,41.3333 40.6667,-2"/>
+  </object>
+ </objectgroup>
+</map>

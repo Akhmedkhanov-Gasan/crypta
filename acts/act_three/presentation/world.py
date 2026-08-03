@@ -188,59 +188,51 @@ def _draw_act_three_world(
         ),
     )
 
+    if floor.tile_layers and assets.get("tmx_tiles"):
+        for layer_name in ("Ground", "Walls", "Decor"):
+            layer = floor.tile_layers.get(layer_name, [])
+            for row in range(first_row, min(last_row, len(layer))):
+                for column in range(first_column, min(last_column, len(layer[row]))):
+                    tile = assets["tmx_tiles"].get(layer[row][column])
+                    if tile is not None:
+                        view_surface.blit(
+                            tile,
+                            _view_position(column, row, camera_x, camera_y),
+                        )
+    else:
+        for row in range(first_row, last_row):
+            for column in range(first_column, last_column):
+                tile_position = _view_position(
+                    column,
+                    row,
+                    camera_x,
+                    camera_y,
+                )
+                if dungeon_map[row][column] == "#":
+                    if _is_exposed_top_wall(dungeon_map, column, row):
+                        view_surface.blit(
+                            assets[_wall_top_sprite_name(dungeon_map, column, row, floor.visual_seed)],
+                            tile_position,
+                        )
+                    continue
+                view_surface.blit(
+                    assets[_floor_sprite_name(column, row, floor.visual_seed)],
+                    tile_position,
+                )
+                _draw_floor_boundaries(
+                    view_surface, assets, dungeon_map, column, row, tile_position
+                )
+
     for row in range(first_row, last_row):
         for column in range(first_column, last_column):
-            tile_position = _view_position(
-                column,
-                row,
-                camera_x,
-                camera_y,
-            )
-
-            if dungeon_map[row][column] == "#":
-                if _is_exposed_top_wall(
+            corner_names = (
+                ()
+                if floor.tile_layers
+                else _top_void_corner_sprite_names(
                     dungeon_map,
                     column,
                     row,
-                ):
-                    view_surface.blit(
-                        assets[
-                            _wall_top_sprite_name(
-                                dungeon_map,
-                                column,
-                                row,
-                                floor.visual_seed,
-                            )
-                        ],
-                        tile_position,
-                    )
-                continue
-
-            view_surface.blit(
-                assets[
-                    _floor_sprite_name(
-                        column,
-                        row,
-                        floor.visual_seed,
-                    )
-                ],
-                tile_position,
-            )
-            _draw_floor_boundaries(
-                view_surface,
-                assets,
-                dungeon_map,
-                column,
-                row,
-                tile_position,
-            )
-
-    for row in range(first_row, last_row):
-        for column in range(first_column, last_column):
-            corner_names = _top_void_corner_sprite_names(
-                dungeon_map,
-                column,
-                row,
+                )
             )
             if not corner_names:
                 continue

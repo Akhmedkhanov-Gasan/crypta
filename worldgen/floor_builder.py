@@ -18,10 +18,8 @@ from worldgen.geometry import (
     position_is_in_room,
     room_center,
 )
-from acts.act_three.generation import (
-    generate_act_three_floor,
-    generate_act_three_test_floor,
-)
+from acts.act_three.tmx_loader import load_tmx_floor
+from acts.act_three.room_generation import generate_tmx_room_floor
 
 
 def choose_free_position(candidate_positions, occupied_positions):
@@ -40,10 +38,15 @@ def choose_free_position(candidate_positions, occupied_positions):
 def generate_floor(floor_index):
     config = FLOOR_CONFIGS[floor_index]
 
-    if config.get("generator") == "act_three":
-        return generate_act_three_floor(config)
-    if config.get("generator") == "act_three_test":
-        return generate_act_three_test_floor(config)
+    if config.get("room_template_directory"):
+        return generate_tmx_room_floor(
+            config["map_path"],
+            config["room_template_directory"],
+            config.get("generated_piece_count", 2),
+        )
+
+    if config.get("map_path"):
+        return load_tmx_floor(config["map_path"])
 
     boss_enemy_types = config.get("boss_enemy_types", [])
     boss_room_layout = config.get("boss_room_layout")
