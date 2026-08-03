@@ -121,6 +121,10 @@ class ActThreeSessionState:
     act_three_test_mode: bool = False
     sidebar_tab: str = "stats"
     log_scroll_offset: int = 0
+    upgrade_altar_hovered: bool = False
+    upgrade_altar_menu_open: bool = False
+    upgrade_altar_menu_tab: str = "attributes"
+    upgrade_altar_menu_hovered_control: str | None = None
 
 
 ACT_THREE_PLAYER_FIELD_NAMES = frozenset(

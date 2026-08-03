@@ -138,6 +138,7 @@ class EnemyState(AttributeMapping):
     movement_animation_started_at: int = 0
     attack_animation_started_at: int = 0
     movement_bounds: tuple[int, int, int, int] | None = None
+    defeat_rewards_claimed: bool = False
 
     @classmethod
     def from_config(
@@ -214,6 +215,7 @@ class FloorState(AttributeMapping):
     boss_emitters: list[tuple[int, int]]
     seal_boss_door_during_fight: bool
     boss_fight_started: bool
+    upgrade_altar: tuple[int, int] | None = None
     torches: list[tuple[int, int]] = field(
         default_factory=list
     )
@@ -253,6 +255,17 @@ class PlayerState:
     gold_count: int = 0
     key_count: int = 0
     enemies_defeated: int = 0
+    level: int = 1
+    experience: int = 0
+    attribute_points: int = 0
+    attribute_ranks: dict[str, int] = field(
+        default_factory=lambda: {
+            "vitality": 0,
+            "power": 0,
+            "precision": 0,
+            "evasion": 0,
+        }
+    )
     ability_kill_charge: int = 0
     invisibility_turns: int = 0
     directional_ability_aiming: bool = False

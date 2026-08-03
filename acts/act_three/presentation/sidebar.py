@@ -2,6 +2,7 @@ import math
 
 import pygame
 
+from game.progression import experience_required_for_level
 from presentation.hud import get_event_color, wrap_text
 from presentation.layout import (
     ACT_THREE_SIDEBAR_WIDTH,
@@ -115,6 +116,63 @@ def _draw_act_three_sidebar(
         ("BERSERKER", (205, 68, 58)),
     )
 
+    experience_required = experience_required_for_level(player.level)
+    experience_ratio = max(
+        0,
+        min(1, player.experience / experience_required),
+    )
+    experience_bar = pygame.Rect(
+        ACT_THREE_SIDEBAR_X + 24,
+        12,
+        ACT_THREE_SIDEBAR_WIDTH - 48,
+        20,
+    )
+    pygame.draw.rect(
+        screen,
+        (5, 7, 12),
+        experience_bar.move(0, 2),
+        border_radius=4,
+    )
+    pygame.draw.rect(
+        screen,
+        (15, 20, 29),
+        experience_bar,
+        border_radius=4,
+    )
+    experience_fill = experience_bar.inflate(-4, -4)
+    experience_fill.width = round(
+        experience_fill.width * experience_ratio
+    )
+    if experience_fill.width > 0:
+        pygame.draw.rect(
+            screen,
+            (35, 126, 203),
+            experience_fill,
+            border_radius=2,
+        )
+        pygame.draw.line(
+            screen,
+            (89, 190, 239),
+            (experience_fill.left + 1, experience_fill.top + 1),
+            (experience_fill.right - 2, experience_fill.top + 1),
+        )
+    pygame.draw.rect(
+        screen,
+        (65, 108, 145),
+        experience_bar,
+        width=1,
+        border_radius=4,
+    )
+    experience_label = numbers_font.render(
+        f"XP {player.experience}/{experience_required}",
+        True,
+        (211, 235, 247),
+    )
+    screen.blit(
+        experience_label,
+        experience_label.get_rect(center=experience_bar.center),
+    )
+
     header_x = ACT_THREE_SIDEBAR_X + 34
     header_y = ACT_THREE_SIDEBAR_Y + 21
     class_surface = display_font.render(
@@ -132,7 +190,11 @@ def _draw_act_three_sidebar(
         topleft=(level_x, header_y + 7),
     )
     screen.blit(level_label, level_label_rectangle)
-    level_number = numbers_font.render("1", True, TEXT_COLOR)
+    level_number = numbers_font.render(
+        str(player.level),
+        True,
+        TEXT_COLOR,
+    )
     screen.blit(
         level_number,
         level_number.get_rect(

@@ -56,6 +56,12 @@ from settings import (
     WARLOCK_SOUL_EXCHANGE_TRAVEL_MS,
 )
 def handle_act_three_key_event(event, game_state):
+    if game_state.upgrade_altar_menu_open:
+        if event.key == pygame.K_ESCAPE:
+            game_state.upgrade_altar_menu_open = False
+            game_state.upgrade_altar_menu_hovered_control = None
+        return True
+
     if (
         game_state.player.archer_leap_origin is not None
         and game_state.player.archer_leap_started_at > 0

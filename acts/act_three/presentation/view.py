@@ -1,5 +1,6 @@
 import pygame
 
+from acts.act_three.altar import get_upgrade_altar_cells
 from presentation.layout import (
     ACT_THREE_TILE_SIZE,
     ACT_THREE_VIEW_HEIGHT,
@@ -198,7 +199,13 @@ def _view_position(column, row, camera_x, camera_y):
     )
 
 
-def _line_of_sight(dungeon_map, origin, target, blockers=()):
+def _line_of_sight(
+    dungeon_map,
+    origin,
+    target,
+    blockers=(),
+    transparent_cells=(),
+):
     """Return whether a grid ray can reach target without crossing a wall."""
     x0, y0 = origin
     x1, y1 = target
@@ -212,7 +219,10 @@ def _line_of_sight(dungeon_map, origin, target, blockers=()):
         if (
             (x0, y0) != origin
             and (
-                dungeon_map[y0][x0] == "#"
+                (
+                    dungeon_map[y0][x0] == "#"
+                    and (x0, y0) not in transparent_cells
+                )
                 or (x0, y0) in blockers
             )
         ):
@@ -234,6 +244,7 @@ def _get_act_three_visibility(floor):
     visible = set()
     map_height = len(floor.map)
     map_width = len(floor.map[0])
+    altar_cells = get_upgrade_altar_cells(floor)
     closed_doors = set()
     if floor.boss_door is not None and not floor.boss_fight_started:
         closed_doors.add(floor.boss_door)
@@ -245,8 +256,12 @@ def _get_act_three_visibility(floor):
                 origin,
                 (column, row),
                 closed_doors,
+                altar_cells,
             ):
                 visible.add((column, row))
+
+    if visible.intersection(altar_cells):
+        visible.update(altar_cells)
 
     floor.explored_cells.update(visible)
     floor.visible_cells = visible

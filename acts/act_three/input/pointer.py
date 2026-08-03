@@ -1,5 +1,10 @@
 import pygame
 
+from game.combat_log import add_log_message
+from game.progression import upgrade_attribute
+from acts.act_three.altar import (
+    player_is_next_to_upgrade_altar,
+)
 from acts.act_three.input.cursors import (
     set_archer_attack_cursor,
     set_archer_barrage_zone_cursor,
@@ -46,6 +51,13 @@ from acts.act_three.presentation import (
     get_act_three_log_panel_rect,
     get_act_three_sidebar_tab_rectangles,
 )
+from acts.act_three.presentation.altar_menu import (
+    ALTAR_MENU_RECT,
+    get_upgrade_altar_menu_control_at,
+)
+from acts.act_three.presentation.hit_testing import (
+    get_upgrade_altar_screen_rect,
+)
 from acts.act_three.runtime import advance_act_three_transition
 from levels import FLOOR_CONFIGS
 from logic import get_enemy_occupied_positions
@@ -66,6 +78,86 @@ def handle_act_three_pointer_event(
     screen,
     window_to_game_position,
 ):
+    if (
+        game_state.upgrade_altar_menu_open
+        and event.type
+        in (
+            pygame.MOUSEMOTION,
+            pygame.MOUSEBUTTONDOWN,
+            pygame.MOUSEBUTTONUP,
+            pygame.MOUSEWHEEL,
+        )
+    ):
+        mouse_position = getattr(
+            event,
+            "pos",
+            pygame.mouse.get_pos(),
+        )
+        game_mouse_position = window_to_game_position(
+            screen,
+            mouse_position,
+        )
+        control = (
+            get_upgrade_altar_menu_control_at(
+                game_mouse_position
+            )
+            if game_mouse_position is not None
+            else None
+        )
+        game_state.upgrade_altar_menu_hovered_control = control
+
+        if (
+            event.type == pygame.MOUSEBUTTONDOWN
+            and event.button == 1
+        ):
+            if control == "close" or (
+                game_mouse_position is not None
+                and not ALTAR_MENU_RECT.collidepoint(
+                    game_mouse_position
+                )
+            ):
+                game_state.upgrade_altar_menu_open = False
+                game_state.upgrade_altar_menu_hovered_control = None
+            elif control is not None and control.startswith("tab:"):
+                game_state.upgrade_altar_menu_tab = control.split(
+                    ":",
+                    1,
+                )[1]
+            elif (
+                control is not None
+                and control.startswith("upgrade:")
+                and game_state.upgrade_altar_menu_tab == "attributes"
+            ):
+                attribute = control.split(":", 1)[1]
+                if upgrade_attribute(game_state.player, attribute):
+                    add_log_message(
+                        game_state.combat_log,
+                        f"{attribute.title()} increased at the altar.",
+                    )
+        return True
+
+    if (
+        event.type == pygame.MOUSEMOTION
+        and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
+        and not game_state.act_three_transition_open
+        and not game_state.subclass_selection_open
+    ):
+        game_mouse_position = window_to_game_position(
+            screen,
+            event.pos,
+        )
+        altar_rectangle = get_upgrade_altar_screen_rect(
+            game_state
+        )
+        game_state.upgrade_altar_hovered = (
+            game_mouse_position is not None
+            and altar_rectangle is not None
+            and altar_rectangle.collidepoint(game_mouse_position)
+            and player_is_next_to_upgrade_altar(game_state)
+        )
+        if game_state.upgrade_altar_hovered:
+            return True
+
     if (
         event.type == pygame.MOUSEBUTTONDOWN
         and event.button == 1
@@ -310,6 +402,25 @@ def handle_act_three_pointer_event(
         and not game_state.act_three_transition_open
         and not game_state.subclass_selection_open
     ):
+        game_mouse_position = window_to_game_position(
+            screen,
+            event.pos,
+        )
+        altar_rectangle = get_upgrade_altar_screen_rect(
+            game_state
+        )
+        if (
+            game_mouse_position is not None
+            and altar_rectangle is not None
+            and altar_rectangle.collidepoint(game_mouse_position)
+            and player_is_next_to_upgrade_altar(game_state)
+        ):
+            game_state.upgrade_altar_menu_open = True
+            game_state.upgrade_altar_menu_tab = "attributes"
+            game_state.upgrade_altar_hovered = False
+            game_state.upgrade_altar_menu_hovered_control = None
+            return True
+
         if (
             game_state.player.archer_leap_origin is not None
             and game_state.player.archer_leap_started_at > 0

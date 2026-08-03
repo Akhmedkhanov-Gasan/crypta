@@ -463,6 +463,24 @@ def load_act_three_gameplay_assets():
             / "torch_base_v2.png",
             (tile_size, tile_size),
         ),
+        "upgrade_altar_0": _load_pixel_scaled_image(
+            environment_directory
+            / "upgrade_altar"
+            / "upgrade_altar_00.png",
+            (tile_size * 2, tile_size * 2),
+        ),
+        "upgrade_altar_1": _load_pixel_scaled_image(
+            environment_directory
+            / "upgrade_altar"
+            / "upgrade_altar_01.png",
+            (tile_size * 2, tile_size * 2),
+        ),
+        "upgrade_altar_2": _load_pixel_scaled_image(
+            environment_directory
+            / "upgrade_altar"
+            / "upgrade_altar_02.png",
+            (tile_size * 2, tile_size * 2),
+        ),
         "gameplay_frame": _load_cropped_ui_image(
             ui_directory / "gameplay_frame_source.png",
             (928, 656),
@@ -474,6 +492,58 @@ def load_act_three_gameplay_assets():
         "assassin_hp_bar": _load_scaled_image(
             ui_directory / "assassin_hp_bar.png",
             (258, 42),
+        ),
+        "altar_menu_panel": _load_scaled_image(
+            ui_directory / "altar_menu" / "panel.png",
+            (1000, 590),
+        ),
+        "altar_menu_card": _load_scaled_image(
+            ui_directory / "altar_menu" / "attribute_card.png",
+            (410, 205),
+        ),
+        "altar_menu_tab": _load_scaled_image(
+            ui_directory / "altar_menu" / "tab.png",
+            (280, 58),
+        ),
+        "altar_menu_button": _load_scaled_image(
+            ui_directory / "altar_menu" / "upgrade_button.png",
+            (330, 42),
+        ),
+        "altar_menu_xp_bar": _load_scaled_image(
+            ui_directory / "altar_menu" / "xp_bar_frame.png",
+            (320, 34),
+        ),
+        "altar_menu_vitality": _load_scaled_image(
+            ui_directory / "altar_menu" / "vitality.png",
+            (72, 72),
+        ),
+        "altar_menu_power": _load_scaled_image(
+            ui_directory / "altar_menu" / "power.png",
+            (72, 72),
+        ),
+        "altar_menu_precision": _load_scaled_image(
+            ui_directory / "altar_menu" / "precision.png",
+            (72, 72),
+        ),
+        "altar_menu_evasion": _load_scaled_image(
+            ui_directory / "altar_menu" / "evasion.png",
+            (72, 72),
+        ),
+        "altar_menu_attribute_point": _load_scaled_image(
+            ui_directory / "altar_menu" / "attribute_point.png",
+            (24, 24),
+        ),
+        "altar_menu_skill_point": _load_scaled_image(
+            ui_directory / "altar_menu" / "skill_point.png",
+            (24, 24),
+        ),
+        "altar_menu_rank_filled": _load_scaled_image(
+            ui_directory / "altar_menu" / "rank_filled.png",
+            (14, 14),
+        ),
+        "altar_menu_rank_empty": _load_scaled_image(
+            ui_directory / "altar_menu" / "rank_empty.png",
+            (14, 14),
         ),
         "assassin_invisibility": _load_scaled_image(
             act_directory

@@ -110,6 +110,7 @@ def _compose(placements, connections):
     enemies = []
     chests = []
     potions = []
+    upgrade_altar = None
     open_connectors = []
 
     for template, original_offset in placements:
@@ -141,6 +142,14 @@ def _compose(placements, connections):
             _translated(position, offset)
             for position in template["potions"]
         )
+        if (
+            upgrade_altar is None
+            and template.get("upgrade_altar") is not None
+        ):
+            upgrade_altar = _translated(
+                template["upgrade_altar"],
+                offset,
+            )
         open_connectors.extend(
             {
                 **connector,
@@ -197,6 +206,7 @@ def _compose(placements, connections):
         "chests": chests,
         "potions": potions,
         "torches": torches,
+        "upgrade_altar": upgrade_altar,
         "tile_layers": layers,
         "barriers": barriers,
         "connectors": open_connectors,

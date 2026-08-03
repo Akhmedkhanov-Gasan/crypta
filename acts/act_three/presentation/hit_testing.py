@@ -1,6 +1,10 @@
 
 
+import pygame
+
 from acts.act_three.presentation.view import _camera_position
+
+from acts.act_three.altar import ALTAR_HEIGHT, ALTAR_WIDTH
 
 from presentation.layout import (
     ACT_THREE_TILE_SIZE,
@@ -27,6 +31,33 @@ _TOP_VOID_CORNER_X_OFFSETS = {
     "wall_corner_top_right": 18,
 }
 _TOP_VOID_DOUBLE_CORNER_CROP_WIDTH = 24
+
+
+def get_upgrade_altar_screen_rect(game_state):
+    altar_position = game_state.floor.upgrade_altar
+    if altar_position is None:
+        return None
+
+    camera_x, camera_y = _camera_position(game_state.floor)
+    altar_column, altar_row = altar_position
+    altar_rectangle = pygame.Rect(
+        ACT_THREE_VIEW_X
+        + altar_column * ACT_THREE_TILE_SIZE
+        - camera_x,
+        ACT_THREE_VIEW_Y
+        + altar_row * ACT_THREE_TILE_SIZE
+        - camera_y,
+        ALTAR_WIDTH * ACT_THREE_TILE_SIZE,
+        ALTAR_HEIGHT * ACT_THREE_TILE_SIZE,
+    )
+    return altar_rectangle.clip(
+        pygame.Rect(
+            ACT_THREE_VIEW_X,
+            ACT_THREE_VIEW_Y,
+            ACT_THREE_VIEW_WIDTH,
+            ACT_THREE_VIEW_HEIGHT,
+        )
+    )
 
 def get_act_three_cell_from_position(game_state, game_position):
     mouse_x, mouse_y = game_position

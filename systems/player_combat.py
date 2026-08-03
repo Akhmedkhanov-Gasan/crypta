@@ -4,6 +4,10 @@ from math import ceil
 
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
+from game.progression import (
+    experience_reward_for_enemy,
+    grant_experience,
+)
 from game.state import (
     EnemyBehaviorState,
     EnemyState,
@@ -374,9 +378,27 @@ def resolve_enemy_defeat(
     game_state: GameState,
     enemy: EnemyState,
 ) -> None:
+    if enemy.defeat_rewards_claimed:
+        return
+
+    enemy.defeat_rewards_claimed = True
     player = game_state.player
     floor = game_state.floor
     player.enemies_defeated += 1
+    experience_reward = experience_reward_for_enemy(enemy.type)
+    levels_gained = grant_experience(player, experience_reward)
+    add_log_message(
+        game_state.combat_log,
+        f"{enemy.name} grants {experience_reward} XP.",
+    )
+    if levels_gained:
+        add_log_message(
+            game_state.combat_log,
+            (
+                f"Level {player.level} reached. "
+                f"Attribute point +{levels_gained}."
+            ),
+        )
 
     if enemy.type == "oracle":
         floor.projectiles.clear()

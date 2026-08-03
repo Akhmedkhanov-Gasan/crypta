@@ -2,6 +2,9 @@ import math
 
 import pygame
 
+from acts.act_three.altar import (
+    player_is_next_to_upgrade_altar,
+)
 from acts.act_three.presentation.view import (
     _camera_position,
     _draw_floor_boundaries,
@@ -44,6 +47,9 @@ from settings import (
 
 _TORCH_LIGHT_SURFACE = None
 _IDLE_FRAME_SEQUENCE = (0, 1, 2, 1)
+_UPGRADE_ALTAR_FRAME_SEQUENCE = (0, 1, 2, 1)
+_UPGRADE_ALTAR_FRAME_DURATION_MS = 1000
+_UPGRADE_ALTAR_PARTICLE_CYCLE_MS = 4200
 _IDLE_TIMELINE_CYCLE_COUNT = 4
 _MOVE_FRAME_COUNT = 2
 _MOVE_FRAME_DURATION_MS = 90
@@ -58,6 +64,63 @@ _TOP_VOID_CORNER_X_OFFSETS = {
     "wall_corner_top_right": 18,
 }
 _TOP_VOID_DOUBLE_CORNER_CROP_WIDTH = 24
+
+
+def _draw_upgrade_altar_particles(
+    surface,
+    altar_position,
+    current_time,
+):
+    effect_size = ACT_THREE_TILE_SIZE * 2
+    particle_surface = pygame.Surface(
+        (effect_size, effect_size),
+        pygame.SRCALPHA,
+    )
+    particle_origins = (18, 36, 53, 73, 91, 108, 64)
+
+    for particle_index, origin_x in enumerate(particle_origins):
+        phase = (
+            current_time / _UPGRADE_ALTAR_PARTICLE_CYCLE_MS
+            + particle_index / len(particle_origins)
+        ) % 1
+        visibility = math.sin(math.pi * phase)
+        drift = math.sin(
+            phase * math.tau + particle_index * 1.73
+        )
+        particle_x = round(origin_x + drift * (3 + particle_index % 3))
+        particle_y = round(
+            effect_size - 18 - phase * (72 + particle_index % 3 * 7)
+        )
+        pulse = 0.9 + 0.1 * math.sin(
+            current_time / 520 + particle_index * 2.1
+        )
+        particle_alpha = round(235 * visibility * pulse)
+        particle_size = 1 + (particle_index % 3 == 1)
+
+        pygame.draw.circle(
+            particle_surface,
+            (34, 133, 255, particle_alpha // 4),
+            (particle_x, particle_y),
+            4,
+        )
+        pygame.draw.rect(
+            particle_surface,
+            (111, 211, 255, particle_alpha),
+            (
+                particle_x,
+                particle_y,
+                particle_size,
+                particle_size,
+            ),
+        )
+        if particle_size > 1:
+            pygame.draw.rect(
+                particle_surface,
+                (55, 151, 255, particle_alpha // 2),
+                (particle_x, particle_y + 2, 1, 2),
+            )
+
+    surface.blit(particle_surface, altar_position)
 
 from acts.act_three.presentation.actors import _enemy_sprite
 from acts.act_three.presentation.animation import (
@@ -405,6 +468,39 @@ def _draw_act_three_world(
             camera_y,
         ),
     )
+
+    if floor.upgrade_altar is not None:
+        altar_position = _view_position(
+            floor.upgrade_altar[0],
+            floor.upgrade_altar[1],
+            camera_x,
+            camera_y,
+        )
+        altar_timeline_frame = (
+            current_time // _UPGRADE_ALTAR_FRAME_DURATION_MS
+        ) % len(_UPGRADE_ALTAR_FRAME_SEQUENCE)
+        altar_frame = _UPGRADE_ALTAR_FRAME_SEQUENCE[altar_timeline_frame]
+        altar_sprite = assets[f"upgrade_altar_{altar_frame}"]
+        view_surface.blit(altar_sprite, altar_position)
+        _draw_upgrade_altar_particles(
+            view_surface,
+            altar_position,
+            current_time,
+        )
+        if (
+            game_state.upgrade_altar_hovered
+            and player_is_next_to_upgrade_altar(game_state)
+        ):
+            altar_highlight = altar_sprite.copy()
+            altar_highlight.fill(
+                (24, 46, 72, 0),
+                special_flags=pygame.BLEND_RGBA_ADD,
+            )
+            pulse = 55 + round(
+                20 * math.sin(current_time / 320)
+            )
+            altar_highlight.set_alpha(pulse)
+            view_surface.blit(altar_highlight, altar_position)
 
     for potion in floor.potions:
         view_surface.blit(
