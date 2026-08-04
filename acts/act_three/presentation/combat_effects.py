@@ -2,7 +2,7 @@ import math
 
 import pygame
 
-
+from game.events import GameEventType
 from presentation.layout import ACT_THREE_TILE_SIZE
 
 
@@ -22,6 +22,665 @@ _TOP_VOID_CORNER_X_OFFSETS = {
     "wall_corner_top_right": 18,
 }
 _TOP_VOID_DOUBLE_CORNER_CROP_WIDTH = 24
+
+_ENEMY_HIT_REACTION_DURATION_MS = 190
+_ENEMY_HIT_FEEDBACK_DURATION_MS = 680
+_PLAYER_HIT_REACTION_DURATION_MS = 210
+_PLAYER_HIT_SPRITE_DURATION_MS = 270
+_PLAYER_HIT_FEEDBACK_DURATION_MS = 680
+_PLAYER_HIT_VIGNETTE_DURATION_MS = 340
+_PLAYER_HIT_CAMERA_SHAKE_DURATION_MS = 190
+_FAMILIAR_HIT_REACTION_DURATION_MS = 190
+_FAMILIAR_HIT_FEEDBACK_DURATION_MS = 680
+_PLAYER_DEATH_HURT_HOLD_MS = 220
+_PLAYER_DEATH_COLLAPSE_END_MS = 720
+_PLAYER_DEATH_MESSAGE_START_MS = 1250
+_PLAYER_DEATH_MESSAGE_FADE_MS = 350
+
+
+def record_enemy_hit_feedback(game_state, started_at):
+    hit_events_by_target = {}
+
+    for event in game_state.events:
+        if (
+            event.type is not GameEventType.HIT
+            or event.target in (None, "hero", "familiar")
+            or not event.amount
+        ):
+            continue
+
+        hit_events_by_target.setdefault(event.target, []).append(event)
+
+    for enemy in game_state.floor.enemies:
+        hit_events = hit_events_by_target.get(enemy.name)
+        if not hit_events:
+            continue
+
+        enemy.hit_animation_started_at = started_at
+        enemy.hit_damage = sum(event.amount for event in hit_events)
+        enemy.hit_critical = any(
+            event.data.get("critical", False)
+            for event in hit_events
+        )
+        enemy.hit_origin = next(
+            (
+                event.origin
+                for event in reversed(hit_events)
+                if event.origin is not None
+            ),
+            None,
+        )
+
+
+def record_enemy_death_feedback(game_state, started_at):
+    defeated_enemy_names = {
+        event.actor
+        for event in game_state.events
+        if event.type is GameEventType.DEATH
+    }
+
+    for enemy in game_state.floor.enemies:
+        if (
+            enemy.name in defeated_enemy_names
+            and enemy.death_animation_started_at < 0
+        ):
+            enemy.death_animation_started_at = started_at
+
+
+def record_player_hit_feedback(game_state, started_at):
+    hit_events = [
+        event
+        for event in game_state.events
+        if (
+            event.type is GameEventType.HIT
+            and event.target == "hero"
+            and event.amount
+        )
+    ]
+    if not hit_events:
+        return
+
+    player = game_state.player
+    player.hit_animation_started_at = started_at
+    player.hit_damage = sum(event.amount for event in hit_events)
+    player.hit_origin = next(
+        (
+            event.origin
+            for event in reversed(hit_events)
+            if event.origin is not None
+        ),
+        None,
+    )
+
+
+def record_player_death_feedback(game_state, started_at):
+    player = game_state.player
+    if (
+        player.health > 0
+        or player.death_animation_started_at >= 0
+    ):
+        return
+
+    player.death_animation_started_at = started_at
+
+
+def _player_death_elapsed(player, current_time):
+    if player.death_animation_started_at < 0:
+        return None
+    return max(0, current_time - player.death_animation_started_at)
+
+
+def _player_death_frame(player, current_time):
+    elapsed = _player_death_elapsed(player, current_time)
+    if elapsed is None or elapsed < _PLAYER_DEATH_HURT_HOLD_MS:
+        return None
+    if elapsed < _PLAYER_DEATH_COLLAPSE_END_MS:
+        return 0
+    return 1
+
+
+def record_familiar_hit_feedback(game_state, started_at):
+    hit_events = [
+        event
+        for event in game_state.events
+        if (
+            event.type is GameEventType.HIT
+            and event.target == "familiar"
+            and event.amount
+        )
+    ]
+    if not hit_events:
+        return
+
+    player = game_state.player
+    player.summoner_familiar_hit_animation_started_at = started_at
+    player.summoner_familiar_hit_damage = sum(
+        event.amount for event in hit_events
+    )
+    player.summoner_familiar_hit_origin = next(
+        (
+            event.origin
+            for event in reversed(hit_events)
+            if event.origin is not None
+        ),
+        None,
+    )
+    player.summoner_familiar_hit_position = next(
+        (
+            event.destination
+            for event in reversed(hit_events)
+            if event.destination is not None
+        ),
+        None,
+    )
+
+
+def _familiar_hit_feedback_active(player, current_time):
+    elapsed = (
+        current_time
+        - player.summoner_familiar_hit_animation_started_at
+    )
+    return (
+        player.summoner_familiar_hit_animation_started_at >= 0
+        and 0 <= elapsed < _FAMILIAR_HIT_FEEDBACK_DURATION_MS
+    )
+
+
+def _familiar_hit_is_heavy(player):
+    return player.summoner_familiar_hit_damage >= max(
+        2,
+        player.summoner_familiar_max_health * 0.25,
+    )
+
+
+def _familiar_hit_direction(player, familiar_column, familiar_row):
+    origin = player.summoner_familiar_hit_origin
+    if origin is None:
+        return (0.0, 1.0)
+
+    direction_x = familiar_column - origin[0]
+    direction_y = familiar_row - origin[1]
+    direction_length = max(
+        1,
+        math.hypot(direction_x, direction_y),
+    )
+    return (
+        direction_x / direction_length,
+        direction_y / direction_length,
+    )
+
+
+def _draw_familiar_hit_feedback(
+    surface,
+    sprite,
+    position,
+    player,
+    familiar_column,
+    familiar_row,
+    current_time,
+    damage_font,
+):
+    if not _familiar_hit_feedback_active(player, current_time):
+        if sprite is not None:
+            surface.blit(sprite, position)
+        return
+
+    elapsed = (
+        current_time
+        - player.summoner_familiar_hit_animation_started_at
+    )
+    direction_x, direction_y = _familiar_hit_direction(
+        player,
+        familiar_column,
+        familiar_row,
+    )
+    recoil_progress = min(
+        1,
+        elapsed / _FAMILIAR_HIT_REACTION_DURATION_MS,
+    )
+    recoil = math.sin(math.pi * recoil_progress)
+    recoil_distance = 6 if _familiar_hit_is_heavy(player) else 4
+    sprite_position = (
+        position[0] + round(direction_x * recoil_distance * recoil),
+        position[1] + round(direction_y * recoil_distance * recoil),
+    )
+
+    if sprite is not None:
+        surface.blit(sprite, sprite_position)
+        if elapsed < _FAMILIAR_HIT_REACTION_DURATION_MS:
+            flash = sprite.copy()
+            flash.fill(
+                (164, 226, 255, 0),
+                special_flags=pygame.BLEND_RGBA_ADD,
+            )
+            flash.set_alpha(round(225 * (1 - recoil_progress)))
+            surface.blit(flash, sprite_position)
+
+    center_x = position[0] + ACT_THREE_TILE_SIZE // 2
+    center_y = position[1] + ACT_THREE_TILE_SIZE // 2
+    particle_visibility = max(0, 1 - recoil_progress)
+    particle_count = 9 if _familiar_hit_is_heavy(player) else 6
+    particle_distance = 8 + recoil_progress * 18
+    base_angle = math.atan2(direction_y, direction_x) + math.pi
+    for particle_index in range(particle_count):
+        spread = (
+            particle_index - (particle_count - 1) / 2
+        ) * 0.28
+        angle = base_angle + spread
+        particle_radius = 2 if particle_index % 3 == 0 else 1
+        particle_surface = pygame.Surface(
+            (particle_radius * 2 + 2, particle_radius * 2 + 2),
+            pygame.SRCALPHA,
+        )
+        pygame.draw.circle(
+            particle_surface,
+            (91, 211, 255, round(245 * particle_visibility)),
+            (particle_radius + 1, particle_radius + 1),
+            particle_radius,
+        )
+        particle_position = (
+            round(center_x + math.cos(angle) * particle_distance),
+            round(center_y + math.sin(angle) * particle_distance),
+        )
+        surface.blit(
+            particle_surface,
+            (
+                particle_position[0] - particle_radius - 1,
+                particle_position[1] - particle_radius - 1,
+            ),
+        )
+
+    number_progress = min(
+        1,
+        elapsed / _FAMILIAR_HIT_FEEDBACK_DURATION_MS,
+    )
+    number_alpha = round(
+        255 * min(1, (1 - number_progress) * 2.6)
+    )
+    number_text = f"-{player.summoner_familiar_hit_damage}"
+    number_color = (
+        (195, 242, 255)
+        if _familiar_hit_is_heavy(player)
+        else (103, 218, 255)
+    )
+    number_surface = damage_font.render(
+        number_text,
+        True,
+        number_color,
+    )
+    number_surface.set_alpha(number_alpha)
+    number_position = number_surface.get_rect(
+        center=(
+            center_x,
+            position[1] - 7 - round(number_progress * 13),
+        )
+    )
+    shadow = damage_font.render(number_text, True, (5, 18, 27))
+    shadow.set_alpha(number_alpha)
+    surface.blit(shadow, number_position.move(1, 2))
+    surface.blit(number_surface, number_position)
+
+
+def _player_hit_feedback_active(player, current_time):
+    elapsed = current_time - player.hit_animation_started_at
+    return (
+        player.hit_animation_started_at >= 0
+        and 0 <= elapsed < _PLAYER_HIT_FEEDBACK_DURATION_MS
+    )
+
+
+def _player_hurt_sprite_active(player, current_time):
+    elapsed = current_time - player.hit_animation_started_at
+    return (
+        player.hit_animation_started_at >= 0
+        and 0 <= elapsed < _PLAYER_HIT_SPRITE_DURATION_MS
+    )
+
+
+def _player_hit_is_heavy(player):
+    return (
+        player.health <= 0
+        or player.hit_damage >= max(2, player.max_health * 0.25)
+    )
+
+
+def _player_hit_direction(player, player_column, player_row):
+    origin = player.hit_origin
+    if origin is None:
+        return (0.0, 1.0)
+
+    direction_x = player_column - origin[0]
+    direction_y = player_row - origin[1]
+    direction_length = max(
+        1,
+        math.hypot(direction_x, direction_y),
+    )
+    return (
+        direction_x / direction_length,
+        direction_y / direction_length,
+    )
+
+
+def _player_hit_offset(
+    player,
+    player_column,
+    player_row,
+    current_time,
+):
+    elapsed = current_time - player.hit_animation_started_at
+    if not 0 <= elapsed < _PLAYER_HIT_REACTION_DURATION_MS:
+        return (0, 0)
+
+    direction_x, direction_y = _player_hit_direction(
+        player,
+        player_column,
+        player_row,
+    )
+    progress = elapsed / _PLAYER_HIT_REACTION_DURATION_MS
+    recoil = math.sin(math.pi * progress)
+    distance = 6 if _player_hit_is_heavy(player) else 4
+    return (
+        round(direction_x * distance * recoil),
+        round(direction_y * distance * recoil),
+    )
+
+
+def _player_hit_camera_offset(player, current_time):
+    elapsed = current_time - player.hit_animation_started_at
+    if not 0 <= elapsed < _PLAYER_HIT_CAMERA_SHAKE_DURATION_MS:
+        return (0, 0)
+
+    progress = elapsed / _PLAYER_HIT_CAMERA_SHAKE_DURATION_MS
+    strength = 4 if _player_hit_is_heavy(player) else 2
+    decay = 1 - progress
+    return (
+        round(math.sin(elapsed * 0.19) * strength * decay),
+        round(math.cos(elapsed * 0.27) * strength * 0.7 * decay),
+    )
+
+
+def _draw_player_hit_feedback(
+    surface,
+    sprite,
+    position,
+    player,
+    player_column,
+    player_row,
+    current_time,
+    damage_font,
+):
+    if not _player_hit_feedback_active(player, current_time):
+        surface.blit(sprite, position)
+        return
+
+    elapsed = current_time - player.hit_animation_started_at
+    offset_x, offset_y = _player_hit_offset(
+        player,
+        player_column,
+        player_row,
+        current_time,
+    )
+    sprite_position = (
+        position[0] + offset_x,
+        position[1] + offset_y,
+    )
+    surface.blit(sprite, sprite_position)
+
+    if elapsed < _PLAYER_HIT_REACTION_DURATION_MS:
+        reaction_progress = (
+            elapsed / _PLAYER_HIT_REACTION_DURATION_MS
+        )
+        flash = sprite.copy()
+        flash.fill(
+            (255, 205, 185, 0),
+            special_flags=pygame.BLEND_RGBA_ADD,
+        )
+        flash.set_alpha(round(225 * (1 - reaction_progress)))
+        surface.blit(flash, sprite_position)
+
+        center_x = position[0] + ACT_THREE_TILE_SIZE // 2
+        center_y = position[1] + ACT_THREE_TILE_SIZE // 2
+        direction_x, direction_y = _player_hit_direction(
+            player,
+            player_column,
+            player_row,
+        )
+        base_angle = math.atan2(direction_y, direction_x) + math.pi
+        particle_count = 9 if _player_hit_is_heavy(player) else 6
+        particle_distance = 8 + reaction_progress * 18
+        particle_alpha = round(245 * (1 - reaction_progress))
+        for particle_index in range(particle_count):
+            spread = (
+                particle_index - (particle_count - 1) / 2
+            ) * 0.24
+            angle = base_angle + spread
+            particle_position = (
+                round(center_x + math.cos(angle) * particle_distance),
+                round(center_y + math.sin(angle) * particle_distance),
+            )
+            particle_radius = 2 if particle_index % 3 == 0 else 1
+            particle_surface = pygame.Surface(
+                (particle_radius * 2 + 2, particle_radius * 2 + 2),
+                pygame.SRCALPHA,
+            )
+            pygame.draw.circle(
+                particle_surface,
+                (255, 112, 82, particle_alpha),
+                (particle_radius + 1, particle_radius + 1),
+                particle_radius,
+            )
+            surface.blit(
+                particle_surface,
+                (
+                    particle_position[0] - particle_radius - 1,
+                    particle_position[1] - particle_radius - 1,
+                ),
+            )
+
+    number_progress = min(
+        1,
+        elapsed / _PLAYER_HIT_FEEDBACK_DURATION_MS,
+    )
+    number_alpha = round(
+        255 * min(1, (1 - number_progress) * 2.6)
+    )
+    number_text = f"-{player.hit_damage}"
+    number_color = (
+        (255, 72, 52)
+        if _player_hit_is_heavy(player)
+        else (255, 126, 105)
+    )
+    number_surface = damage_font.render(
+        number_text,
+        True,
+        number_color,
+    )
+    number_surface.set_alpha(number_alpha)
+    number_position = number_surface.get_rect(
+        center=(
+            position[0] + ACT_THREE_TILE_SIZE // 2,
+            position[1] - 7 - round(number_progress * 13),
+        )
+    )
+    shadow = damage_font.render(number_text, True, (18, 7, 8))
+    shadow.set_alpha(number_alpha)
+    surface.blit(shadow, number_position.move(1, 2))
+    surface.blit(number_surface, number_position)
+
+
+def _draw_player_hit_vignette(surface, player, current_time):
+    elapsed = current_time - player.hit_animation_started_at
+    if not 0 <= elapsed < _PLAYER_HIT_VIGNETTE_DURATION_MS:
+        return
+
+    progress = elapsed / _PLAYER_HIT_VIGNETTE_DURATION_MS
+    visibility = (1 - progress) ** 2
+    base_alpha = round(
+        (105 if _player_hit_is_heavy(player) else 72)
+        * visibility
+    )
+    width, height = surface.get_size()
+    vignette = pygame.Surface((width, height), pygame.SRCALPHA)
+    for inset, alpha_scale in (
+        (0, 1.0),
+        (7, 0.72),
+        (15, 0.42),
+        (25, 0.18),
+    ):
+        pygame.draw.rect(
+            vignette,
+            (116, 8, 12, round(base_alpha * alpha_scale)),
+            (inset, inset, width - inset * 2, height - inset * 2),
+            width=8,
+        )
+    surface.blit(vignette, (0, 0))
+
+
+def _enemy_hit_feedback_active(enemy, current_time):
+    elapsed = current_time - enemy.hit_animation_started_at
+    return (
+        enemy.hit_animation_started_at >= 0
+        and 0 <= elapsed < _ENEMY_HIT_FEEDBACK_DURATION_MS
+    )
+
+
+def _enemy_hit_offset(enemy, elapsed):
+    if elapsed >= _ENEMY_HIT_REACTION_DURATION_MS:
+        return (0, 0)
+
+    origin = enemy.hit_origin
+    direction_x = 0
+    direction_y = -1
+    if origin is not None:
+        direction_x = enemy.column - origin[0]
+        direction_y = enemy.row - origin[1]
+        direction_length = max(
+            1,
+            math.hypot(direction_x, direction_y),
+        )
+        direction_x /= direction_length
+        direction_y /= direction_length
+
+    progress = elapsed / _ENEMY_HIT_REACTION_DURATION_MS
+    recoil = math.sin(math.pi * progress)
+    distance = 7 if enemy.hit_critical else 4
+    return (
+        round(direction_x * distance * recoil),
+        round(direction_y * distance * recoil),
+    )
+
+
+def _draw_enemy_hit_feedback(
+    surface,
+    sprite,
+    position,
+    enemy,
+    current_time,
+    damage_font,
+):
+    if not _enemy_hit_feedback_active(enemy, current_time):
+        surface.blit(sprite, position)
+        return
+
+    elapsed = current_time - enemy.hit_animation_started_at
+    offset_x, offset_y = _enemy_hit_offset(enemy, elapsed)
+    sprite_position = (
+        position[0] + offset_x,
+        position[1] + offset_y,
+    )
+    surface.blit(sprite, sprite_position)
+
+    if elapsed < _ENEMY_HIT_REACTION_DURATION_MS:
+        flash_progress = (
+            elapsed / _ENEMY_HIT_REACTION_DURATION_MS
+        )
+        flash_alpha = round(220 * (1 - flash_progress))
+        flash = sprite.copy()
+        flash.fill(
+            (255, 238, 205, 0),
+            special_flags=pygame.BLEND_RGBA_ADD,
+        )
+        flash.set_alpha(flash_alpha)
+        surface.blit(flash, sprite_position)
+
+    center_x = position[0] + ACT_THREE_TILE_SIZE // 2
+    center_y = position[1] + ACT_THREE_TILE_SIZE // 2
+    particle_progress = min(
+        1,
+        elapsed / _ENEMY_HIT_REACTION_DURATION_MS,
+    )
+    particle_visibility = max(0, 1 - particle_progress)
+    particle_color = (
+        (255, 194, 72)
+        if enemy.hit_critical
+        else (238, 224, 205)
+    )
+    particle_count = 8 if enemy.hit_critical else 6
+    particle_distance = 10 + particle_progress * (
+        20 if enemy.hit_critical else 14
+    )
+
+    for particle_index in range(particle_count):
+        angle = (
+            particle_index * math.tau / particle_count
+            + (enemy.column * 0.71 + enemy.row * 1.13)
+        )
+        particle_position = (
+            round(center_x + math.cos(angle) * particle_distance),
+            round(center_y + math.sin(angle) * particle_distance),
+        )
+        particle_radius = 2 if particle_index % 3 == 0 else 1
+        particle_surface = pygame.Surface(
+            (particle_radius * 2 + 2, particle_radius * 2 + 2),
+            pygame.SRCALPHA,
+        )
+        pygame.draw.circle(
+            particle_surface,
+            (*particle_color, round(255 * particle_visibility)),
+            (particle_radius + 1, particle_radius + 1),
+            particle_radius,
+        )
+        surface.blit(
+            particle_surface,
+            (
+                particle_position[0] - particle_radius - 1,
+                particle_position[1] - particle_radius - 1,
+            ),
+        )
+
+    number_progress = min(
+        1,
+        elapsed / _ENEMY_HIT_FEEDBACK_DURATION_MS,
+    )
+    number_alpha = round(
+        255 * min(1, (1 - number_progress) * 2.6)
+    )
+    number_color = (
+        (255, 196, 64)
+        if enemy.hit_critical
+        else (245, 235, 220)
+    )
+    number_text = (
+        f"{enemy.hit_damage}!"
+        if enemy.hit_critical
+        else str(enemy.hit_damage)
+    )
+    number_surface = damage_font.render(
+        number_text,
+        True,
+        number_color,
+    )
+    number_surface.set_alpha(number_alpha)
+    number_position = number_surface.get_rect(
+        center=(
+            center_x,
+            position[1] - 7 - round(number_progress * 13),
+        )
+    )
+    shadow = damage_font.render(number_text, True, (18, 10, 12))
+    shadow.set_alpha(number_alpha)
+    surface.blit(shadow, number_position.move(1, 2))
+    surface.blit(number_surface, number_position)
 
 def _draw_attack_impact_flash(
     surface,

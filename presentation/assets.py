@@ -926,6 +926,107 @@ def load_act_three_gameplay_assets():
             )
         )
 
+    assets["player_berserker_hurt"] = (
+        _load_pixel_scaled_image(
+            act_directory
+            / "player"
+            / "berserker"
+            / "hurt"
+            / "hurt_00.png",
+            (tile_size, tile_size),
+        )
+    )
+
+    berserker_death_directory = (
+        act_directory / "player" / "berserker" / "death"
+    )
+    for frame_index in range(2):
+        assets[f"player_berserker_death_{frame_index}"] = (
+            _load_pixel_scaled_image(
+                berserker_death_directory
+                / f"death_{frame_index:02d}.png",
+                (tile_size, tile_size),
+            )
+        )
+
+    assets["player_paladin_hurt"] = (
+        _load_pixel_scaled_image(
+            act_directory
+            / "player"
+            / "paladin"
+            / "hurt"
+            / "hurt_00.png",
+            (tile_size, tile_size),
+        )
+    )
+
+    assets["player_assassin_hurt"] = (
+        _load_pixel_scaled_image(
+            act_directory
+            / "player"
+            / "assassin"
+            / "hurt"
+            / "hurt_00.png",
+            (tile_size, tile_size),
+        )
+    )
+
+    assets["player_archer_hurt"] = (
+        _load_pixel_scaled_image(
+            act_directory
+            / "player"
+            / "archer"
+            / "hurt"
+            / "hurt_00.png",
+            (tile_size, tile_size),
+        )
+    )
+
+    assets["player_warlock_hurt"] = (
+        _load_pixel_scaled_image(
+            act_directory
+            / "player"
+            / "warlock"
+            / "hurt"
+            / "hurt_00.png",
+            (tile_size, tile_size),
+        )
+    )
+
+    assets["player_warlock_demon_hurt"] = (
+        _load_pixel_scaled_image(
+            act_directory
+            / "player"
+            / "warlock"
+            / "warlock_demon_form"
+            / "hurt"
+            / "hurt_00.png",
+            (tile_size, tile_size),
+        )
+    )
+
+    assets["player_summoner_hurt"] = (
+        _load_pixel_scaled_image(
+            act_directory
+            / "player"
+            / "summoner"
+            / "hurt"
+            / "hurt_00.png",
+            (tile_size, tile_size),
+        )
+    )
+
+    assets["player_summoner_no_familiar_hurt"] = (
+        _load_pixel_scaled_image(
+            act_directory
+            / "player"
+            / "summoner"
+            / "hurt_no_familiar"
+            / "hurt_00.png",
+            (tile_size, tile_size),
+        )
+    )
+
     paladin_walk_directory = (
         act_directory / "player" / "paladin" / "walk"
     )
@@ -1135,6 +1236,27 @@ def load_act_three_gameplay_assets():
             ] = _load_pixel_scaled_image(
                 enemy_idle_directory
                 / f"idle_{frame_index:02d}.png",
+                (tile_size, tile_size),
+            )
+
+    for enemy_type in (
+        "archer",
+        "brute",
+        "priest",
+        "sentinel",
+    ):
+        enemy_death_directory = (
+            act_directory
+            / "enemies"
+            / enemy_type
+            / "death"
+        )
+        for frame_index in range(2):
+            assets[
+                f"enemy_{enemy_type}_death_{frame_index}"
+            ] = _load_pixel_scaled_image(
+                enemy_death_directory
+                / f"death_{frame_index:02d}.png",
                 (tile_size, tile_size),
             )
 

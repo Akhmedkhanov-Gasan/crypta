@@ -1,10 +1,10 @@
 {
-    "activeFile": "act_3/environment_v1/corridor_straight_01.tmx",
+    "activeFile": "act_3/environment_v1/room_spawn_01.tmx",
     "expandedProjectPaths": [
-        "act_3/environment_v1",
-        "act_3",
         ".",
-        "act_3/environment_v2"
+        "act_3/environment_v2",
+        "act_3",
+        "act_3/environment_v1"
     ],
     "fileStates": {
         "act_3/environment_v1/act_3_environment_v1.tsx": {
@@ -33,11 +33,11 @@
                 8,
                 9
             ],
-            "scale": 1,
-            "selectedLayer": 6,
+            "scale": 1.5,
+            "selectedLayer": 1,
             "viewCenter": {
-                "x": 731.5,
-                "y": 214
+                "x": 293.6666666666667,
+                "y": 284.6666666666667
             }
         },
         "act_3/environment_v1/test_room_01.tmx": {
@@ -73,13 +73,15 @@
     "map.width": 15,
     "openFiles": [
         "act_3/environment_v1/room_spawn_01.tmx",
-        "act_3/environment_v1/corridor_straight_01.tmx"
+        "act_3/environment_v1/corridor_straight_01.tmx",
+        "act_3/environment_v1/test_room_01.tmx"
     ],
     "project": "act3.tiled-project",
     "recentFiles": [
-        "act_3/environment_v1/act_3_environment_v1.tsx",
-        "act_3/environment_v1/room_spawn_01.tmx",
+        "act_3/environment_v1/test_room_01.tmx",
         "act_3/environment_v1/corridor_straight_01.tmx",
+        "act_3/environment_v1/room_spawn_01.tmx",
+        "act_3/environment_v1/act_3_environment_v1.tsx",
         "act_3/environment_v2/act_3_environment.tmx"
     ]
 }

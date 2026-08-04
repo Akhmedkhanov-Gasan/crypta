@@ -141,6 +141,16 @@ from acts.act_three.presentation.class_effects import (
 from acts.act_three.presentation.combat_effects import (
     _draw_archer_projectile,
     _draw_attack_impact_flash,
+    _draw_enemy_hit_feedback,
+    _draw_familiar_hit_feedback,
+    _draw_player_hit_feedback,
+    _draw_player_hit_vignette,
+    _enemy_hit_feedback_active,
+    _familiar_hit_feedback_active,
+    _player_death_elapsed,
+    _player_death_frame,
+    _player_hit_camera_offset,
+    _player_hurt_sprite_active,
     _draw_warlock_orb,
 )
 from acts.act_three.presentation.lighting import (
@@ -165,6 +175,7 @@ from acts.act_three.presentation.status_effects import (
 def _draw_act_three_world(
     screen,
     game_state,
+    fonts,
     assets,
     current_time,
 ):
@@ -198,6 +209,12 @@ def _draw_act_three_world(
                 start_camera[1]
                 + (camera_y - start_camera[1]) * transition_progress
             )
+    hit_camera_x, hit_camera_y = _player_hit_camera_offset(
+        game_state.player,
+        current_time,
+    )
+    camera_x += hit_camera_x
+    camera_y += hit_camera_y
     exchange_player_origin = (
         game_state.player.warlock_soul_exchange_player_origin
     )
@@ -431,6 +448,26 @@ def _draw_act_three_world(
             and (enemy.column, enemy.row) in floor.visible_cells
         )
     ]
+    rendered_enemies = [
+        enemy
+        for enemy in floor.enemies
+        if (
+            (enemy.column, enemy.row) in floor.visible_cells
+            and (
+                enemy.health > 0
+                or (
+                    enemy.type
+                    in ("archer", "brute", "priest", "sentinel")
+                    and enemy.behavior_state
+                    is EnemyBehaviorState.DEAD
+                )
+                or _enemy_hit_feedback_active(
+                    enemy,
+                    current_time,
+                )
+            )
+        )
+    ]
     healing_aura_seeds = {}
 
     for enemy in living_enemies:
@@ -571,7 +608,7 @@ def _draw_act_three_world(
         )
 
     for enemy in sorted(
-        living_enemies,
+        rendered_enemies,
         key=lambda living_enemy: living_enemy.row,
     ):
         enemy_position = _view_position(
@@ -620,7 +657,7 @@ def _draw_act_three_world(
             current_time,
             floor.visual_seed,
         )
-        if enemy.curse_turns > 0:
+        if enemy.health > 0 and enemy.curse_turns > 0:
             _draw_warlock_curse_aura(
                 view_surface,
                 enemy_position[0],
@@ -645,15 +682,23 @@ def _draw_act_three_world(
                     f"exchange:enemy:{enemy.name}"
                 ),
             )
-        view_surface.blit(enemy_sprite, enemy_position)
-        _draw_sentinel_vulnerable_side(
+        _draw_enemy_hit_feedback(
             view_surface,
+            enemy_sprite,
+            enemy_position,
             enemy,
-            enemy_position[0],
-            enemy_position[1],
+            current_time,
+            fonts["sidebar_numbers"],
         )
+        if enemy.health > 0:
+            _draw_sentinel_vulnerable_side(
+                view_surface,
+                enemy,
+                enemy_position[0],
+                enemy_position[1],
+            )
 
-        if enemy.is_aggro:
+        if enemy.health > 0 and enemy.is_aggro:
             pygame.draw.rect(
                 view_surface,
                 DANGER_BORDER_COLOR,
@@ -667,14 +712,15 @@ def _draw_act_three_world(
                 border_radius=5,
             )
 
-        _draw_health_bar(
-            view_surface,
-            enemy_position[0],
-            enemy_position[1],
-            enemy.health,
-            enemy.max_health,
-            HEALTH_BAR_COLOR,
-        )
+        if enemy.health > 0:
+            _draw_health_bar(
+                view_surface,
+                enemy_position[0],
+                enemy_position[1],
+                enemy.health,
+                enemy.max_health,
+                HEALTH_BAR_COLOR,
+            )
 
     player_subclass = game_state.player.subclass
 
@@ -751,7 +797,54 @@ def _draw_act_three_world(
         <= shield_charge_elapsed
         < PALADIN_SHIELD_CHARGE_TRAVEL_MS
     )
-    if shield_charge_active:
+    player_hurt_sprite_active = _player_hurt_sprite_active(
+        game_state.player,
+        current_time,
+    )
+    player_death_elapsed = _player_death_elapsed(
+        game_state.player,
+        current_time,
+    )
+    if (
+        player_subclass == "berserker"
+        and player_death_elapsed is not None
+    ):
+        player_death_frame = _player_death_frame(
+            game_state.player,
+            current_time,
+        )
+        if player_death_frame is None:
+            player_sprite = assets["player_berserker_hurt"]
+        else:
+            player_sprite = assets[
+                f"player_berserker_death_{player_death_frame}"
+            ]
+    elif player_hurt_sprite_active:
+        if player_subclass == "berserker":
+            player_sprite = assets["player_berserker_hurt"]
+        elif player_subclass == "paladin":
+            player_sprite = assets["player_paladin_hurt"]
+        elif player_subclass == "assassin":
+            player_sprite = assets["player_assassin_hurt"]
+        elif player_subclass == "archer":
+            player_sprite = assets["player_archer_hurt"]
+        elif player_subclass == "warlock":
+            if game_state.player.warlock_demon_form_active:
+                player_sprite = assets["player_warlock_demon_hurt"]
+            else:
+                player_sprite = assets["player_warlock_hurt"]
+        elif player_subclass == "summoner":
+            if game_state.player.summoner_familiar_active:
+                player_sprite = assets[
+                    "player_summoner_no_familiar_hurt"
+                ]
+            else:
+                player_sprite = assets["player_summoner_hurt"]
+        else:
+            player_sprite = assets[
+                f"player_{player_subclass}_idle_0"
+            ]
+    elif shield_charge_active:
         player_sprite = assets[
             "player_paladin_shield_charge"
         ]
@@ -1262,7 +1355,16 @@ def _draw_act_three_world(
                 ghost_position,
             )
 
-    view_surface.blit(player_sprite, player_position)
+    _draw_player_hit_feedback(
+        view_surface,
+        player_sprite,
+        player_position,
+        game_state.player,
+        floor.player_column,
+        floor.player_row,
+        current_time,
+        fonts["sidebar_numbers"],
+    )
 
     familiar_position = game_state.player.summoner_familiar_position
     if (
@@ -1343,9 +1445,15 @@ def _draw_act_three_world(
                     * move_progress
                 ),
             )
-        view_surface.blit(
+        _draw_familiar_hit_feedback(
+            view_surface,
             familiar_sprite,
             familiar_render_position,
+            game_state.player,
+            familiar_position[0],
+            familiar_position[1],
+            current_time,
+            fonts["sidebar_numbers"],
         )
         if 0 <= familiar_attack_elapsed < _ATTACK_FRAME_DURATION_MS:
             _draw_summoner_familiar_attack_glow(
@@ -1377,6 +1485,33 @@ def _draw_act_three_world(
                 familiar_render_position[1],
                 current_time + 180,
             )
+    elif (
+        player_subclass == "summoner"
+        and _familiar_hit_feedback_active(
+            game_state.player,
+            current_time,
+        )
+        and game_state.player.summoner_familiar_hit_position is not None
+    ):
+        defeated_familiar_position = (
+            game_state.player.summoner_familiar_hit_position
+        )
+        familiar_render_position = _view_position(
+            defeated_familiar_position[0],
+            defeated_familiar_position[1],
+            camera_x,
+            camera_y,
+        )
+        _draw_familiar_hit_feedback(
+            view_surface,
+            None,
+            familiar_render_position,
+            game_state.player,
+            defeated_familiar_position[0],
+            defeated_familiar_position[1],
+            current_time,
+            fonts["sidebar_numbers"],
+        )
 
     active_barrage_shots = []
     for barrage_shot in game_state.player.archer_barrage_shots:
@@ -1875,6 +2010,11 @@ def _draw_act_three_world(
         floor,
         camera_x,
         camera_y,
+    )
+    _draw_player_hit_vignette(
+        view_surface,
+        game_state.player,
+        current_time,
     )
 
     screen.blit(
