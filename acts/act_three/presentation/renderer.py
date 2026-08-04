@@ -1,6 +1,11 @@
 
 import pygame
 
+from acts.act_three.presentation.combat_effects import (
+    _PLAYER_DEATH_MESSAGE_FADE_MS,
+    _PLAYER_DEATH_MESSAGE_START_MS,
+    _player_death_elapsed,
+)
 from acts.act_three.presentation.altar_menu import (
     draw_upgrade_altar_menu,
 )
@@ -38,6 +43,112 @@ _TOP_VOID_CORNER_X_OFFSETS = {
 _TOP_VOID_DOUBLE_CORNER_CROP_WIDTH = 24
 
 
+def _draw_defeat_sequence(
+    screen,
+    game_state,
+    fonts,
+    current_time,
+):
+    elapsed = _player_death_elapsed(
+        game_state.player,
+        current_time,
+    )
+    if elapsed is None:
+        return False
+
+    fade_progress = min(1, max(0, (elapsed - 120) / 1080))
+    fade_progress = (
+        fade_progress
+        * fade_progress
+        * (3 - 2 * fade_progress)
+    )
+    view_rectangle = pygame.Rect(
+        ACT_THREE_VIEW_X,
+        ACT_THREE_VIEW_Y,
+        ACT_THREE_VIEW_WIDTH,
+        ACT_THREE_VIEW_HEIGHT,
+    )
+    view_copy = screen.subsurface(view_rectangle).copy()
+    grayscale = pygame.transform.grayscale(view_copy)
+    grayscale.set_alpha(round(205 * fade_progress))
+    screen.blit(grayscale, view_rectangle)
+
+    defeat_overlay = pygame.Surface(
+        (ACT_THREE_VIEW_WIDTH, ACT_THREE_VIEW_HEIGHT),
+        pygame.SRCALPHA,
+    )
+    defeat_overlay.fill((3, 4, 7, round(70 * fade_progress)))
+    vignette_alpha = round(95 * fade_progress)
+    for inset, alpha_scale in (
+        (0, 1.0),
+        (8, 0.68),
+        (18, 0.34),
+    ):
+        pygame.draw.rect(
+            defeat_overlay,
+            (0, 0, 0, round(vignette_alpha * alpha_scale)),
+            (
+                inset,
+                inset,
+                ACT_THREE_VIEW_WIDTH - inset * 2,
+                ACT_THREE_VIEW_HEIGHT - inset * 2,
+            ),
+            width=10,
+        )
+    screen.blit(
+        defeat_overlay,
+        (ACT_THREE_VIEW_X, ACT_THREE_VIEW_Y),
+    )
+
+    message_progress = min(
+        1,
+        max(
+            0,
+            (elapsed - _PLAYER_DEATH_MESSAGE_START_MS)
+            / _PLAYER_DEATH_MESSAGE_FADE_MS,
+        ),
+    )
+    if message_progress <= 0:
+        return True
+
+    message_progress = message_progress * message_progress
+    message_alpha = round(255 * message_progress)
+    center_x = ACT_THREE_VIEW_X + ACT_THREE_VIEW_WIDTH // 2
+    title_y = ACT_THREE_VIEW_Y + 82
+
+    title_surface = fonts["title"].render(
+        "DEFEAT",
+        True,
+        (205, 207, 213),
+    )
+    title_surface.set_alpha(message_alpha)
+    title_rectangle = title_surface.get_rect(
+        center=(center_x, title_y),
+    )
+    title_shadow = fonts["title"].render(
+        "DEFEAT",
+        True,
+        (12, 8, 10),
+    )
+    title_shadow.set_alpha(message_alpha)
+    screen.blit(title_shadow, title_rectangle.move(2, 3))
+    screen.blit(title_surface, title_rectangle)
+
+    restart_surface = fonts["sidebar_numbers"].render(
+        "PRESS R TO RESTART",
+        True,
+        (154, 157, 165),
+    )
+    restart_surface.set_alpha(message_alpha)
+    screen.blit(
+        restart_surface,
+        restart_surface.get_rect(
+            center=(center_x, title_y + 52),
+        ),
+    )
+    return True
+
+
 def draw_act_three_gameplay(
     screen,
     game_state,
@@ -60,6 +171,7 @@ def draw_act_three_gameplay(
     _draw_act_three_world(
         screen,
         game_state,
+        fonts,
         assets,
         current_time,
     )
@@ -76,6 +188,15 @@ def draw_act_three_gameplay(
             fonts,
             assets,
         )
+
+    if game_state.player.health <= 0:
+        if _draw_defeat_sequence(
+            screen,
+            game_state,
+            fonts,
+            current_time,
+        ):
+            return
 
     if game_state.player.health <= 0 or game_state.game_won:
         overlay = pygame.Surface(

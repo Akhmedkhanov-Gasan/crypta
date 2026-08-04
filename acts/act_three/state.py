@@ -92,6 +92,10 @@ class ActThreePlayerState:
     summoner_familiar_movement_origin: tuple[int, int] | None = None
     summoner_familiar_movement_started_at: int = 0
     summoner_familiar_attack_started_at: int = 0
+    summoner_familiar_hit_animation_started_at: int = -1
+    summoner_familiar_hit_damage: int = 0
+    summoner_familiar_hit_origin: tuple[int, int] | None = None
+    summoner_familiar_hit_position: tuple[int, int] | None = None
     familiar_turn_started_at: int = 0
     summoner_attack_target: tuple[int, int] | None = None
 
@@ -109,6 +113,10 @@ class ActThreePlayerState:
     ultimate_animation_active: bool = False
     movement_animation_started_at: int = 0
     attack_animation_started_at: int = 0
+    hit_animation_started_at: int = -1
+    hit_damage: int = 0
+    hit_origin: tuple[int, int] | None = None
+    death_animation_started_at: int = -1
 
 
 @dataclass

@@ -20,6 +20,13 @@ from acts.act_three.runtime import (
     create_act_three_debug_transition,
     create_oracle_debug_state,
 )
+from acts.act_three.presentation.combat_effects import (
+    record_enemy_death_feedback,
+    record_enemy_hit_feedback,
+    record_familiar_hit_feedback,
+    record_player_death_feedback,
+    record_player_hit_feedback,
+)
 from acts.turns import resolve_enemy_turn
 from bosses.oracle import resolve_oracle_hit_reaction
 from game.combat_log import add_log_message
@@ -893,6 +900,26 @@ def main():
                     advance_warlock_demon_form(game_state)
                     enemy_movement_started_at = (
                         pygame.time.get_ticks()
+                    )
+                    record_enemy_hit_feedback(
+                        game_state,
+                        enemy_movement_started_at,
+                    )
+                    record_enemy_death_feedback(
+                        game_state,
+                        enemy_movement_started_at,
+                    )
+                    record_player_hit_feedback(
+                        game_state,
+                        enemy_movement_started_at,
+                    )
+                    record_player_death_feedback(
+                        game_state,
+                        enemy_movement_started_at,
+                    )
+                    record_familiar_hit_feedback(
+                        game_state,
+                        enemy_movement_started_at,
                     )
                     for barrage_shot in (
                         game_state.player.archer_barrage_shots

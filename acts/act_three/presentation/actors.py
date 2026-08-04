@@ -20,6 +20,13 @@ _TOP_VOID_CORNER_X_OFFSETS = {
     "wall_corner_top_right": 18,
 }
 _TOP_VOID_DOUBLE_CORNER_CROP_WIDTH = 24
+_ENEMY_DEATH_IMPACT_HOLD_MS = 190
+_ENEMY_DEATH_COLLAPSE_END_MS = {
+    "archer": 720,
+    "brute": 850,
+    "priest": 780,
+    "sentinel": 900,
+}
 
 from acts.act_three.presentation.animation import (
     _idle_frame,
@@ -33,6 +40,25 @@ def _enemy_sprite(
     current_time,
     visual_seed,
 ):
+    if (
+        enemy.type in _ENEMY_DEATH_COLLAPSE_END_MS
+        and enemy.behavior_state is EnemyBehaviorState.DEAD
+    ):
+        if enemy.death_animation_started_at < 0:
+            return assets[f"enemy_{enemy.type}_death_1"]
+
+        death_elapsed = (
+            current_time - enemy.death_animation_started_at
+        )
+        if death_elapsed < _ENEMY_DEATH_IMPACT_HOLD_MS:
+            return assets[f"enemy_{enemy.type}_idle_0"]
+        if (
+            death_elapsed
+            < _ENEMY_DEATH_COLLAPSE_END_MS[enemy.type]
+        ):
+            return assets[f"enemy_{enemy.type}_death_0"]
+        return assets[f"enemy_{enemy.type}_death_1"]
+
     if (
         enemy.type in (
             "archer",

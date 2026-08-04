@@ -137,6 +137,11 @@ class EnemyState(AttributeMapping):
     curse_turns: int = 0
     movement_animation_started_at: int = 0
     attack_animation_started_at: int = 0
+    hit_animation_started_at: int = -1
+    hit_damage: int = 0
+    hit_critical: bool = False
+    hit_origin: tuple[int, int] | None = None
+    death_animation_started_at: int = -1
     movement_bounds: tuple[int, int, int, int] | None = None
     defeat_rewards_claimed: bool = False
 
