@@ -960,6 +960,30 @@ def load_act_three_gameplay_assets():
         )
     )
 
+    paladin_death_directory = (
+        act_directory / "player" / "paladin" / "death"
+    )
+    for frame_index in range(2):
+        assets[f"player_paladin_death_{frame_index}"] = (
+            _load_pixel_scaled_image(
+                paladin_death_directory
+                / f"death_{frame_index:02d}.png",
+                (tile_size, tile_size),
+            )
+        )
+
+    old_man_appearance_directory = (
+        act_directory / "npcs" / "old_man" / "appearance"
+    )
+    for frame_index in range(6):
+        assets[f"old_man_appearance_{frame_index}"] = (
+            _load_pixel_scaled_image(
+                old_man_appearance_directory
+                / f"appearance_{frame_index:02d}.png",
+                (tile_size, tile_size),
+            )
+        )
+
     assets["player_assassin_hurt"] = (
         _load_pixel_scaled_image(
             act_directory
@@ -970,6 +994,18 @@ def load_act_three_gameplay_assets():
             (tile_size, tile_size),
         )
     )
+
+    assassin_death_directory = (
+        act_directory / "player" / "assassin" / "death"
+    )
+    for frame_index in range(2):
+        assets[f"player_assassin_death_{frame_index}"] = (
+            _load_pixel_scaled_image(
+                assassin_death_directory
+                / f"death_{frame_index:02d}.png",
+                (tile_size, tile_size),
+            )
+        )
 
     assets["player_archer_hurt"] = (
         _load_pixel_scaled_image(
@@ -982,6 +1018,18 @@ def load_act_three_gameplay_assets():
         )
     )
 
+    archer_death_directory = (
+        act_directory / "player" / "archer" / "death"
+    )
+    for frame_index in range(2):
+        assets[f"player_archer_death_{frame_index}"] = (
+            _load_pixel_scaled_image(
+                archer_death_directory
+                / f"death_{frame_index:02d}.png",
+                (tile_size, tile_size),
+            )
+        )
+
     assets["player_warlock_hurt"] = (
         _load_pixel_scaled_image(
             act_directory
@@ -992,6 +1040,18 @@ def load_act_three_gameplay_assets():
             (tile_size, tile_size),
         )
     )
+
+    warlock_death_directory = (
+        act_directory / "player" / "warlock" / "death"
+    )
+    for frame_index in range(2):
+        assets[f"player_warlock_death_{frame_index}"] = (
+            _load_pixel_scaled_image(
+                warlock_death_directory
+                / f"death_{frame_index:02d}.png",
+                (tile_size, tile_size),
+            )
+        )
 
     assets["player_warlock_demon_hurt"] = (
         _load_pixel_scaled_image(
@@ -1026,6 +1086,18 @@ def load_act_three_gameplay_assets():
             (tile_size, tile_size),
         )
     )
+
+    summoner_death_directory = (
+        act_directory / "player" / "summoner" / "death"
+    )
+    for frame_index in range(2):
+        assets[f"player_summoner_death_{frame_index}"] = (
+            _load_pixel_scaled_image(
+                summoner_death_directory
+                / f"death_{frame_index:02d}.png",
+                (tile_size, tile_size),
+            )
+        )
 
     paladin_walk_directory = (
         act_directory / "player" / "paladin" / "walk"

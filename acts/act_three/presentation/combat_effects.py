@@ -32,10 +32,12 @@ _PLAYER_HIT_VIGNETTE_DURATION_MS = 340
 _PLAYER_HIT_CAMERA_SHAKE_DURATION_MS = 190
 _FAMILIAR_HIT_REACTION_DURATION_MS = 190
 _FAMILIAR_HIT_FEEDBACK_DURATION_MS = 680
-_PLAYER_DEATH_HURT_HOLD_MS = 220
-_PLAYER_DEATH_COLLAPSE_END_MS = 720
-_PLAYER_DEATH_MESSAGE_START_MS = 1250
-_PLAYER_DEATH_MESSAGE_FADE_MS = 350
+_PLAYER_DEATH_HURT_HOLD_MS = 400
+_PLAYER_DEATH_COLLAPSE_END_MS = 2300
+_PLAYER_DEATH_FALL_END_MS = 4100
+_PLAYER_DEATH_MESSAGE_START_MS = 5400
+_PLAYER_DEATH_MESSAGE_FADE_MS = 650
+_PLAYER_DEATH_IMPACT_SHAKE_MS = 380
 
 
 def record_enemy_hit_feedback(game_state, started_at):
@@ -122,6 +124,54 @@ def record_player_death_feedback(game_state, started_at):
         return
 
     player.death_animation_started_at = started_at
+    if player.subclass == "summoner":
+        player.summoner_familiar_active = False
+        player.summoner_familiar_position = None
+        player.summoner_true_form_active = False
+    if player.subclass not in (
+        "berserker",
+        "paladin",
+        "assassin",
+        "archer",
+        "warlock",
+        "summoner",
+    ):
+        return
+
+    floor = game_state.floor
+    player_position = (floor.player_column, floor.player_row)
+    candidate_offsets = ((1, 0), (-1, 0), (0, 1), (0, -1))
+    old_man_position = None
+    for offset_x, offset_y in candidate_offsets:
+        column = player_position[0] + offset_x
+        row = player_position[1] + offset_y
+        if not (
+            0 <= row < len(floor.map)
+            and 0 <= column < len(floor.map[0])
+        ):
+            continue
+        if floor.map[row][column] in ("#", "C"):
+            continue
+        old_man_position = (column, row)
+        break
+
+    player.old_man_position = old_man_position
+    if old_man_position is None:
+        return
+
+    old_man_column, old_man_row = old_man_position
+    floor.enemies[:] = [
+        enemy
+        for enemy in floor.enemies
+        if not (
+            enemy.column
+            <= old_man_column
+            < enemy.column + enemy.footprint_width
+            and enemy.row
+            <= old_man_row
+            < enemy.row + enemy.footprint_height
+        )
+    ]
 
 
 def _player_death_elapsed(player, current_time):
@@ -137,6 +187,1590 @@ def _player_death_frame(player, current_time):
     if elapsed < _PLAYER_DEATH_COLLAPSE_END_MS:
         return 0
     return 1
+
+
+def _player_death_sprite_offset(player, current_time):
+    elapsed = _player_death_elapsed(player, current_time)
+    if elapsed is None or elapsed < _PLAYER_DEATH_HURT_HOLD_MS:
+        return (0, 0)
+
+    if elapsed < _PLAYER_DEATH_COLLAPSE_END_MS:
+        progress = (
+            (elapsed - _PLAYER_DEATH_HURT_HOLD_MS)
+            / (
+                _PLAYER_DEATH_COLLAPSE_END_MS
+                - _PLAYER_DEATH_HURT_HOLD_MS
+            )
+        )
+        progress = progress * progress * (3 - 2 * progress)
+        return (
+            round(-2 * (1 - progress) + 2 * progress),
+            round(-9 * (1 - progress) + 5 * progress),
+        )
+
+    fall_progress = min(
+        1,
+        (elapsed - _PLAYER_DEATH_COLLAPSE_END_MS)
+        / (
+            _PLAYER_DEATH_FALL_END_MS
+            - _PLAYER_DEATH_COLLAPSE_END_MS
+        ),
+    )
+    fall_progress = 1 - (1 - fall_progress) ** 3
+    return (
+        round(-5 * (1 - fall_progress)),
+        round(-11 * (1 - fall_progress) + 4 * fall_progress),
+    )
+
+
+def _player_death_camera_offset(player, current_time):
+    elapsed = _player_death_elapsed(player, current_time)
+    if elapsed is None:
+        return (0, 0)
+
+    impact_elapsed = elapsed - _PLAYER_DEATH_FALL_END_MS
+    if not 0 <= impact_elapsed < _PLAYER_DEATH_IMPACT_SHAKE_MS:
+        return (0, 0)
+
+    progress = impact_elapsed / _PLAYER_DEATH_IMPACT_SHAKE_MS
+    decay = (1 - progress) ** 2
+    return (
+        round(math.sin(impact_elapsed * 0.31) * 4 * decay),
+        round(math.cos(impact_elapsed * 0.43) * 3 * decay),
+    )
+
+
+def _draw_berserker_death_echoes(
+    surface,
+    assets,
+    position,
+    player,
+    current_time,
+):
+    elapsed = _player_death_elapsed(player, current_time)
+    if elapsed is None:
+        return
+
+    if 150 <= elapsed < 1650:
+        visibility = 1 - (elapsed - 150) / 1500
+        hurt_sprite = assets["player_berserker_hurt"]
+        for echo_index, (offset_x, offset_y, base_alpha) in enumerate(
+            ((-2, -2, 78), (-4, -5, 48), (-6, -8, 26))
+        ):
+            echo = hurt_sprite.copy()
+            echo.fill(
+                (92, 8 + echo_index * 3, 5, 0),
+                special_flags=pygame.BLEND_RGBA_ADD,
+            )
+            echo.set_alpha(round(base_alpha * visibility))
+            surface.blit(
+                echo,
+                (position[0] + offset_x, position[1] + offset_y),
+            )
+
+    spirit_end = _PLAYER_DEATH_MESSAGE_START_MS - 350
+    if _PLAYER_DEATH_COLLAPSE_END_MS <= elapsed < spirit_end:
+        spirit_progress = (
+            (elapsed - _PLAYER_DEATH_COLLAPSE_END_MS)
+            / (spirit_end - _PLAYER_DEATH_COLLAPSE_END_MS)
+        )
+        spirit = assets["player_berserker_hurt"].copy()
+        spirit.fill(
+            (105, 12, 8, 0),
+            special_flags=pygame.BLEND_RGBA_ADD,
+        )
+        spirit.set_alpha(
+            round(105 * (1 - spirit_progress) ** 1.5)
+        )
+        surface.blit(
+            spirit,
+            (
+                position[0] - round(spirit_progress * 3),
+                position[1] - 4 - round(spirit_progress * 15),
+            ),
+        )
+
+
+def _draw_berserker_death_impact(
+    surface,
+    position,
+    player,
+    current_time,
+):
+    elapsed = _player_death_elapsed(player, current_time)
+    if elapsed is None:
+        return
+
+    ember_start = _PLAYER_DEATH_HURT_HOLD_MS
+    ember_end = _PLAYER_DEATH_MESSAGE_START_MS
+    if ember_start <= elapsed < ember_end:
+        ember_progress = (
+            (elapsed - ember_start) / (ember_end - ember_start)
+        )
+        ember_surface = pygame.Surface(
+            (ACT_THREE_TILE_SIZE, ACT_THREE_TILE_SIZE),
+            pygame.SRCALPHA,
+        )
+        for ember_index in range(9):
+            phase = (ember_progress + ember_index * 0.137) % 1
+            visibility = math.sin(math.pi * phase)
+            ember_x = round(
+                ACT_THREE_TILE_SIZE // 2
+                + math.sin(ember_index * 2.17) * (8 + phase * 15)
+            )
+            ember_y = round(
+                ACT_THREE_TILE_SIZE - 10 - phase * (22 + ember_index % 4 * 3)
+            )
+            pygame.draw.rect(
+                ember_surface,
+                (
+                    186 + ember_index % 3 * 18,
+                    34 + ember_index % 2 * 16,
+                    20,
+                    round(190 * visibility * (1 - ember_progress * 0.6)),
+                ),
+                (ember_x, ember_y, 2 if ember_index % 3 == 0 else 1, 2),
+            )
+        surface.blit(ember_surface, position)
+
+    impact_elapsed = elapsed - _PLAYER_DEATH_FALL_END_MS
+    if not 0 <= impact_elapsed < 460:
+        return
+
+    impact_progress = impact_elapsed / 460
+    visibility = (1 - impact_progress) ** 2
+    impact_surface = pygame.Surface(
+        (ACT_THREE_TILE_SIZE, ACT_THREE_TILE_SIZE),
+        pygame.SRCALPHA,
+    )
+    center = (ACT_THREE_TILE_SIZE // 2, ACT_THREE_TILE_SIZE - 7)
+    pygame.draw.ellipse(
+        impact_surface,
+        (128, 112, 101, round(150 * visibility)),
+        (
+            center[0] - round(10 + impact_progress * 22),
+            center[1] - round(3 + impact_progress * 3),
+            round(20 + impact_progress * 44),
+            round(6 + impact_progress * 6),
+        ),
+        width=2,
+    )
+    for dust_index in range(8):
+        angle = math.pi + dust_index * math.pi / 7
+        distance = 7 + impact_progress * (14 + dust_index % 3 * 4)
+        dust_position = (
+            round(center[0] + math.cos(angle) * distance),
+            round(center[1] + math.sin(angle) * distance * 0.45),
+        )
+        pygame.draw.circle(
+            impact_surface,
+            (150, 132, 116, round(180 * visibility)),
+            dust_position,
+            2 if dust_index % 3 == 0 else 1,
+        )
+    surface.blit(impact_surface, position)
+
+
+def _draw_berserker_death_foreground(
+    surface,
+    assets,
+    position,
+    player,
+    current_time,
+):
+    elapsed = _player_death_elapsed(player, current_time)
+    if elapsed is None:
+        return
+
+    spirit_start = _PLAYER_DEATH_COLLAPSE_END_MS
+    spirit_end = _PLAYER_DEATH_MESSAGE_START_MS - 250
+    if spirit_start <= elapsed < spirit_end:
+        spirit_progress = (
+            (elapsed - spirit_start) / (spirit_end - spirit_start)
+        )
+        spirit = assets["player_berserker_hurt"].copy()
+        spirit.fill(
+            (130, 10, 7, 0),
+            special_flags=pygame.BLEND_RGBA_ADD,
+        )
+        spirit.set_alpha(
+            round(138 * math.sin(math.pi * spirit_progress))
+        )
+        surface.blit(
+            spirit,
+            (
+                position[0] - round(spirit_progress * 4),
+                position[1] - 8 - round(spirit_progress * 24),
+            ),
+        )
+
+    ember_start = _PLAYER_DEATH_HURT_HOLD_MS
+    ember_end = _PLAYER_DEATH_MESSAGE_START_MS
+    if ember_start <= elapsed < ember_end:
+        cycle = (elapsed - ember_start) / 1450
+        effect_surface = pygame.Surface(
+            (ACT_THREE_TILE_SIZE * 2, ACT_THREE_TILE_SIZE * 2),
+            pygame.SRCALPHA,
+        )
+        effect_center_x = ACT_THREE_TILE_SIZE
+        effect_base_y = ACT_THREE_TILE_SIZE + 22
+        fade_out = min(
+            1,
+            max(0, (elapsed - _PLAYER_DEATH_FALL_END_MS) / 1300),
+        )
+        for ember_index in range(14):
+            phase = (cycle + ember_index * 0.163) % 1
+            visibility = math.sin(math.pi * phase) * (1 - fade_out * 0.75)
+            drift = math.sin(ember_index * 2.31 + phase * 4.2)
+            ember_x = round(
+                effect_center_x
+                + drift * (9 + phase * 23)
+            )
+            ember_y = round(
+                effect_base_y
+                - phase * (30 + ember_index % 5 * 5)
+            )
+            ember_color = (
+                226,
+                42 + ember_index % 3 * 17,
+                25,
+                round(220 * visibility),
+            )
+            pygame.draw.circle(
+                effect_surface,
+                ember_color,
+                (ember_x, ember_y),
+                2 if ember_index % 4 == 0 else 1,
+            )
+            if ember_index % 3 == 0:
+                pygame.draw.line(
+                    effect_surface,
+                    (176, 22, 18, round(125 * visibility)),
+                    (ember_x, ember_y + 2),
+                    (ember_x - round(drift * 3), ember_y + 7),
+                    1,
+                )
+        surface.blit(
+            effect_surface,
+            (
+                position[0] - ACT_THREE_TILE_SIZE // 2,
+                position[1] - ACT_THREE_TILE_SIZE // 2,
+            ),
+        )
+
+    impact_elapsed = elapsed - _PLAYER_DEATH_FALL_END_MS
+    if not 0 <= impact_elapsed < 900:
+        return
+
+    impact_progress = impact_elapsed / 900
+    visibility = (1 - impact_progress) ** 2
+    wave_surface = pygame.Surface(
+        (ACT_THREE_TILE_SIZE * 3, ACT_THREE_TILE_SIZE * 2),
+        pygame.SRCALPHA,
+    )
+    wave_center = (
+        wave_surface.get_width() // 2,
+        ACT_THREE_TILE_SIZE + 16,
+    )
+    for wave_index, delay in enumerate((0.0, 0.16, 0.32)):
+        wave_progress = max(0, min(1, (impact_progress - delay) / 0.68))
+        if wave_progress <= 0:
+            continue
+        radius_x = round(14 + wave_progress * (50 + wave_index * 10))
+        radius_y = round(4 + wave_progress * 12)
+        pygame.draw.ellipse(
+            wave_surface,
+            (
+                196 - wave_index * 24,
+                38 - wave_index * 7,
+                31,
+                round(180 * visibility * (1 - wave_progress)),
+            ),
+            (
+                wave_center[0] - radius_x,
+                wave_center[1] - radius_y,
+                radius_x * 2,
+                radius_y * 2,
+            ),
+            width=2,
+        )
+    surface.blit(
+        wave_surface,
+        (
+            position[0] - ACT_THREE_TILE_SIZE,
+            position[1] - ACT_THREE_TILE_SIZE // 2,
+        ),
+    )
+
+
+def _draw_paladin_death_echoes(
+    surface,
+    assets,
+    position,
+    player,
+    current_time,
+):
+    elapsed = _player_death_elapsed(player, current_time)
+    if elapsed is None:
+        return
+
+    if 180 <= elapsed < _PLAYER_DEATH_COLLAPSE_END_MS:
+        fade = 1 - (
+            (elapsed - 180)
+            / (_PLAYER_DEATH_COLLAPSE_END_MS - 180)
+        )
+        hurt_sprite = assets["player_paladin_hurt"]
+        for offset_y, alpha in ((-2, 58), (-5, 30)):
+            echo = hurt_sprite.copy()
+            echo.fill(
+                (92, 71, 18, 0),
+                special_flags=pygame.BLEND_RGBA_ADD,
+            )
+            echo.set_alpha(round(alpha * fade))
+            surface.blit(
+                echo,
+                (position[0], position[1] + offset_y),
+            )
+
+    spirit_end = _PLAYER_DEATH_MESSAGE_START_MS - 300
+    if _PLAYER_DEATH_COLLAPSE_END_MS <= elapsed < spirit_end:
+        progress = (
+            (elapsed - _PLAYER_DEATH_COLLAPSE_END_MS)
+            / (spirit_end - _PLAYER_DEATH_COLLAPSE_END_MS)
+        )
+        spirit = assets["player_paladin_hurt"].copy()
+        spirit.fill(
+            (116, 96, 38, 0),
+            special_flags=pygame.BLEND_RGBA_ADD,
+        )
+        spirit.set_alpha(round(78 * (1 - progress) ** 1.7))
+        surface.blit(
+            spirit,
+            (
+                position[0] + round(math.sin(progress * math.pi) * 2),
+                position[1] - 5 - round(progress * 18),
+            ),
+        )
+
+
+def _draw_paladin_death_impact(
+    surface,
+    position,
+    player,
+    current_time,
+):
+    elapsed = _player_death_elapsed(player, current_time)
+    if elapsed is None:
+        return
+
+    mote_start = _PLAYER_DEATH_HURT_HOLD_MS
+    mote_end = _PLAYER_DEATH_MESSAGE_START_MS
+    if mote_start <= elapsed < mote_end:
+        progress = (elapsed - mote_start) / (mote_end - mote_start)
+        mote_surface = pygame.Surface(
+            (ACT_THREE_TILE_SIZE, ACT_THREE_TILE_SIZE),
+            pygame.SRCALPHA,
+        )
+        for mote_index in range(10):
+            phase = (progress * 0.82 + mote_index * 0.173) % 1
+            visibility = math.sin(math.pi * phase)
+            mote_x = round(
+                ACT_THREE_TILE_SIZE // 2
+                + math.sin(mote_index * 2.41 + phase) * (9 + phase * 11)
+            )
+            mote_y = round(
+                ACT_THREE_TILE_SIZE - 9
+                - phase * (26 + mote_index % 3 * 5)
+            )
+            color = (
+                238,
+                212 + mote_index % 2 * 18,
+                128 + mote_index % 3 * 25,
+                round(170 * visibility * (1 - progress * 0.55)),
+            )
+            pygame.draw.circle(
+                mote_surface,
+                color,
+                (mote_x, mote_y),
+                2 if mote_index % 4 == 0 else 1,
+            )
+        surface.blit(mote_surface, position)
+
+    impact_elapsed = elapsed - _PLAYER_DEATH_FALL_END_MS
+    if not 0 <= impact_elapsed < 720:
+        return
+
+    progress = impact_elapsed / 720
+    visibility = (1 - progress) ** 2
+    ring_surface = pygame.Surface(
+        (ACT_THREE_TILE_SIZE, ACT_THREE_TILE_SIZE),
+        pygame.SRCALPHA,
+    )
+    radius_x = round(8 + progress * 27)
+    radius_y = round(3 + progress * 7)
+    center = (ACT_THREE_TILE_SIZE // 2, ACT_THREE_TILE_SIZE - 7)
+    pygame.draw.ellipse(
+        ring_surface,
+        (226, 199, 109, round(175 * visibility)),
+        (
+            center[0] - radius_x,
+            center[1] - radius_y,
+            radius_x * 2,
+            radius_y * 2,
+        ),
+        width=2,
+    )
+    surface.blit(ring_surface, position)
+
+
+def _draw_paladin_death_foreground(
+    surface,
+    assets,
+    position,
+    player,
+    current_time,
+):
+    elapsed = _player_death_elapsed(player, current_time)
+    if elapsed is None:
+        return
+
+    mote_start = _PLAYER_DEATH_HURT_HOLD_MS
+    mote_end = _PLAYER_DEATH_MESSAGE_START_MS
+    if mote_start <= elapsed < mote_end:
+        cycle = (elapsed - mote_start) / 1900
+        fade = min(
+            1,
+            max(0, (elapsed - _PLAYER_DEATH_FALL_END_MS) / 1250),
+        )
+        effect_surface = pygame.Surface(
+            (ACT_THREE_TILE_SIZE * 2, ACT_THREE_TILE_SIZE * 2),
+            pygame.SRCALPHA,
+        )
+        center_x = ACT_THREE_TILE_SIZE
+        base_y = ACT_THREE_TILE_SIZE + 19
+        for mote_index in range(16):
+            phase = (cycle + mote_index * 0.149) % 1
+            visibility = math.sin(math.pi * phase) * (1 - fade * 0.8)
+            drift = math.sin(mote_index * 1.91 + phase * 3.1)
+            mote_x = round(center_x + drift * (8 + phase * 20))
+            mote_y = round(
+                base_y - phase * (34 + mote_index % 4 * 7)
+            )
+            pygame.draw.circle(
+                effect_surface,
+                (
+                    245,
+                    221,
+                    142 + mote_index % 3 * 24,
+                    round(205 * visibility),
+                ),
+                (mote_x, mote_y),
+                2 if mote_index % 5 == 0 else 1,
+            )
+        surface.blit(
+            effect_surface,
+            (
+                position[0] - ACT_THREE_TILE_SIZE // 2,
+                position[1] - ACT_THREE_TILE_SIZE // 2,
+            ),
+        )
+
+    spirit_start = _PLAYER_DEATH_COLLAPSE_END_MS
+    spirit_end = _PLAYER_DEATH_MESSAGE_START_MS - 250
+    if spirit_start <= elapsed < spirit_end:
+        progress = (
+            (elapsed - spirit_start) / (spirit_end - spirit_start)
+        )
+        spirit = assets["player_paladin_hurt"].copy()
+        spirit.fill(
+            (158, 130, 48, 0),
+            special_flags=pygame.BLEND_RGBA_ADD,
+        )
+        spirit.set_alpha(
+            round(105 * math.sin(math.pi * progress))
+        )
+        surface.blit(
+            spirit,
+            (
+                position[0] + round(math.sin(progress * 4) * 2),
+                position[1] - 8 - round(progress * 25),
+            ),
+        )
+
+    impact_elapsed = elapsed - _PLAYER_DEATH_FALL_END_MS
+    if not 0 <= impact_elapsed < 1000:
+        return
+
+    progress = impact_elapsed / 1000
+    visibility = (1 - progress) ** 2
+    halo_surface = pygame.Surface(
+        (ACT_THREE_TILE_SIZE * 3, ACT_THREE_TILE_SIZE * 2),
+        pygame.SRCALPHA,
+    )
+    center = (
+        halo_surface.get_width() // 2,
+        ACT_THREE_TILE_SIZE + 16,
+    )
+    for halo_index, delay in enumerate((0.0, 0.24)):
+        halo_progress = max(
+            0,
+            min(1, (progress - delay) / (1 - delay)),
+        )
+        if halo_progress <= 0:
+            continue
+        radius_x = round(12 + halo_progress * (45 + halo_index * 12))
+        radius_y = round(4 + halo_progress * 10)
+        pygame.draw.ellipse(
+            halo_surface,
+            (
+                235,
+                207,
+                112,
+                round(145 * visibility * (1 - halo_progress)),
+            ),
+            (
+                center[0] - radius_x,
+                center[1] - radius_y,
+                radius_x * 2,
+                radius_y * 2,
+            ),
+            width=2,
+        )
+    surface.blit(
+        halo_surface,
+        (
+            position[0] - ACT_THREE_TILE_SIZE,
+            position[1] - ACT_THREE_TILE_SIZE // 2,
+        ),
+    )
+
+
+def _draw_assassin_death_echoes(
+    surface,
+    assets,
+    position,
+    player,
+    current_time,
+):
+    elapsed = _player_death_elapsed(player, current_time)
+    if elapsed is None:
+        return
+
+    if 120 <= elapsed < _PLAYER_DEATH_COLLAPSE_END_MS:
+        fade = 1 - (
+            (elapsed - 120)
+            / (_PLAYER_DEATH_COLLAPSE_END_MS - 120)
+        )
+        hurt_sprite = assets["player_assassin_hurt"]
+        for echo_index, (offset_x, alpha) in enumerate(
+            ((-3, 62), (3, 42), (-6, 24))
+        ):
+            echo = hurt_sprite.copy()
+            echo.fill(
+                (10, 28 + echo_index * 7, 74, 0),
+                special_flags=pygame.BLEND_RGBA_ADD,
+            )
+            echo.set_alpha(round(alpha * fade))
+            surface.blit(
+                echo,
+                (
+                    position[0] + offset_x,
+                    position[1] - 2 - echo_index * 2,
+                ),
+            )
+
+    spirit_end = _PLAYER_DEATH_MESSAGE_START_MS - 260
+    if _PLAYER_DEATH_COLLAPSE_END_MS <= elapsed < spirit_end:
+        progress = (
+            (elapsed - _PLAYER_DEATH_COLLAPSE_END_MS)
+            / (spirit_end - _PLAYER_DEATH_COLLAPSE_END_MS)
+        )
+        shadow = assets["player_assassin_hurt"].copy()
+        shadow.fill(
+            (8, 25, 68, 0),
+            special_flags=pygame.BLEND_RGBA_ADD,
+        )
+        shadow.set_alpha(round(72 * (1 - progress) ** 1.6))
+        surface.blit(
+            shadow,
+            (
+                position[0] + round(math.sin(progress * 5) * 5),
+                position[1] - 3 - round(progress * 14),
+            ),
+        )
+
+
+def _draw_assassin_death_impact(
+    surface,
+    position,
+    player,
+    current_time,
+):
+    elapsed = _player_death_elapsed(player, current_time)
+    if elapsed is None:
+        return
+
+    particle_start = _PLAYER_DEATH_HURT_HOLD_MS
+    particle_end = _PLAYER_DEATH_MESSAGE_START_MS
+    if particle_start <= elapsed < particle_end:
+        progress = (
+            (elapsed - particle_start)
+            / (particle_end - particle_start)
+        )
+        particle_surface = pygame.Surface(
+            (ACT_THREE_TILE_SIZE, ACT_THREE_TILE_SIZE),
+            pygame.SRCALPHA,
+        )
+        for particle_index in range(9):
+            phase = (progress * 0.9 + particle_index * 0.181) % 1
+            visibility = math.sin(math.pi * phase)
+            particle_x = round(
+                ACT_THREE_TILE_SIZE // 2
+                + math.sin(particle_index * 2.57 + phase * 2) * (
+                    7 + phase * 17
+                )
+            )
+            particle_y = round(
+                ACT_THREE_TILE_SIZE - 8
+                - phase * (20 + particle_index % 4 * 5)
+            )
+            pygame.draw.rect(
+                particle_surface,
+                (
+                    66 + particle_index % 2 * 26,
+                    112 + particle_index % 3 * 17,
+                    205,
+                    round(150 * visibility * (1 - progress * 0.6)),
+                ),
+                (particle_x, particle_y, 1, 2),
+            )
+        surface.blit(particle_surface, position)
+
+    impact_elapsed = elapsed - _PLAYER_DEATH_FALL_END_MS
+    if not 0 <= impact_elapsed < 620:
+        return
+
+    progress = impact_elapsed / 620
+    visibility = (1 - progress) ** 2
+    ripple_surface = pygame.Surface(
+        (ACT_THREE_TILE_SIZE, ACT_THREE_TILE_SIZE),
+        pygame.SRCALPHA,
+    )
+    center = (ACT_THREE_TILE_SIZE // 2, ACT_THREE_TILE_SIZE - 7)
+    radius_x = round(7 + progress * 30)
+    radius_y = round(2 + progress * 6)
+    pygame.draw.ellipse(
+        ripple_surface,
+        (66, 105, 183, round(135 * visibility)),
+        (
+            center[0] - radius_x,
+            center[1] - radius_y,
+            radius_x * 2,
+            radius_y * 2,
+        ),
+        width=1,
+    )
+    surface.blit(ripple_surface, position)
+
+
+def _draw_assassin_death_foreground(
+    surface,
+    assets,
+    position,
+    player,
+    current_time,
+):
+    elapsed = _player_death_elapsed(player, current_time)
+    if elapsed is None:
+        return
+
+    particle_start = _PLAYER_DEATH_HURT_HOLD_MS
+    particle_end = _PLAYER_DEATH_MESSAGE_START_MS
+    if particle_start <= elapsed < particle_end:
+        cycle = (elapsed - particle_start) / 1650
+        fade = min(
+            1,
+            max(0, (elapsed - _PLAYER_DEATH_FALL_END_MS) / 1200),
+        )
+        effect_surface = pygame.Surface(
+            (ACT_THREE_TILE_SIZE * 2, ACT_THREE_TILE_SIZE * 2),
+            pygame.SRCALPHA,
+        )
+        center_x = ACT_THREE_TILE_SIZE
+        base_y = ACT_THREE_TILE_SIZE + 19
+        for particle_index in range(15):
+            phase = (cycle + particle_index * 0.157) % 1
+            visibility = math.sin(math.pi * phase) * (1 - fade * 0.8)
+            drift = math.sin(particle_index * 2.13 + phase * 4.6)
+            particle_x = round(
+                center_x + drift * (8 + phase * 22)
+            )
+            particle_y = round(
+                base_y - phase * (28 + particle_index % 5 * 6)
+            )
+            color = (
+                55 + particle_index % 3 * 18,
+                94 + particle_index % 2 * 25,
+                190 + particle_index % 3 * 18,
+                round(185 * visibility),
+            )
+            pygame.draw.line(
+                effect_surface,
+                color,
+                (particle_x, particle_y),
+                (
+                    particle_x - round(drift * 3),
+                    particle_y + 3,
+                ),
+                1,
+            )
+        surface.blit(
+            effect_surface,
+            (
+                position[0] - ACT_THREE_TILE_SIZE // 2,
+                position[1] - ACT_THREE_TILE_SIZE // 2,
+            ),
+        )
+
+    spirit_start = _PLAYER_DEATH_COLLAPSE_END_MS
+    spirit_end = _PLAYER_DEATH_MESSAGE_START_MS - 220
+    if spirit_start <= elapsed < spirit_end:
+        progress = (
+            (elapsed - spirit_start) / (spirit_end - spirit_start)
+        )
+        spirit = assets["player_assassin_hurt"].copy()
+        spirit.fill(
+            (14, 38, 98, 0),
+            special_flags=pygame.BLEND_RGBA_ADD,
+        )
+        spirit.set_alpha(
+            round(88 * math.sin(math.pi * progress))
+        )
+        surface.blit(
+            spirit,
+            (
+                position[0] + round(math.sin(progress * 8) * 6),
+                position[1] - 7 - round(progress * 21),
+            ),
+        )
+
+    impact_elapsed = elapsed - _PLAYER_DEATH_FALL_END_MS
+    if not 0 <= impact_elapsed < 820:
+        return
+
+    progress = impact_elapsed / 820
+    visibility = (1 - progress) ** 2
+    ripple_surface = pygame.Surface(
+        (ACT_THREE_TILE_SIZE * 3, ACT_THREE_TILE_SIZE * 2),
+        pygame.SRCALPHA,
+    )
+    center = (
+        ripple_surface.get_width() // 2,
+        ACT_THREE_TILE_SIZE + 16,
+    )
+    for ripple_index, delay in enumerate((0.0, 0.28)):
+        ripple_progress = max(
+            0,
+            min(1, (progress - delay) / (1 - delay)),
+        )
+        if ripple_progress <= 0:
+            continue
+        radius_x = round(10 + ripple_progress * (42 + ripple_index * 10))
+        radius_y = round(3 + ripple_progress * 8)
+        pygame.draw.ellipse(
+            ripple_surface,
+            (
+                48,
+                79,
+                151 + ripple_index * 20,
+                round(120 * visibility * (1 - ripple_progress)),
+            ),
+            (
+                center[0] - radius_x,
+                center[1] - radius_y,
+                radius_x * 2,
+                radius_y * 2,
+            ),
+            width=1,
+        )
+    surface.blit(
+        ripple_surface,
+        (
+            position[0] - ACT_THREE_TILE_SIZE,
+            position[1] - ACT_THREE_TILE_SIZE // 2,
+        ),
+    )
+
+
+def _draw_archer_death_echoes(
+    surface,
+    assets,
+    position,
+    player,
+    current_time,
+):
+    elapsed = _player_death_elapsed(player, current_time)
+    if elapsed is None:
+        return
+
+    if 160 <= elapsed < _PLAYER_DEATH_COLLAPSE_END_MS:
+        fade = 1 - (
+            (elapsed - 160)
+            / (_PLAYER_DEATH_COLLAPSE_END_MS - 160)
+        )
+        hurt_sprite = assets["player_archer_hurt"]
+        for echo_index, (offset_x, offset_y, alpha) in enumerate(
+            ((-4, -1, 54), (-7, -3, 33), (-10, -5, 18))
+        ):
+            echo = hurt_sprite.copy()
+            echo.fill(
+                (42 + echo_index * 8, 61, 18, 0),
+                special_flags=pygame.BLEND_RGBA_ADD,
+            )
+            echo.set_alpha(round(alpha * fade))
+            surface.blit(
+                echo,
+                (position[0] + offset_x, position[1] + offset_y),
+            )
+
+    spirit_end = _PLAYER_DEATH_MESSAGE_START_MS - 250
+    if _PLAYER_DEATH_COLLAPSE_END_MS <= elapsed < spirit_end:
+        progress = (
+            (elapsed - _PLAYER_DEATH_COLLAPSE_END_MS)
+            / (spirit_end - _PLAYER_DEATH_COLLAPSE_END_MS)
+        )
+        spirit = assets["player_archer_hurt"].copy()
+        spirit.fill(
+            (70, 86, 28, 0),
+            special_flags=pygame.BLEND_RGBA_ADD,
+        )
+        spirit.set_alpha(round(68 * (1 - progress) ** 1.5))
+        surface.blit(
+            spirit,
+            (
+                position[0] + round(progress * 8),
+                position[1] - 4 - round(progress * 13),
+            ),
+        )
+
+
+def _draw_archer_death_impact(
+    surface,
+    position,
+    player,
+    current_time,
+):
+    elapsed = _player_death_elapsed(player, current_time)
+    if elapsed is None:
+        return
+
+    particle_start = _PLAYER_DEATH_HURT_HOLD_MS
+    particle_end = _PLAYER_DEATH_MESSAGE_START_MS
+    if particle_start <= elapsed < particle_end:
+        progress = (
+            (elapsed - particle_start)
+            / (particle_end - particle_start)
+        )
+        particle_surface = pygame.Surface(
+            (ACT_THREE_TILE_SIZE, ACT_THREE_TILE_SIZE),
+            pygame.SRCALPHA,
+        )
+        for particle_index in range(10):
+            phase = (progress * 0.85 + particle_index * 0.171) % 1
+            visibility = math.sin(math.pi * phase)
+            direction = -1 if particle_index % 2 else 1
+            particle_x = round(
+                ACT_THREE_TILE_SIZE // 2
+                + direction * phase * (16 + particle_index % 3 * 4)
+                + math.sin(particle_index * 2.1) * 5
+            )
+            particle_y = round(
+                ACT_THREE_TILE_SIZE - 10
+                - phase * (18 + particle_index % 4 * 5)
+            )
+            color = (
+                137 + particle_index % 3 * 18,
+                151 + particle_index % 2 * 17,
+                73,
+                round(155 * visibility * (1 - progress * 0.55)),
+            )
+            pygame.draw.line(
+                particle_surface,
+                color,
+                (particle_x - direction * 2, particle_y + 1),
+                (particle_x + direction * 2, particle_y - 1),
+                1,
+            )
+        surface.blit(particle_surface, position)
+
+    impact_elapsed = elapsed - _PLAYER_DEATH_FALL_END_MS
+    if not 0 <= impact_elapsed < 650:
+        return
+    progress = impact_elapsed / 650
+    visibility = (1 - progress) ** 2
+    ripple_surface = pygame.Surface(
+        (ACT_THREE_TILE_SIZE, ACT_THREE_TILE_SIZE),
+        pygame.SRCALPHA,
+    )
+    center = (ACT_THREE_TILE_SIZE // 2, ACT_THREE_TILE_SIZE - 7)
+    radius_x = round(8 + progress * 29)
+    radius_y = round(2 + progress * 6)
+    pygame.draw.ellipse(
+        ripple_surface,
+        (129, 146, 77, round(130 * visibility)),
+        (
+            center[0] - radius_x,
+            center[1] - radius_y,
+            radius_x * 2,
+            radius_y * 2,
+        ),
+        width=1,
+    )
+    surface.blit(ripple_surface, position)
+
+
+def _draw_archer_death_foreground(
+    surface,
+    assets,
+    position,
+    player,
+    current_time,
+):
+    elapsed = _player_death_elapsed(player, current_time)
+    if elapsed is None:
+        return
+
+    particle_start = _PLAYER_DEATH_HURT_HOLD_MS
+    particle_end = _PLAYER_DEATH_MESSAGE_START_MS
+    if particle_start <= elapsed < particle_end:
+        cycle = (elapsed - particle_start) / 1750
+        fade = min(
+            1,
+            max(0, (elapsed - _PLAYER_DEATH_FALL_END_MS) / 1200),
+        )
+        effect_surface = pygame.Surface(
+            (ACT_THREE_TILE_SIZE * 2, ACT_THREE_TILE_SIZE * 2),
+            pygame.SRCALPHA,
+        )
+        center_x = ACT_THREE_TILE_SIZE
+        base_y = ACT_THREE_TILE_SIZE + 18
+        for particle_index in range(14):
+            phase = (cycle + particle_index * 0.163) % 1
+            visibility = math.sin(math.pi * phase) * (1 - fade * 0.8)
+            direction = -1 if particle_index % 2 else 1
+            particle_x = round(
+                center_x
+                + direction * phase * (18 + particle_index % 5 * 4)
+                + math.sin(particle_index * 1.8) * 7
+            )
+            particle_y = round(
+                base_y - phase * (26 + particle_index % 4 * 7)
+            )
+            color = (
+                144 + particle_index % 3 * 17,
+                158 + particle_index % 2 * 15,
+                82,
+                round(180 * visibility),
+            )
+            pygame.draw.line(
+                effect_surface,
+                color,
+                (particle_x - direction * 3, particle_y + 1),
+                (particle_x + direction * 3, particle_y - 1),
+                1,
+            )
+        surface.blit(
+            effect_surface,
+            (
+                position[0] - ACT_THREE_TILE_SIZE // 2,
+                position[1] - ACT_THREE_TILE_SIZE // 2,
+            ),
+        )
+
+    spirit_start = _PLAYER_DEATH_COLLAPSE_END_MS
+    spirit_end = _PLAYER_DEATH_MESSAGE_START_MS - 220
+    if spirit_start <= elapsed < spirit_end:
+        progress = (
+            (elapsed - spirit_start) / (spirit_end - spirit_start)
+        )
+        spirit = assets["player_archer_hurt"].copy()
+        spirit.fill(
+            (80, 93, 31, 0),
+            special_flags=pygame.BLEND_RGBA_ADD,
+        )
+        spirit.set_alpha(
+            round(82 * math.sin(math.pi * progress))
+        )
+        surface.blit(
+            spirit,
+            (
+                position[0] + round(progress * 12),
+                position[1] - 7 - round(progress * 18),
+            ),
+        )
+
+    impact_elapsed = elapsed - _PLAYER_DEATH_FALL_END_MS
+    if not 0 <= impact_elapsed < 860:
+        return
+    progress = impact_elapsed / 860
+    visibility = (1 - progress) ** 2
+    ripple_surface = pygame.Surface(
+        (ACT_THREE_TILE_SIZE * 3, ACT_THREE_TILE_SIZE * 2),
+        pygame.SRCALPHA,
+    )
+    center = (
+        ripple_surface.get_width() // 2,
+        ACT_THREE_TILE_SIZE + 16,
+    )
+    for ripple_index, delay in enumerate((0.0, 0.3)):
+        ripple_progress = max(
+            0,
+            min(1, (progress - delay) / (1 - delay)),
+        )
+        if ripple_progress <= 0:
+            continue
+        radius_x = round(11 + ripple_progress * (44 + ripple_index * 9))
+        radius_y = round(3 + ripple_progress * 8)
+        pygame.draw.ellipse(
+            ripple_surface,
+            (
+                114,
+                133,
+                65,
+                round(115 * visibility * (1 - ripple_progress)),
+            ),
+            (
+                center[0] - radius_x,
+                center[1] - radius_y,
+                radius_x * 2,
+                radius_y * 2,
+            ),
+            width=1,
+        )
+    surface.blit(
+        ripple_surface,
+        (
+            position[0] - ACT_THREE_TILE_SIZE,
+            position[1] - ACT_THREE_TILE_SIZE // 2,
+        ),
+    )
+
+
+def _draw_warlock_death_echoes(
+    surface,
+    assets,
+    position,
+    player,
+    current_time,
+):
+    elapsed = _player_death_elapsed(player, current_time)
+    if elapsed is None:
+        return
+
+    if player.warlock_demon_form_active and elapsed < 950:
+        progress = elapsed / 950
+        demon = assets["player_warlock_demon_hurt"].copy()
+        demon.fill(
+            (76, 9, 91, 0),
+            special_flags=pygame.BLEND_RGBA_ADD,
+        )
+        demon.set_alpha(round(145 * (1 - progress) ** 1.7))
+        surface.blit(
+            demon,
+            (
+                position[0] + round(math.sin(progress * 8) * 3),
+                position[1] - round(progress * 9),
+            ),
+        )
+
+    if 150 <= elapsed < _PLAYER_DEATH_COLLAPSE_END_MS:
+        fade = 1 - (
+            (elapsed - 150)
+            / (_PLAYER_DEATH_COLLAPSE_END_MS - 150)
+        )
+        hurt_sprite = assets["player_warlock_hurt"]
+        for echo_index, (offset_x, offset_y, alpha) in enumerate(
+            ((-2, -2, 56), (3, -5, 34), (-4, -8, 19))
+        ):
+            echo = hurt_sprite.copy()
+            echo.fill(
+                (57 + echo_index * 8, 10, 70, 0),
+                special_flags=pygame.BLEND_RGBA_ADD,
+            )
+            echo.set_alpha(round(alpha * fade))
+            surface.blit(
+                echo,
+                (position[0] + offset_x, position[1] + offset_y),
+            )
+
+    spirit_end = _PLAYER_DEATH_MESSAGE_START_MS - 250
+    if _PLAYER_DEATH_COLLAPSE_END_MS <= elapsed < spirit_end:
+        progress = (
+            (elapsed - _PLAYER_DEATH_COLLAPSE_END_MS)
+            / (spirit_end - _PLAYER_DEATH_COLLAPSE_END_MS)
+        )
+        spirit = assets["player_warlock_hurt"].copy()
+        spirit.fill(
+            (85, 16, 98, 0),
+            special_flags=pygame.BLEND_RGBA_ADD,
+        )
+        spirit.set_alpha(round(76 * (1 - progress) ** 1.5))
+        surface.blit(
+            spirit,
+            (
+                position[0] + round(math.sin(progress * 6) * 4),
+                position[1] - 5 - round(progress * 18),
+            ),
+        )
+
+
+def _draw_warlock_death_impact(
+    surface,
+    position,
+    player,
+    current_time,
+):
+    elapsed = _player_death_elapsed(player, current_time)
+    if elapsed is None:
+        return
+
+    particle_start = _PLAYER_DEATH_HURT_HOLD_MS
+    particle_end = _PLAYER_DEATH_MESSAGE_START_MS
+    if particle_start <= elapsed < particle_end:
+        progress = (
+            (elapsed - particle_start)
+            / (particle_end - particle_start)
+        )
+        particle_surface = pygame.Surface(
+            (ACT_THREE_TILE_SIZE, ACT_THREE_TILE_SIZE),
+            pygame.SRCALPHA,
+        )
+        for particle_index in range(11):
+            phase = (progress * 0.9 + particle_index * 0.149) % 1
+            visibility = math.sin(math.pi * phase)
+            particle_x = round(
+                ACT_THREE_TILE_SIZE // 2
+                + math.sin(particle_index * 2.43 + phase * 3) * (
+                    8 + phase * 17
+                )
+            )
+            particle_y = round(
+                ACT_THREE_TILE_SIZE - 9
+                - phase * (22 + particle_index % 4 * 5)
+            )
+            pygame.draw.polygon(
+                particle_surface,
+                (
+                    150 + particle_index % 3 * 20,
+                    54 + particle_index % 2 * 22,
+                    185 + particle_index % 3 * 16,
+                    round(165 * visibility * (1 - progress * 0.6)),
+                ),
+                (
+                    (particle_x, particle_y - 2),
+                    (particle_x + 1, particle_y + 1),
+                    (particle_x - 1, particle_y + 1),
+                ),
+            )
+        surface.blit(particle_surface, position)
+
+    impact_elapsed = elapsed - _PLAYER_DEATH_FALL_END_MS
+    if not 0 <= impact_elapsed < 700:
+        return
+    progress = impact_elapsed / 700
+    visibility = (1 - progress) ** 2
+    ripple_surface = pygame.Surface(
+        (ACT_THREE_TILE_SIZE, ACT_THREE_TILE_SIZE),
+        pygame.SRCALPHA,
+    )
+    center = (ACT_THREE_TILE_SIZE // 2, ACT_THREE_TILE_SIZE - 7)
+    radius_x = round(8 + progress * 30)
+    radius_y = round(2 + progress * 7)
+    pygame.draw.ellipse(
+        ripple_surface,
+        (135, 55, 164, round(145 * visibility)),
+        (
+            center[0] - radius_x,
+            center[1] - radius_y,
+            radius_x * 2,
+            radius_y * 2,
+        ),
+        width=1,
+    )
+    surface.blit(ripple_surface, position)
+
+
+def _draw_warlock_death_foreground(
+    surface,
+    assets,
+    position,
+    player,
+    current_time,
+):
+    elapsed = _player_death_elapsed(player, current_time)
+    if elapsed is None:
+        return
+
+    particle_start = _PLAYER_DEATH_HURT_HOLD_MS
+    particle_end = _PLAYER_DEATH_MESSAGE_START_MS
+    if particle_start <= elapsed < particle_end:
+        cycle = (elapsed - particle_start) / 1550
+        fade = min(
+            1,
+            max(0, (elapsed - _PLAYER_DEATH_FALL_END_MS) / 1200),
+        )
+        effect_surface = pygame.Surface(
+            (ACT_THREE_TILE_SIZE * 2, ACT_THREE_TILE_SIZE * 2),
+            pygame.SRCALPHA,
+        )
+        center_x = ACT_THREE_TILE_SIZE
+        base_y = ACT_THREE_TILE_SIZE + 19
+        for particle_index in range(16):
+            phase = (cycle + particle_index * 0.151) % 1
+            visibility = math.sin(math.pi * phase) * (1 - fade * 0.8)
+            drift = math.sin(particle_index * 2.29 + phase * 4.5)
+            particle_x = round(
+                center_x + drift * (9 + phase * 23)
+            )
+            particle_y = round(
+                base_y - phase * (30 + particle_index % 5 * 6)
+            )
+            pygame.draw.polygon(
+                effect_surface,
+                (
+                    164 + particle_index % 3 * 18,
+                    55 + particle_index % 2 * 25,
+                    197 + particle_index % 3 * 15,
+                    round(195 * visibility),
+                ),
+                (
+                    (particle_x, particle_y - 2),
+                    (particle_x + 1, particle_y + 2),
+                    (particle_x - 1, particle_y + 1),
+                ),
+            )
+        surface.blit(
+            effect_surface,
+            (
+                position[0] - ACT_THREE_TILE_SIZE // 2,
+                position[1] - ACT_THREE_TILE_SIZE // 2,
+            ),
+        )
+
+    spirit_start = _PLAYER_DEATH_COLLAPSE_END_MS
+    spirit_end = _PLAYER_DEATH_MESSAGE_START_MS - 220
+    if spirit_start <= elapsed < spirit_end:
+        progress = (
+            (elapsed - spirit_start) / (spirit_end - spirit_start)
+        )
+        spirit = assets["player_warlock_hurt"].copy()
+        spirit.fill(
+            (102, 17, 117, 0),
+            special_flags=pygame.BLEND_RGBA_ADD,
+        )
+        spirit.set_alpha(
+            round(92 * math.sin(math.pi * progress))
+        )
+        surface.blit(
+            spirit,
+            (
+                position[0] + round(math.sin(progress * 7) * 5),
+                position[1] - 8 - round(progress * 22),
+            ),
+        )
+
+    impact_elapsed = elapsed - _PLAYER_DEATH_FALL_END_MS
+    if not 0 <= impact_elapsed < 900:
+        return
+    progress = impact_elapsed / 900
+    visibility = (1 - progress) ** 2
+    ripple_surface = pygame.Surface(
+        (ACT_THREE_TILE_SIZE * 3, ACT_THREE_TILE_SIZE * 2),
+        pygame.SRCALPHA,
+    )
+    center = (
+        ripple_surface.get_width() // 2,
+        ACT_THREE_TILE_SIZE + 16,
+    )
+    for ripple_index, delay in enumerate((0.0, 0.27)):
+        ripple_progress = max(
+            0,
+            min(1, (progress - delay) / (1 - delay)),
+        )
+        if ripple_progress <= 0:
+            continue
+        radius_x = round(11 + ripple_progress * (45 + ripple_index * 10))
+        radius_y = round(3 + ripple_progress * 9)
+        pygame.draw.ellipse(
+            ripple_surface,
+            (
+                122,
+                43,
+                151 + ripple_index * 18,
+                round(130 * visibility * (1 - ripple_progress)),
+            ),
+            (
+                center[0] - radius_x,
+                center[1] - radius_y,
+                radius_x * 2,
+                radius_y * 2,
+            ),
+            width=1,
+        )
+    surface.blit(
+        ripple_surface,
+        (
+            position[0] - ACT_THREE_TILE_SIZE,
+            position[1] - ACT_THREE_TILE_SIZE // 2,
+        ),
+    )
+
+
+def _draw_summoner_death_echoes(
+    surface,
+    assets,
+    position,
+    player,
+    current_time,
+):
+    elapsed = _player_death_elapsed(player, current_time)
+    if elapsed is None:
+        return
+
+    if 160 <= elapsed < _PLAYER_DEATH_COLLAPSE_END_MS:
+        fade = 1 - (
+            (elapsed - 160)
+            / (_PLAYER_DEATH_COLLAPSE_END_MS - 160)
+        )
+        hurt_sprite = assets["player_summoner_no_familiar_hurt"]
+        for echo_index, (offset_x, offset_y, alpha) in enumerate(
+            ((-2, -2, 54), (2, -5, 32), (-3, -8, 18))
+        ):
+            echo = hurt_sprite.copy()
+            echo.fill(
+                (8, 61 + echo_index * 8, 68, 0),
+                special_flags=pygame.BLEND_RGBA_ADD,
+            )
+            echo.set_alpha(round(alpha * fade))
+            surface.blit(
+                echo,
+                (position[0] + offset_x, position[1] + offset_y),
+            )
+
+    spirit_end = _PLAYER_DEATH_MESSAGE_START_MS - 250
+    if _PLAYER_DEATH_COLLAPSE_END_MS <= elapsed < spirit_end:
+        progress = (
+            (elapsed - _PLAYER_DEATH_COLLAPSE_END_MS)
+            / (spirit_end - _PLAYER_DEATH_COLLAPSE_END_MS)
+        )
+        spirit = assets["player_summoner_no_familiar_hurt"].copy()
+        spirit.fill(
+            (9, 86, 91, 0),
+            special_flags=pygame.BLEND_RGBA_ADD,
+        )
+        spirit.set_alpha(round(72 * (1 - progress) ** 1.5))
+        surface.blit(
+            spirit,
+            (
+                position[0] + round(math.sin(progress * 6) * 3),
+                position[1] - 5 - round(progress * 18),
+            ),
+        )
+
+
+def _draw_summoner_death_impact(
+    surface,
+    position,
+    player,
+    current_time,
+):
+    elapsed = _player_death_elapsed(player, current_time)
+    if elapsed is None:
+        return
+
+    thread_start = _PLAYER_DEATH_HURT_HOLD_MS
+    thread_end = _PLAYER_DEATH_MESSAGE_START_MS
+    if thread_start <= elapsed < thread_end:
+        progress = (elapsed - thread_start) / (thread_end - thread_start)
+        thread_surface = pygame.Surface(
+            (ACT_THREE_TILE_SIZE, ACT_THREE_TILE_SIZE),
+            pygame.SRCALPHA,
+        )
+        center = (ACT_THREE_TILE_SIZE // 2, ACT_THREE_TILE_SIZE // 2 + 7)
+        for thread_index in range(10):
+            phase = (progress * 0.88 + thread_index * 0.167) % 1
+            visibility = math.sin(math.pi * phase)
+            angle = thread_index * math.tau / 10 + phase * 0.55
+            distance = 7 + phase * (13 + thread_index % 3 * 4)
+            endpoint = (
+                round(center[0] + math.cos(angle) * distance),
+                round(center[1] + math.sin(angle) * distance),
+            )
+            pygame.draw.line(
+                thread_surface,
+                (
+                    58,
+                    181 + thread_index % 3 * 18,
+                    190,
+                    round(125 * visibility * (1 - progress * 0.6)),
+                ),
+                center,
+                endpoint,
+                1,
+            )
+        surface.blit(thread_surface, position)
+
+    impact_elapsed = elapsed - _PLAYER_DEATH_FALL_END_MS
+    if not 0 <= impact_elapsed < 680:
+        return
+    progress = impact_elapsed / 680
+    visibility = (1 - progress) ** 2
+    ripple_surface = pygame.Surface(
+        (ACT_THREE_TILE_SIZE, ACT_THREE_TILE_SIZE),
+        pygame.SRCALPHA,
+    )
+    center = (ACT_THREE_TILE_SIZE // 2, ACT_THREE_TILE_SIZE - 7)
+    radius_x = round(8 + progress * 29)
+    radius_y = round(2 + progress * 7)
+    pygame.draw.ellipse(
+        ripple_surface,
+        (65, 177, 181, round(140 * visibility)),
+        (
+            center[0] - radius_x,
+            center[1] - radius_y,
+            radius_x * 2,
+            radius_y * 2,
+        ),
+        width=1,
+    )
+    surface.blit(ripple_surface, position)
+
+
+def _draw_summoner_death_foreground(
+    surface,
+    assets,
+    position,
+    player,
+    current_time,
+):
+    elapsed = _player_death_elapsed(player, current_time)
+    if elapsed is None:
+        return
+
+    thread_start = _PLAYER_DEATH_HURT_HOLD_MS
+    thread_end = _PLAYER_DEATH_MESSAGE_START_MS
+    if thread_start <= elapsed < thread_end:
+        cycle = (elapsed - thread_start) / 1650
+        fade = min(
+            1,
+            max(0, (elapsed - _PLAYER_DEATH_FALL_END_MS) / 1200),
+        )
+        effect_surface = pygame.Surface(
+            (ACT_THREE_TILE_SIZE * 2, ACT_THREE_TILE_SIZE * 2),
+            pygame.SRCALPHA,
+        )
+        center = (ACT_THREE_TILE_SIZE, ACT_THREE_TILE_SIZE + 15)
+        for thread_index in range(15):
+            phase = (cycle + thread_index * 0.153) % 1
+            visibility = math.sin(math.pi * phase) * (1 - fade * 0.8)
+            angle = thread_index * math.tau / 15 + phase * 0.7
+            inner_distance = 7 + phase * 4
+            outer_distance = 14 + phase * (18 + thread_index % 4 * 4)
+            start = (
+                round(center[0] + math.cos(angle) * inner_distance),
+                round(center[1] + math.sin(angle) * inner_distance),
+            )
+            end = (
+                round(center[0] + math.cos(angle) * outer_distance),
+                round(center[1] + math.sin(angle) * outer_distance),
+            )
+            pygame.draw.line(
+                effect_surface,
+                (
+                    53,
+                    190 + thread_index % 3 * 17,
+                    197,
+                    round(170 * visibility),
+                ),
+                start,
+                end,
+                1,
+            )
+        surface.blit(
+            effect_surface,
+            (
+                position[0] - ACT_THREE_TILE_SIZE // 2,
+                position[1] - ACT_THREE_TILE_SIZE // 2,
+            ),
+        )
+
+    spirit_start = _PLAYER_DEATH_COLLAPSE_END_MS
+    spirit_end = _PLAYER_DEATH_MESSAGE_START_MS - 220
+    if spirit_start <= elapsed < spirit_end:
+        progress = (
+            (elapsed - spirit_start) / (spirit_end - spirit_start)
+        )
+        spirit = assets["player_summoner_no_familiar_hurt"].copy()
+        spirit.fill(
+            (11, 105, 109, 0),
+            special_flags=pygame.BLEND_RGBA_ADD,
+        )
+        spirit.set_alpha(
+            round(88 * math.sin(math.pi * progress))
+        )
+        surface.blit(
+            spirit,
+            (
+                position[0] + round(math.sin(progress * 7) * 4),
+                position[1] - 8 - round(progress * 22),
+            ),
+        )
+
+    impact_elapsed = elapsed - _PLAYER_DEATH_FALL_END_MS
+    if not 0 <= impact_elapsed < 880:
+        return
+    progress = impact_elapsed / 880
+    visibility = (1 - progress) ** 2
+    ripple_surface = pygame.Surface(
+        (ACT_THREE_TILE_SIZE * 3, ACT_THREE_TILE_SIZE * 2),
+        pygame.SRCALPHA,
+    )
+    center = (
+        ripple_surface.get_width() // 2,
+        ACT_THREE_TILE_SIZE + 16,
+    )
+    for ripple_index, delay in enumerate((0.0, 0.29)):
+        ripple_progress = max(
+            0,
+            min(1, (progress - delay) / (1 - delay)),
+        )
+        if ripple_progress <= 0:
+            continue
+        radius_x = round(11 + ripple_progress * (44 + ripple_index * 10))
+        radius_y = round(3 + ripple_progress * 9)
+        pygame.draw.ellipse(
+            ripple_surface,
+            (
+                47,
+                151,
+                158,
+                round(125 * visibility * (1 - ripple_progress)),
+            ),
+            (
+                center[0] - radius_x,
+                center[1] - radius_y,
+                radius_x * 2,
+                radius_y * 2,
+            ),
+            width=1,
+        )
+    surface.blit(
+        ripple_surface,
+        (
+            position[0] - ACT_THREE_TILE_SIZE,
+            position[1] - ACT_THREE_TILE_SIZE // 2,
+        ),
+    )
 
 
 def record_familiar_hit_feedback(game_state, started_at):

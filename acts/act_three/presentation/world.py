@@ -140,7 +140,19 @@ from acts.act_three.presentation.class_effects import (
 )
 from acts.act_three.presentation.combat_effects import (
     _draw_archer_projectile,
+    _draw_archer_death_echoes,
+    _draw_archer_death_impact,
     _draw_attack_impact_flash,
+    _draw_assassin_death_echoes,
+    _draw_assassin_death_impact,
+    _draw_berserker_death_echoes,
+    _draw_berserker_death_impact,
+    _draw_paladin_death_echoes,
+    _draw_paladin_death_impact,
+    _draw_warlock_death_echoes,
+    _draw_warlock_death_impact,
+    _draw_summoner_death_echoes,
+    _draw_summoner_death_impact,
     _draw_enemy_hit_feedback,
     _draw_familiar_hit_feedback,
     _draw_player_hit_feedback,
@@ -149,6 +161,8 @@ from acts.act_three.presentation.combat_effects import (
     _familiar_hit_feedback_active,
     _player_death_elapsed,
     _player_death_frame,
+    _player_death_camera_offset,
+    _player_death_sprite_offset,
     _player_hit_camera_offset,
     _player_hurt_sprite_active,
     _draw_warlock_orb,
@@ -213,8 +227,12 @@ def _draw_act_three_world(
         game_state.player,
         current_time,
     )
-    camera_x += hit_camera_x
-    camera_y += hit_camera_y
+    death_camera_x, death_camera_y = _player_death_camera_offset(
+        game_state.player,
+        current_time,
+    )
+    camera_x += hit_camera_x + death_camera_x
+    camera_y += hit_camera_y + death_camera_y
     exchange_player_origin = (
         game_state.player.warlock_soul_exchange_player_origin
     )
@@ -806,7 +824,14 @@ def _draw_act_three_world(
         current_time,
     )
     if (
-        player_subclass == "berserker"
+        player_subclass in (
+            "berserker",
+            "paladin",
+            "assassin",
+            "archer",
+            "warlock",
+            "summoner",
+        )
         and player_death_elapsed is not None
     ):
         player_death_frame = _player_death_frame(
@@ -814,10 +839,17 @@ def _draw_act_three_world(
             current_time,
         )
         if player_death_frame is None:
-            player_sprite = assets["player_berserker_hurt"]
+            if player_subclass == "summoner":
+                player_sprite = assets[
+                    "player_summoner_no_familiar_hurt"
+                ]
+            else:
+                player_sprite = assets[
+                    f"player_{player_subclass}_hurt"
+                ]
         else:
             player_sprite = assets[
-                f"player_berserker_death_{player_death_frame}"
+                f"player_{player_subclass}_death_{player_death_frame}"
             ]
     elif player_hurt_sprite_active:
         if player_subclass == "berserker":
@@ -954,6 +986,25 @@ def _draw_act_three_world(
         camera_x,
         camera_y,
     )
+    if (
+        player_subclass in (
+            "berserker",
+            "paladin",
+            "assassin",
+            "archer",
+            "warlock",
+            "summoner",
+        )
+        and player_death_elapsed is not None
+    ):
+        death_offset_x, death_offset_y = _player_death_sprite_offset(
+            game_state.player,
+            current_time,
+        )
+        player_position = (
+            player_position[0] + death_offset_x,
+            player_position[1] + death_offset_y,
+        )
     leap_progress = 0.0
     leap_start_position = None
     leap_end_position = player_position
@@ -1355,6 +1406,73 @@ def _draw_act_three_world(
                 ghost_position,
             )
 
+    if (
+        player_subclass == "berserker"
+        and player_death_elapsed is not None
+    ):
+        _draw_berserker_death_echoes(
+            view_surface,
+            assets,
+            player_position,
+            game_state.player,
+            current_time,
+        )
+    elif (
+        player_subclass == "paladin"
+        and player_death_elapsed is not None
+    ):
+        _draw_paladin_death_echoes(
+            view_surface,
+            assets,
+            player_position,
+            game_state.player,
+            current_time,
+        )
+    elif (
+        player_subclass == "assassin"
+        and player_death_elapsed is not None
+    ):
+        _draw_assassin_death_echoes(
+            view_surface,
+            assets,
+            player_position,
+            game_state.player,
+            current_time,
+        )
+    elif (
+        player_subclass == "archer"
+        and player_death_elapsed is not None
+    ):
+        _draw_archer_death_echoes(
+            view_surface,
+            assets,
+            player_position,
+            game_state.player,
+            current_time,
+        )
+    elif (
+        player_subclass == "warlock"
+        and player_death_elapsed is not None
+    ):
+        _draw_warlock_death_echoes(
+            view_surface,
+            assets,
+            player_position,
+            game_state.player,
+            current_time,
+        )
+    elif (
+        player_subclass == "summoner"
+        and player_death_elapsed is not None
+    ):
+        _draw_summoner_death_echoes(
+            view_surface,
+            assets,
+            player_position,
+            game_state.player,
+            current_time,
+        )
+
     _draw_player_hit_feedback(
         view_surface,
         player_sprite,
@@ -1365,6 +1483,67 @@ def _draw_act_three_world(
         current_time,
         fonts["sidebar_numbers"],
     )
+
+    if (
+        player_subclass == "berserker"
+        and player_death_elapsed is not None
+    ):
+        _draw_berserker_death_impact(
+            view_surface,
+            player_position,
+            game_state.player,
+            current_time,
+        )
+    elif (
+        player_subclass == "paladin"
+        and player_death_elapsed is not None
+    ):
+        _draw_paladin_death_impact(
+            view_surface,
+            player_position,
+            game_state.player,
+            current_time,
+        )
+    elif (
+        player_subclass == "assassin"
+        and player_death_elapsed is not None
+    ):
+        _draw_assassin_death_impact(
+            view_surface,
+            player_position,
+            game_state.player,
+            current_time,
+        )
+    elif (
+        player_subclass == "archer"
+        and player_death_elapsed is not None
+    ):
+        _draw_archer_death_impact(
+            view_surface,
+            player_position,
+            game_state.player,
+            current_time,
+        )
+    elif (
+        player_subclass == "warlock"
+        and player_death_elapsed is not None
+    ):
+        _draw_warlock_death_impact(
+            view_surface,
+            player_position,
+            game_state.player,
+            current_time,
+        )
+    elif (
+        player_subclass == "summoner"
+        and player_death_elapsed is not None
+    ):
+        _draw_summoner_death_impact(
+            view_surface,
+            player_position,
+            game_state.player,
+            current_time,
+        )
 
     familiar_position = game_state.player.summoner_familiar_position
     if (
@@ -1908,7 +2087,7 @@ def _draw_act_three_world(
             ),
             player_subclass,
         )
-    elif player_subclass == "warlock":
+    elif player_subclass == "warlock" and player_death_elapsed is None:
         if game_state.player.warlock_demon_form_active:
             _draw_warlock_demon_aura(
                 view_surface,
@@ -1928,7 +2107,7 @@ def _draw_act_three_world(
                 )
             ),
         )
-    elif player_subclass == "summoner":
+    elif player_subclass == "summoner" and player_death_elapsed is None:
         _draw_summoner_idle_lights(
             view_surface,
             player_position[0],
@@ -1945,6 +2124,7 @@ def _draw_act_three_world(
     if (
         player_subclass == "warlock"
         and game_state.player.warlock_demon_form_active
+        and player_death_elapsed is None
     ):
         _draw_warlock_demon_overlay(
             view_surface,
