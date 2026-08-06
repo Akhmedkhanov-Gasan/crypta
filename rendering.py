@@ -5,6 +5,7 @@ from presentation.assets import (
     load_act_three_transition_assets,
     load_act_two_fonts,
     load_act_two_sprites,
+    load_menu_assets,
 )
 from acts.act_three.presentation import (
     draw_act_three_gameplay,
@@ -83,4 +84,5 @@ __all__ = [
     "load_act_three_transition_assets",
     "load_act_two_fonts",
     "load_act_two_sprites",
+    "load_menu_assets",
 ]
