@@ -22,6 +22,19 @@ def load_act_one_fonts():
     }
 
 
+def load_menu_assets():
+    menu_directory = ASSET_ROOT / "ui" / "menu"
+
+    return {
+        "act_two_background": pygame.image.load(
+            str(menu_directory / "act_2_background.png")
+        ).convert(),
+        "act_three_background": pygame.image.load(
+            str(menu_directory / "act_3_background.png")
+        ).convert(),
+    }
+
+
 def load_act_two_fonts():
     regular_path = FONT_ROOT / "Almendra-Regular.ttf"
     bold_path = FONT_ROOT / "Almendra-Bold.ttf"

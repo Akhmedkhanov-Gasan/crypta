@@ -32,6 +32,7 @@ from bosses.oracle import resolve_oracle_hit_reaction
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from game.factories import create_floor_state, create_game_state
+from game.progress_store import load_progress, record_act_reached
 from levels import FLOOR_CONFIGS
 from logic import get_enemy_occupied_positions
 from rendering import (
@@ -65,10 +66,16 @@ from rendering import (
     load_act_three_transition_assets,
     load_act_two_fonts,
     load_act_two_sprites,
+    load_menu_assets,
 )
 from presentation.layout import (
     ACT_THREE_AWAKENING_END_MS,
     ACT_THREE_MUSIC_PATH,
+)
+from presentation.menu import (
+    MenuState,
+    draw_menu,
+    handle_menu_event,
 )
 from settings import (
     BACKGROUND_COLOR,
@@ -207,8 +214,15 @@ def main():
     act_three_transition_assets = (
         load_act_three_transition_assets()
     )
+    menu_assets = load_menu_assets()
 
     game_state = create_game_state()
+    menu_progress = load_progress()
+    progress_tracking_enabled = True
+    menu_state = MenuState()
+    menu_open = True
+    game_started = False
+    menu_started_at = pygame.time.get_ticks()
     act_three_music_attempted = False
     fullscreen = False
     running = True
@@ -226,6 +240,55 @@ def main():
                     windowed_size,
                     pygame.RESIZABLE,
                 )
+            elif menu_open:
+                event_position = getattr(
+                    event,
+                    "pos",
+                    pygame.mouse.get_pos(),
+                )
+                menu_action = handle_menu_event(
+                    event,
+                    menu_state,
+                    window_to_game_position(screen, event_position),
+                    game_started,
+                    fullscreen,
+                )
+
+                if menu_action == "resume":
+                    menu_open = False
+                    game_started = True
+                elif menu_action == "abandon_run":
+                    if (
+                        act_three_music_attempted
+                        and pygame.mixer.get_init() is not None
+                    ):
+                        pygame.mixer.music.stop()
+                    act_three_music_attempted = False
+                    game_state = create_game_state()
+                    progress_tracking_enabled = True
+                    game_started = False
+                    menu_state.page = "main"
+                    menu_state.selected_index = 0
+                    menu_started_at = pygame.time.get_ticks()
+                    pygame.mouse.set_cursor(
+                        pygame.SYSTEM_CURSOR_ARROW
+                    )
+                elif menu_action == "quit":
+                    running = False
+                elif menu_action == "toggle_fullscreen":
+                    if fullscreen:
+                        screen = pygame.display.set_mode(
+                            windowed_size,
+                            pygame.RESIZABLE,
+                        )
+                    else:
+                        windowed_size = screen.get_size()
+                        screen = pygame.display.set_mode(
+                            (0, 0),
+                            pygame.FULLSCREEN,
+                        )
+                    fullscreen = not fullscreen
+                continue
             elif handle_act_three_pointer_event(
                 event,
                 game_state,
@@ -303,6 +366,7 @@ def main():
                     ):
                         pygame.mixer.music.stop()
                     act_three_music_attempted = False
+                    progress_tracking_enabled = False
                     game_state = create_oracle_debug_state(
                         game_state.player.player_class or "warrior",
                         "Debug jump: Oracle arena.",
@@ -321,6 +385,7 @@ def main():
                     ):
                         pygame.mixer.music.stop()
                     act_three_music_attempted = False
+                    progress_tracking_enabled = False
                     game_state = create_game_state(
                         floor_index=FIRST_ACT_THREE_FLOOR,
                         opening_message=(
@@ -420,6 +485,7 @@ def main():
                             pygame.mixer.music.stop()
                         act_three_music_attempted = False
                         game_state = create_game_state()
+                        progress_tracking_enabled = True
                     continue
 
                 if game_state.class_selection_open:
@@ -627,6 +693,13 @@ def main():
                         cancel_ability_aiming(
                             game_state
                         )
+                    continue
+
+                if event.key == pygame.K_ESCAPE:
+                    menu_open = True
+                    menu_state.page = "main"
+                    menu_state.selected_index = 0
+                    menu_started_at = pygame.time.get_ticks()
                     continue
 
                 player_position_before_action = (
@@ -957,6 +1030,21 @@ def main():
                             )
         current_time = pygame.time.get_ticks()
 
+        if menu_open:
+            draw_menu(
+                game_surface,
+                act_one_fonts,
+                menu_state,
+                current_time - menu_started_at,
+                game_started,
+                fullscreen,
+                menu_assets,
+                menu_progress.highest_act_reached,
+            )
+            present_game(screen, game_surface)
+            clock.tick(FPS)
+            continue
+
         if game_state.player.ultimate_animation_active:
             animation_duration = (
                 ASSASSIN_ULTIMATE_PRELUDE_MS
@@ -1034,6 +1122,14 @@ def main():
                     )
 
         current_act = FLOOR_CONFIGS[game_state.floor_index]["act"]
+        if (
+            progress_tracking_enabled
+            and current_act > menu_progress.highest_act_reached
+        ):
+            menu_progress = record_act_reached(
+                menu_progress,
+                current_act,
+            )
         active_status_font = (
             act_two_fonts["status"]
             if current_act >= 2
