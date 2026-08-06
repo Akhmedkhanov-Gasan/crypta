@@ -19,6 +19,7 @@ def load_act_one_fonts():
         "status": pygame.font.Font(str(bold_path), 24),
         "text": pygame.font.Font(str(regular_path), 20),
         "controls": pygame.font.Font(str(bold_path), 19),
+        "interface": pygame.font.Font(str(bold_path), 20),
     }
 
 
