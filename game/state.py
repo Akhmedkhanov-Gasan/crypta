@@ -137,6 +137,9 @@ class EnemyState(AttributeMapping):
     curse_turns: int = 0
     movement_animation_started_at: int = 0
     attack_animation_started_at: int = 0
+    attack_effect_mode: str | None = None
+    attack_effect_positions: tuple[tuple[int, int], ...] = ()
+    phase_transition_started_at: int = -1
     hit_animation_started_at: int = -1
     hit_damage: int = 0
     hit_critical: bool = False
@@ -274,6 +277,8 @@ class PlayerState:
     ability_kill_charge: int = 0
     invisibility_turns: int = 0
     directional_ability_aiming: bool = False
+    potion_effect_started_at: int = 0
+    act_one_attack_target: tuple[int, int] | None = None
     act_three: ActThreePlayerState = field(
         default_factory=ActThreePlayerState,
     )

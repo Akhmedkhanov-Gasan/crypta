@@ -23,15 +23,159 @@ from presentation.layout import (
     CLASS_SELECTION_READY_MS,
 )
 from settings import (
+    CRIT_UPGRADE_AMOUNT,
+    DODGE_UPGRADE_AMOUNT,
     GAME_HEIGHT,
     GAME_WIDTH,
-    PANEL_BORDER_COLOR,
-    PANEL_COLOR,
+    MAX_CRIT_CHANCE,
+    MAX_DODGE_CHANCE,
     PLAYER_ATTACK_BORDER_COLOR,
-    PLAYER_HEALTH_BAR_COLOR,
-    STAIRS_COLOR,
     TEXT_COLOR,
 )
+
+
+def get_upgrade_card_rectangles():
+    return {
+        "vitality": pygame.Rect(210, 240, 410, 132),
+        "power": pygame.Rect(660, 240, 410, 132),
+        "precision": pygame.Rect(210, 394, 410, 132),
+        "evasion": pygame.Rect(660, 394, 410, 132),
+    }
+
+
+def _draw_upgrade_icon(screen, kind, center, color):
+    icon_surface = pygame.Surface((44, 44), pygame.SRCALPHA)
+    pygame.draw.circle(icon_surface, (11, 12, 16, 220), (22, 22), 21)
+    pygame.draw.circle(icon_surface, color, (22, 22), 20, width=2)
+
+    if kind == "vitality":
+        pygame.draw.polygon(
+            icon_surface,
+            color,
+            [(22, 34), (10, 21), (12, 14), (18, 12), (22, 17),
+             (26, 12), (32, 14), (34, 21)],
+        )
+    elif kind == "power":
+        pygame.draw.polygon(
+            icon_surface,
+            color,
+            [
+                (34, 7),
+                (31, 18),
+                (20, 29),
+                (16, 25),
+                (27, 14),
+            ],
+        )
+        pygame.draw.line(
+            icon_surface,
+            (15, 16, 21),
+            (29, 14),
+            (19, 25),
+            2,
+        )
+        pygame.draw.line(icon_surface, color, (12, 23), (22, 33), 3)
+        pygame.draw.line(icon_surface, color, (16, 30), (11, 35), 4)
+        pygame.draw.circle(icon_surface, color, (9, 37), 3)
+    elif kind == "precision":
+        pygame.draw.circle(icon_surface, color, (22, 22), 11, width=2)
+        pygame.draw.circle(icon_surface, color, (22, 22), 4, width=2)
+        pygame.draw.line(icon_surface, color, (22, 6), (22, 13), 2)
+        pygame.draw.line(icon_surface, color, (22, 31), (22, 38), 2)
+        pygame.draw.line(icon_surface, color, (6, 22), (13, 22), 2)
+        pygame.draw.line(icon_surface, color, (31, 22), (38, 22), 2)
+    else:
+        pygame.draw.circle(icon_surface, color, (28, 10), 4)
+        pygame.draw.line(icon_surface, color, (26, 13), (24, 17), 3)
+        pygame.draw.line(icon_surface, color, (25, 15), (19, 26), 4)
+        pygame.draw.line(icon_surface, color, (23, 18), (32, 21), 3)
+        pygame.draw.line(icon_surface, color, (32, 21), (36, 17), 3)
+        pygame.draw.line(icon_surface, color, (22, 18), (15, 16), 3)
+        pygame.draw.line(icon_surface, color, (15, 16), (12, 20), 3)
+        pygame.draw.line(icon_surface, color, (19, 26), (28, 30), 4)
+        pygame.draw.line(icon_surface, color, (28, 30), (35, 28), 3)
+        pygame.draw.line(icon_surface, color, (19, 26), (14, 34), 4)
+        pygame.draw.line(icon_surface, color, (14, 34), (8, 34), 3)
+        pygame.draw.line(icon_surface, color, (7, 12), (15, 12), 2)
+        pygame.draw.line(icon_surface, color, (5, 25), (12, 25), 2)
+
+    screen.blit(icon_surface, (center[0] - 22, center[1] - 22))
+
+
+def _draw_upgrade_card(
+    screen,
+    text_font,
+    rectangle,
+    kind,
+    key_label,
+    title,
+    description,
+    value_text,
+    accent_color,
+    disabled,
+    capped,
+    hovered,
+):
+    if disabled:
+        fill_color = (20, 20, 25)
+        border_color = (51, 49, 56)
+        text_color = (104, 101, 108)
+    else:
+        fill_color = (36, 35, 43) if hovered else (28, 28, 35)
+        border_color = accent_color if hovered else (76, 72, 81)
+        text_color = (224, 216, 204)
+
+    pygame.draw.rect(screen, (8, 8, 11), rectangle.move(3, 4), border_radius=7)
+    pygame.draw.rect(screen, fill_color, rectangle, border_radius=7)
+    pygame.draw.rect(screen, border_color, rectangle, width=2, border_radius=7)
+    pygame.draw.line(
+        screen,
+        (62, 59, 68) if not disabled else (35, 34, 40),
+        (rectangle.x + 12, rectangle.y + 3),
+        (rectangle.right - 12, rectangle.y + 3),
+    )
+
+    badge_rectangle = pygame.Rect(rectangle.x + 12, rectangle.y + 12, 30, 27)
+    pygame.draw.rect(screen, (12, 12, 16), badge_rectangle, border_radius=4)
+    pygame.draw.rect(screen, border_color, badge_rectangle, width=1, border_radius=4)
+    badge = text_font.render(key_label, True, text_color)
+    screen.blit(badge, badge.get_rect(center=badge_rectangle.center))
+
+    _draw_upgrade_icon(
+        screen,
+        kind,
+        (rectangle.x + 70, rectangle.centery),
+        border_color,
+    )
+    title_surface = text_font.render(title, True, text_color)
+    screen.blit(title_surface, (rectangle.x + 105, rectangle.y + 17))
+
+    description_surface = text_font.render(
+        description,
+        True,
+        (178, 173, 181) if not disabled else (96, 93, 101),
+    )
+    screen.blit(description_surface, (rectangle.x + 105, rectangle.y + 50))
+
+    value_surface = text_font.render(
+        value_text,
+        True,
+        accent_color if not disabled else (91, 88, 95),
+    )
+    screen.blit(value_surface, (rectangle.x + 105, rectangle.y + 82))
+
+    cost_text = "MAX" if capped else "1 GOLD"
+    cost_surface = text_font.render(
+        cost_text,
+        True,
+        (195, 151, 67) if not disabled else (86, 82, 75),
+    )
+    screen.blit(
+        cost_surface,
+        cost_surface.get_rect(
+            bottomright=(rectangle.right - 14, rectangle.bottom - 12)
+        ),
+    )
 
 
 def draw_upgrade_screen(
@@ -46,88 +190,169 @@ def draw_upgrade_screen(
     player_crit_chance,
     player_dodge_chance,
     message,
+    mouse_position=None,
 ):
     dark_overlay = pygame.Surface(
         (GAME_WIDTH, GAME_HEIGHT),
         pygame.SRCALPHA,
     )
-    dark_overlay.fill((0, 0, 0, 175))
+    dark_overlay.fill((0, 0, 0, 205))
     screen.blit(dark_overlay, (0, 0))
 
-    panel_rectangle = pygame.Rect(220, 105, 840, 510)
+    panel_rectangle = pygame.Rect(170, 66, 940, 588)
     pygame.draw.rect(
         screen,
-        PANEL_COLOR,
-        panel_rectangle,
-        border_radius=12,
+        (6, 6, 9),
+        panel_rectangle.move(6, 8),
+        border_radius=10,
     )
     pygame.draw.rect(
         screen,
-        PANEL_BORDER_COLOR,
+        (18, 18, 24),
+        panel_rectangle,
+        border_radius=10,
+    )
+    pygame.draw.rect(
+        screen,
+        (70, 68, 77),
         panel_rectangle,
         width=3,
-        border_radius=12,
+        border_radius=10,
     )
+    pygame.draw.rect(
+        screen,
+        (38, 37, 45),
+        panel_rectangle.inflate(-12, -12),
+        width=1,
+        border_radius=7,
+    )
+    for corner in (
+        panel_rectangle.topleft,
+        panel_rectangle.topright,
+        panel_rectangle.bottomleft,
+        panel_rectangle.bottomright,
+    ):
+        pygame.draw.circle(screen, (10, 10, 13), corner, 6)
+        pygame.draw.circle(screen, (116, 104, 82), corner, 2)
 
     title_surface = title_font.render(
         "DESCENT ALTAR",
         True,
-        STAIRS_COLOR,
+        (188, 177, 157),
     )
     title_rectangle = title_surface.get_rect(
-        center=(GAME_WIDTH // 2, 155)
+        center=(GAME_WIDTH // 2, 108)
     )
     screen.blit(title_surface, title_rectangle)
 
-    stats = (
-        f"Gold: {gold_count}    "
-        f"HP: {player_health}/{player_max_health}    "
-        f"Damage: {player_damage_min}-{player_damage_max}"
+    instruction = (
+        f"{gold_count} BLESSING{'S' if gold_count != 1 else ''} AVAILABLE"
     )
-    stats_surface = text_font.render(stats, True, TEXT_COLOR)
-    stats_rectangle = stats_surface.get_rect(
-        center=(GAME_WIDTH // 2, 205)
-    )
-    screen.blit(stats_surface, stats_rectangle)
-
-    chance_stats = (
-        f"Critical chance: {round(player_crit_chance * 100)}%    "
-        f"Dodge chance: {round(player_dodge_chance * 100)}%"
-    )
-    chance_surface = text_font.render(
-        chance_stats,
+    instruction_surface = text_font.render(
+        instruction,
         True,
-        TEXT_COLOR,
+        (211, 169, 77),
     )
-    chance_rectangle = chance_surface.get_rect(
-        center=(GAME_WIDTH // 2, 235)
+    screen.blit(
+        instruction_surface,
+        instruction_surface.get_rect(center=(GAME_WIDTH // 2, 153)),
     )
-    screen.blit(chance_surface, chance_rectangle)
 
-    options = [
-        "[1] Vitality: +2 maximum HP - 1 gold",
-        "[2] Sharpen weapon: +1 damage - 1 gold",
-        "[3] Precision: +5% critical chance - 1 gold",
-        "[4] Evasion: +5% dodge chance - 1 gold",
-        "[Enter] Descend without further purchases",
-    ]
-    option_y = 280
+    stats = (
+        f"HP {player_health}/{player_max_health}     "
+        f"DAMAGE {player_damage_min}-{player_damage_max}     "
+        f"CRIT {round(player_crit_chance * 100)}%     "
+        f"DODGE {round(player_dodge_chance * 100)}%"
+    )
+    stats_surface = text_font.render(
+        stats,
+        True,
+        (184, 179, 187),
+    )
+    screen.blit(
+        stats_surface,
+        stats_surface.get_rect(center=(GAME_WIDTH // 2, 196)),
+    )
 
-    for option in options:
-        option_surface = text_font.render(option, True, TEXT_COLOR)
-        screen.blit(option_surface, (310, option_y))
-        option_y += 52
+    crit_capped = player_crit_chance >= MAX_CRIT_CHANCE
+    dodge_capped = player_dodge_chance >= MAX_DODGE_CHANCE
+    no_gold = gold_count <= 0
+    cards = (
+        (
+            "vitality", "1", "VITALITY", "Maximum health • heals 2",
+            f"{player_max_health}  >  {player_max_health + 2} HP",
+            (155, 71, 74), False,
+        ),
+        (
+            "power", "2", "POWER", "Reliable weapon damage",
+            f"{player_damage_min}-{player_damage_max}  >  "
+            f"{player_damage_min + 1}-{player_damage_max + 1}",
+            (177, 112, 62), False,
+        ),
+        (
+            "precision", "3", "PRECISION", "Chance for a critical hit",
+            f"{round(player_crit_chance * 100)}%  >  "
+            f"{round(min(MAX_CRIT_CHANCE, player_crit_chance + CRIT_UPGRADE_AMOUNT) * 100)}%",
+            (166, 137, 69), crit_capped,
+        ),
+        (
+            "evasion", "4", "EVASION", "Chance to avoid an attack",
+            f"{round(player_dodge_chance * 100)}%  >  "
+            f"{round(min(MAX_DODGE_CHANCE, player_dodge_chance + DODGE_UPGRADE_AMOUNT) * 100)}%",
+            (76, 128, 131), dodge_capped,
+        ),
+    )
+    card_rectangles = get_upgrade_card_rectangles()
+    for (
+        kind,
+        key_label,
+        title,
+        description,
+        value_text,
+        accent_color,
+        capped,
+    ) in cards:
+        rectangle = card_rectangles[kind]
+        hovered = (
+            mouse_position is not None
+            and rectangle.collidepoint(mouse_position)
+        )
+        _draw_upgrade_card(
+            screen,
+            text_font,
+            rectangle,
+            kind,
+            key_label,
+            title,
+            description,
+            value_text,
+            accent_color,
+            no_gold or capped,
+            capped,
+            hovered,
+        )
 
     if message:
         message_surface = text_font.render(
             message,
             True,
-            PLAYER_HEALTH_BAR_COLOR,
+            (211, 169, 77),
         )
         message_rectangle = message_surface.get_rect(
-            center=(GAME_WIDTH // 2, 570)
+            center=(GAME_WIDTH // 2, 565)
         )
         screen.blit(message_surface, message_rectangle)
+
+    footer = (
+        f"[ENTER] KEEP {gold_count} GOLD AND DESCEND"
+        if gold_count > 0
+        else "DESCENDING..."
+    )
+    footer_surface = text_font.render(footer, True, (171, 166, 174))
+    screen.blit(
+        footer_surface,
+        footer_surface.get_rect(center=(GAME_WIDTH // 2, 620)),
+    )
 
 
 def draw_class_selection_screen(

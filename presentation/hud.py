@@ -159,19 +159,89 @@ def draw_status(
             )
         else:
             boss_status = (
-                f"{living_boss['name'].upper()}  "
+                f"{living_boss['name'].upper()}  |  "
                 f"{living_boss['health']}/"
-                f"{living_boss['max_health']} HP  "
-                f"|  Phase {phase}"
+                f"{living_boss['max_health']} HP  |  "
+                f"PHASE {phase}"
+            )
+            boss_color = (
+                (205, 74, 105)
+                if phase == 2
+                else living_boss["color"]
+            )
+            boss_surface = font.render(
+                boss_status,
+                True,
+                boss_color,
             )
             screen.blit(
-                font.render(
-                    boss_status,
-                    True,
-                    living_boss["color"],
+                boss_surface,
+                boss_surface.get_rect(
+                    center=(MAP_OFFSET_X + MAP_WIDTH // 2, 57)
                 ),
-                (MAP_OFFSET_X, 55),
             )
+            boss_bar_width = 500
+            boss_bar_height = 14
+            boss_bar_left = (
+                MAP_OFFSET_X + (MAP_WIDTH - boss_bar_width) // 2
+            )
+            boss_bar_top = 77
+            health_ratio = (
+                living_boss["health"] / living_boss["max_health"]
+            )
+            pygame.draw.rect(
+                screen,
+                (18, 14, 21),
+                (boss_bar_left, boss_bar_top, boss_bar_width, boss_bar_height),
+                border_radius=3,
+            )
+            pygame.draw.rect(
+                screen,
+                boss_color,
+                (
+                    boss_bar_left + 2,
+                    boss_bar_top + 2,
+                    round((boss_bar_width - 4) * health_ratio),
+                    boss_bar_height - 4,
+                ),
+                border_radius=2,
+            )
+            pygame.draw.rect(
+                screen,
+                (94, 83, 99),
+                (boss_bar_left, boss_bar_top, boss_bar_width, boss_bar_height),
+                width=1,
+                border_radius=3,
+            )
+            pygame.draw.line(
+                screen,
+                (28, 22, 31),
+                (boss_bar_left + boss_bar_width // 2, boss_bar_top + 1),
+                (
+                    boss_bar_left + boss_bar_width // 2,
+                    boss_bar_top + boss_bar_height - 2,
+                ),
+                2,
+            )
+
+            prepared_mode = living_boss.get("prepared_attack_mode")
+            if living_boss["attack_targets"] and prepared_mode:
+                mode_colors = {
+                    "cross": (230, 79, 86),
+                    "sweep": (235, 135, 57),
+                    "runes": (190, 95, 214),
+                }
+                warning_surface = font.render(
+                    f"PREPARING {prepared_mode.upper()}",
+                    True,
+                    mode_colors.get(prepared_mode, boss_color),
+                )
+                screen.blit(
+                    warning_surface,
+                    warning_surface.get_rect(
+                        center=(MAP_OFFSET_X + MAP_WIDTH // 2, 104)
+                    ),
+                )
 
     message = None
     message_color = TEXT_COLOR

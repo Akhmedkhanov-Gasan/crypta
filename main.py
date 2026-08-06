@@ -41,6 +41,9 @@ from rendering import (
     draw_act_three_debug_class_selection,
     draw_act_three_gameplay,
     draw_attack_markers,
+    draw_act_one_boss_effects,
+    draw_act_one_atmosphere,
+    draw_act_one_player_attack_effect,
     draw_boss_door,
     draw_chest,
     draw_class_selection_screen,
@@ -59,6 +62,7 @@ from rendering import (
     draw_status,
     draw_subclass_selection_screen,
     draw_upgrade_screen,
+    get_upgrade_card_rectangles,
     get_class_selection_rectangles,
     load_act_one_fonts,
     load_act_three_fonts,
@@ -190,6 +194,21 @@ def window_to_game_position(window, window_position):
     )
 
 
+def _finish_upgrade_descent(game_state):
+    game_state.floor_index += 1
+    game_state.floor = create_floor_state(game_state.floor_index)
+    clear_archer_barrage_zone(game_state)
+    clear_berserker_crushing_leap(game_state)
+    game_state.player.key_count = 0
+    game_state.upgrade_screen_open = False
+    game_state.upgrade_message = ""
+    game_state.player_attack_targets = []
+    add_log_message(
+        game_state.combat_log,
+        f"Hero descends to floor {game_state.floor_index + 1}.",
+    )
+
+
 def main():
     pygame.init()
 
@@ -295,6 +314,36 @@ def main():
                 screen,
                 window_to_game_position,
             ):
+                continue
+            elif (
+                event.type == pygame.MOUSEBUTTONDOWN
+                and event.button == 1
+                and game_state.upgrade_screen_open
+            ):
+                game_mouse_position = window_to_game_position(
+                    screen,
+                    event.pos,
+                )
+                if game_mouse_position is None:
+                    continue
+
+                upgrade_keys = {
+                    "vitality": pygame.K_1,
+                    "power": pygame.K_2,
+                    "precision": pygame.K_3,
+                    "evasion": pygame.K_4,
+                }
+                for upgrade_name, rectangle in (
+                    get_upgrade_card_rectangles().items()
+                ):
+                    if rectangle.collidepoint(game_mouse_position):
+                        pygame.event.post(
+                            pygame.event.Event(
+                                pygame.KEYDOWN,
+                                key=upgrade_keys[upgrade_name],
+                            )
+                        )
+                        break
                 continue
             elif (
                 event.type == pygame.MOUSEBUTTONDOWN
@@ -623,18 +672,7 @@ def main():
                         pygame.K_RETURN,
                         pygame.K_KP_ENTER,
                     ):
-                        game_state.floor_index += 1
-                        game_state.floor = create_floor_state(game_state.floor_index)
-                        clear_archer_barrage_zone(game_state)
-                        clear_berserker_crushing_leap(game_state)
-                        game_state.player.key_count = 0
-                        game_state.upgrade_screen_open = False
-                        game_state.upgrade_message = ""
-                        game_state.player_attack_targets = []
-                        add_log_message(
-                            game_state.combat_log,
-                            f"Hero descends to floor {game_state.floor_index + 1}.",
-                        )
+                        _finish_upgrade_descent(game_state)
 
                     continue
 
@@ -922,6 +960,10 @@ def main():
                     )
                 elif event.key == pygame.K_h:
                     player_acted = try_use_potion(game_state)
+                    if player_acted:
+                        game_state.player.potion_effect_started_at = (
+                            pygame.time.get_ticks()
+                        )
                 elif player_waited:
                     player_acted = True
                 elif player_tried_to_move:
@@ -1016,6 +1058,22 @@ def main():
                         for emitted_event in game_state.events
                         if emitted_event.type is GameEventType.HEAL
                     }
+                    hero_attack_event = next(
+                        (
+                            emitted_event
+                            for emitted_event in reversed(game_state.events)
+                            if (
+                                emitted_event.type is GameEventType.ATTACK
+                                and emitted_event.actor == "hero"
+                                and emitted_event.positions
+                            )
+                        ),
+                        None,
+                    )
+                    if hero_attack_event is not None:
+                        game_state.player.act_one_attack_target = (
+                            hero_attack_event.positions[0]
+                        )
                     for enemy in game_state.floor["enemies"]:
                         if enemy.name in moved_enemy_names:
                             enemy.movement_animation_started_at = (
@@ -1028,6 +1086,43 @@ def main():
                             enemy.attack_animation_started_at = (
                                 enemy_movement_started_at
                             )
+                        if enemy.name in attacked_enemy_names:
+                            attack_event = next(
+                                (
+                                    emitted_event
+                                    for emitted_event in reversed(
+                                        game_state.events
+                                    )
+                                    if (
+                                        emitted_event.type
+                                        is GameEventType.ATTACK
+                                        and emitted_event.actor
+                                        == enemy.name
+                                    )
+                                ),
+                                None,
+                            )
+                            if attack_event is not None:
+                                enemy.attack_effect_mode = (
+                                    attack_event.data.get("mode")
+                                )
+                                enemy.attack_effect_positions = (
+                                    attack_event.positions
+                                )
+                        if (
+                            enemy.type == "warden"
+                            and enemy.second_phase_announced
+                            and enemy.phase_transition_started_at < 0
+                        ):
+                            enemy.phase_transition_started_at = (
+                                enemy_movement_started_at
+                            )
+        if (
+            game_state.upgrade_screen_open
+            and game_state.player.gold_count <= 0
+        ):
+            _finish_upgrade_descent(game_state)
+
         current_time = pygame.time.get_ticks()
 
         if menu_open:
@@ -1143,7 +1238,7 @@ def main():
         active_text_font = (
             act_two_fonts["text"]
             if current_act >= 2
-            else log_font
+            else act_one_fonts["interface"]
         )
         active_controls_font = (
             act_two_fonts["controls"]
@@ -1156,6 +1251,12 @@ def main():
             game_state.floor["map"],
             current_act,
             act_two_sprites,
+        )
+        draw_act_one_atmosphere(
+            game_surface,
+            current_act,
+            game_state.floor["player_column"],
+            game_state.floor["player_row"],
         )
         draw_map_frame(
             game_surface,
@@ -1188,6 +1289,15 @@ def main():
         draw_attack_markers(
             game_surface,
             game_state.floor["enemies"],
+            current_act,
+            current_time,
+        )
+        draw_act_one_boss_effects(
+            game_surface,
+            game_state.floor["enemies"],
+            current_act,
+            current_time,
+            active_status_font,
         )
         if game_state.floor["boss_door"] is not None:
             living_boss_group = any(
@@ -1264,15 +1374,38 @@ def main():
             current_act,
             act_two_sprites,
             game_state.player.invisibility_turns,
+            current_time,
+            game_state.player.potion_effect_started_at,
+            game_state.player.hit_animation_started_at,
+            game_state.player.hit_origin,
+            game_state.player.attack_animation_started_at,
+            game_state.player.act_one_attack_target,
         )
         for enemy in game_state.floor["enemies"]:
-            if enemy["health"] > 0:
+            recent_act_one_hit = (
+                current_act < 2
+                and enemy.hit_animation_started_at >= 0
+                and 0
+                <= current_time - enemy.hit_animation_started_at
+                < 380
+            )
+            if enemy["health"] > 0 or recent_act_one_hit:
                 draw_enemy(
                     game_surface,
                     enemy,
                     current_act,
                     act_two_sprites,
+                    current_time,
                 )
+        draw_act_one_player_attack_effect(
+            game_surface,
+            current_act,
+            game_state.floor["player_column"],
+            game_state.floor["player_row"],
+            game_state.player.act_one_attack_target,
+            current_time,
+            game_state.player.attack_animation_started_at,
+        )
         draw_oracle_projectiles(
             game_surface,
             game_state.floor["projectiles"],
@@ -1331,10 +1464,14 @@ def main():
                 act_three_fonts["text"]
                 if current_act >= 3
                 else (
-                    act_two_fonts["status"]
+                    act_two_fonts["text"]
                     if current_act >= 2
-                    else font
+                    else act_one_fonts["interface"]
                 )
+            )
+            upgrade_mouse_position = window_to_game_position(
+                screen,
+                pygame.mouse.get_pos(),
             )
             draw_upgrade_screen(
                 game_surface,
@@ -1348,6 +1485,7 @@ def main():
                 game_state.player.crit_chance,
                 game_state.player.dodge_chance,
                 game_state.upgrade_message,
+                upgrade_mouse_position,
             )
         if game_state.class_selection_open:
             class_mouse_position = window_to_game_position(
