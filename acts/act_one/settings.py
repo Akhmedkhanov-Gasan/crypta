@@ -10,3 +10,10 @@ PLAYER_STARTING_STATS = PlayerBaseStats(
     crit_chance=0.10,
     dodge_chance=0.10,
 )
+
+
+# Brief captions shown after descending from the upgrade screen.
+FLOOR_INTRO_SUBTITLES = {
+    2: "THE AIR GROWS COLDER",
+    3: "SOMETHING STIRS BELOW",
+}

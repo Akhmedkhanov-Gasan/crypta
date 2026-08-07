@@ -1,5 +1,6 @@
 import random
 
+from acts.act_one.generation import generate_warden_floor
 from enemies import ENEMY_TYPES
 from levels import FLOOR_CONFIGS
 from settings import MAP_COLUMNS, MAP_ROWS
@@ -50,6 +51,9 @@ def generate_floor(floor_index):
 
     boss_enemy_types = config.get("boss_enemy_types", [])
     boss_room_layout = config.get("boss_room_layout")
+
+    if boss_room_layout == "warden_arena":
+        return generate_warden_floor(config)
 
     if boss_room_layout == "oracle_arena":
         return generate_oracle_floor(config)

@@ -318,6 +318,9 @@ class GameState:
     class_selection_open: bool = False
     class_transition_started_at: int = 0
     upgrade_message: str = ""
+    floor_transition_started_at: int = -1
+    floor_transition_target_index: int | None = None
+    floor_transition_swapped: bool = False
     player_attack_targets: list[tuple[int, int]] = field(
         default_factory=list
     )

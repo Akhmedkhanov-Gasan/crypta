@@ -43,6 +43,144 @@ from settings import (
 )
 
 
+FLOOR_TRANSITION_CLOSE_END_MS = 420
+FLOOR_TRANSITION_HOLD_END_MS = 570
+FLOOR_TRANSITION_REVEAL_END_MS = 1080
+FLOOR_TRANSITION_END_MS = 1700
+
+
+def draw_floor_transition(
+    screen,
+    title_font,
+    text_font,
+    elapsed_ms,
+    floor_number,
+    subtitle,
+):
+    if not 0 <= elapsed_ms < FLOOR_TRANSITION_END_MS:
+        return
+
+    center = (GAME_WIDTH // 2, GAME_HEIGHT // 2)
+    maximum_radius = round(
+        (GAME_WIDTH * GAME_WIDTH + GAME_HEIGHT * GAME_HEIGHT) ** 0.5
+        / 2
+    ) + 24
+    overlay = pygame.Surface(
+        (GAME_WIDTH, GAME_HEIGHT),
+        pygame.SRCALPHA,
+    )
+    ring_radius = None
+
+    if elapsed_ms < FLOOR_TRANSITION_CLOSE_END_MS:
+        progress = elapsed_ms / FLOOR_TRANSITION_CLOSE_END_MS
+        eased = progress * progress * (3 - 2 * progress)
+        ring_radius = round(maximum_radius * (1 - eased))
+        overlay.fill((3, 3, 7, 255))
+        pygame.draw.circle(
+            overlay,
+            (0, 0, 0, 0),
+            center,
+            ring_radius,
+        )
+    elif elapsed_ms < FLOOR_TRANSITION_HOLD_END_MS:
+        overlay.fill((3, 3, 7, 255))
+    elif elapsed_ms < FLOOR_TRANSITION_REVEAL_END_MS:
+        progress = (
+            elapsed_ms - FLOOR_TRANSITION_HOLD_END_MS
+        ) / (
+            FLOOR_TRANSITION_REVEAL_END_MS
+            - FLOOR_TRANSITION_HOLD_END_MS
+        )
+        eased = progress * progress * (3 - 2 * progress)
+        ring_radius = round(maximum_radius * eased)
+        overlay.fill((3, 3, 7, 255))
+        pygame.draw.circle(
+            overlay,
+            (0, 0, 0, 0),
+            center,
+            ring_radius,
+        )
+
+    if overlay.get_at((0, 0)).a:
+        screen.blit(overlay, (0, 0))
+
+    if ring_radius is not None and 8 < ring_radius < maximum_radius:
+        rim = pygame.Surface(
+            (GAME_WIDTH, GAME_HEIGHT),
+            pygame.SRCALPHA,
+        )
+        pygame.draw.circle(
+            rim,
+            (122, 111, 92, 75),
+            center,
+            ring_radius,
+            width=2,
+        )
+        screen.blit(rim, (0, 0))
+
+    title_start = FLOOR_TRANSITION_CLOSE_END_MS + 45
+    if elapsed_ms < title_start:
+        return
+
+    if elapsed_ms < title_start + 180:
+        title_alpha = round(
+            255 * (elapsed_ms - title_start) / 180
+        )
+    elif elapsed_ms > FLOOR_TRANSITION_END_MS - 350:
+        title_alpha = round(
+            255
+            * (FLOOR_TRANSITION_END_MS - elapsed_ms)
+            / 350
+        )
+    else:
+        title_alpha = 255
+    title_alpha = max(0, min(255, title_alpha))
+
+    caption_panel = pygame.Surface((600, 118), pygame.SRCALPHA)
+    caption_panel.fill((3, 3, 7, round(145 * title_alpha / 255)))
+    pygame.draw.line(
+        caption_panel,
+        (105, 98, 91, round(90 * title_alpha / 255)),
+        (80, 12),
+        (520, 12),
+    )
+    pygame.draw.line(
+        caption_panel,
+        (105, 98, 91, round(65 * title_alpha / 255)),
+        (150, 106),
+        (450, 106),
+    )
+    screen.blit(
+        caption_panel,
+        caption_panel.get_rect(center=center),
+    )
+
+    title = title_font.render(
+        f"FLOOR {floor_number}",
+        True,
+        (218, 209, 193),
+    )
+    title.set_alpha(title_alpha)
+    screen.blit(
+        title,
+        title.get_rect(center=(center[0], center[1] - 18)),
+    )
+
+    if subtitle:
+        subtitle_surface = text_font.render(
+            subtitle,
+            True,
+            (143, 137, 132),
+        )
+        subtitle_surface.set_alpha(title_alpha)
+        screen.blit(
+            subtitle_surface,
+            subtitle_surface.get_rect(
+                center=(center[0], center[1] + 28)
+            ),
+        )
+
+
 def get_upgrade_card_rectangles():
     return {
         "vitality": pygame.Rect(210, 240, 410, 132),

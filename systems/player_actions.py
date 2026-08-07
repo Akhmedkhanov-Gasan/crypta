@@ -336,11 +336,28 @@ def try_move_player(
         for enemy in living_enemies
         if enemy.boss_group
     ]
+    living_boss_guards = [
+        enemy
+        for enemy in living_enemies
+        if not enemy.boss_group
+    ]
+    boss_door_is_guarded = (
+        target_is_boss_door
+        and not floor.boss_fight_started
+        and bool(living_boss_guards)
+    )
     boss_door_is_sealed = (
         floor.seal_boss_door_during_fight
         and floor.boss_fight_started
         and bool(living_boss_group)
     )
+
+    if boss_door_is_guarded:
+        add_log_message(
+            game_state.combat_log,
+            "Defeat the guards before entering the boss chamber.",
+        )
+        return False
 
     if target_is_boss_door and boss_door_is_sealed:
         add_log_message(

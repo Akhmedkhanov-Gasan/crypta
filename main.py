@@ -1,6 +1,9 @@
 import pygame
 
-from acts.act_one.settings import PLAYER_STARTING_STATS
+from acts.act_one.settings import (
+    FLOOR_INTRO_SUBTITLES,
+    PLAYER_STARTING_STATS,
+)
 from acts.act_two.settings import CLASS_BASE_STATS
 from acts.act_three.input import (
     handle_act_three_key_event,
@@ -41,6 +44,8 @@ from levels import FLOOR_CONFIGS
 from logic import get_enemy_occupied_positions
 from rendering import (
     CLASS_SELECTION_READY_MS,
+    FLOOR_TRANSITION_CLOSE_END_MS,
+    FLOOR_TRANSITION_END_MS,
     draw_act_three_awakening,
     draw_act_three_debug_class_selection,
     draw_act_three_gameplay,
@@ -52,6 +57,7 @@ from rendering import (
     draw_boss_door,
     draw_chest,
     draw_class_selection_screen,
+    draw_floor_transition,
     draw_coin,
     draw_dungeon,
     draw_enemy,
@@ -201,19 +207,55 @@ def window_to_game_position(window, window_position):
     )
 
 
-def _finish_upgrade_descent(game_state):
-    game_state.floor_index += 1
-    game_state.floor = create_floor_state(game_state.floor_index)
-    clear_archer_barrage_zone(game_state)
-    clear_berserker_crushing_leap(game_state)
-    game_state.player.key_count = 0
+def _finish_upgrade_descent(game_state, started_at):
+    if game_state.floor_transition_started_at >= 0:
+        return
+
+    game_state.floor_transition_started_at = started_at
+    game_state.floor_transition_target_index = (
+        game_state.floor_index + 1
+    )
+    game_state.floor_transition_swapped = False
     game_state.upgrade_screen_open = False
     game_state.upgrade_message = ""
     game_state.player_attack_targets = []
-    add_log_message(
-        game_state.combat_log,
-        f"Hero descends to floor {game_state.floor_index + 1}.",
-    )
+
+
+def _advance_floor_transition(game_state, current_time):
+    started_at = game_state.floor_transition_started_at
+    target_index = game_state.floor_transition_target_index
+    if started_at < 0 or target_index is None:
+        return
+
+    elapsed = current_time - started_at
+    if (
+        not game_state.floor_transition_swapped
+        and elapsed >= FLOOR_TRANSITION_CLOSE_END_MS
+    ):
+        game_state.floor_index = target_index
+        game_state.floor = create_floor_state(target_index)
+        game_state.floor_transition_swapped = True
+        game_state.player.key_count = 0
+        game_state.player_attack_targets = []
+        clear_archer_barrage_zone(game_state)
+        clear_berserker_crushing_leap(game_state)
+        add_log_message(
+            game_state.combat_log,
+            f"Hero descends to floor {target_index + 1}.",
+        )
+
+    if elapsed >= FLOOR_TRANSITION_END_MS:
+        game_state.floor_transition_started_at = -1
+        game_state.floor_transition_target_index = None
+        game_state.floor_transition_swapped = False
+
+
+def _roman_floor_number(number):
+    return {
+        1: "I",
+        2: "II",
+        3: "III",
+    }.get(number, str(number))
 
 
 def main():
@@ -314,6 +356,8 @@ def main():
                             pygame.FULLSCREEN,
                         )
                     fullscreen = not fullscreen
+                continue
+            elif game_state.floor_transition_started_at >= 0:
                 continue
             elif handle_act_three_pointer_event(
                 event,
@@ -670,7 +714,10 @@ def main():
                         pygame.K_RETURN,
                         pygame.K_KP_ENTER,
                     ):
-                        _finish_upgrade_descent(game_state)
+                        _finish_upgrade_descent(
+                            game_state,
+                            pygame.time.get_ticks(),
+                        )
 
                     continue
 
@@ -1180,9 +1227,13 @@ def main():
             game_state.upgrade_screen_open
             and game_state.player.gold_count <= 0
         ):
-            _finish_upgrade_descent(game_state)
+            _finish_upgrade_descent(
+                game_state,
+                pygame.time.get_ticks(),
+            )
 
         current_time = pygame.time.get_ticks()
+        _advance_floor_transition(game_state, current_time)
 
         if menu_open:
             draw_menu(
@@ -1372,16 +1423,17 @@ def main():
                 enemy["health"] > 0 and enemy["boss_group"]
                 for enemy in game_state.floor["enemies"]
             )
-            boss_door_is_open = game_state.floor[
-                "boss_fight_started"
-            ]
+            living_boss_guards = any(
+                enemy["health"] > 0 and not enemy["boss_group"]
+                for enemy in game_state.floor["enemies"]
+            )
+            boss_door_is_open = not living_boss_guards
 
             if game_state.floor[
                 "seal_boss_door_during_fight"
-            ]:
+            ] and game_state.floor["boss_fight_started"]:
                 boss_door_is_open = (
-                    game_state.floor["boss_fight_started"]
-                    and not living_boss_group
+                    not living_boss_group
                 )
 
             draw_boss_door(
@@ -1640,6 +1692,44 @@ def main():
                 subclass_mouse_position,
                 game_state.player.subclass,
                 game_state.player.player_class,
+            )
+        if (
+            game_state.floor_transition_started_at >= 0
+            and game_state.floor_transition_target_index is not None
+        ):
+            target_floor_config = FLOOR_CONFIGS[
+                game_state.floor_transition_target_index
+            ]
+            target_act = target_floor_config["act"]
+            target_act_floor = target_floor_config["act_floor"]
+            transition_title_font = (
+                act_one_fonts["title"]
+                if target_act == 1
+                else act_two_fonts["title"]
+                if target_act == 2
+                else act_three_fonts["title"]
+            )
+            transition_text_font = (
+                act_one_fonts["interface"]
+                if target_act == 1
+                else act_two_fonts["text"]
+                if target_act == 2
+                else act_three_fonts["text"]
+            )
+            draw_floor_transition(
+                game_surface,
+                transition_title_font,
+                transition_text_font,
+                (
+                    current_time
+                    - game_state.floor_transition_started_at
+                ),
+                _roman_floor_number(target_act_floor),
+                (
+                    FLOOR_INTRO_SUBTITLES.get(target_act_floor, "")
+                    if target_act == 1
+                    else "THE DESCENT CONTINUES"
+                ),
             )
         present_game(screen, game_surface)
         clock.tick(FPS)

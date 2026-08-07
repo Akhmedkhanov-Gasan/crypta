@@ -18,8 +18,9 @@ FLOOR_CONFIGS = [
     {
         "act": 1,
         "act_floor": 3,
-        "room_count": 5,
-        "enemy_types": ["goblin", "brute"],
+        "room_count": 0,
+        "boss_room_layout": "warden_arena",
+        "enemy_types": ["goblin", "brute", "goblin"],
         "boss_enemy_types": ["warden", "archer", "archer"],
         "chest_count": 1,
         "potion_count": 2,
