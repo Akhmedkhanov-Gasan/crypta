@@ -65,6 +65,7 @@ class ChestState(AttributeMapping):
     contains: str
     is_open: bool = False
     loot_available: bool = False
+    open_animation_started_at: int = -1
 
 
 @dataclass(eq=False)
@@ -136,6 +137,7 @@ class EnemyState(AttributeMapping):
     heal_range: int = 0
     curse_turns: int = 0
     movement_animation_started_at: int = 0
+    movement_origin: tuple[int, int] | None = None
     attack_animation_started_at: int = 0
     attack_effect_mode: str | None = None
     attack_effect_positions: tuple[tuple[int, int], ...] = ()
@@ -279,6 +281,13 @@ class PlayerState:
     directional_ability_aiming: bool = False
     potion_effect_started_at: int = 0
     act_one_attack_target: tuple[int, int] | None = None
+    act_one_attack_was_critical: bool = False
+    act_one_movement_origin: tuple[int, int] | None = None
+    act_one_dodge_started_at: int = -1
+    act_one_dodge_origin: tuple[int, int] | None = None
+    act_one_pickup_kind: str | None = None
+    act_one_pickup_origin: tuple[int, int] | None = None
+    act_one_pickup_started_at: int = -1
     act_three: ActThreePlayerState = field(
         default_factory=ActThreePlayerState,
     )

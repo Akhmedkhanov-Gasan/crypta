@@ -1,5 +1,12 @@
 import pygame
 
+from acts.act_one.settings import PLAYER_STARTING_STATS
+from acts.act_three.settings import SUBCLASS_BASE_STATS
+from acts.act_two.settings import CLASS_BASE_STATS
+from acts.player_stats import (
+    describe_player_stat_changes,
+    player_stat_changes_between,
+)
 from presentation.hud import (
     get_class_selection_rectangles,
     wrap_text,
@@ -24,9 +31,11 @@ from presentation.layout import (
 )
 from settings import (
     CRIT_UPGRADE_AMOUNT,
+    DAMAGE_UPGRADE_AMOUNT,
     DODGE_UPGRADE_AMOUNT,
     GAME_HEIGHT,
     GAME_WIDTH,
+    HEALTH_UPGRADE_AMOUNT,
     MAX_CRIT_CHANCE,
     MAX_DODGE_CHANCE,
     PLAYER_ATTACK_BORDER_COLOR,
@@ -279,14 +288,17 @@ def draw_upgrade_screen(
     no_gold = gold_count <= 0
     cards = (
         (
-            "vitality", "1", "VITALITY", "Maximum health • heals 2",
-            f"{player_max_health}  >  {player_max_health + 2} HP",
+            "vitality", "1", "VITALITY",
+            f"Maximum health • heals {HEALTH_UPGRADE_AMOUNT}",
+            f"{player_max_health}  >  "
+            f"{player_max_health + HEALTH_UPGRADE_AMOUNT} HP",
             (155, 71, 74), False,
         ),
         (
             "power", "2", "POWER", "Reliable weapon damage",
             f"{player_damage_min}-{player_damage_max}  >  "
-            f"{player_damage_min + 1}-{player_damage_max + 1}",
+            f"{player_damage_min + DAMAGE_UPGRADE_AMOUNT}-"
+            f"{player_damage_max + DAMAGE_UPGRADE_AMOUNT}",
             (177, 112, 62), False,
         ),
         (
@@ -500,9 +512,11 @@ def draw_class_selection_screen(
             "number": "1",
             "title": "WARRIOR",
             "color": (205, 75, 68),
-            "bonuses": (
-                "+4 maximum HP",
-                "Highest survivability",
+            "bonuses": describe_player_stat_changes(
+                player_stat_changes_between(
+                    PLAYER_STARTING_STATS,
+                    CLASS_BASE_STATS["warrior"],
+                )
             ),
             "ability": "POWER STRIKE",
             "description": (
@@ -514,9 +528,11 @@ def draw_class_selection_screen(
             "number": "2",
             "title": "ROGUE",
             "color": (145, 78, 190),
-            "bonuses": (
-                "-2 maximum HP",
-                "+10% critical and dodge chance",
+            "bonuses": describe_player_stat_changes(
+                player_stat_changes_between(
+                    PLAYER_STARTING_STATS,
+                    CLASS_BASE_STATS["rogue"],
+                )
             ),
             "ability": "INVISIBILITY",
             "description": (
@@ -529,8 +545,13 @@ def draw_class_selection_screen(
             "title": "MAGE",
             "color": (75, 115, 205),
             "bonuses": (
-                "No passive stat bonuses",
-                "Attacks several enemies at once",
+                describe_player_stat_changes(
+                    player_stat_changes_between(
+                        PLAYER_STARTING_STATS,
+                        CLASS_BASE_STATS["mage"],
+                    )
+                )
+                or ("No passive stat changes",)
             ),
             "ability": "ARCANE BURST",
             "description": (
@@ -1326,6 +1347,24 @@ def draw_subclass_selection_screen(
                 center=(rectangle.centerx, 490)
             ),
         )
+        stat_changes = describe_player_stat_changes(
+            player_stat_changes_between(
+                CLASS_BASE_STATS[player_class],
+                SUBCLASS_BASE_STATS[subclass],
+            )
+        )
+        for index, stat_change in enumerate(stat_changes):
+            stat_surface = text_font.render(
+                stat_change,
+                True,
+                card_config["color"],
+            )
+            screen.blit(
+                stat_surface,
+                stat_surface.get_rect(
+                    center=(rectangle.centerx, 525 + index * 24)
+                ),
+            )
         action_label = (
             "PATH CHOSEN"
             if selected_subclass == subclass

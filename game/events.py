@@ -10,6 +10,7 @@ class GameEventType(Enum):
     MOVE = auto()
     ATTACK = auto()
     HIT = auto()
+    DODGE = auto()
     HEAL = auto()
     DEATH = auto()
 

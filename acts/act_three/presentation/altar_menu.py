@@ -1,9 +1,15 @@
 import pygame
 
 from game.progression import (
-    MAX_ATTRIBUTE_RANK,
     can_upgrade_attribute,
     experience_required_for_level,
+)
+from settings import (
+    CRIT_UPGRADE_AMOUNT,
+    DAMAGE_UPGRADE_AMOUNT,
+    DODGE_UPGRADE_AMOUNT,
+    HEALTH_UPGRADE_AMOUNT,
+    MAX_ATTRIBUTE_RANK,
 )
 
 ALTAR_MENU_RECT = pygame.Rect(140, 65, 1000, 590)
@@ -90,22 +96,22 @@ def _attribute_card_data(player):
         "vitality": (
             "VITALITY",
             f"HP  {player.health} / {player.max_health}",
-            "+2 MAX HP",
+            f"+{HEALTH_UPGRADE_AMOUNT} MAX HP",
         ),
         "power": (
             "POWER",
             f"DAMAGE  {player.damage_min}-{player.damage_max}",
-            "+1 DAMAGE",
+            f"+{DAMAGE_UPGRADE_AMOUNT} DAMAGE",
         ),
         "precision": (
             "PRECISION",
             f"CRITICAL  {round(player.crit_chance * 100)}%",
-            "+5% CRITICAL CHANCE",
+            f"+{round(CRIT_UPGRADE_AMOUNT * 100)}% CRITICAL CHANCE",
         ),
         "evasion": (
             "EVASION",
             f"DODGE  {round(player.dodge_chance * 100)}%",
-            "+5% DODGE CHANCE",
+            f"+{round(DODGE_UPGRADE_AMOUNT * 100)}% DODGE CHANCE",
         ),
     }
 

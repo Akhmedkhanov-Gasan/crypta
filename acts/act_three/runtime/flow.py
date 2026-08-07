@@ -1,5 +1,14 @@
+from acts.act_one.settings import PLAYER_STARTING_STATS
+from acts.act_three.settings import (
+    DEBUG_PLAYER_DAMAGE_MAX,
+    DEBUG_PLAYER_DAMAGE_MIN,
+    DEBUG_PLAYER_POTION_COUNT,
+    SUBCLASS_BASE_STATS,
+)
+from acts.act_two.settings import CLASS_BASE_STATS
 from game.combat_log import add_log_message
 from game.factories import create_floor_state, create_game_state
+from acts.player_stats import apply_player_stat_transition
 from levels import FLOOR_CONFIGS
 from presentation.layout import (
     ACT_THREE_AWAKENING_END_MS,
@@ -25,21 +34,16 @@ def create_oracle_debug_state(
     )
     debug_player = debug_state.player
     debug_player.player_class = player_class
-
-    if debug_player.player_class == "warrior":
-        debug_player.max_health += 4
-    elif debug_player.player_class == "rogue":
-        debug_player.max_health = max(
-            1,
-            debug_player.max_health - 2,
-        )
-        debug_player.crit_chance = 0.10
-        debug_player.dodge_chance = 0.10
+    apply_player_stat_transition(
+        debug_player,
+        PLAYER_STARTING_STATS,
+        CLASS_BASE_STATS[player_class],
+    )
 
     debug_player.health = debug_player.max_health
-    debug_player.damage_min = 5
-    debug_player.damage_max = 6
-    debug_player.potion_count = 2
+    debug_player.damage_min = DEBUG_PLAYER_DAMAGE_MIN
+    debug_player.damage_max = DEBUG_PLAYER_DAMAGE_MAX
+    debug_player.potion_count = DEBUG_PLAYER_POTION_COUNT
     debug_player.ability_kill_charge = CLASS_ABILITY_KILLS
 
     return debug_state
@@ -89,6 +93,11 @@ def create_act_three_debug_transition(
 
 def choose_subclass(game_state, subclass):
     game_state.player.subclass = subclass
+    apply_player_stat_transition(
+        game_state.player,
+        CLASS_BASE_STATS[game_state.player.player_class],
+        SUBCLASS_BASE_STATS[subclass],
+    )
     if not game_state.act_three_test_mode:
         game_state.floor_index += 1
         game_state.floor = create_floor_state(game_state.floor_index)
