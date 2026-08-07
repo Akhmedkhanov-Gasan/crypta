@@ -1,12 +1,20 @@
+from settings import (
+    CRIT_UPGRADE_AMOUNT,
+    DAMAGE_UPGRADE_AMOUNT,
+    DODGE_UPGRADE_AMOUNT,
+    HEALTH_UPGRADE_AMOUNT,
+    MAX_ATTRIBUTE_RANK,
+    MAX_CRIT_CHANCE,
+    MAX_DODGE_CHANCE,
+)
+
+
 DEFAULT_ENEMY_EXPERIENCE = 1
 ENEMY_EXPERIENCE_REWARDS = {
     "brute": 3,
     "warden": 5,
     "oracle": 8,
 }
-MAX_ATTRIBUTE_RANK = 5
-
-
 def experience_required_for_level(level: int) -> int:
     return 5 + max(0, level - 1) * 2
 
@@ -36,6 +44,10 @@ def grant_experience(player, amount: int) -> int:
 
 
 def can_upgrade_attribute(player, attribute: str) -> bool:
+    if attribute == "precision" and player.crit_chance >= MAX_CRIT_CHANCE:
+        return False
+    if attribute == "evasion" and player.dodge_chance >= MAX_DODGE_CHANCE:
+        return False
     return (
         attribute in player.attribute_ranks
         and player.attribute_points > 0
@@ -43,20 +55,34 @@ def can_upgrade_attribute(player, attribute: str) -> bool:
     )
 
 
+def apply_attribute_upgrade(player, attribute: str) -> bool:
+    if attribute == "vitality":
+        player.max_health += HEALTH_UPGRADE_AMOUNT
+        player.health += HEALTH_UPGRADE_AMOUNT
+    elif attribute == "power":
+        player.damage_min += DAMAGE_UPGRADE_AMOUNT
+        player.damage_max += DAMAGE_UPGRADE_AMOUNT
+    elif attribute == "precision":
+        player.crit_chance = min(
+            MAX_CRIT_CHANCE,
+            player.crit_chance + CRIT_UPGRADE_AMOUNT,
+        )
+    elif attribute == "evasion":
+        player.dodge_chance = min(
+            MAX_DODGE_CHANCE,
+            player.dodge_chance + DODGE_UPGRADE_AMOUNT,
+        )
+    else:
+        return False
+
+    return True
+
+
 def upgrade_attribute(player, attribute: str) -> bool:
     if not can_upgrade_attribute(player, attribute):
         return False
 
-    if attribute == "vitality":
-        player.max_health += 2
-        player.health += 2
-    elif attribute == "power":
-        player.damage_min += 1
-        player.damage_max += 1
-    elif attribute == "precision":
-        player.crit_chance += 0.05
-    elif attribute == "evasion":
-        player.dodge_chance += 0.05
+    apply_attribute_upgrade(player, attribute)
 
     player.attribute_ranks[attribute] += 1
     player.attribute_points -= 1

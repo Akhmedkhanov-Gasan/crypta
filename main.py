@@ -1,5 +1,7 @@
 import pygame
 
+from acts.act_one.settings import PLAYER_STARTING_STATS
+from acts.act_two.settings import CLASS_BASE_STATS
 from acts.act_three.input import (
     handle_act_three_key_event,
     handle_act_three_pointer_event,
@@ -33,6 +35,8 @@ from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from game.factories import create_floor_state, create_game_state
 from game.progress_store import load_progress, record_act_reached
+from game.progression import apply_attribute_upgrade
+from acts.player_stats import apply_player_stat_transition
 from levels import FLOOR_CONFIGS
 from logic import get_enemy_occupied_positions
 from rendering import (
@@ -44,6 +48,7 @@ from rendering import (
     draw_act_one_boss_effects,
     draw_act_one_atmosphere,
     draw_act_one_player_attack_effect,
+    draw_act_one_pickup_effect,
     draw_boss_door,
     draw_chest,
     draw_class_selection_screen,
@@ -87,11 +92,13 @@ from settings import (
     ASSASSIN_ULTIMATE_PRELUDE_MS,
     ASSASSIN_ULTIMATE_STEP_MS,
     CRIT_UPGRADE_AMOUNT,
+    DAMAGE_UPGRADE_AMOUNT,
     DODGE_UPGRADE_AMOUNT,
     FPS,
     GAME_HEIGHT,
     GAME_WIDTH,
     INITIAL_WINDOW_SCALE,
+    HEALTH_UPGRADE_AMOUNT,
     MAX_CRIT_CHANCE,
     MAX_DODGE_CHANCE,
 )
@@ -461,18 +468,11 @@ def main():
                     if player_class is not None:
                         if game_state.act_three_test_mode:
                             game_state.player.player_class = player_class
-                            if player_class == "warrior":
-                                game_state.player.max_health += 4
-                                game_state.player.health += 4
-                            elif player_class == "rogue":
-                                game_state.player.max_health = max(
-                                    1, game_state.player.max_health - 2
-                                )
-                                game_state.player.health = max(
-                                    1, game_state.player.health - 2
-                                )
-                                game_state.player.crit_chance = 0.10
-                                game_state.player.dodge_chance = 0.10
+                            apply_player_stat_transition(
+                                game_state.player,
+                                PLAYER_STARTING_STATS,
+                                CLASS_BASE_STATS[player_class],
+                            )
                             game_state.act_three_debug_class_selection_open = False
                             game_state.subclass_selection_open = True
                         else:
@@ -569,27 +569,11 @@ def main():
                         continue
 
                     game_state.player.player_class = chosen_class
-
-                    if game_state.player.player_class == "warrior":
-                        game_state.player.max_health += 4
-                        game_state.player.health += 4
-                    elif game_state.player.player_class == "rogue":
-                        game_state.player.max_health = max(
-                            1,
-                            game_state.player.max_health - 2,
-                        )
-                        game_state.player.health = max(
-                            1,
-                            game_state.player.health - 2,
-                        )
-                        game_state.player.crit_chance = min(
-                            MAX_CRIT_CHANCE,
-                            game_state.player.crit_chance + 0.10,
-                        )
-                        game_state.player.dodge_chance = min(
-                            MAX_DODGE_CHANCE,
-                            game_state.player.dodge_chance + 0.10,
-                        )
+                    apply_player_stat_transition(
+                        game_state.player,
+                        PLAYER_STARTING_STATS,
+                        CLASS_BASE_STATS[chosen_class],
+                    )
 
                     game_state.floor_index += 1
                     game_state.floor = create_floor_state(game_state.floor_index)
@@ -615,9 +599,14 @@ def main():
                             game_state.upgrade_message = "Not enough gold."
                         else:
                             game_state.player.gold_count -= 1
-                            game_state.player.max_health += 2
-                            game_state.player.health += 2
-                            game_state.upgrade_message = "Maximum HP increased by 2."
+                            apply_attribute_upgrade(
+                                game_state.player,
+                                "vitality",
+                            )
+                            game_state.upgrade_message = (
+                                "Maximum HP increased by "
+                                f"{HEALTH_UPGRADE_AMOUNT}."
+                            )
                             add_log_message(
                                 game_state.combat_log,
                                 game_state.upgrade_message,
@@ -627,9 +616,14 @@ def main():
                             game_state.upgrade_message = "Not enough gold."
                         else:
                             game_state.player.gold_count -= 1
-                            game_state.player.damage_min += 1
-                            game_state.player.damage_max += 1
-                            game_state.upgrade_message = "Damage increased by 1."
+                            apply_attribute_upgrade(
+                                game_state.player,
+                                "power",
+                            )
+                            game_state.upgrade_message = (
+                                "Damage increased by "
+                                f"{DAMAGE_UPGRADE_AMOUNT}."
+                            )
                             add_log_message(
                                 game_state.combat_log,
                                 game_state.upgrade_message,
@@ -641,12 +635,14 @@ def main():
                             game_state.upgrade_message = "Critical chance is capped."
                         else:
                             game_state.player.gold_count -= 1
-                            game_state.player.crit_chance = min(
-                                MAX_CRIT_CHANCE,
-                                game_state.player.crit_chance
-                                + CRIT_UPGRADE_AMOUNT,
+                            apply_attribute_upgrade(
+                                game_state.player,
+                                "precision",
                             )
-                            game_state.upgrade_message = "Critical chance increased by 5%."
+                            game_state.upgrade_message = (
+                                "Critical chance increased by "
+                                f"{round(CRIT_UPGRADE_AMOUNT * 100)}%."
+                            )
                             add_log_message(
                                 game_state.combat_log,
                                 game_state.upgrade_message,
@@ -658,12 +654,14 @@ def main():
                             game_state.upgrade_message = "Dodge chance is capped."
                         else:
                             game_state.player.gold_count -= 1
-                            game_state.player.dodge_chance = min(
-                                MAX_DODGE_CHANCE,
-                                game_state.player.dodge_chance
-                                + DODGE_UPGRADE_AMOUNT,
+                            apply_attribute_upgrade(
+                                game_state.player,
+                                "evasion",
                             )
-                            game_state.upgrade_message = "Dodge chance increased by 5%."
+                            game_state.upgrade_message = (
+                                "Dodge chance increased by "
+                                f"{round(DODGE_UPGRADE_AMOUNT * 100)}%."
+                            )
                             add_log_message(
                                 game_state.combat_log,
                                 game_state.upgrade_message,
@@ -990,6 +988,7 @@ def main():
                         player_acted = open_chest(
                             game_state,
                             target_chest,
+                            pygame.time.get_ticks(),
                         )
                     else:
                         player_acted = try_move_player(
@@ -1074,11 +1073,71 @@ def main():
                         game_state.player.act_one_attack_target = (
                             hero_attack_event.positions[0]
                         )
+                        game_state.player.act_one_attack_was_critical = any(
+                            emitted_event.type is GameEventType.HIT
+                            and emitted_event.actor == "hero"
+                            and emitted_event.data.get("critical", False)
+                            for emitted_event in game_state.events
+                        )
+                    dodge_event = next(
+                        (
+                            emitted_event
+                            for emitted_event in reversed(game_state.events)
+                            if (
+                                emitted_event.type is GameEventType.DODGE
+                                and emitted_event.target == "hero"
+                            )
+                        ),
+                        None,
+                    )
+                    if current_act < 2 and dodge_event is not None:
+                        game_state.player.act_one_dodge_started_at = (
+                            enemy_movement_started_at
+                        )
+                        game_state.player.act_one_dodge_origin = (
+                            dodge_event.origin
+                        )
+                    hero_move_event = next(
+                        (
+                            emitted_event
+                            for emitted_event in reversed(game_state.events)
+                            if (
+                                emitted_event.type is GameEventType.MOVE
+                                and emitted_event.actor == "hero"
+                                and emitted_event.origin is not None
+                            )
+                        ),
+                        None,
+                    )
+                    if current_act < 2 and hero_move_event is not None:
+                        game_state.player.act_one_movement_origin = (
+                            hero_move_event.origin
+                        )
+                        game_state.player.movement_animation_started_at = (
+                            enemy_movement_started_at
+                        )
                     for enemy in game_state.floor["enemies"]:
                         if enemy.name in moved_enemy_names:
                             enemy.movement_animation_started_at = (
                                 enemy_movement_started_at
                             )
+                            movement_event = next(
+                                (
+                                    emitted_event
+                                    for emitted_event in reversed(
+                                        game_state.events
+                                    )
+                                    if (
+                                        emitted_event.type
+                                        is GameEventType.MOVE
+                                        and emitted_event.actor == enemy.name
+                                        and emitted_event.origin is not None
+                                    )
+                                ),
+                                None,
+                            )
+                            if movement_event is not None:
+                                enemy.movement_origin = movement_event.origin
                         if (
                             enemy.name in attacked_enemy_names
                             or enemy.name in healed_enemy_names
@@ -1217,6 +1276,9 @@ def main():
                     )
 
         current_act = FLOOR_CONFIGS[game_state.floor_index]["act"]
+        current_act_floor = FLOOR_CONFIGS[game_state.floor_index][
+            "act_floor"
+        ]
         if (
             progress_tracking_enabled
             and current_act > menu_progress.highest_act_reached
@@ -1251,12 +1313,18 @@ def main():
             game_state.floor["map"],
             current_act,
             act_two_sprites,
+            current_act_floor,
+            game_state.floor.visual_seed,
         )
         draw_act_one_atmosphere(
             game_surface,
             current_act,
             game_state.floor["player_column"],
             game_state.floor["player_row"],
+            game_state.floor["map"],
+            current_act_floor,
+            game_state.floor.visual_seed,
+            current_time,
         )
         draw_map_frame(
             game_surface,
@@ -1347,6 +1415,7 @@ def main():
                 chest,
                 current_act,
                 act_two_sprites,
+                current_time,
             )
             if chest["loot_available"]:
                 draw_coin(
@@ -1380,6 +1449,10 @@ def main():
             game_state.player.hit_origin,
             game_state.player.attack_animation_started_at,
             game_state.player.act_one_attack_target,
+            game_state.player.movement_animation_started_at,
+            game_state.player.act_one_movement_origin,
+            game_state.player.act_one_dodge_started_at,
+            game_state.player.act_one_dodge_origin,
         )
         for enemy in game_state.floor["enemies"]:
             recent_act_one_hit = (
@@ -1389,7 +1462,15 @@ def main():
                 <= current_time - enemy.hit_animation_started_at
                 < 380
             )
-            if enemy["health"] > 0 or recent_act_one_hit:
+            has_act_one_death_effect = (
+                current_act < 2
+                and enemy.death_animation_started_at >= 0
+            )
+            if (
+                enemy["health"] > 0
+                or recent_act_one_hit
+                or has_act_one_death_effect
+            ):
                 draw_enemy(
                     game_surface,
                     enemy,
@@ -1405,6 +1486,15 @@ def main():
             game_state.player.act_one_attack_target,
             current_time,
             game_state.player.attack_animation_started_at,
+            game_state.player.act_one_attack_was_critical,
+        )
+        draw_act_one_pickup_effect(
+            game_surface,
+            current_act,
+            game_state.player.act_one_pickup_kind,
+            game_state.player.act_one_pickup_origin,
+            current_time,
+            game_state.player.act_one_pickup_started_at,
         )
         draw_oracle_projectiles(
             game_surface,

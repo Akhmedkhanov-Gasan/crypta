@@ -1,5 +1,6 @@
 import random
 
+from acts.act_one.settings import PLAYER_STARTING_STATS
 from enemies import ENEMY_TYPES
 from generation import generate_floor
 from game.state import (
@@ -10,11 +11,6 @@ from game.state import (
     PlayerState,
     PotionState,
     RoomState,
-)
-from settings import (
-    PLAYER_DAMAGE_MAX,
-    PLAYER_DAMAGE_MIN,
-    PLAYER_MAX_HEALTH,
 )
 
 
@@ -133,10 +129,12 @@ def create_floor_state(floor_index: int) -> FloorState:
 
 def create_player_state() -> PlayerState:
     return PlayerState(
-        max_health=PLAYER_MAX_HEALTH,
-        health=PLAYER_MAX_HEALTH,
-        damage_min=PLAYER_DAMAGE_MIN,
-        damage_max=PLAYER_DAMAGE_MAX,
+        max_health=PLAYER_STARTING_STATS.max_health,
+        health=PLAYER_STARTING_STATS.max_health,
+        damage_min=PLAYER_STARTING_STATS.damage_min,
+        damage_max=PLAYER_STARTING_STATS.damage_max,
+        crit_chance=PLAYER_STARTING_STATS.crit_chance,
+        dodge_chance=PLAYER_STARTING_STATS.dodge_chance,
     )
 
 

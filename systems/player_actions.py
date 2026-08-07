@@ -46,6 +46,7 @@ def try_use_potion(game_state: GameState) -> bool:
 def open_chest(
     game_state: GameState,
     chest: ChestState,
+    effect_started_at: int = 0,
 ) -> bool:
     player = game_state.player
 
@@ -57,6 +58,7 @@ def open_chest(
         return True
 
     chest["is_open"] = True
+    chest.open_animation_started_at = effect_started_at
     player.key_count -= 1
 
     if chest["contains"] == "gold":
@@ -127,7 +129,22 @@ def _activate_boss_fight(game_state: GameState) -> None:
         )
 
 
-def _collect_items(game_state: GameState) -> None:
+def _start_pickup_effect(
+    game_state: GameState,
+    kind: str,
+    position: tuple[int, int],
+    effect_started_at: int,
+) -> None:
+    player = game_state.player
+    player.act_one_pickup_kind = kind
+    player.act_one_pickup_origin = position
+    player.act_one_pickup_started_at = effect_started_at
+
+
+def _collect_items(
+    game_state: GameState,
+    effect_started_at: int = 0,
+) -> None:
     floor = game_state.floor
     player = game_state.player
     player_position = (
@@ -147,6 +164,12 @@ def _collect_items(game_state: GameState) -> None:
     if found_potion:
         player.potion_count += 1
         floor.potions.remove(found_potion)
+        _start_pickup_effect(
+            game_state,
+            "potion",
+            player_position,
+            effect_started_at,
+        )
         add_log_message(
             game_state.combat_log,
             "Hero picks up a potion.",
@@ -169,6 +192,12 @@ def _collect_items(game_state: GameState) -> None:
     if chest_with_coin:
         player.gold_count += 1
         chest_with_coin["loot_available"] = False
+        _start_pickup_effect(
+            game_state,
+            "gold",
+            player_position,
+            effect_started_at,
+        )
         add_log_message(
             game_state.combat_log,
             "Hero picks up one gold.",
@@ -186,6 +215,12 @@ def _collect_items(game_state: GameState) -> None:
     if found_key is not None:
         player.key_count += 1
         floor.dropped_keys.remove(found_key)
+        _start_pickup_effect(
+            game_state,
+            "key",
+            player_position,
+            effect_started_at,
+        )
         add_log_message(
             game_state.combat_log,
             "Hero picks up a key.",
@@ -366,7 +401,7 @@ def try_move_player(
     if entered_boss_room:
         _activate_boss_fight(game_state)
 
-    _collect_items(game_state)
+    _collect_items(game_state, transition_started_at)
     player_acted = _resolve_stairs(
         game_state,
         first_act_final_floor,

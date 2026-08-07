@@ -154,6 +154,19 @@ def resolve_enemy_turn(
                     and random.random()
                     < game_state.player.dodge_chance
                 ):
+                    game_state.emit(
+                        GameEvent(
+                            type=GameEventType.DODGE,
+                            actor=enemy.name,
+                            target="hero",
+                            origin=(enemy.column, enemy.row),
+                            destination=(
+                                game_state.floor.player_column,
+                                game_state.floor.player_row,
+                            ),
+                            data={"mode": attack_mode},
+                        )
+                    )
                     add_log_message(
                         game_state.combat_log,
                         (

@@ -31,6 +31,7 @@ from settings import (
     BERSERKER_RAGE_INJURED_DAMAGE_MULTIPLIER,
     BERSERKER_RAGE_INJURED_HEALTH_RATIO,
     CLASS_ABILITY_KILLS,
+    CRITICAL_DAMAGE_MULTIPLIER,
     PALADIN_HOLY_HAND_CHARGES,
     PALADIN_HOLY_SHIELD_CHARGES,
     PALADIN_HOLY_SHIELD_DAMAGE_BONUS,
@@ -197,7 +198,7 @@ def attack_enemy(
     )
 
     if critical_hit:
-        damage *= 2
+        damage = ceil(damage * CRITICAL_DAMAGE_MULTIPLIER)
 
     enemy.health = max(0, enemy.health - damage)
     if (
