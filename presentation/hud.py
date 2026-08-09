@@ -268,18 +268,18 @@ def draw_status(
 
 
 def draw_pixel_section(screen, rectangle):
-    pygame.draw.rect(screen, (24, 21, 27), rectangle)
+    pygame.draw.rect(screen, (18, 21, 26), rectangle)
     pygame.draw.rect(
         screen,
-        (66, 61, 70),
+        (54, 65, 70),
         rectangle,
-        width=2,
+        width=1,
     )
     pygame.draw.line(
         screen,
-        (92, 84, 96),
-        (rectangle.left + 2, rectangle.top + 2),
-        (rectangle.right - 3, rectangle.top + 2),
+        (79, 94, 96),
+        (rectangle.left + 1, rectangle.top + 1),
+        (rectangle.right - 2, rectangle.top + 1),
         1,
     )
 
@@ -399,16 +399,16 @@ def draw_act_two_sidebar(
         SIDEBAR_WIDTH,
         SIDEBAR_HEIGHT,
     )
-    pygame.draw.rect(screen, (16, 14, 18), panel_rectangle)
+    pygame.draw.rect(screen, (11, 14, 18), panel_rectangle)
     pygame.draw.rect(
         screen,
-        (82, 75, 86),
+        (62, 82, 84),
         panel_rectangle,
         width=3,
     )
     pygame.draw.rect(
         screen,
-        (35, 31, 39),
+        (31, 39, 43),
         panel_rectangle.inflate(-8, -8),
         width=1,
     )
@@ -439,11 +439,26 @@ def draw_act_two_sidebar(
     class_name = (
         player_class.upper()
         if player_class is not None
-        else "UNCHOOSEN"
+        else "UNBOUND"
     )
     screen.blit(
         title_font.render(class_name, True, class_color),
-        (SIDEBAR_X + 70, SIDEBAR_Y + 5),
+        (SIDEBAR_X + 70, SIDEBAR_Y + 8),
+    )
+
+    defeated_surface = log_font.render(
+        f"KILLS {enemies_defeated}",
+        True,
+        (139, 151, 151),
+    )
+    screen.blit(
+        defeated_surface,
+        defeated_surface.get_rect(
+            topright=(
+                SIDEBAR_X + SIDEBAR_WIDTH - 16,
+                SIDEBAR_Y + 12,
+            )
+        ),
     )
 
     health_text = f"HP {player_health}/{player_max_health}"
@@ -496,31 +511,56 @@ def draw_act_two_sidebar(
         SIDEBAR_X + 10,
         SIDEBAR_Y + 68,
         SIDEBAR_WIDTH - 20,
-        50,
+        54,
     )
     draw_pixel_section(screen, stats_rectangle)
     stats = (
-        f"DMG {player_damage_min}-{player_damage_max}"
-        f"    CRIT {round(player_crit_chance * 100)}%"
-        f"    DODGE {round(player_dodge_chance * 100)}%"
+        ("DMG", f"{player_damage_min}-{player_damage_max}"),
+        ("CRIT", f"{round(player_crit_chance * 100)}%"),
+        ("DODGE", f"{round(player_dodge_chance * 100)}%"),
     )
-    screen.blit(
-        log_font.render(stats, True, TEXT_COLOR),
-        (stats_rectangle.x + 10, stats_rectangle.y + 8),
-    )
-    defeated_text = f"Defeated: {enemies_defeated}"
-    screen.blit(
-        log_font.render(
-            defeated_text,
+    stat_width = stats_rectangle.width // len(stats)
+    for stat_index, (label, value) in enumerate(stats):
+        center_x = (
+            stats_rectangle.x
+            + stat_index * stat_width
+            + stat_width // 2
+        )
+        label_surface = controls_font.render(
+            label,
             True,
-            PANEL_BORDER_COLOR,
-        ),
-        (stats_rectangle.x + 10, stats_rectangle.y + 27),
-    )
+            (126, 140, 141),
+        )
+        value_surface = log_font.render(value, True, (238, 239, 235))
+        screen.blit(
+            label_surface,
+            label_surface.get_rect(
+                center=(center_x, stats_rectangle.y + 14)
+            ),
+        )
+        screen.blit(
+            value_surface,
+            value_surface.get_rect(
+                center=(center_x, stats_rectangle.y + 36)
+            ),
+        )
+        if stat_index:
+            pygame.draw.line(
+                screen,
+                (39, 49, 53),
+                (
+                    stats_rectangle.x + stat_index * stat_width,
+                    stats_rectangle.y + 7,
+                ),
+                (
+                    stats_rectangle.x + stat_index * stat_width,
+                    stats_rectangle.bottom - 7,
+                ),
+            )
 
     ability_rectangle = pygame.Rect(
         SIDEBAR_X + 10,
-        SIDEBAR_Y + 126,
+        SIDEBAR_Y + 130,
         SIDEBAR_WIDTH - 20,
         68,
     )
@@ -577,7 +617,11 @@ def draw_act_two_sidebar(
         )
     screen.blit(
         log_font.render(
-            ability_description,
+            fit_text_to_width(
+                log_font,
+                ability_description,
+                ability_rectangle.width - 20,
+            ),
             True,
             TEXT_COLOR,
         ),
@@ -586,7 +630,7 @@ def draw_act_two_sidebar(
 
     inventory_rectangle = pygame.Rect(
         SIDEBAR_X + 10,
-        SIDEBAR_Y + 202,
+        SIDEBAR_Y + 206,
         SIDEBAR_WIDTH - 20,
         50,
     )
@@ -616,7 +660,7 @@ def draw_act_two_sidebar(
             (item_x + 34, inventory_rectangle.y + 15),
         )
 
-    events_title_y = SIDEBAR_Y + 258
+    events_title_y = SIDEBAR_Y + 262
     screen.blit(
         title_font.render("RECENT EVENTS", True, TEXT_COLOR),
         (SIDEBAR_X + 12, events_title_y),
@@ -624,10 +668,10 @@ def draw_act_two_sidebar(
     event_y = events_title_y + 28
 
     for message in combat_log:
-        visible_message = (
-            message
-            if len(message) <= 43
-            else f"{message[:40]}..."
+        visible_message = fit_text_to_width(
+            log_font,
+            message,
+            SIDEBAR_WIDTH - 24,
         )
         screen.blit(
             log_font.render(

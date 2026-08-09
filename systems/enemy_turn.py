@@ -23,9 +23,12 @@ from logic import (
     update_enemy_aggro,
 )
 from systems.enemy_ai import (
+    note_warden_attack_completed,
+    resolve_warden_reposition,
     take_archer_turn,
     take_oracle_turn,
     take_standard_turn,
+    take_warden_turn,
     try_raise_shield,
     try_start_healing,
 )
@@ -76,6 +79,12 @@ def resolve_enemy_turn(
             enemy["attack_targets"] = []
             enemy["prepared_attack_mode"] = None
             enemy["heal_target"] = None
+            continue
+
+        if (
+            enemy.type == "warden"
+            and resolve_warden_reposition(game_state, enemy)
+        ):
             continue
 
         if (
@@ -241,6 +250,12 @@ def resolve_enemy_turn(
                     "The hero has fallen.",
                 )
                 break
+
+            if enemy.type == "warden":
+                note_warden_attack_completed(
+                    game_state,
+                    enemy,
+                )
 
             continue
 
@@ -532,7 +547,14 @@ def resolve_enemy_turn(
         ):
             continue
 
-        if enemy.type == "archer":
+        if enemy.type == "warden":
+            take_warden_turn(
+                game_state,
+                enemy,
+                occupied_positions,
+                attack_blocking_positions,
+            )
+        elif enemy.type == "archer":
             take_archer_turn(
                 game_state,
                 enemy,

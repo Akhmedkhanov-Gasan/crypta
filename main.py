@@ -23,7 +23,6 @@ from acts.act_three.runtime import (
     clear_archer_barrage_zone,
     clear_berserker_crushing_leap,
     create_act_three_debug_transition,
-    create_oracle_debug_state,
 )
 from acts.act_three.presentation.combat_effects import (
     record_enemy_death_feedback,
@@ -52,7 +51,10 @@ from rendering import (
     draw_attack_markers,
     draw_act_one_boss_effects,
     draw_act_one_atmosphere,
+    draw_act_two_atmosphere,
     draw_act_one_player_attack_effect,
+    draw_act_two_player_attack_effect,
+    draw_act_two_player_feedback_overlay,
     draw_act_one_pickup_effect,
     draw_boss_door,
     draw_chest,
@@ -171,10 +173,13 @@ def present_game(window, game_surface):
     )
     scaled_width = max(1, int(GAME_WIDTH * scale))
     scaled_height = max(1, int(GAME_HEIGHT * scale))
-    scaled_surface = pygame.transform.scale(
-        game_surface,
-        (scaled_width, scaled_height),
+    scale_is_integer = abs(scale - round(scale)) < 0.001
+    transform = (
+        pygame.transform.scale
+        if scale_is_integer
+        else pygame.transform.smoothscale
     )
+    scaled_surface = transform(game_surface, (scaled_width, scaled_height))
     offset_x = (window_width - scaled_width) // 2
     offset_y = (window_height - scaled_height) // 2
 
@@ -467,9 +472,14 @@ def main():
                         pygame.mixer.music.stop()
                     act_three_music_attempted = False
                     progress_tracking_enabled = False
-                    game_state = create_oracle_debug_state(
-                        game_state.player.player_class or "warrior",
-                        "Debug jump: Oracle arena.",
+                    game_state = create_game_state(
+                        floor_index=FIRST_ACT_FINAL_FLOOR,
+                        opening_message="Debug jump: choose an Act II class.",
+                    )
+                    game_state.class_selection_open = True
+                    game_state.class_transition_started_at = (
+                        pygame.time.get_ticks()
+                        - CLASS_SELECTION_READY_MS
                     )
                     continue
 
@@ -1344,17 +1354,17 @@ def main():
             else font
         )
         active_heading_font = (
-            act_two_fonts["heading"]
+            act_two_fonts["sidebar_heading"]
             if current_act >= 2
             else font
         )
         active_text_font = (
-            act_two_fonts["text"]
+            act_two_fonts["sidebar_text"]
             if current_act >= 2
             else act_one_fonts["interface"]
         )
         active_controls_font = (
-            act_two_fonts["controls"]
+            act_two_fonts["sidebar_controls"]
             if current_act >= 2
             else act_one_fonts["controls"]
         )
@@ -1368,6 +1378,16 @@ def main():
             game_state.floor.visual_seed,
         )
         draw_act_one_atmosphere(
+            game_surface,
+            current_act,
+            game_state.floor["player_column"],
+            game_state.floor["player_row"],
+            game_state.floor["map"],
+            current_act_floor,
+            game_state.floor.visual_seed,
+            current_time,
+        )
+        draw_act_two_atmosphere(
             game_surface,
             current_act,
             game_state.floor["player_column"],
@@ -1505,6 +1525,9 @@ def main():
             game_state.player.act_one_movement_origin,
             game_state.player.act_one_dodge_started_at,
             game_state.player.act_one_dodge_origin,
+            game_state.player.death_animation_started_at,
+            game_state.player.hit_damage,
+            active_status_font,
         )
         for enemy in game_state.floor["enemies"]:
             recent_act_one_hit = (
@@ -1518,10 +1541,22 @@ def main():
                 current_act < 2
                 and enemy.death_animation_started_at >= 0
             )
+            has_act_two_death_effect = (
+                current_act == 2
+                and enemy.type in (
+                    "goblin",
+                    "archer",
+                    "brute",
+                    "sentinel",
+                    "priest",
+                )
+                and enemy.death_animation_started_at >= 0
+            )
             if (
                 enemy["health"] > 0
                 or recent_act_one_hit
                 or has_act_one_death_effect
+                or has_act_two_death_effect
             ):
                 draw_enemy(
                     game_surface,
@@ -1529,6 +1564,7 @@ def main():
                     current_act,
                     act_two_sprites,
                     current_time,
+                    active_status_font,
                 )
         draw_act_one_player_attack_effect(
             game_surface,
@@ -1536,6 +1572,17 @@ def main():
             game_state.floor["player_column"],
             game_state.floor["player_row"],
             game_state.player.act_one_attack_target,
+            current_time,
+            game_state.player.attack_animation_started_at,
+            game_state.player.act_one_attack_was_critical,
+        )
+        draw_act_two_player_attack_effect(
+            game_surface,
+            current_act,
+            game_state.floor["player_column"],
+            game_state.floor["player_row"],
+            game_state.player.act_one_attack_target,
+            game_state.player.player_class,
             current_time,
             game_state.player.attack_animation_started_at,
             game_state.player.act_one_attack_was_critical,
@@ -1561,6 +1608,14 @@ def main():
             game_state.floor["enemies"],
             game_state.game_won,
         )
+        if current_act == 2:
+            draw_act_two_player_feedback_overlay(
+                game_surface,
+                game_state,
+                act_two_fonts,
+                act_two_sprites,
+                current_time,
+            )
         draw_sidebar(
             game_surface,
             active_heading_font,

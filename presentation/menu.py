@@ -156,8 +156,8 @@ def _draw_menu_background(surface, menu_assets, visual_stage):
 
 
 def _draw_title(surface, fonts):
-    title = fonts["title"].render("CRYPTA", False, _TEXT)
-    title = pygame.transform.scale_by(title, 1.7)
+    title = fonts["title"].render("CRYPTA", True, _TEXT)
+    title = pygame.transform.smoothscale_by(title, 1.7)
     surface.blit(
         title,
         title.get_rect(center=(GAME_WIDTH // 2, 245)),
@@ -184,7 +184,7 @@ def _draw_entries(surface, font, entries, selected_index):
             pygame.draw.rect(surface, _STONE_DARK, rectangle, width=1)
             color = _TEXT_DIM
 
-        label_surface = font.render(label, False, color)
+        label_surface = font.render(label, True, color)
         surface.blit(
             label_surface,
             label_surface.get_rect(center=rectangle.center),
@@ -207,7 +207,7 @@ def draw_menu(
     if menu_state.page == "confirm_abandon":
         warning = fonts["heading"].render(
             "ABANDON THE DESCENT?",
-            False,
+            True,
             _TEXT,
         )
         surface.blit(
@@ -216,7 +216,7 @@ def draw_menu(
         )
         consequence = fonts["text"].render(
             "ALL PROGRESS WILL BE LOST",
-            False,
+            True,
             _ACCENT,
         )
         surface.blit(

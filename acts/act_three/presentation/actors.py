@@ -129,7 +129,7 @@ def _enemy_sprite(
             f"enemy_{enemy.type}_idle_{frame_index}"
         ]
 
-    return assets.get(
-        f"enemy_{enemy.type}",
-        assets["enemy_brute"],
+    raise KeyError(
+        "Act III has no visual asset set for enemy type "
+        f"{enemy.type!r}. Add its animations to assets/sprites/act_3."
     )

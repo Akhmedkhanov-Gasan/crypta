@@ -2,6 +2,7 @@ import math
 
 import pygame
 
+from acts.act_two.presentation import draw_act_two_player_actor
 from presentation.layout import (
     MAP_HEIGHT,
     MAP_OFFSET_X,
@@ -45,11 +46,28 @@ ACT_ONE_MOVE_DURATIONS = {
     "goblin": 135,
     "archer": 205,
     "brute": 235,
-    "warden": 275,
+    "warden": 360,
 }
 ACT_ONE_ENEMY_DEATH_DURATION_MS = 820
 ACT_ONE_BOSS_DEATH_DURATION_MS = 1450
 _ACT_ONE_RUNE_SURFACES = {}
+ACT_TWO_GRID_COLOR = (20, 22, 28)
+ACT_TWO_MORTAR_DARK = (17, 20, 25)
+ACT_TWO_MORTAR_LIGHT = (56, 61, 66)
+ACT_TWO_DAMP = (20, 49, 53)
+ACT_TWO_RUNE = (61, 116, 123)
+ACT_TWO_HIT_FEEDBACK_MS = 650
+ACT_TWO_HIT_REACTION_MS = 230
+ACT_TWO_GOBLIN_DEATH_MS = 920
+ACT_TWO_ARCHER_DEATH_MS = 880
+ACT_TWO_BRUTE_DEATH_MS = 1120
+ACT_TWO_SENTINEL_DEATH_MS = 1060
+ACT_TWO_PRIEST_DEATH_MS = 1040
+ACT_TWO_CLASS_EFFECT_COLORS = {
+    "warrior": (218, 76, 54),
+    "rogue": (161, 73, 202),
+    "mage": (61, 146, 216),
+}
 
 
 def _act_one_enemy_color(color, is_aggro):
@@ -753,6 +771,193 @@ def draw_act_one_player_attack_effect(
         )
 
     screen.blit(effect_surface, (effect_left, effect_top))
+
+
+def draw_act_two_player_attack_effect(
+    screen,
+    act_number,
+    column,
+    row,
+    target,
+    player_class,
+    current_time,
+    attack_started_at,
+    critical=False,
+):
+    duration = 390 if critical else 310
+    elapsed = current_time - attack_started_at
+    if (
+        act_number != 2
+        or target is None
+        or player_class not in ACT_TWO_CLASS_EFFECT_COLORS
+        or attack_started_at <= 0
+        or not 0 <= elapsed < duration
+    ):
+        return
+
+    progress = elapsed / duration
+    visibility = max(0, 1 - progress)
+    impact = math.sin(math.pi * min(1, progress * 1.45))
+    direction_x = target[0] - column
+    direction_y = target[1] - row
+    length = max(1, math.hypot(direction_x, direction_y))
+    direction_x /= length
+    direction_y /= length
+    perpendicular_x = -direction_y
+    perpendicular_y = direction_x
+    origin = (
+        MAP_OFFSET_X + column * TILE_SIZE + TILE_SIZE // 2,
+        MAP_OFFSET_Y + row * TILE_SIZE + TILE_SIZE // 2,
+    )
+    destination = (
+        MAP_OFFSET_X + target[0] * TILE_SIZE + TILE_SIZE // 2,
+        MAP_OFFSET_Y + target[1] * TILE_SIZE + TILE_SIZE // 2,
+    )
+    color = ACT_TWO_CLASS_EFFECT_COLORS[player_class]
+    effect = pygame.Surface((MAP_WIDTH, MAP_HEIGHT), pygame.SRCALPHA)
+    local_origin = (
+        origin[0] - MAP_OFFSET_X,
+        origin[1] - MAP_OFFSET_Y,
+    )
+    local_destination = (
+        destination[0] - MAP_OFFSET_X,
+        destination[1] - MAP_OFFSET_Y,
+    )
+
+    if player_class == "warrior":
+        sweep_center = (
+            local_destination[0] - round(direction_x * 3),
+            local_destination[1] - round(direction_y * 3),
+        )
+        sweep_length = 15 + round(impact * 5)
+        start = (
+            round(sweep_center[0] - perpendicular_x * sweep_length),
+            round(sweep_center[1] - perpendicular_y * sweep_length),
+        )
+        end = (
+            round(sweep_center[0] + perpendicular_x * sweep_length),
+            round(sweep_center[1] + perpendicular_y * sweep_length),
+        )
+        pygame.draw.line(
+            effect,
+            (*color, round(210 * visibility)),
+            start,
+            end,
+            7 if critical else 5,
+        )
+        pygame.draw.line(
+            effect,
+            (255, 205, 138, round(245 * visibility)),
+            start,
+            end,
+            2,
+        )
+        for spark_index in range(6 if critical else 4):
+            angle = spark_index * math.tau / (6 if critical else 4)
+            distance = 6 + progress * 16
+            spark_end = (
+                round(local_destination[0] + math.cos(angle) * distance),
+                round(local_destination[1] + math.sin(angle) * distance),
+            )
+            pygame.draw.line(
+                effect,
+                (245, 138, 70, round(190 * visibility)),
+                local_destination,
+                spark_end,
+                2,
+            )
+    elif player_class == "rogue":
+        travel = min(1, progress * 2.2)
+        trail_end = (
+            round(
+                local_origin[0]
+                + (local_destination[0] - local_origin[0]) * travel
+            ),
+            round(
+                local_origin[1]
+                + (local_destination[1] - local_origin[1]) * travel
+            ),
+        )
+        pygame.draw.line(
+            effect,
+            (*color, round(145 * visibility)),
+            local_origin,
+            trail_end,
+            3,
+        )
+        for slash_direction in (-1, 1):
+            offset = 10 * slash_direction
+            start = (
+                round(local_destination[0] - perpendicular_x * offset - direction_x * 8),
+                round(local_destination[1] - perpendicular_y * offset - direction_y * 8),
+            )
+            end = (
+                round(local_destination[0] + perpendicular_x * offset + direction_x * 5),
+                round(local_destination[1] + perpendicular_y * offset + direction_y * 5),
+            )
+            pygame.draw.line(
+                effect,
+                (222, 143, 246, round(225 * visibility)),
+                start,
+                end,
+                3 if critical else 2,
+            )
+    else:
+        travel = min(1, progress * 2.0)
+        bolt_end = (
+            round(
+                local_origin[0]
+                + (local_destination[0] - local_origin[0]) * travel
+            ),
+            round(
+                local_origin[1]
+                + (local_destination[1] - local_origin[1]) * travel
+            ),
+        )
+        pygame.draw.line(
+            effect,
+            (*color, round(125 * visibility)),
+            local_origin,
+            bolt_end,
+            6,
+        )
+        pygame.draw.line(
+            effect,
+            (169, 224, 255, round(235 * visibility)),
+            local_origin,
+            bolt_end,
+            2,
+        )
+        if travel >= 0.8:
+            rune_radius = round(7 + progress * (13 if critical else 9))
+            pygame.draw.circle(
+                effect,
+                (*color, round(190 * visibility)),
+                local_destination,
+                rune_radius,
+                width=2,
+            )
+            pygame.draw.polygon(
+                effect,
+                (174, 226, 255, round(210 * visibility)),
+                (
+                    (local_destination[0], local_destination[1] - rune_radius),
+                    (local_destination[0] + rune_radius, local_destination[1]),
+                    (local_destination[0], local_destination[1] + rune_radius),
+                    (local_destination[0] - rune_radius, local_destination[1]),
+                ),
+                width=1,
+            )
+
+    if critical:
+        pygame.draw.circle(
+            effect,
+            (255, 221, 132, round(175 * visibility)),
+            local_destination,
+            round(8 + progress * 18),
+            width=2,
+        )
+    screen.blit(effect, (MAP_OFFSET_X, MAP_OFFSET_Y))
 
 
 def draw_act_one_pickup_effect(
@@ -1563,6 +1768,293 @@ def _draw_act_one_particles(
     screen.blit(particle_surface, (MAP_OFFSET_X, MAP_OFFSET_Y))
 
 
+def _act_two_open_neighbor(dungeon_map, column, row, dc, dr):
+    neighbor_column = column + dc
+    neighbor_row = row + dr
+    return (
+        0 <= neighbor_row < len(dungeon_map)
+        and 0 <= neighbor_column < len(dungeon_map[neighbor_row])
+        and dungeon_map[neighbor_row][neighbor_column] != "#"
+    )
+
+
+def _draw_act_two_floor_detail(screen, x, y, noise, floor_number):
+    if noise % 11 == 0:
+        stain = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
+        pygame.draw.ellipse(
+            stain,
+            (*ACT_TWO_DAMP, 34 + floor_number * 5),
+            (4 + noise % 7, 16 + noise % 5, 19, 8),
+        )
+        pygame.draw.ellipse(
+            stain,
+            (47, 69, 66, 22),
+            (8 + noise % 4, 18 + noise % 3, 11, 3),
+        )
+        screen.blit(stain, (x, y))
+
+    if noise % max(7, 12 - floor_number) == 2:
+        _draw_act_one_crack(
+            screen,
+            x,
+            y,
+            noise // 7,
+        )
+
+    if noise % 41 == 9:
+        pygame.draw.circle(
+            screen,
+            (42, 49, 48),
+            (x + 7 + noise % 17, y + 7 + (noise // 17) % 17),
+            1,
+        )
+        pygame.draw.circle(
+            screen,
+            (29, 42, 42),
+            (x + 11 + noise % 13, y + 12 + (noise // 13) % 13),
+            1,
+        )
+
+
+def _draw_act_two_wall_detail(
+    screen,
+    dungeon_map,
+    column,
+    row,
+    x,
+    y,
+    noise,
+):
+    if _act_two_open_neighbor(dungeon_map, column, row, 0, 1):
+        pygame.draw.line(
+            screen,
+            ACT_TWO_MORTAR_DARK,
+            (x + 1, y + TILE_SIZE - 2),
+            (x + TILE_SIZE - 2, y + TILE_SIZE - 2),
+            3,
+        )
+        pygame.draw.line(
+            screen,
+            ACT_TWO_MORTAR_LIGHT,
+            (x + 2, y + TILE_SIZE - 5),
+            (x + TILE_SIZE - 3, y + TILE_SIZE - 5),
+        )
+    if _act_two_open_neighbor(dungeon_map, column, row, 1, 0):
+        pygame.draw.line(
+            screen,
+            ACT_TWO_MORTAR_DARK,
+            (x + TILE_SIZE - 2, y + 2),
+            (x + TILE_SIZE - 2, y + TILE_SIZE - 2),
+            2,
+        )
+    if _act_two_open_neighbor(dungeon_map, column, row, -1, 0):
+        pygame.draw.line(
+            screen,
+            ACT_TWO_MORTAR_LIGHT,
+            (x + 2, y + 3),
+            (x + 2, y + TILE_SIZE - 3),
+        )
+
+    if noise % 37 == 4:
+        rune = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
+        pulse_color = (*ACT_TWO_RUNE, 112)
+        center_x = 10 + noise % 12
+        pygame.draw.line(rune, pulse_color, (center_x, 8), (center_x, 23), 1)
+        pygame.draw.lines(
+            rune,
+            pulse_color,
+            False,
+            ((center_x - 5, 12), (center_x, 17), (center_x + 5, 11)),
+            1,
+        )
+        screen.blit(rune, (x, y))
+    elif noise % 17 == 3:
+        _draw_act_one_crack(screen, x, y, noise // 17, wall=True)
+
+
+def _draw_act_two_motes(
+    screen,
+    dungeon_map,
+    floor_number,
+    visual_seed,
+    current_time,
+):
+    if not dungeon_map:
+        return
+    motes = pygame.Surface((MAP_WIDTH, MAP_HEIGHT), pygame.SRCALPHA)
+    column_count = len(dungeon_map[0])
+    row_count = len(dungeon_map)
+    for mote_index in range(24 + floor_number * 7):
+        noise = _act_one_tile_noise(
+            mote_index,
+            floor_number,
+            visual_seed,
+            211,
+        )
+        column = noise % column_count
+        row = (noise // column_count) % row_count
+        if dungeon_map[row][column] == "#":
+            continue
+        cycle = ((current_time / 13) + noise % 1201) % 1201 / 1201
+        mote_x = (
+            column * TILE_SIZE
+            + 4
+            + (noise // 19) % (TILE_SIZE - 8)
+            + round(math.sin(current_time / 1150 + mote_index) * 4)
+        )
+        mote_y = (
+            row * TILE_SIZE
+            + TILE_SIZE
+            - round(cycle * (TILE_SIZE + 12))
+        )
+        alpha = round(34 * math.sin(math.pi * cycle))
+        color = (
+            (91, 139, 144, alpha)
+            if mote_index % 4
+            else (152, 137, 119, alpha)
+        )
+        pygame.draw.circle(motes, color, (mote_x, mote_y), 1)
+    screen.blit(motes, (MAP_OFFSET_X, MAP_OFFSET_Y))
+
+
+def _draw_act_two_rune_glows(
+    screen,
+    dungeon_map,
+    floor_number,
+    visual_seed,
+    current_time,
+):
+    if not dungeon_map:
+        return
+    pulse = (math.sin(current_time / 480) + 1) / 2
+    for row, tiles in enumerate(dungeon_map):
+        for column, tile in enumerate(tiles):
+            if tile != "#" or not _act_one_wall_is_exposed(
+                dungeon_map,
+                column,
+                row,
+            ):
+                continue
+            noise = _act_one_tile_noise(
+                column,
+                row,
+                visual_seed,
+                floor_number + 101,
+            )
+            if noise % 37 != 4:
+                continue
+            center = (
+                MAP_OFFSET_X + column * TILE_SIZE + 10 + noise % 12,
+                MAP_OFFSET_Y + row * TILE_SIZE + 16,
+            )
+            _draw_act_one_glow(
+                screen,
+                center,
+                (49, 119, 126),
+                round(21 + pulse * 5),
+            )
+            pygame.draw.circle(
+                screen,
+                (93, 153, 155),
+                center,
+                1,
+            )
+
+
+def draw_act_two_atmosphere(
+    screen,
+    act_number,
+    player_column,
+    player_row,
+    dungeon_map=None,
+    floor_number=1,
+    visual_seed=0,
+    current_time=0,
+):
+    if act_number != 2:
+        return
+
+    player_center = (
+        player_column * TILE_SIZE + TILE_SIZE // 2,
+        player_row * TILE_SIZE + TILE_SIZE // 2,
+    )
+    darkness = pygame.Surface((MAP_WIDTH, MAP_HEIGHT), pygame.SRCALPHA)
+    darkness.fill((3, 6, 11, 76 + (floor_number - 1) * 10))
+    for radius, alpha in ((146, 54), (112, 38), (78, 21), (46, 8)):
+        pygame.draw.circle(
+            darkness,
+            (8, 13, 18, alpha),
+            player_center,
+            radius,
+        )
+    screen.blit(darkness, (MAP_OFFSET_X, MAP_OFFSET_Y))
+
+    _draw_act_two_rune_glows(
+        screen,
+        dungeon_map,
+        floor_number,
+        visual_seed,
+        current_time,
+    )
+
+    world_player_center = (
+        MAP_OFFSET_X + player_center[0],
+        MAP_OFFSET_Y + player_center[1],
+    )
+    _draw_act_one_glow(screen, world_player_center, (55, 102, 111), 62)
+
+    fog = pygame.Surface((MAP_WIDTH, MAP_HEIGHT), pygame.SRCALPHA)
+    for band_index in range(5):
+        noise = _act_one_tile_noise(
+            band_index,
+            floor_number,
+            visual_seed,
+            307,
+        )
+        drift = round(
+            math.sin(current_time / 2200 + band_index * 1.7) * 34
+        )
+        fog_y = 52 + (noise % max(1, MAP_HEIGHT - 104))
+        fog_x = -90 + (noise % 130) + drift
+        pygame.draw.ellipse(
+            fog,
+            (53, 69, 72, 8 + floor_number * 2),
+            (fog_x, fog_y, 360 + noise % 150, 34 + noise % 24),
+        )
+        pygame.draw.ellipse(
+            fog,
+            (73, 78, 80, 5 + floor_number),
+            (fog_x + 230, fog_y + 11, 390, 28),
+        )
+    screen.blit(fog, (MAP_OFFSET_X, MAP_OFFSET_Y))
+
+    vignette = pygame.Surface((MAP_WIDTH, MAP_HEIGHT), pygame.SRCALPHA)
+    for inset, alpha, width in (
+        (0, 92, 28),
+        (24, 51, 22),
+        (47, 25, 18),
+    ):
+        pygame.draw.rect(
+            vignette,
+            (1, 3, 7, alpha + (floor_number - 1) * 5),
+            (
+                inset,
+                inset,
+                MAP_WIDTH - inset * 2,
+                MAP_HEIGHT - inset * 2,
+            ),
+            width=width,
+        )
+    screen.blit(vignette, (MAP_OFFSET_X, MAP_OFFSET_Y))
+    _draw_act_two_motes(
+        screen,
+        dungeon_map,
+        floor_number,
+        visual_seed,
+        current_time,
+    )
+
+
 def draw_act_one_atmosphere(
     screen,
     act_number,
@@ -1629,6 +2121,32 @@ def draw_dungeon(
             if act_number >= 2:
                 texture_name = "wall" if tile == "#" else "floor"
                 screen.blit(sprites[texture_name], tile_rectangle)
+
+                if act_number == 2:
+                    detail_noise = _act_one_tile_noise(
+                        column_index,
+                        row_index,
+                        visual_seed,
+                        floor_number + 101,
+                    )
+                    if tile == "#":
+                        _draw_act_two_wall_detail(
+                            screen,
+                            dungeon_map,
+                            column_index,
+                            row_index,
+                            x,
+                            y,
+                            detail_noise,
+                        )
+                    else:
+                        _draw_act_two_floor_detail(
+                            screen,
+                            x,
+                            y,
+                            detail_noise,
+                            floor_number,
+                        )
 
                 if tile == "C":
                     screen.blit(
@@ -1739,6 +2257,8 @@ def draw_dungeon(
             grid_color = (
                 ACT_ONE_GRID_COLOR
                 if act_number < 2
+                else ACT_TWO_GRID_COLOR
+                if act_number == 2
                 else GRID_COLOR
             )
             pygame.draw.rect(screen, grid_color, tile_rectangle, 1)
@@ -1776,18 +2296,30 @@ def draw_map_frame(screen, act_number):
         MAP_WIDTH + 8,
         MAP_HEIGHT + 8,
     )
-    pygame.draw.rect(
-        screen,
-        (72, 68, 78),
-        outer_rectangle,
-        width=3,
-    )
+    frame_color = (58, 76, 79) if act_number == 2 else (72, 68, 78)
+    pygame.draw.rect(screen, (8, 10, 14), outer_rectangle.inflate(6, 6), width=5)
+    pygame.draw.rect(screen, frame_color, outer_rectangle, width=3)
     pygame.draw.rect(
         screen,
         (30, 27, 34),
         outer_rectangle.inflate(-6, -6),
         width=1,
     )
+    if act_number == 2:
+        pygame.draw.line(
+            screen,
+            (99, 112, 108),
+            outer_rectangle.topleft,
+            outer_rectangle.topright,
+        )
+        for corner in (
+            outer_rectangle.topleft,
+            outer_rectangle.topright,
+            outer_rectangle.bottomleft,
+            outer_rectangle.bottomright,
+        ):
+            pygame.draw.circle(screen, (13, 17, 21), corner, 5)
+            pygame.draw.circle(screen, (75, 92, 92), corner, 2)
 
 
 def _draw_act_one_warden_telegraph(
@@ -2059,6 +2591,96 @@ def _draw_act_one_warden_phase_transition(
         )
 
 
+def _draw_act_one_warden_reposition_telegraph(
+    screen,
+    warden,
+    current_time,
+):
+    target = warden.warden_reposition_target
+    if target is None or warden.health <= 0:
+        return
+
+    origin_center = (
+        MAP_OFFSET_X + warden.column * TILE_SIZE + TILE_SIZE // 2,
+        MAP_OFFSET_Y + warden.row * TILE_SIZE + TILE_SIZE // 2,
+    )
+    target_center = (
+        MAP_OFFSET_X + target[0] * TILE_SIZE + TILE_SIZE // 2,
+        MAP_OFFSET_Y + target[1] * TILE_SIZE + TILE_SIZE // 2,
+    )
+    pulse = (math.sin(current_time / 105) + 1) / 2
+    effect = pygame.Surface(
+        (MAP_WIDTH, MAP_HEIGHT),
+        pygame.SRCALPHA,
+    )
+    local_origin = (
+        origin_center[0] - MAP_OFFSET_X,
+        origin_center[1] - MAP_OFFSET_Y,
+    )
+    local_target = (
+        target_center[0] - MAP_OFFSET_X,
+        target_center[1] - MAP_OFFSET_Y,
+    )
+
+    segment_count = 7
+    for segment_index in range(segment_count):
+        if segment_index % 2:
+            continue
+        start_progress = segment_index / segment_count
+        end_progress = min(
+            1,
+            (segment_index + 0.7) / segment_count,
+        )
+        start = (
+            round(
+                local_origin[0]
+                + (local_target[0] - local_origin[0]) * start_progress
+            ),
+            round(
+                local_origin[1]
+                + (local_target[1] - local_origin[1]) * start_progress
+            ),
+        )
+        end = (
+            round(
+                local_origin[0]
+                + (local_target[0] - local_origin[0]) * end_progress
+            ),
+            round(
+                local_origin[1]
+                + (local_target[1] - local_origin[1]) * end_progress
+            ),
+        )
+        pygame.draw.line(
+            effect,
+            (166, 73, 180, round(90 + pulse * 65)),
+            start,
+            end,
+            2,
+        )
+
+    radius = round(9 + pulse * 4)
+    pygame.draw.circle(
+        effect,
+        (190, 90, 203, round(155 + pulse * 75)),
+        local_target,
+        radius,
+        width=2,
+    )
+    pygame.draw.polygon(
+        effect,
+        (229, 151, 220, round(150 + pulse * 85)),
+        [
+            (local_target[0], local_target[1] - 7),
+            (local_target[0] + 7, local_target[1]),
+            (local_target[0], local_target[1] + 7),
+            (local_target[0] - 7, local_target[1]),
+        ],
+        width=2,
+    )
+    screen.blit(effect, (MAP_OFFSET_X, MAP_OFFSET_Y))
+
+
 def draw_act_one_boss_effects(
     screen,
     enemies,
@@ -2075,6 +2697,12 @@ def draw_act_one_boss_effects(
     )
     if warden is None:
         return
+
+    _draw_act_one_warden_reposition_telegraph(
+        screen,
+        warden,
+        current_time,
+    )
 
     _draw_act_one_warden_phase_transition(
         screen,
@@ -2244,6 +2872,9 @@ def draw_player(
     movement_origin=None,
     dodge_animation_started_at=-1,
     dodge_origin=None,
+    death_animation_started_at=-1,
+    hit_damage=0,
+    damage_font=None,
 ):
     center_x = MAP_OFFSET_X + column * TILE_SIZE + TILE_SIZE // 2
     center_y = MAP_OFFSET_Y + row * TILE_SIZE + TILE_SIZE // 2
@@ -2257,6 +2888,25 @@ def draw_player(
     dodge_effect_active = False
     dodge_offset_x = 0
     dodge_offset_y = 0
+    if act_number == 2 and player_class is not None:
+        draw_act_two_player_actor(
+            screen,
+            sprites,
+            column,
+            row,
+            health,
+            max_health,
+            player_class,
+            invisibility_turns,
+            current_time,
+            potion_effect_started_at,
+            hit_animation_started_at,
+            hit_origin,
+            death_animation_started_at,
+            hit_damage,
+            damage_font,
+        )
+        return
     if act_number < 2:
         movement_offset_x, movement_offset_y = (
             _act_one_movement_offset(
@@ -2506,12 +3156,1486 @@ def draw_player(
     )
 
 
+def _act_two_hit_offset(enemy, elapsed):
+    if elapsed >= ACT_TWO_HIT_REACTION_MS:
+        return (0, 0)
+    origin = enemy.get("hit_origin")
+    direction_x = 0
+    direction_y = -1
+    if origin is not None:
+        direction_x = enemy["column"] - origin[0]
+        direction_y = enemy["row"] - origin[1]
+        direction_length = max(1, math.hypot(direction_x, direction_y))
+        direction_x /= direction_length
+        direction_y /= direction_length
+    progress = elapsed / ACT_TWO_HIT_REACTION_MS
+    recoil = math.sin(math.pi * progress)
+    distance = 8 if enemy.get("hit_critical", False) else 5
+    return (
+        round(direction_x * distance * recoil),
+        round(direction_y * distance * recoil),
+    )
+
+
+def _draw_act_two_damage_number(
+    screen,
+    enemy,
+    current_time,
+    damage_font,
+):
+    started_at = enemy.get("hit_animation_started_at", -1)
+    elapsed = current_time - started_at
+    if (
+        damage_font is None
+        or started_at < 0
+        or enemy.get("hit_blocked", False)
+        or not 0 <= elapsed < ACT_TWO_HIT_FEEDBACK_MS
+    ):
+        return
+    progress = elapsed / ACT_TWO_HIT_FEEDBACK_MS
+    alpha = round(255 * min(1, (1 - progress) * 2.4))
+    critical = enemy.get("hit_critical", False)
+    text = (
+        f"{enemy.get('hit_damage', 0)}!"
+        if critical
+        else str(enemy.get("hit_damage", 0))
+    )
+    color = (
+        (255, 213, 91)
+        if critical
+        else (241, 233, 218)
+    )
+    number = damage_font.render(text, True, color)
+    number.set_alpha(alpha)
+    shadow = damage_font.render(text, True, (13, 8, 11))
+    shadow.set_alpha(alpha)
+    center_x = (
+        MAP_OFFSET_X
+        + enemy["column"] * TILE_SIZE
+        + TILE_SIZE // 2
+    )
+    top = (
+        MAP_OFFSET_Y
+        + enemy["row"] * TILE_SIZE
+        - 7
+        - round(progress * 14)
+    )
+    rectangle = number.get_rect(midbottom=(center_x, top))
+    screen.blit(shadow, rectangle.move(1, 2))
+    screen.blit(number, rectangle)
+
+
+def _draw_act_two_goblin_hit_feedback(
+    screen,
+    enemy,
+    sprite,
+    position,
+    current_time,
+    damage_font,
+):
+    started_at = enemy.get("hit_animation_started_at", -1)
+    elapsed = current_time - started_at
+    if started_at < 0 or not 0 <= elapsed < ACT_TWO_HIT_FEEDBACK_MS:
+        screen.blit(sprite, position)
+        return
+
+    reaction_progress = min(1, elapsed / ACT_TWO_HIT_REACTION_MS)
+    reaction = math.sin(math.pi * reaction_progress)
+    offset_x, offset_y = _act_two_hit_offset(enemy, elapsed)
+    center = (
+        position[0] + TILE_SIZE // 2 + offset_x,
+        position[1] + TILE_SIZE // 2 + offset_y,
+    )
+    pygame.draw.ellipse(
+        screen,
+        (5, 6, 9),
+        (center[0] - 10, position[1] + TILE_SIZE - 7, 20, 6),
+    )
+
+    sprite_width = round(TILE_SIZE * (1 + reaction * 0.13))
+    sprite_height = round(TILE_SIZE * (1 - reaction * 0.16))
+    reacted_sprite = pygame.transform.scale(
+        sprite,
+        (sprite_width, max(20, sprite_height)),
+    )
+    sprite_position = reacted_sprite.get_rect(center=center)
+    screen.blit(reacted_sprite, sprite_position)
+
+    if elapsed < ACT_TWO_HIT_REACTION_MS:
+        flash = reacted_sprite.copy()
+        flash.fill(
+            (230, 218, 198, 0),
+            special_flags=pygame.BLEND_RGBA_ADD,
+        )
+        flash.set_alpha(round(215 * (1 - reaction_progress)))
+        screen.blit(flash, sprite_position)
+
+        effect_color = ACT_TWO_CLASS_EFFECT_COLORS.get(
+            enemy.get("hit_attacker_class"),
+            (190, 84, 67),
+        )
+        particle_count = 9 if enemy.get("hit_critical", False) else 6
+        particle_layer = pygame.Surface(
+            (TILE_SIZE * 2, TILE_SIZE * 2),
+            pygame.SRCALPHA,
+        )
+        particle_center = TILE_SIZE
+        visibility = 1 - reaction_progress
+        for particle_index in range(particle_count):
+            angle = (
+                particle_index * math.tau / particle_count
+                + enemy["column"] * 0.47
+                + enemy["row"] * 0.31
+            )
+            distance = 5 + reaction_progress * 18
+            particle_position = (
+                round(particle_center + math.cos(angle) * distance),
+                round(particle_center + math.sin(angle) * distance),
+            )
+            pygame.draw.circle(
+                particle_layer,
+                (*effect_color, round(230 * visibility)),
+                particle_position,
+                2 if particle_index % 3 == 0 else 1,
+            )
+        screen.blit(
+            particle_layer,
+            (
+                center[0] - particle_center,
+                center[1] - particle_center,
+            ),
+        )
+
+    _draw_act_two_damage_number(
+        screen,
+        enemy,
+        current_time,
+        damage_font,
+    )
+
+
+def _draw_act_two_goblin_death(
+    screen,
+    enemy,
+    sprite,
+    current_time,
+    damage_font,
+):
+    started_at = enemy.get("death_animation_started_at", -1)
+    elapsed = current_time - started_at
+    if started_at < 0 or not 0 <= elapsed < ACT_TWO_GOBLIN_DEATH_MS:
+        return
+    progress = elapsed / ACT_TWO_GOBLIN_DEATH_MS
+    center = (
+        MAP_OFFSET_X
+        + enemy["column"] * TILE_SIZE
+        + TILE_SIZE // 2,
+        MAP_OFFSET_Y
+        + enemy["row"] * TILE_SIZE
+        + TILE_SIZE // 2,
+    )
+    effect_color = ACT_TWO_CLASS_EFFECT_COLORS.get(
+        enemy.get("hit_attacker_class"),
+        (155, 65, 58),
+    )
+
+    stain_alpha = round(75 * min(1, progress * 2.3) * (1 - progress))
+    stain = pygame.Surface((38, 16), pygame.SRCALPHA)
+    pygame.draw.ellipse(
+        stain,
+        (61, 17, 21, stain_alpha),
+        stain.get_rect(),
+    )
+    screen.blit(stain, (center[0] - 19, center[1] + 8))
+
+    body_end = 0.64
+    if progress < body_end:
+        body_progress = progress / body_end
+        recoil_x, recoil_y = _act_two_hit_offset(enemy, elapsed)
+        body = sprite.copy()
+        if elapsed < 115:
+            flash = body.copy()
+            flash.fill(
+                (235, 220, 202, 0),
+                special_flags=pygame.BLEND_RGBA_ADD,
+            )
+            flash.set_alpha(round(220 * (1 - elapsed / 115)))
+            body.blit(flash, (0, 0))
+        else:
+            darkness = max(48, round(190 * (1 - body_progress)))
+            body.fill(
+                (darkness, darkness, darkness, 255),
+                special_flags=pygame.BLEND_RGBA_MULT,
+            )
+        body = pygame.transform.rotozoom(
+            body,
+            -18 * body_progress,
+            1,
+        )
+        collapsed_height = max(
+            5,
+            round(body.get_height() * (1 - body_progress * 0.72)),
+        )
+        body = pygame.transform.smoothscale(
+            body,
+            (body.get_width(), collapsed_height),
+        )
+        body.set_alpha(round(255 * (1 - body_progress ** 1.8)))
+        body_rectangle = body.get_rect(
+            midbottom=(
+                center[0] + recoil_x,
+                center[1] + 15 + recoil_y,
+            )
+        )
+        screen.blit(body, body_rectangle)
+
+    particle_layer = pygame.Surface((72, 72), pygame.SRCALPHA)
+    particle_center = 36
+    for particle_index in range(15):
+        delay = (particle_index % 5) * 24
+        particle_elapsed = elapsed - delay
+        if particle_elapsed < 0:
+            continue
+        particle_progress = min(
+            1,
+            particle_elapsed / max(1, ACT_TWO_GOBLIN_DEATH_MS - delay),
+        )
+        angle = math.radians(
+            (enemy["column"] * 29 + enemy["row"] * 43 + particle_index * 137)
+            % 360
+        )
+        distance = (8 + particle_index % 5 * 3) * particle_progress
+        particle_position = (
+            round(particle_center + math.cos(angle) * distance),
+            round(
+                particle_center
+                + math.sin(angle) * distance * 0.65
+                - 12 * particle_progress
+                + 17 * particle_progress * particle_progress
+            ),
+        )
+        alpha = round(225 * (1 - particle_progress) ** 1.5)
+        particle_color = (
+            (*effect_color, alpha)
+            if particle_index % 3 == 0
+            else (74, 55, 54, alpha)
+        )
+        pygame.draw.circle(
+            particle_layer,
+            particle_color,
+            particle_position,
+            2 if particle_index % 4 == 0 else 1,
+        )
+    screen.blit(
+        particle_layer,
+        (center[0] - particle_center, center[1] - particle_center),
+    )
+
+    signature_visibility = max(0, 1 - progress / 0.72)
+    signature = pygame.Surface((64, 64), pygame.SRCALPHA)
+    signature_center = 32
+    attacker_class = enemy.get("hit_attacker_class")
+    if attacker_class == "warrior":
+        for spark_index in range(5):
+            angle = math.radians(-70 + spark_index * 35)
+            inner = 5 + progress * 6
+            outer = 13 + progress * 20
+            pygame.draw.line(
+                signature,
+                (235, 91, 53, round(205 * signature_visibility)),
+                (
+                    round(signature_center + math.cos(angle) * inner),
+                    round(signature_center + math.sin(angle) * inner),
+                ),
+                (
+                    round(signature_center + math.cos(angle) * outer),
+                    round(signature_center + math.sin(angle) * outer),
+                ),
+                2,
+            )
+    elif attacker_class == "rogue":
+        slash_extent = round(10 + progress * 15)
+        for slope in (-1, 1):
+            pygame.draw.line(
+                signature,
+                (199, 105, 230, round(190 * signature_visibility)),
+                (
+                    signature_center - slash_extent,
+                    signature_center - slash_extent * slope,
+                ),
+                (
+                    signature_center + slash_extent,
+                    signature_center + slash_extent * slope,
+                ),
+                2,
+            )
+    elif attacker_class == "mage":
+        rune_radius = max(3, round(20 * (1 - progress / 0.72)))
+        pygame.draw.circle(
+            signature,
+            (72, 166, 230, round(205 * signature_visibility)),
+            (signature_center, signature_center),
+            rune_radius,
+            width=2,
+        )
+        pygame.draw.polygon(
+            signature,
+            (154, 219, 249, round(180 * signature_visibility)),
+            (
+                (signature_center, signature_center - rune_radius),
+                (signature_center + rune_radius, signature_center),
+                (signature_center, signature_center + rune_radius),
+                (signature_center - rune_radius, signature_center),
+            ),
+            width=1,
+        )
+    screen.blit(
+        signature,
+        (center[0] - signature_center, center[1] - signature_center),
+    )
+
+    if enemy.get("hit_critical", False) and progress < 0.45:
+        critical_visibility = 1 - progress / 0.45
+        pygame.draw.circle(
+            screen,
+            (255, 204, 83, round(210 * critical_visibility)),
+            center,
+            round(7 + progress * 25),
+            width=2,
+        )
+    _draw_act_two_damage_number(
+        screen,
+        enemy,
+        current_time,
+        damage_font,
+    )
+
+
+def _draw_act_two_archer_hit_feedback(
+    screen,
+    enemy,
+    sprite,
+    position,
+    current_time,
+    damage_font,
+):
+    started_at = enemy.get("hit_animation_started_at", -1)
+    elapsed = current_time - started_at
+    if started_at < 0 or not 0 <= elapsed < ACT_TWO_HIT_FEEDBACK_MS:
+        screen.blit(sprite, position)
+        return
+
+    reaction_progress = min(1, elapsed / ACT_TWO_HIT_REACTION_MS)
+    reaction = math.sin(math.pi * reaction_progress)
+    offset_x, offset_y = _act_two_hit_offset(enemy, elapsed)
+    offset_x = round(offset_x * 1.45)
+    offset_y = round(offset_y * 1.45)
+    center = (
+        position[0] + TILE_SIZE // 2 + offset_x,
+        position[1] + TILE_SIZE // 2 + offset_y,
+    )
+    origin = enemy.get("hit_origin")
+    rotation_direction = 1
+    if origin is not None and origin[0] > enemy["column"]:
+        rotation_direction = -1
+    angle = rotation_direction * reaction * (
+        17 if enemy.get("hit_critical", False) else 11
+    )
+    reacted_sprite = pygame.transform.rotozoom(sprite, angle, 1)
+    sprite_position = reacted_sprite.get_rect(center=center)
+    pygame.draw.ellipse(
+        screen,
+        (5, 6, 9),
+        (center[0] - 10, position[1] + TILE_SIZE - 7, 20, 6),
+    )
+    screen.blit(reacted_sprite, sprite_position)
+
+    if elapsed < ACT_TWO_HIT_REACTION_MS:
+        flash = reacted_sprite.copy()
+        flash.fill(
+            (229, 220, 196, 0),
+            special_flags=pygame.BLEND_RGBA_ADD,
+        )
+        flash.set_alpha(round(210 * (1 - reaction_progress)))
+        screen.blit(flash, sprite_position)
+
+        effect_color = ACT_TWO_CLASS_EFFECT_COLORS.get(
+            enemy.get("hit_attacker_class"),
+            (176, 118, 58),
+        )
+        debris = pygame.Surface((64, 64), pygame.SRCALPHA)
+        debris_center = 32
+        visibility = 1 - reaction_progress
+        debris_count = 8 if enemy.get("hit_critical", False) else 5
+        for debris_index in range(debris_count):
+            angle_radians = (
+                debris_index * math.tau / debris_count
+                + enemy["row"] * 0.37
+            )
+            distance = 5 + reaction_progress * 20
+            debris_start = (
+                round(debris_center + math.cos(angle_radians) * distance),
+                round(debris_center + math.sin(angle_radians) * distance),
+            )
+            debris_end = (
+                round(debris_start[0] + math.cos(angle_radians) * 5),
+                round(debris_start[1] + math.sin(angle_radians) * 5),
+            )
+            color = (
+                (*effect_color, round(225 * visibility))
+                if debris_index % 2 == 0
+                else (171, 126, 67, round(210 * visibility))
+            )
+            pygame.draw.line(
+                debris,
+                color,
+                debris_start,
+                debris_end,
+                2 if debris_index % 3 == 0 else 1,
+            )
+        screen.blit(
+            debris,
+            (center[0] - debris_center, center[1] - debris_center),
+        )
+
+    _draw_act_two_damage_number(
+        screen,
+        enemy,
+        current_time,
+        damage_font,
+    )
+
+
+def _draw_act_two_archer_death(
+    screen,
+    enemy,
+    sprite,
+    current_time,
+    damage_font,
+):
+    started_at = enemy.get("death_animation_started_at", -1)
+    elapsed = current_time - started_at
+    if started_at < 0 or not 0 <= elapsed < ACT_TWO_ARCHER_DEATH_MS:
+        return
+    progress = elapsed / ACT_TWO_ARCHER_DEATH_MS
+    fall_progress = min(1, progress / 0.68)
+    fall_progress = fall_progress * fall_progress * (3 - 2 * fall_progress)
+    center = (
+        MAP_OFFSET_X
+        + enemy["column"] * TILE_SIZE
+        + TILE_SIZE // 2,
+        MAP_OFFSET_Y
+        + enemy["row"] * TILE_SIZE
+        + TILE_SIZE // 2,
+    )
+    origin = enemy.get("hit_origin")
+    fall_direction = 1
+    if origin is not None and origin[0] > enemy["column"]:
+        fall_direction = -1
+    effect_color = ACT_TWO_CLASS_EFFECT_COLORS.get(
+        enemy.get("hit_attacker_class"),
+        (157, 105, 55),
+    )
+
+    shadow = pygame.Surface((38, 14), pygame.SRCALPHA)
+    pygame.draw.ellipse(
+        shadow,
+        (5, 7, 9, round(105 * (1 - progress * 0.65))),
+        shadow.get_rect(),
+    )
+    screen.blit(shadow, (center[0] - 19, center[1] + 8))
+
+    if progress < 0.78:
+        body = sprite.copy()
+        if elapsed < 100:
+            flash = body.copy()
+            flash.fill(
+                (236, 222, 196, 0),
+                special_flags=pygame.BLEND_RGBA_ADD,
+            )
+            flash.set_alpha(round(215 * (1 - elapsed / 100)))
+            body.blit(flash, (0, 0))
+        else:
+            shade = max(55, round(205 * (1 - progress * 0.8)))
+            body.fill(
+                (shade, shade, shade, 255),
+                special_flags=pygame.BLEND_RGBA_MULT,
+            )
+        body = pygame.transform.rotozoom(
+            body,
+            fall_direction * 72 * fall_progress,
+            1 - fall_progress * 0.08,
+        )
+        body.set_alpha(round(255 * min(1, (0.78 - progress) * 4.5)))
+        body_rectangle = body.get_rect(
+            center=(
+                center[0] + round(fall_direction * fall_progress * 10),
+                center[1] + round(fall_progress * 9),
+            )
+        )
+        screen.blit(body, body_rectangle)
+
+    debris = pygame.Surface((72, 72), pygame.SRCALPHA)
+    debris_center = 36
+    for debris_index in range(12):
+        delay = (debris_index % 4) * 30
+        debris_elapsed = elapsed - delay
+        if debris_elapsed < 0:
+            continue
+        debris_progress = min(
+            1,
+            debris_elapsed / max(1, ACT_TWO_ARCHER_DEATH_MS - delay),
+        )
+        angle = math.radians(
+            (enemy["column"] * 41 + enemy["row"] * 23 + debris_index * 83)
+            % 360
+        )
+        distance = (8 + debris_index % 4 * 4) * debris_progress
+        start = (
+            round(debris_center + math.cos(angle) * distance),
+            round(
+                debris_center
+                + math.sin(angle) * distance * 0.55
+                - 8 * debris_progress
+                + 13 * debris_progress * debris_progress
+            ),
+        )
+        length = 5 if debris_index % 3 == 0 else 3
+        end = (
+            round(start[0] + math.cos(angle) * length),
+            round(start[1] + math.sin(angle) * length),
+        )
+        alpha = round(220 * (1 - debris_progress) ** 1.35)
+        color = (
+            (*effect_color, alpha)
+            if debris_index % 3 == 0
+            else (158, 112, 58, alpha)
+        )
+        pygame.draw.line(debris, color, start, end, 1)
+        if debris_index % 4 == 0:
+            pygame.draw.circle(debris, color, end, 1)
+    screen.blit(
+        debris,
+        (center[0] - debris_center, center[1] - debris_center),
+    )
+
+    signature_visibility = max(0, 1 - progress / 0.7)
+    if enemy.get("hit_attacker_class") == "mage":
+        rune = pygame.Surface((54, 54), pygame.SRCALPHA)
+        radius = max(3, round(17 * signature_visibility))
+        pygame.draw.circle(
+            rune,
+            (78, 174, 232, round(190 * signature_visibility)),
+            (27, 27),
+            radius,
+            width=2,
+        )
+        screen.blit(rune, (center[0] - 27, center[1] - 27))
+    elif enemy.get("hit_attacker_class") == "rogue":
+        slash = pygame.Surface((54, 54), pygame.SRCALPHA)
+        extent = round(8 + progress * 15)
+        pygame.draw.line(
+            slash,
+            (202, 107, 229, round(190 * signature_visibility)),
+            (27 - extent, 27 + extent),
+            (27 + extent, 27 - extent),
+            2,
+        )
+        screen.blit(slash, (center[0] - 27, center[1] - 27))
+    elif enemy.get("hit_attacker_class") == "warrior":
+        shock = pygame.Surface((54, 54), pygame.SRCALPHA)
+        pygame.draw.arc(
+            shock,
+            (232, 89, 51, round(195 * signature_visibility)),
+            (7, 19, 40, 22),
+            math.radians(195),
+            math.radians(345),
+            3,
+        )
+        screen.blit(shock, (center[0] - 27, center[1] - 27))
+
+    if enemy.get("hit_critical", False) and progress < 0.42:
+        critical_visibility = 1 - progress / 0.42
+        critical = pygame.Surface((64, 64), pygame.SRCALPHA)
+        pygame.draw.circle(
+            critical,
+            (255, 207, 86, round(205 * critical_visibility)),
+            (32, 32),
+            round(8 + progress * 24),
+            width=2,
+        )
+        screen.blit(critical, (center[0] - 32, center[1] - 32))
+    _draw_act_two_damage_number(
+        screen,
+        enemy,
+        current_time,
+        damage_font,
+    )
+
+
+def _draw_act_two_brute_hit_feedback(
+    screen,
+    enemy,
+    sprite,
+    position,
+    current_time,
+    damage_font,
+):
+    started_at = enemy.get("hit_animation_started_at", -1)
+    elapsed = current_time - started_at
+    if started_at < 0 or not 0 <= elapsed < ACT_TWO_HIT_FEEDBACK_MS:
+        screen.blit(sprite, position)
+        return
+
+    reaction_progress = min(1, elapsed / ACT_TWO_HIT_REACTION_MS)
+    reaction = math.sin(math.pi * reaction_progress)
+    offset_x, offset_y = _act_two_hit_offset(enemy, elapsed)
+    offset_x = round(offset_x * 0.42)
+    offset_y = round(offset_y * 0.42)
+    shake = round(
+        math.sin(elapsed / 17) * 2 * max(0, 1 - reaction_progress)
+    )
+    center = (
+        position[0] + TILE_SIZE // 2 + offset_x + shake,
+        position[1] + TILE_SIZE // 2 + offset_y + round(reaction * 3),
+    )
+    sprite_width = round(TILE_SIZE * (1 + reaction * 0.2))
+    sprite_height = round(TILE_SIZE * (1 - reaction * 0.23))
+    reacted_sprite = pygame.transform.scale(
+        sprite,
+        (sprite_width, max(20, sprite_height)),
+    )
+    sprite_position = reacted_sprite.get_rect(
+        midbottom=(center[0], position[1] + TILE_SIZE + offset_y)
+    )
+    pygame.draw.ellipse(
+        screen,
+        (4, 5, 7),
+        (
+            center[0] - 13,
+            position[1] + TILE_SIZE - 7,
+            26,
+            7,
+        ),
+    )
+    screen.blit(reacted_sprite, sprite_position)
+
+    if elapsed < ACT_TWO_HIT_REACTION_MS:
+        flash = reacted_sprite.copy()
+        flash.fill(
+            (237, 211, 181, 0),
+            special_flags=pygame.BLEND_RGBA_ADD,
+        )
+        flash.set_alpha(round(205 * (1 - reaction_progress)))
+        screen.blit(flash, sprite_position)
+
+        effect_color = ACT_TWO_CLASS_EFFECT_COLORS.get(
+            enemy.get("hit_attacker_class"),
+            (174, 91, 54),
+        )
+        impact = pygame.Surface((72, 40), pygame.SRCALPHA)
+        impact_center = 36
+        visibility = 1 - reaction_progress
+        ring_width = round(10 + reaction_progress * 24)
+        pygame.draw.arc(
+            impact,
+            (*effect_color, round(190 * visibility)),
+            (
+                impact_center - ring_width,
+                20 - round(ring_width * 0.28),
+                ring_width * 2,
+                max(8, round(ring_width * 0.56)),
+            ),
+            math.pi,
+            math.tau,
+            2,
+        )
+        chunk_count = 8 if enemy.get("hit_critical", False) else 5
+        for chunk_index in range(chunk_count):
+            spread = (chunk_index / max(1, chunk_count - 1) - 0.5) * 38
+            chunk_x = round(impact_center + spread * reaction_progress)
+            chunk_y = round(
+                22
+                - math.sin(math.pi * reaction_progress)
+                * (5 + chunk_index % 3 * 3)
+            )
+            pygame.draw.rect(
+                impact,
+                (118, 91, 70, round(210 * visibility)),
+                (chunk_x, chunk_y, 2, 2),
+            )
+        screen.blit(
+            impact,
+            (center[0] - impact_center, position[1] + TILE_SIZE - 20),
+        )
+
+    _draw_act_two_damage_number(
+        screen,
+        enemy,
+        current_time,
+        damage_font,
+    )
+
+
+def _draw_act_two_brute_death(
+    screen,
+    enemy,
+    sprite,
+    current_time,
+    damage_font,
+):
+    started_at = enemy.get("death_animation_started_at", -1)
+    elapsed = current_time - started_at
+    if started_at < 0 or not 0 <= elapsed < ACT_TWO_BRUTE_DEATH_MS:
+        return
+    progress = elapsed / ACT_TWO_BRUTE_DEATH_MS
+    center = (
+        MAP_OFFSET_X
+        + enemy["column"] * TILE_SIZE
+        + TILE_SIZE // 2,
+        MAP_OFFSET_Y
+        + enemy["row"] * TILE_SIZE
+        + TILE_SIZE // 2,
+    )
+    effect_color = ACT_TWO_CLASS_EFFECT_COLORS.get(
+        enemy.get("hit_attacker_class"),
+        (171, 82, 49),
+    )
+    fall_progress = max(0, min(1, (progress - 0.08) / 0.55))
+    fall_progress = fall_progress * fall_progress * (3 - 2 * fall_progress)
+    impact_progress = max(0, min(1, (progress - 0.48) / 0.3))
+
+    shadow = pygame.Surface((48, 18), pygame.SRCALPHA)
+    pygame.draw.ellipse(
+        shadow,
+        (4, 5, 7, round(125 * (1 - progress * 0.55))),
+        shadow.get_rect(),
+    )
+    screen.blit(shadow, (center[0] - 24, center[1] + 7))
+
+    if progress < 0.86:
+        body = sprite.copy()
+        if elapsed < 120:
+            flash = body.copy()
+            flash.fill(
+                (239, 211, 179, 0),
+                special_flags=pygame.BLEND_RGBA_ADD,
+            )
+            flash.set_alpha(round(215 * (1 - elapsed / 120)))
+            body.blit(flash, (0, 0))
+        else:
+            shade = max(50, round(210 * (1 - progress * 0.78)))
+            body.fill(
+                (shade, shade, shade, 255),
+                special_flags=pygame.BLEND_RGBA_MULT,
+            )
+        body_width = round(TILE_SIZE * (1 + fall_progress * 0.28))
+        body_height = max(8, round(TILE_SIZE * (1 - fall_progress * 0.58)))
+        body = pygame.transform.smoothscale(
+            body,
+            (body_width, body_height),
+        )
+        body.set_alpha(round(255 * min(1, (0.86 - progress) * 4)))
+        body_rectangle = body.get_rect(
+            midbottom=(
+                center[0] + round(fall_progress * 3),
+                center[1] + 15,
+            )
+        )
+        screen.blit(body, body_rectangle)
+
+    if 0 < impact_progress < 1:
+        impact_visibility = math.sin(math.pi * impact_progress)
+        impact = pygame.Surface((88, 48), pygame.SRCALPHA)
+        impact_center = 44
+        ring_width = round(13 + impact_progress * 29)
+        pygame.draw.arc(
+            impact,
+            (*effect_color, round(185 * impact_visibility)),
+            (
+                impact_center - ring_width,
+                18 - round(ring_width * 0.22),
+                ring_width * 2,
+                max(10, round(ring_width * 0.44)),
+            ),
+            math.pi,
+            math.tau,
+            3,
+        )
+        pygame.draw.line(
+            impact,
+            (151, 112, 80, round(150 * impact_visibility)),
+            (impact_center - ring_width, 21),
+            (impact_center + ring_width, 21),
+            2,
+        )
+        screen.blit(impact, (center[0] - impact_center, center[1] - 7))
+
+    debris = pygame.Surface((88, 64), pygame.SRCALPHA)
+    debris_center_x = 44
+    for chunk_index in range(18):
+        delay = (chunk_index % 6) * 28
+        chunk_elapsed = elapsed - delay
+        if chunk_elapsed < 0:
+            continue
+        chunk_progress = min(
+            1,
+            chunk_elapsed / max(1, ACT_TWO_BRUTE_DEATH_MS - delay),
+        )
+        angle = math.radians(195 + (chunk_index * 151) % 150)
+        distance = (9 + chunk_index % 6 * 4) * chunk_progress
+        chunk_position = (
+            round(debris_center_x + math.cos(angle) * distance),
+            round(
+                35
+                + math.sin(angle) * distance * 0.42
+                - 11 * chunk_progress
+                + 17 * chunk_progress * chunk_progress
+            ),
+        )
+        alpha = round(215 * (1 - chunk_progress) ** 1.4)
+        color = (
+            (*effect_color, alpha)
+            if chunk_index % 4 == 0
+            else (105, 79, 64, alpha)
+        )
+        size = 3 if chunk_index % 5 == 0 else 2
+        pygame.draw.rect(
+            debris,
+            color,
+            (*chunk_position, size, size),
+        )
+    screen.blit(
+        debris,
+        (center[0] - debris_center_x, center[1] - 32),
+    )
+
+    signature_visibility = max(0, 1 - progress / 0.76)
+    signature = pygame.Surface((64, 64), pygame.SRCALPHA)
+    attacker_class = enemy.get("hit_attacker_class")
+    if attacker_class == "warrior":
+        pygame.draw.arc(
+            signature,
+            (235, 88, 51, round(205 * signature_visibility)),
+            (7, 20, 50, 28),
+            math.radians(195),
+            math.radians(345),
+            4,
+        )
+    elif attacker_class == "rogue":
+        extent = round(9 + progress * 19)
+        for slope in (-1, 1):
+            pygame.draw.line(
+                signature,
+                (200, 102, 229, round(190 * signature_visibility)),
+                (32 - extent, 32 - extent * slope),
+                (32 + extent, 32 + extent * slope),
+                2,
+            )
+    elif attacker_class == "mage":
+        radius = max(3, round(21 * signature_visibility))
+        pygame.draw.circle(
+            signature,
+            (74, 169, 230, round(195 * signature_visibility)),
+            (32, 32),
+            radius,
+            width=3,
+        )
+    screen.blit(signature, (center[0] - 32, center[1] - 32))
+
+    if enemy.get("hit_critical", False) and progress < 0.46:
+        critical_visibility = 1 - progress / 0.46
+        critical = pygame.Surface((72, 72), pygame.SRCALPHA)
+        pygame.draw.circle(
+            critical,
+            (255, 205, 82, round(205 * critical_visibility)),
+            (36, 36),
+            round(9 + progress * 28),
+            width=3,
+        )
+        screen.blit(critical, (center[0] - 36, center[1] - 36))
+    _draw_act_two_damage_number(
+        screen,
+        enemy,
+        current_time,
+        damage_font,
+    )
+
+
+def _draw_act_two_sentinel_hit_feedback(
+    screen,
+    enemy,
+    sprite,
+    position,
+    current_time,
+    damage_font,
+):
+    started_at = enemy.get("hit_animation_started_at", -1)
+    elapsed = current_time - started_at
+    if started_at < 0 or not 0 <= elapsed < ACT_TWO_HIT_FEEDBACK_MS:
+        screen.blit(sprite, position)
+        return
+
+    blocked = enemy.get("hit_blocked", False)
+    reaction_progress = min(1, elapsed / ACT_TWO_HIT_REACTION_MS)
+    reaction = math.sin(math.pi * reaction_progress)
+    offset_x, offset_y = _act_two_hit_offset(enemy, elapsed)
+    if blocked:
+        offset_x = 0
+        offset_y = 0
+    else:
+        offset_x = round(offset_x * 0.68)
+        offset_y = round(offset_y * 0.68)
+    center = (
+        position[0] + TILE_SIZE // 2 + offset_x,
+        position[1] + TILE_SIZE // 2 + offset_y,
+    )
+    origin = enemy.get("hit_origin")
+    rotation_direction = 1
+    if origin is not None and origin[0] > enemy["column"]:
+        rotation_direction = -1
+    angle = 0 if blocked else rotation_direction * reaction * 6
+    reacted_sprite = pygame.transform.rotozoom(sprite, angle, 1)
+    sprite_position = reacted_sprite.get_rect(center=center)
+    pygame.draw.ellipse(
+        screen,
+        (4, 5, 7),
+        (center[0] - 11, position[1] + TILE_SIZE - 7, 22, 6),
+    )
+    screen.blit(reacted_sprite, sprite_position)
+
+    if elapsed < ACT_TWO_HIT_REACTION_MS:
+        flash = reacted_sprite.copy()
+        flash_color = (
+            (232, 184, 72, 0)
+            if blocked
+            else (208, 220, 222, 0)
+        )
+        flash.fill(flash_color, special_flags=pygame.BLEND_RGBA_ADD)
+        flash.set_alpha(round(220 * (1 - reaction_progress)))
+        screen.blit(flash, sprite_position)
+
+        effect = pygame.Surface((72, 72), pygame.SRCALPHA)
+        effect_center = 36
+        visibility = 1 - reaction_progress
+        effect_color = (
+            (239, 190, 73)
+            if blocked
+            else ACT_TWO_CLASS_EFFECT_COLORS.get(
+                enemy.get("hit_attacker_class"),
+                (151, 168, 172),
+            )
+        )
+        if blocked:
+            shield_radius = round(14 + reaction_progress * 13)
+            pygame.draw.arc(
+                effect,
+                (*effect_color, round(235 * visibility)),
+                (
+                    effect_center - shield_radius,
+                    effect_center - shield_radius,
+                    shield_radius * 2,
+                    shield_radius * 2,
+                ),
+                math.radians(-70),
+                math.radians(250),
+                4,
+            )
+        spark_count = 11 if blocked else 7
+        for spark_index in range(spark_count):
+            angle_radians = (
+                spark_index * math.tau / spark_count
+                + enemy["column"] * 0.23
+            )
+            inner = 7 + reaction_progress * 8
+            outer = inner + 5 + reaction_progress * 9
+            start = (
+                round(effect_center + math.cos(angle_radians) * inner),
+                round(effect_center + math.sin(angle_radians) * inner),
+            )
+            end = (
+                round(effect_center + math.cos(angle_radians) * outer),
+                round(effect_center + math.sin(angle_radians) * outer),
+            )
+            pygame.draw.line(
+                effect,
+                (*effect_color, round(225 * visibility)),
+                start,
+                end,
+                2 if blocked or spark_index % 3 == 0 else 1,
+            )
+        screen.blit(
+            effect,
+            (center[0] - effect_center, center[1] - effect_center),
+        )
+
+    if blocked and damage_font is not None:
+        progress = elapsed / ACT_TWO_HIT_FEEDBACK_MS
+        alpha = round(255 * min(1, (1 - progress) * 2.3))
+        label = damage_font.render("BLOCK", True, (245, 199, 83))
+        label.set_alpha(alpha)
+        label_rectangle = label.get_rect(
+            midbottom=(
+                center[0],
+                position[1] - 6 - round(progress * 12),
+            )
+        )
+        shadow = damage_font.render("BLOCK", True, (16, 10, 7))
+        shadow.set_alpha(alpha)
+        screen.blit(shadow, label_rectangle.move(1, 2))
+        screen.blit(label, label_rectangle)
+    else:
+        _draw_act_two_damage_number(
+            screen,
+            enemy,
+            current_time,
+            damage_font,
+        )
+
+
+def _draw_act_two_sentinel_death(
+    screen,
+    enemy,
+    sprite,
+    current_time,
+    damage_font,
+):
+    started_at = enemy.get("death_animation_started_at", -1)
+    elapsed = current_time - started_at
+    if started_at < 0 or not 0 <= elapsed < ACT_TWO_SENTINEL_DEATH_MS:
+        return
+    progress = elapsed / ACT_TWO_SENTINEL_DEATH_MS
+    collapse_progress = min(1, progress / 0.66)
+    collapse_progress = (
+        collapse_progress
+        * collapse_progress
+        * (3 - 2 * collapse_progress)
+    )
+    center = (
+        MAP_OFFSET_X
+        + enemy["column"] * TILE_SIZE
+        + TILE_SIZE // 2,
+        MAP_OFFSET_Y
+        + enemy["row"] * TILE_SIZE
+        + TILE_SIZE // 2,
+    )
+    effect_color = ACT_TWO_CLASS_EFFECT_COLORS.get(
+        enemy.get("hit_attacker_class"),
+        (144, 160, 165),
+    )
+
+    shadow = pygame.Surface((44, 16), pygame.SRCALPHA)
+    pygame.draw.ellipse(
+        shadow,
+        (4, 5, 7, round(115 * (1 - progress * 0.6))),
+        shadow.get_rect(),
+    )
+    screen.blit(shadow, (center[0] - 22, center[1] + 8))
+
+    if progress < 0.82:
+        body = sprite.copy()
+        if elapsed < 110:
+            flash = body.copy()
+            flash.fill(
+                (220, 229, 226, 0),
+                special_flags=pygame.BLEND_RGBA_ADD,
+            )
+            flash.set_alpha(round(220 * (1 - elapsed / 110)))
+            body.blit(flash, (0, 0))
+        else:
+            shade = max(58, round(215 * (1 - progress * 0.72)))
+            body.fill(
+                (shade, shade, shade, 255),
+                special_flags=pygame.BLEND_RGBA_MULT,
+            )
+        body = pygame.transform.rotozoom(
+            body,
+            -24 * collapse_progress,
+            1,
+        )
+        body_width = round(body.get_width() * (1 + collapse_progress * 0.14))
+        body_height = max(
+            7,
+            round(body.get_height() * (1 - collapse_progress * 0.55)),
+        )
+        body = pygame.transform.smoothscale(
+            body,
+            (body_width, body_height),
+        )
+        body.set_alpha(round(255 * min(1, (0.82 - progress) * 4.2)))
+        body_rectangle = body.get_rect(
+            midbottom=(
+                center[0] + round(collapse_progress * 5),
+                center[1] + 15,
+            )
+        )
+        screen.blit(body, body_rectangle)
+
+    shards = pygame.Surface((84, 76), pygame.SRCALPHA)
+    shard_center = (42, 38)
+    for shard_index in range(16):
+        delay = (shard_index % 5) * 27
+        shard_elapsed = elapsed - delay
+        if shard_elapsed < 0:
+            continue
+        shard_progress = min(
+            1,
+            shard_elapsed / max(1, ACT_TWO_SENTINEL_DEATH_MS - delay),
+        )
+        angle = math.radians(
+            (enemy["column"] * 31 + enemy["row"] * 47 + shard_index * 137)
+            % 360
+        )
+        distance = (10 + shard_index % 5 * 4) * shard_progress
+        shard_position = (
+            round(shard_center[0] + math.cos(angle) * distance),
+            round(
+                shard_center[1]
+                + math.sin(angle) * distance * 0.62
+                - 13 * shard_progress
+                + 18 * shard_progress * shard_progress
+            ),
+        )
+        alpha = round(225 * (1 - shard_progress) ** 1.35)
+        color = (
+            (*effect_color, alpha)
+            if shard_index % 4 == 0
+            else (133, 146, 148, alpha)
+        )
+        shard_size = 4 if shard_index % 5 == 0 else 3
+        pygame.draw.polygon(
+            shards,
+            color,
+            (
+                (shard_position[0], shard_position[1] - shard_size),
+                (shard_position[0] + shard_size, shard_position[1] + 1),
+                (shard_position[0] - 1, shard_position[1] + shard_size),
+            ),
+        )
+    screen.blit(shards, (center[0] - 42, center[1] - 38))
+
+    impact_progress = max(0, min(1, (progress - 0.5) / 0.3))
+    if 0 < impact_progress < 1:
+        visibility = math.sin(math.pi * impact_progress)
+        impact = pygame.Surface((82, 42), pygame.SRCALPHA)
+        radius = round(13 + impact_progress * 25)
+        pygame.draw.arc(
+            impact,
+            (151, 169, 172, round(165 * visibility)),
+            (41 - radius, 13, radius * 2, 22),
+            math.pi,
+            math.tau,
+            2,
+        )
+        screen.blit(impact, (center[0] - 41, center[1] - 5))
+
+    signature_visibility = max(0, 1 - progress / 0.74)
+    signature = pygame.Surface((68, 68), pygame.SRCALPHA)
+    attacker_class = enemy.get("hit_attacker_class")
+    if attacker_class == "warrior":
+        pygame.draw.arc(
+            signature,
+            (234, 88, 51, round(200 * signature_visibility)),
+            (7, 21, 54, 30),
+            math.radians(195),
+            math.radians(345),
+            4,
+        )
+    elif attacker_class == "rogue":
+        extent = round(9 + progress * 20)
+        for slope in (-1, 1):
+            pygame.draw.line(
+                signature,
+                (201, 104, 231, round(190 * signature_visibility)),
+                (34 - extent, 34 - extent * slope),
+                (34 + extent, 34 + extent * slope),
+                2,
+            )
+    elif attacker_class == "mage":
+        radius = max(3, round(22 * signature_visibility))
+        pygame.draw.circle(
+            signature,
+            (73, 171, 232, round(195 * signature_visibility)),
+            (34, 34),
+            radius,
+            width=3,
+        )
+    screen.blit(signature, (center[0] - 34, center[1] - 34))
+
+    if enemy.get("hit_critical", False) and progress < 0.45:
+        visibility = 1 - progress / 0.45
+        critical = pygame.Surface((72, 72), pygame.SRCALPHA)
+        pygame.draw.circle(
+            critical,
+            (255, 210, 88, round(205 * visibility)),
+            (36, 36),
+            round(9 + progress * 28),
+            width=3,
+        )
+        screen.blit(critical, (center[0] - 36, center[1] - 36))
+    _draw_act_two_damage_number(
+        screen,
+        enemy,
+        current_time,
+        damage_font,
+    )
+
+
+def _draw_act_two_priest_hit_feedback(
+    screen,
+    enemy,
+    sprite,
+    position,
+    current_time,
+    damage_font,
+):
+    started_at = enemy.get("hit_animation_started_at", -1)
+    elapsed = current_time - started_at
+    if started_at < 0 or not 0 <= elapsed < ACT_TWO_HIT_FEEDBACK_MS:
+        screen.blit(sprite, position)
+        return
+
+    reaction_progress = min(1, elapsed / ACT_TWO_HIT_REACTION_MS)
+    reaction = math.sin(math.pi * reaction_progress)
+    offset_x, offset_y = _act_two_hit_offset(enemy, elapsed)
+    offset_x = round(offset_x * 0.42)
+    offset_y = round(offset_y * 0.42 - reaction * 2)
+    center = (
+        position[0] + TILE_SIZE // 2 + offset_x,
+        position[1] + TILE_SIZE // 2 + offset_y,
+    )
+    origin = enemy.get("hit_origin")
+    rotation_direction = -1
+    if origin is not None and origin[0] > enemy["column"]:
+        rotation_direction = 1
+    reacted_sprite = pygame.transform.rotozoom(
+        sprite,
+        rotation_direction * reaction * 4,
+        1 + reaction * 0.025,
+    )
+    sprite_position = reacted_sprite.get_rect(center=center)
+    pygame.draw.ellipse(
+        screen,
+        (3, 7, 7),
+        (center[0] - 10, position[1] + TILE_SIZE - 6, 20, 5),
+    )
+    screen.blit(reacted_sprite, sprite_position)
+
+    if elapsed < ACT_TWO_HIT_REACTION_MS:
+        visibility = 1 - reaction_progress
+        flash = reacted_sprite.copy()
+        flash.fill((117, 229, 173, 0), special_flags=pygame.BLEND_RGBA_ADD)
+        flash.set_alpha(round(205 * visibility))
+        screen.blit(flash, sprite_position)
+
+        aura = pygame.Surface((84, 84), pygame.SRCALPHA)
+        aura_center = 42
+        aura_color = (75, 208, 143)
+        class_color = ACT_TWO_CLASS_EFFECT_COLORS.get(
+            enemy.get("hit_attacker_class"),
+            (189, 234, 204),
+        )
+        radius = round(17 + reaction_progress * 13)
+        for arc_index in range(5):
+            start = (
+                arc_index * math.tau / 5
+                + enemy["row"] * 0.17
+                + reaction_progress * 0.35
+            )
+            pygame.draw.arc(
+                aura,
+                (*aura_color, round(205 * visibility)),
+                (
+                    aura_center - radius,
+                    aura_center - radius,
+                    radius * 2,
+                    radius * 2,
+                ),
+                start,
+                start + 0.55,
+                2,
+            )
+        for mote_index in range(10):
+            angle = mote_index * math.tau / 10 + enemy["column"] * 0.31
+            distance = 10 + reaction_progress * (13 + mote_index % 3 * 3)
+            mote = (
+                round(aura_center + math.cos(angle) * distance),
+                round(aura_center + math.sin(angle) * distance),
+            )
+            color = class_color if mote_index % 4 == 0 else aura_color
+            pygame.draw.circle(
+                aura,
+                (*color, round(225 * visibility)),
+                mote,
+                2 if mote_index % 3 == 0 else 1,
+            )
+        screen.blit(aura, (center[0] - aura_center, center[1] - aura_center))
+
+    _draw_act_two_damage_number(
+        screen,
+        enemy,
+        current_time,
+        damage_font,
+    )
+
+
+def _draw_act_two_priest_death(
+    screen,
+    enemy,
+    sprite,
+    current_time,
+    damage_font,
+):
+    started_at = enemy.get("death_animation_started_at", -1)
+    elapsed = current_time - started_at
+    if started_at < 0 or not 0 <= elapsed < ACT_TWO_PRIEST_DEATH_MS:
+        return
+    progress = elapsed / ACT_TWO_PRIEST_DEATH_MS
+    dissolve_progress = min(1, progress / 0.78)
+    dissolve_progress = dissolve_progress * dissolve_progress * (
+        3 - 2 * dissolve_progress
+    )
+    center = (
+        MAP_OFFSET_X + enemy["column"] * TILE_SIZE + TILE_SIZE // 2,
+        MAP_OFFSET_Y + enemy["row"] * TILE_SIZE + TILE_SIZE // 2,
+    )
+    class_color = ACT_TWO_CLASS_EFFECT_COLORS.get(
+        enemy.get("hit_attacker_class"),
+        (79, 202, 144),
+    )
+
+    shadow = pygame.Surface((36, 12), pygame.SRCALPHA)
+    pygame.draw.ellipse(
+        shadow,
+        (2, 7, 7, round(105 * (1 - dissolve_progress))),
+        shadow.get_rect(),
+    )
+    screen.blit(shadow, (center[0] - 18, center[1] + 10))
+
+    if progress < 0.8:
+        body = sprite.copy()
+        if elapsed < 120:
+            flash = body.copy()
+            flash.fill((126, 239, 180, 0), special_flags=pygame.BLEND_RGBA_ADD)
+            flash.set_alpha(round(220 * (1 - elapsed / 120)))
+            body.blit(flash, (0, 0))
+        shade = max(70, round(255 * (1 - dissolve_progress * 0.68)))
+        body.fill((shade, shade, shade, 255), special_flags=pygame.BLEND_RGBA_MULT)
+        body_width = max(10, round(body.get_width() * (1 - dissolve_progress * 0.16)))
+        body_height = max(8, round(body.get_height() * (1 + dissolve_progress * 0.12)))
+        body = pygame.transform.smoothscale(body, (body_width, body_height))
+        body.set_alpha(round(255 * min(1, (0.8 - progress) * 4.5)))
+        body_rectangle = body.get_rect(
+            center=(center[0], center[1] - round(dissolve_progress * 9))
+        )
+        screen.blit(body, body_rectangle)
+
+    magic = pygame.Surface((92, 104), pygame.SRCALPHA)
+    magic_center = (46, 61)
+    aura_visibility = max(0, 1 - progress / 0.68)
+    aura_radius = round(14 + progress * 24)
+    for arc_index in range(7):
+        start = arc_index * math.tau / 7 + progress * 1.4
+        pygame.draw.arc(
+            magic,
+            (63, 202, 139, round(180 * aura_visibility)),
+            (
+                magic_center[0] - aura_radius,
+                magic_center[1] - aura_radius,
+                aura_radius * 2,
+                aura_radius * 2,
+            ),
+            start,
+            start + 0.42,
+            2,
+        )
+    for mote_index in range(18):
+        delay = (mote_index % 6) * 31
+        mote_elapsed = elapsed - delay
+        if mote_elapsed < 0:
+            continue
+        mote_progress = min(
+            1,
+            mote_elapsed / max(1, ACT_TWO_PRIEST_DEATH_MS - delay),
+        )
+        angle = math.radians(
+            (enemy["column"] * 29 + enemy["row"] * 43 + mote_index * 139)
+            % 360
+        )
+        spread = (5 + mote_index % 5 * 3) * mote_progress
+        mote_position = (
+            round(magic_center[0] + math.cos(angle) * spread),
+            round(
+                magic_center[1]
+                + math.sin(angle) * spread * 0.35
+                - (18 + mote_index % 4 * 5) * mote_progress
+            ),
+        )
+        alpha = round(220 * (1 - mote_progress) ** 1.25)
+        color = class_color if mote_index % 5 == 0 else (65, 190, 137)
+        radius = 3 if mote_index % 6 == 0 else 2
+        pygame.draw.circle(magic, (*color, alpha), mote_position, radius)
+    screen.blit(magic, (center[0] - 46, center[1] - 61))
+
+    signature_visibility = max(0, 1 - progress / 0.72)
+    signature = pygame.Surface((68, 68), pygame.SRCALPHA)
+    attacker_class = enemy.get("hit_attacker_class")
+    if attacker_class == "warrior":
+        pygame.draw.arc(
+            signature,
+            (234, 88, 51, round(210 * signature_visibility)),
+            (6, 18, 56, 34),
+            math.radians(190),
+            math.radians(350),
+            4,
+        )
+    elif attacker_class == "rogue":
+        extent = round(9 + progress * 19)
+        for slope in (-1, 1):
+            pygame.draw.line(
+                signature,
+                (201, 104, 231, round(200 * signature_visibility)),
+                (34 - extent, 34 - extent * slope),
+                (34 + extent, 34 + extent * slope),
+                2,
+            )
+    elif attacker_class == "mage":
+        radius = max(3, round(21 * signature_visibility))
+        pygame.draw.circle(
+            signature,
+            (73, 171, 232, round(205 * signature_visibility)),
+            (34, 34),
+            radius,
+            width=3,
+        )
+    screen.blit(signature, (center[0] - 34, center[1] - 34))
+
+    if enemy.get("hit_critical", False) and progress < 0.44:
+        visibility = 1 - progress / 0.44
+        critical = pygame.Surface((72, 72), pygame.SRCALPHA)
+        pygame.draw.circle(
+            critical,
+            (255, 213, 91, round(205 * visibility)),
+            (36, 36),
+            round(9 + progress * 28),
+            width=3,
+        )
+        screen.blit(critical, (center[0] - 36, center[1] - 36))
+    _draw_act_two_damage_number(
+        screen,
+        enemy,
+        current_time,
+        damage_font,
+    )
+
+
 def draw_enemy(
     screen,
     enemy,
     act_number,
     sprites,
     current_time=0,
+    damage_font=None,
 ):
     padding = TILE_SIZE // 5
     column = enemy["column"]
@@ -2531,6 +4655,58 @@ def draw_enemy(
             current_time,
             _act_one_enemy_color(color, enemy["is_aggro"]),
         )
+        return
+    if (
+        act_number == 2
+        and enemy["type"] in (
+            "goblin",
+            "archer",
+            "brute",
+            "sentinel",
+            "priest",
+        )
+        and enemy["health"] <= 0
+    ):
+        if enemy["type"] == "goblin":
+            _draw_act_two_goblin_death(
+                screen,
+                enemy,
+                sprites["goblin"],
+                current_time,
+                damage_font,
+            )
+        elif enemy["type"] == "archer":
+            _draw_act_two_archer_death(
+                screen,
+                enemy,
+                sprites["archer"],
+                current_time,
+                damage_font,
+            )
+        elif enemy["type"] == "brute":
+            _draw_act_two_brute_death(
+                screen,
+                enemy,
+                sprites["brute"],
+                current_time,
+                damage_font,
+            )
+        elif enemy["type"] == "sentinel":
+            _draw_act_two_sentinel_death(
+                screen,
+                enemy,
+                sprites["sentinel_idle"],
+                current_time,
+                damage_font,
+            )
+        else:
+            _draw_act_two_priest_death(
+                screen,
+                enemy,
+                sprites["priest_idle"],
+                current_time,
+                damage_font,
+            )
         return
 
     hit_effect_active = False
@@ -2729,14 +4905,57 @@ def draw_enemy(
                 else "priest_idle"
             )
         enemy_sprite = sprites[sprite_name]
-
-        screen.blit(
-            enemy_sprite,
-            (
-                MAP_OFFSET_X + column * TILE_SIZE,
-                MAP_OFFSET_Y + row * TILE_SIZE,
-            ),
+        enemy_position = (
+            MAP_OFFSET_X + column * TILE_SIZE,
+            MAP_OFFSET_Y + row * TILE_SIZE,
         )
+        if act_number == 2 and enemy["type"] == "goblin":
+            _draw_act_two_goblin_hit_feedback(
+                screen,
+                enemy,
+                enemy_sprite,
+                enemy_position,
+                current_time,
+                damage_font,
+            )
+        elif act_number == 2 and enemy["type"] == "archer":
+            _draw_act_two_archer_hit_feedback(
+                screen,
+                enemy,
+                enemy_sprite,
+                enemy_position,
+                current_time,
+                damage_font,
+            )
+        elif act_number == 2 and enemy["type"] == "brute":
+            _draw_act_two_brute_hit_feedback(
+                screen,
+                enemy,
+                enemy_sprite,
+                enemy_position,
+                current_time,
+                damage_font,
+            )
+        elif act_number == 2 and enemy["type"] == "sentinel":
+            _draw_act_two_sentinel_hit_feedback(
+                screen,
+                enemy,
+                enemy_sprite,
+                enemy_position,
+                current_time,
+                damage_font,
+            )
+        elif act_number == 2 and enemy["type"] == "priest":
+            _draw_act_two_priest_hit_feedback(
+                screen,
+                enemy,
+                enemy_sprite,
+                enemy_position,
+                current_time,
+                damage_font,
+            )
+        else:
+            screen.blit(enemy_sprite, enemy_position)
 
         if (
             enemy["type"] == "sentinel"

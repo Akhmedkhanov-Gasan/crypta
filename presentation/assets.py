@@ -10,16 +10,16 @@ from settings import GAME_HEIGHT, GAME_WIDTH, TILE_SIZE
 
 
 def load_act_one_fonts():
-    regular_path = FONT_ROOT / "PixelOperator.ttf"
-    bold_path = FONT_ROOT / "PixelOperator-Bold.ttf"
+    regular_path = FONT_ROOT / "AtkinsonHyperlegible-Regular.ttf"
+    bold_path = FONT_ROOT / "AtkinsonHyperlegible-Bold.ttf"
 
     return {
-        "title": pygame.font.Font(str(bold_path), 44),
-        "heading": pygame.font.Font(str(bold_path), 28),
-        "status": pygame.font.Font(str(bold_path), 24),
-        "text": pygame.font.Font(str(regular_path), 20),
-        "controls": pygame.font.Font(str(bold_path), 19),
-        "interface": pygame.font.Font(str(bold_path), 20),
+        "title": pygame.font.Font(str(bold_path), 42),
+        "heading": pygame.font.Font(str(bold_path), 27),
+        "status": pygame.font.Font(str(bold_path), 21),
+        "text": pygame.font.Font(str(regular_path), 19),
+        "controls": pygame.font.Font(str(bold_path), 17),
+        "interface": pygame.font.Font(str(regular_path), 19),
     }
 
 
@@ -37,22 +37,32 @@ def load_menu_assets():
 
 
 def load_act_two_fonts():
-    regular_path = FONT_ROOT / "Almendra-Regular.ttf"
-    bold_path = FONT_ROOT / "Almendra-Bold.ttf"
+    display_bold_path = FONT_ROOT / "Almendra-Bold.ttf"
+    interface_path = FONT_ROOT / "AtkinsonHyperlegible-Regular.ttf"
+    interface_bold_path = FONT_ROOT / "AtkinsonHyperlegible-Bold.ttf"
 
     return {
-        "title": pygame.font.Font(str(bold_path), 42),
-        "heading": pygame.font.Font(str(bold_path), 25),
-        "status": pygame.font.Font(str(bold_path), 24),
-        "text": pygame.font.Font(str(regular_path), 18),
-        "controls": pygame.font.Font(str(bold_path), 18),
+        "title": pygame.font.Font(str(display_bold_path), 42),
+        "heading": pygame.font.Font(str(display_bold_path), 25),
+        "status": pygame.font.Font(str(interface_bold_path), 22),
+        "text": pygame.font.Font(str(interface_path), 18),
+        "controls": pygame.font.Font(str(interface_bold_path), 17),
+        "sidebar_heading": pygame.font.Font(
+            str(interface_bold_path),
+            22,
+        ),
+        "sidebar_text": pygame.font.Font(str(interface_path), 18),
+        "sidebar_controls": pygame.font.Font(
+            str(interface_bold_path),
+            16,
+        ),
     }
 
 
 def load_act_three_fonts():
     display_path = FONT_ROOT / "Sandey Molse DEMO.ttf"
-    interface_path = FONT_ROOT / "PixelOperator.ttf"
-    interface_bold_path = FONT_ROOT / "PixelOperator-Bold.ttf"
+    interface_path = FONT_ROOT / "AtkinsonHyperlegible-Regular.ttf"
+    interface_bold_path = FONT_ROOT / "AtkinsonHyperlegible-Bold.ttf"
 
     return {
         "title": pygame.font.Font(str(display_path), 46),
@@ -85,49 +95,59 @@ def load_act_three_fonts():
 def load_act_two_sprites():
     asset_directory = ASSET_ROOT / "act_2"
     ui_directory = ASSET_ROOT / "ui" / "act_2"
-    sprite_names = (
-        "player_warrior",
-        "player_rogue",
-        "player_mage",
-        "goblin",
-        "brute",
-        "archer",
-        "potion",
-        "key",
-        "coin",
-        "chest_closed",
-        "chest_open",
-        "stairs_locked",
-        "stairs_open",
-        "floor",
-        "wall",
-        "sentinel_idle",
-        "sentinel_guard",
-        "priest_idle",
-        "priest_cast",
-        "oracle_idle",
-        "oracle_awake",
-        "oracle_projectile",
-        "oracle_projectile_homing",
-        "pillar",
-        "charged_pillar",
-    )
+    sprite_paths = {
+        "player_warrior": "player/warrior/idle/idle_00.png",
+        "player_warrior_hurt": "player/warrior/hurt/hurt_00.png",
+        "player_warrior_death_0": "player/warrior/death/death_00.png",
+        "player_warrior_death_1": "player/warrior/death/death_01.png",
+        "player_rogue": "player/rogue/idle/idle_00.png",
+        "player_rogue_death_0": "player/rogue/death/death_00.png",
+        "player_rogue_death_1": "player/rogue/death/death_01.png",
+        "player_mage": "player/mage/idle/idle_00.png",
+        "player_mage_death_0": "player/mage/death/death_00.png",
+        "player_mage_death_1": "player/mage/death/death_01.png",
+        "old_man_standing": "npcs/old_man/standing/standing_00.png",
+        "old_man_kneeling": "npcs/old_man/kneeling/kneeling_00.png",
+        "goblin": "enemies/goblin/idle/idle_00.png",
+        "brute": "enemies/brute/idle/idle_00.png",
+        "archer": "enemies/archer/idle/idle_00.png",
+        "sentinel_idle": "enemies/sentinel/idle/idle_00.png",
+        "sentinel_guard": "enemies/sentinel/guard/guard_00.png",
+        "priest_idle": "enemies/priest/idle/idle_00.png",
+        "priest_cast": "enemies/priest/cast/cast_00.png",
+        "oracle_idle": "bosses/oracle/idle/idle_00.png",
+        "oracle_awake": "bosses/oracle/awake/awake_00.png",
+        "oracle_projectile": "bosses/oracle/projectiles/projectile.png",
+        "oracle_projectile_homing": (
+            "bosses/oracle/projectiles/projectile_homing.png"
+        ),
+        "pillar": "bosses/oracle/arena/pillar.png",
+        "charged_pillar": "bosses/oracle/arena/charged_pillar.png",
+        "floor": "environment/tiles/floor.png",
+        "wall": "environment/tiles/wall.png",
+        "stairs_locked": "environment/stairs/locked.png",
+        "stairs_open": "environment/stairs/open.png",
+        "potion": "items/consumables/potion.png",
+        "key": "items/loot/key.png",
+        "coin": "items/loot/coin.png",
+        "chest_closed": "items/chests/closed.png",
+        "chest_open": "items/chests/open.png",
+    }
 
     sprites = {
         name: pygame.transform.scale(
             pygame.image.load(
-                str(asset_directory / f"{name}.png")
+                str(asset_directory / relative_path)
             ).convert_alpha(),
             (TILE_SIZE, TILE_SIZE),
         )
-        for name in sprite_names
+        for name, relative_path in sprite_paths.items()
     }
     for oracle_sprite_name in ("oracle_idle", "oracle_awake"):
         sprites[oracle_sprite_name] = pygame.transform.scale(
             pygame.image.load(
                 str(
-                    asset_directory
-                    / f"{oracle_sprite_name}.png"
+                    asset_directory / sprite_paths[oracle_sprite_name]
                 )
             ).convert_alpha(),
             (TILE_SIZE * 3, TILE_SIZE * 3),
@@ -347,7 +367,6 @@ def load_act_three_gameplay_assets():
     project_root = ASSET_ROOT.parent.parent
     map_path = project_root / act_three_config["map_path"]
     environment_directory = map_path.parent
-    act_two_directory = ASSET_ROOT / "act_2"
     ui_directory = ASSET_ROOT / "ui" / "act_3"
     tile_size = 64
     assets = {
@@ -1401,19 +1420,5 @@ def load_act_three_gameplay_assets():
             (tile_size, tile_size),
         )
     )
-
-    fallback_enemy_sprites = {
-        "goblin": "goblin",
-        "brute": "brute",
-        "sentinel": "sentinel_idle",
-    }
-
-    for enemy_type, sprite_name in fallback_enemy_sprites.items():
-        assets[f"enemy_{enemy_type}"] = (
-            _load_pixel_scaled_image(
-                act_two_directory / f"{sprite_name}.png",
-                (tile_size, tile_size),
-            )
-        )
 
     return assets

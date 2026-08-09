@@ -146,6 +146,20 @@ def attack_enemy(
         )
 
         if attack_direction != vulnerable_direction:
+            game_state.emit(
+                GameEvent(
+                    type=GameEventType.HIT,
+                    actor=attacker_name,
+                    target=enemy.name,
+                    origin=attacker_position,
+                    destination=(enemy.column, enemy.row),
+                    amount=0,
+                    data={
+                        "blocked": True,
+                        "player_class": player.player_class,
+                    },
+                )
+            )
             add_log_message(
                 game_state.combat_log,
                 f"{enemy.name}'s shield blocks the attack.",
@@ -322,7 +336,11 @@ def attack_enemy(
             origin=attacker_position,
             destination=(enemy.column, enemy.row),
             amount=damage,
-            data={"critical": critical_hit},
+            data={
+                "critical": critical_hit,
+                "blocked": False,
+                "player_class": player.player_class,
+            },
         )
     )
 

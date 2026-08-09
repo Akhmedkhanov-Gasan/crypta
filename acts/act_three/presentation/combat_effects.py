@@ -47,7 +47,10 @@ def record_enemy_hit_feedback(game_state, started_at):
         if (
             event.type is not GameEventType.HIT
             or event.target in (None, "hero", "familiar")
-            or not event.amount
+            or (
+                not event.amount
+                and not event.data.get("blocked", False)
+            )
         ):
             continue
 
@@ -69,6 +72,18 @@ def record_enemy_hit_feedback(game_state, started_at):
                 event.origin
                 for event in reversed(hit_events)
                 if event.origin is not None
+            ),
+            None,
+        )
+        enemy.hit_blocked = any(
+            event.data.get("blocked", False)
+            for event in hit_events
+        )
+        enemy.hit_attacker_class = next(
+            (
+                event.data.get("player_class")
+                for event in reversed(hit_events)
+                if event.data.get("player_class") is not None
             ),
             None,
         )
@@ -128,13 +143,17 @@ def record_player_death_feedback(game_state, started_at):
         player.summoner_familiar_active = False
         player.summoner_familiar_position = None
         player.summoner_true_form_active = False
-    if player.subclass not in (
+    death_identity = player.subclass or player.player_class
+    if death_identity not in (
         "berserker",
         "paladin",
         "assassin",
         "archer",
         "warlock",
         "summoner",
+        "warrior",
+        "rogue",
+        "mage",
     ):
         return
 

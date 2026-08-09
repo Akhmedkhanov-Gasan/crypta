@@ -19,6 +19,9 @@ from presentation.hud import (
     draw_status,
     get_class_selection_rectangles,
 )
+from acts.act_two.presentation import (
+    draw_act_two_player_feedback_overlay,
+)
 from presentation.layout import CLASS_SELECTION_READY_MS
 from presentation.screens import (
     FLOOR_TRANSITION_CLOSE_END_MS,
@@ -36,8 +39,10 @@ from presentation.screens import (
 from presentation.world import (
     draw_attack_markers,
     draw_act_one_atmosphere,
+    draw_act_two_atmosphere,
     draw_act_one_boss_effects,
     draw_act_one_player_attack_effect,
+    draw_act_two_player_attack_effect,
     draw_act_one_pickup_effect,
     draw_boss_door,
     draw_chest,
@@ -64,8 +69,11 @@ __all__ = [
     "draw_act_three_gameplay",
     "draw_attack_markers",
     "draw_act_one_atmosphere",
+    "draw_act_two_atmosphere",
     "draw_act_one_boss_effects",
     "draw_act_one_player_attack_effect",
+    "draw_act_two_player_attack_effect",
+    "draw_act_two_player_feedback_overlay",
     "draw_act_one_pickup_effect",
     "draw_boss_door",
     "draw_chest",
