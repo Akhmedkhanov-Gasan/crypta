@@ -136,9 +136,15 @@ def _start_pickup_effect(
     effect_started_at: int,
 ) -> None:
     player = game_state.player
-    player.act_one_pickup_kind = kind
-    player.act_one_pickup_origin = position
-    player.act_one_pickup_started_at = effect_started_at
+    act_number = FLOOR_CONFIGS[game_state.floor_index]["act"]
+    if act_number == 1:
+        player.act_one_pickup_kind = kind
+        player.act_one_pickup_origin = position
+        player.act_one_pickup_started_at = effect_started_at
+    elif act_number == 2:
+        player.act_two_pickup_kind = kind
+        player.act_two_pickup_origin = position
+        player.act_two_pickup_started_at = effect_started_at
 
 
 def _collect_items(
