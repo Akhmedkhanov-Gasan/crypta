@@ -2875,6 +2875,7 @@ def draw_player(
     death_animation_started_at=-1,
     hit_damage=0,
     damage_font=None,
+    act_two_facing_direction=(0, 1),
 ):
     center_x = MAP_OFFSET_X + column * TILE_SIZE + TILE_SIZE // 2
     center_y = MAP_OFFSET_Y + row * TILE_SIZE + TILE_SIZE // 2
@@ -2899,12 +2900,15 @@ def draw_player(
             player_class,
             invisibility_turns,
             current_time,
+            movement_animation_started_at,
+            movement_origin,
             potion_effect_started_at,
             hit_animation_started_at,
             hit_origin,
             death_animation_started_at,
             hit_damage,
             damage_font,
+            act_two_facing_direction,
         )
         return
     if act_number < 2:

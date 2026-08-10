@@ -1173,6 +1173,20 @@ def main():
                         game_state.player.movement_animation_started_at = (
                             enemy_movement_started_at
                         )
+                    elif current_act == 2 and hero_move_event is not None:
+                        game_state.player.act_two_movement_started_at = (
+                            enemy_movement_started_at
+                        )
+                        game_state.player.act_two_movement_origin = (
+                            hero_move_event.origin
+                        )
+                        if hero_move_event.destination is not None:
+                            game_state.player.act_two_facing_direction = (
+                                hero_move_event.destination[0]
+                                - hero_move_event.origin[0],
+                                hero_move_event.destination[1]
+                                - hero_move_event.origin[1],
+                            )
                     for enemy in game_state.floor["enemies"]:
                         if enemy.name in moved_enemy_names:
                             enemy.movement_animation_started_at = (
@@ -1521,13 +1535,22 @@ def main():
             game_state.player.hit_origin,
             game_state.player.attack_animation_started_at,
             game_state.player.act_one_attack_target,
-            game_state.player.movement_animation_started_at,
-            game_state.player.act_one_movement_origin,
+            (
+                game_state.player.act_two_movement_started_at
+                if current_act == 2
+                else game_state.player.movement_animation_started_at
+            ),
+            (
+                game_state.player.act_two_movement_origin
+                if current_act == 2
+                else game_state.player.act_one_movement_origin
+            ),
             game_state.player.act_one_dodge_started_at,
             game_state.player.act_one_dodge_origin,
             game_state.player.death_animation_started_at,
             game_state.player.hit_damage,
             active_status_font,
+            game_state.player.act_two_facing_direction,
         )
         for enemy in game_state.floor["enemies"]:
             recent_act_one_hit = (

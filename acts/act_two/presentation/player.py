@@ -2,6 +2,15 @@ import math
 
 import pygame
 
+from acts.act_two.presentation.movement import (
+    PlayerMovementPose,
+    draw_mage_movement_grounding,
+    draw_rogue_movement_grounding,
+    draw_warrior_movement_grounding,
+    sample_mage_movement,
+    sample_rogue_movement,
+    sample_warrior_movement,
+)
 from presentation.hud import wrap_text
 from presentation.layout import (
     MAP_HEIGHT,
@@ -9,10 +18,7 @@ from presentation.layout import (
     MAP_OFFSET_Y,
     MAP_WIDTH,
 )
-from settings import (
-    HEALTH_BAR_BACKGROUND,
-    TILE_SIZE,
-)
+from settings import TILE_SIZE
 
 
 ACT_TWO_PLAYER_HIT_FEEDBACK_MS = 650
@@ -36,9 +42,6 @@ _CLASS_COLORS = {
     "rogue": (180, 82, 218),
     "mage": (67, 157, 224),
 }
-_HEALTH_HIGH_COLOR = (67, 196, 112)
-_HEALTH_MID_COLOR = (224, 178, 66)
-_HEALTH_LOW_COLOR = (211, 63, 70)
 _OLD_MAN_LINES = {
     "warrior": "Strength is loud. What waits below is patient.",
     "rogue": "You can hide from beasts. Not from the road below.",
@@ -234,6 +237,7 @@ def _draw_player_hit(
     current_time,
     hit_started_at,
     hit_origin,
+    facing_direction=(0, 1),
 ):
     elapsed = current_time - hit_started_at
     if hit_started_at < 0 or not 0 <= elapsed < ACT_TWO_PLAYER_HIT_FEEDBACK_MS:
@@ -252,16 +256,31 @@ def _draw_player_hit(
         position[0] + TILE_SIZE // 2 + offset_x,
         position[1] + TILE_SIZE // 2 + offset_y,
     )
-    angle = {
-        "warrior": -7,
-        "rogue": 10,
-        "mage": -4,
-    }[player_class] * reaction
-    reacted_sprite = pygame.transform.rotozoom(
-        sprite,
-        angle,
-        1 + (0.035 if player_class == "warrior" else 0.015) * reaction,
+    directional_warrior_hit = (
+        player_class == "warrior"
+        and facing_direction != (0, 1)
     )
+    if directional_warrior_hit:
+        shake_direction = (
+            1 if (elapsed // 38) % 2 == 0 else -1
+        )
+        shake = round((1 - reaction_progress) * 2) * shake_direction
+        if facing_direction[0] != 0:
+            center = (center[0], center[1] + shake)
+        else:
+            center = (center[0] + shake, center[1])
+        reacted_sprite = sprite
+    else:
+        angle = {
+            "warrior": -7,
+            "rogue": 10,
+            "mage": -4,
+        }[player_class] * reaction
+        reacted_sprite = pygame.transform.rotozoom(
+            sprite,
+            angle,
+            1 + (0.035 if player_class == "warrior" else 0.015) * reaction,
+        )
     reacted_position = reacted_sprite.get_rect(center=center)
 
     if player_class == "rogue" and reaction_progress < 1:
@@ -437,15 +456,18 @@ def draw_act_two_player_actor(
     player_class,
     invisibility_turns,
     current_time,
+    movement_started_at,
+    movement_origin,
     potion_effect_started_at,
     hit_started_at,
     hit_origin,
     death_started_at,
     hit_damage,
     damage_font,
+    facing_direction=(0, 1),
 ):
     sprite = sprites[f"player_{player_class}"]
-    position = (
+    destination_position = (
         MAP_OFFSET_X + column * TILE_SIZE,
         MAP_OFFSET_Y + row * TILE_SIZE,
     )
@@ -474,7 +496,7 @@ def draw_act_two_player_actor(
         _draw_player_death(
             screen,
             sprite,
-            position,
+            destination_position,
             player_class,
             current_time,
             death_started_at,
@@ -482,9 +504,132 @@ def draw_act_two_player_actor(
         )
         return
 
+    movement_pose = PlayerMovementPose(
+        position=destination_position,
+        ground_position=destination_position,
+        direction=(0, 0),
+        progress=1.0,
+        landing_progress=1.0,
+        active=False,
+    )
+    if player_class == "warrior":
+        movement_pose = sample_warrior_movement(
+            column,
+            row,
+            movement_origin,
+            current_time,
+            movement_started_at,
+        )
+        if movement_pose.active:
+            movement_frame = min(
+                2,
+                int(movement_pose.progress * 3),
+            )
+            if movement_pose.landing_progress > 0:
+                movement_frame = 1
+            if (column + row) % 2:
+                movement_frame = 2 - movement_frame
+            if movement_pose.direction[0] != 0:
+                side = (
+                    "right"
+                    if movement_pose.direction[0] > 0
+                    else "left"
+                )
+                sprite = sprites[
+                    f"player_warrior_walk_side_{side}_{movement_frame}"
+                ]
+            elif movement_pose.direction[1] < 0:
+                sprite = sprites[
+                    f"player_warrior_walk_up_{movement_frame}"
+                ]
+            else:
+                sprite = sprites[f"player_warrior_walk_{movement_frame}"]
+            if invisibility_turns > 0:
+                sprite = sprite.copy()
+                sprite.set_alpha(90)
+        elif facing_direction[0] != 0:
+            side = "right" if facing_direction[0] > 0 else "left"
+            sprite = sprites[f"player_warrior_walk_side_{side}_1"]
+            if invisibility_turns > 0:
+                sprite = sprite.copy()
+                sprite.set_alpha(90)
+        elif facing_direction[1] < 0:
+            sprite = sprites["player_warrior_walk_up_1"]
+            if invisibility_turns > 0:
+                sprite = sprite.copy()
+                sprite.set_alpha(90)
+        draw_warrior_movement_grounding(screen, movement_pose)
+    elif player_class == "rogue":
+        movement_pose = sample_rogue_movement(
+            column,
+            row,
+            movement_origin,
+            current_time,
+            movement_started_at,
+        )
+        if movement_pose.active:
+            movement_frame = min(
+                2,
+                int(movement_pose.progress * 3),
+            )
+            if movement_pose.landing_progress > 0:
+                movement_frame = 1
+            if (column + row) % 2:
+                movement_frame = 2 - movement_frame
+            if movement_pose.direction[0] != 0:
+                side = (
+                    "right"
+                    if movement_pose.direction[0] > 0
+                    else "left"
+                )
+                sprite = sprites[
+                    f"player_rogue_walk_side_{side}_{movement_frame}"
+                ]
+            else:
+                sprite = sprites[f"player_rogue_walk_{movement_frame}"]
+            if invisibility_turns > 0:
+                sprite = sprite.copy()
+                sprite.set_alpha(90)
+        elif facing_direction[0] != 0:
+            side = "right" if facing_direction[0] > 0 else "left"
+            sprite = sprites[f"player_rogue_walk_side_{side}_1"]
+            if invisibility_turns > 0:
+                sprite = sprite.copy()
+                sprite.set_alpha(90)
+        draw_rogue_movement_grounding(screen, sprite, movement_pose)
+    elif player_class == "mage":
+        movement_pose = sample_mage_movement(
+            column,
+            row,
+            movement_origin,
+            current_time,
+            movement_started_at,
+        )
+        if movement_pose.active:
+            movement_frame = min(
+                2,
+                int(movement_pose.progress * 3),
+            )
+            if movement_pose.landing_progress > 0:
+                movement_frame = 1
+            if (column + row) % 2:
+                movement_frame = 2 - movement_frame
+            sprite = sprites[f"player_mage_walk_{movement_frame}"]
+            if invisibility_turns > 0:
+                sprite = sprite.copy()
+                sprite.set_alpha(90)
+        draw_mage_movement_grounding(screen, movement_pose)
+    position = movement_pose.position
+    visual_facing_direction = (
+        movement_pose.direction
+        if movement_pose.active
+        else facing_direction
+    )
+
     hit_elapsed = current_time - hit_started_at
     if (
         player_class == "warrior"
+        and visual_facing_direction == (0, 1)
         and hit_started_at >= 0
         and 0 <= hit_elapsed < ACT_TWO_PLAYER_HIT_REACTION_MS
     ):
@@ -497,6 +642,7 @@ def draw_act_two_player_actor(
         current_time,
         hit_started_at,
         hit_origin,
+        visual_facing_direction,
     )
     _draw_healing_effect(
         screen,
@@ -528,32 +674,6 @@ def draw_act_two_player_actor(
         shadow.set_alpha(alpha)
         screen.blit(shadow, number_position.move(1, 2))
         screen.blit(number, number_position)
-
-    health_ratio = health / max_health
-    bar_rectangle = pygame.Rect(
-        position[0] + 4,
-        position[1] + TILE_SIZE - 5,
-        TILE_SIZE - 8,
-        4,
-    )
-    pygame.draw.rect(screen, HEALTH_BAR_BACKGROUND, bar_rectangle)
-    if health_ratio > 0.6:
-        health_color = _HEALTH_HIGH_COLOR
-    elif health_ratio > 0.3:
-        health_color = _HEALTH_MID_COLOR
-    else:
-        health_color = _HEALTH_LOW_COLOR
-    pygame.draw.rect(
-        screen,
-        health_color,
-        (
-            bar_rectangle.x,
-            bar_rectangle.y,
-            round(bar_rectangle.width * health_ratio),
-            bar_rectangle.height,
-        ),
-    )
-
 
 def _draw_old_man(screen, game_state, fonts, sprites, elapsed):
     old_man_cell = game_state.player.old_man_position
