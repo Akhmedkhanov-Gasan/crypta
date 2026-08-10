@@ -291,11 +291,16 @@ class PlayerState:
     act_two_movement_started_at: int = 0
     act_two_movement_origin: tuple[int, int] | None = None
     act_two_facing_direction: tuple[int, int] = (0, 1)
+    act_two_blocked_movement_started_at: int = -1
+    act_two_blocked_movement_direction: tuple[int, int] = (0, 1)
     act_one_dodge_started_at: int = -1
     act_one_dodge_origin: tuple[int, int] | None = None
     act_one_pickup_kind: str | None = None
     act_one_pickup_origin: tuple[int, int] | None = None
     act_one_pickup_started_at: int = -1
+    act_two_pickup_kind: str | None = None
+    act_two_pickup_origin: tuple[int, int] | None = None
+    act_two_pickup_started_at: int = -1
     act_three: ActThreePlayerState = field(
         default_factory=ActThreePlayerState,
     )

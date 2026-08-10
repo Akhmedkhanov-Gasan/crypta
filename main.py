@@ -56,6 +56,7 @@ from rendering import (
     draw_act_two_player_attack_effect,
     draw_act_two_player_feedback_overlay,
     draw_act_one_pickup_effect,
+    draw_act_two_pickup_effect,
     draw_boss_door,
     draw_chest,
     draw_class_selection_screen,
@@ -1022,6 +1023,21 @@ def main():
                 elif player_waited:
                     player_acted = True
                 elif player_tried_to_move:
+                    if current_act == 2:
+                        movement_attempt_started_at = pygame.time.get_ticks()
+                        attempted_direction = (
+                            column_change,
+                            row_change,
+                        )
+                        game_state.player.act_two_movement_started_at = 0
+                        game_state.player.act_two_movement_origin = None
+                        game_state.player.act_two_facing_direction = attempted_direction
+                        game_state.player.act_two_blocked_movement_started_at = (
+                            movement_attempt_started_at
+                        )
+                        game_state.player.act_two_blocked_movement_direction = (
+                            attempted_direction
+                        )
                     if target_enemy:
                         if game_state.player.subclass == "warlock":
                             perform_warlock_attack(
@@ -1551,6 +1567,8 @@ def main():
             game_state.player.hit_damage,
             active_status_font,
             game_state.player.act_two_facing_direction,
+            game_state.player.act_two_blocked_movement_started_at,
+            game_state.player.act_two_blocked_movement_direction,
         )
         for enemy in game_state.floor["enemies"]:
             recent_act_one_hit = (
@@ -1617,6 +1635,15 @@ def main():
             game_state.player.act_one_pickup_origin,
             current_time,
             game_state.player.act_one_pickup_started_at,
+        )
+        draw_act_two_pickup_effect(
+            game_surface,
+            current_act,
+            act_two_sprites,
+            game_state.player.act_two_pickup_kind,
+            game_state.player.act_two_pickup_origin,
+            current_time,
+            game_state.player.act_two_pickup_started_at,
         )
         draw_oracle_projectiles(
             game_surface,

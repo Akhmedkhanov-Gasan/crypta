@@ -113,6 +113,33 @@ def load_act_two_sprites():
         "player_warrior_walk_up_0": "player/warrior/walk/up/walk_00.png",
         "player_warrior_walk_up_1": "player/warrior/walk/up/walk_01.png",
         "player_warrior_walk_up_2": "player/warrior/walk/up/walk_02.png",
+        "player_warrior_attack_side_right_0": (
+            "player/warrior/attack/side/attack_00.png"
+        ),
+        "player_warrior_attack_side_right_1": (
+            "player/warrior/attack/side/attack_01.png"
+        ),
+        "player_warrior_attack_side_right_2": (
+            "player/warrior/attack/side/attack_02.png"
+        ),
+        "player_warrior_attack_up_0": (
+            "player/warrior/attack/up/attack_00.png"
+        ),
+        "player_warrior_attack_up_1": (
+            "player/warrior/attack/up/attack_01.png"
+        ),
+        "player_warrior_attack_up_2": (
+            "player/warrior/attack/up/attack_02.png"
+        ),
+        "player_warrior_attack_down_0": (
+            "player/warrior/attack/down/attack_00.png"
+        ),
+        "player_warrior_attack_down_1": (
+            "player/warrior/attack/down/attack_01.png"
+        ),
+        "player_warrior_attack_down_2": (
+            "player/warrior/attack/down/attack_02.png"
+        ),
         "player_warrior_death_0": "player/warrior/death/death_00.png",
         "player_warrior_death_1": "player/warrior/death/death_01.png",
         "player_rogue": "player/rogue/idle/idle_00.png",
@@ -128,12 +155,45 @@ def load_act_two_sprites():
         "player_rogue_walk_side_right_2": (
             "player/rogue/walk/side/walk_02.png"
         ),
+        "player_rogue_walk_up_0": "player/rogue/walk/up/walk_00.png",
+        "player_rogue_walk_up_1": "player/rogue/walk/up/walk_01.png",
+        "player_rogue_walk_up_2": "player/rogue/walk/up/walk_02.png",
+        "player_rogue_attack_side_right": (
+            "player/rogue/attack/side/attack_00.png"
+        ),
+        "player_rogue_attack_side_left": (
+            "player/rogue/attack/side/attack_left_00.png"
+        ),
+        "player_rogue_attack_down": (
+            "player/rogue/attack/down/attack_00.png"
+        ),
+        "player_rogue_attack_up": (
+            "player/rogue/attack/up/attack_00.png"
+        ),
         "player_rogue_death_0": "player/rogue/death/death_00.png",
         "player_rogue_death_1": "player/rogue/death/death_01.png",
         "player_mage": "player/mage/idle/idle_00.png",
         "player_mage_walk_0": "player/mage/walk/down/walk_00.png",
         "player_mage_walk_1": "player/mage/walk/down/walk_01.png",
         "player_mage_walk_2": "player/mage/walk/down/walk_02.png",
+        "player_mage_walk_side_right_0": (
+            "player/mage/walk/side/walk_00.png"
+        ),
+        "player_mage_walk_side_right_1": (
+            "player/mage/walk/side/walk_01.png"
+        ),
+        "player_mage_walk_side_right_2": (
+            "player/mage/walk/side/walk_02.png"
+        ),
+        "player_mage_walk_up_0": "player/mage/walk/up/walk_00.png",
+        "player_mage_walk_up_1": "player/mage/walk/up/walk_01.png",
+        "player_mage_walk_up_2": "player/mage/walk/up/walk_02.png",
+        "player_mage_attack_side_right": (
+            "player/mage/attack/side/attack_00.png"
+        ),
+        "player_mage_attack_side_left": (
+            "player/mage/attack/side/attack_left_00.png"
+        ),
         "player_mage_death_0": "player/mage/death/death_00.png",
         "player_mage_death_1": "player/mage/death/death_01.png",
         "old_man_standing": "npcs/old_man/standing/standing_00.png",
@@ -183,10 +243,28 @@ def load_act_two_sprites():
                 False,
             )
         )
+        sprites[f"player_warrior_attack_side_left_{frame_index}"] = (
+            pygame.transform.flip(
+                sprites[
+                    f"player_warrior_attack_side_right_{frame_index}"
+                ],
+                True,
+                False,
+            )
+        )
         sprites[f"player_rogue_walk_side_left_{frame_index}"] = (
             pygame.transform.flip(
                 sprites[
                     f"player_rogue_walk_side_right_{frame_index}"
+                ],
+                True,
+                False,
+            )
+        )
+        sprites[f"player_mage_walk_side_left_{frame_index}"] = (
+            pygame.transform.flip(
+                sprites[
+                    f"player_mage_walk_side_right_{frame_index}"
                 ],
                 True,
                 False,

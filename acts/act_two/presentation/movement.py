@@ -18,6 +18,11 @@ ROGUE_MOVE_DURATION_MS = ROGUE_MOVE_TRAVEL_MS + ROGUE_MOVE_SETTLE_MS
 MAGE_MOVE_TRAVEL_MS = 215
 MAGE_MOVE_SETTLE_MS = 35
 MAGE_MOVE_DURATION_MS = MAGE_MOVE_TRAVEL_MS + MAGE_MOVE_SETTLE_MS
+BLOCKED_MOVE_DURATION_MS = {
+    "warrior": 180,
+    "rogue": 150,
+    "mage": 190,
+}
 
 
 @dataclass(frozen=True)
@@ -49,6 +54,60 @@ def _smootherstep(progress):
         * progress
         * progress
         * (progress * (progress * 6.0 - 15.0) + 10.0)
+    )
+
+
+def sample_blocked_movement_attempt(
+    column,
+    row,
+    direction,
+    player_class,
+    current_time,
+    movement_started_at,
+):
+    cell_position = _cell_position(column, row)
+    inactive_pose = PlayerMovementPose(
+        position=cell_position,
+        ground_position=cell_position,
+        direction=(0, 0),
+        progress=1.0,
+        landing_progress=1.0,
+        active=False,
+    )
+    if (
+        player_class not in BLOCKED_MOVE_DURATION_MS
+        or abs(direction[0]) + abs(direction[1]) != 1
+        or movement_started_at <= 0
+    ):
+        return inactive_pose
+
+    duration = BLOCKED_MOVE_DURATION_MS[player_class]
+    elapsed = current_time - movement_started_at
+    if not 0 <= elapsed < duration:
+        return inactive_pose
+
+    progress = elapsed / duration
+    impulse = math.sin(math.pi * progress)
+    push_distance = {
+        "warrior": 2,
+        "rogue": 3,
+        "mage": 2,
+    }[player_class]
+    body_lift = round(impulse) if player_class == "mage" else 0
+    landing_progress = max(0.0, (progress - 0.62) / 0.38)
+
+    return PlayerMovementPose(
+        position=(
+            cell_position[0] + round(direction[0] * impulse * push_distance),
+            cell_position[1]
+            + round(direction[1] * impulse * push_distance)
+            - body_lift,
+        ),
+        ground_position=cell_position,
+        direction=direction,
+        progress=progress,
+        landing_progress=landing_progress,
+        active=True,
     )
 
 
