@@ -393,6 +393,11 @@ def resolve_enemy_turn(
             for chest in game_state.floor["chests"]
             if not chest["is_open"]
         )
+        occupied_positions.update(
+            (crate.column, crate.row)
+            for crate in game_state.floor.breakable_crates
+            if not crate.is_broken
+        )
         occupied_positions.add(
             (
                 game_state.floor["stairs_column"],
@@ -423,6 +428,11 @@ def resolve_enemy_turn(
             for chest in game_state.floor["chests"]
             if not chest["is_open"]
         }
+        attack_blocking_positions.update(
+            (crate.column, crate.row)
+            for crate in game_state.floor.breakable_crates
+            if not crate.is_broken
+        )
 
         if _familiar_is_preferred_target(game_state, enemy):
             enemy.is_aggro = True

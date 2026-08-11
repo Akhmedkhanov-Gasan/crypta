@@ -10,6 +10,7 @@ from acts.act_two.settings import (
     CLASS_BASE_STATS,
 )
 from acts.act_two.abilities import select_warrior_cleave_direction
+from acts.act_two.crates import break_crate
 from acts.act_two.progression import (
     get_act_two_upgrade_order,
     purchase_act_two_upgrade,
@@ -17,6 +18,19 @@ from acts.act_two.progression import (
 from acts.act_two.visibility import (
     position_is_visible,
     update_act_two_visibility,
+)
+from acts.act_two.traps import advance_spike_traps
+from acts.act_two.runes import (
+    interact_with_rune_pedestal,
+    rune_pedestal_is_at,
+    rune_wall_is_at,
+    strike_wall_rune,
+)
+from acts.act_two.treasury import (
+    activate_treasury_trial,
+    purchase_treasury_reward_upgrade,
+    treasury_chest_is_at,
+    update_treasury_trial,
 )
 from acts.act_two.presentation.camera import (
     ActTwoCamera,
@@ -80,10 +94,14 @@ from rendering import (
     draw_act_two_player_attack_effect,
     draw_act_two_player_feedback_overlay,
     draw_act_two_power_cleave_effect,
+    draw_act_two_rune_room,
     draw_act_two_upgrade_screen,
+    draw_act_two_spike_traps,
+    draw_act_two_treasury,
     draw_act_one_pickup_effect,
     draw_act_two_pickup_effect,
     draw_boss_door,
+    draw_breakable_crate,
     draw_chest,
     draw_class_selection_screen,
     draw_floor_transition,
@@ -755,12 +773,21 @@ def main():
                         upgrade = get_act_two_upgrade_order(
                             game_state.player.player_class
                         )[upgrade_index]
-                        game_state.upgrade_message = (
-                            purchase_act_two_upgrade(
-                                game_state.player,
+                        if game_state.upgrade_reward_pending:
+                            (
+                                upgraded,
+                                game_state.upgrade_message,
+                            ) = purchase_treasury_reward_upgrade(
+                                game_state,
                                 upgrade,
                             )
-                        )
+                        else:
+                            game_state.upgrade_message = (
+                                purchase_act_two_upgrade(
+                                    game_state.player,
+                                    upgrade,
+                                )
+                            )
                         add_log_message(
                             game_state.combat_log,
                             game_state.upgrade_message,
@@ -806,7 +833,7 @@ def main():
                     elif event.key in (
                         pygame.K_RETURN,
                         pygame.K_KP_ENTER,
-                    ):
+                    ) and not game_state.upgrade_reward_pending:
                         _finish_upgrade_descent(
                             game_state,
                             pygame.time.get_ticks(),
@@ -925,6 +952,39 @@ def main():
                         )
                     ),
                     None,
+                )
+                target_breakable_crate = next(
+                    (
+                        crate
+                        for crate in game_state.floor.breakable_crates
+                        if (
+                            not crate.is_broken
+                            and (crate.column, crate.row)
+                            == (new_column, new_row)
+                        )
+                    ),
+                    None,
+                )
+                target_treasury_chest = (
+                    player_tried_to_move
+                    and treasury_chest_is_at(
+                        game_state,
+                        (new_column, new_row),
+                    )
+                )
+                target_rune_wall = (
+                    player_tried_to_move
+                    and rune_wall_is_at(
+                        game_state,
+                        (new_column, new_row),
+                    )
+                )
+                target_rune_pedestal = (
+                    player_tried_to_move
+                    and rune_pedestal_is_at(
+                        game_state,
+                        (new_column, new_row),
+                    )
                 )
                 target_secret_wall = (
                     player_tried_to_move
@@ -1176,12 +1236,38 @@ def main():
                         )
 
                         player_acted = True
+                    elif target_rune_wall:
+                        player_acted = strike_wall_rune(
+                            game_state,
+                            (new_column, new_row),
+                        )
+                        if player_acted:
+                            game_state.player.attack_animation_started_at = (
+                                pygame.time.get_ticks()
+                            )
+                    elif target_rune_pedestal:
+                        player_acted = interact_with_rune_pedestal(
+                            game_state
+                        )
+                    elif target_treasury_chest:
+                        player_acted = activate_treasury_trial(
+                            game_state
+                        )
                     elif target_chest:
                         player_acted = open_chest(
                             game_state,
                             target_chest,
                             pygame.time.get_ticks(),
                         )
+                    elif target_breakable_crate:
+                        player_acted = break_crate(
+                            game_state,
+                            target_breakable_crate,
+                        )
+                        if player_acted:
+                            game_state.player.attack_animation_started_at = (
+                                pygame.time.get_ticks()
+                            )
                     elif target_secret_wall:
                         player_acted = break_secret_passage(
                             game_state,
@@ -1205,11 +1291,15 @@ def main():
                     game_state.player.familiar_turn_started_at = (
                         pygame.time.get_ticks()
                     )
-                    resolve_enemy_turn(
-                        game_state,
-                        player_position_before_action,
-                        rogue_ability_activated,
-                    )
+                    advance_spike_traps(game_state)
+                    update_treasury_trial(game_state)
+                    if game_state.player.health > 0:
+                        resolve_enemy_turn(
+                            game_state,
+                            player_position_before_action,
+                            rogue_ability_activated,
+                        )
+                    update_treasury_trial(game_state)
                     advance_berserker_last_rage(game_state)
                     advance_paladin_holy_shield(game_state)
                     advance_warlock_curses(game_state)
@@ -1549,10 +1639,64 @@ def main():
                 act_two_world_surface = pygame.Surface(world_size)
                 act_two_map_surface = None
                 act_two_map_cache_key = None
+            floor_decor_excluded_positions = {
+                (
+                    game_state.floor.stairs_column,
+                    game_state.floor.stairs_row,
+                ),
+                *(
+                    (chest.column, chest.row)
+                    for chest in game_state.floor.chests
+                ),
+                *(
+                    (crate.column, crate.row)
+                    for crate in game_state.floor.breakable_crates
+                ),
+                *(
+                    (potion.column, potion.row)
+                    for potion in game_state.floor.potions
+                ),
+                *(
+                    (trap.column, trap.row)
+                    for trap in game_state.floor.spike_traps
+                ),
+                *game_state.floor.boss_columns,
+                *game_state.floor.boss_emitters,
+            }
+            if game_state.floor.boss_door is not None:
+                floor_decor_excluded_positions.add(
+                    game_state.floor.boss_door
+                )
+            if game_state.floor.upgrade_altar is not None:
+                floor_decor_excluded_positions.add(
+                    game_state.floor.upgrade_altar
+                )
+            if game_state.floor.treasury_room is not None:
+                treasury_room = game_state.floor.treasury_room
+                floor_decor_excluded_positions.update(
+                    {
+                        treasury_room.door_position,
+                        treasury_room.chest_position,
+                        *treasury_room.statue_positions,
+                    }
+                )
+            if game_state.floor.rune_room is not None:
+                rune_room = game_state.floor.rune_room
+                floor_decor_excluded_positions.update(
+                    {
+                        rune_room.door_position,
+                        rune_room.pedestal_position,
+                        *rune_room.floor_rune_positions,
+                    }
+                )
+            floor_decor_excluded_positions = tuple(
+                sorted(floor_decor_excluded_positions)
+            )
             map_cache_key = (
                 game_state.floor_index,
                 game_state.floor.visual_seed,
                 tuple(game_state.floor["map"]),
+                floor_decor_excluded_positions,
             )
             if act_two_map_cache_key != map_cache_key:
                 act_two_map_surface = pygame.Surface(world_size)
@@ -1564,6 +1708,7 @@ def main():
                     act_two_sprites,
                     current_act_floor,
                     game_state.floor.visual_seed,
+                    floor_decor_excluded_positions,
                 )
                 act_two_map_cache_key = map_cache_key
             act_two_world_surface.fill(BACKGROUND_COLOR)
@@ -1599,6 +1744,28 @@ def main():
             game_state.floor.visual_seed,
             current_time,
         )
+        if current_act == 2:
+            draw_act_two_spike_traps(
+                world_target,
+                game_state.floor.spike_traps,
+                act_two_sprites,
+                game_state.floor.visible_cells,
+                current_time,
+            )
+            draw_act_two_treasury(
+                world_target,
+                game_state.floor.treasury_room,
+                act_two_sprites,
+                game_state.floor.visible_cells,
+                current_time,
+            )
+            draw_act_two_rune_room(
+                world_target,
+                game_state.floor.rune_room,
+                act_two_sprites,
+                game_state.floor.visible_cells,
+                current_time,
+            )
         if current_act != 2:
             draw_map_frame(
                 game_surface,
@@ -1744,6 +1911,47 @@ def main():
                 current_act,
                 act_two_sprites,
             )
+        if current_act == 2:
+            for crate in game_state.floor.breakable_crates:
+                crate_is_visible = position_is_visible(
+                    game_state.floor,
+                    crate.column,
+                    crate.row,
+                )
+                remembered_crate = (
+                    {
+                        "column": crate.column,
+                        "row": crate.row,
+                        "variant": crate.variant,
+                        "is_broken": crate.is_broken,
+                        "loot_kind": crate.loot_kind,
+                        "loot_available": crate.loot_available,
+                    }
+                    if crate_is_visible
+                    else game_state.floor.act_two_remembered_crates.get(
+                        (crate.column, crate.row)
+                    )
+                )
+                if remembered_crate is None:
+                    continue
+                draw_breakable_crate(
+                    world_target,
+                    remembered_crate,
+                    act_two_sprites,
+                )
+                if remembered_crate["loot_available"]:
+                    draw_loot = (
+                        draw_potion
+                        if remembered_crate["loot_kind"] == "potion"
+                        else draw_coin
+                    )
+                    draw_loot(
+                        world_target,
+                        remembered_crate["column"],
+                        remembered_crate["row"],
+                        current_act,
+                        act_two_sprites,
+                    )
         for chest in game_state.floor["chests"]:
             remembered_chest = chest
             if current_act == 2:
@@ -2058,6 +2266,7 @@ def main():
                     act_two_sprites,
                     game_state.upgrade_message,
                     upgrade_mouse_position,
+                    game_state.upgrade_reward_pending,
                 )
             else:
                 draw_upgrade_screen(

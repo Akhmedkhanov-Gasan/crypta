@@ -1,11 +1,13 @@
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
+from acts.act_two.crates import collect_crate_loot
 from game.state import (
     ChestState,
     EnemyBehaviorState,
     GameState,
     RoomState,
 )
+from acts.act_two.treasury import collect_treasury_reward
 from levels import FLOOR_CONFIGS
 from logic import can_move_between
 from settings import POTION_HEALING
@@ -198,6 +200,29 @@ def _collect_items(
         floor.player_column,
         floor.player_row,
     )
+    collect_treasury_reward(game_state, player_position)
+    crate_loot_kind = collect_crate_loot(
+        game_state,
+        player_position,
+    )
+    if crate_loot_kind is not None:
+        pickup_kind = (
+            "potion" if crate_loot_kind == "potion" else "gold"
+        )
+        _start_pickup_effect(
+            game_state,
+            pickup_kind,
+            player_position,
+            effect_started_at,
+        )
+        add_log_message(
+            game_state.combat_log,
+            (
+                "Hero picks up a potion."
+                if crate_loot_kind == "potion"
+                else "Hero picks up one gold."
+            ),
+        )
     found_potion = next(
         (
             potion
@@ -376,6 +401,12 @@ def try_move_player(
         if enemy.health > 0
     ]
     target_position = (new_column, new_row)
+    if any(
+        not crate.is_broken
+        and (crate.column, crate.row) == target_position
+        for crate in floor.breakable_crates
+    ):
+        return False
     stairs_are_open = not living_enemies
     target_is_locked_stairs = (
         not stairs_are_open

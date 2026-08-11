@@ -34,6 +34,10 @@ FLOOR_CONFIGS = [
         "generation_attempts": 12,
         "minimum_start_exit_distance": 24,
         "secret_room_chance": 0.75,
+        "treasury_room": True,
+        "rune_room": True,
+        "spike_trap_count": 5,
+        "breakable_crate_count": 7,
         "enemy_types": [
             "goblin",
             "goblin",
@@ -43,7 +47,7 @@ FLOOR_CONFIGS = [
             "sentinel",
         ],
         "chest_count": 2,
-        "potion_count": 2,
+        "potion_count": 0,
     },
     {
         "act": 2,
@@ -54,6 +58,10 @@ FLOOR_CONFIGS = [
         "generation_attempts": 12,
         "minimum_start_exit_distance": 28,
         "secret_room_chance": 1.0,
+        "treasury_room": True,
+        "rune_room": True,
+        "spike_trap_count": 7,
+        "breakable_crate_count": 9,
         "enemy_types": [
             "goblin",
             "goblin",
@@ -65,7 +73,7 @@ FLOOR_CONFIGS = [
             "priest",
         ],
         "chest_count": 2,
-        "potion_count": 2,
+        "potion_count": 0,
     },
     {
         "act": 2,
@@ -79,6 +87,7 @@ FLOOR_CONFIGS = [
         "seal_boss_door_during_fight": True,
         "chest_count": 0,
         "potion_count": 0,
+        "breakable_crate_count": 0,
     },
     {
         "act": 3,

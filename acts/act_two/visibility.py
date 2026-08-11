@@ -93,3 +93,16 @@ def _update_remembered_objects(floor):
             "requires_key": chest.requires_key,
             "appearance": chest.appearance,
         }
+
+    for crate in floor.breakable_crates:
+        position = (crate.column, crate.row)
+        if position not in floor.visible_cells:
+            continue
+        floor.act_two_remembered_crates[position] = {
+            "column": crate.column,
+            "row": crate.row,
+            "variant": crate.variant,
+            "is_broken": crate.is_broken,
+            "loot_kind": crate.loot_kind,
+            "loot_available": crate.loot_available,
+        }

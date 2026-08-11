@@ -197,6 +197,7 @@ def draw_act_two_upgrade_screen(
     sprites,
     message,
     mouse_position=None,
+    reward_pending=False,
 ):
     overlay = pygame.Surface((GAME_WIDTH, GAME_HEIGHT), pygame.SRCALPHA)
     overlay.fill((0, 0, 0, 218))
@@ -256,8 +257,13 @@ def draw_act_two_upgrade_screen(
             message_surface,
             message_surface.get_rect(center=(GAME_WIDTH // 2, 574)),
         )
+    footer_text = (
+        "CHOOSE ONE UPGRADE"
+        if reward_pending
+        else "[ENTER] DESCEND"
+    )
     footer = text_font.render(
-        "[ENTER] DESCEND",
+        footer_text,
         True,
         (171, 164, 168),
     )

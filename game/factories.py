@@ -8,6 +8,7 @@ from acts.player_stats import ATTRIBUTE_NAMES
 from enemies import ENEMY_TYPES
 from generation import generate_floor
 from game.state import (
+    BreakableCrateState,
     ChestState,
     EnemyState,
     FloorState,
@@ -15,6 +16,9 @@ from game.state import (
     PlayerState,
     PotionState,
     RoomState,
+    RuneRoomState,
+    SpikeTrapState,
+    TreasuryRoomState,
 )
 
 
@@ -110,6 +114,31 @@ def create_floor_state(floor_index: int) -> FloorState:
         if floor["boss_room"] is not None
         else None
     )
+    spike_traps = [
+        SpikeTrapState(
+            column=trap_data["position"][0],
+            row=trap_data["position"][1],
+        )
+        for trap_data in floor.get("spike_traps", [])
+    ]
+    breakable_crates = [
+        BreakableCrateState(
+            column=crate_data["position"][0],
+            row=crate_data["position"][1],
+            variant=crate_data["variant"],
+        )
+        for crate_data in floor.get("breakable_crates", [])
+    ]
+    treasury_room = (
+        TreasuryRoomState.from_mapping(floor["treasury_room"])
+        if floor.get("treasury_room") is not None
+        else None
+    )
+    rune_room = (
+        RuneRoomState.from_mapping(floor["rune_room"])
+        if floor.get("rune_room") is not None
+        else None
+    )
 
     return FloorState(
         map=floor["map"],
@@ -129,6 +158,10 @@ def create_floor_state(floor_index: int) -> FloorState:
         ],
         boss_fight_started=floor["boss_door"] is None,
         upgrade_altar=floor.get("upgrade_altar"),
+        breakable_crates=breakable_crates,
+        spike_traps=spike_traps,
+        treasury_room=treasury_room,
+        rune_room=rune_room,
         torches=floor.get("torches", []),
         tile_layers=floor.get("tile_layers", {}),
         barriers=floor.get("barriers", set()),
