@@ -67,6 +67,8 @@ class ChestState(AttributeMapping):
     is_open: bool = False
     loot_available: bool = False
     open_animation_started_at: int = -1
+    requires_key: bool = True
+    appearance: str = "standard"
 
 
 @dataclass(eq=False)

@@ -20,7 +20,7 @@ def _line_of_sight(
         if (
             (x0, y0) != origin
             and (
-                dungeon_map[y0][x0] == "#"
+                dungeon_map[y0][x0] in ("#", "S")
                 or (x0, y0) in blockers
             )
         ):
@@ -86,7 +86,10 @@ def _update_remembered_objects(floor):
         floor.act_two_remembered_chests[position] = {
             "column": chest.column,
             "row": chest.row,
+            "contains": chest.contains,
             "is_open": chest.is_open,
             "loot_available": chest.loot_available,
             "open_animation_started_at": -1,
+            "requires_key": chest.requires_key,
+            "appearance": chest.appearance,
         }

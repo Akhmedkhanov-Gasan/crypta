@@ -248,6 +248,9 @@ def load_act_two_sprites():
         "wall_iron_shackle": (
             "environment/tiles/wall_variants/wall_iron_shackle.png"
         ),
+        "wall_secret": (
+            "environment/tiles/wall_variants/wall_secret.png"
+        ),
         "wall_damp": (
             "environment/tiles/wall_variants/wall_damp.png"
         ),
@@ -292,6 +295,8 @@ def load_act_two_sprites():
         "coin": "items/loot/coin.png",
         "chest_closed": "items/chests/closed.png",
         "chest_open": "items/chests/open.png",
+        "stash_closed": "items/chests/closed_stash.png",
+        "stash_open": "items/chests/open_stash.png",
     }
 
     sprites = {

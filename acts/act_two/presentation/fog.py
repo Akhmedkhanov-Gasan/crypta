@@ -8,10 +8,8 @@ from acts.act_two.settings import (
     VISION_RADIUS_TILES,
 )
 from presentation.layout import (
-    MAP_HEIGHT,
     MAP_OFFSET_X,
     MAP_OFFSET_Y,
-    MAP_WIDTH,
 )
 from settings import TILE_SIZE
 
@@ -48,7 +46,9 @@ def draw_act_two_fog_of_war(screen, act_number, floor):
     if act_number != 2:
         return
 
-    fog = pygame.Surface((MAP_WIDTH, MAP_HEIGHT), pygame.SRCALPHA)
+    map_width = len(floor.map[0]) * TILE_SIZE
+    map_height = len(floor.map) * TILE_SIZE
+    fog = pygame.Surface((map_width, map_height), pygame.SRCALPHA)
     fog.fill((*_FOG_COLOR, FOG_UNEXPLORED_ALPHA))
 
     for column, row in floor.explored_cells:

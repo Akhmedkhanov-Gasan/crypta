@@ -36,6 +36,179 @@ def choose_free_position(candidate_positions, occupied_positions):
     return random.choice(available_positions)
 
 
+def _create_room_floor(config, boss_room):
+    map_columns = config.get("map_columns", MAP_COLUMNS)
+    map_rows = config.get("map_rows", MAP_ROWS)
+    generation_attempts = config.get("generation_attempts", 1)
+    best_generation = None
+    best_score = (-1, -1)
+
+    for _ in range(generation_attempts):
+        dungeon_map = [
+            ["#" for _ in range(map_columns)]
+            for _ in range(map_rows)
+        ]
+        rooms = create_rooms(
+            dungeon_map,
+            config["room_count"],
+            blocked_rooms=[boss_room] if boss_room else None,
+        )
+
+        if not rooms:
+            continue
+
+        start_column, start_row = room_center(rooms[0])
+        farthest_room = max(
+            rooms[1:] or rooms,
+            key=lambda room: (
+                abs(room_center(room)[0] - start_column)
+                + abs(room_center(room)[1] - start_row)
+            ),
+        )
+        distance = (
+            abs(room_center(farthest_room)[0] - start_column)
+            + abs(room_center(farthest_room)[1] - start_row)
+        )
+        score = (len(rooms), distance)
+
+        if score > best_score:
+            best_generation = (dungeon_map, rooms, farthest_room)
+            best_score = score
+
+        if (
+            len(rooms) >= config["room_count"]
+            and distance
+            >= config.get("minimum_start_exit_distance", 0)
+        ):
+            break
+
+    if best_generation is None:
+        raise RuntimeError("Unable to generate a dungeon floor")
+
+    dungeon_map, rooms, farthest_room = best_generation
+    if farthest_room is not rooms[-1]:
+        rooms.remove(farthest_room)
+        rooms.append(farthest_room)
+
+    return dungeon_map, rooms
+
+
+def _set_map_tile(dungeon_map, column, row, tile):
+    dungeon_map[row][column] = tile
+
+
+def _secret_room_candidate(
+    dungeon_map,
+    approach,
+    direction,
+):
+    approach_column, approach_row = approach
+    column_change, row_change = direction
+    perpendicular = (-row_change, column_change)
+    entrance = (
+        approach_column + column_change,
+        approach_row + row_change,
+    )
+    map_height = len(dungeon_map)
+    map_width = len(dungeon_map[0])
+
+    if not (
+        0 <= entrance[0] < map_width
+        and 0 <= entrance[1] < map_height
+        and dungeon_map[entrance[1]][entrance[0]] == "#"
+    ):
+        return None
+
+    interior = {
+        (
+            entrance[0]
+            + column_change * depth
+            + perpendicular[0] * cross_offset,
+            entrance[1]
+            + row_change * depth
+            + perpendicular[1] * cross_offset,
+        )
+        for depth in range(1, 4)
+        for cross_offset in range(-1, 2)
+    }
+    protected_wall_cells = {
+        (column + neighbor_column, row + neighbor_row)
+        for column, row in interior
+        for neighbor_column in (-1, 0, 1)
+        for neighbor_row in (-1, 0, 1)
+        if (column + neighbor_column, row + neighbor_row)
+        not in interior
+    }
+    required_solid_cells = (
+        interior | protected_wall_cells
+    ) - {entrance}
+
+    if any(
+        not (0 <= column < map_width and 0 <= row < map_height)
+        or dungeon_map[row][column] != "#"
+        for column, row in required_solid_cells
+    ):
+        return None
+
+    stash_positions = [
+        (
+            entrance[0]
+            + column_change * 3
+            + perpendicular[0] * cross_offset,
+            entrance[1]
+            + row_change * 3
+            + perpendicular[1] * cross_offset,
+        )
+        for cross_offset in (-1, 1)
+    ]
+    return entrance, interior, stash_positions
+
+
+def _add_secret_stash_room(dungeon_map, chance):
+    if chance <= 0 or random.random() >= chance:
+        return []
+
+    approaches = [
+        (column, row)
+        for row, map_row in enumerate(dungeon_map)
+        for column, tile in enumerate(map_row)
+        if tile == "."
+    ]
+    random.shuffle(approaches)
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
+    for approach in approaches:
+        random.shuffle(directions)
+        for direction in directions:
+            candidate = _secret_room_candidate(
+                dungeon_map,
+                approach,
+                direction,
+            )
+            if candidate is None:
+                continue
+            entrance, interior, stash_positions = candidate
+            for column, row in interior:
+                _set_map_tile(dungeon_map, column, row, "s")
+            _set_map_tile(
+                dungeon_map,
+                entrance[0],
+                entrance[1],
+                "S",
+            )
+            return [
+                {
+                    "position": position,
+                    "contains": random.choice(("gold", "potion")),
+                    "requires_key": False,
+                    "appearance": "stash",
+                }
+                for position in stash_positions
+            ]
+
+    return []
+
+
 def generate_floor(floor_index):
     config = FLOOR_CONFIGS[floor_index]
 
@@ -58,10 +231,6 @@ def generate_floor(floor_index):
     if boss_room_layout == "oracle_arena":
         return generate_oracle_floor(config)
 
-    dungeon_map = [
-        ["#" for _ in range(MAP_COLUMNS)]
-        for _ in range(MAP_ROWS)
-    ]
     boss_room = (
         create_reserved_boss_room(
             config.get("boss_room_width", BOSS_ROOM_WIDTH),
@@ -70,10 +239,9 @@ def generate_floor(floor_index):
         if boss_enemy_types
         else None
     )
-    rooms = create_rooms(
-        dungeon_map,
-        config["room_count"],
-        blocked_rooms=[boss_room] if boss_room else None,
+    dungeon_map, rooms = _create_room_floor(
+        config,
+        boss_room,
     )
 
     if boss_enemy_types:
@@ -97,9 +265,9 @@ def generate_floor(floor_index):
     occupied_positions = {player_start, stairs}
     all_floor_positions = [
         (column, row)
-        for row in range(MAP_ROWS)
-        for column in range(MAP_COLUMNS)
-        if dungeon_map[row][column] == "."
+        for row, map_row in enumerate(dungeon_map)
+        for column, tile in enumerate(map_row)
+        if tile == "."
     ]
     non_boss_floor_positions = [
         position
@@ -231,6 +399,13 @@ def generate_floor(floor_index):
 
         occupied_positions.add(potion_position)
         potions.append(potion_position)
+
+    chests.extend(
+        _add_secret_stash_room(
+            dungeon_map,
+            config.get("secret_room_chance", 0),
+        )
+    )
 
     return {
         "map": ["".join(row) for row in dungeon_map],

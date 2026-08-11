@@ -14,6 +14,11 @@ from acts.act_two.presentation.movement import (
 )
 from presentation.hud import wrap_text
 from presentation.layout import (
+    ACT_TWO_RENDER_SCALE,
+    ACT_TWO_VIEW_HEIGHT,
+    ACT_TWO_VIEW_WIDTH,
+    ACT_TWO_VIEW_X,
+    ACT_TWO_VIEW_Y,
     MAP_HEIGHT,
     MAP_OFFSET_X,
     MAP_OFFSET_Y,
@@ -977,7 +982,15 @@ def draw_act_two_player_actor(
         screen.blit(shadow, number_position.move(1, 2))
         screen.blit(number, number_position)
 
-def _draw_old_man(screen, game_state, fonts, sprites, elapsed):
+def _draw_old_man(
+    screen,
+    game_state,
+    fonts,
+    sprites,
+    elapsed,
+    view_rectangle,
+    camera=None,
+):
     old_man_cell = game_state.player.old_man_position
     if elapsed < ACT_TWO_OLD_MAN_APPEAR_MS or old_man_cell is None:
         return
@@ -992,18 +1005,47 @@ def _draw_old_man(screen, game_state, fonts, sprites, elapsed):
     if old_man_cell[0] < game_state.floor.player_column:
         sprite = pygame.transform.flip(sprite, True, False)
     sprite.set_alpha(round(255 * fade))
-    position = (
-        MAP_OFFSET_X
-        + old_man_cell[0] * TILE_SIZE
-        - (sprite.get_width() - TILE_SIZE) // 2,
-        MAP_OFFSET_Y
-        + old_man_cell[1] * TILE_SIZE
-        - (sprite.get_height() - TILE_SIZE),
-    )
+    if camera is None:
+        position = (
+            MAP_OFFSET_X
+            + old_man_cell[0] * TILE_SIZE
+            - (sprite.get_width() - TILE_SIZE) // 2,
+            MAP_OFFSET_Y
+            + old_man_cell[1] * TILE_SIZE
+            - (sprite.get_height() - TILE_SIZE),
+        )
+        echo_distance = 3
+    else:
+        source_width, source_height = sprite.get_size()
+        sprite = pygame.transform.scale(
+            sprite,
+            (
+                source_width * ACT_TWO_RENDER_SCALE,
+                source_height * ACT_TWO_RENDER_SCALE,
+            ),
+        )
+        position = (
+            view_rectangle.x
+            + round(
+                (old_man_cell[0] * TILE_SIZE - camera.x)
+                * ACT_TWO_RENDER_SCALE
+            )
+            - (sprite.get_width() - TILE_SIZE * ACT_TWO_RENDER_SCALE) // 2,
+            view_rectangle.y
+            + round(
+                (old_man_cell[1] * TILE_SIZE - camera.y)
+                * ACT_TWO_RENDER_SCALE
+            )
+            - (sprite.get_height() - TILE_SIZE * ACT_TWO_RENDER_SCALE),
+        )
+        echo_distance = 6
     for echo_index in range(2, 0, -1):
         echo = sprite.copy()
         echo.set_alpha(round(42 * fade / echo_index))
-        screen.blit(echo, (position[0], position[1] - echo_index * 3))
+        screen.blit(
+            echo,
+            (position[0], position[1] - echo_index * echo_distance),
+        )
     screen.blit(sprite, position)
 
     if elapsed < ACT_TWO_OLD_MAN_DIALOGUE_MS:
@@ -1011,16 +1053,16 @@ def _draw_old_man(screen, game_state, fonts, sprites, elapsed):
     dialogue_progress = _smoothstep(
         (elapsed - ACT_TWO_OLD_MAN_DIALOGUE_MS) / 420
     )
-    line_y = MAP_OFFSET_Y + MAP_HEIGHT - 46
+    line_y = view_rectangle.bottom - 46
     for line in wrap_text(
         fonts["text"],
         _OLD_MAN_LINES[game_state.player.player_class],
-        MAP_WIDTH - 100,
+        view_rectangle.width - 100,
     ):
         line_surface = fonts["text"].render(line, True, (218, 211, 197))
         line_surface.set_alpha(round(255 * dialogue_progress))
         rectangle = line_surface.get_rect(
-            center=(MAP_OFFSET_X + MAP_WIDTH // 2, line_y)
+            center=(view_rectangle.centerx, line_y)
         )
         shadow = fonts["text"].render(line, True, (4, 5, 7))
         shadow.set_alpha(round(255 * dialogue_progress))
@@ -1035,10 +1077,26 @@ def draw_act_two_player_feedback_overlay(
     fonts,
     sprites,
     current_time,
+    camera=None,
 ):
     player = game_state.player
     if player.player_class not in _CLASS_COLORS:
         return
+    view_rectangle = (
+        pygame.Rect(
+            ACT_TWO_VIEW_X,
+            ACT_TWO_VIEW_Y,
+            ACT_TWO_VIEW_WIDTH,
+            ACT_TWO_VIEW_HEIGHT,
+        )
+        if camera is not None
+        else pygame.Rect(
+            MAP_OFFSET_X,
+            MAP_OFFSET_Y,
+            MAP_WIDTH,
+            MAP_HEIGHT,
+        )
+    )
     hit_elapsed = current_time - player.hit_animation_started_at
     if (
         player.health > 0
@@ -1046,7 +1104,7 @@ def draw_act_two_player_feedback_overlay(
         and 0 <= hit_elapsed < 330
     ):
         visibility = math.sin(math.pi * hit_elapsed / 330)
-        vignette = pygame.Surface((MAP_WIDTH, MAP_HEIGHT), pygame.SRCALPHA)
+        vignette = pygame.Surface(view_rectangle.size, pygame.SRCALPHA)
         for inset, strength in ((0, 1), (7, 0.6), (15, 0.28)):
             pygame.draw.rect(
                 vignette,
@@ -1054,33 +1112,38 @@ def draw_act_two_player_feedback_overlay(
                 (
                     inset,
                     inset,
-                    MAP_WIDTH - inset * 2,
-                    MAP_HEIGHT - inset * 2,
+                    view_rectangle.width - inset * 2,
+                    view_rectangle.height - inset * 2,
                 ),
                 width=9,
             )
-        screen.blit(vignette, (MAP_OFFSET_X, MAP_OFFSET_Y))
+        screen.blit(vignette, view_rectangle)
 
     if player.health > 0 or player.death_animation_started_at < 0:
         return
     elapsed = max(0, current_time - player.death_animation_started_at)
     fade = _smoothstep((elapsed - 600) / 1900)
-    view_rectangle = pygame.Rect(
-        MAP_OFFSET_X,
-        MAP_OFFSET_Y,
-        MAP_WIDTH,
-        MAP_HEIGHT,
-    )
     if fade > 0:
         view_copy = screen.subsurface(view_rectangle).copy()
         grayscale = pygame.transform.grayscale(view_copy)
         grayscale.set_alpha(round(185 * fade))
         screen.blit(grayscale, view_rectangle)
-        darkness = pygame.Surface((MAP_WIDTH, MAP_HEIGHT), pygame.SRCALPHA)
+        darkness = pygame.Surface(view_rectangle.size, pygame.SRCALPHA)
         darkness.fill((3, 5, 7, round(58 * fade)))
-        screen.blit(darkness, (MAP_OFFSET_X, MAP_OFFSET_Y))
+        screen.blit(darkness, view_rectangle)
 
-    _draw_old_man(screen, game_state, fonts, sprites, elapsed)
+    previous_clip = screen.get_clip()
+    screen.set_clip(view_rectangle)
+    _draw_old_man(
+        screen,
+        game_state,
+        fonts,
+        sprites,
+        elapsed,
+        view_rectangle,
+        camera,
+    )
+    screen.set_clip(previous_clip)
 
     message_progress = _smoothstep(
         (elapsed - ACT_TWO_DEFEAT_MESSAGE_MS) / ACT_TWO_DEFEAT_FADE_MS
@@ -1088,7 +1151,7 @@ def draw_act_two_player_feedback_overlay(
     if message_progress <= 0:
         return
     alpha = round(255 * message_progress)
-    center_x = MAP_OFFSET_X + MAP_WIDTH // 2
+    center_x = view_rectangle.centerx
     title = fonts["title"].render(
         _DEFEAT_TITLES[player.player_class],
         True,
@@ -1096,7 +1159,7 @@ def draw_act_two_player_feedback_overlay(
     )
     title.set_alpha(alpha)
     title_rectangle = title.get_rect(
-        center=(center_x, MAP_OFFSET_Y + 76)
+        center=(center_x, view_rectangle.y + 76)
     )
     title_shadow = fonts["title"].render(
         _DEFEAT_TITLES[player.player_class],
@@ -1115,5 +1178,5 @@ def draw_act_two_player_feedback_overlay(
     restart.set_alpha(alpha)
     screen.blit(
         restart,
-        restart.get_rect(center=(center_x, MAP_OFFSET_Y + 116)),
+        restart.get_rect(center=(center_x, view_rectangle.y + 116)),
     )

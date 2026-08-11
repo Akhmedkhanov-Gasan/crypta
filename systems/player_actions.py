@@ -50,7 +50,7 @@ def open_chest(
 ) -> bool:
     player = game_state.player
 
-    if player.key_count <= 0:
+    if chest.requires_key and player.key_count <= 0:
         add_log_message(
             game_state.combat_log,
             "The chest is locked.",
@@ -59,15 +59,56 @@ def open_chest(
 
     chest["is_open"] = True
     chest.open_animation_started_at = effect_started_at
-    player.key_count -= 1
+    if chest.requires_key:
+        player.key_count -= 1
 
-    if chest["contains"] == "gold":
+    if chest["contains"] in ("gold", "potion"):
         chest["loot_available"] = True
+        loot_name = (
+            "a healing potion"
+            if chest["contains"] == "potion"
+            else "gold"
+        )
         add_log_message(
             game_state.combat_log,
-            "Chest opened: gold found.",
+            f"Chest opened: {loot_name} found.",
         )
 
+    return True
+
+
+def break_secret_passage(
+    game_state: GameState,
+    column: int,
+    row: int,
+) -> bool:
+    floor = game_state.floor
+    if not (
+        0 <= row < len(floor.map)
+        and 0 <= column < len(floor.map[row])
+        and floor.map[row][column] == "S"
+    ):
+        return False
+
+    passage_row = floor.map[row]
+    floor.map[row] = (
+        passage_row[:column]
+        + "s"
+        + passage_row[column + 1:]
+    )
+    game_state.emit(
+        GameEvent(
+            type=GameEventType.ATTACK,
+            actor="hero",
+            origin=(floor.player_column, floor.player_row),
+            positions=((column, row),),
+            data={"kind": "secret_wall"},
+        )
+    )
+    add_log_message(
+        game_state.combat_log,
+        "Hero shatters a weakened wall.",
+    )
     return True
 
 
@@ -181,7 +222,7 @@ def _collect_items(
             "Hero picks up a potion.",
         )
 
-    chest_with_coin = next(
+    chest_with_loot = next(
         (
             chest
             for chest in floor.chests
@@ -195,18 +236,26 @@ def _collect_items(
         None,
     )
 
-    if chest_with_coin:
-        player.gold_count += 1
-        chest_with_coin["loot_available"] = False
+    if chest_with_loot:
+        loot_kind = chest_with_loot["contains"]
+        if loot_kind == "potion":
+            player.potion_count += 1
+            pickup_kind = "potion"
+            message = "Hero picks up a potion."
+        else:
+            player.gold_count += 1
+            pickup_kind = "gold"
+            message = "Hero picks up one gold."
+        chest_with_loot["loot_available"] = False
         _start_pickup_effect(
             game_state,
-            "gold",
+            pickup_kind,
             player_position,
             effect_started_at,
         )
         add_log_message(
             game_state.combat_log,
-            "Hero picks up one gold.",
+            message,
         )
 
     found_key = next(
