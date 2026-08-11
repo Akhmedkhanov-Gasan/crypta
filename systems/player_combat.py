@@ -489,6 +489,11 @@ def perform_basic_attack(
         for chest in floor.chests
         if not chest["is_open"]
     }
+    blocking_positions.update(
+        (crate.column, crate.row)
+        for crate in floor.breakable_crates
+        if not crate.is_broken
+    )
     game_state.player_attack_targets = get_directional_line(
         floor.map,
         floor.player_column,

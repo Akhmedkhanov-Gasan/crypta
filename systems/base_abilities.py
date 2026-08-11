@@ -132,6 +132,11 @@ def cast_directional_ability(
         for chest in floor.chests
         if not chest["is_open"]
     }
+    blocking_positions.update(
+        (crate.column, crate.row)
+        for crate in floor.breakable_crates
+        if not crate.is_broken
+    )
 
     if player.player_class == "warrior":
         maximum_range = 1

@@ -2,7 +2,14 @@ from dataclasses import dataclass, field, fields
 from enum import Enum, auto
 from typing import Any, Iterator
 
-from acts.act_two.state import ActTwoPlayerState
+from acts.act_two.state import (
+    ActTwoPlayerState,
+    BreakableCrateState,
+    RuneRoomState,
+    SpikeTrapPhase,
+    SpikeTrapState,
+    TreasuryRoomState,
+)
 from acts.act_three.state import (
     ACT_THREE_PLAYER_FIELD_NAMES,
     ACT_THREE_SESSION_FIELD_NAMES,
@@ -157,6 +164,7 @@ class EnemyState(AttributeMapping):
     warden_reposition_cooldown: int = 0
     warden_reposition_target: tuple[int, int] | None = None
     defeat_rewards_claimed: bool = False
+    treasury_trial_enemy: bool = False
 
     @classmethod
     def from_config(
@@ -234,6 +242,14 @@ class FloorState(AttributeMapping):
     seal_boss_door_during_fight: bool
     boss_fight_started: bool
     upgrade_altar: tuple[int, int] | None = None
+    breakable_crates: list[BreakableCrateState] = field(
+        default_factory=list
+    )
+    spike_traps: list[SpikeTrapState] = field(
+        default_factory=list
+    )
+    treasury_room: TreasuryRoomState | None = None
+    rune_room: RuneRoomState | None = None
     torches: list[tuple[int, int]] = field(
         default_factory=list
     )
@@ -258,6 +274,9 @@ class FloorState(AttributeMapping):
         default_factory=set
     )
     act_two_remembered_chests: dict[
+        tuple[int, int], dict[str, Any]
+    ] = field(default_factory=dict)
+    act_two_remembered_crates: dict[
         tuple[int, int], dict[str, Any]
     ] = field(default_factory=dict)
     act_two_remembered_stairs_open: bool | None = None
@@ -343,6 +362,7 @@ class GameState:
     class_selection_open: bool = False
     class_transition_started_at: int = 0
     upgrade_message: str = ""
+    upgrade_reward_pending: bool = False
     floor_transition_started_at: int = -1
     floor_transition_target_index: int | None = None
     floor_transition_swapped: bool = False
@@ -379,6 +399,7 @@ class GameState:
 __all__ = [
     "ArcherBarrageShotState",
     "AttributeMapping",
+    "BreakableCrateState",
     "ChestState",
     "EnemyBehaviorState",
     "EnemyState",
@@ -388,4 +409,7 @@ __all__ = [
     "PotionState",
     "ProjectileState",
     "RoomState",
+    "SpikeTrapPhase",
+    "SpikeTrapState",
+    "TreasuryRoomState",
 ]

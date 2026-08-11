@@ -235,6 +235,9 @@ def load_act_two_sprites():
         "floor_burial_seal": (
             "environment/tiles/floor_variants/floor_burial_seal.png"
         ),
+        "spike_trap_hole": "environment/traps/spike_trap_hole.png",
+        "spike_trap_warning": "environment/traps/spike_trap_warning.png",
+        "spike_trap_active": "environment/traps/spike_trap_active.png",
         "wall": "environment/tiles/wall.png",
         "wall_torch": (
             "environment/tiles/wall_variants/wall_torch.png"
@@ -297,6 +300,47 @@ def load_act_two_sprites():
         "chest_open": "items/chests/open.png",
         "stash_closed": "items/chests/closed_stash.png",
         "stash_open": "items/chests/open_stash.png",
+        "treasury_chest": "items/chests/treasury_closed.png",
+        "breakable_crate_1": (
+            "environment/objects/breakable_crates/crate_01.png"
+        ),
+        "breakable_crate_1_broken": (
+            "environment/objects/breakable_crates/crate_01_broken.png"
+        ),
+        "breakable_crate_2": (
+            "environment/objects/breakable_crates/crate_02.png"
+        ),
+        "breakable_crate_2_broken": (
+            "environment/objects/breakable_crates/crate_02_broken.png"
+        ),
+        "breakable_crate_3": (
+            "environment/objects/breakable_crates/crate_03.png"
+        ),
+        "breakable_crate_3_broken": (
+            "environment/objects/breakable_crates/crate_03_broken.png"
+        ),
+        "treasury_guardian_knight": (
+            "environment/objects/treasury_guardian_knight.png"
+        ),
+        "treasury_guardian_knight_red": (
+            "environment/objects/treasury_guardian_knight_red.png"
+        ),
+        "treasury_guardian_hooded": (
+            "environment/objects/treasury_guardian_hooded.png"
+        ),
+        "treasury_guardian_hooded_red": (
+            "environment/objects/treasury_guardian_hooded_red.png"
+        ),
+        "treasury_gate_horizontal": (
+            "environment/tiles/doorways/treasury_gate.png"
+        ),
+        "rune_pedestal": "environment/objects/rune_pedestal.png",
+        "rune_pedestal_reward": (
+            "environment/objects/rune_pedestal_reward.png"
+        ),
+        "rune_trident": "environment/runes/rune_trident.png",
+        "rune_eye": "environment/runes/rune_eye.png",
+        "rune_spiral": "environment/runes/rune_spiral.png",
     }
 
     sprites = {
@@ -308,6 +352,10 @@ def load_act_two_sprites():
         )
         for name, relative_path in sprite_paths.items()
     }
+    sprites["treasury_gate_vertical"] = pygame.transform.rotate(
+        sprites["treasury_gate_horizontal"],
+        90,
+    )
     for frame_index in range(3):
         sprites[f"player_warrior_walk_side_left_{frame_index}"] = (
             pygame.transform.flip(

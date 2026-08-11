@@ -1,4 +1,122 @@
 from dataclasses import dataclass, field
+from enum import Enum, auto
+
+
+class SpikeTrapPhase(Enum):
+    SAFE = auto()
+    WARNING = auto()
+    ACTIVE = auto()
+    COOLDOWN = auto()
+
+
+class TreasuryTrialPhase(Enum):
+    DORMANT = auto()
+    ACTIVE = auto()
+    REWARD_AVAILABLE = auto()
+    CLAIMED = auto()
+
+
+class RunePuzzlePhase(Enum):
+    DORMANT = auto()
+    REWARD_AVAILABLE = auto()
+    CLAIMED = auto()
+
+
+@dataclass
+class SpikeTrapState:
+    column: int
+    row: int
+    phase: SpikeTrapPhase = SpikeTrapPhase.SAFE
+
+
+@dataclass
+class BreakableCrateState:
+    column: int
+    row: int
+    variant: int
+    is_broken: bool = False
+    loot_kind: str | None = None
+    loot_available: bool = False
+
+
+@dataclass
+class TreasuryRoomState:
+    x: int
+    y: int
+    width: int
+    height: int
+    door_position: tuple[int, int]
+    door_orientation: str
+    chest_position: tuple[int, int]
+    statue_positions: tuple[tuple[int, int], tuple[int, int]]
+    enemy_spawn_positions: tuple[
+        tuple[int, int],
+        tuple[int, int],
+        tuple[int, int],
+        tuple[int, int],
+    ]
+    phase: TreasuryTrialPhase = TreasuryTrialPhase.DORMANT
+
+    @classmethod
+    def from_mapping(cls, room: dict) -> "TreasuryRoomState":
+        return cls(
+            x=room["x"],
+            y=room["y"],
+            width=room["width"],
+            height=room["height"],
+            door_position=tuple(room["door_position"]),
+            door_orientation=room["door_orientation"],
+            chest_position=tuple(room["chest_position"]),
+            statue_positions=tuple(
+                tuple(position)
+                for position in room["statue_positions"]
+            ),
+            enemy_spawn_positions=tuple(
+                tuple(position)
+                for position in room["enemy_spawn_positions"]
+            ),
+        )
+
+
+@dataclass
+class RuneRoomState:
+    x: int
+    y: int
+    width: int
+    height: int
+    door_position: tuple[int, int]
+    pedestal_position: tuple[int, int]
+    floor_rune_positions: tuple[
+        tuple[int, int],
+        tuple[int, int],
+        tuple[int, int],
+    ]
+    wall_rune_positions: tuple[
+        tuple[int, int],
+        tuple[int, int],
+        tuple[int, int],
+    ]
+    activated_runes: set[int] = field(default_factory=set)
+    phase: RunePuzzlePhase = RunePuzzlePhase.DORMANT
+
+    @classmethod
+    def from_mapping(cls, room: dict) -> "RuneRoomState":
+        return cls(
+            x=room["x"],
+            y=room["y"],
+            width=room["width"],
+            height=room["height"],
+            door_position=tuple(room["door_position"]),
+            pedestal_position=tuple(room["pedestal_position"]),
+            floor_rune_positions=tuple(
+                tuple(position)
+                for position in room["floor_rune_positions"]
+            ),
+            wall_rune_positions=tuple(
+                tuple(position)
+                for position in room["wall_rune_positions"]
+            ),
+        )
 
 
 @dataclass

@@ -29,7 +29,16 @@ def can_move_to(dungeon_map, column, row):
         and 0 <= column < len(dungeon_map[row])
     ):
         return False
-    return dungeon_map[row][column] not in ("#", "B", "C", "S")
+    return dungeon_map[row][column] not in (
+        "#",
+        "B",
+        "C",
+        "S",
+        "G",
+        "H",
+        "P",
+        "T",
+    )
 
 
 def can_move_between(

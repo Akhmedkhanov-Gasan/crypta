@@ -1977,8 +1977,12 @@ def _act_two_floor_decor_candidate_sprite_name(
     row,
     visual_seed,
     floor_number,
+    excluded_positions=(),
 ):
-    if dungeon_map[row][column] != ".":
+    if (
+        dungeon_map[row][column] != "."
+        or (column, row) in excluded_positions
+    ):
         return None
 
     cluster_size = max(1, FLOOR_DECOR_CLUSTER_SIZE_TILES)
@@ -2044,6 +2048,7 @@ def _act_two_floor_decor_sprite_name(
     row,
     visual_seed,
     floor_number,
+    excluded_positions=(),
 ):
     selected_sprite = _act_two_floor_decor_candidate_sprite_name(
         dungeon_map,
@@ -2051,6 +2056,7 @@ def _act_two_floor_decor_sprite_name(
         row,
         visual_seed,
         floor_number,
+        excluded_positions,
     )
     if selected_sprite is None:
         return None
@@ -2082,6 +2088,7 @@ def _act_two_floor_decor_sprite_name(
                 neighbor_row,
                 visual_seed,
                 floor_number,
+                excluded_positions,
             ) is None:
                 continue
             neighbor_rank = (
@@ -3098,6 +3105,7 @@ def draw_dungeon(
     sprites,
     floor_number=1,
     visual_seed=0,
+    floor_decor_excluded_positions=(),
 ):
     for row_index, row in enumerate(dungeon_map):
         for column_index, tile in enumerate(row):
@@ -3122,11 +3130,15 @@ def draw_dungeon(
                     else:
                         texture_name = "wall"
                 elif act_number == 2:
-                    texture_name = _act_two_floor_sprite_name(
-                        column_index,
-                        row_index,
-                        visual_seed,
-                        floor_number,
+                    texture_name = (
+                        "floor"
+                        if tile in ("r", "R", "G", "H", "P", "T")
+                        else _act_two_floor_sprite_name(
+                            column_index,
+                            row_index,
+                            visual_seed,
+                            floor_number,
+                        )
                     )
                 else:
                     texture_name = "floor"
@@ -3176,14 +3188,17 @@ def draw_dungeon(
                                 )
                             screen.blit(wall_overlay, tile_rectangle)
                     else:
-                        if texture_name not in {
-                            "floor_fissure",
-                            "floor_fissure_cross",
-                            "floor_puddle",
-                            "floor_rubble_heavy",
-                            "floor_drain",
-                            "floor_burial_seal",
-                        }:
+                        if (
+                            tile not in ("r", "R", "G", "H", "P", "T")
+                            and texture_name not in {
+                                "floor_fissure",
+                                "floor_fissure_cross",
+                                "floor_puddle",
+                                "floor_rubble_heavy",
+                                "floor_drain",
+                                "floor_burial_seal",
+                            }
+                        ):
                             _draw_act_two_floor_detail(
                                 screen,
                                 x,
@@ -3199,6 +3214,7 @@ def draw_dungeon(
                                     row_index,
                                     visual_seed,
                                     floor_number,
+                                    floor_decor_excluded_positions,
                                 )
                             )
                             if floor_decor_name is not None:
@@ -6683,6 +6699,18 @@ def draw_coin(screen, column, row, act_number, sprites):
         (center_x, center_y - 3),
         (center_x, center_y + 3),
         2,
+    )
+
+
+def draw_breakable_crate(screen, crate, sprites):
+    suffix = "_broken" if crate["is_broken"] else ""
+    sprite_name = f"breakable_crate_{crate['variant']}{suffix}"
+    screen.blit(
+        sprites[sprite_name],
+        (
+            MAP_OFFSET_X + crate["column"] * TILE_SIZE,
+            MAP_OFFSET_Y + crate["row"] * TILE_SIZE,
+        ),
     )
 
 

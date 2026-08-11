@@ -41,7 +41,7 @@ def get_warrior_cleave_cells(
         if (
             0 <= row < len(floor.map)
             and 0 <= column < len(floor.map[row])
-            and floor.map[row][column] != "#"
+            and floor.map[row][column] not in ("#", "P")
         ):
             cells.append((column, row))
     return cells

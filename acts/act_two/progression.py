@@ -56,13 +56,14 @@ def _apply_class_upgrade(player, upgrade: str) -> bool:
     return True
 
 
-def purchase_act_two_upgrade(player, upgrade: str) -> str:
-    if player.gold_count <= 0:
-        return "Not enough gold."
+def _apply_attribute_upgrade_with_message(
+    player,
+    upgrade: str,
+) -> tuple[bool, str]:
     if upgrade not in get_act_two_upgrade_order(player.player_class):
-        return "This upgrade is unavailable to the class."
+        return False, "This upgrade is unavailable to the class."
     if not can_upgrade_act_two(player, upgrade):
-        return f"{upgrade.replace('_', ' ').title()} is capped."
+        return False, f"{upgrade.replace('_', ' ').title()} is capped."
 
     if upgrade in player.attribute_ranks:
         change = player_stat_changes_for_attribute_upgrade(
@@ -70,7 +71,7 @@ def purchase_act_two_upgrade(player, upgrade: str) -> str:
             player.attribute_ranks[upgrade],
         )
         if not apply_attribute_upgrade(player, upgrade):
-            return f"{upgrade.title()} is capped."
+            return False, f"{upgrade.title()} is capped."
         details = {
             "strength": "physical damage increased",
             "dexterity": "critical power and dodge increased",
@@ -88,7 +89,21 @@ def purchase_act_two_upgrade(player, upgrade: str) -> str:
         )
         message = f"{upgrade.title()}: {detail}."
     else:
-        return "Unknown attribute."
+        return False, "Unknown attribute."
+
+    return True, message
+
+
+def purchase_act_two_upgrade(player, upgrade: str) -> str:
+    if player.gold_count <= 0:
+        return "Not enough gold."
+
+    upgraded, message = _apply_attribute_upgrade_with_message(
+        player,
+        upgrade,
+    )
+    if not upgraded:
+        return message
 
     player.gold_count -= 1
     return message
