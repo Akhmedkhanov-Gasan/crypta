@@ -2,9 +2,22 @@ import pygame
 
 from acts.act_one.settings import (
     FLOOR_INTRO_SUBTITLES,
+    PLAYER_STARTING_ATTRIBUTE_RANKS,
     PLAYER_STARTING_STATS,
 )
-from acts.act_two.settings import CLASS_BASE_STATS
+from acts.act_two.settings import (
+    CLASS_BASE_ATTRIBUTE_RANKS,
+    CLASS_BASE_STATS,
+)
+from acts.act_two.abilities import select_warrior_cleave_direction
+from acts.act_two.progression import (
+    get_act_two_upgrade_order,
+    purchase_act_two_upgrade,
+)
+from acts.act_two.visibility import (
+    position_is_visible,
+    update_act_two_visibility,
+)
 from acts.act_three.input import (
     handle_act_three_key_event,
     handle_act_three_pointer_event,
@@ -38,7 +51,10 @@ from game.events import GameEvent, GameEventType
 from game.factories import create_floor_state, create_game_state
 from game.progress_store import load_progress, record_act_reached
 from game.progression import apply_attribute_upgrade
-from acts.player_stats import apply_player_stat_transition
+from acts.player_stats import (
+    apply_attribute_rank_transition,
+    apply_player_stat_transition,
+)
 from levels import FLOOR_CONFIGS
 from logic import get_enemy_occupied_positions
 from rendering import (
@@ -52,9 +68,13 @@ from rendering import (
     draw_act_one_boss_effects,
     draw_act_one_atmosphere,
     draw_act_two_atmosphere,
+    draw_act_two_ability_preview,
+    draw_act_two_fog_of_war,
     draw_act_one_player_attack_effect,
     draw_act_two_player_attack_effect,
     draw_act_two_player_feedback_overlay,
+    draw_act_two_power_cleave_effect,
+    draw_act_two_upgrade_screen,
     draw_act_one_pickup_effect,
     draw_act_two_pickup_effect,
     draw_boss_door,
@@ -77,6 +97,7 @@ from rendering import (
     draw_subclass_selection_screen,
     draw_upgrade_screen,
     get_upgrade_card_rectangles,
+    get_act_two_upgrade_card_rectangles,
     get_class_selection_rectangles,
     load_act_one_fonts,
     load_act_three_fonts,
@@ -100,16 +121,10 @@ from settings import (
     ASSASSIN_ULTIMATE_OUTRO_MS,
     ASSASSIN_ULTIMATE_PRELUDE_MS,
     ASSASSIN_ULTIMATE_STEP_MS,
-    CRIT_UPGRADE_AMOUNT,
-    DAMAGE_UPGRADE_AMOUNT,
-    DODGE_UPGRADE_AMOUNT,
     FPS,
     GAME_HEIGHT,
     GAME_WIDTH,
     INITIAL_WINDOW_SCALE,
-    HEALTH_UPGRADE_AMOUNT,
-    MAX_CRIT_CHANCE,
-    MAX_DODGE_CHANCE,
 )
 from systems.player_actions import (
     open_chest,
@@ -384,14 +399,52 @@ def main():
                 if game_mouse_position is None:
                     continue
 
-                upgrade_keys = {
-                    "vitality": pygame.K_1,
-                    "power": pygame.K_2,
-                    "precision": pygame.K_3,
-                    "evasion": pygame.K_4,
+                act_two_upgrade_screen = (
+                    FLOOR_CONFIGS[game_state.floor_index]["act"] == 2
+                    and game_state.player.player_class in (
+                        "warrior",
+                        "rogue",
+                        "mage",
+                    )
+                    and game_state.player.subclass is None
+                )
+                show_generic_intelligence = (
+                    FLOOR_CONFIGS[game_state.floor_index]["act"] >= 3
+                )
+                generic_upgrade_keys = {
+                    "strength": pygame.K_1,
+                    "dexterity": pygame.K_2,
+                    "vitality": (
+                        pygame.K_4
+                        if show_generic_intelligence
+                        else pygame.K_3
+                    ),
                 }
+                if show_generic_intelligence:
+                    generic_upgrade_keys["intelligence"] = pygame.K_3
+                upgrade_keys = (
+                    {
+                        upgrade: getattr(pygame, f"K_{index + 1}")
+                        for index, upgrade in enumerate(
+                            get_act_two_upgrade_order(
+                                game_state.player.player_class
+                            )
+                        )
+                    }
+                    if act_two_upgrade_screen
+                    else generic_upgrade_keys
+                )
+                card_rectangles = (
+                    get_act_two_upgrade_card_rectangles(
+                        game_state.player.player_class
+                    )
+                    if act_two_upgrade_screen
+                    else get_upgrade_card_rectangles(
+                        show_generic_intelligence
+                    )
+                )
                 for upgrade_name, rectangle in (
-                    get_upgrade_card_rectangles().items()
+                    card_rectangles.items()
                 ):
                     if rectangle.collidepoint(game_mouse_position):
                         pygame.event.post(
@@ -528,6 +581,11 @@ def main():
                                 PLAYER_STARTING_STATS,
                                 CLASS_BASE_STATS[player_class],
                             )
+                            apply_attribute_rank_transition(
+                                game_state.player,
+                                PLAYER_STARTING_ATTRIBUTE_RANKS,
+                                CLASS_BASE_ATTRIBUTE_RANKS[player_class],
+                            )
                             game_state.act_three_debug_class_selection_open = False
                             game_state.subclass_selection_open = True
                         else:
@@ -629,6 +687,11 @@ def main():
                         PLAYER_STARTING_STATS,
                         CLASS_BASE_STATS[chosen_class],
                     )
+                    apply_attribute_rank_transition(
+                        game_state.player,
+                        PLAYER_STARTING_ATTRIBUTE_RANKS,
+                        CLASS_BASE_ATTRIBUTE_RANKS[chosen_class],
+                    )
 
                     game_state.floor_index += 1
                     game_state.floor = create_floor_state(game_state.floor_index)
@@ -649,77 +712,85 @@ def main():
                     continue
 
                 if game_state.upgrade_screen_open:
-                    if event.key in (pygame.K_1, pygame.K_KP1):
+                    act_two_upgrade_screen = (
+                        FLOOR_CONFIGS[game_state.floor_index]["act"] == 2
+                        and game_state.player.player_class in (
+                            "warrior",
+                            "rogue",
+                            "mage",
+                        )
+                        and game_state.player.subclass is None
+                    )
+                    if act_two_upgrade_screen and event.key in (
+                        pygame.K_1,
+                        pygame.K_KP1,
+                        pygame.K_2,
+                        pygame.K_KP2,
+                        pygame.K_3,
+                        pygame.K_KP3,
+                        pygame.K_4,
+                        pygame.K_KP4,
+                    ):
+                        upgrade_index = {
+                            pygame.K_1: 0,
+                            pygame.K_KP1: 0,
+                            pygame.K_2: 1,
+                            pygame.K_KP2: 1,
+                            pygame.K_3: 2,
+                            pygame.K_KP3: 2,
+                            pygame.K_4: 3,
+                            pygame.K_KP4: 3,
+                        }[event.key]
+                        upgrade = get_act_two_upgrade_order(
+                            game_state.player.player_class
+                        )[upgrade_index]
+                        game_state.upgrade_message = (
+                            purchase_act_two_upgrade(
+                                game_state.player,
+                                upgrade,
+                            )
+                        )
+                        add_log_message(
+                            game_state.combat_log,
+                            game_state.upgrade_message,
+                        )
+                        continue
+                    attribute_keys = {
+                        pygame.K_1: "strength",
+                        pygame.K_KP1: "strength",
+                        pygame.K_2: "dexterity",
+                        pygame.K_KP2: "dexterity",
+                        pygame.K_3: "vitality",
+                        pygame.K_KP3: "vitality",
+                    }
+                    if FLOOR_CONFIGS[game_state.floor_index]["act"] >= 3:
+                        attribute_keys.update(
+                            {
+                                pygame.K_3: "intelligence",
+                                pygame.K_KP3: "intelligence",
+                                pygame.K_4: "vitality",
+                                pygame.K_KP4: "vitality",
+                            }
+                        )
+                    if event.key in attribute_keys:
+                        attribute = attribute_keys[event.key]
                         if game_state.player.gold_count <= 0:
                             game_state.upgrade_message = "Not enough gold."
-                        else:
+                        elif apply_attribute_upgrade(
+                            game_state.player,
+                            attribute,
+                        ):
                             game_state.player.gold_count -= 1
-                            apply_attribute_upgrade(
-                                game_state.player,
-                                "vitality",
-                            )
                             game_state.upgrade_message = (
-                                "Maximum HP increased by "
-                                f"{HEALTH_UPGRADE_AMOUNT}."
+                                f"{attribute.title()} increased."
                             )
                             add_log_message(
                                 game_state.combat_log,
                                 game_state.upgrade_message,
                             )
-                    elif event.key in (pygame.K_2, pygame.K_KP2):
-                        if game_state.player.gold_count <= 0:
-                            game_state.upgrade_message = "Not enough gold."
                         else:
-                            game_state.player.gold_count -= 1
-                            apply_attribute_upgrade(
-                                game_state.player,
-                                "power",
-                            )
                             game_state.upgrade_message = (
-                                "Damage increased by "
-                                f"{DAMAGE_UPGRADE_AMOUNT}."
-                            )
-                            add_log_message(
-                                game_state.combat_log,
-                                game_state.upgrade_message,
-                            )
-                    elif event.key in (pygame.K_3, pygame.K_KP3):
-                        if game_state.player.gold_count <= 0:
-                            game_state.upgrade_message = "Not enough gold."
-                        elif game_state.player.crit_chance >= MAX_CRIT_CHANCE:
-                            game_state.upgrade_message = "Critical chance is capped."
-                        else:
-                            game_state.player.gold_count -= 1
-                            apply_attribute_upgrade(
-                                game_state.player,
-                                "precision",
-                            )
-                            game_state.upgrade_message = (
-                                "Critical chance increased by "
-                                f"{round(CRIT_UPGRADE_AMOUNT * 100)}%."
-                            )
-                            add_log_message(
-                                game_state.combat_log,
-                                game_state.upgrade_message,
-                            )
-                    elif event.key in (pygame.K_4, pygame.K_KP4):
-                        if game_state.player.gold_count <= 0:
-                            game_state.upgrade_message = "Not enough gold."
-                        elif game_state.player.dodge_chance >= MAX_DODGE_CHANCE:
-                            game_state.upgrade_message = "Dodge chance is capped."
-                        else:
-                            game_state.player.gold_count -= 1
-                            apply_attribute_upgrade(
-                                game_state.player,
-                                "evasion",
-                            )
-                            game_state.upgrade_message = (
-                                "Dodge chance increased by "
-                                f"{round(DODGE_UPGRADE_AMOUNT * 100)}%."
-                            )
-                            add_log_message(
-                                game_state.combat_log,
-                                game_state.upgrade_message,
+                                f"{attribute.title()} is capped."
                             )
                     elif event.key in (
                         pygame.K_RETURN,
@@ -757,6 +828,21 @@ def main():
                     and game_state.player.directional_ability_aiming
                     and player_tried_to_move
                 )
+                if (
+                    directional_ability_cast
+                    and FLOOR_CONFIGS[game_state.floor_index]["act"] == 2
+                    and game_state.player.player_class == "warrior"
+                    and game_state.player.subclass is None
+                ):
+                    directional_ability_cast = (
+                        select_warrior_cleave_direction(
+                            game_state,
+                            column_change,
+                            row_change,
+                        )
+                    )
+                    if not directional_ability_cast:
+                        continue
                 rogue_ability_activated = False
 
                 assassin_ability_pressed = (
@@ -1014,6 +1100,19 @@ def main():
                         row_change,
                         resolve_oracle_hit_reaction,
                     )
+                    if player_acted:
+                        ability_started_at = pygame.time.get_ticks()
+                        game_state.player.attack_animation_started_at = (
+                            ability_started_at
+                        )
+                        if current_act == 2:
+                            game_state.player.act_two.ability_effect_started_at = (
+                                ability_started_at
+                            )
+                            game_state.player.act_two.ability_effect_direction = (
+                                column_change,
+                                row_change,
+                            )
                 elif event.key == pygame.K_h:
                     player_acted = try_use_potion(game_state)
                     if player_acted:
@@ -1370,6 +1469,8 @@ def main():
         current_act_floor = FLOOR_CONFIGS[game_state.floor_index][
             "act_floor"
         ]
+        if current_act == 2:
+            update_act_two_visibility(game_state.floor)
         if (
             progress_tracking_enabled
             and current_act > menu_progress.highest_act_reached
@@ -1444,7 +1545,19 @@ def main():
         )
         draw_oracle_emitters(
             game_surface,
-            game_state.floor["boss_emitters"],
+            (
+                [
+                    position
+                    for position in game_state.floor["boss_emitters"]
+                    if position_is_visible(
+                        game_state.floor,
+                        position[0],
+                        position[1],
+                    )
+                ]
+                if current_act == 2
+                else game_state.floor["boss_emitters"]
+            ),
             (
                 living_oracle is not None
                 and living_oracle["oracle_awakened"]
@@ -1453,13 +1566,44 @@ def main():
         )
         draw_player_attack_markers(
             game_surface,
-            game_state.player_attack_targets,
+            (
+                [
+                    position
+                    for position in game_state.player_attack_targets
+                    if position_is_visible(
+                        game_state.floor,
+                        position[0],
+                        position[1],
+                    )
+                ]
+                if current_act == 2
+                else game_state.player_attack_targets
+            ),
         )
+        if current_act == 2:
+            draw_act_two_ability_preview(
+                game_surface,
+                game_state,
+                current_time,
+            )
         draw_attack_markers(
             game_surface,
             game_state.floor["enemies"],
             current_act,
             current_time,
+            (
+                game_state.floor.visible_cells
+                if current_act == 2
+                else None
+            ),
+            (
+                (
+                    game_state.floor["player_column"],
+                    game_state.floor["player_row"],
+                )
+                if current_act == 2
+                else None
+            ),
         )
         draw_act_one_boss_effects(
             game_surface,
@@ -1492,18 +1636,35 @@ def main():
                 game_state.floor["boss_door"][1],
                 boss_door_is_open,
             )
-        draw_stairs(
-            game_surface,
-            game_state.floor["stairs_column"],
-            game_state.floor["stairs_row"],
-            not any(
-                enemy["health"] > 0
-                for enemy in game_state.floor["enemies"]
-            ),
-            current_act,
-            act_two_sprites,
+        stairs_are_open = not any(
+            enemy["health"] > 0
+            for enemy in game_state.floor["enemies"]
         )
+        if current_act == 2:
+            remembered_stairs_open = (
+                game_state.floor.act_two_remembered_stairs_open
+            )
+        else:
+            remembered_stairs_open = stairs_are_open
+        if remembered_stairs_open is not None:
+            draw_stairs(
+                game_surface,
+                game_state.floor["stairs_column"],
+                game_state.floor["stairs_row"],
+                remembered_stairs_open,
+                current_act,
+                act_two_sprites,
+            )
         for potion in game_state.floor["potions"]:
+            if (
+                current_act == 2
+                and not position_is_visible(
+                    game_state.floor,
+                    potion["column"],
+                    potion["row"],
+                )
+            ):
+                continue
             draw_potion(
                 game_surface,
                 potion["column"],
@@ -1512,22 +1673,46 @@ def main():
                 act_two_sprites,
             )
         for chest in game_state.floor["chests"]:
+            remembered_chest = chest
+            if current_act == 2:
+                chest_is_visible = position_is_visible(
+                    game_state.floor,
+                    chest["column"],
+                    chest["row"],
+                )
+                if not chest_is_visible:
+                    remembered_chest = (
+                        game_state.floor.act_two_remembered_chests.get(
+                            (chest["column"], chest["row"])
+                        )
+                    )
+                    if remembered_chest is None:
+                        continue
             draw_chest(
                 game_surface,
-                chest,
+                remembered_chest,
                 current_act,
                 act_two_sprites,
                 current_time,
             )
-            if chest["loot_available"]:
+            if remembered_chest["loot_available"]:
                 draw_coin(
                     game_surface,
-                    chest["column"],
-                    chest["row"],
+                    remembered_chest["column"],
+                    remembered_chest["row"],
                     current_act,
                     act_two_sprites,
                 )
         for dropped_key in game_state.floor["dropped_keys"]:
+            if (
+                current_act == 2
+                and not position_is_visible(
+                    game_state.floor,
+                    dropped_key[0],
+                    dropped_key[1],
+                )
+            ):
+                continue
             draw_key(
                 game_surface,
                 dropped_key[0],
@@ -1571,6 +1756,14 @@ def main():
             game_state.player.act_two_blocked_movement_direction,
         )
         for enemy in game_state.floor["enemies"]:
+            if (
+                current_act == 2
+                and not any(
+                    position in game_state.floor.visible_cells
+                    for position in get_enemy_occupied_positions(enemy)
+                )
+            ):
+                continue
             recent_act_one_hit = (
                 current_act < 2
                 and enemy.hit_animation_started_at >= 0
@@ -1607,6 +1800,19 @@ def main():
                     current_time,
                     active_status_font,
                 )
+        if current_act == 2:
+            draw_attack_markers(
+                game_surface,
+                game_state.floor["enemies"],
+                current_act,
+                current_time,
+                game_state.floor.visible_cells,
+                (
+                    game_state.floor["player_column"],
+                    game_state.floor["player_row"],
+                ),
+                foreground=True,
+            )
         draw_act_one_player_attack_effect(
             game_surface,
             current_act,
@@ -1628,6 +1834,12 @@ def main():
             game_state.player.attack_animation_started_at,
             game_state.player.act_one_attack_was_critical,
         )
+        if current_act == 2:
+            draw_act_two_power_cleave_effect(
+                game_surface,
+                game_state,
+                current_time,
+            )
         draw_act_one_pickup_effect(
             game_surface,
             current_act,
@@ -1647,9 +1859,28 @@ def main():
         )
         draw_oracle_projectiles(
             game_surface,
-            game_state.floor["projectiles"],
+            (
+                [
+                    projectile
+                    for projectile in game_state.floor["projectiles"]
+                    if position_is_visible(
+                        game_state.floor,
+                        projectile["column"],
+                        projectile["row"],
+                    )
+                ]
+                if current_act == 2
+                else game_state.floor["projectiles"]
+            ),
             act_two_sprites,
         )
+        if current_act == 2:
+            draw_act_two_fog_of_war(
+                game_surface,
+                current_act,
+                game_state.floor,
+            )
+            draw_map_frame(game_surface, current_act)
         draw_status(
             game_surface,
             active_status_font,
@@ -1678,6 +1909,9 @@ def main():
             game_state.player.damage_max,
             game_state.player.crit_chance,
             game_state.player.dodge_chance,
+            game_state.player.critical_damage_multiplier,
+            game_state.player.spell_power,
+            game_state.player.attribute_ranks,
             game_state.player.potion_count,
             game_state.player.gold_count,
             game_state.player.key_count,
@@ -1720,20 +1954,43 @@ def main():
                 screen,
                 pygame.mouse.get_pos(),
             )
-            draw_upgrade_screen(
-                game_surface,
-                active_upgrade_title_font,
-                active_upgrade_text_font,
-                game_state.player.gold_count,
-                game_state.player.health,
-                game_state.player.max_health,
-                game_state.player.damage_min,
-                game_state.player.damage_max,
-                game_state.player.crit_chance,
-                game_state.player.dodge_chance,
-                game_state.upgrade_message,
-                upgrade_mouse_position,
-            )
+            if (
+                current_act == 2
+                and game_state.player.player_class in (
+                    "warrior",
+                    "rogue",
+                    "mage",
+                )
+                and game_state.player.subclass is None
+            ):
+                draw_act_two_upgrade_screen(
+                    game_surface,
+                    active_upgrade_title_font,
+                    active_upgrade_text_font,
+                    game_state.player,
+                    act_two_sprites,
+                    game_state.upgrade_message,
+                    upgrade_mouse_position,
+                )
+            else:
+                draw_upgrade_screen(
+                    game_surface,
+                    active_upgrade_title_font,
+                    active_upgrade_text_font,
+                    game_state.player.gold_count,
+                    game_state.player.health,
+                    game_state.player.max_health,
+                    game_state.player.damage_min,
+                    game_state.player.damage_max,
+                    game_state.player.crit_chance,
+                    game_state.player.dodge_chance,
+                    game_state.player.critical_damage_multiplier,
+                    game_state.player.spell_power,
+                    game_state.player.attribute_ranks,
+                    game_state.upgrade_message,
+                    upgrade_mouse_position,
+                    show_intelligence=(current_act >= 2),
+                )
         if game_state.class_selection_open:
             class_mouse_position = window_to_game_position(
                 screen,

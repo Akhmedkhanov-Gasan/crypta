@@ -214,7 +214,77 @@ def load_act_two_sprites():
         "pillar": "bosses/oracle/arena/pillar.png",
         "charged_pillar": "bosses/oracle/arena/charged_pillar.png",
         "floor": "environment/tiles/floor.png",
+        "floor_layout_b": (
+            "environment/tiles/floor_variants/floor_layout_b.png"
+        ),
+        "floor_fissure": (
+            "environment/tiles/floor_variants/floor_fissure.png"
+        ),
+        "floor_fissure_cross": (
+            "environment/tiles/floor_variants/floor_fissure_cross.png"
+        ),
+        "floor_puddle": (
+            "environment/tiles/floor_variants/floor_puddle.png"
+        ),
+        "floor_rubble_heavy": (
+            "environment/tiles/floor_variants/floor_rubble_heavy.png"
+        ),
+        "floor_drain": (
+            "environment/tiles/floor_variants/floor_drain.png"
+        ),
+        "floor_burial_seal": (
+            "environment/tiles/floor_variants/floor_burial_seal.png"
+        ),
         "wall": "environment/tiles/wall.png",
+        "wall_torch": (
+            "environment/tiles/wall_variants/wall_torch.png"
+        ),
+        "wall_chains": (
+            "environment/tiles/wall_variants/wall_chains.png"
+        ),
+        "wall_broken": (
+            "environment/tiles/wall_variants/wall_broken.png"
+        ),
+        "wall_iron_shackle": (
+            "environment/tiles/wall_variants/wall_iron_shackle.png"
+        ),
+        "wall_damp": (
+            "environment/tiles/wall_variants/wall_damp.png"
+        ),
+        "wall_skull_niche": (
+            "environment/tiles/wall_variants/wall_skull_niche.png"
+        ),
+        "decor_floor_broken_barrel": (
+            "environment/decor/floor/broken_barrel.png"
+        ),
+        "decor_floor_skeleton_sprawled": (
+            "environment/decor/floor/skeleton_sprawled.png"
+        ),
+        "decor_floor_skeleton_curled": (
+            "environment/decor/floor/skeleton_curled.png"
+        ),
+        "decor_floor_bone_pile": (
+            "environment/decor/floor/bone_pile.png"
+        ),
+        "decor_floor_broken_crate": (
+            "environment/decor/floor/broken_crate.png"
+        ),
+        "decor_floor_urn_shards": (
+            "environment/decor/floor/urn_shards.png"
+        ),
+        "decor_floor_boss_brazier": (
+            "environment/decor/floor/boss_brazier.png"
+        ),
+        "decor_wall_cobweb": "environment/decor/wall/cobweb.png",
+        "decor_wall_torn_banner": (
+            "environment/decor/wall/torn_banner.png"
+        ),
+        "decor_wall_guardian_statue": (
+            "environment/decor/wall/guardian_statue.png"
+        ),
+        "decor_wall_mourner_statue": (
+            "environment/decor/wall/mourner_statue.png"
+        ),
         "stairs_locked": "environment/stairs/locked.png",
         "stairs_open": "environment/stairs/open.png",
         "potion": "items/consumables/potion.png",
@@ -279,14 +349,33 @@ def load_act_two_sprites():
             ).convert_alpha(),
             (TILE_SIZE * 3, TILE_SIZE * 3),
         )
-    sprites["floor"].fill(
-        (150, 145, 160),
-        special_flags=pygame.BLEND_RGB_MULT,
-    )
-    sprites["wall"].fill(
-        (10, 12, 16),
-        special_flags=pygame.BLEND_RGB_ADD,
-    )
+    for floor_sprite_name in (
+        "floor",
+        "floor_layout_b",
+        "floor_fissure",
+        "floor_fissure_cross",
+        "floor_puddle",
+        "floor_rubble_heavy",
+        "floor_drain",
+        "floor_burial_seal",
+    ):
+        sprites[floor_sprite_name].fill(
+            (150, 145, 160),
+            special_flags=pygame.BLEND_RGB_MULT,
+        )
+    for wall_sprite_name in (
+        "wall",
+        "wall_torch",
+        "wall_chains",
+        "wall_broken",
+        "wall_iron_shackle",
+        "wall_damp",
+        "wall_skull_niche",
+    ):
+        sprites[wall_sprite_name].fill(
+            (10, 12, 16),
+            special_flags=pygame.BLEND_RGB_ADD,
+        )
     awakening_source = pygame.image.load(
         str(ui_directory / "awakening.png")
     ).convert()
@@ -339,6 +428,20 @@ def load_act_two_sprites():
                 / f"{class_name}_portrait.png"
             )
         ).convert_alpha()
+
+    sprites["warrior_power_cleave_icon"] = pygame.transform.scale(
+        pygame.image.load(
+            str(
+                ui_directory
+                / "abilities"
+                / "power_cleave.png"
+            )
+        ).convert_alpha(),
+        (32, 32),
+    )
+    sprites["upgrade_window"] = pygame.image.load(
+        str(ui_directory / "upgrade" / "upgrade_window.png")
+    ).convert_alpha()
 
     return sprites
 

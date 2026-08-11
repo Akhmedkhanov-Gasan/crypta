@@ -1,16 +1,11 @@
 import pygame
 
+from acts.player_stats import player_stat_changes_for_attribute_upgrade
 from game.progression import (
     can_upgrade_attribute,
     experience_required_for_level,
 )
-from settings import (
-    CRIT_UPGRADE_AMOUNT,
-    DAMAGE_UPGRADE_AMOUNT,
-    DODGE_UPGRADE_AMOUNT,
-    HEALTH_UPGRADE_AMOUNT,
-    MAX_ATTRIBUTE_RANK,
-)
+from settings import MAX_ATTRIBUTE_RANK
 
 ALTAR_MENU_RECT = pygame.Rect(140, 65, 1000, 590)
 ALTAR_MENU_CLOSE_RECT = pygame.Rect(1082, 83, 38, 38)
@@ -21,10 +16,10 @@ _TAB_RECTS = {
     for index, name in enumerate(_TAB_NAMES)
 }
 _CARD_RECTS = {
-    "vitality": pygame.Rect(210, 244, 410, 205),
-    "power": pygame.Rect(650, 244, 410, 205),
-    "precision": pygame.Rect(210, 446, 410, 205),
-    "evasion": pygame.Rect(650, 446, 410, 205),
+    "strength": pygame.Rect(210, 244, 410, 205),
+    "dexterity": pygame.Rect(650, 244, 410, 205),
+    "intelligence": pygame.Rect(210, 446, 410, 205),
+    "vitality": pygame.Rect(650, 446, 410, 205),
 }
 _BUTTON_RECTS = {
     name: pygame.Rect(rectangle.x + 40, rectangle.y + 154, 330, 42)
@@ -92,26 +87,39 @@ def _draw_tabs(screen, game_state, fonts, assets):
 
 
 def _attribute_card_data(player):
+    changes = {
+        name: player_stat_changes_for_attribute_upgrade(
+            name,
+            player.attribute_ranks[name],
+        )
+        for name in _CARD_RECTS
+    }
     return {
+        "strength": (
+            "STRENGTH",
+            f"DAMAGE  {player.damage_min}-{player.damage_max}",
+            (
+                f"NEXT  +{changes['strength'].damage_min} MIN / "
+                f"+{changes['strength'].damage_max} MAX"
+            ),
+        ),
+        "dexterity": (
+            "DEXTERITY",
+            (
+                f"CRIT {round(player.crit_chance * 100)}%  /  "
+                f"DODGE {round(player.dodge_chance * 100)}%"
+            ),
+            "+CRIT / DODGE / CRITICAL DAMAGE",
+        ),
+        "intelligence": (
+            "INTELLIGENCE",
+            f"SPELL POWER  {player.spell_power}",
+            f"+{changes['intelligence'].spell_power} SPELL POWER",
+        ),
         "vitality": (
             "VITALITY",
             f"HP  {player.health} / {player.max_health}",
-            f"+{HEALTH_UPGRADE_AMOUNT} MAX HP",
-        ),
-        "power": (
-            "POWER",
-            f"DAMAGE  {player.damage_min}-{player.damage_max}",
-            f"+{DAMAGE_UPGRADE_AMOUNT} DAMAGE",
-        ),
-        "precision": (
-            "PRECISION",
-            f"CRITICAL  {round(player.crit_chance * 100)}%",
-            f"+{round(CRIT_UPGRADE_AMOUNT * 100)}% CRITICAL CHANCE",
-        ),
-        "evasion": (
-            "EVASION",
-            f"DODGE  {round(player.dodge_chance * 100)}%",
-            f"+{round(DODGE_UPGRADE_AMOUNT * 100)}% DODGE CHANCE",
+            f"+{changes['vitality'].max_health} MAX HP",
         ),
     }
 
@@ -132,8 +140,14 @@ def _draw_attribute_cards(screen, game_state, fonts, assets):
                 border_radius=5,
             )
 
+        placeholder_icon = {
+            "strength": "power",
+            "dexterity": "precision",
+            "intelligence": "evasion",
+            "vitality": "vitality",
+        }[name]
         screen.blit(
-            assets[f"altar_menu_{name}"],
+            assets[f"altar_menu_{placeholder_icon}"],
             (rectangle.x + 24, rectangle.y + 33),
         )
         title, current_value, next_value = card_data[name]

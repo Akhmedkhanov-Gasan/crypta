@@ -1,12 +1,9 @@
-from settings import (
-    CRIT_UPGRADE_AMOUNT,
-    DAMAGE_UPGRADE_AMOUNT,
-    DODGE_UPGRADE_AMOUNT,
-    HEALTH_UPGRADE_AMOUNT,
-    MAX_ATTRIBUTE_RANK,
-    MAX_CRIT_CHANCE,
-    MAX_DODGE_CHANCE,
+from acts.player_stats import (
+    ATTRIBUTE_NAMES,
+    apply_player_stat_changes,
+    player_stat_changes_for_attribute_upgrade,
 )
+from settings import MAX_ATTRIBUTE_RANK
 
 
 DEFAULT_ENEMY_EXPERIENCE = 1
@@ -44,37 +41,29 @@ def grant_experience(player, amount: int) -> int:
 
 
 def can_upgrade_attribute(player, attribute: str) -> bool:
-    if attribute == "precision" and player.crit_chance >= MAX_CRIT_CHANCE:
-        return False
-    if attribute == "evasion" and player.dodge_chance >= MAX_DODGE_CHANCE:
-        return False
     return (
-        attribute in player.attribute_ranks
+        attribute in ATTRIBUTE_NAMES
+        and attribute in player.attribute_ranks
         and player.attribute_points > 0
         and player.attribute_ranks[attribute] < MAX_ATTRIBUTE_RANK
     )
 
 
 def apply_attribute_upgrade(player, attribute: str) -> bool:
-    if attribute == "vitality":
-        player.max_health += HEALTH_UPGRADE_AMOUNT
-        player.health += HEALTH_UPGRADE_AMOUNT
-    elif attribute == "power":
-        player.damage_min += DAMAGE_UPGRADE_AMOUNT
-        player.damage_max += DAMAGE_UPGRADE_AMOUNT
-    elif attribute == "precision":
-        player.crit_chance = min(
-            MAX_CRIT_CHANCE,
-            player.crit_chance + CRIT_UPGRADE_AMOUNT,
-        )
-    elif attribute == "evasion":
-        player.dodge_chance = min(
-            MAX_DODGE_CHANCE,
-            player.dodge_chance + DODGE_UPGRADE_AMOUNT,
-        )
-    else:
+    if attribute not in ATTRIBUTE_NAMES:
+        return False
+    current_rank = player.attribute_ranks.get(attribute)
+    if current_rank is None or current_rank >= MAX_ATTRIBUTE_RANK:
         return False
 
+    apply_player_stat_changes(
+        player,
+        player_stat_changes_for_attribute_upgrade(
+            attribute,
+            current_rank,
+        ),
+    )
+    player.attribute_ranks[attribute] = current_rank + 1
     return True
 
 
@@ -82,8 +71,7 @@ def upgrade_attribute(player, attribute: str) -> bool:
     if not can_upgrade_attribute(player, attribute):
         return False
 
-    apply_attribute_upgrade(player, attribute)
-
-    player.attribute_ranks[attribute] += 1
+    if not apply_attribute_upgrade(player, attribute):
+        return False
     player.attribute_points -= 1
     return True

@@ -20,7 +20,12 @@ from presentation.hud import (
     get_class_selection_rectangles,
 )
 from acts.act_two.presentation import (
+    draw_act_two_ability_preview,
+    draw_act_two_fog_of_war,
     draw_act_two_player_feedback_overlay,
+    draw_act_two_power_cleave_effect,
+    draw_act_two_upgrade_screen,
+    get_act_two_upgrade_card_rectangles,
 )
 from presentation.layout import CLASS_SELECTION_READY_MS
 from presentation.screens import (
@@ -71,10 +76,14 @@ __all__ = [
     "draw_attack_markers",
     "draw_act_one_atmosphere",
     "draw_act_two_atmosphere",
+    "draw_act_two_ability_preview",
+    "draw_act_two_fog_of_war",
     "draw_act_one_boss_effects",
     "draw_act_one_player_attack_effect",
     "draw_act_two_player_attack_effect",
     "draw_act_two_player_feedback_overlay",
+    "draw_act_two_power_cleave_effect",
+    "draw_act_two_upgrade_screen",
     "draw_act_one_pickup_effect",
     "draw_act_two_pickup_effect",
     "draw_boss_door",
@@ -97,6 +106,7 @@ __all__ = [
     "draw_subclass_selection_screen",
     "draw_upgrade_screen",
     "get_upgrade_card_rectangles",
+    "get_act_two_upgrade_card_rectangles",
     "get_class_selection_rectangles",
     "get_act_three_debug_class_rectangles",
     "get_act_three_cell_from_position",

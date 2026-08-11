@@ -2,6 +2,7 @@ from dataclasses import dataclass, field, fields
 from enum import Enum, auto
 from typing import Any, Iterator
 
+from acts.act_two.state import ActTwoPlayerState
 from acts.act_three.state import (
     ACT_THREE_PLAYER_FIELD_NAMES,
     ACT_THREE_SESSION_FIELD_NAMES,
@@ -254,6 +255,10 @@ class FloorState(AttributeMapping):
     visible_cells: set[tuple[int, int]] = field(
         default_factory=set
     )
+    act_two_remembered_chests: dict[
+        tuple[int, int], dict[str, Any]
+    ] = field(default_factory=dict)
+    act_two_remembered_stairs_open: bool | None = None
 
 
 @dataclass
@@ -264,6 +269,8 @@ class PlayerState:
     damage_max: int
     crit_chance: float = 0.0
     dodge_chance: float = 0.0
+    critical_damage_multiplier: float = 2.0
+    spell_power: int = 0
     player_class: str | None = None
     subclass: str | None = None
     potion_count: int = 0
@@ -275,10 +282,10 @@ class PlayerState:
     attribute_points: int = 0
     attribute_ranks: dict[str, int] = field(
         default_factory=lambda: {
+            "strength": 0,
+            "dexterity": 0,
+            "intelligence": 0,
             "vitality": 0,
-            "power": 0,
-            "precision": 0,
-            "evasion": 0,
         }
     )
     ability_kill_charge: int = 0
@@ -301,6 +308,9 @@ class PlayerState:
     act_two_pickup_kind: str | None = None
     act_two_pickup_origin: tuple[int, int] | None = None
     act_two_pickup_started_at: int = -1
+    act_two: ActTwoPlayerState = field(
+        default_factory=ActTwoPlayerState,
+    )
     act_three: ActThreePlayerState = field(
         default_factory=ActThreePlayerState,
     )

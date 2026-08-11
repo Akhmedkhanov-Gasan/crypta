@@ -170,6 +170,13 @@ def generate_oracle_floor(config):
         for column in range(1, boss_room["x"]):
             dungeon_map[row][column] = "."
 
+    # Two permanent braziers frame the approach while leaving the central
+    # doorway lane open. The B tile is rendered as a floor prop and blocks
+    # movement just like the arena's stone columns.
+    brazier_column = boss_door[0] - 1
+    for brazier_row in (boss_row - 1, boss_row + 1):
+        dungeon_map[brazier_row][brazier_column] = "B"
+
     boss_columns = create_oracle_arena(
         dungeon_map,
         boss_room,

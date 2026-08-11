@@ -2,6 +2,7 @@ import random
 from collections.abc import Callable
 from math import ceil
 
+from acts.act_two.settings import ABILITY_HITS_REQUIRED
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from game.progression import (
@@ -31,7 +32,6 @@ from settings import (
     BERSERKER_RAGE_INJURED_DAMAGE_MULTIPLIER,
     BERSERKER_RAGE_INJURED_HEALTH_RATIO,
     CLASS_ABILITY_KILLS,
-    CRITICAL_DAMAGE_MULTIPLIER,
     PALADIN_HOLY_HAND_CHARGES,
     PALADIN_HOLY_SHIELD_CHARGES,
     PALADIN_HOLY_SHIELD_DAMAGE_BONUS,
@@ -212,7 +212,7 @@ def attack_enemy(
     )
 
     if critical_hit:
-        damage = ceil(damage * CRITICAL_DAMAGE_MULTIPLIER)
+        damage = ceil(damage * player.critical_damage_multiplier)
 
     enemy.health = max(0, enemy.health - damage)
     if (
@@ -242,6 +242,15 @@ def attack_enemy(
             f"Holy Shield restores {healing} health.",
         )
     if (
+        grant_ability_charge
+        and player.player_class is not None
+        and player.subclass is None
+    ):
+        player.ability_kill_charge = min(
+            ABILITY_HITS_REQUIRED,
+            player.ability_kill_charge + 1,
+        )
+    elif (
         grant_ability_charge
         and player.subclass == "assassin"
         and not player.ultimate_animation_active
@@ -435,7 +444,10 @@ def resolve_enemy_defeat(
                 "The second veil begins to fall.",
             )
 
-    if player.player_class is not None and player.subclass != "assassin":
+    if (
+        player.player_class is not None
+        and player.subclass not in (None, "assassin")
+    ):
         player.ability_kill_charge = min(
             CLASS_ABILITY_KILLS,
             player.ability_kill_charge + 1,

@@ -1,6 +1,10 @@
 import random
 
-from acts.act_one.settings import PLAYER_STARTING_STATS
+from acts.act_one.settings import (
+    PLAYER_STARTING_ATTRIBUTE_RANKS,
+    PLAYER_STARTING_STATS,
+)
+from acts.player_stats import ATTRIBUTE_NAMES
 from enemies import ENEMY_TYPES
 from generation import generate_floor
 from game.state import (
@@ -135,6 +139,14 @@ def create_player_state() -> PlayerState:
         damage_max=PLAYER_STARTING_STATS.damage_max,
         crit_chance=PLAYER_STARTING_STATS.crit_chance,
         dodge_chance=PLAYER_STARTING_STATS.dodge_chance,
+        critical_damage_multiplier=(
+            PLAYER_STARTING_STATS.critical_damage_multiplier
+        ),
+        spell_power=PLAYER_STARTING_STATS.spell_power,
+        attribute_ranks={
+            attribute: PLAYER_STARTING_ATTRIBUTE_RANKS.get(attribute, 0)
+            for attribute in ATTRIBUTE_NAMES
+        },
     )
 
 

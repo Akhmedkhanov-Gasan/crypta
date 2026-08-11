@@ -1,14 +1,23 @@
-from acts.act_one.settings import PLAYER_STARTING_STATS
+from acts.act_one.settings import (
+    PLAYER_STARTING_ATTRIBUTE_RANKS,
+    PLAYER_STARTING_STATS,
+)
 from acts.act_three.settings import (
     DEBUG_PLAYER_DAMAGE_MAX,
     DEBUG_PLAYER_DAMAGE_MIN,
     DEBUG_PLAYER_POTION_COUNT,
     SUBCLASS_BASE_STATS,
 )
-from acts.act_two.settings import CLASS_BASE_STATS
+from acts.act_two.settings import (
+    CLASS_BASE_ATTRIBUTE_RANKS,
+    CLASS_BASE_STATS,
+)
 from game.combat_log import add_log_message
 from game.factories import create_floor_state, create_game_state
-from acts.player_stats import apply_player_stat_transition
+from acts.player_stats import (
+    apply_attribute_rank_transition,
+    apply_player_stat_transition,
+)
 from levels import FLOOR_CONFIGS
 from presentation.layout import (
     ACT_THREE_AWAKENING_END_MS,
@@ -38,6 +47,11 @@ def create_oracle_debug_state(
         debug_player,
         PLAYER_STARTING_STATS,
         CLASS_BASE_STATS[player_class],
+    )
+    apply_attribute_rank_transition(
+        debug_player,
+        PLAYER_STARTING_ATTRIBUTE_RANKS,
+        CLASS_BASE_ATTRIBUTE_RANKS[player_class],
     )
 
     debug_player.health = debug_player.max_health

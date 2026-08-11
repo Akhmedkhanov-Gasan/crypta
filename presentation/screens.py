@@ -5,6 +5,7 @@ from acts.act_three.settings import SUBCLASS_BASE_STATS
 from acts.act_two.settings import CLASS_BASE_STATS
 from acts.player_stats import (
     describe_player_stat_changes,
+    player_stat_changes_for_attribute_upgrade,
     player_stat_changes_between,
 )
 from presentation.hud import (
@@ -30,14 +31,9 @@ from presentation.layout import (
     CLASS_SELECTION_READY_MS,
 )
 from settings import (
-    CRIT_UPGRADE_AMOUNT,
-    DAMAGE_UPGRADE_AMOUNT,
-    DODGE_UPGRADE_AMOUNT,
     GAME_HEIGHT,
     GAME_WIDTH,
-    HEALTH_UPGRADE_AMOUNT,
-    MAX_CRIT_CHANCE,
-    MAX_DODGE_CHANCE,
+    MAX_ATTRIBUTE_RANK,
     PLAYER_ATTACK_BORDER_COLOR,
     TEXT_COLOR,
 )
@@ -181,12 +177,18 @@ def draw_floor_transition(
         )
 
 
-def get_upgrade_card_rectangles():
+def get_upgrade_card_rectangles(show_intelligence=False):
+    if show_intelligence:
+        return {
+            "strength": pygame.Rect(210, 240, 410, 132),
+            "dexterity": pygame.Rect(660, 240, 410, 132),
+            "intelligence": pygame.Rect(210, 394, 410, 132),
+            "vitality": pygame.Rect(660, 394, 410, 132),
+        }
     return {
-        "vitality": pygame.Rect(210, 240, 410, 132),
-        "power": pygame.Rect(660, 240, 410, 132),
-        "precision": pygame.Rect(210, 394, 410, 132),
-        "evasion": pygame.Rect(660, 394, 410, 132),
+        "strength": pygame.Rect(190, 240, 280, 250),
+        "dexterity": pygame.Rect(500, 240, 280, 250),
+        "vitality": pygame.Rect(810, 240, 280, 250),
     }
 
 
@@ -195,56 +197,176 @@ def _draw_upgrade_icon(screen, kind, center, color):
     pygame.draw.circle(icon_surface, (11, 12, 16, 220), (22, 22), 21)
     pygame.draw.circle(icon_surface, color, (22, 22), 20, width=2)
 
-    if kind == "vitality":
+    if kind == "strength":
+        # Raised-fist silhouette based on the reference. Drawing at 4x keeps
+        # the separated fingers and thumb readable after downscaling.
+        scale = 4
+        glyph = pygame.Surface((44 * scale, 44 * scale), pygame.SRCALPHA)
+
+        def scaled_points(points):
+            return [(x * scale, y * scale) for x, y in points]
+
+        def draw_finger(center_position, size, angle):
+            padding = 4 * scale
+            width, height = size
+            finger = pygame.Surface(
+                (
+                    width * scale + padding * 2,
+                    height * scale + padding * 2,
+                ),
+                pygame.SRCALPHA,
+            )
+            pygame.draw.rect(
+                finger,
+                color,
+                (
+                    padding,
+                    padding,
+                    width * scale,
+                    height * scale,
+                ),
+                border_radius=2 * scale,
+            )
+            rotated = pygame.transform.rotate(finger, angle)
+            glyph.blit(
+                rotated,
+                rotated.get_rect(
+                    center=(
+                        center_position[0] * scale,
+                        center_position[1] * scale,
+                    )
+                ),
+            )
+
+        # Four separated fingers. Their lower ends are covered by the palm,
+        # which keeps the silhouette joined without losing the gaps on top.
+        draw_finger((16, 10), (5, 12), -34)
+        draw_finger((22, 12), (5, 13), -34)
+        draw_finger((28, 16), (5, 13), -34)
+        draw_finger((33, 21), (5, 11), -34)
+
+        # Left palm and straight wrist.
+        pygame.draw.polygon(
+            glyph,
+            color,
+            scaled_points(
+                [
+                    (9, 18), (13, 15), (24, 19), (28, 21),
+                    (28, 25), (25, 28), (20, 29), (16, 27),
+                    (15, 25), (17, 23), (15, 22), (13, 24),
+                    (9, 23), (8, 20),
+                ]
+            ),
+        )
+        pygame.draw.polygon(
+            glyph,
+            color,
+            scaled_points(
+                [
+                    (13, 25), (22, 28), (22, 38), (12, 38),
+                    (13, 31),
+                ]
+            ),
+        )
+        # Thumb wrapping over the fist and the second straight wrist edge.
+        pygame.draw.polygon(
+            glyph,
+            color,
+            scaled_points(
+                [
+                    (19, 24), (24, 26), (29, 30), (32, 28),
+                    (34, 23), (35, 22), (34, 31), (29, 35),
+                    (29, 38), (23, 38), (23, 32), (20, 28),
+                ]
+            ),
+        )
+        # Negative crease under the thumb, matching the reference's cutout.
+        pygame.draw.polygon(
+            glyph,
+            (11, 12, 16),
+            scaled_points(
+                [
+                    (16, 22), (18, 24), (23, 25), (25, 23),
+                    (25, 26), (22, 28), (18, 26), (15, 24),
+                ]
+            ),
+        )
+
+        icon_surface.blit(
+            pygame.transform.smoothscale(glyph, (38, 38)),
+            (3, 3),
+        )
+    elif kind == "dexterity":
+        # Running figure with three speed trails, based on the reference.
+        scale = 4
+        glyph = pygame.Surface((44 * scale, 44 * scale), pygame.SRCALPHA)
+
+        def scaled_point(point):
+            return point[0] * scale, point[1] * scale
+
+        def draw_limb(start, end, width):
+            start = scaled_point(start)
+            end = scaled_point(end)
+            radius = width * scale // 2
+            pygame.draw.line(glyph, color, start, end, width * scale)
+            pygame.draw.circle(glyph, color, start, radius)
+            pygame.draw.circle(glyph, color, end, radius)
+
+        pygame.draw.circle(
+            glyph,
+            color,
+            scaled_point((29, 10)),
+            4 * scale,
+        )
+        draw_limb((23, 16), (21, 25), 6)
+        draw_limb((21, 17), (15, 15), 4)
+        draw_limb((15, 15), (10, 16), 4)
+        draw_limb((24, 17), (28, 21), 4)
+        draw_limb((28, 21), (35, 21), 4)
+        draw_limb((21, 25), (15, 30), 6)
+        draw_limb((15, 30), (11, 35), 5)
+        draw_limb((22, 25), (27, 31), 6)
+        draw_limb((27, 31), (33, 36), 5)
+
+        for start, end, width in (
+            ((7, 14), (14, 14), 2),
+            ((6, 21), (13, 21), 2),
+            ((8, 28), (14, 28), 2),
+        ):
+            pygame.draw.line(
+                glyph,
+                color,
+                scaled_point(start),
+                scaled_point(end),
+                width * scale,
+            )
+
+        icon_surface.blit(
+            pygame.transform.smoothscale(glyph, (38, 38)),
+            (3, 3),
+        )
+    elif kind == "intelligence":
+        # Centered brain with a consistent gap from the circular frame.
+        for brain_center, radius in (
+            ((15, 17), 5), ((20, 14), 5), ((25, 14), 5),
+            ((30, 17), 5), ((14, 23), 5), ((18, 29), 5),
+            ((24, 30), 5), ((29, 28), 5), ((31, 22), 5),
+            ((22, 22), 9),
+        ):
+            pygame.draw.circle(icon_surface, color, brain_center, radius)
+        dark = (12, 13, 17)
+        pygame.draw.line(icon_surface, dark, (22, 12), (22, 32), 2)
+        pygame.draw.arc(icon_surface, dark, (12, 15, 11, 10), 4.5, 1.4, 2)
+        pygame.draw.arc(icon_surface, dark, (22, 15, 10, 10), 1.7, 4.8, 2)
+        pygame.draw.arc(icon_surface, dark, (13, 22, 10, 10), 4.5, 1.5, 2)
+        pygame.draw.arc(icon_surface, dark, (22, 22, 10, 9), 1.7, 4.8, 2)
+    else:
         pygame.draw.polygon(
             icon_surface,
             color,
             [(22, 34), (10, 21), (12, 14), (18, 12), (22, 17),
              (26, 12), (32, 14), (34, 21)],
         )
-    elif kind == "power":
-        pygame.draw.polygon(
-            icon_surface,
-            color,
-            [
-                (34, 7),
-                (31, 18),
-                (20, 29),
-                (16, 25),
-                (27, 14),
-            ],
-        )
-        pygame.draw.line(
-            icon_surface,
-            (15, 16, 21),
-            (29, 14),
-            (19, 25),
-            2,
-        )
-        pygame.draw.line(icon_surface, color, (12, 23), (22, 33), 3)
-        pygame.draw.line(icon_surface, color, (16, 30), (11, 35), 4)
-        pygame.draw.circle(icon_surface, color, (9, 37), 3)
-    elif kind == "precision":
-        pygame.draw.circle(icon_surface, color, (22, 22), 11, width=2)
-        pygame.draw.circle(icon_surface, color, (22, 22), 4, width=2)
-        pygame.draw.line(icon_surface, color, (22, 6), (22, 13), 2)
-        pygame.draw.line(icon_surface, color, (22, 31), (22, 38), 2)
-        pygame.draw.line(icon_surface, color, (6, 22), (13, 22), 2)
-        pygame.draw.line(icon_surface, color, (31, 22), (38, 22), 2)
-    else:
-        pygame.draw.circle(icon_surface, color, (28, 10), 4)
-        pygame.draw.line(icon_surface, color, (26, 13), (24, 17), 3)
-        pygame.draw.line(icon_surface, color, (25, 15), (19, 26), 4)
-        pygame.draw.line(icon_surface, color, (23, 18), (32, 21), 3)
-        pygame.draw.line(icon_surface, color, (32, 21), (36, 17), 3)
-        pygame.draw.line(icon_surface, color, (22, 18), (15, 16), 3)
-        pygame.draw.line(icon_surface, color, (15, 16), (12, 20), 3)
-        pygame.draw.line(icon_surface, color, (19, 26), (28, 30), 4)
-        pygame.draw.line(icon_surface, color, (28, 30), (35, 28), 3)
-        pygame.draw.line(icon_surface, color, (19, 26), (14, 34), 4)
-        pygame.draw.line(icon_surface, color, (14, 34), (8, 34), 3)
-        pygame.draw.line(icon_surface, color, (7, 12), (15, 12), 2)
-        pygame.draw.line(icon_surface, color, (5, 25), (12, 25), 2)
 
     screen.blit(icon_surface, (center[0] - 22, center[1] - 22))
 
@@ -287,6 +409,62 @@ def _draw_upgrade_card(
     pygame.draw.rect(screen, border_color, badge_rectangle, width=1, border_radius=4)
     badge = text_font.render(key_label, True, text_color)
     screen.blit(badge, badge.get_rect(center=badge_rectangle.center))
+
+    if rectangle.width < 350:
+        _draw_upgrade_icon(
+            screen,
+            kind,
+            (rectangle.centerx, rectangle.y + 53),
+            border_color,
+        )
+        title_surface = text_font.render(title, True, text_color)
+        screen.blit(
+            title_surface,
+            title_surface.get_rect(
+                center=(rectangle.centerx, rectangle.y + 91)
+            ),
+        )
+        description_surface = text_font.render(
+            description,
+            True,
+            (178, 173, 181) if not disabled else (96, 93, 101),
+        )
+        screen.blit(
+            description_surface,
+            description_surface.get_rect(
+                center=(rectangle.centerx, rectangle.y + 128)
+            ),
+        )
+        value_surface = text_font.render(
+            value_text,
+            True,
+            accent_color if not disabled else (91, 88, 95),
+        )
+        screen.blit(
+            value_surface,
+            value_surface.get_rect(
+                center=(rectangle.centerx, rectangle.y + 164)
+            ),
+        )
+        pygame.draw.line(
+            screen,
+            (62, 59, 68) if not disabled else (35, 34, 40),
+            (rectangle.x + 24, rectangle.bottom - 53),
+            (rectangle.right - 24, rectangle.bottom - 53),
+        )
+        cost_text = "MAX" if capped else "1 GOLD"
+        cost_surface = text_font.render(
+            cost_text,
+            True,
+            (195, 151, 67) if not disabled else (86, 82, 75),
+        )
+        screen.blit(
+            cost_surface,
+            cost_surface.get_rect(
+                center=(rectangle.centerx, rectangle.bottom - 27)
+            ),
+        )
+        return
 
     _draw_upgrade_icon(
         screen,
@@ -336,8 +514,12 @@ def draw_upgrade_screen(
     player_damage_max,
     player_crit_chance,
     player_dodge_chance,
+    player_critical_damage_multiplier,
+    player_spell_power,
+    attribute_ranks,
     message,
     mouse_position=None,
+    show_intelligence=False,
 ):
     dark_overlay = pygame.Surface(
         (GAME_WIDTH, GAME_HEIGHT),
@@ -346,7 +528,12 @@ def draw_upgrade_screen(
     dark_overlay.fill((0, 0, 0, 205))
     screen.blit(dark_overlay, (0, 0))
 
-    panel_rectangle = pygame.Rect(170, 66, 940, 588)
+    panel_rectangle = pygame.Rect(
+        170,
+        66,
+        940,
+        588 if show_intelligence else 520,
+    )
     pygame.draw.rect(
         screen,
         (6, 6, 9),
@@ -421,38 +608,64 @@ def draw_upgrade_screen(
         stats_surface.get_rect(center=(GAME_WIDTH // 2, 196)),
     )
 
-    crit_capped = player_crit_chance >= MAX_CRIT_CHANCE
-    dodge_capped = player_dodge_chance >= MAX_DODGE_CHANCE
     no_gold = gold_count <= 0
-    cards = (
-        (
-            "vitality", "1", "VITALITY",
-            f"Maximum health • heals {HEALTH_UPGRADE_AMOUNT}",
-            f"{player_max_health}  >  "
-            f"{player_max_health + HEALTH_UPGRADE_AMOUNT} HP",
-            (155, 71, 74), False,
-        ),
-        (
-            "power", "2", "POWER", "Reliable weapon damage",
-            f"{player_damage_min}-{player_damage_max}  >  "
-            f"{player_damage_min + DAMAGE_UPGRADE_AMOUNT}-"
-            f"{player_damage_max + DAMAGE_UPGRADE_AMOUNT}",
-            (177, 112, 62), False,
-        ),
-        (
-            "precision", "3", "PRECISION", "Chance for a critical hit",
-            f"{round(player_crit_chance * 100)}%  >  "
-            f"{round(min(MAX_CRIT_CHANCE, player_crit_chance + CRIT_UPGRADE_AMOUNT) * 100)}%",
-            (166, 137, 69), crit_capped,
-        ),
-        (
-            "evasion", "4", "EVASION", "Chance to avoid an attack",
-            f"{round(player_dodge_chance * 100)}%  >  "
-            f"{round(min(MAX_DODGE_CHANCE, player_dodge_chance + DODGE_UPGRADE_AMOUNT) * 100)}%",
-            (76, 128, 131), dodge_capped,
-        ),
+    strength_change = player_stat_changes_for_attribute_upgrade(
+        "strength",
+        attribute_ranks["strength"],
     )
-    card_rectangles = get_upgrade_card_rectangles()
+    dexterity_change = player_stat_changes_for_attribute_upgrade(
+        "dexterity",
+        attribute_ranks["dexterity"],
+    )
+    vitality_change = player_stat_changes_for_attribute_upgrade(
+        "vitality",
+        attribute_ranks["vitality"],
+    )
+    cards = [
+        (
+            "strength", "1", "STRENGTH",
+            f"Rank {attribute_ranks['strength']} | Physical attack damage",
+            f"{player_damage_min}-{player_damage_max}  >  "
+            f"{player_damage_min + strength_change.damage_min}-"
+            f"{player_damage_max + strength_change.damage_max}",
+            (184, 82, 64),
+        ),
+        (
+            "dexterity", "2", "DEXTERITY",
+            f"Rank {attribute_ranks['dexterity']} | Crit damage "
+            f"x{player_critical_damage_multiplier:.1f} > "
+            f"x{player_critical_damage_multiplier + dexterity_change.critical_damage_multiplier:.1f}",
+            f"C/D {round(player_crit_chance * 100)}/"
+            f"{round(player_dodge_chance * 100)}% > "
+            f"{round((player_crit_chance + dexterity_change.crit_chance) * 100)}/"
+            f"{round((player_dodge_chance + dexterity_change.dodge_chance) * 100)}%",
+            (190, 151, 69),
+        ),
+    ]
+    if show_intelligence:
+        intelligence_change = player_stat_changes_for_attribute_upgrade(
+            "intelligence",
+            attribute_ranks["intelligence"],
+        )
+        cards.append(
+            (
+                "intelligence", "3", "INTELLIGENCE",
+                f"Rank {attribute_ranks['intelligence']} | Magical attack power",
+                f"{player_spell_power}  >  "
+                f"{player_spell_power + intelligence_change.spell_power} SPELL POWER",
+                (92, 128, 185),
+            )
+        )
+    cards.append(
+        (
+            "vitality", "4" if show_intelligence else "3", "VITALITY",
+            f"Rank {attribute_ranks['vitality']} | Maximum health",
+            f"{player_max_health}  >  "
+            f"{player_max_health + vitality_change.max_health} HP",
+            (139, 74, 89),
+        )
+    )
+    card_rectangles = get_upgrade_card_rectangles(show_intelligence)
     for (
         kind,
         key_label,
@@ -460,8 +673,10 @@ def draw_upgrade_screen(
         description,
         value_text,
         accent_color,
-        capped,
     ) in cards:
+        capped = attribute_ranks[kind] >= MAX_ATTRIBUTE_RANK
+        if capped:
+            value_text = f"RANK {attribute_ranks[kind]} | MAXIMUM"
         rectangle = card_rectangles[kind]
         hovered = (
             mouse_position is not None
@@ -489,7 +704,10 @@ def draw_upgrade_screen(
             (211, 169, 77),
         )
         message_rectangle = message_surface.get_rect(
-            center=(GAME_WIDTH // 2, 565)
+            center=(
+                GAME_WIDTH // 2,
+                565 if show_intelligence else 516,
+            )
         )
         screen.blit(message_surface, message_rectangle)
 
@@ -501,7 +719,12 @@ def draw_upgrade_screen(
     footer_surface = text_font.render(footer, True, (171, 166, 174))
     screen.blit(
         footer_surface,
-        footer_surface.get_rect(center=(GAME_WIDTH // 2, 620)),
+        footer_surface.get_rect(
+            center=(
+                GAME_WIDTH // 2,
+                620 if show_intelligence else 554,
+            )
+        ),
     )
 
 
@@ -656,10 +879,10 @@ def draw_class_selection_screen(
                     CLASS_BASE_STATS["warrior"],
                 )
             ),
-            "ability": "POWER STRIKE",
+            "ability": "POWER CLEAVE",
             "description": (
-                "After 2 kills, press E and choose a direction. "
-                "Strike an adjacent enemy with +2 damage."
+                "After 4 hits, press E and choose a direction twice. "
+                "Cleave three cells in front with +2 damage."
             ),
         },
         "rogue": {
@@ -674,7 +897,7 @@ def draw_class_selection_screen(
             ),
             "ability": "INVISIBILITY",
             "description": (
-                "After 2 kills, press E to vanish for 5 turns. "
+                "After 4 hits, press E to vanish for 5 turns. "
                 "Your first attack from invisibility is a sure critical."
             ),
         },
@@ -693,9 +916,9 @@ def draw_class_selection_screen(
             ),
             "ability": "ARCANE BURST",
             "description": (
-                "After 2 kills, press E and choose a direction. "
+                "After 4 hits, press E and choose a direction. "
                 "Magic hits every enemy in a line up to 5 cells "
-                "away with +2 damage."
+                "away with +2 damage plus spell power."
             ),
         },
     }
