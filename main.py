@@ -161,6 +161,7 @@ from systems.player_combat import (
     perform_basic_attack,
     perform_summoner_attack,
     perform_warlock_attack,
+    remove_enemy_corpses_at_position,
 )
 from systems.player_abilities import (
     AbilityRequestResult,
@@ -1323,6 +1324,14 @@ def main():
                         game_state,
                         enemy_movement_started_at,
                     )
+                    if current_act == 2 and game_state.player.health <= 0:
+                        remove_enemy_corpses_at_position(
+                            game_state.floor,
+                            (
+                                game_state.floor.player_column,
+                                game_state.floor.player_row,
+                            ),
+                        )
                     record_familiar_hit_feedback(
                         game_state,
                         enemy_movement_started_at,
@@ -1474,6 +1483,9 @@ def main():
                                 enemy.attack_effect_positions = (
                                     attack_event.positions
                                 )
+                        elif enemy.name in healed_enemy_names:
+                            enemy.attack_effect_mode = "heal"
+                            enemy.attack_effect_positions = ()
                         if (
                             enemy.type == "warden"
                             and enemy.second_phase_announced
