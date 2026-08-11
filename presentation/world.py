@@ -77,6 +77,10 @@ ACT_TWO_DAMP = (20, 49, 53)
 ACT_TWO_RUNE = (61, 116, 123)
 ACT_TWO_HIT_FEEDBACK_MS = 650
 ACT_TWO_HIT_REACTION_MS = 230
+ACT_TWO_ENEMY_ATTACK_FRAME_MS = 240
+ACT_TWO_DEATH_IMPACT_MS = 150
+ACT_TWO_DEATH_SETTLE_MS = 430
+ACT_TWO_DEATH_BURST_MS = 360
 ACT_TWO_GOBLIN_DEATH_MS = 920
 ACT_TWO_ARCHER_DEATH_MS = 880
 ACT_TWO_BRUTE_DEATH_MS = 1120
@@ -4556,6 +4560,128 @@ def _draw_act_two_damage_number(
     screen.blit(number, rectangle)
 
 
+def _draw_act_two_enemy_death(
+    screen,
+    enemy,
+    standing_sprite,
+    corpse_sprite,
+    current_time,
+    damage_font,
+):
+    started_at = enemy.get("death_animation_started_at", -1)
+    elapsed = (
+        max(0, current_time - started_at)
+        if started_at >= 0
+        else ACT_TWO_DEATH_SETTLE_MS
+    )
+    tile_position = (
+        MAP_OFFSET_X + enemy["column"] * TILE_SIZE,
+        MAP_OFFSET_Y + enemy["row"] * TILE_SIZE,
+    )
+    center = (
+        tile_position[0] + TILE_SIZE // 2,
+        tile_position[1] + TILE_SIZE // 2,
+    )
+
+    if elapsed < ACT_TWO_DEATH_IMPACT_MS:
+        progress = elapsed / ACT_TWO_DEATH_IMPACT_MS
+        recoil_x, recoil_y = _act_two_hit_offset(enemy, elapsed)
+        body_height = max(
+            22,
+            round(TILE_SIZE * (1 - progress * 0.18)),
+        )
+        body = pygame.transform.scale(
+            standing_sprite,
+            (TILE_SIZE, body_height),
+        )
+        body_position = body.get_rect(
+            midbottom=(
+                center[0] + recoil_x,
+                tile_position[1] + TILE_SIZE - 2 + recoil_y,
+            )
+        )
+        screen.blit(body, body_position)
+        flash = body.copy()
+        flash.fill(
+            (235, 224, 207, 0),
+            special_flags=pygame.BLEND_RGBA_ADD,
+        )
+        flash.set_alpha(round(205 * (1 - progress)))
+        screen.blit(flash, body_position)
+    else:
+        settle_progress = min(
+            1,
+            (elapsed - ACT_TWO_DEATH_IMPACT_MS)
+            / (ACT_TWO_DEATH_SETTLE_MS - ACT_TWO_DEATH_IMPACT_MS),
+        )
+        lift = round((1 - settle_progress) * 5)
+        shadow = pygame.Surface((28, 7), pygame.SRCALPHA)
+        pygame.draw.ellipse(
+            shadow,
+            (5, 6, 8, round(105 + settle_progress * 45)),
+            shadow.get_rect(),
+        )
+        screen.blit(
+            shadow,
+            (
+                center[0] - 14,
+                tile_position[1] + TILE_SIZE - 8,
+            ),
+        )
+        screen.blit(
+            corpse_sprite,
+            (tile_position[0], tile_position[1] - lift),
+        )
+
+    if elapsed < ACT_TWO_DEATH_BURST_MS:
+        burst_progress = elapsed / ACT_TWO_DEATH_BURST_MS
+        visibility = 1 - burst_progress
+        effect_color = ACT_TWO_CLASS_EFFECT_COLORS.get(
+            enemy.get("hit_attacker_class"),
+            (157, 74, 61),
+        )
+        burst = pygame.Surface(
+            (TILE_SIZE * 2, TILE_SIZE * 2),
+            pygame.SRCALPHA,
+        )
+        burst_center = TILE_SIZE
+        pygame.draw.circle(
+            burst,
+            (*effect_color, round(135 * visibility)),
+            (burst_center, burst_center + 5),
+            round(5 + burst_progress * 14),
+            width=2,
+        )
+        for particle_index in range(6):
+            angle = (
+                particle_index * math.tau / 6
+                + enemy["column"] * 0.31
+                + enemy["row"] * 0.19
+            )
+            distance = 5 + burst_progress * 17
+            particle_position = (
+                round(burst_center + math.cos(angle) * distance),
+                round(burst_center + 5 + math.sin(angle) * distance * 0.5),
+            )
+            pygame.draw.circle(
+                burst,
+                (*effect_color, round(210 * visibility)),
+                particle_position,
+                2 if particle_index % 2 == 0 else 1,
+            )
+        screen.blit(
+            burst,
+            (center[0] - burst_center, center[1] - burst_center),
+        )
+
+    _draw_act_two_damage_number(
+        screen,
+        enemy,
+        current_time,
+        damage_font,
+    )
+
+
 def _draw_act_two_goblin_hit_feedback(
     screen,
     enemy,
@@ -5998,46 +6124,21 @@ def draw_enemy(
         )
         and enemy["health"] <= 0
     ):
-        if enemy["type"] == "goblin":
-            _draw_act_two_goblin_death(
-                screen,
-                enemy,
-                sprites["goblin"],
-                current_time,
-                damage_font,
-            )
-        elif enemy["type"] == "archer":
-            _draw_act_two_archer_death(
-                screen,
-                enemy,
-                sprites["archer"],
-                current_time,
-                damage_font,
-            )
-        elif enemy["type"] == "brute":
-            _draw_act_two_brute_death(
-                screen,
-                enemy,
-                sprites["brute"],
-                current_time,
-                damage_font,
-            )
-        elif enemy["type"] == "sentinel":
-            _draw_act_two_sentinel_death(
-                screen,
-                enemy,
-                sprites["sentinel_idle"],
-                current_time,
-                damage_font,
-            )
-        else:
-            _draw_act_two_priest_death(
-                screen,
-                enemy,
-                sprites["priest_idle"],
-                current_time,
-                damage_font,
-            )
+        standing_sprite_names = {
+            "goblin": "goblin",
+            "archer": "archer",
+            "brute": "brute",
+            "sentinel": "sentinel_idle",
+            "priest": "priest_idle",
+        }
+        _draw_act_two_enemy_death(
+            screen,
+            enemy,
+            sprites[standing_sprite_names[enemy["type"]]],
+            sprites[f"{enemy['type']}_death"],
+            current_time,
+            damage_font,
+        )
         return
 
     hit_effect_active = False
@@ -6220,13 +6321,37 @@ def draw_enemy(
     ):
         sprite_name = enemy["type"]
 
-        if enemy["type"] == "sentinel":
+        if enemy["type"] in (
+            "goblin",
+            "brute",
+            "archer",
+            "sentinel",
+            "priest",
+        ):
+            attack_started_at = enemy.get(
+                "attack_animation_started_at",
+                0,
+            )
+            attack_elapsed = current_time - attack_started_at
+            if (
+                attack_started_at > 0
+                and 0 <= attack_elapsed < ACT_TWO_ENEMY_ATTACK_FRAME_MS
+            ):
+                sprite_name = (
+                    "priest_cast"
+                    if (
+                        enemy["type"] == "priest"
+                        and enemy.get("attack_effect_mode") == "heal"
+                    )
+                    else f"{enemy['type']}_attack"
+                )
+        if enemy["type"] == "sentinel" and sprite_name == "sentinel":
             sprite_name = (
                 "sentinel_guard"
                 if enemy["shield_turns"] > 0
                 else "sentinel_idle"
             )
-        elif enemy["type"] == "priest":
+        elif enemy["type"] == "priest" and sprite_name == "priest":
             sprite_name = (
                 "priest_cast"
                 if (

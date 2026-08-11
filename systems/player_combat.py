@@ -464,6 +464,20 @@ def resolve_enemy_defeat(
     )
 
 
+def remove_enemy_corpses_at_position(
+    floor: FloorState,
+    position: tuple[int, int],
+) -> None:
+    floor.enemies[:] = [
+        enemy
+        for enemy in floor.enemies
+        if (
+            enemy.health > 0
+            or position not in get_enemy_occupied_positions(enemy)
+        )
+    ]
+
+
 def perform_basic_attack(
     game_state: GameState,
     column_change: int,
