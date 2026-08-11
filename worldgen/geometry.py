@@ -1,7 +1,5 @@
 import random
 
-from settings import MAP_COLUMNS, MAP_ROWS
-
 
 MIN_ROOM_WIDTH = 4
 MAX_ROOM_WIDTH = 7
@@ -158,6 +156,8 @@ def connect_rooms(dungeon_map, first_room, second_room):
 def create_rooms(dungeon_map, room_count, blocked_rooms=None):
     rooms = []
     blocked_rooms = blocked_rooms or []
+    map_rows = len(dungeon_map)
+    map_columns = len(dungeon_map[0])
 
     for _ in range(MAX_ROOM_ATTEMPTS):
         if len(rooms) >= room_count:
@@ -166,8 +166,8 @@ def create_rooms(dungeon_map, room_count, blocked_rooms=None):
         width = random.randint(MIN_ROOM_WIDTH, MAX_ROOM_WIDTH)
         height = random.randint(MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT)
         room = {
-            "x": random.randint(1, MAP_COLUMNS - width - 2),
-            "y": random.randint(1, MAP_ROWS - height - 2),
+            "x": random.randint(1, map_columns - width - 2),
+            "y": random.randint(1, map_rows - height - 2),
             "width": width,
             "height": height,
         }

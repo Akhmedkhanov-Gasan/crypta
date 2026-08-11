@@ -69,8 +69,12 @@ def create_floor_state(floor_index: int) -> FloorState:
     possible_key_carriers = (
         eligible_key_carriers + other_key_carriers
     )
+    locked_chest_count = sum(
+        chest_data.get("requires_key", True)
+        for chest_data in floor["chests"]
+    )
     key_carrier_count = min(
-        len(floor["chests"]),
+        locked_chest_count,
         len(possible_key_carriers),
     )
 
@@ -89,6 +93,8 @@ def create_floor_state(floor_index: int) -> FloorState:
                 column=chest_column,
                 row=chest_row,
                 contains=chest_data["contains"],
+                requires_key=chest_data.get("requires_key", True),
+                appearance=chest_data.get("appearance", "standard"),
             )
         )
 

@@ -19,6 +19,10 @@ from acts.act_two.settings import (
     WALL_WEAR_REPEAT_MIN_SPACING_TILES,
 )
 from presentation.layout import (
+    ACT_TWO_VIEW_HEIGHT,
+    ACT_TWO_VIEW_WIDTH,
+    ACT_TWO_VIEW_X,
+    ACT_TWO_VIEW_Y,
     MAP_HEIGHT,
     MAP_OFFSET_X,
     MAP_OFFSET_Y,
@@ -2758,10 +2762,14 @@ def _draw_act_two_motes(
 ):
     if not dungeon_map:
         return
-    motes = pygame.Surface((MAP_WIDTH, MAP_HEIGHT), pygame.SRCALPHA)
     column_count = len(dungeon_map[0])
     row_count = len(dungeon_map)
-    for mote_index in range(24 + floor_number * 7):
+    map_width = column_count * TILE_SIZE
+    map_height = row_count * TILE_SIZE
+    motes = pygame.Surface((map_width, map_height), pygame.SRCALPHA)
+    area_scale = (column_count * row_count) / (25 * 15)
+    mote_count = round((24 + floor_number * 7) * area_scale)
+    for mote_index in range(mote_count):
         noise = _act_one_tile_noise(
             mote_index,
             floor_number,
@@ -2952,11 +2960,14 @@ def draw_act_two_atmosphere(
     if act_number != 2:
         return
 
+    map_width = len(dungeon_map[0]) * TILE_SIZE
+    map_height = len(dungeon_map) * TILE_SIZE
+
     player_center = (
         player_column * TILE_SIZE + TILE_SIZE // 2,
         player_row * TILE_SIZE + TILE_SIZE // 2,
     )
-    darkness = pygame.Surface((MAP_WIDTH, MAP_HEIGHT), pygame.SRCALPHA)
+    darkness = pygame.Surface((map_width, map_height), pygame.SRCALPHA)
     darkness.fill((3, 6, 11, 76 + (floor_number - 1) * 10))
     for radius, alpha in ((146, 54), (112, 38), (78, 21), (46, 8)):
         pygame.draw.circle(
@@ -2996,7 +3007,7 @@ def draw_act_two_atmosphere(
     )
     _draw_act_one_glow(screen, world_player_center, (55, 102, 111), 62)
 
-    fog = pygame.Surface((MAP_WIDTH, MAP_HEIGHT), pygame.SRCALPHA)
+    fog = pygame.Surface((map_width, map_height), pygame.SRCALPHA)
     for band_index in range(5):
         noise = _act_one_tile_noise(
             band_index,
@@ -3007,7 +3018,7 @@ def draw_act_two_atmosphere(
         drift = round(
             math.sin(current_time / 2200 + band_index * 1.7) * 34
         )
-        fog_y = 52 + (noise % max(1, MAP_HEIGHT - 104))
+        fog_y = 52 + (noise % max(1, map_height - 104))
         fog_x = -90 + (noise % 130) + drift
         pygame.draw.ellipse(
             fog,
@@ -3021,24 +3032,6 @@ def draw_act_two_atmosphere(
         )
     screen.blit(fog, (MAP_OFFSET_X, MAP_OFFSET_Y))
 
-    vignette = pygame.Surface((MAP_WIDTH, MAP_HEIGHT), pygame.SRCALPHA)
-    for inset, alpha, width in (
-        (0, 92, 28),
-        (24, 51, 22),
-        (47, 25, 18),
-    ):
-        pygame.draw.rect(
-            vignette,
-            (1, 3, 7, alpha + (floor_number - 1) * 5),
-            (
-                inset,
-                inset,
-                MAP_WIDTH - inset * 2,
-                MAP_HEIGHT - inset * 2,
-            ),
-            width=width,
-        )
-    screen.blit(vignette, (MAP_OFFSET_X, MAP_OFFSET_Y))
     _draw_act_two_motes(
         screen,
         dungeon_map,
@@ -3112,14 +3105,19 @@ def draw_dungeon(
             y = MAP_OFFSET_Y + row_index * TILE_SIZE
             tile_rectangle = pygame.Rect(x, y, TILE_SIZE, TILE_SIZE)
             if act_number >= 2:
-                if tile == "#":
+                is_wall = tile in ("#", "S")
+                if is_wall:
                     if act_number == 2:
-                        texture_name = _act_two_wall_sprite_name(
-                            dungeon_map,
-                            column_index,
-                            row_index,
-                            visual_seed,
-                            floor_number,
+                        texture_name = (
+                            "wall_secret"
+                            if tile == "S"
+                            else _act_two_wall_sprite_name(
+                                dungeon_map,
+                                column_index,
+                                row_index,
+                                visual_seed,
+                                floor_number,
+                            )
                         )
                     else:
                         texture_name = "wall"
@@ -3141,7 +3139,7 @@ def draw_dungeon(
                         visual_seed,
                         floor_number + 101,
                     )
-                    if tile == "#":
+                    if is_wall:
                         _draw_act_two_wall_detail(
                             screen,
                             dungeon_map,
@@ -3150,7 +3148,9 @@ def draw_dungeon(
                             x,
                             y,
                             detail_noise,
-                            allow_decor=texture_name == "wall",
+                            allow_decor=(
+                                tile == "#" and texture_name == "wall"
+                            ),
                         )
                         wall_overlay_name = (
                             _act_two_wall_overlay_sprite_name(
@@ -3160,6 +3160,8 @@ def draw_dungeon(
                                 visual_seed,
                                 floor_number,
                             )
+                            if tile == "#"
+                            else None
                         )
                         if wall_overlay_name is not None:
                             wall_overlay = sprites[wall_overlay_name]
@@ -3352,22 +3354,26 @@ def draw_map_frame(screen, act_number):
             pygame.draw.circle(screen, (89, 84, 81), corner, 2)
         return
 
-    outer_rectangle = pygame.Rect(
-        MAP_OFFSET_X - 4,
-        MAP_OFFSET_Y - 4,
-        MAP_WIDTH + 8,
-        MAP_HEIGHT + 8,
-    )
-    frame_color = (58, 76, 79) if act_number == 2 else (72, 68, 78)
-    pygame.draw.rect(screen, (8, 10, 14), outer_rectangle.inflate(6, 6), width=5)
-    pygame.draw.rect(screen, frame_color, outer_rectangle, width=3)
-    pygame.draw.rect(
-        screen,
-        (30, 27, 34),
-        outer_rectangle.inflate(-6, -6),
-        width=1,
-    )
     if act_number == 2:
+        outer_rectangle = pygame.Rect(
+            ACT_TWO_VIEW_X - 4,
+            ACT_TWO_VIEW_Y - 4,
+            ACT_TWO_VIEW_WIDTH + 8,
+            ACT_TWO_VIEW_HEIGHT + 8,
+        )
+        pygame.draw.rect(
+            screen,
+            (8, 10, 14),
+            outer_rectangle.inflate(6, 6),
+            width=5,
+        )
+        pygame.draw.rect(screen, (58, 76, 79), outer_rectangle, width=3)
+        pygame.draw.rect(
+            screen,
+            (30, 27, 34),
+            outer_rectangle.inflate(-6, -6),
+            width=1,
+        )
         pygame.draw.line(
             screen,
             (99, 112, 108),
@@ -3382,6 +3388,23 @@ def draw_map_frame(screen, act_number):
         ):
             pygame.draw.circle(screen, (13, 17, 21), corner, 5)
             pygame.draw.circle(screen, (75, 92, 92), corner, 2)
+        return
+
+    outer_rectangle = pygame.Rect(
+        MAP_OFFSET_X - 4,
+        MAP_OFFSET_Y - 4,
+        MAP_WIDTH + 8,
+        MAP_HEIGHT + 8,
+    )
+    frame_color = (72, 68, 78)
+    pygame.draw.rect(screen, (8, 10, 14), outer_rectangle.inflate(6, 6), width=5)
+    pygame.draw.rect(screen, frame_color, outer_rectangle, width=3)
+    pygame.draw.rect(
+        screen,
+        (30, 27, 34),
+        outer_rectangle.inflate(-6, -6),
+        width=1,
+    )
 
 
 def _draw_act_one_warden_telegraph(
@@ -6721,11 +6744,13 @@ def draw_chest(screen, chest, act_number, sprites, current_time=0):
     cell_y = MAP_OFFSET_Y + chest["row"] * TILE_SIZE
 
     if act_number >= 2:
-        sprite_name = (
-            "chest_open"
-            if chest["is_open"]
-            else "chest_closed"
+        prefix = (
+            "stash"
+            if chest.get("appearance", "standard") == "stash"
+            else "chest"
         )
+        state = "open" if chest["is_open"] else "closed"
+        sprite_name = f"{prefix}_{state}"
         screen.blit(sprites[sprite_name], (cell_x, cell_y))
         return
 

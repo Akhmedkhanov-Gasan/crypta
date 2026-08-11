@@ -18,6 +18,12 @@ from acts.act_two.visibility import (
     position_is_visible,
     update_act_two_visibility,
 )
+from acts.act_two.presentation.camera import (
+    ActTwoCamera,
+    act_two_world_surface_size,
+    draw_act_two_camera_view,
+    update_act_two_camera,
+)
 from acts.act_three.input import (
     handle_act_three_key_event,
     handle_act_three_pointer_event,
@@ -127,6 +133,7 @@ from settings import (
     INITIAL_WINDOW_SCALE,
 )
 from systems.player_actions import (
+    break_secret_passage,
     open_chest,
     try_move_player,
     try_use_potion,
@@ -306,6 +313,10 @@ def main():
     menu_assets = load_menu_assets()
 
     game_state = create_game_state()
+    act_two_camera = ActTwoCamera()
+    act_two_world_surface = None
+    act_two_map_surface = None
+    act_two_map_cache_key = None
     menu_progress = load_progress()
     progress_tracking_enabled = True
     menu_state = MenuState()
@@ -915,6 +926,15 @@ def main():
                     ),
                     None,
                 )
+                target_secret_wall = (
+                    player_tried_to_move
+                    and 0 <= new_row < len(game_state.floor["map"])
+                    and 0
+                    <= new_column
+                    < len(game_state.floor["map"][new_row])
+                    and game_state.floor["map"][new_row][new_column]
+                    == "S"
+                )
                 player_acted = False
                 game_state.player_attack_targets = []
 
@@ -1162,6 +1182,16 @@ def main():
                             target_chest,
                             pygame.time.get_ticks(),
                         )
+                    elif target_secret_wall:
+                        player_acted = break_secret_passage(
+                            game_state,
+                            new_column,
+                            new_row,
+                        )
+                        if player_acted:
+                            game_state.player.attack_animation_started_at = (
+                                pygame.time.get_ticks()
+                            )
                     else:
                         player_acted = try_move_player(
                             game_state,
@@ -1500,16 +1530,57 @@ def main():
             else act_one_fonts["controls"]
         )
         game_surface.fill(BACKGROUND_COLOR)
-        draw_dungeon(
-            game_surface,
-            game_state.floor["map"],
-            current_act,
-            act_two_sprites,
-            current_act_floor,
-            game_state.floor.visual_seed,
-        )
+        if current_act == 2:
+            update_act_two_camera(
+                act_two_camera,
+                game_state.floor["map"],
+                game_state.floor["player_column"],
+                game_state.floor["player_row"],
+                game_state.floor_index,
+                current_time,
+            )
+            world_size = act_two_world_surface_size(
+                game_state.floor["map"]
+            )
+            if (
+                act_two_world_surface is None
+                or act_two_world_surface.get_size() != world_size
+            ):
+                act_two_world_surface = pygame.Surface(world_size)
+                act_two_map_surface = None
+                act_two_map_cache_key = None
+            map_cache_key = (
+                game_state.floor_index,
+                game_state.floor.visual_seed,
+                tuple(game_state.floor["map"]),
+            )
+            if act_two_map_cache_key != map_cache_key:
+                act_two_map_surface = pygame.Surface(world_size)
+                act_two_map_surface.fill(BACKGROUND_COLOR)
+                draw_dungeon(
+                    act_two_map_surface,
+                    game_state.floor["map"],
+                    current_act,
+                    act_two_sprites,
+                    current_act_floor,
+                    game_state.floor.visual_seed,
+                )
+                act_two_map_cache_key = map_cache_key
+            act_two_world_surface.fill(BACKGROUND_COLOR)
+            act_two_world_surface.blit(act_two_map_surface, (0, 0))
+            world_target = act_two_world_surface
+        else:
+            world_target = game_surface
+            draw_dungeon(
+                world_target,
+                game_state.floor["map"],
+                current_act,
+                act_two_sprites,
+                current_act_floor,
+                game_state.floor.visual_seed,
+            )
         draw_act_one_atmosphere(
-            game_surface,
+            world_target,
             current_act,
             game_state.floor["player_column"],
             game_state.floor["player_row"],
@@ -1519,7 +1590,7 @@ def main():
             current_time,
         )
         draw_act_two_atmosphere(
-            game_surface,
+            world_target,
             current_act,
             game_state.floor["player_column"],
             game_state.floor["player_row"],
@@ -1528,10 +1599,11 @@ def main():
             game_state.floor.visual_seed,
             current_time,
         )
-        draw_map_frame(
-            game_surface,
-            current_act,
-        )
+        if current_act != 2:
+            draw_map_frame(
+                game_surface,
+                current_act,
+            )
         living_oracle = next(
             (
                 enemy
@@ -1544,7 +1616,7 @@ def main():
             None,
         )
         draw_oracle_emitters(
-            game_surface,
+            world_target,
             (
                 [
                     position
@@ -1565,7 +1637,7 @@ def main():
             act_two_sprites,
         )
         draw_player_attack_markers(
-            game_surface,
+            world_target,
             (
                 [
                     position
@@ -1582,12 +1654,12 @@ def main():
         )
         if current_act == 2:
             draw_act_two_ability_preview(
-                game_surface,
+                world_target,
                 game_state,
                 current_time,
             )
         draw_attack_markers(
-            game_surface,
+            world_target,
             game_state.floor["enemies"],
             current_act,
             current_time,
@@ -1606,7 +1678,7 @@ def main():
             ),
         )
         draw_act_one_boss_effects(
-            game_surface,
+            world_target,
             game_state.floor["enemies"],
             current_act,
             current_time,
@@ -1631,7 +1703,7 @@ def main():
                 )
 
             draw_boss_door(
-                game_surface,
+                world_target,
                 game_state.floor["boss_door"][0],
                 game_state.floor["boss_door"][1],
                 boss_door_is_open,
@@ -1648,7 +1720,7 @@ def main():
             remembered_stairs_open = stairs_are_open
         if remembered_stairs_open is not None:
             draw_stairs(
-                game_surface,
+                world_target,
                 game_state.floor["stairs_column"],
                 game_state.floor["stairs_row"],
                 remembered_stairs_open,
@@ -1666,7 +1738,7 @@ def main():
             ):
                 continue
             draw_potion(
-                game_surface,
+                world_target,
                 potion["column"],
                 potion["row"],
                 current_act,
@@ -1689,20 +1761,29 @@ def main():
                     if remembered_chest is None:
                         continue
             draw_chest(
-                game_surface,
+                world_target,
                 remembered_chest,
                 current_act,
                 act_two_sprites,
                 current_time,
             )
             if remembered_chest["loot_available"]:
-                draw_coin(
-                    game_surface,
-                    remembered_chest["column"],
-                    remembered_chest["row"],
-                    current_act,
-                    act_two_sprites,
-                )
+                if remembered_chest.get("contains") == "potion":
+                    draw_potion(
+                        world_target,
+                        remembered_chest["column"],
+                        remembered_chest["row"],
+                        current_act,
+                        act_two_sprites,
+                    )
+                else:
+                    draw_coin(
+                        world_target,
+                        remembered_chest["column"],
+                        remembered_chest["row"],
+                        current_act,
+                        act_two_sprites,
+                    )
         for dropped_key in game_state.floor["dropped_keys"]:
             if (
                 current_act == 2
@@ -1714,14 +1795,14 @@ def main():
             ):
                 continue
             draw_key(
-                game_surface,
+                world_target,
                 dropped_key[0],
                 dropped_key[1],
                 current_act,
                 act_two_sprites,
             )
         draw_player(
-            game_surface,
+            world_target,
             game_state.floor["player_column"],
             game_state.floor["player_row"],
             game_state.player.health,
@@ -1793,7 +1874,7 @@ def main():
                 or has_act_two_death_effect
             ):
                 draw_enemy(
-                    game_surface,
+                    world_target,
                     enemy,
                     current_act,
                     act_two_sprites,
@@ -1802,7 +1883,7 @@ def main():
                 )
         if current_act == 2:
             draw_attack_markers(
-                game_surface,
+                world_target,
                 game_state.floor["enemies"],
                 current_act,
                 current_time,
@@ -1814,7 +1895,7 @@ def main():
                 foreground=True,
             )
         draw_act_one_player_attack_effect(
-            game_surface,
+            world_target,
             current_act,
             game_state.floor["player_column"],
             game_state.floor["player_row"],
@@ -1824,7 +1905,7 @@ def main():
             game_state.player.act_one_attack_was_critical,
         )
         draw_act_two_player_attack_effect(
-            game_surface,
+            world_target,
             current_act,
             game_state.floor["player_column"],
             game_state.floor["player_row"],
@@ -1836,12 +1917,12 @@ def main():
         )
         if current_act == 2:
             draw_act_two_power_cleave_effect(
-                game_surface,
+                world_target,
                 game_state,
                 current_time,
             )
         draw_act_one_pickup_effect(
-            game_surface,
+            world_target,
             current_act,
             game_state.player.act_one_pickup_kind,
             game_state.player.act_one_pickup_origin,
@@ -1849,7 +1930,7 @@ def main():
             game_state.player.act_one_pickup_started_at,
         )
         draw_act_two_pickup_effect(
-            game_surface,
+            world_target,
             current_act,
             act_two_sprites,
             game_state.player.act_two_pickup_kind,
@@ -1858,7 +1939,7 @@ def main():
             game_state.player.act_two_pickup_started_at,
         )
         draw_oracle_projectiles(
-            game_surface,
+            world_target,
             (
                 [
                     projectile
@@ -1876,9 +1957,14 @@ def main():
         )
         if current_act == 2:
             draw_act_two_fog_of_war(
-                game_surface,
+                world_target,
                 current_act,
                 game_state.floor,
+            )
+            draw_act_two_camera_view(
+                game_surface,
+                world_target,
+                act_two_camera,
             )
             draw_map_frame(game_surface, current_act)
         draw_status(
@@ -1896,6 +1982,7 @@ def main():
                 act_two_fonts,
                 act_two_sprites,
                 current_time,
+                act_two_camera,
             )
         draw_sidebar(
             game_surface,
