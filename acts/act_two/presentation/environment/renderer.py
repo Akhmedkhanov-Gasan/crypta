@@ -166,7 +166,17 @@ def _draw_wall(
     detail_noise,
 ):
     texture_name = (
-        "wall_secret"
+        (
+            "wall_secret"
+            if _tile_noise(
+                column,
+                row,
+                visual_seed,
+                floor_number + 1301,
+            )
+            & 1
+            else "wall_secret_2"
+        )
         if tile == "S"
         else wall_sprite_name(
             dungeon_map,
@@ -258,6 +268,7 @@ def draw_dungeon(
     visual_seed=0,
     floor_decor_excluded_positions=(),
 ):
+    visual_map = [row.replace("S", "#") for row in dungeon_map]
     for row_index, row in enumerate(dungeon_map):
         for column_index, tile in enumerate(row):
             rectangle = pygame.Rect(
@@ -276,7 +287,7 @@ def draw_dungeon(
                 _draw_wall(
                     screen,
                     sprites,
-                    dungeon_map,
+                    visual_map,
                     tile,
                     column_index,
                     row_index,
@@ -289,7 +300,7 @@ def draw_dungeon(
                 _draw_floor(
                     screen,
                     sprites,
-                    dungeon_map,
+                    visual_map,
                     tile,
                     column_index,
                     row_index,

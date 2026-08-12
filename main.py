@@ -134,6 +134,7 @@ from rendering import (
 from presentation.layout import (
     ACT_THREE_AWAKENING_END_MS,
     ACT_THREE_MUSIC_PATH,
+    CLASS_SELECTION_CHOICE_END_MS,
 )
 from presentation.menu import (
     MenuState,
@@ -228,6 +229,31 @@ def present_game(window, game_surface):
     window.fill(BACKGROUND_COLOR)
     window.blit(scaled_surface, (offset_x, offset_y))
     pygame.display.flip()
+
+
+def _complete_class_selection(game_state):
+    chosen_class = game_state.class_selection_choice
+    if chosen_class is None:
+        return
+
+    game_state.floor_index += 1
+    game_state.floor = create_floor_state(game_state.floor_index)
+    clear_archer_barrage_zone(game_state)
+    clear_berserker_crushing_leap(game_state)
+    game_state.player.key_count = 0
+    game_state.class_selection_open = False
+    game_state.class_transition_started_at = 0
+    game_state.class_selection_choice = None
+    game_state.class_selection_choice_started_at = 0
+    game_state.player_attack_targets = []
+    add_log_message(
+        game_state.combat_log,
+        f"The hero becomes a {chosen_class}.",
+    )
+    add_log_message(
+        game_state.combat_log,
+        "Act II begins. The world gains shape.",
+    )
 
 
 def window_to_game_position(window, window_position):
@@ -495,6 +521,9 @@ def main():
                     current_time - game_state.class_transition_started_at
                 )
 
+                if game_state.class_selection_choice is not None:
+                    continue
+
                 if transition_elapsed < CLASS_SELECTION_READY_MS:
                     game_state.class_transition_started_at = (
                         current_time
@@ -546,6 +575,26 @@ def main():
                         )
 
                     fullscreen = not fullscreen
+                    continue
+
+                if event.key == pygame.K_F1:
+                    if (
+                        act_three_music_attempted
+                        and pygame.mixer.get_init() is not None
+                    ):
+                        pygame.mixer.music.stop()
+                    act_three_music_attempted = False
+                    progress_tracking_enabled = False
+                    game_state = create_game_state(
+                        floor_index=FIRST_ACT_FINAL_FLOOR,
+                        opening_message=(
+                            "Debug: replay the Act II awakening."
+                        ),
+                    )
+                    game_state.class_selection_open = True
+                    game_state.class_transition_started_at = (
+                        pygame.time.get_ticks()
+                    )
                     continue
 
                 if event.key == pygame.K_F2:
@@ -681,6 +730,8 @@ def main():
                     continue
 
                 if game_state.class_selection_open:
+                    if game_state.class_selection_choice is not None:
+                        continue
                     transition_elapsed = (
                         pygame.time.get_ticks()
                         - game_state.class_transition_started_at
@@ -722,22 +773,9 @@ def main():
                         PLAYER_STARTING_ATTRIBUTE_RANKS,
                         CLASS_BASE_ATTRIBUTE_RANKS[chosen_class],
                     )
-
-                    game_state.floor_index += 1
-                    game_state.floor = create_floor_state(game_state.floor_index)
-                    clear_archer_barrage_zone(game_state)
-                    clear_berserker_crushing_leap(game_state)
-                    game_state.player.key_count = 0
-                    game_state.class_selection_open = False
-                    game_state.class_transition_started_at = 0
-                    game_state.player_attack_targets = []
-                    add_log_message(
-                        game_state.combat_log,
-                        f"The hero becomes a {game_state.player.player_class}.",
-                    )
-                    add_log_message(
-                        game_state.combat_log,
-                        "Act II begins. The world gains shape.",
+                    game_state.class_selection_choice = chosen_class
+                    game_state.class_selection_choice_started_at = (
+                        pygame.time.get_ticks()
                     )
                     continue
 
@@ -1597,6 +1635,15 @@ def main():
                         True
                     )
 
+        if (
+            game_state.class_selection_open
+            and game_state.class_selection_choice_started_at > 0
+            and current_time
+            - game_state.class_selection_choice_started_at
+            >= CLASS_SELECTION_CHOICE_END_MS
+        ):
+            _complete_class_selection(game_state)
+
         current_act = FLOOR_CONFIGS[game_state.floor_index]["act"]
         current_act_floor = FLOOR_CONFIGS[game_state.floor_index][
             "act_floor"
@@ -2297,8 +2344,8 @@ def main():
             )
             draw_class_selection_screen(
                 game_surface,
-                title_font,
-                font,
+                act_two_fonts["title"],
+                act_two_fonts["heading"],
                 act_two_fonts["heading"],
                 act_two_fonts["text"],
                 act_two_sprites,
@@ -2307,6 +2354,15 @@ def main():
                     - game_state.class_transition_started_at
                 ),
                 class_mouse_position,
+                game_state.class_selection_choice,
+                (
+                    None
+                    if game_state.class_selection_choice_started_at == 0
+                    else (
+                        current_time
+                        - game_state.class_selection_choice_started_at
+                    )
+                ),
             )
         if game_state.act_three_debug_class_selection_open:
             debug_mouse_position = window_to_game_position(

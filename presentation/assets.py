@@ -264,6 +264,9 @@ def load_act_two_sprites():
         "wall_secret": (
             "environment/tiles/wall_variants/wall_secret.png"
         ),
+        "wall_secret_2": (
+            "environment/tiles/wall_variants/wall_secret_2.png"
+        ),
         "wall_damp": (
             "environment/tiles/wall_variants/wall_damp.png"
         ),
@@ -483,6 +486,50 @@ def load_act_two_sprites():
         awakening_small,
         (GAME_WIDTH, GAME_HEIGHT),
     )
+
+    transition_directory = ui_directory / "awakening_v2"
+
+    def load_transition_background(filename):
+        source = pygame.image.load(
+            str(transition_directory / filename)
+        ).convert()
+        source_width, source_height = source.get_size()
+        target_ratio = GAME_WIDTH / GAME_HEIGHT
+        source_ratio = source_width / source_height
+        if source_ratio > target_ratio:
+            crop_width = round(source_height * target_ratio)
+            crop = pygame.Rect(
+                (source_width - crop_width) // 2,
+                0,
+                crop_width,
+                source_height,
+            )
+        else:
+            crop_height = round(source_width / target_ratio)
+            crop = pygame.Rect(
+                0,
+                (source_height - crop_height) // 2,
+                source_width,
+                crop_height,
+            )
+        return pygame.transform.scale(
+            source.subsurface(crop),
+            (GAME_WIDTH, GAME_HEIGHT),
+        )
+
+    sprites["awakening_act_one"] = load_transition_background(
+        "act_one_corridor_source.png"
+    )
+    sprites["awakening_act_two"] = load_transition_background(
+        "act_two_corridor_source.png"
+    )
+    old_man = pygame.image.load(
+        str(transition_directory / "old_man_silhouette.png")
+    ).convert_alpha()
+    old_man_bounds = old_man.get_bounding_rect(min_alpha=8)
+    sprites["awakening_old_man"] = old_man.subsurface(
+        old_man_bounds
+    ).copy()
 
     for class_name in ("warrior", "rogue", "mage"):
         sprites[f"{class_name}_portrait"] = pygame.image.load(
