@@ -1746,17 +1746,16 @@ def main():
             game_state.floor.visual_seed,
             current_time,
         )
-        draw_act_two_atmosphere(
-            world_target,
-            current_act,
-            game_state.floor["player_column"],
-            game_state.floor["player_row"],
-            game_state.floor["map"],
-            current_act_floor,
-            game_state.floor.visual_seed,
-            current_time,
-        )
         if current_act == 2:
+            draw_act_two_atmosphere(
+                world_target,
+                game_state.floor["player_column"],
+                game_state.floor["player_row"],
+                game_state.floor["map"],
+                current_act_floor,
+                game_state.floor.visual_seed,
+                current_time,
+            )
             draw_act_two_spike_traps(
                 world_target,
                 game_state.floor.spike_traps,
@@ -1794,9 +1793,9 @@ def main():
             ),
             None,
         )
-        draw_oracle_emitters(
-            world_target,
-            (
+        if current_act == 2:
+            draw_oracle_emitters(
+                world_target,
                 [
                     position
                     for position in game_state.floor["boss_emitters"]
@@ -1805,16 +1804,13 @@ def main():
                         position[0],
                         position[1],
                     )
-                ]
-                if current_act == 2
-                else game_state.floor["boss_emitters"]
-            ),
-            (
-                living_oracle is not None
-                and living_oracle["oracle_awakened"]
-            ),
-            act_two_sprites,
-        )
+                ],
+                (
+                    living_oracle is not None
+                    and living_oracle["oracle_awakened"]
+                ),
+                act_two_sprites,
+            )
         draw_player_attack_markers(
             world_target,
             (
@@ -2124,18 +2120,17 @@ def main():
             game_state.player.attack_animation_started_at,
             game_state.player.act_one_attack_was_critical,
         )
-        draw_act_two_player_attack_effect(
-            world_target,
-            current_act,
-            game_state.floor["player_column"],
-            game_state.floor["player_row"],
-            game_state.player.act_one_attack_target,
-            game_state.player.player_class,
-            current_time,
-            game_state.player.attack_animation_started_at,
-            game_state.player.act_one_attack_was_critical,
-        )
         if current_act == 2:
+            draw_act_two_player_attack_effect(
+                world_target,
+                game_state.floor["player_column"],
+                game_state.floor["player_row"],
+                game_state.player.act_one_attack_target,
+                game_state.player.player_class,
+                current_time,
+                game_state.player.attack_animation_started_at,
+                game_state.player.act_one_attack_was_critical,
+            )
             draw_act_two_power_cleave_effect(
                 world_target,
                 game_state,
@@ -2149,18 +2144,18 @@ def main():
             current_time,
             game_state.player.act_one_pickup_started_at,
         )
-        draw_act_two_pickup_effect(
-            world_target,
-            current_act,
-            act_two_sprites,
-            game_state.player.act_two_pickup_kind,
-            game_state.player.act_two_pickup_origin,
-            current_time,
-            game_state.player.act_two_pickup_started_at,
-        )
-        draw_oracle_projectiles(
-            world_target,
-            (
+        if current_act == 2:
+            draw_act_two_pickup_effect(
+                world_target,
+                act_two_sprites,
+                game_state.player.act_two_pickup_kind,
+                game_state.player.act_two_pickup_origin,
+                current_time,
+                game_state.player.act_two_pickup_started_at,
+            )
+        if current_act == 2:
+            draw_oracle_projectiles(
+                world_target,
                 [
                     projectile
                     for projectile in game_state.floor["projectiles"]
@@ -2169,13 +2164,9 @@ def main():
                         projectile["column"],
                         projectile["row"],
                     )
-                ]
-                if current_act == 2
-                else game_state.floor["projectiles"]
-            ),
-            act_two_sprites,
-        )
-        if current_act == 2:
+                ],
+                act_two_sprites,
+            )
             draw_act_two_fog_of_war(
                 world_target,
                 current_act,
