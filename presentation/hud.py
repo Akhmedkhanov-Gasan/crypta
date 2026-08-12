@@ -352,12 +352,12 @@ def wrap_text(font, text, maximum_width):
 
 
 def get_class_selection_rectangles():
-    card_width = 330
-    card_height = 370
-    gap = 20
+    card_width = 300
+    card_height = 300
+    gap = 30
     total_width = card_width * 3 + gap * 2
     start_x = (GAME_WIDTH - total_width) // 2
-    card_y = 270
+    card_y = 365
 
     return {
         class_name: pygame.Rect(
