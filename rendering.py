@@ -21,6 +21,7 @@ from presentation.hud import (
 )
 from acts.act_two.presentation import (
     draw_act_two_ability_preview,
+    draw_act_two_arcane_burst_effect,
     draw_act_two_atmosphere,
     draw_act_two_fog_of_war,
     draw_act_two_pickup_effect,
@@ -81,6 +82,7 @@ __all__ = [
     "draw_act_one_atmosphere",
     "draw_act_two_atmosphere",
     "draw_act_two_ability_preview",
+    "draw_act_two_arcane_burst_effect",
     "draw_act_two_fog_of_war",
     "draw_act_one_boss_effects",
     "draw_act_one_player_attack_effect",

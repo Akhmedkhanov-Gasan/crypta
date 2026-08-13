@@ -6,7 +6,7 @@ from presentation.layout import MAP_OFFSET_X, MAP_OFFSET_Y
 from settings import TILE_SIZE
 
 
-def _draw_attack_tile(screen, column, row, current_time):
+def _draw_standard_attack_tile(screen, column, row, current_time):
     left = MAP_OFFSET_X + column * TILE_SIZE
     top = MAP_OFFSET_Y + row * TILE_SIZE
     phase = (column * 0.73) + (row * 0.41)
@@ -40,21 +40,128 @@ def _draw_attack_tile(screen, column, row, current_time):
     screen.blit(marker, (left, top))
 
 
+def _draw_brute_attack_tile(screen, column, row, current_time):
+    left = MAP_OFFSET_X + column * TILE_SIZE
+    top = MAP_OFFSET_Y + row * TILE_SIZE
+    phase = (column * 0.61) + (row * 0.37)
+    pulse = (math.sin(current_time / 82 + phase) + 1) / 2
+    overflow = 2
+    marker_size = TILE_SIZE + overflow * 2
+    marker = pygame.Surface(
+        (marker_size, marker_size),
+        pygame.SRCALPHA,
+    )
+    marker.fill((105, 0, 8, round(82 + pulse * 48)))
+
+    glow_alpha = round(118 + pulse * 92)
+    pygame.draw.rect(
+        marker,
+        (255, 32, 35, glow_alpha),
+        (1, 1, marker_size - 2, marker_size - 2),
+        width=4,
+        border_radius=3,
+    )
+    pygame.draw.rect(
+        marker,
+        (255, 103, 69, round(170 + pulse * 80)),
+        (5, 5, marker_size - 10, marker_size - 10),
+        width=2,
+        border_radius=2,
+    )
+
+    center = marker_size // 2
+    radius = 5 + round(pulse * 3)
+    pygame.draw.circle(
+        marker,
+        (57, 0, 5, 220),
+        (center, center),
+        radius + 3,
+        width=2,
+    )
+    pygame.draw.line(
+        marker,
+        (255, 142, 91, 235),
+        (center - radius, center),
+        (center + radius, center),
+        3,
+    )
+    pygame.draw.line(
+        marker,
+        (255, 142, 91, 235),
+        (center, center - radius),
+        (center, center + radius),
+        3,
+    )
+    screen.blit(marker, (left - overflow, top - overflow))
+
+
+def _draw_archer_attack_tile(screen, column, row, current_time):
+    left = MAP_OFFSET_X + column * TILE_SIZE
+    top = MAP_OFFSET_Y + row * TILE_SIZE
+    phase = (column * 0.73) + (row * 0.41)
+    pulse = (math.sin(current_time / 105 + phase) + 1) / 2
+    marker = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
+    inset = max(6, TILE_SIZE // 5)
+    size = TILE_SIZE - inset * 2
+    color = (255, 128, 54, round(180 + pulse * 70))
+    fill = (134, 40, 8, round(45 + pulse * 35))
+
+    pygame.draw.rect(
+        marker,
+        fill,
+        (inset, inset, size, size),
+        border_radius=4,
+    )
+    pygame.draw.rect(
+        marker,
+        color,
+        (inset, inset, size, size),
+        width=2,
+        border_radius=4,
+    )
+    center = TILE_SIZE // 2
+    pygame.draw.circle(
+        marker,
+        color,
+        (center, center),
+        max(3, size // 4),
+        width=1,
+    )
+    pygame.draw.circle(marker, color, (center, center), 2)
+    screen.blit(marker, (left, top))
+
+
 def _draw_attack_foreground(
     screen,
     column,
     row,
     current_time,
     is_player_cell,
+    enemy_type,
 ):
     left = MAP_OFFSET_X + column * TILE_SIZE
     top = MAP_OFFSET_Y + row * TILE_SIZE
     phase = (column * 0.73) + (row * 0.41)
     pulse = (math.sin(current_time / 105 + phase) + 1) / 2
     marker = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
-    inset = 2 + round(pulse)
-    arm = 8
-    color = (255, 76, 60, round(205 + pulse * 50))
+    if enemy_type == "brute":
+        inset = 1 + round(pulse)
+        arm = 11
+        color = (255, 47, 42, round(220 + pulse * 35))
+        shadow_width = 5
+        line_width = 3
+    elif enemy_type == "archer":
+        inset = max(7, TILE_SIZE // 5) + round(pulse)
+        arm = 5
+        color = (255, 142, 61, round(195 + pulse * 60))
+        shadow_width = 3
+        line_width = 1
+    else:
+        inset = 2 + round(pulse)
+        arm = 8
+        color = (255, 76, 60, round(205 + pulse * 50))
+        shadow_width = 4
+        line_width = 2
     shadow = (38, 3, 7, 225)
 
     corner_segments = (
@@ -76,8 +183,20 @@ def _draw_attack_foreground(
         ),
     )
     for points in corner_segments:
-        pygame.draw.lines(marker, shadow, False, points, 4)
-        pygame.draw.lines(marker, color, False, points, 2)
+        pygame.draw.lines(
+            marker,
+            shadow,
+            False,
+            points,
+            shadow_width,
+        )
+        pygame.draw.lines(
+            marker,
+            color,
+            False,
+            points,
+            line_width,
+        )
 
     if is_player_cell:
         badge_center_x = TILE_SIZE // 2
@@ -174,7 +293,17 @@ def draw_act_two_attack_markers(
     player_position=None,
     foreground=False,
 ):
-    for enemy in enemies:
+    # Draw broad brute warnings first and the smaller archer reticle last.
+    # When their targets overlap, both shapes remain visible.
+    draw_order = {
+        "brute": 0,
+        "archer": 2,
+    }
+    ordered_enemies = sorted(
+        enemies,
+        key=lambda enemy: draw_order.get(enemy["type"], 1),
+    )
+    for enemy in ordered_enemies:
         if enemy["health"] <= 0:
             continue
 
@@ -218,6 +347,26 @@ def draw_act_two_attack_markers(
                     row,
                     current_time,
                     (column, row) == player_position,
+                    enemy["type"],
+                )
+            elif enemy["type"] == "brute":
+                _draw_brute_attack_tile(
+                    screen,
+                    column,
+                    row,
+                    current_time,
+                )
+            elif enemy["type"] == "archer":
+                _draw_archer_attack_tile(
+                    screen,
+                    column,
+                    row,
+                    current_time,
                 )
             else:
-                _draw_attack_tile(screen, column, row, current_time)
+                _draw_standard_attack_tile(
+                    screen,
+                    column,
+                    row,
+                    current_time,
+                )

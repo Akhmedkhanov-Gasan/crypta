@@ -9,7 +9,9 @@ from acts.act_two.settings import (
     CLASS_BASE_ATTRIBUTE_RANKS,
     CLASS_BASE_STATS,
 )
-from acts.act_two.abilities import select_warrior_cleave_direction
+from acts.act_two.abilities import (
+    select_directional_ability_direction,
+)
 from acts.act_two.crates import break_crate
 from acts.act_two.progression import (
     get_act_two_upgrade_order,
@@ -89,6 +91,7 @@ from rendering import (
     draw_act_one_atmosphere,
     draw_act_two_atmosphere,
     draw_act_two_ability_preview,
+    draw_act_two_arcane_burst_effect,
     draw_act_two_fog_of_war,
     draw_act_one_player_attack_effect,
     draw_act_two_player_attack_effect,
@@ -908,11 +911,11 @@ def main():
                 if (
                     directional_ability_cast
                     and FLOOR_CONFIGS[game_state.floor_index]["act"] == 2
-                    and game_state.player.player_class == "warrior"
+                    and game_state.player.player_class in ("warrior", "mage")
                     and game_state.player.subclass is None
                 ):
                     directional_ability_cast = (
-                        select_warrior_cleave_direction(
+                        select_directional_ability_direction(
                             game_state,
                             column_change,
                             row_change,
@@ -1858,9 +1861,44 @@ def main():
                 ),
                 act_two_sprites,
             )
+        act_two_ability_effect_duration = (
+            620
+            if game_state.player.player_class == "mage"
+            else 460
+        )
+        act_two_ability_effect_elapsed = (
+            current_time
+            - game_state.player.act_two.ability_effect_started_at
+        )
+        act_two_ability_effect_active = (
+            current_act == 2
+            and game_state.player.act_two.ability_effect_started_at > 0
+            and game_state.player.act_two.ability_effect_started_at
+            == game_state.player.attack_animation_started_at
+            and 0
+            <= act_two_ability_effect_elapsed
+            < act_two_ability_effect_duration
+        )
+        act_two_targets_belong_to_directional_ability = (
+            current_act == 2
+            and game_state.player.act_two.ability_effect_started_at > 0
+            and game_state.player.act_two.ability_effect_started_at
+            == game_state.player.attack_animation_started_at
+        )
+        act_two_ability_visual_owns_targets = (
+            current_act == 2
+            and game_state.player.player_class in ("warrior", "mage")
+            and (
+                game_state.player.directional_ability_aiming
+                or act_two_targets_belong_to_directional_ability
+            )
+        )
         draw_player_attack_markers(
             world_target,
             (
+                []
+                if act_two_ability_visual_owns_targets
+                else
                 [
                     position
                     for position in game_state.player_attack_targets
@@ -2168,17 +2206,30 @@ def main():
             game_state.player.act_one_attack_was_critical,
         )
         if current_act == 2:
+            mage_ability_effect_active = (
+                game_state.player.player_class == "mage"
+                and act_two_ability_effect_active
+            )
             draw_act_two_player_attack_effect(
                 world_target,
                 game_state.floor["player_column"],
                 game_state.floor["player_row"],
-                game_state.player.act_one_attack_target,
+                (
+                    None
+                    if mage_ability_effect_active
+                    else game_state.player.act_one_attack_target
+                ),
                 game_state.player.player_class,
                 current_time,
                 game_state.player.attack_animation_started_at,
                 game_state.player.act_one_attack_was_critical,
             )
             draw_act_two_power_cleave_effect(
+                world_target,
+                game_state,
+                current_time,
+            )
+            draw_act_two_arcane_burst_effect(
                 world_target,
                 game_state,
                 current_time,

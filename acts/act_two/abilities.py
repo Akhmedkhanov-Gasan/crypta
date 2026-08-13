@@ -1,4 +1,8 @@
-from acts.act_two.settings import ABILITY_HITS_REQUIRED
+from acts.act_two.settings import (
+    ABILITY_HITS_REQUIRED,
+    MAGE_ARCANE_BURST_RANGE,
+)
+from logic import get_directional_line
 
 
 CARDINAL_DIRECTIONS = {
@@ -47,7 +51,37 @@ def get_warrior_cleave_cells(
     return cells
 
 
-def select_warrior_cleave_direction(
+def get_mage_arcane_cells(
+    floor,
+    column_change: int,
+    row_change: int,
+) -> list[tuple[int, int]]:
+    direction = (column_change, row_change)
+    if direction not in CARDINAL_DIRECTIONS:
+        return []
+
+    blocking_positions = {
+        (chest.column, chest.row)
+        for chest in floor.chests
+        if not chest.is_open
+    }
+    blocking_positions.update(
+        (crate.column, crate.row)
+        for crate in floor.breakable_crates
+        if not crate.is_broken
+    )
+    return get_directional_line(
+        floor.map,
+        floor.player_column,
+        floor.player_row,
+        column_change,
+        row_change,
+        MAGE_ARCANE_BURST_RANGE,
+        blocking_positions,
+    )
+
+
+def select_directional_ability_direction(
     game_state,
     column_change: int,
     row_change: int,
@@ -62,12 +96,32 @@ def select_warrior_cleave_direction(
 
     player.act_two.selected_ability_direction = direction
     player.act_two_facing_direction = direction
-    game_state.player_attack_targets = get_warrior_cleave_cells(
-        game_state.floor,
+    game_state.player_attack_targets = (
+        get_warrior_cleave_cells(
+            game_state.floor,
+            column_change,
+            row_change,
+        )
+        if player.player_class == "warrior"
+        else get_mage_arcane_cells(
+            game_state.floor,
+            column_change,
+            row_change,
+        )
+    )
+    return False
+
+
+def select_warrior_cleave_direction(
+    game_state,
+    column_change: int,
+    row_change: int,
+) -> bool:
+    return select_directional_ability_direction(
+        game_state,
         column_change,
         row_change,
     )
-    return False
 
 
 def clear_act_two_ability_selection(game_state) -> None:

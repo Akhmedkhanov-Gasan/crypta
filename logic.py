@@ -575,28 +575,17 @@ def get_enemy_attack_targets(
         return []
 
     if attack_kind == "cleave":
-        if random.choice((True, False)):
-            potential_targets = [
-                (player_column - 1, player_row),
-                (player_column, player_row),
-                (player_column + 1, player_row),
-            ]
-        else:
-            potential_targets = [
-                (player_column, player_row - 1),
-                (player_column, player_row),
-                (player_column, player_row + 1),
-            ]
-
-        return [
-            position
-            for position in potential_targets
-            if can_move_to(
-                dungeon_map,
-                position[0],
-                position[1],
-            )
-        ]
+        column_change = player_column - enemy_column
+        row_change = player_row - enemy_row
+        return get_directional_line(
+            dungeon_map,
+            enemy_column,
+            enemy_row,
+            column_change,
+            row_change,
+            3,
+            blocking_positions,
+        )
 
     return [(player_column, player_row)]
 

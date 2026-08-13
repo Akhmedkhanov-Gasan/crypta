@@ -130,6 +130,7 @@ class EnemyState(AttributeMapping):
     phase_transition_pending: bool = False
     prepared_attack_mode: str | None = None
     prepared_attack_target: str = "hero"
+    attack_windup_turns_remaining: int = 0
     selected_attack_mode: str | None = None
     last_attack_mode: str | None = None
     second_phase_announced: bool = False

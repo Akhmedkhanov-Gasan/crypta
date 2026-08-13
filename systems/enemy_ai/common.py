@@ -19,6 +19,9 @@ def prepare_enemy_attack(
 ) -> None:
     enemy.attack_targets = attack_targets
     enemy.prepared_attack_mode = attack_mode
+    enemy.attack_windup_turns_remaining = (
+        1 if enemy.type == "brute" else 0
+    )
     enemy.behavior_state = (
         EnemyBehaviorState.PREPARING_ATTACK
     )

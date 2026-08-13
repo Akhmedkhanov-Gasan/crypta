@@ -78,6 +78,7 @@ def resolve_enemy_turn(
             enemy.behavior_state = EnemyBehaviorState.IDLE
             enemy["attack_targets"] = []
             enemy["prepared_attack_mode"] = None
+            enemy.attack_windup_turns_remaining = 0
             enemy["heal_target"] = None
             continue
 
@@ -91,10 +92,15 @@ def resolve_enemy_turn(
             enemy.behavior_state
             is EnemyBehaviorState.PREPARING_ATTACK
         ):
+            if enemy.attack_windup_turns_remaining > 0:
+                enemy.attack_windup_turns_remaining -= 1
+                continue
+
             attack_targets = enemy["attack_targets"]
             attack_mode = enemy["prepared_attack_mode"]
             enemy["attack_targets"] = []
             enemy["prepared_attack_mode"] = None
+            enemy.attack_windup_turns_remaining = 0
             enemy.behavior_state = EnemyBehaviorState.CHASING
             game_state.emit(
                 GameEvent(

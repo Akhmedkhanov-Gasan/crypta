@@ -4,6 +4,7 @@ from enum import Enum, auto
 from acts.act_two.abilities import (
     ability_charge_required,
     clear_act_two_ability_selection,
+    get_mage_arcane_cells,
     get_warrior_cleave_cells,
 )
 from acts.act_two.progression import (
@@ -11,7 +12,6 @@ from acts.act_two.progression import (
 )
 from acts.act_two.settings import (
     MAGE_ARCANE_BURST_BASE_DAMAGE_BONUS,
-    MAGE_ARCANE_BURST_RANGE,
     MAGE_ARCANE_BURST_SPELL_POWER_SCALING,
     WARRIOR_CLEAVE_DAMAGE_BONUS,
     WARRIOR_CLEAVE_DAMAGE_PER_RANK,
@@ -24,10 +24,7 @@ from game.state import (
     FloorState,
     GameState,
 )
-from logic import (
-    get_directional_line,
-    get_enemy_occupied_positions,
-)
+from logic import get_enemy_occupied_positions
 from settings import (
     ASSASSIN_INVISIBILITY_TURNS,
     ROGUE_INVISIBILITY_TURNS,
@@ -81,6 +78,7 @@ def request_class_ability(
             enemy.behavior_state = EnemyBehaviorState.IDLE
             enemy.attack_targets = []
             enemy.prepared_attack_mode = None
+            enemy.attack_windup_turns_remaining = 0
             enemy.heal_target = None
 
         add_log_message(
@@ -127,19 +125,7 @@ def cast_directional_ability(
         return False
 
     player.directional_ability_aiming = False
-    blocking_positions = {
-        (chest["column"], chest["row"])
-        for chest in floor.chests
-        if not chest["is_open"]
-    }
-    blocking_positions.update(
-        (crate.column, crate.row)
-        for crate in floor.breakable_crates
-        if not crate.is_broken
-    )
-
     if player.player_class == "warrior":
-        maximum_range = 1
         cleave_rank = get_warrior_upgrade_rank(
             player,
             "warrior_cleave",
@@ -155,7 +141,6 @@ def cast_directional_ability(
         ability_name = "power cleave"
         player.ability_kill_charge = rhythm_rank
     else:
-        maximum_range = MAGE_ARCANE_BURST_RANGE
         damage_bonus = (
             MAGE_ARCANE_BURST_BASE_DAMAGE_BONUS
             + player.spell_power
@@ -171,14 +156,10 @@ def cast_directional_ability(
             row_change,
         )
     else:
-        game_state.player_attack_targets = get_directional_line(
-            floor.map,
-            floor.player_column,
-            floor.player_row,
+        game_state.player_attack_targets = get_mage_arcane_cells(
+            floor,
             column_change,
             row_change,
-            maximum_range,
-            blocking_positions,
         )
     player.act_two.selected_ability_direction = None
     ability_targets = [
@@ -192,6 +173,15 @@ def cast_directional_ability(
             )
         )
     ]
+    player.act_two.ability_effect_cells = tuple(
+        game_state.player_attack_targets
+    )
+    player.act_two.ability_effect_hit_positions = tuple(
+        position
+        for ability_target in ability_targets
+        for position in get_enemy_occupied_positions(ability_target)
+        if position in game_state.player_attack_targets
+    )
 
     if not ability_targets:
         add_log_message(

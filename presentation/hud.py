@@ -646,7 +646,7 @@ def draw_act_two_sidebar(
     ability_descriptions = {
         "warrior": "E | direction twice | scales with STR",
         "rogue": "E | vanish | ambush scales with DEX",
-        "mage": "E + direction | scales with INT",
+        "mage": "E | direction twice | scales with INT",
     }
     ability_name = ability_names.get(player_class, "ABILITY")
     ability_title_x = ability_rectangle.x + 10

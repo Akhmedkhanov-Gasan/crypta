@@ -112,6 +112,9 @@ def _draw_oracle(screen, enemy, sprites):
 
 
 def _enemy_sprite_name(enemy, current_time):
+    if enemy["type"] == "brute":
+        return "brute_attack" if enemy["attack_targets"] else "brute"
+
     sprite_name = enemy["type"]
     attack_started_at = enemy.get("attack_animation_started_at", 0)
     attack_elapsed = current_time - attack_started_at
