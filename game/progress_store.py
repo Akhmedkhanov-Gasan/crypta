@@ -8,6 +8,7 @@ import sys
 @dataclass(frozen=True)
 class MetaProgress:
     highest_act_reached: int = 1
+    menu_theme: int = 1
 
 
 def get_progress_path():
@@ -37,10 +38,16 @@ def load_progress(path=None):
     try:
         saved_data = json.loads(progress_path.read_text(encoding="utf-8"))
         highest_act = int(saved_data.get("highest_act_reached", 1))
+        menu_theme = int(saved_data.get("menu_theme", highest_act))
     except (OSError, ValueError, TypeError, json.JSONDecodeError):
         return MetaProgress()
 
-    return MetaProgress(highest_act_reached=max(1, highest_act))
+    highest_act = max(1, min(3, highest_act))
+    menu_theme = max(1, min(highest_act, menu_theme))
+    return MetaProgress(
+        highest_act_reached=highest_act,
+        menu_theme=menu_theme,
+    )
 
 
 def save_progress(progress, path=None):
@@ -50,8 +57,9 @@ def save_progress(progress, path=None):
     temporary_path.write_text(
         json.dumps(
             {
-                "version": 1,
+                "version": 2,
                 "highest_act_reached": progress.highest_act_reached,
+                "menu_theme": progress.menu_theme,
             },
             indent=2,
         ),
@@ -64,8 +72,27 @@ def record_act_reached(progress, act, path=None):
     if act <= progress.highest_act_reached:
         return progress
 
-    updated_progress = MetaProgress(highest_act_reached=act)
+    updated_progress = MetaProgress(
+        highest_act_reached=act,
+        menu_theme=act,
+    )
 
+    try:
+        save_progress(updated_progress, path)
+    except OSError:
+        pass
+
+    return updated_progress
+
+
+def select_menu_theme(progress, theme, path=None):
+    if not 1 <= theme <= progress.highest_act_reached:
+        return progress
+
+    updated_progress = MetaProgress(
+        highest_act_reached=progress.highest_act_reached,
+        menu_theme=theme,
+    )
     try:
         save_progress(updated_progress, path)
     except OSError:

@@ -25,6 +25,15 @@ def prepare_enemy_attack(
     enemy.behavior_state = (
         EnemyBehaviorState.PREPARING_ATTACK
     )
+    game_state.emit(
+        GameEvent(
+            type=GameEventType.PREPARE_ATTACK,
+            actor=enemy.name,
+            origin=(enemy.column, enemy.row),
+            positions=tuple(attack_targets),
+            data={"mode": attack_mode, "enemy_type": enemy.type},
+        )
+    )
     add_log_message(
         game_state.combat_log,
         (

@@ -12,6 +12,7 @@ RUNE_SPRITE_NAMES = (
     "rune_eye",
     "rune_spiral",
 )
+RUNE_ACTIVATION_EFFECT_DURATION_MS = 900
 
 
 def _cell_top_left(position):
@@ -103,6 +104,71 @@ def _draw_rune_effects(
         screen.blit(outline, (left + offset_x, top + offset_y))
 
 
+def _draw_rune_activation_burst(
+    screen,
+    position,
+    rune_index,
+    current_time,
+    started_at,
+):
+    if started_at is None:
+        return
+    elapsed = current_time - started_at
+    if elapsed < 0 or elapsed >= RUNE_ACTIVATION_EFFECT_DURATION_MS:
+        return
+
+    progress = elapsed / RUNE_ACTIVATION_EFFECT_DURATION_MS
+    visibility = (1 - progress) ** 1.35
+    left, top = _cell_top_left(position)
+    effect = pygame.Surface((96, 96), pygame.SRCALPHA)
+    center = (48, 48)
+
+    flash_visibility = max(0.0, 1 - progress * 3.2)
+    for radius, alpha in ((24, 25), (17, 42), (10, 75)):
+        pygame.draw.circle(
+            effect,
+            (190, 62, 32, round(alpha * flash_visibility)),
+            center,
+            radius,
+        )
+
+    ring_radius = round(7 + progress * 30)
+    pygame.draw.circle(
+        effect,
+        (231, 145, 76, round(220 * visibility)),
+        center,
+        ring_radius,
+        width=2 if progress < 0.45 else 1,
+    )
+
+    for particle_index in range(12):
+        angle = (
+            particle_index * math.tau / 12
+            + rune_index * 0.71
+            + progress * 0.45
+        )
+        distance = 7 + progress * (24 + particle_index % 4 * 3)
+        particle_x = round(center[0] + math.cos(angle) * distance)
+        particle_y = round(
+            center[1]
+            + math.sin(angle) * distance
+            - progress * (4 + particle_index % 3 * 2)
+        )
+        color = (
+            (238, 163, 87, round(235 * visibility))
+            if particle_index % 3 == 0
+            else (156, 47, 30, round(205 * visibility))
+        )
+        pygame.draw.circle(
+            effect,
+            color,
+            (particle_x, particle_y),
+            2 if particle_index % 4 == 0 else 1,
+        )
+
+    screen.blit(effect, (left - 32, top - 32))
+
+
 def draw_act_two_rune_room(
     screen,
     room,
@@ -136,6 +202,13 @@ def draw_act_two_rune_room(
             position,
             alpha,
         )
+        _draw_rune_activation_burst(
+            screen,
+            position,
+            rune_index,
+            current_time,
+            room.activation_effect_started_at.get(rune_index),
+        )
 
     for rune_index, (position, sprite_name) in enumerate(
         zip(room.floor_rune_positions, RUNE_SPRITE_NAMES)
@@ -158,6 +231,13 @@ def draw_act_two_rune_room(
             sprites[sprite_name],
             position,
             alpha,
+        )
+        _draw_rune_activation_burst(
+            screen,
+            position,
+            rune_index,
+            current_time,
+            room.activation_effect_started_at.get(rune_index),
         )
 
     if room.pedestal_position not in visible_cells:

@@ -36,6 +36,7 @@ from acts.act_two.treasury import (
 )
 from acts.act_two.presentation.camera import (
     ActTwoCamera,
+    act_two_screen_to_cell,
     act_two_world_surface_size,
     draw_act_two_camera_view,
     update_act_two_camera,
@@ -71,7 +72,12 @@ from bosses.oracle import resolve_oracle_hit_reaction
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from game.factories import create_floor_state, create_game_state
-from game.progress_store import load_progress, record_act_reached
+from game.progress_store import (
+    load_progress,
+    record_act_reached,
+    select_menu_theme,
+)
+from acts.act_two.navigation import find_act_two_path
 from game.progression import apply_attribute_upgrade
 from acts.player_stats import (
     apply_attribute_rank_transition,
@@ -96,6 +102,7 @@ from rendering import (
     draw_act_one_player_attack_effect,
     draw_act_two_player_attack_effect,
     draw_act_two_player_feedback_overlay,
+    draw_act_two_wait_indicator,
     draw_act_two_power_cleave_effect,
     draw_act_two_rune_room,
     draw_act_two_upgrade_screen,
@@ -136,8 +143,24 @@ from rendering import (
 )
 from presentation.layout import (
     ACT_THREE_AWAKENING_END_MS,
+    AWAKENING_HOLD_END_MS,
+    AWAKENING_SECOND_OPEN_START_MS,
+    ACT_ONE_MENU_MUSIC_PATH,
+    ACT_ONE_MUSIC_PATH,
+    ACT_ONE_WARDEN_MUSIC_PATH,
+    ACT_TWO_MENU_MUSIC_PATH,
+    ACT_ONE_SOUNDS_PATH,
+    ACT_TWO_MUSIC_PATH,
+    ACT_TWO_SOUNDS_PATH,
     ACT_THREE_MUSIC_PATH,
     CLASS_SELECTION_CHOICE_END_MS,
+)
+from presentation.audio import (
+    ActOneSoundBank,
+    ActTwoSoundBank,
+    ActTwoTransitionSoundBank,
+    warden_has_been_defeated,
+    warden_music_should_play,
 )
 from presentation.menu import (
     MenuState,
@@ -334,6 +357,39 @@ def _roman_floor_number(number):
     }.get(number, str(number))
 
 
+_ACT_TWO_MOVEMENT_KEYS = frozenset(
+    (
+        pygame.K_w,
+        pygame.K_a,
+        pygame.K_s,
+        pygame.K_d,
+        pygame.K_UP,
+        pygame.K_LEFT,
+        pygame.K_DOWN,
+        pygame.K_RIGHT,
+    )
+)
+_ACT_TWO_MOVE_REPEAT_DELAY_MS = 190
+_ACT_TWO_MOVE_REPEAT_INTERVAL_MS = 175
+
+
+def _movement_direction_for_keys(keys):
+    left = bool(keys & {pygame.K_a, pygame.K_LEFT})
+    right = bool(keys & {pygame.K_d, pygame.K_RIGHT})
+    up = bool(keys & {pygame.K_w, pygame.K_UP})
+    down = bool(keys & {pygame.K_s, pygame.K_DOWN})
+    return int(right) - int(left), int(down) - int(up)
+
+
+def _act_two_visual_direction(direction):
+    column_change, row_change = direction
+    if row_change:
+        return 0, 1 if row_change > 0 else -1
+    if column_change:
+        return 1 if column_change > 0 else -1, 0
+    return 0, 1
+
+
 def main():
     pygame.init()
 
@@ -352,6 +408,14 @@ def main():
     act_two_fonts = load_act_two_fonts()
     act_two_sprites = load_act_two_sprites()
     act_three_fonts = load_act_three_fonts()
+    menu_fonts = {
+        1: act_one_fonts,
+        2: act_two_fonts,
+        3: {
+            **act_three_fonts,
+            "status": act_three_fonts["sidebar_heading"],
+        },
+    }
     act_three_gameplay_assets = (
         load_act_three_gameplay_assets()
     )
@@ -359,6 +423,13 @@ def main():
         load_act_three_transition_assets()
     )
     menu_assets = load_menu_assets()
+    act_one_sounds = ActOneSoundBank.load(ACT_ONE_SOUNDS_PATH)
+    act_two_transition_sounds = ActTwoTransitionSoundBank.load(
+        ACT_TWO_SOUNDS_PATH
+    )
+    act_two_sounds = ActTwoSoundBank.load(ACT_TWO_SOUNDS_PATH)
+    if pygame.mixer.get_init() is not None:
+        pygame.mixer.set_reserved(2)
 
     game_state = create_game_state()
     act_two_camera = ActTwoCamera()
@@ -367,16 +438,129 @@ def main():
     act_two_map_cache_key = None
     menu_progress = load_progress()
     progress_tracking_enabled = True
-    menu_state = MenuState()
+    menu_state = MenuState(menu_theme=menu_progress.menu_theme)
+    act_one_sounds.set_master_volume(menu_state.effects_volume)
+    act_two_transition_sounds.set_master_volume(
+        menu_state.effects_volume
+    )
+    act_two_sounds.set_master_volume(menu_state.effects_volume)
     menu_open = True
     game_started = False
     menu_started_at = pygame.time.get_ticks()
+    act_one_menu_music_playing = False
+    act_two_menu_music_playing = False
+    act_one_music_attempted = False
+    act_one_warden_music_attempted = False
+    act_one_warden_music_channel = None
+    act_two_transition_audio_started = False
+    act_two_eyes_close_played = False
+    act_two_eyes_open_played = False
+    act_two_music_attempted = False
     act_three_music_attempted = False
     fullscreen = False
     running = True
+    act_two_held_movement_keys = set()
+    act_two_held_direction = (0, 0)
+    act_two_next_held_move_at = 0
+    act_two_auto_move_target = None
+    act_two_auto_move_floor_index = None
+    act_two_next_auto_move_at = 0
 
     while running:
+        current_act = FLOOR_CONFIGS[game_state.floor_index]["act"]
+        continuous_move_time = pygame.time.get_ticks()
+        continuous_movement_available = (
+            current_act == 2
+            and not menu_open
+            and game_state.floor_transition_started_at < 0
+            and not game_state.class_selection_open
+            and not game_state.upgrade_screen_open
+            and not game_state.subclass_selection_open
+            and not game_state.player.directional_ability_aiming
+            and game_state.player.health > 0
+            and not game_state.game_won
+        )
+        held_direction = _movement_direction_for_keys(
+            act_two_held_movement_keys
+        )
+        if continuous_movement_available and held_direction != (0, 0):
+            act_two_auto_move_target = None
+            act_two_auto_move_floor_index = None
+            if held_direction != act_two_held_direction:
+                act_two_held_direction = held_direction
+                act_two_next_held_move_at = (
+                    continuous_move_time + _ACT_TWO_MOVE_REPEAT_DELAY_MS
+                )
+            elif continuous_move_time >= act_two_next_held_move_at:
+                pygame.event.post(
+                    pygame.event.Event(
+                        pygame.KEYDOWN,
+                        key=pygame.K_UNKNOWN,
+                        movement_direction=held_direction,
+                        automatic_movement=True,
+                    )
+                )
+                act_two_next_held_move_at = (
+                    continuous_move_time + _ACT_TWO_MOVE_REPEAT_INTERVAL_MS
+                )
+        else:
+            act_two_held_direction = (0, 0)
+
+        if (
+            continuous_movement_available
+            and not act_two_held_movement_keys
+            and act_two_auto_move_target is not None
+        ):
+            if (
+                act_two_auto_move_floor_index != game_state.floor_index
+                or (
+                    game_state.floor.player_column,
+                    game_state.floor.player_row,
+                )
+                == act_two_auto_move_target
+            ):
+                act_two_auto_move_target = None
+                act_two_auto_move_floor_index = None
+            elif continuous_move_time >= act_two_next_auto_move_at:
+                automatic_path = find_act_two_path(
+                    game_state.floor,
+                    act_two_auto_move_target,
+                )
+                if automatic_path:
+                    next_position = automatic_path[0]
+                    automatic_direction = (
+                        next_position[0] - game_state.floor.player_column,
+                        next_position[1] - game_state.floor.player_row,
+                    )
+                    pygame.event.post(
+                        pygame.event.Event(
+                            pygame.KEYDOWN,
+                            key=pygame.K_UNKNOWN,
+                            movement_direction=automatic_direction,
+                            automatic_movement=True,
+                        )
+                    )
+                    act_two_next_auto_move_at = (
+                        continuous_move_time
+                        + _ACT_TWO_MOVE_REPEAT_INTERVAL_MS
+                    )
+                else:
+                    act_two_auto_move_target = None
+                    act_two_auto_move_floor_index = None
+
         for event in pygame.event.get():
+            if event.type == pygame.WINDOWFOCUSLOST:
+                act_two_held_movement_keys.clear()
+                act_two_held_direction = (0, 0)
+                continue
+            if (
+                event.type == pygame.KEYUP
+                and event.key in _ACT_TWO_MOVEMENT_KEYS
+            ):
+                act_two_held_movement_keys.discard(event.key)
+                if not act_two_held_movement_keys:
+                    act_two_held_direction = (0, 0)
+                continue
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.VIDEORESIZE and not fullscreen:
@@ -400,17 +584,47 @@ def main():
                     window_to_game_position(screen, event_position),
                     game_started,
                     fullscreen,
+                    menu_progress.highest_act_reached,
                 )
 
                 if menu_action == "resume":
+                    if (
+                        (
+                            act_one_menu_music_playing
+                            or act_two_menu_music_playing
+                        )
+                        and pygame.mixer.get_init() is not None
+                    ):
+                        pygame.mixer.music.stop()
+                    act_one_menu_music_playing = False
+                    act_two_menu_music_playing = False
                     menu_open = False
                     game_started = True
                 elif menu_action == "abandon_run":
                     if (
-                        act_three_music_attempted
+                        (
+                            act_one_music_attempted
+                            or act_one_menu_music_playing
+                            or act_two_menu_music_playing
+                            or act_two_music_attempted
+                            or act_three_music_attempted
+                        )
                         and pygame.mixer.get_init() is not None
                     ):
                         pygame.mixer.music.stop()
+                    if act_one_warden_music_channel is not None:
+                        act_one_warden_music_channel.stop()
+                    if pygame.mixer.get_init() is not None:
+                        pygame.mixer.Channel(0).stop()
+                    act_one_music_attempted = False
+                    act_one_menu_music_playing = False
+                    act_two_menu_music_playing = False
+                    act_one_warden_music_attempted = False
+                    act_one_warden_music_channel = None
+                    act_two_transition_audio_started = False
+                    act_two_eyes_close_played = False
+                    act_two_eyes_open_played = False
+                    act_two_music_attempted = False
                     act_three_music_attempted = False
                     game_state = create_game_state()
                     progress_tracking_enabled = True
@@ -436,6 +650,37 @@ def main():
                             pygame.FULLSCREEN,
                         )
                     fullscreen = not fullscreen
+                elif menu_action == "act_one_volume_changed":
+                    act_one_sounds.set_master_volume(
+                        menu_state.effects_volume
+                    )
+                    act_two_transition_sounds.set_master_volume(
+                        menu_state.effects_volume
+                    )
+                    act_two_sounds.set_master_volume(
+                        menu_state.effects_volume
+                    )
+                    if (
+                        (
+                            act_one_music_attempted
+                            or act_one_menu_music_playing
+                            or act_two_menu_music_playing
+                            or act_two_music_attempted
+                        )
+                        and pygame.mixer.get_init() is not None
+                    ):
+                        pygame.mixer.music.set_volume(
+                            menu_state.music_volume
+                        )
+                    if act_one_warden_music_channel is not None:
+                        act_one_warden_music_channel.set_volume(
+                            menu_state.music_volume
+                        )
+                elif menu_action == "menu_theme_changed":
+                    menu_progress = select_menu_theme(
+                        menu_progress,
+                        menu_state.menu_theme,
+                    )
                 continue
             elif game_state.floor_transition_started_at >= 0:
                 continue
@@ -563,7 +808,52 @@ def main():
                             )
                         )
                         break
+            elif (
+                event.type == pygame.MOUSEBUTTONDOWN
+                and event.button == 1
+                and current_act == 2
+                and not game_state.class_selection_open
+                and not game_state.upgrade_screen_open
+                and game_state.player.health > 0
+            ):
+                game_mouse_position = window_to_game_position(
+                    screen,
+                    event.pos,
+                )
+                target_cell = (
+                    act_two_screen_to_cell(
+                        game_mouse_position,
+                        act_two_camera,
+                    )
+                    if game_mouse_position is not None
+                    else None
+                )
+                if (
+                    target_cell is not None
+                    and target_cell in game_state.floor.visible_cells
+                ):
+                    automatic_path = find_act_two_path(
+                        game_state.floor,
+                        target_cell,
+                    )
+                    if automatic_path:
+                        act_two_auto_move_target = target_cell
+                        act_two_auto_move_floor_index = (
+                            game_state.floor_index
+                        )
+                        act_two_next_auto_move_at = 0
+                    else:
+                        act_two_auto_move_target = None
+                        act_two_auto_move_floor_index = None
             elif event.type == pygame.KEYDOWN:
+                automatic_movement = getattr(
+                    event,
+                    "automatic_movement",
+                    False,
+                )
+                if not automatic_movement:
+                    act_two_auto_move_target = None
+                    act_two_auto_move_floor_index = None
                 if event.key == pygame.K_F11:
                     if fullscreen:
                         screen = pygame.display.set_mode(
@@ -780,6 +1070,7 @@ def main():
                     game_state.class_selection_choice_started_at = (
                         pygame.time.get_ticks()
                     )
+                    act_two_transition_sounds.play("class_select")
                     continue
 
                 if game_state.upgrade_screen_open:
@@ -886,8 +1177,32 @@ def main():
                 game_state.clear_events()
                 column_change = 0
                 row_change = 0
+                movement_direction = getattr(
+                    event,
+                    "movement_direction",
+                    None,
+                )
+                if (
+                    current_act == 2
+                    and event.key in _ACT_TWO_MOVEMENT_KEYS
+                    and not automatic_movement
+                ):
+                    act_two_held_movement_keys.add(event.key)
+                    movement_direction = _movement_direction_for_keys(
+                        act_two_held_movement_keys
+                    )
+                    act_two_held_direction = movement_direction
+                    act_two_next_held_move_at = (
+                        pygame.time.get_ticks()
+                        + _ACT_TWO_MOVE_REPEAT_DELAY_MS
+                    )
 
-                if event.key in (pygame.K_w, pygame.K_UP):
+                if movement_direction is not None:
+                    column_change, row_change = movement_direction
+                    game_state.player.facing_direction = (
+                        _act_two_visual_direction(movement_direction)
+                    )
+                elif event.key in (pygame.K_w, pygame.K_UP):
                     row_change = -1
                     game_state.player.facing_direction = (0, -1)
                 elif event.key in (pygame.K_s, pygame.K_DOWN):
@@ -956,6 +1271,8 @@ def main():
                     continue
 
                 if event.key == pygame.K_ESCAPE:
+                    act_two_held_movement_keys.clear()
+                    act_two_held_direction = (0, 0)
                     menu_open = True
                     menu_state.page = "main"
                     menu_state.selected_index = 0
@@ -969,6 +1286,8 @@ def main():
                 new_column = game_state.floor["player_column"] + column_change
                 new_row = game_state.floor["player_row"] + row_change
                 player_waited = event.key == pygame.K_SPACE
+                if current_act == 2 and not player_waited:
+                    game_state.player.act_two.wait_effect_started_at = -1
                 living_enemies = [
                     enemy
                     for enemy in game_state.floor["enemies"]
@@ -1242,6 +1561,10 @@ def main():
                             pygame.time.get_ticks()
                         )
                 elif player_waited:
+                    if current_act == 2:
+                        game_state.player.act_two.wait_effect_started_at = (
+                            pygame.time.get_ticks()
+                        )
                     player_acted = True
                 elif player_tried_to_move:
                     if current_act == 2:
@@ -1252,7 +1575,9 @@ def main():
                         )
                         game_state.player.act_two_movement_started_at = 0
                         game_state.player.act_two_movement_origin = None
-                        game_state.player.act_two_facing_direction = attempted_direction
+                        game_state.player.act_two_facing_direction = (
+                            _act_two_visual_direction(attempted_direction)
+                        )
                         game_state.player.act_two_blocked_movement_started_at = (
                             movement_attempt_started_at
                         )
@@ -1282,11 +1607,8 @@ def main():
                         player_acted = strike_wall_rune(
                             game_state,
                             (new_column, new_row),
+                            pygame.time.get_ticks(),
                         )
-                        if player_acted:
-                            game_state.player.attack_animation_started_at = (
-                                pygame.time.get_ticks()
-                            )
                     elif target_rune_pedestal:
                         player_acted = interact_with_rune_pedestal(
                             game_state
@@ -1467,10 +1789,14 @@ def main():
                         )
                         if hero_move_event.destination is not None:
                             game_state.player.act_two_facing_direction = (
-                                hero_move_event.destination[0]
-                                - hero_move_event.origin[0],
-                                hero_move_event.destination[1]
-                                - hero_move_event.origin[1],
+                                _act_two_visual_direction(
+                                    (
+                                        hero_move_event.destination[0]
+                                        - hero_move_event.origin[0],
+                                        hero_move_event.destination[1]
+                                        - hero_move_event.origin[1],
+                                    )
+                                )
                             )
                     for enemy in game_state.floor["enemies"]:
                         if enemy.name in moved_enemy_names:
@@ -1535,6 +1861,21 @@ def main():
                             enemy.phase_transition_started_at = (
                                 enemy_movement_started_at
                             )
+                    if current_act == 1:
+                        act_one_sounds.play_events(game_state.events)
+                    elif current_act == 2:
+                        if any(
+                            emitted_event.target == "hero"
+                            and emitted_event.type
+                            in (GameEventType.HIT, GameEventType.DODGE)
+                            for emitted_event in game_state.events
+                        ):
+                            act_two_auto_move_target = None
+                            act_two_auto_move_floor_index = None
+                        act_two_sounds.play_events(
+                            game_state.events,
+                            game_state.player.player_class,
+                        )
         if (
             game_state.upgrade_screen_open
             and game_state.player.gold_count <= 0
@@ -1547,15 +1888,125 @@ def main():
         current_time = pygame.time.get_ticks()
         _advance_floor_transition(game_state, current_time)
 
+        if game_state.class_selection_open:
+            awakening_elapsed = (
+                current_time - game_state.class_transition_started_at
+            )
+            if not act_two_transition_audio_started:
+                act_two_transition_audio_started = True
+                if act_one_warden_music_channel is not None:
+                    act_one_warden_music_channel.fadeout(1400)
+                    act_one_warden_music_channel = None
+                if awakening_elapsed >= AWAKENING_SECOND_OPEN_START_MS:
+                    act_two_eyes_close_played = True
+                if not act_two_music_attempted:
+                    act_two_music_attempted = True
+                    act_one_music_attempted = False
+                    try:
+                        if pygame.mixer.get_init() is None:
+                            pygame.mixer.init()
+                        pygame.mixer.music.load(
+                            str(ACT_TWO_MUSIC_PATH)
+                        )
+                        pygame.mixer.music.set_volume(
+                            menu_state.music_volume
+                        )
+                        pygame.mixer.music.play(-1, fade_ms=1400)
+                    except pygame.error as audio_error:
+                        add_log_message(
+                            game_state.combat_log,
+                            f"Act II music unavailable: {audio_error}",
+                        )
+
+            if (
+                awakening_elapsed >= AWAKENING_HOLD_END_MS
+                and not act_two_eyes_close_played
+            ):
+                act_two_eyes_close_played = True
+                act_two_transition_sounds.play("eyes_close")
+
+            if (
+                awakening_elapsed >= AWAKENING_SECOND_OPEN_START_MS
+                and not act_two_eyes_open_played
+            ):
+                act_two_eyes_open_played = True
+                act_two_transition_sounds.play("eyes_open")
+
         if menu_open:
+            menu_visual_theme = (
+                FLOOR_CONFIGS[game_state.floor_index]["act"]
+                if game_started
+                else menu_state.menu_theme
+            )
+            should_play_act_one_menu_music = (
+                not game_started and menu_visual_theme == 1
+            )
+            should_play_act_two_menu_music = (
+                not game_started and menu_visual_theme == 2
+            )
+            if (
+                should_play_act_one_menu_music
+                and not act_one_menu_music_playing
+            ):
+                act_one_menu_music_playing = True
+                act_two_menu_music_playing = False
+                try:
+                    if pygame.mixer.get_init() is None:
+                        pygame.mixer.init()
+                    pygame.mixer.music.load(
+                        str(ACT_ONE_MENU_MUSIC_PATH)
+                    )
+                    pygame.mixer.music.set_volume(
+                        menu_state.music_volume
+                    )
+                    pygame.mixer.music.play(-1, fade_ms=1200)
+                except pygame.error as audio_error:
+                    add_log_message(
+                        game_state.combat_log,
+                        f"Act I menu music unavailable: {audio_error}",
+                    )
+            elif (
+                should_play_act_two_menu_music
+                and not act_two_menu_music_playing
+            ):
+                act_one_menu_music_playing = False
+                act_two_menu_music_playing = True
+                try:
+                    if pygame.mixer.get_init() is None:
+                        pygame.mixer.init()
+                    pygame.mixer.music.load(
+                        str(ACT_TWO_MENU_MUSIC_PATH)
+                    )
+                    pygame.mixer.music.set_volume(
+                        menu_state.music_volume
+                    )
+                    pygame.mixer.music.play(-1, fade_ms=1200)
+                except pygame.error as audio_error:
+                    add_log_message(
+                        game_state.combat_log,
+                        f"Act II menu music unavailable: {audio_error}",
+                    )
+            elif (
+                not should_play_act_one_menu_music
+                and not should_play_act_two_menu_music
+                and (
+                    act_one_menu_music_playing
+                    or act_two_menu_music_playing
+                )
+            ):
+                if pygame.mixer.get_init() is not None:
+                    pygame.mixer.music.fadeout(500)
+                act_one_menu_music_playing = False
+                act_two_menu_music_playing = False
             draw_menu(
                 game_surface,
-                act_one_fonts,
+                menu_fonts[menu_visual_theme],
                 menu_state,
                 current_time - menu_started_at,
                 game_started,
                 fullscreen,
                 menu_assets,
+                menu_visual_theme,
                 menu_progress.highest_act_reached,
             )
             present_game(screen, game_surface)
@@ -1594,6 +2045,8 @@ def main():
             and ACT_THREE_MUSIC_ENABLED
             and not act_three_music_attempted
         ):
+            act_one_music_attempted = False
+            act_two_music_attempted = False
             act_three_music_attempted = True
 
             try:
@@ -1651,6 +2104,101 @@ def main():
         current_act_floor = FLOOR_CONFIGS[game_state.floor_index][
             "act_floor"
         ]
+        warden_fight_started = warden_music_should_play(
+            game_state.floor
+        )
+        warden_defeated = warden_has_been_defeated(
+            game_state.floor
+        )
+        if (
+            current_act == 1
+            and warden_fight_started
+            and not act_one_warden_music_attempted
+        ):
+            act_one_warden_music_attempted = True
+            try:
+                if pygame.mixer.get_init() is None:
+                    pygame.mixer.init()
+                warden_music = pygame.mixer.Sound(
+                    str(ACT_ONE_WARDEN_MUSIC_PATH)
+                )
+                pygame.mixer.music.fadeout(700)
+                act_one_warden_music_channel = pygame.mixer.Channel(0)
+                act_one_warden_music_channel.play(
+                    warden_music,
+                    loops=-1,
+                    fade_ms=700,
+                )
+                act_one_warden_music_channel.set_volume(
+                    menu_state.music_volume
+                )
+            except pygame.error as audio_error:
+                add_log_message(
+                    game_state.combat_log,
+                    f"Warden music unavailable: {audio_error}",
+                )
+        if (
+            current_act == 1
+            and warden_defeated
+            and act_one_warden_music_channel is not None
+        ):
+            act_one_warden_music_channel.fadeout(2200)
+            act_one_warden_music_channel = None
+        if (
+            current_act == 1
+            and not warden_fight_started
+            and not act_one_music_attempted
+        ):
+            act_one_music_attempted = True
+            try:
+                if pygame.mixer.get_init() is None:
+                    pygame.mixer.init()
+                pygame.mixer.music.load(str(ACT_ONE_MUSIC_PATH))
+                pygame.mixer.music.set_volume(menu_state.music_volume)
+                pygame.mixer.music.play(-1, fade_ms=1400)
+            except pygame.error as audio_error:
+                add_log_message(
+                    game_state.combat_log,
+                    f"Act I music unavailable: {audio_error}",
+                )
+        elif (
+            current_act != 1
+            and act_one_music_attempted
+            and not act_three_music_attempted
+        ):
+            if pygame.mixer.get_init() is not None:
+                pygame.mixer.music.stop()
+            act_one_music_attempted = False
+        if (
+            current_act != 1
+            and act_one_warden_music_channel is not None
+        ):
+            act_one_warden_music_channel.fadeout(500)
+            act_one_warden_music_channel = None
+            act_one_warden_music_attempted = False
+        if (
+            current_act == 2
+            and not game_state.class_selection_open
+            and (
+                not act_two_music_attempted
+                or pygame.mixer.get_init() is None
+                or not pygame.mixer.music.get_busy()
+            )
+        ):
+            act_two_music_attempted = True
+            try:
+                if pygame.mixer.get_init() is None:
+                    pygame.mixer.init()
+                pygame.mixer.music.load(str(ACT_TWO_MUSIC_PATH))
+                pygame.mixer.music.set_volume(
+                    menu_state.music_volume
+                )
+                pygame.mixer.music.play(-1, fade_ms=700)
+            except pygame.error as audio_error:
+                add_log_message(
+                    game_state.combat_log,
+                    f"Act II music unavailable: {audio_error}",
+                )
         if current_act == 2:
             update_act_two_visibility(game_state.floor)
         if (
@@ -1661,6 +2209,7 @@ def main():
                 menu_progress,
                 current_act,
             )
+            menu_state.menu_theme = menu_progress.menu_theme
         active_status_font = (
             act_two_fonts["status"]
             if current_act >= 2
@@ -2137,6 +2686,14 @@ def main():
             game_state.player.act_two_blocked_movement_started_at,
             game_state.player.act_two_blocked_movement_direction,
         )
+        if current_act == 2 and game_state.player.health > 0:
+            draw_act_two_wait_indicator(
+                world_target,
+                game_state.floor.player_column,
+                game_state.floor.player_row,
+                current_time,
+                game_state.player.act_two.wait_effect_started_at,
+            )
         for enemy in game_state.floor["enemies"]:
             if (
                 current_act == 2

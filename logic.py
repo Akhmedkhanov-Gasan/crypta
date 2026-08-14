@@ -69,6 +69,65 @@ def can_move_between(
     return edge not in barriers
 
 
+def can_player_move_between(
+    dungeon_map,
+    start_column,
+    start_row,
+    target_column,
+    target_row,
+    barriers=(),
+):
+    column_change = target_column - start_column
+    row_change = target_row - start_row
+    if (
+        max(abs(column_change), abs(row_change)) != 1
+        or not can_move_to(dungeon_map, target_column, target_row)
+    ):
+        return False
+    if column_change == 0 or row_change == 0:
+        return can_move_between(
+            dungeon_map,
+            start_column,
+            start_row,
+            target_column,
+            target_row,
+            barriers,
+        )
+
+    horizontal_cell = (target_column, start_row)
+    vertical_cell = (start_column, target_row)
+    return (
+        can_move_between(
+            dungeon_map,
+            start_column,
+            start_row,
+            *horizontal_cell,
+            barriers,
+        )
+        and can_move_between(
+            dungeon_map,
+            *horizontal_cell,
+            target_column,
+            target_row,
+            barriers,
+        )
+        and can_move_between(
+            dungeon_map,
+            start_column,
+            start_row,
+            *vertical_cell,
+            barriers,
+        )
+        and can_move_between(
+            dungeon_map,
+            *vertical_cell,
+            target_column,
+            target_row,
+            barriers,
+        )
+    )
+
+
 def distance_between(first_column, first_row, second_column, second_row):
     return abs(first_column - second_column) + abs(first_row - second_row)
 
@@ -138,15 +197,10 @@ def get_enemy_occupied_positions(enemy):
 
 
 def positions_are_adjacent(first_column, first_row, second_column, second_row):
-    return (
-        distance_between(
-            first_column,
-            first_row,
-            second_column,
-            second_row,
-        )
-        == 1
-    )
+    return max(
+        abs(first_column - second_column),
+        abs(first_row - second_row),
+    ) == 1
 
 
 def has_line_of_sight(
@@ -349,6 +403,12 @@ def get_enemy_attack_targets(
         player_column,
         player_row,
     )
+    player_is_adjacent = positions_are_adjacent(
+        enemy_column,
+        enemy_row,
+        player_column,
+        player_row,
+    )
 
     if attack_kind == "oracle":
         second_phase = enemy["health"] <= enemy["max_health"] // 2
@@ -508,7 +568,7 @@ def get_enemy_attack_targets(
         ]
 
     if attack_kind == "ranged":
-        if distance_to_player == 1:
+        if player_is_adjacent:
             return [(player_column, player_row)]
 
         if (
@@ -553,7 +613,7 @@ def get_enemy_attack_targets(
         return []
 
     if attack_kind == "priest_magic":
-        if distance_to_player == 1:
+        if player_is_adjacent:
             return [(player_column, player_row)]
 
         if (
@@ -571,7 +631,7 @@ def get_enemy_attack_targets(
 
         return []
 
-    if distance_to_player != 1:
+    if not player_is_adjacent:
         return []
 
     if attack_kind == "cleave":

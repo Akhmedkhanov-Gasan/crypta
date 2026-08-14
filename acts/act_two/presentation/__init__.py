@@ -22,6 +22,7 @@ from acts.act_two.presentation.items import (
 from acts.act_two.presentation.player import (
     draw_act_two_player_actor,
     draw_act_two_player_feedback_overlay,
+    draw_act_two_wait_indicator,
 )
 from acts.act_two.presentation.fog import draw_act_two_fog_of_war
 from acts.act_two.presentation.camera import (
@@ -59,6 +60,7 @@ __all__ = [
     "get_act_two_upgrade_card_rectangles",
     "draw_act_two_player_actor",
     "draw_act_two_player_feedback_overlay",
+    "draw_act_two_wait_indicator",
     "draw_breakable_crate",
     "draw_oracle_emitters",
     "draw_oracle_projectiles",

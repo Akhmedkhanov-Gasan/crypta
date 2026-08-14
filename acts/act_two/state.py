@@ -97,6 +97,9 @@ class RuneRoomState:
         tuple[int, int],
     ]
     activated_runes: set[int] = field(default_factory=set)
+    activation_effect_started_at: dict[int, int] = field(
+        default_factory=dict
+    )
     phase: RunePuzzlePhase = RunePuzzlePhase.DORMANT
 
     @classmethod
@@ -122,6 +125,7 @@ class RuneRoomState:
 @dataclass
 class ActTwoPlayerState:
     selected_ability_direction: tuple[int, int] | None = None
+    wait_effect_started_at: int = -1
     ability_effect_started_at: int = 0
     ability_effect_direction: tuple[int, int] = (0, 1)
     ability_effect_cells: tuple[tuple[int, int], ...] = ()

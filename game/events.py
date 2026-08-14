@@ -9,10 +9,14 @@ Position = tuple[int, int]
 class GameEventType(Enum):
     MOVE = auto()
     ATTACK = auto()
+    ABILITY = auto()
+    PREPARE_ATTACK = auto()
     HIT = auto()
     DODGE = auto()
     HEAL = auto()
     DEATH = auto()
+    PICKUP = auto()
+    CHEST_OPEN = auto()
 
 
 @dataclass(frozen=True)

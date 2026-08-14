@@ -35,7 +35,15 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 ASSET_ROOT = PROJECT_ROOT / "assets" / "sprites"
 FONT_ROOT = PROJECT_ROOT / "assets" / "fonts"
 AUDIO_ROOT = PROJECT_ROOT / "assets" / "audio"
-ACT_THREE_MUSIC_PATH = AUDIO_ROOT / "music" / "act_3.mp3"
+ACT_ONE_SOUNDS_PATH = AUDIO_ROOT / "sounds_act_1"
+ACT_TWO_SOUNDS_PATH = AUDIO_ROOT / "sounds_act_2"
+MUSIC_ROOT = AUDIO_ROOT / "music"
+ACT_ONE_MENU_MUSIC_PATH = MUSIC_ROOT / "act_1_menu.mp3"
+ACT_ONE_MUSIC_PATH = MUSIC_ROOT / "act_1_music.mp3"
+ACT_ONE_WARDEN_MUSIC_PATH = MUSIC_ROOT / "act_1_warden.mp3"
+ACT_TWO_MENU_MUSIC_PATH = MUSIC_ROOT / "act_2_menu.mp3"
+ACT_TWO_MUSIC_PATH = MUSIC_ROOT / "act_2_music.mp3"
+ACT_THREE_MUSIC_PATH = MUSIC_ROOT / "act_3.mp3"
 
 ACT_THREE_TILE_SIZE = 64
 ACT_THREE_VIEW_X = 88
