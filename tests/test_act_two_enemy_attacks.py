@@ -70,7 +70,7 @@ class ActTwoEnemyAttackTests(unittest.TestCase):
 
         self.assertEqual(targets, [])
 
-    def test_brute_holds_windup_for_a_turn_before_attacking(self):
+    def test_brute_attacks_on_the_turn_after_telegraph(self):
         game_state = create_game_state(floor_index=3)
         brute = EnemyState.from_config(
             enemy_type="brute",
@@ -96,7 +96,7 @@ class ActTwoEnemyAttackTests(unittest.TestCase):
             targets,
             "cleave",
         )
-        health_before_windup = game_state.player.health
+        health_before_attack = game_state.player.health
 
         resolve_enemy_turn(
             game_state,
@@ -104,28 +104,13 @@ class ActTwoEnemyAttackTests(unittest.TestCase):
             rogue_ability_activated=False,
         )
 
-        self.assertEqual(game_state.player.health, health_before_windup)
-        self.assertEqual(brute.attack_targets, targets)
-        self.assertEqual(
-            brute.behavior_state,
-            EnemyBehaviorState.PREPARING_ATTACK,
-        )
-        self.assertEqual(brute.attack_windup_turns_remaining, 0)
-
-        game_state.floor.player_column = 5
-        game_state.floor.player_row = 3
-        resolve_enemy_turn(
-            game_state,
-            player_position_before_action=(4, 3),
-            rogue_ability_activated=False,
-        )
-
-        self.assertEqual(game_state.player.health, health_before_windup)
+        self.assertLess(game_state.player.health, health_before_attack)
         self.assertEqual(brute.attack_targets, [])
         self.assertEqual(
             brute.behavior_state,
             EnemyBehaviorState.CHASING,
         )
+        self.assertEqual(brute.attack_windup_turns_remaining, 0)
 
 
 if __name__ == "__main__":
