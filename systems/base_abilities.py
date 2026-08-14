@@ -81,6 +81,18 @@ def request_class_ability(
             enemy.attack_windup_turns_remaining = 0
             enemy.heal_target = None
 
+        game_state.emit(
+            GameEvent(
+                type=GameEventType.ABILITY,
+                actor="hero",
+                destination=(
+                    game_state.floor.player_column,
+                    game_state.floor.player_row,
+                ),
+                data={"ability": "invisibility"},
+            )
+        )
+
         add_log_message(
             game_state.combat_log,
             "The rogue vanishes from sight.",

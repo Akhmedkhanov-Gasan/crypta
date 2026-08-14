@@ -76,7 +76,7 @@ def sample_blocked_movement_attempt(
     )
     if (
         player_class not in BLOCKED_MOVE_DURATION_MS
-        or abs(direction[0]) + abs(direction[1]) != 1
+        or max(abs(direction[0]), abs(direction[1])) != 1
         or movement_started_at <= 0
     ):
         return inactive_pose
@@ -131,7 +131,7 @@ def sample_warrior_movement(
         return inactive_pose
 
     direction = (column - origin[0], row - origin[1])
-    if abs(direction[0]) + abs(direction[1]) != 1:
+    if max(abs(direction[0]), abs(direction[1])) != 1:
         return inactive_pose
 
     elapsed = current_time - movement_started_at
@@ -199,7 +199,7 @@ def sample_rogue_movement(
         return inactive_pose
 
     direction = (column - origin[0], row - origin[1])
-    if abs(direction[0]) + abs(direction[1]) != 1:
+    if max(abs(direction[0]), abs(direction[1])) != 1:
         return inactive_pose
 
     elapsed = current_time - movement_started_at
@@ -264,7 +264,7 @@ def sample_mage_movement(
         return inactive_pose
 
     direction = (column - origin[0], row - origin[1])
-    if abs(direction[0]) + abs(direction[1]) != 1:
+    if max(abs(direction[0]), abs(direction[1])) != 1:
         return inactive_pose
 
     elapsed = current_time - movement_started_at

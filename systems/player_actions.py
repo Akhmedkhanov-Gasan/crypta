@@ -9,7 +9,7 @@ from game.state import (
 )
 from acts.act_two.treasury import collect_treasury_reward
 from levels import FLOOR_CONFIGS
-from logic import can_move_between
+from logic import can_player_move_between
 from settings import POTION_HEALING
 
 
@@ -61,6 +61,14 @@ def open_chest(
 
     chest["is_open"] = True
     chest.open_animation_started_at = effect_started_at
+    game_state.emit(
+        GameEvent(
+            type=GameEventType.CHEST_OPEN,
+            actor="hero",
+            destination=(chest.column, chest.row),
+            data={"contains": chest.contains},
+        )
+    )
     if chest.requires_key:
         player.key_count -= 1
 
@@ -179,6 +187,14 @@ def _start_pickup_effect(
     effect_started_at: int,
 ) -> None:
     player = game_state.player
+    game_state.emit(
+        GameEvent(
+            type=GameEventType.PICKUP,
+            actor="hero",
+            destination=position,
+            data={"kind": kind},
+        )
+    )
     act_number = FLOOR_CONFIGS[game_state.floor_index]["act"]
     if act_number == 1:
         player.act_one_pickup_kind = kind
@@ -454,7 +470,7 @@ def try_move_player(
 
     if (
         target_is_locked_stairs
-        or not can_move_between(
+        or not can_player_move_between(
             floor.map,
             floor.player_column,
             floor.player_row,

@@ -55,9 +55,10 @@ class ActTwoRuneRoomTests(unittest.TestCase):
         room = game_state.floor.rune_room
         first_position = room.wall_rune_positions[0]
 
-        self.assertTrue(strike_wall_rune(game_state, first_position))
-        self.assertTrue(strike_wall_rune(game_state, first_position))
+        self.assertTrue(strike_wall_rune(game_state, first_position, 1234))
+        self.assertTrue(strike_wall_rune(game_state, first_position, 5678))
         self.assertEqual(room.activated_runes, {0})
+        self.assertEqual(room.activation_effect_started_at, {0: 1234})
 
         for position in reversed(room.wall_rune_positions[1:]):
             self.assertTrue(strike_wall_rune(game_state, position))

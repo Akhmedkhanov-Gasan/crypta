@@ -15,12 +15,14 @@ def rune_wall_is_at(
 def strike_wall_rune(
     game_state: GameState,
     position: tuple[int, int],
+    current_time: int | None = None,
 ) -> bool:
     room = game_state.floor.rune_room
     if room is None or position not in room.wall_rune_positions:
         return False
 
     rune_index = room.wall_rune_positions.index(position)
+    rune_activated = rune_index not in room.activated_runes
     game_state.emit(
         GameEvent(
             type=GameEventType.ATTACK,
@@ -30,10 +32,14 @@ def strike_wall_rune(
                 game_state.floor.player_row,
             ),
             positions=(position,),
-            data={"kind": "wall_rune", "rune_index": rune_index},
+            data={
+                "kind": "wall_rune",
+                "rune_index": rune_index,
+                "activated": rune_activated,
+            },
         )
     )
-    if rune_index in room.activated_runes:
+    if not rune_activated:
         add_log_message(
             game_state.combat_log,
             "This wall rune is already awake.",
@@ -41,6 +47,8 @@ def strike_wall_rune(
         return True
 
     room.activated_runes.add(rune_index)
+    if current_time is not None:
+        room.activation_effect_started_at[rune_index] = current_time
     remaining = len(room.wall_rune_positions) - len(room.activated_runes)
     if remaining > 0:
         add_log_message(

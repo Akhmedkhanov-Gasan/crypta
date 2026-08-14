@@ -26,6 +26,45 @@ from presentation.layout import (
 from settings import TILE_SIZE
 
 
+ACT_TWO_WAIT_EFFECT_DURATION_MS = 900
+
+
+def draw_act_two_wait_indicator(
+    screen,
+    column,
+    row,
+    current_time,
+    started_at,
+):
+    elapsed = current_time - started_at
+    if elapsed < 0 or elapsed >= ACT_TWO_WAIT_EFFECT_DURATION_MS:
+        return
+
+    progress = elapsed / ACT_TWO_WAIT_EFFECT_DURATION_MS
+    fade = min(1.0, elapsed / 100) * min(1.0, (1 - progress) / 0.22)
+    effect = pygame.Surface((34, 22), pygame.SRCALPHA)
+    for dot_index in range(3):
+        dot_phase = max(0.0, min(1.0, (elapsed - dot_index * 90) / 310))
+        lift = round(math.sin(dot_phase * math.pi) * 4)
+        center = (9 + dot_index * 8, 14 - lift)
+        pygame.draw.circle(
+            effect,
+            (16, 13, 18, round(190 * fade)),
+            (center[0] + 1, center[1] + 1),
+            3,
+        )
+        pygame.draw.circle(
+            effect,
+            (220, 210, 190, round(245 * fade)),
+            center,
+            2,
+        )
+
+    center_x = MAP_OFFSET_X + column * TILE_SIZE + TILE_SIZE // 2
+    top = MAP_OFFSET_Y + row * TILE_SIZE
+    screen.blit(effect, (center_x - effect.get_width() // 2, top - 20))
+
+
 ACT_TWO_PLAYER_HIT_FEEDBACK_MS = 650
 ACT_TWO_PLAYER_HIT_REACTION_MS = 230
 ACT_TWO_WARRIOR_ATTACK_DURATION_MS = 310
@@ -52,6 +91,14 @@ _CLASS_COLORS = {
     "rogue": (180, 82, 218),
     "mage": (67, 157, 224),
 }
+
+
+def _visual_direction(direction):
+    if direction[1]:
+        return 0, 1 if direction[1] > 0 else -1
+    if direction[0]:
+        return 1 if direction[0] > 0 else -1, 0
+    return 0, 1
 
 
 def _smoothstep(progress):
@@ -582,7 +629,13 @@ def draw_act_two_player_actor(
                 movement_frame = 1
             if (column + row) % 2:
                 movement_frame = 2 - movement_frame
-            if movement_pose.direction[0] != 0:
+            if movement_pose.direction[1] < 0:
+                sprite = sprites[
+                    f"player_warrior_walk_up_{movement_frame}"
+                ]
+            elif movement_pose.direction[1] > 0:
+                sprite = sprites[f"player_warrior_walk_{movement_frame}"]
+            else:
                 side = (
                     "right"
                     if movement_pose.direction[0] > 0
@@ -591,12 +644,6 @@ def draw_act_two_player_actor(
                 sprite = sprites[
                     f"player_warrior_walk_side_{side}_{movement_frame}"
                 ]
-            elif movement_pose.direction[1] < 0:
-                sprite = sprites[
-                    f"player_warrior_walk_up_{movement_frame}"
-                ]
-            else:
-                sprite = sprites[f"player_warrior_walk_{movement_frame}"]
             if invisibility_turns > 0:
                 sprite = sprite.copy()
                 sprite.set_alpha(90)
@@ -638,7 +685,13 @@ def draw_act_two_player_actor(
                 movement_frame = 1
             if (column + row) % 2:
                 movement_frame = 2 - movement_frame
-            if movement_pose.direction[0] != 0:
+            if movement_pose.direction[1] < 0:
+                sprite = sprites[
+                    f"player_rogue_walk_up_{movement_frame}"
+                ]
+            elif movement_pose.direction[1] > 0:
+                sprite = sprites[f"player_rogue_walk_{movement_frame}"]
+            else:
                 side = (
                     "right"
                     if movement_pose.direction[0] > 0
@@ -647,12 +700,6 @@ def draw_act_two_player_actor(
                 sprite = sprites[
                     f"player_rogue_walk_side_{side}_{movement_frame}"
                 ]
-            elif movement_pose.direction[1] < 0:
-                sprite = sprites[
-                    f"player_rogue_walk_up_{movement_frame}"
-                ]
-            else:
-                sprite = sprites[f"player_rogue_walk_{movement_frame}"]
             if invisibility_turns > 0:
                 sprite = sprite.copy()
                 sprite.set_alpha(90)
@@ -694,7 +741,13 @@ def draw_act_two_player_actor(
                 movement_frame = 1
             if (column + row) % 2:
                 movement_frame = 2 - movement_frame
-            if movement_pose.direction[0] != 0:
+            if movement_pose.direction[1] < 0:
+                sprite = sprites[
+                    f"player_mage_walk_up_{movement_frame}"
+                ]
+            elif movement_pose.direction[1] > 0:
+                sprite = sprites[f"player_mage_walk_{movement_frame}"]
+            else:
                 side = (
                     "right"
                     if movement_pose.direction[0] > 0
@@ -703,12 +756,6 @@ def draw_act_two_player_actor(
                 sprite = sprites[
                     f"player_mage_walk_side_{side}_{movement_frame}"
                 ]
-            elif movement_pose.direction[1] < 0:
-                sprite = sprites[
-                    f"player_mage_walk_up_{movement_frame}"
-                ]
-            else:
-                sprite = sprites[f"player_mage_walk_{movement_frame}"]
             if invisibility_turns > 0:
                 sprite = sprite.copy()
                 sprite.set_alpha(90)
@@ -741,6 +788,7 @@ def draw_act_two_player_actor(
             attack_target[0] - column,
             attack_target[1] - row,
         )
+        attack_direction = _visual_direction(attack_direction)
         attack_sprite_prefix = None
         recovery_sprite_name = None
         if abs(attack_direction[0]) == 1 and attack_direction[1] == 0:
@@ -799,6 +847,7 @@ def draw_act_two_player_actor(
             attack_target[0] - column,
             attack_target[1] - row,
         )
+        attack_direction = _visual_direction(attack_direction)
         if abs(attack_direction[0]) == 1 and attack_direction[1] == 0:
             side = "right" if attack_direction[0] > 0 else "left"
             if (
@@ -889,6 +938,7 @@ def draw_act_two_player_actor(
             attack_target[0] - column,
             attack_target[1] - row,
         )
+        attack_direction = _visual_direction(attack_direction)
         if abs(attack_direction[0]) == 1 and attack_direction[1] == 0:
             side = "right" if attack_direction[0] > 0 else "left"
             if (
