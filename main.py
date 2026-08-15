@@ -1875,6 +1875,7 @@ def main():
                         act_two_sounds.play_events(
                             game_state.events,
                             game_state.player.player_class,
+                            game_state.floor,
                         )
         if (
             game_state.upgrade_screen_open

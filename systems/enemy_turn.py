@@ -108,7 +108,10 @@ def resolve_enemy_turn(
                     actor=enemy.name,
                     origin=(enemy.column, enemy.row),
                     positions=tuple(attack_targets),
-                    data={"mode": attack_mode},
+                    data={
+                        "mode": attack_mode,
+                        "enemy_type": enemy.type,
+                    },
                 )
             )
 
@@ -323,6 +326,7 @@ def resolve_enemy_turn(
                             heal_target.row,
                         ),
                         amount=healed_amount,
+                        data={"enemy_type": enemy.type},
                     )
                 )
                 enemy["heal_cooldown"] = (

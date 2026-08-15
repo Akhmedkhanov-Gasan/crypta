@@ -113,6 +113,46 @@ ACT_TWO_MAGE_SOUND_FILES = {
 }
 
 
+ACT_TWO_ENEMY_SOUND_FILES = {
+    "goblin_attack": ("goblin_attack_1.mp3", "goblin_attack_2.mp3"),
+    "goblin_hurt": ("goblin_hurt_1.mp3", "goblin_hurt_2.mp3"),
+    "goblin_death": ("goblin_death_1.mp3", "goblin_death_2.mp3"),
+    "brute_prepare": ("brute_prepare_1.mp3", "brute_prepare_2.mp3"),
+    "brute_attack": ("brute_attack_1.mp3", "brute_attack_2.mp3"),
+    "brute_hurt": ("brute_hurt_1.mp3", "brute_hurt_2.mp3"),
+    "brute_death": ("brute_death_1.mp3", "brute_death_2.mp3"),
+    "archer_prepare": ("archer_prepare_1.mp3", "archer_prepare_2.mp3"),
+    "archer_attack": ("archer_attack_1.mp3", "archer_attack_2.mp3"),
+    "archer_hurt": ("archer_hurt_1.mp3", "archer_hurt_2.mp3"),
+    "archer_death": ("archer_death_1.mp3", "archer_death_2.mp3"),
+    "sentinel_prepare": (
+        "sentinel_prepare_1.mp3",
+        "sentinel_prepare_2.mp3",
+    ),
+    "sentinel_attack": (
+        "sentinel_attack_1.mp3",
+        "sentinel_attack_2.mp3",
+    ),
+    "sentinel_block": ("sentinel_block_1.mp3", "sentinel_block_2.mp3"),
+    "sentinel_hurt": ("sentinel_hurt_1.mp3", "sentinel_hurt_2.mp3"),
+    "sentinel_death": ("sentinel_death_1.mp3", "sentinel_death_2.mp3"),
+    "priest_prepare": ("priest_prepare_1.mp3", "priest_prepare_2.mp3"),
+    "priest_attack": ("priest_attack_1.mp3", "priest_attack_2.mp3"),
+    "priest_heal_prepare": (
+        "priest_heal_prepare_1.mp3",
+        "priest_heal_prepare_2.mp3",
+    ),
+    "priest_heal": ("priest_heal_1.mp3", "priest_heal_2.mp3"),
+    "priest_hurt": ("priest_hurt_1.mp3", "priest_hurt_2.mp3"),
+    "priest_death": ("priest_death_1.mp3", "priest_death_2.mp3"),
+}
+
+
+ACT_TWO_PLAYER_SOUND_FILES = {
+    "player_heal": ("player_heal_1.mp3", "player_heal_2.mp3"),
+}
+
+
 ACT_TWO_FOOTSTEP_FILES = tuple(
     f"act_2_footstep_{index}.mp3" for index in range(1, 6)
 )
@@ -125,6 +165,20 @@ ACT_TWO_ENVIRONMENT_SOUND_FILES = {
     "gold_pickup": ("gold_pickup_1.mp3", "gold_pickup_2.mp3"),
     "item_pickup": ("item_pickup_1.mp3", "item_pickup_2.mp3"),
     "key_pickup": ("item_pickup_1.mp3", "item_pickup_2.mp3"),
+    "treasury_trap_activate": (
+        "treasury_trap_activate_1.mp3",
+        "treasury_trap_activate_2.mp3",
+    ),
+    "portcullis_lock": ("portcullis_lock_1.mp3", "portcullis_lock_2.mp3"),
+    "portcullis_unlock": (
+        "portcullis_unlock_1.mp3",
+        "portcullis_unlock_2.mp3",
+    ),
+    "room_reward": ("room_reward_1.mp3", "room_reward_2.mp3"),
+    "secret_wall_break": (
+        "secret_wall_break_1.mp3",
+        "secret_wall_break_2.mp3",
+    ),
 }
 
 
@@ -142,6 +196,29 @@ ACT_TWO_SOUND_VOLUMES = {
     "mage_arcane_burst": 0.84,
     "mage_hurt": 0.68,
     "mage_death": 0.72,
+    "player_heal": 0.82,
+    "goblin_attack": 0.68,
+    "goblin_hurt": 0.66,
+    "goblin_death": 0.70,
+    "brute_prepare": 0.68,
+    "brute_attack": 0.82,
+    "brute_hurt": 0.72,
+    "brute_death": 0.82,
+    "archer_prepare": 0.60,
+    "archer_attack": 0.72,
+    "archer_hurt": 0.64,
+    "archer_death": 0.70,
+    "sentinel_prepare": 0.66,
+    "sentinel_attack": 0.80,
+    "sentinel_block": 0.86,
+    "sentinel_hurt": 0.72,
+    "sentinel_death": 0.82,
+    "priest_prepare": 0.64,
+    "priest_attack": 0.74,
+    "priest_heal_prepare": 0.64,
+    "priest_heal": 0.76,
+    "priest_hurt": 0.66,
+    "priest_death": 0.74,
     "footstep": 0.48,
     "rune_activate": 0.68,
     "chest_open": 0.62,
@@ -149,6 +226,11 @@ ACT_TWO_SOUND_VOLUMES = {
     "gold_pickup": 0.72,
     "item_pickup": 0.72,
     "key_pickup": 1.00,
+    "treasury_trap_activate": 0.82,
+    "portcullis_lock": 0.78,
+    "portcullis_unlock": 0.74,
+    "room_reward": 0.84,
+    "secret_wall_break": 0.82,
 }
 
 
@@ -241,6 +323,32 @@ class ActTwoSoundBank:
             if variants:
                 loaded_sounds[sound_key] = variants
 
+        for sound_key, filenames in ACT_TWO_ENEMY_SOUND_FILES.items():
+            enemy_path = sounds_path / sound_key.split("_", 1)[0]
+            variants = []
+            for filename in filenames:
+                try:
+                    variants.append(
+                        pygame.mixer.Sound(str(enemy_path / filename))
+                    )
+                except (FileNotFoundError, pygame.error):
+                    continue
+            if variants:
+                loaded_sounds[sound_key] = variants
+
+        player_path = sounds_path / "player"
+        for sound_key, filenames in ACT_TWO_PLAYER_SOUND_FILES.items():
+            variants = []
+            for filename in filenames:
+                try:
+                    variants.append(
+                        pygame.mixer.Sound(str(player_path / filename))
+                    )
+                except (FileNotFoundError, pygame.error):
+                    continue
+            if variants:
+                loaded_sounds[sound_key] = variants
+
         footstep_path = sounds_path / "footstep"
         footsteps = []
         for filename in ACT_TWO_FOOTSTEP_FILES:
@@ -306,12 +414,23 @@ class ActTwoSoundBank:
         self,
         events: Iterable[GameEvent],
         player_class: str | None,
+        floor=None,
     ) -> None:
         events = tuple(events)
         hero_died = any(
             event.type is GameEventType.DEATH and event.actor == "hero"
             for event in events
         )
+        if hero_died:
+            self._stop_effect_channels()
+            death_sound_key = {
+                "warrior": "warrior_death",
+                "rogue": "rogue_death",
+                "mage": "mage_death",
+            }.get(player_class)
+            if death_sound_key is not None:
+                self._play(death_sound_key, volume_multiplier=1.12)
+            return
 
         hero_move = next(
             (
@@ -326,7 +445,18 @@ class ActTwoSoundBank:
         if hero_move is not None:
             self._play("footstep")
 
-        played_environment_sounds = set()
+        if any(
+            event.type is GameEventType.HEAL
+            and event.actor == "hero"
+            and event.target == "hero"
+            and event.data.get("kind") == "potion"
+            for event in events
+        ):
+            self._play("player_heal")
+
+        self._play_enemy_events(events, floor)
+
+        environment_sound_gains = {}
         for event in events:
             sound_key = None
             if (
@@ -345,6 +475,10 @@ class ActTwoSoundBank:
                     sound_key = "key_pickup"
                 elif event.data.get("kind") == "potion":
                     sound_key = "item_pickup"
+            elif event.type is GameEventType.ENVIRONMENT:
+                candidate_key = event.data.get("kind")
+                if candidate_key in ACT_TWO_ENVIRONMENT_SOUND_FILES:
+                    sound_key = candidate_key
             elif (
                 event.type is GameEventType.ATTACK
                 and event.actor == "hero"
@@ -355,23 +489,83 @@ class ActTwoSoundBank:
                     "rogue": "rogue_hit",
                     "mage": "mage_hit",
                 }.get(player_class)
-                crate_sound_keys = tuple(
+                layered_sound_keys = tuple(
                     sound_key
                     for sound_key in (class_attack_sound, "chest_break")
                     if sound_key is not None
                 )
-                for crate_sound_key in crate_sound_keys:
-                    if crate_sound_key not in played_environment_sounds:
-                        self._play(crate_sound_key)
-                        played_environment_sounds.add(crate_sound_key)
+                source_position = (
+                    event.positions[0] if event.positions else event.origin
+                )
+                distance_gain = _act_two_distance_gain(
+                    source_position,
+                    (
+                        (floor.player_column, floor.player_row)
+                        if floor is not None
+                        else None
+                    ),
+                )
+                for layered_sound_key in layered_sound_keys:
+                    environment_sound_gains[layered_sound_key] = max(
+                        distance_gain,
+                        environment_sound_gains.get(layered_sound_key, 0.0),
+                    )
+                continue
+            elif (
+                event.type is GameEventType.ATTACK
+                and event.actor == "hero"
+                and event.data.get("kind") == "secret_wall"
+            ):
+                class_attack_sound = {
+                    "warrior": "warrior_hit",
+                    "rogue": "rogue_hit",
+                    "mage": "mage_hit",
+                }.get(player_class)
+                layered_sound_keys = tuple(
+                    key
+                    for key in (class_attack_sound, "secret_wall_break")
+                    if key is not None
+                )
+                source_position = (
+                    event.positions[0] if event.positions else event.origin
+                )
+                distance_gain = _act_two_distance_gain(
+                    source_position,
+                    (
+                        (floor.player_column, floor.player_row)
+                        if floor is not None
+                        else None
+                    ),
+                )
+                for layered_sound_key in layered_sound_keys:
+                    environment_sound_gains[layered_sound_key] = max(
+                        distance_gain,
+                        environment_sound_gains.get(layered_sound_key, 0.0),
+                    )
                 continue
 
-            if (
-                sound_key is not None
-                and sound_key not in played_environment_sounds
-            ):
-                self._play(sound_key)
-                played_environment_sounds.add(sound_key)
+            if sound_key is not None:
+                source_position = (
+                    event.positions[0]
+                    if event.positions
+                    else event.destination or event.origin
+                )
+                distance_gain = _act_two_distance_gain(
+                    source_position,
+                    (
+                        (floor.player_column, floor.player_row)
+                        if floor is not None
+                        else None
+                    ),
+                )
+                environment_sound_gains[sound_key] = max(
+                    distance_gain,
+                    environment_sound_gains.get(sound_key, 0.0),
+                )
+
+        for sound_key, distance_gain in environment_sound_gains.items():
+            if distance_gain > 0:
+                self._play(sound_key, distance_gain=distance_gain)
 
         if player_class == "rogue":
             rogue_attacked = any(
@@ -483,6 +677,121 @@ class ActTwoSoundBank:
             for event in events
         ):
             self._play("warrior_hurt")
+
+    @staticmethod
+    def _stop_effect_channels() -> None:
+        if pygame.mixer.get_init() is None:
+            return
+        for channel_index in range(2, pygame.mixer.get_num_channels()):
+            pygame.mixer.Channel(channel_index).stop()
+
+    def _play_enemy_events(self, events, floor) -> None:
+        if any(
+            event.type is GameEventType.ENVIRONMENT
+            and event.data.get("kind") == "treasury_trap_activate"
+            for event in events
+        ):
+            return
+        enemies = tuple(getattr(floor, "enemies", ()))
+        enemies_by_name = {enemy.name: enemy for enemy in enemies}
+        player_position = None
+        if floor is not None:
+            player_position = (floor.player_column, floor.player_row)
+
+        defeated_enemies = {
+            event.actor
+            for event in events
+            if event.type is GameEventType.DEATH and event.actor != "hero"
+        }
+        candidates = []
+
+        for event_index, event in enumerate(events):
+            enemy = enemies_by_name.get(event.actor)
+            if enemy is None and event.target is not None:
+                enemy = enemies_by_name.get(event.target)
+            enemy_type = event.data.get("enemy_type")
+            if enemy_type is None and enemy is not None:
+                enemy_type = enemy.type
+            if enemy_type not in ("goblin", "brute", "archer", "sentinel", "priest"):
+                continue
+
+            sound_key = None
+            priority = 0
+            if event.type is GameEventType.PREPARE_ATTACK:
+                candidate_key = f"{enemy_type}_prepare"
+                if candidate_key in ACT_TWO_ENEMY_SOUND_FILES:
+                    sound_key = candidate_key
+                    priority = 1
+            elif event.type is GameEventType.PREPARE_HEAL:
+                sound_key = "priest_heal_prepare"
+                priority = 2
+            elif event.type is GameEventType.ATTACK and event.actor != "hero":
+                sound_key = f"{enemy_type}_attack"
+                priority = 3
+            elif (
+                event.type is GameEventType.HEAL
+                and event.actor != "hero"
+                and enemy_type == "priest"
+            ):
+                sound_key = "priest_heal"
+                priority = 4
+            elif (
+                event.type is GameEventType.HIT
+                and event.actor in ("hero", "familiar")
+                and event.target not in (None, "hero", "familiar")
+            ):
+                if event.data.get("blocked", False) and enemy_type == "sentinel":
+                    sound_key = "sentinel_block"
+                    priority = 5
+                elif event.target not in defeated_enemies:
+                    sound_key = f"{enemy_type}_hurt"
+                    priority = 3
+            elif event.type is GameEventType.DEATH and event.actor != "hero":
+                sound_key = f"{enemy_type}_death"
+                priority = 5
+
+            if sound_key is None:
+                continue
+            source_position = event.origin or event.destination
+            if source_position is None and enemy is not None:
+                source_position = (enemy.column, enemy.row)
+            distance_gain = _act_two_distance_gain(
+                source_position,
+                player_position,
+            )
+            if distance_gain <= 0:
+                continue
+            candidates.append(
+                (priority, distance_gain, event_index, sound_key)
+            )
+
+        nearest_by_sound = {}
+        for candidate in candidates:
+            sound_key = candidate[3]
+            previous = nearest_by_sound.get(sound_key)
+            if previous is None or candidate[:2] > previous[:2]:
+                nearest_by_sound[sound_key] = candidate
+
+        selected = sorted(
+            nearest_by_sound.values(),
+            key=lambda candidate: (-candidate[0], -candidate[1], candidate[2]),
+        )[:3]
+        for _priority, distance_gain, _event_index, sound_key in selected:
+            self._play(sound_key, distance_gain=distance_gain)
+
+
+def _act_two_distance_gain(source_position, player_position) -> float:
+    if source_position is None or player_position is None:
+        return 1.0
+    distance = max(
+        abs(source_position[0] - player_position[0]),
+        abs(source_position[1] - player_position[1]),
+    )
+    if distance <= 1:
+        return 1.0
+    if distance > 8:
+        return 0.0
+    return max(0.10, 1.0 - (distance - 1) * 0.13)
 
 
 def warden_music_should_play(floor) -> bool:

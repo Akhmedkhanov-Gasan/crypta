@@ -11,12 +11,14 @@ class GameEventType(Enum):
     ATTACK = auto()
     ABILITY = auto()
     PREPARE_ATTACK = auto()
+    PREPARE_HEAL = auto()
     HIT = auto()
     DODGE = auto()
     HEAL = auto()
     DEATH = auto()
     PICKUP = auto()
     CHEST_OPEN = auto()
+    ENVIRONMENT = auto()
 
 
 @dataclass(frozen=True)

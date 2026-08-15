@@ -157,6 +157,7 @@ def attack_enemy(
                     data={
                         "blocked": True,
                         "player_class": player.player_class,
+                        "enemy_type": enemy.type,
                     },
                 )
             )
@@ -349,6 +350,7 @@ def attack_enemy(
                 "critical": critical_hit,
                 "blocked": False,
                 "player_class": player.player_class,
+                "enemy_type": enemy.type,
             },
         )
     )
@@ -391,6 +393,7 @@ def attack_enemy(
                 type=GameEventType.DEATH,
                 actor=enemy.name,
                 destination=(enemy.column, enemy.row),
+                data={"enemy_type": enemy.type},
             )
         )
         add_log_message(

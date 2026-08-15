@@ -7,6 +7,7 @@ from acts.act_two.treasury import (
     purchase_treasury_reward_upgrade,
     update_treasury_trial,
 )
+from game.events import GameEventType
 from game.factories import create_floor_state, create_game_state
 from logic import can_move_to
 from systems.player_actions import try_move_player
@@ -68,6 +69,13 @@ class ActTwoTreasuryTests(unittest.TestCase):
         self.assertFalse(
             can_move_to(game_state.floor.map, door_column, door_row)
         )
+        environment_kinds = {
+            event.data.get("kind")
+            for event in game_state.events
+            if event.type is GameEventType.ENVIRONMENT
+        }
+        self.assertIn("treasury_trap_activate", environment_kinds)
+        self.assertIn("portcullis_lock", environment_kinds)
 
     def test_defeating_trial_enemies_replaces_chest_with_reward(self):
         game_state = create_game_state(floor_index=3)
@@ -91,6 +99,13 @@ class ActTwoTreasuryTests(unittest.TestCase):
         )
         self.assertEqual(game_state.floor.map[chest_row][chest_column], "R")
         self.assertFalse(game_state.upgrade_screen_open)
+        self.assertTrue(
+            any(
+                event.type is GameEventType.ENVIRONMENT
+                and event.data.get("kind") == "portcullis_unlock"
+                for event in game_state.events
+            )
+        )
 
     def test_reward_grants_one_gold_upgrade_without_leaving_floor(self):
         game_state = create_game_state(floor_index=3)
@@ -118,6 +133,13 @@ class ActTwoTreasuryTests(unittest.TestCase):
         self.assertTrue(game_state.upgrade_screen_open)
         self.assertTrue(game_state.upgrade_reward_pending)
         self.assertEqual(game_state.player.gold_count, 1)
+        self.assertTrue(
+            any(
+                event.type is GameEventType.ENVIRONMENT
+                and event.data.get("kind") == "room_reward"
+                for event in game_state.events
+            )
+        )
 
         previous_rank = game_state.player.attribute_ranks["strength"]
         floor_index_before_upgrade = game_state.floor_index

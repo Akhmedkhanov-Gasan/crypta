@@ -539,3 +539,219 @@ def test_act_two_mage_crate_uses_magic_hit_and_break_layers():
 
     assert magic_hit.play_count == 1
     assert chest_break.play_count == 1
+
+
+def test_act_two_player_potion_heal_plays_common_sound():
+    class FakeChannel:
+        def set_volume(self, volume):
+            self.volume = volume
+
+    class FakeSound:
+        def __init__(self):
+            self.play_count = 0
+
+        def play(self):
+            self.play_count += 1
+            return FakeChannel()
+
+    healing = FakeSound()
+    sound_bank = ActTwoSoundBank({"player_heal": [healing]})
+    event = GameEvent(
+        type=GameEventType.HEAL,
+        actor="hero",
+        target="hero",
+        data={"kind": "potion"},
+    )
+
+    sound_bank.play_events([event], "rogue")
+
+    assert healing.play_count == 1
+
+
+def test_act_two_enemy_sounds_fade_with_distance_and_stop_after_eight_cells():
+    class FakeChannel:
+        def __init__(self):
+            self.volume = None
+
+        def set_volume(self, volume):
+            self.volume = volume
+
+    class FakeSound:
+        def __init__(self):
+            self.channels = []
+
+        def play(self):
+            channel = FakeChannel()
+            self.channels.append(channel)
+            return channel
+
+    class FakeFloor:
+        player_column = 0
+        player_row = 0
+        enemies = ()
+
+    attack = FakeSound()
+    sound_bank = ActTwoSoundBank({"goblin_attack": [attack]})
+    near_attack = GameEvent(
+        type=GameEventType.ATTACK,
+        actor="Goblin 1",
+        origin=(3, 0),
+        data={"enemy_type": "goblin"},
+    )
+    far_attack = GameEvent(
+        type=GameEventType.ATTACK,
+        actor="Goblin 2",
+        origin=(9, 0),
+        data={"enemy_type": "goblin"},
+    )
+
+    sound_bank.play_events([near_attack], "warrior", FakeFloor())
+    sound_bank.play_events([far_attack], "warrior", FakeFloor())
+
+    assert len(attack.channels) == 1
+    assert attack.channels[0].volume == pytest.approx(0.68 * 0.74)
+
+
+def test_act_two_enemy_death_replaces_hurt_and_sentinel_block_is_distinct():
+    class FakeChannel:
+        def set_volume(self, volume):
+            self.volume = volume
+
+    class FakeSound:
+        def __init__(self):
+            self.play_count = 0
+
+        def play(self):
+            self.play_count += 1
+            return FakeChannel()
+
+    goblin_hurt = FakeSound()
+    goblin_death = FakeSound()
+    sentinel_block = FakeSound()
+    sound_bank = ActTwoSoundBank(
+        {
+            "goblin_hurt": [goblin_hurt],
+            "goblin_death": [goblin_death],
+            "sentinel_block": [sentinel_block],
+        }
+    )
+    events = [
+        GameEvent(
+            type=GameEventType.HIT,
+            actor="hero",
+            target="Goblin 1",
+            destination=(1, 0),
+            data={"enemy_type": "goblin", "blocked": False},
+        ),
+        GameEvent(
+            type=GameEventType.DEATH,
+            actor="Goblin 1",
+            destination=(1, 0),
+            data={"enemy_type": "goblin"},
+        ),
+        GameEvent(
+            type=GameEventType.HIT,
+            actor="hero",
+            target="Sentinel 1",
+            destination=(1, 1),
+            data={"enemy_type": "sentinel", "blocked": True},
+        ),
+    ]
+
+    sound_bank.play_events(events, "mage")
+
+    assert goblin_hurt.play_count == 0
+    assert goblin_death.play_count == 1
+    assert sentinel_block.play_count == 1
+
+
+def test_act_two_player_death_suppresses_every_other_sound_in_the_turn():
+    class FakeChannel:
+        def set_volume(self, volume):
+            self.volume = volume
+
+    class FakeSound:
+        def __init__(self):
+            self.play_count = 0
+
+        def play(self):
+            self.play_count += 1
+            return FakeChannel()
+
+    death = FakeSound()
+    footstep = FakeSound()
+    enemy_attack = FakeSound()
+    hurt = FakeSound()
+    sound_bank = ActTwoSoundBank(
+        {
+            "warrior_death": [death],
+            "warrior_hurt": [hurt],
+            "footstep": [footstep],
+            "brute_attack": [enemy_attack],
+        }
+    )
+    events = [
+        GameEvent(type=GameEventType.MOVE, actor="hero"),
+        GameEvent(
+            type=GameEventType.ATTACK,
+            actor="Brute 1",
+            data={"enemy_type": "brute"},
+        ),
+        GameEvent(type=GameEventType.HIT, actor="Brute 1", target="hero"),
+        GameEvent(type=GameEventType.DEATH, actor="hero"),
+    ]
+
+    sound_bank.play_events(events, "warrior")
+
+    assert death.play_count == 1
+    assert hurt.play_count == 0
+    assert footstep.play_count == 0
+    assert enemy_attack.play_count == 0
+
+
+def test_act_two_room_sounds_and_secret_wall_layers_are_connected():
+    class FakeChannel:
+        def set_volume(self, volume):
+            self.volume = volume
+
+    class FakeSound:
+        def __init__(self):
+            self.play_count = 0
+
+        def play(self):
+            self.play_count += 1
+            return FakeChannel()
+
+    sound_keys = (
+        "treasury_trap_activate",
+        "portcullis_lock",
+        "portcullis_unlock",
+        "room_reward",
+        "secret_wall_break",
+        "rogue_hit",
+    )
+    sounds = {sound_key: FakeSound() for sound_key in sound_keys}
+    sound_bank = ActTwoSoundBank(
+        {sound_key: [sound] for sound_key, sound in sounds.items()}
+    )
+    events = [
+        GameEvent(
+            type=GameEventType.ENVIRONMENT,
+            actor="treasury",
+            origin=(1, 1),
+            data={"kind": sound_key},
+        )
+        for sound_key in sound_keys[:4]
+    ]
+    events.append(
+        GameEvent(
+            type=GameEventType.ATTACK,
+            actor="hero",
+            positions=((1, 1),),
+            data={"kind": "secret_wall"},
+        )
+    )
+
+    sound_bank.play_events(events, "rogue")
+
+    assert all(sound.play_count == 1 for sound in sounds.values())

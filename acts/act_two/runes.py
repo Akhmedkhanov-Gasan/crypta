@@ -94,6 +94,14 @@ def interact_with_rune_pedestal(game_state: GameState) -> bool:
     game_state.upgrade_screen_open = True
     game_state.upgrade_message = "Choose one attribute upgrade."
     game_state.player_attack_targets = []
+    game_state.emit(
+        GameEvent(
+            type=GameEventType.ENVIRONMENT,
+            actor="rune reward",
+            origin=room.pedestal_position,
+            data={"kind": "room_reward"},
+        )
+    )
     add_log_message(
         game_state.combat_log,
         "The hero claims the rune pedestal blessing.",

@@ -35,6 +35,7 @@ def try_use_potion(game_state: GameState) -> bool:
             actor="hero",
             target="hero",
             amount=healed_health,
+            data={"kind": "potion"},
         )
     )
     add_log_message(

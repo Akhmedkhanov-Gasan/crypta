@@ -87,6 +87,19 @@ def try_start_healing(
         priest.behavior_state = (
             EnemyBehaviorState.PREPARING_HEAL
         )
+        game_state.emit(
+            GameEvent(
+                type=GameEventType.PREPARE_HEAL,
+                actor=priest.name,
+                target=heal_candidate.name,
+                origin=(priest.column, priest.row),
+                destination=(
+                    heal_candidate.column,
+                    heal_candidate.row,
+                ),
+                data={"enemy_type": priest.type},
+            )
+        )
         add_log_message(
             game_state.combat_log,
             (

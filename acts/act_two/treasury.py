@@ -2,6 +2,7 @@ from acts.act_two.state import TreasuryTrialPhase
 from acts.act_two.progression import purchase_act_two_upgrade
 from enemies import ENEMY_TYPES
 from game.combat_log import add_log_message
+from game.events import GameEvent, GameEventType
 from game.state import EnemyBehaviorState, EnemyState, GameState
 
 
@@ -101,6 +102,23 @@ def activate_treasury_trial(game_state: GameState) -> bool:
     ):
         _spawn_trial_enemy(game_state, enemy_type, spawn_position)
 
+    game_state.emit(
+        GameEvent(
+            type=GameEventType.ENVIRONMENT,
+            actor="treasury",
+            origin=treasury.chest_position,
+            data={"kind": "treasury_trap_activate"},
+        )
+    )
+    game_state.emit(
+        GameEvent(
+            type=GameEventType.ENVIRONMENT,
+            actor="treasury gate",
+            origin=treasury.door_position,
+            data={"kind": "portcullis_lock"},
+        )
+    )
+
     game_state.player_attack_targets = []
     add_log_message(
         game_state.combat_log,
@@ -132,6 +150,14 @@ def update_treasury_trial(game_state: GameState) -> bool:
         treasury.chest_position,
         TREASURY_REWARD_TILE,
     )
+    game_state.emit(
+        GameEvent(
+            type=GameEventType.ENVIRONMENT,
+            actor="treasury gate",
+            origin=treasury.door_position,
+            data={"kind": "portcullis_unlock"},
+        )
+    )
     add_log_message(
         game_state.combat_log,
         "The reliquary dissolves. A treasury blessing remains.",
@@ -157,6 +183,14 @@ def collect_treasury_reward(
     game_state.upgrade_screen_open = True
     game_state.upgrade_message = "Choose one free attribute upgrade."
     game_state.player_attack_targets = []
+    game_state.emit(
+        GameEvent(
+            type=GameEventType.ENVIRONMENT,
+            actor="treasury reward",
+            origin=position,
+            data={"kind": "room_reward"},
+        )
+    )
     add_log_message(
         game_state.combat_log,
         "The hero claims the treasury blessing.",

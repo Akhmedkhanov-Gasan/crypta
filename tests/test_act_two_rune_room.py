@@ -7,6 +7,7 @@ from acts.act_two.runes import (
 )
 from acts.act_two.state import RunePuzzlePhase
 from acts.act_two.treasury import purchase_treasury_reward_upgrade
+from game.events import GameEventType
 from game.factories import create_floor_state, create_game_state
 from logic import can_move_to
 
@@ -85,6 +86,13 @@ class ActTwoRuneRoomTests(unittest.TestCase):
         self.assertEqual(game_state.player.gold_count, 1)
         self.assertTrue(game_state.upgrade_screen_open)
         self.assertTrue(game_state.upgrade_reward_pending)
+        self.assertTrue(
+            any(
+                event.type is GameEventType.ENVIRONMENT
+                and event.data.get("kind") == "room_reward"
+                for event in game_state.events
+            )
+        )
 
         previous_rank = game_state.player.attribute_ranks["strength"]
         upgraded, _message = purchase_treasury_reward_upgrade(

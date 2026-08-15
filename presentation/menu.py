@@ -43,8 +43,8 @@ def _settings_entries(menu_state, fullscreen):
     fullscreen_label = "ON" if fullscreen else "OFF"
     return (
         ("toggle_fullscreen", f"FULLSCREEN  {fullscreen_label}"),
-        ("music_volume", "ACT I MUSIC"),
-        ("effects_volume", "ACT I EFFECTS"),
+        ("music_volume", "MUSIC"),
+        ("effects_volume", "EFFECTS"),
         ("back", "BACK"),
     )
 
