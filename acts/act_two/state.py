@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from enum import Enum, auto
 
+from acts.act_two.settings import CONSUMABLE_BELT_SIZE
+
 
 class SpikeTrapPhase(Enum):
     SAFE = auto()
@@ -23,6 +25,16 @@ class RunePuzzlePhase(Enum):
 
 
 @dataclass
+class FireZoneState:
+    center: tuple[int, int]
+    cells: tuple[tuple[int, int], ...]
+    origin: tuple[int, int]
+    created_at: int
+    ticks_remaining: int
+    skip_next_advance: bool = True
+
+
+@dataclass
 class SpikeTrapState:
     column: int
     row: int
@@ -37,6 +49,7 @@ class BreakableCrateState:
     is_broken: bool = False
     loot_kind: str | None = None
     loot_available: bool = False
+    loot_fire_turns_remaining: int | None = None
 
 
 @dataclass
@@ -124,6 +137,12 @@ class RuneRoomState:
 
 @dataclass
 class ActTwoPlayerState:
+    consumable_slots: list[str | None] = field(
+        default_factory=lambda: [None] * CONSUMABLE_BELT_SIZE
+    )
+    consumable_belt_initialized: bool = False
+    fire_bomb_aiming: bool = False
+    fire_bomb_aiming_slot: int | None = None
     selected_ability_direction: tuple[int, int] | None = None
     wait_effect_started_at: int = -1
     ability_effect_started_at: int = 0

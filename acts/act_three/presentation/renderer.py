@@ -521,19 +521,10 @@ def draw_act_three_gameplay(
     fonts,
     assets,
     current_time,
+    mouse_position=None,
 ):
-    screen.fill((7, 6, 10))
-    floor_config = FLOOR_CONFIGS[game_state.floor_index]
-    floor_label = (
-        f"ACT III  /  FLOOR {floor_config['act_floor']}"
-    )
-    _draw_label(
-        screen,
-        fonts["sidebar_text"],
-        floor_label,
-        (139, 132, 142),
-        (ACT_THREE_VIEW_X, 62),
-    )
+    screen.fill((5, 5, 8))
+    floor_label = "ACT III"
     _draw_act_three_world(
         screen,
         game_state,
@@ -541,11 +532,29 @@ def draw_act_three_gameplay(
         assets,
         current_time,
     )
+    floor_label_surface = fonts["heading"].render(
+        floor_label,
+        True,
+        (226, 211, 177),
+    )
+    floor_label_rect = floor_label_surface.get_rect(
+        midtop=(ACT_THREE_VIEW_X + ACT_THREE_VIEW_WIDTH // 2, 10)
+    )
+    shadow = fonts["heading"].render(floor_label, True, (20, 13, 19))
+    screen.blit(shadow, floor_label_rect.move(2, 2))
+    screen.blit(floor_label_surface, floor_label_rect)
+    ornament_y = floor_label_rect.centery + 1
+    for direction in (-1, 1):
+        inner_x = floor_label_rect.centerx + direction * (floor_label_rect.width // 2 + 14)
+        outer_x = inner_x + direction * 76
+        pygame.draw.line(screen, (100, 76, 52), (inner_x, ornament_y), (outer_x, ornament_y))
+        pygame.draw.circle(screen, (155, 112, 67), (outer_x, ornament_y), 2)
     _draw_act_three_sidebar(
         screen,
         game_state,
         fonts,
         assets,
+        mouse_position,
     )
     if game_state.upgrade_altar_menu_open:
         draw_upgrade_altar_menu(

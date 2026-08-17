@@ -3,6 +3,8 @@ import unittest
 from unittest.mock import patch
 
 from acts.act_two.crates import break_crate, collect_crate_loot
+from acts.act_two.consumables import FIRE_BOMB, POTION
+from acts.act_two.settings import CONSUMABLE_BELT_SIZE
 from generation import generate_floor
 from game.factories import create_game_state
 from worldgen.geometry import position_is_in_room
@@ -95,6 +97,34 @@ class BreakableCrateLootTests(unittest.TestCase):
         )
         self.assertEqual(self.game_state.player.potion_count, 1)
         self.assertFalse(self.crate.loot_available)
+
+    def test_potion_stays_on_ground_when_belt_is_full(self):
+        with patch("acts.act_two.crates.random.random", return_value=0.20):
+            break_crate(self.game_state, self.crate)
+        self.game_state.player.potion_count = CONSUMABLE_BELT_SIZE - 1
+        self.game_state.player.act_two.consumable_slots = [
+            FIRE_BOMB,
+            POTION,
+            POTION,
+            POTION,
+            POTION,
+        ]
+
+        self.assertIsNone(
+            collect_crate_loot(
+                self.game_state,
+                (self.crate.column, self.crate.row),
+            )
+        )
+        self.assertEqual(
+            self.game_state.player.potion_count,
+            CONSUMABLE_BELT_SIZE - 1,
+        )
+        self.assertTrue(self.crate.loot_available)
+        self.assertEqual(
+            self.game_state.combat_log[-1],
+            "The consumable belt is full.",
+        )
 
     def test_gold_is_the_rarest_drop_and_crate_cannot_be_rerolled(self):
         with patch("acts.act_two.crates.random.random", return_value=0.01):

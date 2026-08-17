@@ -3,6 +3,7 @@ import xml.etree.ElementTree as ET
 
 from levels import FLOOR_CONFIGS
 from presentation.layout import (
+    ACT_THREE_TILE_SIZE,
     ASSET_ROOT,
     FONT_ROOT,
 )
@@ -84,6 +85,14 @@ def load_act_three_fonts():
         "sidebar_log": pygame.font.Font(
             str(interface_path),
             16,
+        ),
+        "sidebar_hud": pygame.font.Font(
+            str(interface_path),
+            13,
+        ),
+        "sidebar_class": pygame.font.Font(
+            str(display_path),
+            19,
         ),
         "sidebar_numbers": pygame.font.Font(
             str(interface_bold_path),
@@ -307,6 +316,13 @@ def load_act_two_sprites():
         "stairs_locked": "environment/stairs/locked.png",
         "stairs_open": "environment/stairs/open.png",
         "potion": "items/consumables/potion.png",
+        "potion_belt": "items/consumables/potion_belt.png",
+        "fire_bomb": "items/consumables/fire_bomb.png",
+        "fire_bomb_belt": "items/consumables/fire_bomb_belt.png",
+        "fire_0": "environment/effects/fire/fire_00.png",
+        "fire_1": "environment/effects/fire/fire_01.png",
+        "fire_2": "environment/effects/fire/fire_02.png",
+        "fire_3": "environment/effects/fire/fire_03.png",
         "key": "items/loot/key.png",
         "coin": "items/loot/coin.png",
         "chest_closed": "items/chests/closed.png",
@@ -699,6 +715,13 @@ def _load_cropped_ui_image(path, size):
     return pygame.transform.smoothscale(cropped_source, size)
 
 
+def _load_pixel_cropped_ui_image(path, size):
+    source = pygame.image.load(str(path)).convert_alpha()
+    content_rectangle = source.get_bounding_rect(min_alpha=1)
+    cropped_source = source.subsurface(content_rectangle).copy()
+    return pygame.transform.scale(cropped_source, size)
+
+
 def load_act_three_gameplay_assets():
     act_directory = ASSET_ROOT / "act_3"
     act_three_config = next(
@@ -708,8 +731,24 @@ def load_act_three_gameplay_assets():
     map_path = project_root / act_three_config["map_path"]
     environment_directory = map_path.parent
     ui_directory = ASSET_ROOT / "ui" / "act_3"
-    tile_size = 64
+    tile_size = ACT_THREE_TILE_SIZE
     assets = {
+        "character_hud_frame": _load_pixel_cropped_ui_image(
+            ui_directory / "character_hud_frame_c.png",
+            (420, 151),
+        ),
+        "character_hud_hp": _load_pixel_cropped_ui_image(
+            ui_directory / "character_hud_hp.png",
+            (246, 18),
+        ),
+        "character_hud_xp": _load_pixel_cropped_ui_image(
+            ui_directory / "character_hud_xp.png",
+            (246, 19),
+        ),
+        "character_portrait_placeholder": _load_pixel_cropped_ui_image(
+            ui_directory / "character_portrait_placeholder.png",
+            (86, 84),
+        ),
         "floor_base": _load_scaled_image(
             environment_directory / "floor" / "floor_base.png",
             (tile_size, tile_size),
@@ -853,18 +892,6 @@ def load_act_three_gameplay_assets():
             / "upgrade_altar"
             / "upgrade_altar_02.png",
             (tile_size * 2, tile_size * 2),
-        ),
-        "gameplay_frame": _load_cropped_ui_image(
-            ui_directory / "gameplay_frame_source.png",
-            (928, 656),
-        ),
-        "sidebar_panel": _load_cropped_ui_image(
-            ui_directory / "sidebar_panel_source.png",
-            (304, 640),
-        ),
-        "assassin_hp_bar": _load_scaled_image(
-            ui_directory / "assassin_hp_bar.png",
-            (258, 42),
         ),
         "altar_menu_panel": _load_scaled_image(
             ui_directory / "altar_menu" / "panel.png",

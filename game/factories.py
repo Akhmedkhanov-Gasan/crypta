@@ -7,6 +7,7 @@ from acts.act_one.settings import (
 from acts.player_stats import ATTRIBUTE_NAMES
 from enemies import ENEMY_TYPES
 from generation import generate_floor
+from levels import FLOOR_CONFIGS
 from game.state import (
     BreakableCrateState,
     ChestState,
@@ -193,9 +194,16 @@ def create_game_state(
     floor_index: int = 0,
     opening_message: str = "The descent begins.",
 ) -> GameState:
-    return GameState(
+    game_state = GameState(
         floor_index=floor_index,
         floor=create_floor_state(floor_index),
         player=create_player_state(),
         combat_log=[opening_message],
     )
+    if FLOOR_CONFIGS[floor_index]["act"] == 2:
+        from acts.act_two.consumables import (
+            initialize_act_two_consumable_belt,
+        )
+
+        initialize_act_two_consumable_belt(game_state.player)
+    return game_state

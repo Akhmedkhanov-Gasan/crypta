@@ -1,6 +1,9 @@
 import pygame
 
-from acts.act_two.settings import ABILITY_HITS_REQUIRED
+from acts.act_two.settings import (
+    ABILITY_HITS_REQUIRED,
+    CONSUMABLE_BELT_SIZE,
+)
 from levels import FLOOR_CONFIGS
 from presentation.layout import (
     MAP_OFFSET_X,
@@ -388,6 +391,7 @@ def draw_act_two_sidebar(
     player_spell_power,
     attribute_ranks,
     potion_count,
+    consumable_slots,
     gold_count,
     key_count,
     enemies_defeated,
@@ -397,20 +401,14 @@ def draw_act_two_sidebar(
     directional_ability_aiming,
     sprites,
 ):
-    _draw_inventory_counters(
-        screen,
-        log_font,
-        potion_count,
-        gold_count,
-        key_count,
-        sprites,
-    )
+    panel_y = 54
+    panel_height = GAME_HEIGHT - panel_y - 54
 
     panel_rectangle = pygame.Rect(
         SIDEBAR_X,
-        SIDEBAR_Y,
+        panel_y,
         SIDEBAR_WIDTH,
-        SIDEBAR_HEIGHT,
+        panel_height,
     )
     pygame.draw.rect(screen, (11, 14, 18), panel_rectangle)
     pygame.draw.rect(
@@ -437,7 +435,7 @@ def draw_act_two_sidebar(
     )
     portrait_rectangle = pygame.Rect(
         SIDEBAR_X + 14,
-        SIDEBAR_Y + 14,
+        panel_y + 14,
         44,
         44,
     )
@@ -448,7 +446,7 @@ def draw_act_two_sidebar(
             sprites[f"{player_class}_portrait"],
             (40, 40),
         )
-        screen.blit(portrait, (SIDEBAR_X + 16, SIDEBAR_Y + 16))
+        screen.blit(portrait, (SIDEBAR_X + 16, panel_y + 16))
 
     class_name = (
         player_class.upper()
@@ -457,7 +455,7 @@ def draw_act_two_sidebar(
     )
     screen.blit(
         title_font.render(class_name, True, class_color),
-        (SIDEBAR_X + 70, SIDEBAR_Y + 8),
+        (SIDEBAR_X + 70, panel_y + 8),
     )
 
     defeated_surface = log_font.render(
@@ -470,7 +468,7 @@ def draw_act_two_sidebar(
         defeated_surface.get_rect(
             topright=(
                 SIDEBAR_X + SIDEBAR_WIDTH - 16,
-                SIDEBAR_Y + 12,
+                panel_y + 12,
             )
         ),
     )
@@ -482,12 +480,12 @@ def draw_act_two_sidebar(
         TEXT_COLOR,
     )
     health_rectangle = health_surface.get_rect(
-        midleft=(SIDEBAR_X + 70, SIDEBAR_Y + 51),
+        midleft=(SIDEBAR_X + 70, panel_y + 51),
     )
     health_bar_x = health_rectangle.right + 8
     health_bar_rectangle = pygame.Rect(
         health_bar_x,
-        SIDEBAR_Y + 42,
+        panel_y + 42,
         SIDEBAR_X + SIDEBAR_WIDTH - 18 - health_bar_x,
         18,
     )
@@ -523,7 +521,7 @@ def draw_act_two_sidebar(
 
     stats_rectangle = pygame.Rect(
         SIDEBAR_X + 10,
-        SIDEBAR_Y + 68,
+        panel_y + 68,
         SIDEBAR_WIDTH - 20,
         54,
     )
@@ -575,7 +573,7 @@ def draw_act_two_sidebar(
 
     derived_rectangle = pygame.Rect(
         SIDEBAR_X + 10,
-        SIDEBAR_Y + 130,
+        panel_y + 130,
         SIDEBAR_WIDTH - 20,
         54,
     )
@@ -633,7 +631,7 @@ def draw_act_two_sidebar(
 
     ability_rectangle = pygame.Rect(
         SIDEBAR_X + 10,
-        SIDEBAR_Y + 192,
+        panel_y + 192,
         SIDEBAR_WIDTH - 20,
         70,
     )
@@ -719,7 +717,24 @@ def draw_act_two_sidebar(
         (ability_rectangle.x + 10, ability_rectangle.y + 39),
     )
 
-    events_title_y = SIDEBAR_Y + 270
+    _draw_act_two_consumable_belt(
+        screen,
+        title_font,
+        controls_font,
+        log_font,
+        pygame.Rect(
+            SIDEBAR_X + 10,
+            panel_y + 270,
+            SIDEBAR_WIDTH - 20,
+            98,
+        ),
+        consumable_slots,
+        gold_count,
+        key_count,
+        sprites,
+    )
+
+    events_title_y = panel_y + 376
     screen.blit(
         title_font.render("RECENT EVENTS", True, TEXT_COLOR),
         (SIDEBAR_X + 12, events_title_y),
@@ -744,7 +759,7 @@ def draw_act_two_sidebar(
 
     controls_rectangle = pygame.Rect(
         SIDEBAR_X + 10,
-        SIDEBAR_Y + SIDEBAR_HEIGHT - 77,
+        panel_y + panel_height - 77,
         SIDEBAR_WIDTH - 20,
         67,
     )
@@ -752,7 +767,7 @@ def draw_act_two_sidebar(
     controls = (
         "WASD / Arrows - move / aim",
         "Space - wait  |  E - ability",
-        "H - potion  |  F11 - fullscreen",
+        "1-5 - consumables  |  F11 - fullscreen",
     )
     controls_y = controls_rectangle.y + 3
 
@@ -766,6 +781,94 @@ def draw_act_two_sidebar(
             (controls_rectangle.x + 9, controls_y),
         )
         controls_y += 21
+
+
+def _draw_act_two_consumable_belt(
+    screen,
+    title_font,
+    controls_font,
+    count_font,
+    rectangle,
+    consumable_slots,
+    gold_count,
+    key_count,
+    sprites,
+):
+    draw_pixel_section(screen, rectangle)
+    screen.blit(
+        title_font.render("BELT", True, TEXT_COLOR),
+        (rectangle.x + 9, rectangle.y + 5),
+    )
+
+    resource_specs = (
+        ("coin", gold_count, rectangle.right - 172),
+        ("key", key_count, rectangle.right - 84),
+    )
+    for sprite_name, count, icon_x in resource_specs:
+        screen.blit(sprites[sprite_name], (icon_x, rectangle.y + 2))
+        count_surface = count_font.render(
+            f"x{count}",
+            True,
+            TEXT_COLOR if count > 0 else (112, 107, 116),
+        )
+        screen.blit(
+            count_surface,
+            count_surface.get_rect(
+                midleft=(icon_x + 35, rectangle.y + 18)
+            ),
+        )
+
+    for slot_index, slot_rectangle in enumerate(
+        get_act_two_belt_slot_rectangles()
+    ):
+        pygame.draw.rect(screen, (8, 11, 14), slot_rectangle)
+        pygame.draw.rect(
+            screen,
+            (54, 66, 70),
+            slot_rectangle,
+            width=2,
+        )
+        key_surface = controls_font.render(
+            str(slot_index + 1),
+            True,
+            (126, 140, 141),
+        )
+        screen.blit(key_surface, (slot_rectangle.x + 4, slot_rectangle.y + 2))
+
+        item = consumable_slots[slot_index]
+        sprite_name = {
+            "potion": "potion_belt",
+            "fire_bomb": "fire_bomb_belt",
+        }.get(item)
+        if sprite_name is not None:
+            item_rectangle = sprites[sprite_name].get_rect(
+                center=(slot_rectangle.centerx + 3, slot_rectangle.centery + 3)
+            )
+            screen.blit(sprites[sprite_name], item_rectangle)
+
+
+def get_act_two_belt_slot_rectangles():
+    belt_rectangle = pygame.Rect(
+        SIDEBAR_X + 10,
+        54 + 270,
+        SIDEBAR_WIDTH - 20,
+        98,
+    )
+    slot_gap = 6
+    slots_left = belt_rectangle.x + 9
+    slots_width = belt_rectangle.width - 18
+    slot_width = (
+        slots_width - slot_gap * (CONSUMABLE_BELT_SIZE - 1)
+    ) // CONSUMABLE_BELT_SIZE
+    return tuple(
+        pygame.Rect(
+            slots_left + slot_index * (slot_width + slot_gap),
+            belt_rectangle.y + 38,
+            slot_width,
+            50,
+        )
+        for slot_index in range(CONSUMABLE_BELT_SIZE)
+    )
 
 
 def _draw_inventory_counters(
@@ -849,6 +952,7 @@ def draw_sidebar(
     player_spell_power,
     attribute_ranks,
     potion_count,
+    consumable_slots,
     gold_count,
     key_count,
     enemies_defeated,
@@ -876,6 +980,7 @@ def draw_sidebar(
             player_spell_power,
             attribute_ranks,
             potion_count,
+            consumable_slots,
             gold_count,
             key_count,
             enemies_defeated,

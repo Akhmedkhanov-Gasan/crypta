@@ -128,7 +128,7 @@ class ActThreeSessionState:
     act_three_debug_class_selection_open: bool = False
     subclass_selection_open: bool = False
     act_three_test_mode: bool = False
-    sidebar_tab: str = "stats"
+    sidebar_tab: str = "closed"
     log_scroll_offset: int = 0
     upgrade_altar_hovered: bool = False
     upgrade_altar_menu_open: bool = False

@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pygame
 
+from acts.act_two.settings import FIRE_BOMB_FLIGHT_MS
 from game.events import GameEvent, GameEventType
 
 
@@ -182,6 +183,19 @@ ACT_TWO_ENVIRONMENT_SOUND_FILES = {
 }
 
 
+ACT_TWO_FIRE_BOMB_SOUND_FILES = {
+    "fire_bomb_break": (
+        "fire_bomb_break_1.mp3",
+        "fire_bomb_break_2.mp3",
+    ),
+    "fire_bomb_ignite": (
+        "fire_bomb_ignite_1.mp3",
+        "fire_bomb_ignite_2.mp3",
+    ),
+    "fire_bomb_burning": ("fire_bomb_burning_loop.mp3",),
+}
+
+
 ACT_TWO_SOUND_VOLUMES = {
     "warrior_hit": 0.78,
     "warrior_cleave_impact": 0.82,
@@ -231,7 +245,17 @@ ACT_TWO_SOUND_VOLUMES = {
     "portcullis_unlock": 0.74,
     "room_reward": 0.84,
     "secret_wall_break": 0.82,
+    "fire_bomb_break": 0.68,
+    "fire_bomb_ignite": 0.50,
+    "fire_bomb_burning": 0.22,
 }
+
+
+_FIRE_BOMB_IGNITE_DELAY_MS = 90
+_FIRE_BOMB_LOOP_DELAY_MS = 220
+_FIRE_BOMB_BREAK_CHANNEL = 5
+_FIRE_BOMB_IGNITE_CHANNEL = 6
+_FIRE_BOMB_LOOP_CHANNEL = 7
 
 
 class ActTwoTransitionSoundBank:
@@ -274,6 +298,10 @@ class ActTwoSoundBank:
         self.sounds = sounds
         self.master_volume = 1.0
         self._last_footstep = None
+        self._fire_bomb_floor_identity = None
+        self._fire_bomb_breaks_played = set()
+        self._fire_bomb_ignitions_played = set()
+        self._fire_bomb_loop_active = False
 
     @classmethod
     def load(cls, sounds_path: Path) -> "ActTwoSoundBank":
@@ -374,10 +402,152 @@ class ActTwoSoundBank:
             if variants:
                 loaded_sounds[sound_key] = variants
 
+        fire_bomb_path = sounds_path / "items" / "fire_bomb"
+        for sound_key, filenames in ACT_TWO_FIRE_BOMB_SOUND_FILES.items():
+            variants = []
+            for filename in filenames:
+                try:
+                    variants.append(
+                        pygame.mixer.Sound(str(fire_bomb_path / filename))
+                    )
+                except (FileNotFoundError, pygame.error):
+                    continue
+            if variants:
+                loaded_sounds[sound_key] = variants
+
         return cls(loaded_sounds)
 
     def set_master_volume(self, volume: float) -> None:
         self.master_volume = max(0.0, min(1.0, volume))
+
+    @staticmethod
+    def _fire_channel(channel_index: int):
+        if pygame.mixer.get_init() is None:
+            return None
+        if pygame.mixer.get_num_channels() <= channel_index:
+            pygame.mixer.set_num_channels(channel_index + 1)
+        return pygame.mixer.Channel(channel_index)
+
+    def _play_fire_sound(
+        self,
+        sound_key: str,
+        channel_index: int,
+        distance_gain: float,
+        loops: int = 0,
+        fade_ms: int = 0,
+    ) -> bool:
+        variants = self.sounds.get(sound_key)
+        channel = self._fire_channel(channel_index)
+        if not variants or channel is None:
+            return False
+        channel.play(
+            random.choice(variants),
+            loops=loops,
+            fade_ms=fade_ms,
+        )
+        channel.set_volume(
+            min(
+                1.0,
+                ACT_TWO_SOUND_VOLUMES[sound_key]
+                * self.master_volume
+                * max(0.0, min(1.0, distance_gain)),
+            )
+        )
+        return True
+
+    def _stop_fire_bomb_audio(self) -> None:
+        for channel_index in (
+            _FIRE_BOMB_BREAK_CHANNEL,
+            _FIRE_BOMB_IGNITE_CHANNEL,
+        ):
+            channel = self._fire_channel(channel_index)
+            if channel is not None:
+                channel.fadeout(120)
+        loop_channel = self._fire_channel(_FIRE_BOMB_LOOP_CHANNEL)
+        if loop_channel is not None:
+            loop_channel.fadeout(280)
+        self._fire_bomb_loop_active = False
+
+    def update_fire_bomb_audio(self, floor, current_time: int) -> None:
+        floor_identity = id(floor) if floor is not None else None
+        if floor_identity != self._fire_bomb_floor_identity:
+            self._stop_fire_bomb_audio()
+            self._fire_bomb_floor_identity = floor_identity
+            self._fire_bomb_breaks_played.clear()
+            self._fire_bomb_ignitions_played.clear()
+
+        zones = tuple(getattr(floor, "fire_zones", ()))
+        if not zones:
+            if (
+                self._fire_bomb_loop_active
+                or self._fire_bomb_breaks_played
+                or self._fire_bomb_ignitions_played
+            ):
+                self._stop_fire_bomb_audio()
+            self._fire_bomb_breaks_played.clear()
+            self._fire_bomb_ignitions_played.clear()
+            return
+
+        player_position = (
+            (floor.player_column, floor.player_row)
+            if floor is not None
+            else None
+        )
+        burning_distance_gain = 0.0
+        for zone in zones:
+            elapsed = current_time - zone.created_at
+            zone_key = (zone.created_at, zone.origin, zone.center)
+            distance_gain = _act_two_distance_gain(
+                zone.center,
+                player_position,
+            )
+            if (
+                elapsed >= FIRE_BOMB_FLIGHT_MS
+                and zone_key not in self._fire_bomb_breaks_played
+            ):
+                self._fire_bomb_breaks_played.add(zone_key)
+                self._play_fire_sound(
+                    "fire_bomb_break",
+                    _FIRE_BOMB_BREAK_CHANNEL,
+                    distance_gain,
+                )
+            if (
+                elapsed
+                >= FIRE_BOMB_FLIGHT_MS + _FIRE_BOMB_IGNITE_DELAY_MS
+                and zone_key not in self._fire_bomb_ignitions_played
+            ):
+                self._fire_bomb_ignitions_played.add(zone_key)
+                self._play_fire_sound(
+                    "fire_bomb_ignite",
+                    _FIRE_BOMB_IGNITE_CHANNEL,
+                    distance_gain,
+                )
+            if elapsed >= FIRE_BOMB_FLIGHT_MS + _FIRE_BOMB_LOOP_DELAY_MS:
+                burning_distance_gain = max(
+                    burning_distance_gain,
+                    distance_gain,
+                )
+
+        if burning_distance_gain <= 0:
+            return
+        loop_channel = self._fire_channel(_FIRE_BOMB_LOOP_CHANNEL)
+        if not self._fire_bomb_loop_active:
+            self._fire_bomb_loop_active = self._play_fire_sound(
+                "fire_bomb_burning",
+                _FIRE_BOMB_LOOP_CHANNEL,
+                burning_distance_gain,
+                loops=-1,
+                fade_ms=180,
+            )
+        elif loop_channel is not None:
+            loop_channel.set_volume(
+                min(
+                    1.0,
+                    ACT_TWO_SOUND_VOLUMES["fire_bomb_burning"]
+                    * self.master_volume
+                    * burning_distance_gain,
+                )
+            )
 
     def _play(
         self,
@@ -737,7 +907,10 @@ class ActTwoSoundBank:
                 priority = 4
             elif (
                 event.type is GameEventType.HIT
-                and event.actor in ("hero", "familiar")
+                and (
+                    event.actor in ("hero", "familiar")
+                    or event.data.get("kind") == "fire_bomb"
+                )
                 and event.target not in (None, "hero", "familiar")
             ):
                 if event.data.get("blocked", False) and enemy_type == "sentinel":

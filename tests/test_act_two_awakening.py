@@ -97,6 +97,10 @@ class ActTwoAwakeningTests(unittest.TestCase):
         self.assertFalse(game_state.class_selection_open)
         self.assertIsNone(game_state.class_selection_choice)
         self.assertEqual(game_state.class_selection_choice_started_at, 0)
+        self.assertIn(
+            "fire_bomb",
+            game_state.player.act_two.consumable_slots,
+        )
 
 
 if __name__ == "__main__":

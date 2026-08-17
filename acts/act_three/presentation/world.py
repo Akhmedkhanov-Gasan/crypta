@@ -19,8 +19,6 @@ from acts.act_three.presentation.view import (
 
 from game.state import EnemyBehaviorState
 from presentation.layout import (
-    ACT_THREE_FRAME_X,
-    ACT_THREE_FRAME_Y,
     ACT_THREE_TILE_SIZE,
     ACT_THREE_VIEW_HEIGHT,
     ACT_THREE_VIEW_WIDTH,
@@ -199,7 +197,24 @@ def _draw_act_three_world(
     view_surface = pygame.Surface(
         (ACT_THREE_VIEW_WIDTH, ACT_THREE_VIEW_HEIGHT)
     )
-    view_surface.fill((5, 5, 8))
+    view_surface.fill((9, 10, 13))
+    brick_width = 64
+    brick_height = 32
+    for brick_y in range(0, ACT_THREE_VIEW_HEIGHT, brick_height):
+        pygame.draw.line(
+            view_surface,
+            (18, 20, 24),
+            (0, brick_y),
+            (ACT_THREE_VIEW_WIDTH, brick_y),
+        )
+        row_offset = brick_width // 2 if (brick_y // brick_height) % 2 else 0
+        for brick_x in range(-row_offset, ACT_THREE_VIEW_WIDTH, brick_width):
+            pygame.draw.line(
+                view_surface,
+                (16, 18, 22),
+                (brick_x, brick_y),
+                (brick_x, min(ACT_THREE_VIEW_HEIGHT, brick_y + brick_height)),
+            )
     camera_x, camera_y = _camera_position(floor)
     teleport_origin = game_state.player.teleport_camera_origin
     transition_started_at = (
@@ -2200,8 +2215,4 @@ def _draw_act_three_world(
     screen.blit(
         view_surface,
         (ACT_THREE_VIEW_X, ACT_THREE_VIEW_Y),
-    )
-    screen.blit(
-        assets["gameplay_frame"],
-        (ACT_THREE_FRAME_X, ACT_THREE_FRAME_Y),
     )

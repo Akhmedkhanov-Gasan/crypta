@@ -47,8 +47,9 @@ from acts.act_three.combat import (
 )
 from acts.act_three.presentation import (
     get_act_three_cell_from_position,
-    get_act_three_log_arrow_rectangles,
-    get_act_three_log_panel_rect,
+    get_act_three_bottom_hud_rectangles,
+    get_act_three_panel_close_rectangle,
+    get_act_three_popup_rectangle,
     get_act_three_sidebar_tab_rectangles,
 )
 from acts.act_three.presentation.altar_menu import (
@@ -467,6 +468,40 @@ def handle_act_three_pointer_event(
             event.pos,
         )
         if game_mouse_position is not None:
+            if any(
+                rectangle.collidepoint(game_mouse_position)
+                for rectangle in get_act_three_bottom_hud_rectangles()
+            ):
+                return True
+            for tab_name, tab_rectangle in (
+                get_act_three_sidebar_tab_rectangles().items()
+            ):
+                if not tab_rectangle.collidepoint(game_mouse_position):
+                    continue
+                if tab_name == "settings":
+                    pygame.event.post(
+                        pygame.event.Event(
+                            pygame.KEYDOWN,
+                            key=pygame.K_ESCAPE,
+                        )
+                    )
+                elif tab_name in ("inventory", "stats"):
+                    game_state.sidebar_tab = (
+                        "closed"
+                        if game_state.sidebar_tab == tab_name
+                        else tab_name
+                    )
+                return True
+            if game_state.sidebar_tab in ("inventory", "stats"):
+                if get_act_three_panel_close_rectangle().collidepoint(
+                    game_mouse_position
+                ):
+                    game_state.sidebar_tab = "closed"
+                    return True
+                if get_act_three_popup_rectangle().collidepoint(
+                    game_mouse_position
+                ):
+                    return True
             if game_state.player.ultimate_animation_active:
                 return True
             elif game_state.player.warlock_curse_aiming:
@@ -716,42 +751,6 @@ def handle_act_three_pointer_event(
                     )
                     return True
     
-                log_arrow_clicked = False
-                if get_act_three_log_panel_rect().collidepoint(
-                    game_mouse_position
-                ):
-                    for arrow_name, arrow_rectangle in (
-                        get_act_three_log_arrow_rectangles().items()
-                    ):
-                        if arrow_rectangle.collidepoint(
-                            game_mouse_position
-                        ):
-                            maximum_scroll = max(
-                                0,
-                                len(game_state.combat_log) - 4,
-                            )
-                            if arrow_name == "older":
-                                game_state.log_scroll_offset = min(
-                                    maximum_scroll,
-                                    game_state.log_scroll_offset + 1,
-                                )
-                            else:
-                                game_state.log_scroll_offset = max(
-                                    0,
-                                    game_state.log_scroll_offset - 1,
-                                )
-                            log_arrow_clicked = True
-                            break
-                if not log_arrow_clicked:
-                    for tab_name, tab_rectangle in (
-                        get_act_three_sidebar_tab_rectangles().items()
-                    ):
-                        if tab_rectangle.collidepoint(
-                            game_mouse_position
-                        ):
-                            game_state.sidebar_tab = tab_name
-                            break
-
     else:
         return False
 

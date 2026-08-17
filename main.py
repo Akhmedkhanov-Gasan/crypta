@@ -13,6 +13,17 @@ from acts.act_two.abilities import (
     select_directional_ability_direction,
 )
 from acts.act_two.crates import break_crate
+from acts.act_two.consumables import (
+    FIRE_BOMB,
+    POTION,
+    advance_fire_zones,
+    cancel_fire_bomb_aiming,
+    get_act_two_consumable_slots,
+    initialize_act_two_consumable_belt,
+    is_valid_fire_bomb_target,
+    request_fire_bomb_aiming,
+    throw_fire_bomb,
+)
 from acts.act_two.progression import (
     get_act_two_upgrade_order,
     purchase_act_two_upgrade,
@@ -99,6 +110,9 @@ from rendering import (
     draw_act_two_ability_preview,
     draw_act_two_arcane_burst_effect,
     draw_act_two_fog_of_war,
+    draw_fire_bomb_flight,
+    draw_fire_bomb_targeting,
+    draw_fire_zones,
     draw_act_one_player_attack_effect,
     draw_act_two_player_attack_effect,
     draw_act_two_player_feedback_overlay,
@@ -132,6 +146,7 @@ from rendering import (
     draw_upgrade_screen,
     get_upgrade_card_rectangles,
     get_act_two_upgrade_card_rectangles,
+    get_act_two_belt_slot_rectangles,
     get_class_selection_rectangles,
     load_act_one_fonts,
     load_act_three_fonts,
@@ -213,6 +228,17 @@ FIRST_ACT_THREE_FLOOR = next(
     if floor_config["act"] == 3
 )
 ACT_THREE_MUSIC_ENABLED = False
+_ACT_TWO_CONSUMABLE_KEY_ORDER = (
+    pygame.K_1,
+    pygame.K_2,
+    pygame.K_3,
+    pygame.K_4,
+    pygame.K_5,
+)
+_ACT_TWO_CONSUMABLE_KEYS = {
+    key: slot_index
+    for slot_index, key in enumerate(_ACT_TWO_CONSUMABLE_KEY_ORDER)
+}
 
 
 def get_initial_window_size():
@@ -234,6 +260,54 @@ def get_initial_window_size():
     )
 
 
+_AMBIENT_MARGIN_CACHE = {}
+
+
+def _draw_ambient_margin(window, rectangle):
+    if rectangle.width <= 0 or rectangle.height <= 0:
+        return
+
+    cache_key = rectangle.size
+    cached_margin = _AMBIENT_MARGIN_CACHE.get(cache_key)
+    if cached_margin is not None:
+        window.blit(cached_margin, rectangle)
+        return
+
+    margin = pygame.Surface(rectangle.size)
+    margin.fill((6, 8, 10))
+    brick_width = 72
+    brick_height = 48
+    for row, y in enumerate(range(0, rectangle.height, brick_height)):
+        pygame.draw.line(
+            margin,
+            (14, 18, 20),
+            (0, y),
+            (rectangle.width, y),
+        )
+        offset = -(brick_width // 2) if row % 2 else 0
+        for x in range(offset, rectangle.width, brick_width):
+            pygame.draw.line(
+                margin,
+                (11, 15, 17),
+                (x, y),
+                (x, min(rectangle.height, y + brick_height)),
+            )
+    shade = pygame.Surface(rectangle.size, pygame.SRCALPHA)
+    for x in range(rectangle.width):
+        distance_from_game = rectangle.width - x
+        alpha = min(178, 70 + distance_from_game // 3)
+        pygame.draw.line(
+            shade,
+            (0, 0, 0, alpha),
+            (x, 0),
+            (x, rectangle.height),
+        )
+    margin.blit(shade, (0, 0))
+    _AMBIENT_MARGIN_CACHE.clear()
+    _AMBIENT_MARGIN_CACHE[cache_key] = margin
+    window.blit(margin, rectangle)
+
+
 def present_game(window, game_surface):
     window_width, window_height = window.get_size()
     scale = min(
@@ -249,10 +323,31 @@ def present_game(window, game_surface):
         else pygame.transform.smoothscale
     )
     scaled_surface = transform(game_surface, (scaled_width, scaled_height))
-    offset_x = (window_width - scaled_width) // 2
+    offset_x = window_width - scaled_width
     offset_y = (window_height - scaled_height) // 2
 
     window.fill(BACKGROUND_COLOR)
+    if offset_x > 0:
+        _draw_ambient_margin(
+            window,
+            pygame.Rect(0, offset_y, offset_x, scaled_height),
+        )
+    if offset_y > 0:
+        pygame.draw.rect(
+            window,
+            (6, 8, 10),
+            (offset_x, 0, scaled_width, offset_y),
+        )
+        pygame.draw.rect(
+            window,
+            (6, 8, 10),
+            (
+                offset_x,
+                offset_y + scaled_height,
+                scaled_width,
+                window_height - scaled_height - offset_y,
+            ),
+        )
     window.blit(scaled_surface, (offset_x, offset_y))
     pygame.display.flip()
 
@@ -267,11 +362,13 @@ def _complete_class_selection(game_state):
     clear_archer_barrage_zone(game_state)
     clear_berserker_crushing_leap(game_state)
     game_state.player.key_count = 0
+    initialize_act_two_consumable_belt(game_state.player)
     game_state.class_selection_open = False
     game_state.class_transition_started_at = 0
     game_state.class_selection_choice = None
     game_state.class_selection_choice_started_at = 0
     game_state.player_attack_targets = []
+    cancel_fire_bomb_aiming(game_state)
     add_log_message(
         game_state.combat_log,
         f"The hero becomes a {chosen_class}.",
@@ -290,7 +387,7 @@ def window_to_game_position(window, window_position):
     )
     scaled_width = int(GAME_WIDTH * scale)
     scaled_height = int(GAME_HEIGHT * scale)
-    offset_x = (window_width - scaled_width) // 2
+    offset_x = window_width - scaled_width
     offset_y = (window_height - scaled_height) // 2
     mouse_x, mouse_y = window_position
 
@@ -336,6 +433,7 @@ def _advance_floor_transition(game_state, current_time):
         game_state.floor_transition_swapped = True
         game_state.player.key_count = 0
         game_state.player_attack_targets = []
+        cancel_fire_bomb_aiming(game_state)
         clear_archer_barrage_zone(game_state)
         clear_berserker_crushing_leap(game_state)
         add_log_message(
@@ -477,6 +575,7 @@ def main():
             and not game_state.upgrade_screen_open
             and not game_state.subclass_selection_open
             and not game_state.player.directional_ability_aiming
+            and not game_state.player.act_two.fire_bomb_aiming
             and game_state.player.health > 0
             and not game_state.game_won
         )
@@ -810,6 +909,14 @@ def main():
                         break
             elif (
                 event.type == pygame.MOUSEBUTTONDOWN
+                and event.button == 3
+                and current_act == 2
+                and game_state.player.act_two.fire_bomb_aiming
+            ):
+                cancel_fire_bomb_aiming(game_state)
+                continue
+            elif (
+                event.type == pygame.MOUSEBUTTONDOWN
                 and event.button == 1
                 and current_act == 2
                 and not game_state.class_selection_open
@@ -820,6 +927,25 @@ def main():
                     screen,
                     event.pos,
                 )
+                belt_slot_clicked = False
+                if game_mouse_position is not None:
+                    for slot_index, rectangle in enumerate(
+                        get_act_two_belt_slot_rectangles()
+                    ):
+                        if not rectangle.collidepoint(game_mouse_position):
+                            continue
+                        pygame.event.post(
+                            pygame.event.Event(
+                                pygame.KEYDOWN,
+                                key=(
+                                    _ACT_TWO_CONSUMABLE_KEY_ORDER[slot_index]
+                                ),
+                            )
+                        )
+                        belt_slot_clicked = True
+                        break
+                if belt_slot_clicked:
+                    continue
                 target_cell = (
                     act_two_screen_to_cell(
                         game_mouse_position,
@@ -828,6 +954,22 @@ def main():
                     if game_mouse_position is not None
                     else None
                 )
+                if game_state.player.act_two.fire_bomb_aiming:
+                    if is_valid_fire_bomb_target(
+                        game_state,
+                        target_cell,
+                    ):
+                        pygame.event.post(
+                            pygame.event.Event(
+                                pygame.KEYDOWN,
+                                key=pygame.K_UNKNOWN,
+                                fire_bomb_target=target_cell,
+                                fire_bomb_slot=(
+                                    game_state.player.act_two.fire_bomb_aiming_slot
+                                ),
+                            )
+                        )
+                    continue
                 if (
                     target_cell is not None
                     and target_cell in game_state.floor.visible_cells
@@ -1175,6 +1317,49 @@ def main():
                     continue
 
                 game_state.clear_events()
+                fire_bomb_target = getattr(
+                    event,
+                    "fire_bomb_target",
+                    None,
+                )
+                fire_bomb_slot = getattr(
+                    event,
+                    "fire_bomb_slot",
+                    None,
+                )
+                consumable_slot = (
+                    _ACT_TWO_CONSUMABLE_KEYS.get(event.key)
+                    if current_act == 2
+                    else None
+                )
+                consumable_slots = get_act_two_consumable_slots(
+                    game_state.player
+                )
+                selected_consumable = (
+                    consumable_slots[consumable_slot]
+                    if consumable_slot is not None
+                    else None
+                )
+                if (
+                    current_act == 2
+                    and game_state.player.act_two.fire_bomb_aiming
+                    and fire_bomb_target is None
+                ):
+                    if (
+                        event.key == pygame.K_ESCAPE
+                        or selected_consumable == FIRE_BOMB
+                    ):
+                        cancel_fire_bomb_aiming(game_state)
+                    continue
+                if selected_consumable == FIRE_BOMB:
+                    act_two_held_movement_keys.clear()
+                    act_two_held_direction = (0, 0)
+                    request_fire_bomb_aiming(
+                        game_state,
+                        consumable_slot,
+                    )
+                    continue
+
                 column_change = 0
                 row_change = 0
                 movement_direction = getattr(
@@ -1359,7 +1544,14 @@ def main():
                 player_acted = False
                 game_state.player_attack_targets = []
 
-                if (
+                if fire_bomb_target is not None and fire_bomb_slot is not None:
+                    player_acted = throw_fire_bomb(
+                        game_state,
+                        fire_bomb_slot,
+                        fire_bomb_target,
+                        pygame.time.get_ticks(),
+                    )
+                elif (
                     game_state.player.warlock_soul_exchange_target
                     is not None
                 ):
@@ -1554,6 +1746,18 @@ def main():
                                 column_change,
                                 row_change,
                             )
+                elif (
+                    current_act == 2
+                    and selected_consumable == POTION
+                ):
+                    player_acted = try_use_potion(
+                        game_state,
+                        consumable_slot,
+                    )
+                    if player_acted:
+                        game_state.player.potion_effect_started_at = (
+                            pygame.time.get_ticks()
+                        )
                 elif event.key == pygame.K_h:
                     player_acted = try_use_potion(game_state)
                     if player_acted:
@@ -1663,6 +1867,8 @@ def main():
                             player_position_before_action,
                             rogue_ability_activated,
                         )
+                    if current_act == 2:
+                        advance_fire_zones(game_state)
                     update_treasury_trial(game_state)
                     advance_berserker_last_rage(game_state)
                     advance_paladin_holy_shield(game_state)
@@ -2105,6 +2311,10 @@ def main():
         current_act_floor = FLOOR_CONFIGS[game_state.floor_index][
             "act_floor"
         ]
+        act_two_sounds.update_fire_bomb_audio(
+            game_state.floor if current_act == 2 else None,
+            current_time,
+        )
         warden_fight_started = warden_music_should_play(
             game_state.floor
         )
@@ -2375,6 +2585,12 @@ def main():
                 game_state.floor.rune_room,
                 act_two_sprites,
                 game_state.floor.visible_cells,
+                current_time,
+            )
+            draw_fire_zones(
+                world_target,
+                game_state,
+                act_two_sprites,
                 current_time,
             )
         if current_act != 2:
@@ -2823,6 +3039,29 @@ def main():
                 ],
                 act_two_sprites,
             )
+            draw_fire_bomb_flight(
+                world_target,
+                game_state,
+                act_two_sprites,
+                current_time,
+            )
+            fire_bomb_mouse_position = window_to_game_position(
+                screen,
+                pygame.mouse.get_pos(),
+            )
+            fire_bomb_target = (
+                act_two_screen_to_cell(
+                    fire_bomb_mouse_position,
+                    act_two_camera,
+                )
+                if fire_bomb_mouse_position is not None
+                else None
+            )
+            draw_fire_bomb_targeting(
+                world_target,
+                game_state,
+                fire_bomb_target,
+            )
             draw_act_two_fog_of_war(
                 world_target,
                 current_act,
@@ -2867,6 +3106,7 @@ def main():
             game_state.player.spell_power,
             game_state.player.attribute_ranks,
             game_state.player.potion_count,
+            get_act_two_consumable_slots(game_state.player),
             game_state.player.gold_count,
             game_state.player.key_count,
             game_state.player.enemies_defeated,
@@ -2884,6 +3124,10 @@ def main():
                 act_three_fonts,
                 act_three_gameplay_assets,
                 current_time,
+                window_to_game_position(
+                    screen,
+                    pygame.mouse.get_pos(),
+                ),
             )
         if game_state.upgrade_screen_open:
             active_upgrade_title_font = (

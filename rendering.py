@@ -17,6 +17,7 @@ from acts.act_three.presentation import (
 from presentation.hud import (
     draw_sidebar,
     draw_status,
+    get_act_two_belt_slot_rectangles,
     get_class_selection_rectangles,
 )
 from acts.act_two.presentation import (
@@ -24,6 +25,9 @@ from acts.act_two.presentation import (
     draw_act_two_arcane_burst_effect,
     draw_act_two_atmosphere,
     draw_act_two_fog_of_war,
+    draw_fire_bomb_flight,
+    draw_fire_bomb_targeting,
+    draw_fire_zones,
     draw_act_two_pickup_effect,
     draw_act_two_player_attack_effect,
     draw_act_two_player_feedback_overlay,
@@ -85,6 +89,9 @@ __all__ = [
     "draw_act_two_ability_preview",
     "draw_act_two_arcane_burst_effect",
     "draw_act_two_fog_of_war",
+    "draw_fire_bomb_flight",
+    "draw_fire_bomb_targeting",
+    "draw_fire_zones",
     "draw_act_one_boss_effects",
     "draw_act_one_player_attack_effect",
     "draw_act_two_player_attack_effect",
@@ -119,6 +126,7 @@ __all__ = [
     "draw_upgrade_screen",
     "get_upgrade_card_rectangles",
     "get_act_two_upgrade_card_rectangles",
+    "get_act_two_belt_slot_rectangles",
     "get_class_selection_rectangles",
     "get_act_three_debug_class_rectangles",
     "get_act_three_cell_from_position",

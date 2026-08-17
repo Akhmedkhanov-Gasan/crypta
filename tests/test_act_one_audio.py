@@ -1,5 +1,7 @@
 import pytest
 
+import presentation.audio as audio_module
+from acts.act_two.state import FireZoneState
 from game.events import GameEvent, GameEventType
 from game.factories import create_game_state
 from game.state import ChestState
@@ -707,6 +709,132 @@ def test_act_two_player_death_suppresses_every_other_sound_in_the_turn():
     assert hurt.play_count == 0
     assert footstep.play_count == 0
     assert enemy_attack.play_count == 0
+
+
+def test_act_two_fire_tick_plays_enemy_hurt_sound():
+    class FakeChannel:
+        def set_volume(self, volume):
+            self.volume = volume
+
+    class FakeSound:
+        def __init__(self):
+            self.play_count = 0
+
+        def play(self):
+            self.play_count += 1
+            return FakeChannel()
+
+    goblin_hurt = FakeSound()
+    sound_bank = ActTwoSoundBank({"goblin_hurt": [goblin_hurt]})
+    game_state = create_game_state(3)
+    goblin = next(
+        enemy for enemy in game_state.floor.enemies
+        if enemy.type == "goblin"
+    )
+    goblin.column = game_state.floor.player_column + 1
+    goblin.row = game_state.floor.player_row
+
+    sound_bank.play_events(
+        [
+            GameEvent(
+                type=GameEventType.HIT,
+                actor="fire",
+                target=goblin.name,
+                destination=(goblin.column, goblin.row),
+                amount=1,
+                data={"kind": "fire_bomb", "enemy_type": "goblin"},
+            )
+        ],
+        "rogue",
+        game_state.floor,
+    )
+
+    assert goblin_hurt.play_count == 1
+
+
+def test_act_two_fire_bomb_audio_loops_until_zone_ends(monkeypatch):
+    class FakeChannel:
+        def __init__(self):
+            self.play_calls = []
+            self.fadeouts = []
+            self.volume = None
+
+        def play(self, sound, loops=0, fade_ms=0):
+            self.play_calls.append((sound, loops, fade_ms))
+
+        def fadeout(self, duration):
+            self.fadeouts.append(duration)
+
+        def set_volume(self, volume):
+            self.volume = volume
+
+    class FakeMixer:
+        def __init__(self):
+            self.channels = {
+                index: FakeChannel() for index in range(8)
+            }
+
+        @staticmethod
+        def get_init():
+            return 44100, -16, 2
+
+        @staticmethod
+        def get_num_channels():
+            return 8
+
+        @staticmethod
+        def set_num_channels(_count):
+            return None
+
+        def Channel(self, index):
+            return self.channels[index]
+
+    fake_mixer = FakeMixer()
+    monkeypatch.setattr(audio_module.pygame, "mixer", fake_mixer)
+    sounds = {
+        "fire_bomb_break": [object()],
+        "fire_bomb_ignite": [object()],
+        "fire_bomb_burning": [object()],
+    }
+    sound_bank = ActTwoSoundBank(sounds)
+    game_state = create_game_state(3)
+    game_state.floor.fire_zones = [
+        FireZoneState(
+            center=(
+                game_state.floor.player_column + 1,
+                game_state.floor.player_row,
+            ),
+            cells=(),
+            origin=(
+                game_state.floor.player_column,
+                game_state.floor.player_row,
+            ),
+            created_at=100,
+            ticks_remaining=8,
+        )
+    ]
+
+    sound_bank.update_fire_bomb_audio(game_state.floor, 519)
+    assert fake_mixer.channels[5].play_calls == []
+
+    sound_bank.update_fire_bomb_audio(game_state.floor, 520)
+    assert len(fake_mixer.channels[5].play_calls) == 1
+
+    sound_bank.update_fire_bomb_audio(game_state.floor, 610)
+    assert len(fake_mixer.channels[6].play_calls) == 1
+
+    sound_bank.update_fire_bomb_audio(game_state.floor, 740)
+    loop_calls = fake_mixer.channels[7].play_calls
+    assert len(loop_calls) == 1
+    assert loop_calls[0][1:] == (-1, 180)
+
+    sound_bank.update_fire_bomb_audio(game_state.floor, 20000)
+    assert len(fake_mixer.channels[7].play_calls) == 1
+
+    game_state.floor.fire_zones = []
+    sound_bank.update_fire_bomb_audio(game_state.floor, 20001)
+    assert fake_mixer.channels[7].fadeouts[-1] == 280
+    assert sound_bank._fire_bomb_loop_active is False
 
 
 def test_act_two_room_sounds_and_secret_wall_layers_are_connected():

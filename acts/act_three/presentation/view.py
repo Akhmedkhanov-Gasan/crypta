@@ -279,7 +279,9 @@ def _draw_fog_of_war(
         (ACT_THREE_VIEW_WIDTH, ACT_THREE_VIEW_HEIGHT),
         pygame.SRCALPHA,
     )
-    fog.fill((0, 0, 0, 255))
+    # Keep the non-playable area visibly textured when the fixed logical
+    # viewport is wider than a map. Unexplored map cells remain fully hidden.
+    fog.fill((0, 0, 0, 208))
 
     for row in range(len(floor.map)):
         for column in range(len(floor.map[0])):
@@ -295,6 +297,13 @@ def _draw_fog_of_war(
                 pygame.draw.rect(
                     fog,
                     (0, 0, 0, 178),
+                    (*_view_position(column, row, camera_x, camera_y),
+                     ACT_THREE_TILE_SIZE, ACT_THREE_TILE_SIZE),
+                )
+            else:
+                pygame.draw.rect(
+                    fog,
+                    (0, 0, 0, 255),
                     (*_view_position(column, row, camera_x, camera_y),
                      ACT_THREE_TILE_SIZE, ACT_THREE_TILE_SIZE),
                 )

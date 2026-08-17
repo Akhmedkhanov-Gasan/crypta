@@ -5,6 +5,7 @@ from typing import Any, Iterator
 from acts.act_two.state import (
     ActTwoPlayerState,
     BreakableCrateState,
+    FireZoneState,
     RuneRoomState,
     SpikeTrapPhase,
     SpikeTrapState,
@@ -281,6 +282,7 @@ class FloorState(AttributeMapping):
         tuple[int, int], dict[str, Any]
     ] = field(default_factory=dict)
     act_two_remembered_stairs_open: bool | None = None
+    fire_zones: list[FireZoneState] = field(default_factory=list)
 
 
 @dataclass

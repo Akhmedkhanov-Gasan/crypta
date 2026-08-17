@@ -25,6 +25,11 @@ from acts.act_two.presentation.player import (
     draw_act_two_wait_indicator,
 )
 from acts.act_two.presentation.fog import draw_act_two_fog_of_war
+from acts.act_two.presentation.fire_bomb import (
+    draw_fire_bomb_flight,
+    draw_fire_bomb_targeting,
+    draw_fire_zones,
+)
 from acts.act_two.presentation.camera import (
     ActTwoCamera,
     act_two_screen_to_cell,
@@ -50,6 +55,9 @@ __all__ = [
     "draw_act_two_arcane_burst_effect",
     "draw_act_two_atmosphere",
     "draw_act_two_fog_of_war",
+    "draw_fire_bomb_flight",
+    "draw_fire_bomb_targeting",
+    "draw_fire_zones",
     "draw_act_two_pickup_effect",
     "draw_act_two_player_attack_effect",
     "draw_act_two_power_cleave_effect",

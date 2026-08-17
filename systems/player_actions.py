@@ -1,6 +1,13 @@
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from acts.act_two.crates import collect_crate_loot
+from acts.act_two.consumables import (
+    POTION,
+    act_two_belt_is_full,
+    consume_act_two_potion,
+    get_act_two_consumable_slots,
+    store_act_two_consumable,
+)
 from game.state import (
     ChestState,
     EnemyBehaviorState,
@@ -13,11 +20,27 @@ from logic import can_player_move_between
 from settings import POTION_HEALING
 
 
-def try_use_potion(game_state: GameState) -> bool:
+def try_use_potion(
+    game_state: GameState,
+    slot_index: int | None = None,
+) -> bool:
     player = game_state.player
+    act_number = FLOOR_CONFIGS[game_state.floor_index]["act"]
+    if act_number == 2:
+        slots = get_act_two_consumable_slots(player)
+        potion_is_available = (
+            any(item == POTION for item in slots)
+            if slot_index is None
+            else (
+                0 <= slot_index < len(slots)
+                and slots[slot_index] == POTION
+            )
+        )
+    else:
+        potion_is_available = player.potion_count > 0
 
     if (
-        player.potion_count <= 0
+        not potion_is_available
         or player.health >= player.max_health
     ):
         return False
@@ -27,7 +50,10 @@ def try_use_potion(game_state: GameState) -> bool:
         player.max_health,
         player.health + POTION_HEALING,
     )
-    player.potion_count -= 1
+    if act_number == 2:
+        consume_act_two_potion(player, slot_index)
+    else:
+        player.potion_count -= 1
     healed_health = player.health - previous_health
     game_state.emit(
         GameEvent(
@@ -217,6 +243,7 @@ def _collect_items(
         floor.player_column,
         floor.player_row,
     )
+    act_number = FLOOR_CONFIGS[game_state.floor_index]["act"]
     collect_treasury_reward(game_state, player_position)
     crate_loot_kind = collect_crate_loot(
         game_state,
@@ -250,8 +277,13 @@ def _collect_items(
         None,
     )
 
-    if found_potion:
-        player.potion_count += 1
+    if found_potion and not (
+        act_number == 2 and act_two_belt_is_full(player)
+    ):
+        if act_number == 2:
+            store_act_two_consumable(player, POTION)
+        else:
+            player.potion_count += 1
         floor.potions.remove(found_potion)
         _start_pickup_effect(
             game_state,
@@ -262,6 +294,11 @@ def _collect_items(
         add_log_message(
             game_state.combat_log,
             "Hero picks up a potion.",
+        )
+    elif found_potion:
+        add_log_message(
+            game_state.combat_log,
+            "The consumable belt is full.",
         )
 
     chest_with_loot = next(
@@ -278,10 +315,23 @@ def _collect_items(
         None,
     )
 
-    if chest_with_loot:
+    if (
+        chest_with_loot
+        and chest_with_loot["contains"] == "potion"
+        and act_number == 2
+        and act_two_belt_is_full(player)
+    ):
+        add_log_message(
+            game_state.combat_log,
+            "The consumable belt is full.",
+        )
+    elif chest_with_loot:
         loot_kind = chest_with_loot["contains"]
         if loot_kind == "potion":
-            player.potion_count += 1
+            if act_number == 2:
+                store_act_two_consumable(player, POTION)
+            else:
+                player.potion_count += 1
             pickup_kind = "potion"
             message = "Hero picks up a potion."
         else:
