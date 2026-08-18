@@ -2930,6 +2930,19 @@ def draw_potion(screen, column, row, act_number, sprites):
 
     cell_x = MAP_OFFSET_X + column * TILE_SIZE
     cell_y = MAP_OFFSET_Y + row * TILE_SIZE
+    potion_sprite = sprites.get("act_one_potion")
+    if potion_sprite is not None:
+        center = (
+            cell_x + TILE_SIZE // 2,
+            cell_y + TILE_SIZE // 2,
+        )
+        _draw_act_one_glow(screen, center, (190, 35, 45), 16)
+        screen.blit(
+            potion_sprite,
+            potion_sprite.get_rect(center=center),
+        )
+        return
+
     bottle_rectangle = pygame.Rect(
         cell_x + TILE_SIZE // 2 - 6,
         cell_y + 11,
@@ -2940,7 +2953,7 @@ def draw_potion(screen, column, row, act_number, sprites):
     _draw_act_one_glow(
         screen,
         (cell_x + TILE_SIZE // 2, cell_y + 19),
-        (35, 123, 86),
+        (190, 35, 45),
         16,
     )
     pygame.draw.rect(
@@ -2951,13 +2964,13 @@ def draw_potion(screen, column, row, act_number, sprites):
     )
     pygame.draw.rect(
         screen,
-        (30, 87, 69),
+        (129, 20, 31),
         bottle_rectangle,
         border_radius=4,
     )
     pygame.draw.rect(
         screen,
-        (76, 184, 126),
+        (255, 112, 105),
         (bottle_rectangle.x + 3, bottle_rectangle.y + 8, 3, 6),
         border_radius=1,
     )

@@ -73,13 +73,7 @@ def generate_warden_floor(config):
         "map": ["".join(row) for row in dungeon_map],
         "player_start": (2, 7),
         "enemies": enemies,
-        # The chest sits in a side corner and cannot block either passage.
-        "chests": [
-            {
-                "position": (8, 4),
-                "contains": "gold",
-            }
-        ],
+        "chests": [],
         "potions": [(4, 8), (12, 10)],
         "stairs": (19, 7),
         "boss_door": boss_door,

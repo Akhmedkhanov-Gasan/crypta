@@ -47,6 +47,14 @@ _SLOT_FILL = (7, 10, 12)
 _MUTED_TEXT = (132, 145, 145)
 _BRIGHT_TEXT = (234, 232, 226)
 
+# Exact coordinates exported from the 1280x720 Figma layout in hud_layout.svg.
+_HUD_FRAME_POSITION = (0, 0)
+_HUD_PORTRAIT_RECT = pygame.Rect(31, 20, 96, 87)
+_HUD_HEALTH_RECT = pygame.Rect(147, 58, 261, 19)
+_HUD_EXPERIENCE_RECT = pygame.Rect(147, 91, 256, 19)
+_HUD_LEVEL_CENTER = (83, 126)
+_HUD_EMPTY_FILL = (5, 5, 7)
+
 _SUBCLASS_PRESENTATION = {
     "paladin": ("PALADIN", (206, 168, 80)),
     "assassin": ("ASSASSIN", (69, 130, 221)),
@@ -435,29 +443,30 @@ def _damage_value(player):
     return damage_text
 
 
-def _draw_header(screen, player, fonts, assets, accent_color, subclass_name):
-    frame_position = (8, 4)
-    portrait_rect = pygame.Rect(45, 25, 86, 84)
-    pygame.draw.rect(screen, _SLOT_FILL, portrait_rect)
+def _draw_header(screen, player, fonts, assets):
+    pygame.draw.rect(screen, _SLOT_FILL, _HUD_PORTRAIT_RECT)
     portrait = assets.get("character_portrait_placeholder")
     if portrait is not None:
-        screen.blit(portrait, portrait_rect)
+        screen.blit(portrait, _HUD_PORTRAIT_RECT)
 
-    health_rect = pygame.Rect(148, 53, 246, 18)
-    experience_rect = pygame.Rect(148, 87, 246, 19)
     experience_required = experience_required_for_level(player.level)
     frame = assets.get("character_hud_frame")
     if frame is not None:
-        screen.blit(frame, frame_position)
+        screen.blit(frame, _HUD_FRAME_POSITION)
 
     for rectangle, ratio, asset_name in (
-        (health_rect, player.health / player.max_health, "character_hud_hp"),
         (
-            experience_rect,
+            _HUD_HEALTH_RECT,
+            player.health / player.max_health,
+            "character_hud_hp",
+        ),
+        (
+            _HUD_EXPERIENCE_RECT,
             _ratio(player.experience, experience_required),
             "character_hud_xp",
         ),
     ):
+        pygame.draw.rect(screen, _HUD_EMPTY_FILL, rectangle)
         fill_sprite = assets.get(asset_name)
         fill_width = round(rectangle.width * max(0.0, min(1.0, ratio)))
         if fill_sprite is not None and fill_width > 0:
@@ -467,32 +476,21 @@ def _draw_header(screen, player, fonts, assets, accent_color, subclass_name):
                 pygame.Rect(0, 0, fill_width, rectangle.height),
             )
 
-    name_surface = fonts["sidebar_class"].render(
-        subclass_name,
-        True,
-        accent_color,
-    )
-    name_background = name_surface.get_rect(topleft=(180, 27)).inflate(14, 6)
-    pygame.draw.rect(screen, (5, 7, 9), name_background)
-    pygame.draw.rect(screen, (57, 47, 39), name_background, width=1)
-    screen.blit(
-        name_surface,
-        name_surface.get_rect(midleft=(name_background.left + 7, name_background.centery)),
-    )
-
-    level_center = (92, 126)
-    level_surface = fonts["sidebar_numbers"].render(
+    level_surface = fonts["hud_level"].render(
         str(player.level), True, _BRIGHT_TEXT
     )
     screen.blit(
         level_surface,
-        level_surface.get_rect(center=level_center),
+        level_surface.get_rect(center=_HUD_LEVEL_CENTER),
     )
     for rectangle, label in (
-        (health_rect, f"HP {player.health}/{player.max_health}"),
-        (experience_rect, f"XP {player.experience}/{experience_required}"),
+        (_HUD_HEALTH_RECT, f"{player.health}/{player.max_health}"),
+        (
+            _HUD_EXPERIENCE_RECT,
+            f"{player.experience}/{experience_required}",
+        ),
     ):
-        label_surface = fonts["sidebar_hud"].render(label, True, _BRIGHT_TEXT)
+        label_surface = fonts["hud_value"].render(label, True, _BRIGHT_TEXT)
         screen.blit(label_surface, label_surface.get_rect(center=rectangle.center))
 
 
@@ -813,11 +811,11 @@ def _draw_act_three_sidebar(
     mouse_position=None,
 ):
     player = game_state.player
-    subclass_name, accent_color = _SUBCLASS_PRESENTATION.get(
+    _, accent_color = _SUBCLASS_PRESENTATION.get(
         player.subclass,
         ("UNBOUND", (139, 151, 151)),
     )
-    _draw_header(screen, player, fonts, assets, accent_color, subclass_name)
+    _draw_header(screen, player, fonts, assets)
     _draw_events(screen, game_state, fonts, accent_color)
     _draw_abilities(
         screen,

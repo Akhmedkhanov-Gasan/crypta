@@ -1,5 +1,10 @@
 import pygame
 
+from acts.act_one.camera import (
+    ActOneCamera,
+    draw_act_one_camera_view,
+    update_act_one_camera,
+)
 from acts.act_one.settings import (
     FLOOR_INTRO_SUBTITLES,
     PLAYER_STARTING_ATTRIBUTE_RANKS,
@@ -101,6 +106,7 @@ from rendering import (
     FLOOR_TRANSITION_CLOSE_END_MS,
     FLOOR_TRANSITION_END_MS,
     draw_act_three_awakening,
+    draw_act_one_upgrade_screen,
     draw_act_three_debug_class_selection,
     draw_act_three_gameplay,
     draw_attack_markers,
@@ -145,10 +151,13 @@ from rendering import (
     draw_subclass_selection_screen,
     draw_upgrade_screen,
     get_upgrade_card_rectangles,
+    get_act_one_upgrade_card_rectangles,
     get_act_two_upgrade_card_rectangles,
     get_act_two_belt_slot_rectangles,
+    get_act_two_sidebar_button_rectangles,
     get_class_selection_rectangles,
     load_act_one_fonts,
+    load_act_one_gameplay_assets,
     load_act_three_fonts,
     load_act_three_gameplay_assets,
     load_act_three_transition_assets,
@@ -467,6 +476,20 @@ _ACT_TWO_MOVEMENT_KEYS = frozenset(
         pygame.K_RIGHT,
     )
 )
+_ACT_ONE_POTION_KEYS = {
+    pygame.K_1: 0,
+    pygame.K_KP1: 0,
+    pygame.K_2: 1,
+    pygame.K_KP2: 1,
+    pygame.K_3: 2,
+    pygame.K_KP3: 2,
+    pygame.K_4: 3,
+    pygame.K_KP4: 3,
+    pygame.K_5: 4,
+    pygame.K_KP5: 4,
+    pygame.K_6: 5,
+    pygame.K_KP6: 5,
+}
 _ACT_TWO_MOVE_REPEAT_DELAY_MS = 190
 _ACT_TWO_MOVE_REPEAT_INTERVAL_MS = 175
 
@@ -500,6 +523,7 @@ def main():
     pygame.display.set_caption("Crypta")
     clock = pygame.time.Clock()
     act_one_fonts = load_act_one_fonts()
+    act_one_gameplay_assets = load_act_one_gameplay_assets()
     title_font = act_one_fonts["title"]
     font = act_one_fonts["status"]
     log_font = act_one_fonts["text"]
@@ -530,7 +554,9 @@ def main():
         pygame.mixer.set_reserved(2)
 
     game_state = create_game_state()
+    act_one_camera = ActOneCamera()
     act_two_camera = ActTwoCamera()
+    act_one_world_surface = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
     act_two_world_surface = None
     act_two_map_surface = None
     act_two_map_cache_key = None
@@ -783,6 +809,48 @@ def main():
                 continue
             elif game_state.floor_transition_started_at >= 0:
                 continue
+            elif (
+                event.type == pygame.MOUSEBUTTONDOWN
+                and event.button == 1
+                and current_act == 2
+                and not game_state.class_selection_open
+                and not game_state.upgrade_screen_open
+                and (
+                    game_mouse_position := window_to_game_position(
+                        screen,
+                        event.pos,
+                    )
+                )
+                is not None
+                and (
+                    clicked_sidebar_button := next(
+                        (
+                            button_name
+                            for button_name, rectangle in (
+                                get_act_two_sidebar_button_rectangles().items()
+                            )
+                            if rectangle.collidepoint(game_mouse_position)
+                        ),
+                        None,
+                    )
+                )
+                is not None
+            ):
+                if clicked_sidebar_button == "stats":
+                    game_state.act_two_stats_open = (
+                        not game_state.act_two_stats_open
+                    )
+                    continue
+                if clicked_sidebar_button == "placeholder":
+                    continue
+                if clicked_sidebar_button == "settings":
+                    pygame.event.post(
+                        pygame.event.Event(
+                            pygame.KEYDOWN,
+                            key=pygame.K_ESCAPE,
+                        )
+                    )
+                    continue
             elif handle_act_three_pointer_event(
                 event,
                 game_state,
@@ -837,15 +905,18 @@ def main():
                     if act_two_upgrade_screen
                     else generic_upgrade_keys
                 )
-                card_rectangles = (
-                    get_act_two_upgrade_card_rectangles(
+                if current_act == 1:
+                    card_rectangles = (
+                        get_act_one_upgrade_card_rectangles()
+                    )
+                elif act_two_upgrade_screen:
+                    card_rectangles = get_act_two_upgrade_card_rectangles(
                         game_state.player.player_class
                     )
-                    if act_two_upgrade_screen
-                    else get_upgrade_card_rectangles(
+                else:
+                    card_rectangles = get_upgrade_card_rectangles(
                         show_generic_intelligence
                     )
-                )
                 for upgrade_name, rectangle in (
                     card_rectangles.items()
                 ):
@@ -1216,8 +1287,11 @@ def main():
                     continue
 
                 if game_state.upgrade_screen_open:
+                    current_upgrade_act = FLOOR_CONFIGS[
+                        game_state.floor_index
+                    ]["act"]
                     act_two_upgrade_screen = (
-                        FLOOR_CONFIGS[game_state.floor_index]["act"] == 2
+                        current_upgrade_act == 2
                         and game_state.player.player_class in (
                             "warrior",
                             "rogue",
@@ -1287,13 +1361,26 @@ def main():
                         )
                     if event.key in attribute_keys:
                         attribute = attribute_keys[event.key]
-                        if game_state.player.gold_count <= 0:
+                        if (
+                            current_upgrade_act == 1
+                            and game_state.act_one_upgrades_remaining <= 0
+                        ):
+                            game_state.upgrade_message = (
+                                "All blessings chosen. Press Enter."
+                            )
+                        elif (
+                            current_upgrade_act != 1
+                            and game_state.player.gold_count <= 0
+                        ):
                             game_state.upgrade_message = "Not enough gold."
                         elif apply_attribute_upgrade(
                             game_state.player,
                             attribute,
                         ):
-                            game_state.player.gold_count -= 1
+                            if current_upgrade_act == 1:
+                                game_state.act_one_upgrades_remaining -= 1
+                            else:
+                                game_state.player.gold_count -= 1
                             game_state.upgrade_message = (
                                 f"{attribute.title()} increased."
                             )
@@ -1301,6 +1388,14 @@ def main():
                                 game_state.combat_log,
                                 game_state.upgrade_message,
                             )
+                            if (
+                                current_upgrade_act == 1
+                                and game_state.act_one_upgrades_remaining <= 0
+                            ):
+                                _finish_upgrade_descent(
+                                    game_state,
+                                    pygame.time.get_ticks(),
+                                )
                         else:
                             game_state.upgrade_message = (
                                 f"{attribute.title()} is capped."
@@ -1308,7 +1403,13 @@ def main():
                     elif event.key in (
                         pygame.K_RETURN,
                         pygame.K_KP_ENTER,
-                    ) and not game_state.upgrade_reward_pending:
+                    ) and (
+                        not game_state.upgrade_reward_pending
+                        and (
+                            current_upgrade_act != 1
+                            or game_state.act_one_upgrades_remaining <= 0
+                        )
+                    ):
                         _finish_upgrade_descent(
                             game_state,
                             pygame.time.get_ticks(),
@@ -1330,6 +1431,11 @@ def main():
                 consumable_slot = (
                     _ACT_TWO_CONSUMABLE_KEYS.get(event.key)
                     if current_act == 2
+                    else None
+                )
+                act_one_potion_slot = (
+                    _ACT_ONE_POTION_KEYS.get(event.key)
+                    if current_act == 1
                     else None
                 )
                 consumable_slots = get_act_two_consumable_slots(
@@ -1758,7 +1864,18 @@ def main():
                         game_state.player.potion_effect_started_at = (
                             pygame.time.get_ticks()
                         )
-                elif event.key == pygame.K_h:
+                elif (
+                    current_act == 1
+                    and act_one_potion_slot is not None
+                    and act_one_potion_slot
+                    < game_state.player.potion_count
+                ):
+                    player_acted = try_use_potion(game_state)
+                    if player_acted:
+                        game_state.player.potion_effect_started_at = (
+                            pygame.time.get_ticks()
+                        )
+                elif current_act >= 3 and event.key == pygame.K_h:
                     player_acted = try_use_potion(game_state)
                     if player_acted:
                         game_state.player.potion_effect_started_at = (
@@ -2086,6 +2203,7 @@ def main():
         if (
             game_state.upgrade_screen_open
             and game_state.player.gold_count <= 0
+            and FLOOR_CONFIGS[game_state.floor_index]["act"] != 1
         ):
             _finish_upgrade_descent(
                 game_state,
@@ -2429,19 +2547,35 @@ def main():
         active_heading_font = (
             act_two_fonts["sidebar_heading"]
             if current_act >= 2
-            else font
+            else act_one_fonts["hud"]
         )
         active_text_font = (
-            act_two_fonts["sidebar_text"]
-            if current_act >= 2
-            else act_one_fonts["interface"]
+            act_two_fonts["log"]
+            if current_act == 2
+            else act_two_fonts["sidebar_text"]
+            if current_act >= 3
+            else act_one_fonts["hud_small"]
         )
         active_controls_font = (
             act_two_fonts["sidebar_controls"]
             if current_act >= 2
             else act_one_fonts["controls"]
         )
+        active_ability_font = (
+            act_two_fonts["ability_text"]
+            if current_act == 2
+            else active_text_font
+        )
         game_surface.fill(BACKGROUND_COLOR)
+        if current_act == 1:
+            update_act_one_camera(
+                act_one_camera,
+                game_state.floor["map"],
+                game_state.floor["player_column"],
+                game_state.floor["player_row"],
+                game_state.floor_index,
+                current_time,
+            )
         if current_act == 2:
             update_act_two_camera(
                 act_two_camera,
@@ -2537,7 +2671,12 @@ def main():
             act_two_world_surface.blit(act_two_map_surface, (0, 0))
             world_target = act_two_world_surface
         else:
-            world_target = game_surface
+            world_target = (
+                act_one_world_surface
+                if current_act == 1
+                else game_surface
+            )
+            world_target.fill(BACKGROUND_COLOR)
             draw_dungeon(
                 world_target,
                 game_state.floor["map"],
@@ -2595,7 +2734,7 @@ def main():
             )
         if current_act != 2:
             draw_map_frame(
-                game_surface,
+                world_target,
                 current_act,
             )
         living_oracle = next(
@@ -2768,7 +2907,11 @@ def main():
                 potion["column"],
                 potion["row"],
                 current_act,
-                act_two_sprites,
+                (
+                    act_one_gameplay_assets
+                    if current_act == 1
+                    else act_two_sprites
+                ),
             )
         if current_act == 2:
             for crate in game_state.floor.breakable_crates:
@@ -3072,7 +3215,12 @@ def main():
                 world_target,
                 act_two_camera,
             )
-            draw_map_frame(game_surface, current_act)
+        elif current_act == 1:
+            draw_act_one_camera_view(
+                game_surface,
+                act_one_world_surface,
+                act_one_camera,
+            )
         draw_status(
             game_surface,
             active_status_font,
@@ -3095,6 +3243,7 @@ def main():
             active_heading_font,
             active_text_font,
             active_controls_font,
+            active_ability_font,
             game_state.combat_log,
             game_state.player.health,
             game_state.player.max_health,
@@ -3111,11 +3260,22 @@ def main():
             game_state.player.key_count,
             game_state.player.enemies_defeated,
             game_state.player.player_class,
+            game_state.player.level,
+            game_state.player.experience,
             game_state.player.ability_kill_charge,
             game_state.player.invisibility_turns,
             game_state.player.directional_ability_aiming,
+            game_state.act_two_stats_open,
+            window_to_game_position(
+                screen,
+                pygame.mouse.get_pos(),
+            ),
             current_act,
-            act_two_sprites,
+            (
+                act_one_gameplay_assets
+                if current_act == 1
+                else act_two_sprites
+            ),
         )
         if current_act >= 3:
             draw_act_three_gameplay(
@@ -3152,7 +3312,16 @@ def main():
                 screen,
                 pygame.mouse.get_pos(),
             )
-            if (
+            if current_act == 1:
+                draw_act_one_upgrade_screen(
+                    game_surface,
+                    act_one_gameplay_assets["act_one_upgrade"],
+                    active_upgrade_text_font,
+                    game_state.act_one_upgrades_remaining,
+                    game_state.upgrade_message,
+                    upgrade_mouse_position,
+                )
+            elif (
                 current_act == 2
                 and game_state.player.player_class in (
                     "warrior",
