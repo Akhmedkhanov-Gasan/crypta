@@ -208,6 +208,95 @@ def get_upgrade_card_rectangles(show_intelligence=False):
     }
 
 
+def get_act_one_upgrade_card_rectangles():
+    """Clickable regions matching the flattened Act One Figma export."""
+    return {
+        "strength": pygame.Rect(210, 304, 275, 233),
+        "dexterity": pygame.Rect(503, 304, 275, 233),
+        "vitality": pygame.Rect(798, 304, 275, 233),
+    }
+
+
+def draw_act_one_upgrade_screen(
+    screen,
+    upgrade_background,
+    text_font,
+    upgrades_remaining,
+    message,
+    mouse_position=None,
+):
+    dark_overlay = pygame.Surface(
+        (GAME_WIDTH, GAME_HEIGHT),
+        pygame.SRCALPHA,
+    )
+    dark_overlay.fill((0, 0, 0, 150))
+    screen.blit(dark_overlay, (0, 0))
+
+    background_rectangle = upgrade_background.get_rect(
+        center=(GAME_WIDTH // 2, GAME_HEIGHT // 2),
+    )
+    screen.blit(upgrade_background, background_rectangle)
+
+    card_rectangles = get_act_one_upgrade_card_rectangles()
+    for rectangle in card_rectangles.values():
+        if (
+            mouse_position is not None
+            and rectangle.collidepoint(mouse_position)
+        ):
+            highlight = pygame.Surface(
+                rectangle.size,
+                pygame.SRCALPHA,
+            )
+            highlight.fill((185, 199, 225, 22))
+            screen.blit(highlight, rectangle.topleft)
+            pygame.draw.rect(
+                screen,
+                (181, 196, 225),
+                rectangle,
+                width=2,
+                border_radius=8,
+            )
+
+    counter_background = pygame.Surface((430, 38), pygame.SRCALPHA)
+    counter_background.fill((9, 10, 16, 238))
+    counter_rectangle = counter_background.get_rect(
+        center=(GAME_WIDTH // 2, 220),
+    )
+    screen.blit(counter_background, counter_rectangle)
+    counter_text = (
+        f"{upgrades_remaining} BLESSING"
+        f"{'S' if upgrades_remaining != 1 else ''} AVAILABLE"
+        if upgrades_remaining > 0
+        else "[ENTER] DESCEND"
+    )
+    counter_surface = text_font.render(
+        counter_text,
+        True,
+        (211, 186, 126),
+    )
+    screen.blit(
+        counter_surface,
+        counter_surface.get_rect(center=counter_rectangle.center),
+    )
+
+    if message:
+        message_background = pygame.Surface((520, 34), pygame.SRCALPHA)
+        message_background.fill((9, 10, 16, 230))
+        message_rectangle = message_background.get_rect(
+            center=(GAME_WIDTH // 2, 590),
+        )
+        screen.blit(message_background, message_rectangle)
+        message_surface = text_font.render(
+            message,
+            True,
+            (211, 186, 126),
+        )
+        screen.blit(
+            message_surface,
+            message_surface.get_rect(center=message_rectangle.center),
+        )
+
+
 def _draw_upgrade_icon(screen, kind, center, color):
     icon_surface = pygame.Surface((44, 44), pygame.SRCALPHA)
     pygame.draw.circle(icon_surface, (11, 12, 16, 220), (22, 22), 21)

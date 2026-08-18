@@ -13,6 +13,8 @@ from settings import GAME_HEIGHT, GAME_WIDTH, TILE_SIZE
 def load_act_one_fonts():
     regular_path = FONT_ROOT / "AtkinsonHyperlegible-Regular.ttf"
     bold_path = FONT_ROOT / "AtkinsonHyperlegible-Bold.ttf"
+    pixel_path = FONT_ROOT / "PixelOperator.ttf"
+    pixel_bold_path = FONT_ROOT / "PixelOperator-Bold.ttf"
 
     return {
         "title": pygame.font.Font(str(bold_path), 42),
@@ -21,7 +23,57 @@ def load_act_one_fonts():
         "text": pygame.font.Font(str(regular_path), 19),
         "controls": pygame.font.Font(str(bold_path), 17),
         "interface": pygame.font.Font(str(regular_path), 19),
+        "hud": pygame.font.Font(str(pixel_bold_path), 19),
+        "hud_small": pygame.font.Font(str(pixel_path), 16),
     }
+
+
+def load_act_one_gameplay_assets():
+    ui_directory = ASSET_ROOT / "ui" / "act_1"
+
+    return {
+        "act_one_hud_frame": _load_scaled_image(
+            ui_directory / "hud_frame_act1.png",
+            (466, 121),
+        ),
+        "act_one_health_fill": _load_scaled_image(
+            ui_directory / "hp_bar_act1.png",
+            (389, 34),
+        ),
+        "act_one_bottom_bar": _load_scaled_image(
+            ui_directory / "skill+belt_bar_act1.png",
+            (736, 245),
+        ),
+        "act_one_upgrade": _load_scaled_image(
+            ui_directory / "upgrade.png",
+            (1080, 608),
+        ),
+        "act_one_potion": _create_act_one_health_potion(),
+    }
+
+
+def _create_act_one_health_potion():
+    potion = pygame.Surface((26, 30), pygame.SRCALPHA)
+
+    pygame.draw.polygon(
+        potion,
+        (8, 7, 11),
+        ((8, 8), (18, 8), (22, 13), (22, 25), (19, 28),
+         (7, 28), (4, 25), (4, 13)),
+    )
+    pygame.draw.polygon(
+        potion,
+        (129, 20, 31),
+        ((9, 9), (17, 9), (20, 14), (20, 24), (18, 26),
+         (8, 26), (6, 24), (6, 14)),
+    )
+    pygame.draw.rect(potion, (213, 42, 52), (8, 14, 10, 10))
+    pygame.draw.rect(potion, (255, 112, 105), (9, 14, 3, 8))
+    pygame.draw.rect(potion, (32, 25, 29), (8, 3, 10, 6))
+    pygame.draw.rect(potion, (91, 79, 71), (9, 1, 8, 4))
+    pygame.draw.rect(potion, (241, 226, 211), (11, 16, 4, 8))
+    pygame.draw.rect(potion, (241, 226, 211), (9, 18, 8, 4))
+    return pygame.transform.scale(potion, (22, 25))
 
 
 def load_menu_assets():
@@ -38,23 +90,27 @@ def load_menu_assets():
 
 
 def load_act_two_fonts():
-    display_bold_path = FONT_ROOT / "Almendra-Bold.ttf"
-    interface_path = FONT_ROOT / "AtkinsonHyperlegible-Regular.ttf"
-    interface_bold_path = FONT_ROOT / "AtkinsonHyperlegible-Bold.ttf"
+    pixelify_directory = FONT_ROOT / "Pixelify_Sans"
+    regular_path = pixelify_directory / "PixelifySans-Regular.ttf"
+    medium_path = pixelify_directory / "PixelifySans-Medium.ttf"
+    semibold_path = pixelify_directory / "PixelifySans-SemiBold.ttf"
+    bold_path = pixelify_directory / "PixelifySans-Bold.ttf"
 
     return {
-        "title": pygame.font.Font(str(display_bold_path), 42),
-        "heading": pygame.font.Font(str(display_bold_path), 25),
-        "status": pygame.font.Font(str(interface_bold_path), 22),
-        "text": pygame.font.Font(str(interface_path), 18),
-        "controls": pygame.font.Font(str(interface_bold_path), 17),
+        "title": pygame.font.Font(str(bold_path), 42),
+        "heading": pygame.font.Font(str(semibold_path), 25),
+        "status": pygame.font.Font(str(semibold_path), 22),
+        "text": pygame.font.Font(str(regular_path), 18),
+        "log": pygame.font.Font(str(regular_path), 15),
+        "ability_text": pygame.font.Font(str(regular_path), 12),
+        "controls": pygame.font.Font(str(medium_path), 17),
         "sidebar_heading": pygame.font.Font(
-            str(interface_bold_path),
+            str(bold_path),
             22,
         ),
-        "sidebar_text": pygame.font.Font(str(interface_path), 18),
+        "sidebar_text": pygame.font.Font(str(regular_path), 18),
         "sidebar_controls": pygame.font.Font(
-            str(interface_bold_path),
+            str(medium_path),
             16,
         ),
     }
@@ -62,8 +118,14 @@ def load_act_two_fonts():
 
 def load_act_three_fonts():
     display_path = FONT_ROOT / "Sandey Molse DEMO.ttf"
+    hud_path = FONT_ROOT / "Almendra-Regular.ttf"
+    hud_bold_path = FONT_ROOT / "Almendra-Bold.ttf"
     interface_path = FONT_ROOT / "AtkinsonHyperlegible-Regular.ttf"
     interface_bold_path = FONT_ROOT / "AtkinsonHyperlegible-Bold.ttf"
+
+    hud_value_font = pygame.font.Font(str(hud_path), 17)
+    hud_value_font.set_bold(True)
+    hud_value_font.set_italic(True)
 
     return {
         "title": pygame.font.Font(str(display_path), 46),
@@ -90,6 +152,8 @@ def load_act_three_fonts():
             str(interface_path),
             13,
         ),
+        "hud_value": hud_value_font,
+        "hud_level": pygame.font.Font(str(hud_bold_path), 18),
         "sidebar_class": pygame.font.Font(
             str(display_path),
             19,
@@ -555,19 +619,73 @@ def load_act_two_sprites():
             )
         ).convert_alpha()
 
-    sprites["warrior_power_cleave_icon"] = pygame.transform.scale(
-        pygame.image.load(
-            str(
-                ui_directory
-                / "abilities"
-                / "power_cleave.png"
-            )
-        ).convert_alpha(),
-        (32, 32),
-    )
+    ability_directory = ui_directory / "abilities"
+    for asset_name, file_name in (
+        ("warrior_power_cleave_icon", "power_cleave.png"),
+        ("rogue_invisibility_icon", "invisibility.png"),
+        ("mage_arcane_burst_icon", "blast.png"),
+    ):
+        sprites[asset_name] = pygame.image.load(
+            str(ability_directory / file_name)
+        ).convert_alpha()
     sprites["upgrade_window"] = pygame.image.load(
         str(ui_directory / "upgrade" / "upgrade_window.png")
     ).convert_alpha()
+
+    act_two_hud_directory = ui_directory / "ui_v.0.2"
+    sprites.update(
+        {
+            "act_two_hud_frame": _load_scaled_image(
+                act_two_hud_directory / "hud_frame_act2(32).png",
+                (443, 125),
+            ),
+            "act_two_hud_hp": _load_scaled_image(
+                act_two_hud_directory / "hp_bar_act2.png",
+                (363, 24),
+            ),
+            "act_two_hud_xp": _load_scaled_image(
+                act_two_hud_directory / "xp_bar_act2.png",
+                (346, 23),
+            ),
+            "act_two_bottom_bar": _load_scaled_image(
+                act_two_hud_directory
+                / "skill+belt_bar_act2.png",
+                (768, 256),
+            ),
+            "act_two_stats_panel": _load_scaled_image(
+                act_two_hud_directory / "character_list(32).png",
+                (243, 479),
+            ),
+            "act_two_side_buttons": _load_scaled_image(
+                act_two_hud_directory / "sidebar_act2(32).png",
+                (88, 228),
+            ),
+            "act_two_abilities_panel": _load_scaled_image(
+                act_two_hud_directory / "abilities.png",
+                (290, 218),
+            ),
+        }
+    )
+    chat_log_backing = pygame.Surface((208, 74), pygame.SRCALPHA)
+    pygame.draw.rect(
+        chat_log_backing,
+        (42, 39, 39, 191),
+        pygame.Rect(4, 4, 200, 66),
+        border_radius=11,
+    )
+    sprites["act_two_chat_log_backing"] = (
+        pygame.transform.gaussian_blur(chat_log_backing, 2)
+    )
+    ability_text_backing = pygame.Surface((159, 72), pygame.SRCALPHA)
+    pygame.draw.rect(
+        ability_text_backing,
+        (42, 39, 39, 191),
+        pygame.Rect(4, 4, 151, 64),
+        border_radius=11,
+    )
+    sprites["act_two_ability_text_backing"] = (
+        pygame.transform.gaussian_blur(ability_text_backing, 2)
+    )
 
     return sprites
 
@@ -731,23 +849,24 @@ def load_act_three_gameplay_assets():
     map_path = project_root / act_three_config["map_path"]
     environment_directory = map_path.parent
     ui_directory = ASSET_ROOT / "ui" / "act_3"
+    hud_directory = ui_directory / "ui_v.0.2"
     tile_size = ACT_THREE_TILE_SIZE
     assets = {
-        "character_hud_frame": _load_pixel_cropped_ui_image(
-            ui_directory / "character_hud_frame_c.png",
-            (420, 151),
+        "character_hud_frame": _load_scaled_image(
+            hud_directory / "hud_frame.png",
+            (423, 160),
         ),
-        "character_hud_hp": _load_pixel_cropped_ui_image(
-            ui_directory / "character_hud_hp.png",
-            (246, 18),
+        "character_hud_hp": _load_scaled_image(
+            hud_directory / "character_hud_hp.png",
+            (261, 19),
         ),
-        "character_hud_xp": _load_pixel_cropped_ui_image(
-            ui_directory / "character_hud_xp.png",
-            (246, 19),
+        "character_hud_xp": _load_scaled_image(
+            hud_directory / "character_hud_xp.png",
+            (256, 19),
         ),
-        "character_portrait_placeholder": _load_pixel_cropped_ui_image(
-            ui_directory / "character_portrait_placeholder.png",
-            (86, 84),
+        "character_portrait_placeholder": _load_scaled_image(
+            hud_directory / "character_portrait_placeholder.png",
+            (96, 87),
         ),
         "floor_base": _load_scaled_image(
             environment_directory / "floor" / "floor_base.png",

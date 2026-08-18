@@ -5,6 +5,7 @@ from acts.act_two.settings import (
     CONSUMABLE_BELT_SIZE,
 )
 from levels import FLOOR_CONFIGS
+from game.progression import experience_required_for_level
 from presentation.layout import (
     MAP_OFFSET_X,
     MAP_WIDTH,
@@ -26,6 +27,58 @@ from settings import (
 )
 
 
+_ACT_ONE_HUD_FRAME_RECT = pygame.Rect(25, 23, 466, 121)
+_ACT_ONE_HEALTH_RECT = pygame.Rect(84, 65, 389, 34)
+_ACT_ONE_BOTTOM_BAR_RECT = pygame.Rect(272, 495, 736, 245)
+_ACT_ONE_HEALTH_TEXT_CENTER = (297, 82)
+_ACT_ONE_LOG_POSITION = (320, 611)
+_ACT_ONE_BELT_SLOT_CENTERS = tuple(
+    (626 + slot_index * 65, 642)
+    for slot_index in range(6)
+)
+_ACT_TWO_BOTTOM_BAR_POSITION = (256, 529)
+_ACT_TWO_BELT_ITEM_POSITIONS = (
+    (550, 643),
+    (610, 643),
+    (668, 643),
+    (728, 643),
+    (788, 643),
+    (850, 643),
+)
+_ACT_TWO_BELT_ITEM_SIZE = (36, 36)
+_ACT_TWO_ABILITY_RECT = pygame.Rect(931, 636, 42, 42)
+_ACT_TWO_ABILITY_CHARGE_RECTS = tuple(
+    pygame.Rect(936 + charge_index * 9, 675, 7, 3)
+    for charge_index in range(ABILITY_HITS_REQUIRED)
+)
+_ACT_TWO_LOG_TEXT_RECT = pygame.Rect(308, 625, 194, 65)
+_ACT_TWO_LOG_BACKING_POSITION = (301, 620)
+_ACT_TWO_SIDEBAR_BUTTON_RECTS = {
+    "stats": pygame.Rect(1195, 219, 72, 59),
+    "placeholder": pygame.Rect(1195, 277, 72, 59),
+    "settings": pygame.Rect(1195, 335, 72, 59),
+}
+_ACT_TWO_SIDEBAR_HIGHLIGHT_RECTS = {
+    "stats": pygame.Rect(1207, 230, 47, 44),
+    "placeholder": pygame.Rect(1207, 288, 47, 44),
+    "settings": pygame.Rect(1207, 346, 47, 44),
+}
+_ACT_TWO_ABILITIES_PANEL_POSITION = (809, 464)
+_ACT_TWO_ABILITIES_ICON_RECT = pygame.Rect(844, 546, 42, 42)
+_ACT_TWO_ABILITIES_TEXT_BACKING_POSITION = (905, 537)
+_ACT_TWO_ABILITIES_TEXT_RECT = pygame.Rect(917, 548, 135, 48)
+_ACT_TWO_ABILITY_ASSETS = {
+    "warrior": "warrior_power_cleave_icon",
+    "rogue": "rogue_invisibility_icon",
+    "mage": "mage_arcane_burst_icon",
+}
+_ACT_TWO_ABILITY_DESCRIPTIONS = {
+    "warrior": "Cleave several tiles for bonus damage.",
+    "rogue": "Vanish. Your next attack is a sure critical.",
+    "mage": "Blast up to 5 tiles with bonus spell damage.",
+}
+
+
 def draw_status(
     screen,
     font,
@@ -44,12 +97,28 @@ def draw_status(
     living_enemy_count = sum(enemy["health"] > 0 for enemy in enemies)
     total_enemy_count = len(enemies)
     stairs_are_open = living_enemy_count == 0
-    status = (
-        f"Act {act_number} - Floor {act_floor}/{act_floor_count}  |  "
-        f"Enemies {living_enemy_count}/{total_enemy_count}  |  "
-        f"Stairs {'open' if stairs_are_open else 'locked'}"
+    displayed_map_left = (
+        (GAME_WIDTH - MAP_WIDTH) // 2
+        if act_number in (1, 2)
+        else MAP_OFFSET_X
     )
-    screen.blit(font.render(status, True, TEXT_COLOR), (MAP_OFFSET_X, 8))
+    if act_number in (1, 2):
+        status = (
+            f"ACT {'I' if act_number == 1 else 'II'}"
+            f"  ·  FLOOR {act_floor}/{act_floor_count}"
+        )
+        status_surface = font.render(status, True, TEXT_COLOR)
+        screen.blit(
+            status_surface,
+            status_surface.get_rect(midtop=(GAME_WIDTH // 2, 8)),
+        )
+    else:
+        status = (
+            f"Act {act_number} - Floor {act_floor}/{act_floor_count}  |  "
+            f"Enemies {living_enemy_count}/{total_enemy_count}  |  "
+            f"Stairs {'open' if stairs_are_open else 'locked'}"
+        )
+        screen.blit(font.render(status, True, TEXT_COLOR), (MAP_OFFSET_X, 8))
 
     living_boss = next(
         (
@@ -90,7 +159,7 @@ def draw_status(
                 label_surface,
                 label_surface.get_rect(
                     center=(
-                        MAP_OFFSET_X + MAP_WIDTH // 2,
+                        displayed_map_left + MAP_WIDTH // 2,
                         55,
                     )
                 ),
@@ -98,7 +167,7 @@ def draw_status(
             boss_bar_width = min(640, MAP_WIDTH - 120)
             boss_bar_height = 22
             boss_bar_left = (
-                MAP_OFFSET_X
+                displayed_map_left
                 + (MAP_WIDTH - boss_bar_width) // 2
             )
             boss_bar_top = 75
@@ -181,13 +250,13 @@ def draw_status(
             screen.blit(
                 boss_surface,
                 boss_surface.get_rect(
-                    center=(MAP_OFFSET_X + MAP_WIDTH // 2, 57)
+                    center=(displayed_map_left + MAP_WIDTH // 2, 57)
                 ),
             )
             boss_bar_width = 500
             boss_bar_height = 14
             boss_bar_left = (
-                MAP_OFFSET_X + (MAP_WIDTH - boss_bar_width) // 2
+                displayed_map_left + (MAP_WIDTH - boss_bar_width) // 2
             )
             boss_bar_top = 77
             health_ratio = (
@@ -243,7 +312,7 @@ def draw_status(
                 screen.blit(
                     warning_surface,
                     warning_surface.get_rect(
-                        center=(MAP_OFFSET_X + MAP_WIDTH // 2, 104)
+                        center=(displayed_map_left + MAP_WIDTH // 2, 104)
                     ),
                 )
 
@@ -262,12 +331,33 @@ def draw_status(
 
     if message:
         message_surface = font.render(message, True, message_color)
+        message_center_y = 552 if act_number == 2 else GAME_HEIGHT - 38
         message_rectangle = message_surface.get_rect(
             center=(
-                MAP_OFFSET_X + MAP_WIDTH // 2,
-                GAME_HEIGHT - 38,
+                displayed_map_left + MAP_WIDTH // 2,
+                message_center_y,
             )
         )
+        if act_number == 2:
+            message_backing = message_rectangle.inflate(28, 14)
+            backing_surface = pygame.Surface(
+                message_backing.size,
+                pygame.SRCALPHA,
+            )
+            pygame.draw.rect(
+                backing_surface,
+                (8, 8, 11, 210),
+                backing_surface.get_rect(),
+                border_radius=5,
+            )
+            pygame.draw.rect(
+                backing_surface,
+                (101, 91, 88, 210),
+                backing_surface.get_rect(),
+                width=1,
+                border_radius=5,
+            )
+            screen.blit(backing_surface, message_backing)
         screen.blit(message_surface, message_rectangle)
 
 
@@ -375,11 +465,334 @@ def get_class_selection_rectangles():
     }
 
 
+def _draw_act_two_overlay_hud(
+    screen,
+    title_font,
+    log_font,
+    controls_font,
+    ability_font,
+    combat_log,
+    player_health,
+    player_max_health,
+    player_damage_min,
+    player_damage_max,
+    player_crit_chance,
+    player_dodge_chance,
+    player_spell_power,
+    attribute_ranks,
+    consumable_slots,
+    gold_count,
+    key_count,
+    player_class,
+    player_level,
+    player_experience,
+    ability_kill_charge,
+    stats_open,
+    mouse_position,
+    sprites,
+):
+    def draw_fill(asset_name, position, ratio):
+        asset = sprites[asset_name]
+        visible_width = round(
+            asset.get_width() * max(0.0, min(1.0, ratio))
+        )
+        if visible_width > 0:
+            screen.blit(
+                asset,
+                position,
+                pygame.Rect(0, 0, visible_width, asset.get_height()),
+            )
+
+    health_ratio = player_health / max(1, player_max_health)
+    experience_required = experience_required_for_level(player_level)
+    experience_ratio = player_experience / max(1, experience_required)
+    draw_fill("act_two_hud_hp", (114, 53), health_ratio)
+    draw_fill("act_two_hud_xp", (63, 89), experience_ratio)
+
+    screen.blit(sprites["act_two_hud_frame"], (44, 19))
+
+    portrait_rectangle = pygame.Rect(70, 48, 55, 53)
+    if player_class is not None:
+        portrait = pygame.transform.scale(
+            sprites[f"player_{player_class}"],
+            portrait_rectangle.size,
+        )
+        screen.blit(portrait, portrait_rectangle)
+
+    value_color = (239, 235, 225)
+    muted_color = (174, 158, 147)
+    level_surface = title_font.render(
+        str(player_level),
+        True,
+        value_color,
+    )
+    screen.blit(
+        level_surface,
+        level_surface.get_rect(center=(129, 115)),
+    )
+    hp_surface = controls_font.render(
+        f"{player_health}/{player_max_health}",
+        True,
+        value_color,
+    )
+    screen.blit(hp_surface, hp_surface.get_rect(center=(307, 64)))
+    xp_surface = controls_font.render(
+        f"{player_experience}/{experience_required}",
+        True,
+        value_color,
+    )
+    screen.blit(xp_surface, xp_surface.get_rect(center=(282, 101)))
+
+    screen.blit(
+        sprites["act_two_bottom_bar"],
+        _ACT_TWO_BOTTOM_BAR_POSITION,
+    )
+    screen.blit(
+        sprites["act_two_chat_log_backing"],
+        _ACT_TWO_LOG_BACKING_POSITION,
+    )
+    line_height = 16
+    maximum_line_count = (
+        _ACT_TWO_LOG_TEXT_RECT.height // line_height
+    )
+    recent_messages = []
+    for message in combat_log[-3:]:
+        recent_messages.append(
+            (
+                wrap_text(
+                    log_font,
+                    message,
+                    _ACT_TWO_LOG_TEXT_RECT.width,
+                ),
+                get_event_color(message),
+            )
+        )
+
+    selected_messages = [
+        ([lines[0]] if lines else [""], color)
+        for lines, color in recent_messages
+    ]
+    remaining_line_count = max(
+        0,
+        maximum_line_count - len(selected_messages),
+    )
+    for message_index in range(len(recent_messages) - 1, -1, -1):
+        if remaining_line_count <= 0:
+            break
+        wrapped_lines, _color = recent_messages[message_index]
+        extra_lines = wrapped_lines[1:1 + remaining_line_count]
+        selected_messages[message_index][0].extend(extra_lines)
+        remaining_line_count -= len(extra_lines)
+
+    visible_log_lines = []
+    for message_index, ((wrapped_lines, color), selected_message) in (
+        enumerate(zip(recent_messages, selected_messages))
+    ):
+        selected_lines, _selected_color = selected_message
+        if len(selected_lines) < len(wrapped_lines):
+            selected_lines[-1] = fit_text_to_width(
+                log_font,
+                selected_lines[-1] + "...",
+                _ACT_TWO_LOG_TEXT_RECT.width,
+            )
+        visible_log_lines.extend(
+            (line, color)
+            for line in selected_lines
+        )
+    log_y = _ACT_TWO_LOG_TEXT_RECT.y
+    for line, line_color in visible_log_lines:
+        screen.blit(
+            log_font.render(
+                line,
+                True,
+                line_color,
+            ),
+            (_ACT_TWO_LOG_TEXT_RECT.x, log_y),
+        )
+        log_y += line_height
+
+    for slot_index, item in enumerate(consumable_slots[:5]):
+        sprite_name = {
+            "potion": "potion_belt",
+            "fire_bomb": "fire_bomb_belt",
+        }.get(item)
+        if sprite_name is None:
+            continue
+        item_sprite = pygame.transform.scale(
+            sprites[sprite_name],
+            _ACT_TWO_BELT_ITEM_SIZE,
+        )
+        screen.blit(
+            item_sprite,
+            _ACT_TWO_BELT_ITEM_POSITIONS[slot_index],
+        )
+
+    ability_asset_name = _ACT_TWO_ABILITY_ASSETS.get(player_class)
+    if ability_asset_name in sprites:
+        ability_icon = pygame.transform.scale(
+            sprites[ability_asset_name],
+            _ACT_TWO_ABILITY_RECT.size,
+        )
+        screen.blit(ability_icon, _ACT_TWO_ABILITY_RECT)
+    for charge_index, charge_rectangle in enumerate(
+        _ACT_TWO_ABILITY_CHARGE_RECTS
+    ):
+        pygame.draw.rect(
+            screen,
+            (
+                (177, 40, 48)
+                if charge_index < ability_kill_charge
+                else (40, 35, 39)
+            ),
+            charge_rectangle,
+        )
+
+    if stats_open:
+        screen.blit(sprites["act_two_stats_panel"], (948, 101))
+    ability_hovered = (
+        mouse_position is not None
+        and _ACT_TWO_ABILITY_RECT.collidepoint(mouse_position)
+    )
+    if ability_hovered:
+        screen.blit(
+            sprites["act_two_abilities_panel"],
+            _ACT_TWO_ABILITIES_PANEL_POSITION,
+        )
+        screen.blit(
+            sprites["act_two_ability_text_backing"],
+            _ACT_TWO_ABILITIES_TEXT_BACKING_POSITION,
+        )
+        if ability_asset_name in sprites:
+            panel_icon = pygame.transform.scale(
+                sprites[ability_asset_name],
+                _ACT_TWO_ABILITIES_ICON_RECT.size,
+            )
+            screen.blit(panel_icon, _ACT_TWO_ABILITIES_ICON_RECT)
+
+        description = _ACT_TWO_ABILITY_DESCRIPTIONS.get(
+            player_class,
+            "Choose a class to unlock its ability.",
+        )
+        description_lines = wrap_text(
+            ability_font,
+            description,
+            _ACT_TWO_ABILITIES_TEXT_RECT.width,
+        )
+        maximum_description_lines = 3
+        visible_description_lines = description_lines[
+            :maximum_description_lines
+        ]
+        if len(description_lines) > maximum_description_lines:
+            visible_description_lines[-1] = fit_text_to_width(
+                ability_font,
+                visible_description_lines[-1] + "...",
+                _ACT_TWO_ABILITIES_TEXT_RECT.width,
+            )
+        description_y = _ACT_TWO_ABILITIES_TEXT_RECT.y
+        for description_line in visible_description_lines:
+            screen.blit(
+                ability_font.render(
+                    description_line,
+                    True,
+                    value_color,
+                ),
+                (_ACT_TWO_ABILITIES_TEXT_RECT.x, description_y),
+            )
+            description_y += 14
+    screen.blit(sprites["act_two_side_buttons"], (1187, 195))
+
+    for button_name, button_rectangle in (
+        _ACT_TWO_SIDEBAR_BUTTON_RECTS.items()
+    ):
+        is_hovered = (
+            mouse_position is not None
+            and button_rectangle.collidepoint(mouse_position)
+        )
+        is_selected = button_name == "stats" and stats_open
+        if not (is_hovered or is_selected):
+            continue
+        highlight_rectangle = _ACT_TWO_SIDEBAR_HIGHLIGHT_RECTS[
+            button_name
+        ]
+        highlight = pygame.Surface(
+            highlight_rectangle.size,
+            pygame.SRCALPHA,
+        )
+        pygame.draw.rect(
+            highlight,
+            (145, 26, 26, 42 if is_hovered else 25),
+            highlight.get_rect(),
+            border_radius=10,
+        )
+        screen.blit(highlight, highlight_rectangle)
+
+    if not stats_open:
+        return
+
+    class_name = (player_class or "UNBOUND").upper()
+    class_surface = title_font.render(class_name, True, (174, 21, 24))
+    screen.blit(
+        class_surface,
+        class_surface.get_rect(center=(1069, 177)),
+    )
+
+    attribute_values = (
+        attribute_ranks.get("strength", 0),
+        attribute_ranks.get("dexterity", 0),
+        attribute_ranks.get("intelligence", 0),
+        attribute_ranks.get("vitality", 0),
+    )
+    for value, center_y in zip(
+        attribute_values,
+        (253, 281, 309, 337),
+    ):
+        value_surface = controls_font.render(
+            str(value),
+            True,
+            value_color,
+        )
+        screen.blit(
+            value_surface,
+            value_surface.get_rect(center=(1117, center_y)),
+        )
+
+    combat_values = (
+        f"{player_damage_min}-{player_damage_max}",
+        f"{round(player_crit_chance * 100)}%",
+        f"{round(player_dodge_chance * 100)}%",
+        str(player_spell_power),
+    )
+    for value, center_y in zip(
+        combat_values,
+        (417, 445, 473, 501),
+    ):
+        value_surface = controls_font.render(
+            value,
+            True,
+            value_color,
+        )
+        screen.blit(
+            value_surface,
+            value_surface.get_rect(center=(1117, center_y)),
+        )
+
+    resources_surface = controls_font.render(
+        f"GOLD {gold_count}   ·   KEYS {key_count}",
+        True,
+        muted_color,
+    )
+    screen.blit(
+        resources_surface,
+        resources_surface.get_rect(center=(1069, 546)),
+    )
+
+
 def draw_act_two_sidebar(
     screen,
     title_font,
     log_font,
     controls_font,
+    ability_font,
     combat_log,
     player_health,
     player_max_health,
@@ -396,11 +809,44 @@ def draw_act_two_sidebar(
     key_count,
     enemies_defeated,
     player_class,
+    player_level,
+    player_experience,
     ability_kill_charge,
     invisibility_turns,
     directional_ability_aiming,
+    stats_open,
+    mouse_position,
     sprites,
 ):
+    if "act_two_hud_frame" in sprites:
+        _draw_act_two_overlay_hud(
+            screen,
+            title_font,
+            log_font,
+            controls_font,
+            ability_font,
+            combat_log,
+            player_health,
+            player_max_health,
+            player_damage_min,
+            player_damage_max,
+            player_crit_chance,
+            player_dodge_chance,
+            player_spell_power,
+            attribute_ranks,
+            consumable_slots,
+            gold_count,
+            key_count,
+            player_class,
+            player_level,
+            player_experience,
+            ability_kill_charge,
+            stats_open,
+            mouse_position,
+            sprites,
+        )
+        return
+
     panel_y = 54
     panel_height = GAME_HEIGHT - panel_y - 54
 
@@ -848,27 +1294,26 @@ def _draw_act_two_consumable_belt(
 
 
 def get_act_two_belt_slot_rectangles():
-    belt_rectangle = pygame.Rect(
-        SIDEBAR_X + 10,
-        54 + 270,
-        SIDEBAR_WIDTH - 20,
-        98,
-    )
-    slot_gap = 6
-    slots_left = belt_rectangle.x + 9
-    slots_width = belt_rectangle.width - 18
-    slot_width = (
-        slots_width - slot_gap * (CONSUMABLE_BELT_SIZE - 1)
-    ) // CONSUMABLE_BELT_SIZE
     return tuple(
         pygame.Rect(
-            slots_left + slot_index * (slot_width + slot_gap),
-            belt_rectangle.y + 38,
-            slot_width,
-            50,
+            item_x - 7,
+            619,
+            52,
+            70,
         )
-        for slot_index in range(CONSUMABLE_BELT_SIZE)
+        for item_x, _item_y in _ACT_TWO_BELT_ITEM_POSITIONS[
+            :CONSUMABLE_BELT_SIZE
+        ]
     )
+
+
+def get_act_two_sidebar_button_rectangles():
+    return {
+        button_name: button_rectangle.copy()
+        for button_name, button_rectangle in (
+            _ACT_TWO_SIDEBAR_BUTTON_RECTS.items()
+        )
+    }
 
 
 def _draw_inventory_counters(
@@ -941,6 +1386,7 @@ def draw_sidebar(
     title_font,
     log_font,
     controls_font,
+    ability_font,
     combat_log,
     player_health,
     player_max_health,
@@ -957,9 +1403,13 @@ def draw_sidebar(
     key_count,
     enemies_defeated,
     player_class,
+    player_level,
+    player_experience,
     ability_kill_charge,
     invisibility_turns,
     directional_ability_aiming,
+    act_two_stats_open,
+    mouse_position,
     act_number,
     sprites,
 ):
@@ -969,6 +1419,7 @@ def draw_sidebar(
             title_font,
             log_font,
             controls_font,
+            ability_font,
             combat_log,
             player_health,
             player_max_health,
@@ -985,12 +1436,74 @@ def draw_sidebar(
             key_count,
             enemies_defeated,
             player_class,
+            player_level,
+            player_experience,
             ability_kill_charge,
             invisibility_turns,
             directional_ability_aiming,
+            act_two_stats_open,
+            mouse_position,
             sprites,
         )
         return
+
+    health_ratio = max(
+        0.0,
+        min(1.0, player_health / max(1, player_max_health)),
+    )
+    health_fill = sprites.get("act_one_health_fill")
+    fill_width = round(_ACT_ONE_HEALTH_RECT.width * health_ratio)
+    if health_fill is not None and fill_width > 0:
+        screen.blit(
+            health_fill,
+            _ACT_ONE_HEALTH_RECT,
+            pygame.Rect(
+                0,
+                0,
+                fill_width,
+                _ACT_ONE_HEALTH_RECT.height,
+            ),
+        )
+
+    hud_frame = sprites.get("act_one_hud_frame")
+    if hud_frame is not None:
+        screen.blit(hud_frame, _ACT_ONE_HUD_FRAME_RECT)
+
+    health_surface = title_font.render(
+        f"{player_health}/{player_max_health}",
+        True,
+        (236, 236, 230),
+    )
+    screen.blit(
+        health_surface,
+        health_surface.get_rect(center=_ACT_ONE_HEALTH_TEXT_CENTER),
+    )
+
+    bottom_bar = sprites.get("act_one_bottom_bar")
+    if bottom_bar is not None:
+        screen.blit(bottom_bar, _ACT_ONE_BOTTOM_BAR_RECT)
+
+    log_y = _ACT_ONE_LOG_POSITION[1]
+    for message in combat_log[-3:]:
+        visible_message = fit_text_to_width(log_font, message, 246)
+        message_surface = log_font.render(
+            visible_message,
+            True,
+            get_event_color(message),
+        )
+        screen.blit(message_surface, (_ACT_ONE_LOG_POSITION[0], log_y))
+        log_y += 20
+
+    potion_sprite = sprites.get("act_one_potion")
+    if potion_sprite is not None:
+        for slot_center in _ACT_ONE_BELT_SLOT_CENTERS[
+            :min(potion_count, len(_ACT_ONE_BELT_SLOT_CENTERS))
+        ]:
+            screen.blit(
+                potion_sprite,
+                potion_sprite.get_rect(center=slot_center),
+            )
+    return
 
     _draw_inventory_counters(
         screen,

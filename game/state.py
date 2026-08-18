@@ -362,10 +362,12 @@ class GameState:
     combat_log: list[str]
     game_won: bool = False
     upgrade_screen_open: bool = False
+    act_one_upgrades_remaining: int = 0
     class_selection_open: bool = False
     class_transition_started_at: int = 0
     class_selection_choice: str | None = None
     class_selection_choice_started_at: int = 0
+    act_two_stats_open: bool = False
     upgrade_message: str = ""
     upgrade_reward_pending: bool = False
     floor_transition_started_at: int = -1

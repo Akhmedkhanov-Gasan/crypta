@@ -443,6 +443,10 @@ def _resolve_stairs(
         )
         return False
 
+    if current_floor_config["act"] == 1:
+        game_state.act_one_upgrades_remaining = current_floor_config[
+            "act_floor"
+        ]
     game_state.upgrade_screen_open = True
     game_state.upgrade_message = ""
     game_state.player_attack_targets = []
