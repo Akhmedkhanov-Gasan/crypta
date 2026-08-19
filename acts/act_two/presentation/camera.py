@@ -14,7 +14,7 @@ from presentation.layout import (
     MAP_OFFSET_X,
     MAP_OFFSET_Y,
 )
-from settings import TILE_SIZE
+from settings import BACKGROUND_COLOR, TILE_SIZE
 
 
 _CAMERA_RESPONSE_MS = 145
@@ -82,7 +82,6 @@ def update_act_two_camera(
     floor_index,
     current_time,
 ):
-    maximum_x, maximum_y = _camera_limits(dungeon_map)
     if camera.floor_index != floor_index or camera.updated_at < 0:
         camera.x, camera.y = _centered_camera_target(
             dungeon_map,
@@ -117,8 +116,6 @@ def update_act_two_camera(
             ACT_TWO_VIEW_LOGICAL_HEIGHT / 2
         )
 
-    camera.target_x = _clamp(camera.target_x, maximum_x)
-    camera.target_y = _clamp(camera.target_y, maximum_y)
     elapsed = max(0, min(50, current_time - camera.updated_at))
     blend = 1 - math.exp(-elapsed / _CAMERA_RESPONSE_MS)
     camera.x += (camera.target_x - camera.x) * blend
@@ -161,7 +158,23 @@ def draw_act_two_camera_view(screen, world_surface, camera):
         ACT_TWO_VIEW_LOGICAL_WIDTH,
         ACT_TWO_VIEW_LOGICAL_HEIGHT,
     )
-    view = world_surface.subsurface(source_rectangle)
+    view = pygame.Surface(
+        (ACT_TWO_VIEW_LOGICAL_WIDTH, ACT_TWO_VIEW_LOGICAL_HEIGHT)
+    )
+    view.fill(BACKGROUND_COLOR)
+
+    visible_rectangle = source_rectangle.clip(world_surface.get_rect())
+
+    if visible_rectangle.width > 0 and visible_rectangle.height > 0:
+        visible_piece = world_surface.subsurface(visible_rectangle)
+
+        destination = (
+            visible_rectangle.x - source_rectangle.x,
+            visible_rectangle.y - source_rectangle.y,
+        )
+
+        view.blit(visible_piece, destination)
+
     enlarged = pygame.transform.scale(
         view,
         (ACT_TWO_VIEW_WIDTH, ACT_TWO_VIEW_HEIGHT),
