@@ -78,6 +78,8 @@ ACT_TWO_MAGE_ATTACK_DURATION_MS = 310
 ACT_TWO_MAGE_ATTACK_CAST_START_MS = 45
 ACT_TWO_MAGE_ATTACK_CAST_END_MS = 235
 ACT_TWO_PLAYER_HEAL_EFFECT_MS = 950
+ACT_TWO_PLAYER_LEVEL_UP_EFFECT_MS = 3000
+ACT_TWO_PLAYER_LEVEL_UP_FRAME_SWITCH_MS = 900
 ACT_TWO_PLAYER_DEATH_HOLD_MS = 480
 ACT_TWO_PLAYER_DEATH_COLLAPSE_MS = 2400
 ACT_TWO_WARRIOR_DEATH_FALL_MS = 1700
@@ -274,6 +276,55 @@ def _draw_healing_effect(
         (center[0] - effect_center[0], center[1] - effect_center[1]),
     )
     return True
+
+
+def _draw_level_up_effect(
+    screen,
+    sprites,
+    position,
+    current_time,
+    effect_started_at,
+):
+    elapsed = current_time - effect_started_at
+    if (
+        effect_started_at < 0
+        or not 0 <= elapsed < ACT_TWO_PLAYER_LEVEL_UP_EFFECT_MS
+    ):
+        return
+
+    fade_in = min(1.0, elapsed / 120)
+    fade_out = min(
+        1.0,
+        (ACT_TWO_PLAYER_LEVEL_UP_EFFECT_MS - elapsed) / 420,
+    )
+    visibility = min(fade_in, fade_out)
+    transition = max(
+        0.0,
+        min(
+            1.0,
+            (
+                elapsed
+                - (ACT_TWO_PLAYER_LEVEL_UP_FRAME_SWITCH_MS - 120)
+            )
+            / 240,
+        ),
+    )
+
+    frame_alphas = (
+        round(255 * visibility * (1.0 - transition)),
+        round(255 * visibility * transition),
+    )
+    for frame_index, alpha in enumerate(frame_alphas):
+        if alpha <= 0:
+            continue
+        frame = sprites[f"player_level_up_{frame_index}"].copy()
+        frame.set_alpha(alpha)
+        screen.blit(
+            frame,
+            frame.get_rect(
+                topleft=(round(position[0]), round(position[1]))
+            ),
+        )
 
 
 def _draw_player_hit(
@@ -556,6 +607,7 @@ def draw_act_two_player_actor(
     blocked_movement_direction=(0, 1),
     attack_started_at=0,
     attack_target=None,
+    level_up_effect_started_at=-1,
 ):
     sprite = sprites[f"player_{player_class}"]
     destination_position = (
@@ -994,6 +1046,13 @@ def draw_act_two_player_actor(
         player_class,
         current_time,
         potion_effect_started_at,
+    )
+    _draw_level_up_effect(
+        screen,
+        sprites,
+        position,
+        current_time,
+        level_up_effect_started_at,
     )
     elapsed = current_time - hit_started_at
     if (

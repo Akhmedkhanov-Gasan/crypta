@@ -3,7 +3,10 @@ from acts.act_two.settings import (
     WARRIOR_RHYTHM_MAX_RANK,
 )
 from acts.player_stats import player_stat_changes_for_attribute_upgrade
-from game.progression import apply_attribute_upgrade
+from game.progression import (
+    apply_attribute_upgrade,
+    upgrade_attribute,
+)
 from settings import MAX_ATTRIBUTE_RANK
 
 
@@ -56,63 +59,130 @@ def _apply_class_upgrade(player, upgrade: str) -> bool:
     return True
 
 
-def _apply_attribute_upgrade_with_message(
-    player,
-    upgrade: str,
-) -> tuple[bool, str]:
-    if upgrade not in get_act_two_upgrade_order(player.player_class):
-        return False, "This upgrade is unavailable to the class."
-    if not can_upgrade_act_two(player, upgrade):
-        return False, f"{upgrade.replace('_', ' ').title()} is capped."
+def upgrade_act_two_attribute(player, attribute: str) -> str:
+    if attribute not in get_act_two_upgrade_order(player.player_class):
+        return "This attribute is unavailable to the class."
 
-    if upgrade in player.attribute_ranks:
-        change = player_stat_changes_for_attribute_upgrade(
-            upgrade,
-            player.attribute_ranks[upgrade],
-        )
-        if not apply_attribute_upgrade(player, upgrade):
-            return False, f"{upgrade.title()} is capped."
-        details = {
-            "strength": "physical damage increased",
-            "dexterity": "critical power and dodge increased",
-            "intelligence": "spell power increased",
-            "vitality": f"maximum HP increased by {change.max_health}",
-        }
-        profile_effects = {
-            ("warrior", "strength"): "physical damage and Power Cleave increased",
-            ("rogue", "dexterity"): "critical power, dodge, and ambush increased",
-            ("mage", "intelligence"): "spell power and Arcane Burst increased",
-        }
-        detail = profile_effects.get(
-            (player.player_class, upgrade),
-            details[upgrade],
-        )
-        message = f"{upgrade.title()}: {detail}."
-    else:
-        return False, "Unknown attribute."
+    if not can_upgrade_act_two(player, attribute):
+        return f"{attribute.title()} is capped."
 
-    return True, message
+    if player.attribute_points <= 0:
+        return "No attribute points available."
 
-
-def purchase_act_two_upgrade(player, upgrade: str) -> str:
-    if player.gold_count <= 0:
-        return "Not enough gold."
-
-    upgraded, message = _apply_attribute_upgrade_with_message(
-        player,
-        upgrade,
+    change = player_stat_changes_for_attribute_upgrade(
+        attribute,
+        player.attribute_ranks[attribute],
     )
-    if not upgraded:
-        return message
 
-    player.gold_count -= 1
-    return message
+    if not upgrade_attribute(player, attribute):
+        return "Attribute upgrade failed."
+
+    details = {
+        "strength": "physical damage increased",
+        "dexterity": "critical power and dodge increased",
+        "intelligence": "spell power increased",
+        "vitality": f"maximum HP increased by {change.max_health}",
+    }
+    profile_effects = {
+        (
+            "warrior",
+            "strength",
+        ): "physical damage and Power Cleave increased",
+        (
+            "rogue",
+            "dexterity",
+        ): "critical power, dodge, and ambush increased",
+        (
+            "mage",
+            "intelligence",
+        ): "spell power and Arcane Burst increased",
+    }
+    detail = profile_effects.get(
+        (player.player_class, attribute),
+        details[attribute],
+    )
+    return f"{attribute.title()}: {detail}."
 
 
-# Compatibility for older callers while the Act Two interface is migrated.
-WARRIOR_UPGRADE_MAX_RANKS = ACT_TWO_CLASS_UPGRADE_MAX_RANKS
+def queue_act_two_attribute_upgrade(
+    player,
+    attribute: str,
+) -> bool:
+    if attribute not in COMMON_ACT_TWO_UPGRADES:
+        return False
+
+    pending = player.act_two.pending_attribute_upgrades
+    pending_points = sum(pending.values())
+
+    if pending_points >= player.attribute_points:
+        return False
+
+    future_rank = (
+        player.attribute_ranks[attribute]
+        + pending[attribute]
+    )
+    if future_rank >= MAX_ATTRIBUTE_RANK:
+        return False
+
+    pending[attribute] += 1
+    return True
 
 
-def purchase_warrior_upgrade(player, upgrade: str) -> str:
-    aliases = {"power": "strength"}
-    return purchase_act_two_upgrade(player, aliases.get(upgrade, upgrade))
+def cancel_queued_act_two_attribute_upgrade(
+    player,
+    attribute: str,
+) -> bool:
+    if attribute not in COMMON_ACT_TWO_UPGRADES:
+        return False
+
+    pending = player.act_two.pending_attribute_upgrades
+
+    if pending[attribute] <= 0:
+        return False
+
+    pending[attribute] -= 1
+    return True
+
+
+def confirm_queued_act_two_attribute_upgrades(
+    player,
+) -> tuple[bool, str]:
+    pending = player.act_two.pending_attribute_upgrades
+    selected_points = sum(pending.values())
+
+    if selected_points <= 0:
+        return False, "No attribute upgrades selected."
+
+    if selected_points > player.attribute_points:
+        return False, "Not enough attribute points."
+
+    for attribute in COMMON_ACT_TWO_UPGRADES:
+        amount = pending.get(attribute, 0)
+        future_rank = (
+            player.attribute_ranks[attribute] + amount
+        )
+
+        if amount < 0 or future_rank > MAX_ATTRIBUTE_RANK:
+            return False, "Invalid attribute allocation."
+
+    applied_upgrades = []
+
+    for attribute in COMMON_ACT_TWO_UPGRADES:
+        amount = pending.get(attribute, 0)
+
+        for _ in range(amount):
+            if not apply_attribute_upgrade(player, attribute):
+                return False, "Attribute upgrade failed."
+
+        if amount > 0:
+            applied_upgrades.append(
+                f"{attribute.title()} +{amount}"
+            )
+
+    player.attribute_points -= selected_points
+
+    for attribute in COMMON_ACT_TWO_UPGRADES:
+        pending[attribute] = 0
+
+    summary = ", ".join(applied_upgrades)
+    return True, f"Attributes confirmed: {summary}."

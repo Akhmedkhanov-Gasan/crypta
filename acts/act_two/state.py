@@ -145,6 +145,7 @@ class ActTwoPlayerState:
     fire_bomb_aiming_slot: int | None = None
     selected_ability_direction: tuple[int, int] | None = None
     wait_effect_started_at: int = -1
+    level_up_effect_started_at: int = -1
     ability_effect_started_at: int = 0
     ability_effect_direction: tuple[int, int] = (0, 1)
     ability_effect_cells: tuple[tuple[int, int], ...] = ()
@@ -153,5 +154,13 @@ class ActTwoPlayerState:
         default_factory=lambda: {
             "warrior_cleave": 0,
             "warrior_rhythm": 0,
+        }
+    )
+    pending_attribute_upgrades: dict[str, int] = field(
+        default_factory=lambda: {
+            "strength": 0,
+            "dexterity": 0,
+            "intelligence": 0,
+            "vitality": 0,
         }
     )

@@ -14,18 +14,21 @@ from systems.player_combat import damage_player, resolve_enemy_defeat
 
 POTION = "potion"
 FIRE_BOMB = "fire_bomb"
+KEY = "key"
 
 
 def initialize_act_two_consumable_belt(player) -> None:
     if player.act_two.consumable_belt_initialized:
         return
 
-    potion_slots = min(
-        player.potion_count,
-        CONSUMABLE_BELT_SIZE - 1,
+    potion_slots = min(player.potion_count, CONSUMABLE_BELT_SIZE)
+    key_slots = min(
+        player.key_count,
+        CONSUMABLE_BELT_SIZE - potion_slots,
     )
     player.potion_count = potion_slots
-    items = [POTION] * potion_slots + [FIRE_BOMB]
+    player.key_count = key_slots
+    items = [POTION] * potion_slots + [KEY] * key_slots
     player.act_two.consumable_slots = items + [
         None
     ] * (CONSUMABLE_BELT_SIZE - len(items))
@@ -49,6 +52,8 @@ def store_act_two_consumable(player, item: str) -> bool:
         player.act_two.consumable_slots[slot_index] = item
         if item == POTION:
             player.potion_count += 1
+        elif item == KEY:
+            player.key_count += 1
         return True
     return False
 
@@ -72,6 +77,22 @@ def consume_act_two_potion(player, slot_index: int | None = None) -> bool:
         return False
     slots[slot_index] = None
     player.potion_count = max(0, player.potion_count - 1)
+    return True
+
+
+def consume_act_two_key(player) -> bool:
+    slot_index = next(
+        (
+            index
+            for index, item in enumerate(player.act_two.consumable_slots)
+            if item == KEY
+        ),
+        None,
+    )
+    if slot_index is None:
+        return False
+    player.act_two.consumable_slots[slot_index] = None
+    player.key_count = max(0, player.key_count - 1)
     return True
 
 
@@ -313,11 +334,13 @@ def advance_fire_zones(game_state: GameState) -> None:
 
 __all__ = [
     "FIRE_BOMB",
+    "KEY",
     "POTION",
     "act_two_belt_is_full",
     "advance_fire_zones",
     "cancel_fire_bomb_aiming",
     "consume_act_two_potion",
+    "consume_act_two_key",
     "fire_bomb_zone_cells",
     "get_act_two_consumable_slots",
     "initialize_act_two_consumable_belt",

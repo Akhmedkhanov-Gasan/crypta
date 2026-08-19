@@ -1,5 +1,4 @@
 from acts.act_two.state import TreasuryTrialPhase
-from acts.act_two.progression import purchase_act_two_upgrade
 from enemies import ENEMY_TYPES
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
@@ -178,10 +177,7 @@ def collect_treasury_reward(
         return False
 
     treasury.phase = TreasuryTrialPhase.CLAIMED
-    game_state.player.gold_count += 1
-    game_state.upgrade_reward_pending = True
-    game_state.upgrade_screen_open = True
-    game_state.upgrade_message = "Choose one free attribute upgrade."
+    game_state.player.gold_count += 4
     game_state.player_attack_targets = []
     game_state.emit(
         GameEvent(
@@ -193,31 +189,14 @@ def collect_treasury_reward(
     )
     add_log_message(
         game_state.combat_log,
-        "The hero claims the treasury blessing.",
+        "The hero claims four treasury coins.",
     )
     return True
-
-
-def purchase_treasury_reward_upgrade(
-    game_state: GameState,
-    upgrade: str,
-) -> tuple[bool, str]:
-    if not game_state.upgrade_reward_pending:
-        return False, "No reward upgrade is pending."
-
-    gold_before_purchase = game_state.player.gold_count
-    message = purchase_act_two_upgrade(game_state.player, upgrade)
-    upgraded = game_state.player.gold_count < gold_before_purchase
-    if upgraded:
-        game_state.upgrade_reward_pending = False
-        game_state.upgrade_screen_open = False
-    return upgraded, message
 
 
 __all__ = [
     "activate_treasury_trial",
     "collect_treasury_reward",
-    "purchase_treasury_reward_upgrade",
     "treasury_chest_is_at",
     "update_treasury_trial",
 ]

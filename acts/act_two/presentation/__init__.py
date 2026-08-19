@@ -15,6 +15,14 @@ from acts.act_two.presentation.combat import (
 from acts.act_two.presentation.environment import (
     draw_atmosphere as draw_act_two_atmosphere,
 )
+from acts.act_two.presentation.hud import (
+    draw_act_two_sidebar,
+    get_act_two_belt_slot_rectangles,
+    get_act_two_sidebar_button_rectangles,
+    get_act_two_attribute_plus_rectangles,
+    get_act_two_attribute_minus_rectangles,
+    get_act_two_confirm_button_rectangle,
+)
 from acts.act_two.presentation.items import (
     draw_breakable_crate,
     draw_pickup_effect as draw_act_two_pickup_effect,
@@ -45,7 +53,6 @@ from acts.act_two.presentation.traps import draw_act_two_spike_traps
 from acts.act_two.presentation.runes import draw_act_two_rune_room
 from acts.act_two.presentation.treasury import draw_act_two_treasury
 
-
 __all__ = [
     "ActTwoCamera",
     "act_two_screen_to_cell",
@@ -73,4 +80,10 @@ __all__ = [
     "draw_oracle_emitters",
     "draw_oracle_projectiles",
     "update_act_two_camera",
+    "draw_act_two_sidebar",
+    "get_act_two_belt_slot_rectangles",
+    "get_act_two_sidebar_button_rectangles",
+    "get_act_two_attribute_plus_rectangles",
+    "get_act_two_attribute_minus_rectangles",
+    "get_act_two_confirm_button_rectangle",
 ]

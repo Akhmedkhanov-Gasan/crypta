@@ -121,7 +121,7 @@ def _draw_upgrade_card(
     hovered,
 ):
     title, description, value, capped = _upgrade_card_data(player, upgrade)
-    disabled = player.gold_count <= 0 or capped
+    disabled = player.attribute_points <= 0 or capped
 
     if disabled or hovered:
         overlay = pygame.Surface(rectangle.size, pygame.SRCALPHA)
@@ -215,9 +215,10 @@ def draw_act_two_upgrade_screen(
         title_font.render(_CLASS_TITLES[player_class], True, (215, 202, 186)),
         (302, 117),
     )
+    points = player.attribute_points
     blessings = (
-        f"{player.gold_count} UPGRADE"
-        f"{'S' if player.gold_count != 1 else ''} AVAILABLE"
+        f"{points} ATTRIBUTE POINT"
+        f"{'S' if points != 1 else ''} AVAILABLE"
     )
     screen.blit(
         text_font.render(blessings, True, (216, 161, 74)),

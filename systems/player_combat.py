@@ -49,6 +49,8 @@ from settings import (
 from settings import ASSASSIN_TELEPORT_CHARGES
 from settings import ASSASSIN_ULTIMATE_CHARGES
 
+from levels import FLOOR_CONFIGS
+
 
 OracleHitReaction = Callable[
     [EnemyState, FloorState, list[str]],
@@ -416,20 +418,31 @@ def resolve_enemy_defeat(
     player = game_state.player
     floor = game_state.floor
     player.enemies_defeated += 1
-    experience_reward = experience_reward_for_enemy(enemy.type)
-    levels_gained = grant_experience(player, experience_reward)
-    add_log_message(
-        game_state.combat_log,
-        f"{enemy.name} grants {experience_reward} XP.",
-    )
-    if levels_gained:
+
+    current_act = FLOOR_CONFIGS[game_state.floor_index]["act"]
+    if current_act == 2:
+        experience_reward = experience_reward_for_enemy(enemy.type)
+        levels_gained = grant_experience(player, experience_reward)
         add_log_message(
             game_state.combat_log,
-            (
-                f"Level {player.level} reached. "
-                f"Attribute point +{levels_gained}."
-            ),
+            f"{enemy.name} grants {experience_reward} XP.",
         )
+        if levels_gained:
+            game_state.emit(
+                GameEvent(
+                    type=GameEventType.LEVEL_UP,
+                    actor="hero",
+                    amount=levels_gained,
+                    data={"level": player.level},
+                )
+            )
+            add_log_message(
+                game_state.combat_log,
+                (
+                    f"Level {player.level} reached. "
+                    f"Attribute point +{levels_gained}."
+                ),
+            )
 
     if enemy.type == "oracle":
         floor.projectiles.clear()

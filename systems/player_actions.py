@@ -2,9 +2,12 @@ from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from acts.act_two.crates import collect_crate_loot
 from acts.act_two.consumables import (
+    FIRE_BOMB,
+    KEY,
     POTION,
     act_two_belt_is_full,
     consume_act_two_potion,
+    consume_act_two_key,
     get_act_two_consumable_slots,
     store_act_two_consumable,
 )
@@ -78,8 +81,14 @@ def open_chest(
     effect_started_at: int = 0,
 ) -> bool:
     player = game_state.player
+    act_number = FLOOR_CONFIGS[game_state.floor_index]["act"]
 
-    if chest.requires_key and player.key_count <= 0:
+    has_required_key = (
+        KEY in get_act_two_consumable_slots(player)
+        if act_number == 2
+        else player.key_count > 0
+    )
+    if chest.requires_key and not has_required_key:
         add_log_message(
             game_state.combat_log,
             "The chest is locked.",
@@ -97,15 +106,18 @@ def open_chest(
         )
     )
     if chest.requires_key:
-        player.key_count -= 1
+        if act_number == 2:
+            consume_act_two_key(player)
+        else:
+            player.key_count -= 1
 
-    if chest["contains"] in ("gold", "potion"):
+    if chest["contains"] in ("gold", POTION, FIRE_BOMB):
         chest["loot_available"] = True
-        loot_name = (
-            "a healing potion"
-            if chest["contains"] == "potion"
-            else "gold"
-        )
+        loot_name = {
+            POTION: "a healing potion",
+            FIRE_BOMB: "a fire bomb",
+            "gold": "gold",
+        }[chest["contains"]]
         add_log_message(
             game_state.combat_log,
             f"Chest opened: {loot_name} found.",
@@ -317,7 +329,7 @@ def _collect_items(
 
     if (
         chest_with_loot
-        and chest_with_loot["contains"] == "potion"
+        and chest_with_loot["contains"] in (POTION, FIRE_BOMB)
         and act_number == 2
         and act_two_belt_is_full(player)
     ):
@@ -327,13 +339,17 @@ def _collect_items(
         )
     elif chest_with_loot:
         loot_kind = chest_with_loot["contains"]
-        if loot_kind == "potion":
+        if loot_kind == POTION:
             if act_number == 2:
                 store_act_two_consumable(player, POTION)
             else:
                 player.potion_count += 1
             pickup_kind = "potion"
             message = "Hero picks up a potion."
+        elif loot_kind == FIRE_BOMB:
+            store_act_two_consumable(player, FIRE_BOMB)
+            pickup_kind = FIRE_BOMB
+            message = "Hero picks up a fire bomb."
         else:
             player.gold_count += 1
             pickup_kind = "gold"
@@ -359,8 +375,20 @@ def _collect_items(
         None,
     )
 
-    if found_key is not None:
-        player.key_count += 1
+    if (
+        found_key is not None
+        and act_number == 2
+        and act_two_belt_is_full(player)
+    ):
+        add_log_message(
+            game_state.combat_log,
+            "The consumable belt is full.",
+        )
+    elif found_key is not None:
+        if act_number == 2:
+            store_act_two_consumable(player, KEY)
+        else:
+            player.key_count += 1
         floor.dropped_keys.remove(found_key)
         _start_pickup_effect(
             game_state,
