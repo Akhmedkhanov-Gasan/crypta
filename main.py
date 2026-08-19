@@ -13,6 +13,7 @@ from acts.act_one.settings import (
 from acts.act_two.settings import (
     CLASS_BASE_ATTRIBUTE_RANKS,
     CLASS_BASE_STATS,
+    ACT_TWO_STARTING_LEVEL,
 )
 from acts.act_two.abilities import (
     select_directional_ability_direction,
@@ -30,8 +31,11 @@ from acts.act_two.consumables import (
     throw_fire_bomb,
 )
 from acts.act_two.progression import (
+    cancel_queued_act_two_attribute_upgrade,
+    confirm_queued_act_two_attribute_upgrades,
     get_act_two_upgrade_order,
-    purchase_act_two_upgrade,
+    queue_act_two_attribute_upgrade,
+    upgrade_act_two_attribute,
 )
 from acts.act_two.visibility import (
     position_is_visible,
@@ -46,7 +50,6 @@ from acts.act_two.runes import (
 )
 from acts.act_two.treasury import (
     activate_treasury_trial,
-    purchase_treasury_reward_upgrade,
     treasury_chest_is_at,
     update_treasury_trial,
 )
@@ -138,6 +141,7 @@ from rendering import (
     draw_coin,
     draw_dungeon,
     draw_enemy,
+    draw_fire_bomb,
     draw_key,
     draw_map_frame,
     draw_oracle_emitters,
@@ -164,6 +168,10 @@ from rendering import (
     load_act_two_fonts,
     load_act_two_sprites,
     load_menu_assets,
+    draw_act_two_sidebar,
+    get_act_two_attribute_plus_rectangles,
+    get_act_two_attribute_minus_rectangles,
+    get_act_two_confirm_button_rectangle,
 )
 from presentation.layout import (
     ACT_THREE_AWAKENING_END_MS,
@@ -365,7 +373,11 @@ def _complete_class_selection(game_state):
     chosen_class = game_state.class_selection_choice
     if chosen_class is None:
         return
-
+    game_state.player.level = ACT_TWO_STARTING_LEVEL
+    # ---TEST---
+    game_state.player.experience = 8
+    game_state.player.attribute_points = 1
+    # ---TEST---
     game_state.floor_index += 1
     game_state.floor = create_floor_state(game_state.floor_index)
     clear_archer_barrage_zone(game_state)
@@ -440,7 +452,8 @@ def _advance_floor_transition(game_state, current_time):
         game_state.floor_index = target_index
         game_state.floor = create_floor_state(target_index)
         game_state.floor_transition_swapped = True
-        game_state.player.key_count = 0
+        if FLOOR_CONFIGS[target_index]["act"] != 2:
+            game_state.player.key_count = 0
         game_state.player_attack_targets = []
         cancel_fire_bomb_aiming(game_state)
         clear_archer_barrage_zone(game_state)
@@ -808,6 +821,104 @@ def main():
                     )
                 continue
             elif game_state.floor_transition_started_at >= 0:
+                continue
+            elif (
+                    event.type == pygame.MOUSEBUTTONDOWN
+                    and event.button == 1
+                    and current_act == 2
+                    and game_state.act_two_stats_open
+                    and not game_state.class_selection_open
+                    and not game_state.upgrade_screen_open
+                    and (
+                            game_mouse_position := window_to_game_position(
+                                screen,
+                                event.pos,
+                            )
+                    )
+                    is not None
+                    and get_act_two_confirm_button_rectangle().collidepoint(
+                game_mouse_position
+            )
+            ):
+                confirmed, message = (
+                    confirm_queued_act_two_attribute_upgrades(
+                        game_state.player,
+                    )
+                )
+
+                if confirmed:
+                    add_log_message(
+                        game_state.combat_log,
+                        message,
+                    )
+
+                continue
+
+            elif (
+                    event.type == pygame.MOUSEBUTTONDOWN
+                    and event.button == 1
+                    and current_act == 2
+                    and game_state.act_two_stats_open
+                    and not game_state.class_selection_open
+                    and not game_state.upgrade_screen_open
+                    and (
+                            game_mouse_position := window_to_game_position(
+                                screen,
+                                event.pos,
+                            )
+                    )
+                    is not None
+                    and (
+                            clicked_attribute := next(
+                                (
+                                        attribute
+                                        for attribute, rectangle in (
+                                        get_act_two_attribute_minus_rectangles().items()
+                                )
+                                        if rectangle.collidepoint(game_mouse_position)
+                                ),
+                                None,
+                            )
+                    )
+                    is not None
+            ):
+                cancel_queued_act_two_attribute_upgrade(
+                    game_state.player,
+                    clicked_attribute,
+                )
+                continue
+            elif (
+                    event.type == pygame.MOUSEBUTTONDOWN
+                    and event.button == 1
+                    and current_act == 2
+                    and game_state.act_two_stats_open
+                    and not game_state.class_selection_open
+                    and not game_state.upgrade_screen_open
+                    and (
+                            game_mouse_position := window_to_game_position(
+                                screen,
+                                event.pos,
+                            )
+                    )
+                    is not None
+                    and (
+                            clicked_attribute := next(
+                                (
+                                        attribute
+                                        for attribute, rectangle in (
+                                        get_act_two_attribute_plus_rectangles().items()
+                                )
+                                        if rectangle.collidepoint(game_mouse_position)
+                                ),
+                                None,
+                            )
+                    )
+                    is not None
+            ):
+                queue_act_two_attribute_upgrade(
+                    game_state.player,
+                    clicked_attribute,
+                )
                 continue
             elif (
                 event.type == pygame.MOUSEBUTTONDOWN
@@ -1322,21 +1433,10 @@ def main():
                         upgrade = get_act_two_upgrade_order(
                             game_state.player.player_class
                         )[upgrade_index]
-                        if game_state.upgrade_reward_pending:
-                            (
-                                upgraded,
-                                game_state.upgrade_message,
-                            ) = purchase_treasury_reward_upgrade(
-                                game_state,
-                                upgrade,
-                            )
-                        else:
-                            game_state.upgrade_message = (
-                                purchase_act_two_upgrade(
-                                    game_state.player,
-                                    upgrade,
-                                )
-                            )
+                        game_state.upgrade_message = upgrade_act_two_attribute(
+                            game_state.player,
+                            upgrade,
+                        )
                         add_log_message(
                             game_state.combat_log,
                             game_state.upgrade_message,
@@ -1404,11 +1504,8 @@ def main():
                         pygame.K_RETURN,
                         pygame.K_KP_ENTER,
                     ) and (
-                        not game_state.upgrade_reward_pending
-                        and (
                             current_upgrade_act != 1
                             or game_state.act_one_upgrades_remaining <= 0
-                        )
                     ):
                         _finish_upgrade_descent(
                             game_state,
@@ -2010,6 +2107,17 @@ def main():
                         game_state,
                         enemy_movement_started_at,
                     )
+                    if (
+                        current_act == 2
+                        and any(
+                            emitted_event.type is GameEventType.LEVEL_UP
+                            and emitted_event.actor == "hero"
+                            for emitted_event in game_state.events
+                        )
+                    ):
+                        (
+                            game_state.player.act_two.level_up_effect_started_at
+                        ) = enemy_movement_started_at
                     if current_act == 2 and game_state.player.health <= 0:
                         remove_enemy_corpses_at_position(
                             game_state.floor,
@@ -2202,7 +2310,7 @@ def main():
                         )
         if (
             game_state.upgrade_screen_open
-            and game_state.player.gold_count <= 0
+            and game_state.player.attribute_points <= 0
             and FLOOR_CONFIGS[game_state.floor_index]["act"] != 1
         ):
             _finish_upgrade_descent(
@@ -2978,8 +3086,17 @@ def main():
                 current_time,
             )
             if remembered_chest["loot_available"]:
-                if remembered_chest.get("contains") == "potion":
+                chest_loot_kind = remembered_chest.get("contains")
+                if chest_loot_kind == "potion":
                     draw_potion(
+                        world_target,
+                        remembered_chest["column"],
+                        remembered_chest["row"],
+                        current_act,
+                        act_two_sprites,
+                    )
+                elif chest_loot_kind == FIRE_BOMB:
+                    draw_fire_bomb(
                         world_target,
                         remembered_chest["column"],
                         remembered_chest["row"],
@@ -3045,6 +3162,11 @@ def main():
             game_state.player.act_two_facing_direction,
             game_state.player.act_two_blocked_movement_started_at,
             game_state.player.act_two_blocked_movement_direction,
+            (
+                game_state.player.act_two.level_up_effect_started_at
+                if current_act == 2
+                else -1
+            ),
         )
         if current_act == 2 and game_state.player.health > 0:
             draw_act_two_wait_indicator(
@@ -3238,45 +3360,48 @@ def main():
                 current_time,
                 act_two_camera,
             )
-        draw_sidebar(
-            game_surface,
-            active_heading_font,
-            active_text_font,
-            active_controls_font,
-            active_ability_font,
-            game_state.combat_log,
-            game_state.player.health,
-            game_state.player.max_health,
-            game_state.player.damage_min,
-            game_state.player.damage_max,
-            game_state.player.crit_chance,
-            game_state.player.dodge_chance,
-            game_state.player.critical_damage_multiplier,
-            game_state.player.spell_power,
-            game_state.player.attribute_ranks,
-            game_state.player.potion_count,
-            get_act_two_consumable_slots(game_state.player),
-            game_state.player.gold_count,
-            game_state.player.key_count,
-            game_state.player.enemies_defeated,
-            game_state.player.player_class,
-            game_state.player.level,
-            game_state.player.experience,
-            game_state.player.ability_kill_charge,
-            game_state.player.invisibility_turns,
-            game_state.player.directional_ability_aiming,
-            game_state.act_two_stats_open,
-            window_to_game_position(
-                screen,
-                pygame.mouse.get_pos(),
-            ),
-            current_act,
-            (
-                act_one_gameplay_assets
-                if current_act == 1
-                else act_two_sprites
-            ),
-        )
+        if current_act == 1:
+            draw_sidebar(
+                game_surface,
+                active_heading_font,
+                active_text_font,
+                game_state.combat_log,
+                game_state.player.health,
+                game_state.player.max_health,
+                game_state.player.potion_count,
+                act_one_gameplay_assets,
+            )
+        elif current_act == 2:
+            draw_act_two_sidebar(
+                game_surface,
+                active_heading_font,
+                active_text_font,
+                active_controls_font,
+                active_ability_font,
+                game_state.combat_log,
+                game_state.player.health,
+                game_state.player.max_health,
+                game_state.player.damage_min,
+                game_state.player.damage_max,
+                game_state.player.crit_chance,
+                game_state.player.dodge_chance,
+                game_state.player.spell_power,
+                game_state.player.attribute_ranks,
+                game_state.player.act_two.pending_attribute_upgrades,
+                get_act_two_consumable_slots(game_state.player),
+                game_state.player.gold_count,
+                game_state.player.player_class,
+                game_state.player.level,
+                game_state.player.experience,
+                game_state.player.ability_kill_charge,
+                game_state.player.attribute_points,
+                game_state.act_two_stats_open,
+                window_to_game_position(
+                    screen,
+                    pygame.mouse.get_pos(),
+                ),
+                act_two_sprites,
+            )
         if current_act >= 3:
             draw_act_three_gameplay(
                 game_surface,

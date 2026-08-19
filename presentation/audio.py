@@ -154,6 +154,11 @@ ACT_TWO_PLAYER_SOUND_FILES = {
 }
 
 
+ACT_TWO_LEVEL_UP_SOUND_FILES = {
+    "level_up": ("lvl_up_1.mp3", "lvl_up_2.mp3"),
+}
+
+
 ACT_TWO_FOOTSTEP_FILES = tuple(
     f"act_2_footstep_{index}.mp3" for index in range(1, 6)
 )
@@ -211,6 +216,7 @@ ACT_TWO_SOUND_VOLUMES = {
     "mage_hurt": 0.68,
     "mage_death": 0.72,
     "player_heal": 0.82,
+    "level_up": 0.72,
     "goblin_attack": 0.68,
     "goblin_hurt": 0.66,
     "goblin_death": 0.70,
@@ -371,6 +377,19 @@ class ActTwoSoundBank:
                 try:
                     variants.append(
                         pygame.mixer.Sound(str(player_path / filename))
+                    )
+                except (FileNotFoundError, pygame.error):
+                    continue
+            if variants:
+                loaded_sounds[sound_key] = variants
+
+        level_up_path = sounds_path / "lvl_up"
+        for sound_key, filenames in ACT_TWO_LEVEL_UP_SOUND_FILES.items():
+            variants = []
+            for filename in filenames:
+                try:
+                    variants.append(
+                        pygame.mixer.Sound(str(level_up_path / filename))
                     )
                 except (FileNotFoundError, pygame.error):
                     continue
@@ -624,6 +643,13 @@ class ActTwoSoundBank:
         ):
             self._play("player_heal")
 
+        if any(
+            event.type is GameEventType.LEVEL_UP
+            and event.actor == "hero"
+            for event in events
+        ):
+            self._play("level_up")
+
         self._play_enemy_events(events, floor)
 
         environment_sound_gains = {}
@@ -644,6 +670,8 @@ class ActTwoSoundBank:
                 elif event.data.get("kind") == "key":
                     sound_key = "key_pickup"
                 elif event.data.get("kind") == "potion":
+                    sound_key = "item_pickup"
+                elif event.data.get("kind") == "fire_bomb":
                     sound_key = "item_pickup"
             elif event.type is GameEventType.ENVIRONMENT:
                 candidate_key = event.data.get("kind")

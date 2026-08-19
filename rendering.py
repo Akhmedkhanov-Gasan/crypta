@@ -18,8 +18,6 @@ from acts.act_three.presentation import (
 from presentation.hud import (
     draw_sidebar,
     draw_status,
-    get_act_two_belt_slot_rectangles,
-    get_act_two_sidebar_button_rectangles,
     get_class_selection_rectangles,
 )
 from acts.act_two.presentation import (
@@ -27,6 +25,7 @@ from acts.act_two.presentation import (
     draw_act_two_arcane_burst_effect,
     draw_act_two_atmosphere,
     draw_act_two_fog_of_war,
+    draw_act_two_sidebar,
     draw_fire_bomb_flight,
     draw_fire_bomb_targeting,
     draw_fire_zones,
@@ -42,7 +41,12 @@ from acts.act_two.presentation import (
     draw_breakable_crate,
     draw_oracle_emitters,
     draw_oracle_projectiles,
+    get_act_two_belt_slot_rectangles,
+    get_act_two_sidebar_button_rectangles,
     get_act_two_upgrade_card_rectangles,
+    get_act_two_attribute_plus_rectangles,
+    get_act_two_attribute_minus_rectangles,
+    get_act_two_confirm_button_rectangle,
 )
 from presentation.layout import CLASS_SELECTION_READY_MS
 from presentation.screens import (
@@ -71,6 +75,7 @@ from presentation.world import (
     draw_coin,
     draw_dungeon,
     draw_enemy,
+    draw_fire_bomb,
     draw_key,
     draw_map_frame,
     draw_player,
@@ -94,6 +99,10 @@ __all__ = [
     "draw_act_two_ability_preview",
     "draw_act_two_arcane_burst_effect",
     "draw_act_two_fog_of_war",
+    "draw_act_two_sidebar",
+    "get_act_two_attribute_plus_rectangles",
+    "get_act_two_attribute_minus_rectangles",
+    "get_act_two_confirm_button_rectangle",
     "draw_fire_bomb_flight",
     "draw_fire_bomb_targeting",
     "draw_fire_zones",
@@ -117,6 +126,7 @@ __all__ = [
     "draw_coin",
     "draw_dungeon",
     "draw_enemy",
+    "draw_fire_bomb",
     "draw_key",
     "draw_map_frame",
     "draw_oracle_emitters",
@@ -149,4 +159,5 @@ __all__ = [
     "load_act_two_fonts",
     "load_act_two_sprites",
     "load_menu_assets",
+
 ]

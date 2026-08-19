@@ -21,6 +21,10 @@ def draw_coin(screen, column, row, sprites):
     screen.blit(sprites["coin"], _position(column, row))
 
 
+def draw_fire_bomb(screen, column, row, sprites):
+    screen.blit(sprites["fire_bomb"], _position(column, row))
+
+
 def draw_chest(screen, chest, sprites):
     prefix = (
         "stash"

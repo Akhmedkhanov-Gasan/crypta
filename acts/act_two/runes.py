@@ -89,10 +89,7 @@ def interact_with_rune_pedestal(game_state: GameState) -> bool:
         return False
 
     room.phase = RunePuzzlePhase.CLAIMED
-    game_state.player.gold_count += 1
-    game_state.upgrade_reward_pending = True
-    game_state.upgrade_screen_open = True
-    game_state.upgrade_message = "Choose one attribute upgrade."
+    game_state.player.gold_count += 2
     game_state.player_attack_targets = []
     game_state.emit(
         GameEvent(
@@ -104,7 +101,7 @@ def interact_with_rune_pedestal(game_state: GameState) -> bool:
     )
     add_log_message(
         game_state.combat_log,
-        "The hero claims the rune pedestal blessing.",
+        "The rune pedestal yields an ancient coin.",
     )
     return True
 

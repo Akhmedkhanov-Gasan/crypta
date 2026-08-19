@@ -9,8 +9,12 @@ from settings import MAX_ATTRIBUTE_RANK
 DEFAULT_ENEMY_EXPERIENCE = 1
 ENEMY_EXPERIENCE_REWARDS = {
     "brute": 3,
-    "warden": 5,
+    "goblin": 2,
+    "archer": 2,
+    "priest": 2,
+    "sentinel": 3,
     "oracle": 8,
+
 }
 def experience_required_for_level(level: int) -> int:
     return 5 + max(0, level - 1) * 2

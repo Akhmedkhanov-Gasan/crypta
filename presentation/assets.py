@@ -169,6 +169,8 @@ def load_act_two_sprites():
     asset_directory = ASSET_ROOT / "act_2"
     ui_directory = ASSET_ROOT / "ui" / "act_2"
     sprite_paths = {
+        "player_level_up_0": "player/lvl_up_1.png",
+        "player_level_up_1": "player/lvl_up_2.png",
         "player_warrior": "player/warrior/idle/idle_00.png",
         "player_warrior_hurt": "player/warrior/hurt/hurt_00.png",
         "player_warrior_walk_0": "player/warrior/walk/down/walk_00.png",
@@ -388,6 +390,7 @@ def load_act_two_sprites():
         "fire_2": "environment/effects/fire/fire_02.png",
         "fire_3": "environment/effects/fire/fire_03.png",
         "key": "items/loot/key.png",
+        "key_belt": "items/loot/key_belt.png",
         "coin": "items/loot/coin.png",
         "chest_closed": "items/chests/closed.png",
         "chest_open": "items/chests/open.png",
@@ -659,6 +662,18 @@ def load_act_two_sprites():
             "act_two_side_buttons": _load_scaled_image(
                 act_two_hud_directory / "sidebar_act2(32).png",
                 (88, 228),
+            ),
+            "act_two_level_up_indicator": _load_scaled_image(
+                act_two_hud_directory / "lvl_up.png",
+                (92, 92),
+            ),
+            "act_two_confirm_button": _load_scaled_image(
+                act_two_hud_directory / "confirm_button.png",
+                (158, 53),
+            ),
+            "act_two_gold_counter": _load_scaled_image(
+                act_two_hud_directory / "gold.png",
+                (102, 102),
             ),
             "act_two_abilities_panel": _load_scaled_image(
                 act_two_hud_directory / "abilities.png",
