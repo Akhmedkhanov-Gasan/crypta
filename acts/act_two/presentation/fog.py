@@ -11,10 +11,7 @@ from presentation.layout import (
     MAP_OFFSET_X,
     MAP_OFFSET_Y,
 )
-from settings import TILE_SIZE
-
-
-_FOG_COLOR = (2, 5, 9)
+from settings import BACKGROUND_COLOR, TILE_SIZE
 
 
 def _draw_visibility_gradient(fog, center):
@@ -29,14 +26,14 @@ def _draw_visibility_gradient(fog, center):
         alpha = round(FOG_EDGE_ALPHA * (1 - progress) ** 1.35)
         pygame.draw.circle(
             fog,
-            (*_FOG_COLOR, alpha),
+            (*BACKGROUND_COLOR, alpha),
             center,
             radius,
         )
 
     pygame.draw.circle(
         fog,
-        (*_FOG_COLOR, 0),
+        (*BACKGROUND_COLOR, 0),
         center,
         outer_radius - FOG_EDGE_WIDTH_PIXELS,
     )
@@ -49,12 +46,12 @@ def draw_act_two_fog_of_war(screen, act_number, floor):
     map_width = len(floor.map[0]) * TILE_SIZE
     map_height = len(floor.map) * TILE_SIZE
     fog = pygame.Surface((map_width, map_height), pygame.SRCALPHA)
-    fog.fill((*_FOG_COLOR, FOG_UNEXPLORED_ALPHA))
+    fog.fill((*BACKGROUND_COLOR, FOG_UNEXPLORED_ALPHA))
 
     for column, row in floor.explored_cells:
         pygame.draw.rect(
             fog,
-            (*_FOG_COLOR, FOG_EXPLORED_ALPHA),
+            (*BACKGROUND_COLOR, FOG_EXPLORED_ALPHA),
             (
                 column * TILE_SIZE,
                 row * TILE_SIZE,
@@ -79,7 +76,7 @@ def draw_act_two_fog_of_war(screen, act_number, floor):
             pygame.draw.rect(
                 fog,
                 (
-                    *_FOG_COLOR,
+                    *BACKGROUND_COLOR,
                     (
                         FOG_EXPLORED_ALPHA
                         if position in floor.explored_cells
