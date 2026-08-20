@@ -1,12 +1,16 @@
 {
-    "activeFile": "act_3/environment_v1/act_3_environment_v1.tsx",
+    "activeFile": "C:/Users/ldago/Downloads/act2.tsx",
     "expandedProjectPaths": [
-        "act_3/environment_v2",
-        "act_3",
         "act_3/environment_v1",
+        "act_3",
+        "act_3/environment_v2",
         "."
     ],
     "fileStates": {
+        "C:/Users/ldago/Downloads/act2.tsx": {
+            "scaleInDock": 3,
+            "scaleInEditor": 8
+        },
         "act_3/environment_v1/act_3_environment_v1.tsx": {
             "dynamicWrapping": true,
             "scaleInDock": 1,
@@ -14,16 +18,16 @@
         },
         "act_3/environment_v1/corridor_straight_01.tmx": {
             "expandedObjectLayers": [
-                5,
-                6,
                 4,
-                3
+                6,
+                3,
+                5
             ],
             "scale": 1,
             "selectedLayer": 4,
             "viewCenter": {
-                "x": 670.5,
-                "y": 606
+                "x": 640,
+                "y": 640.5
             }
         },
         "act_3/environment_v1/room_spawn_01.tmx": {
@@ -33,11 +37,11 @@
                 6,
                 8
             ],
-            "scale": 2,
+            "scale": 1.5,
             "selectedLayer": 4,
             "viewCenter": {
-                "x": 449.25,
-                "y": 294
+                "x": 469,
+                "y": 241.3333333333333
             }
         },
         "act_3/environment_v1/test_room_01.tmx": {
@@ -66,22 +70,27 @@
             }
         }
     },
+    "last.imagePath": "C:/Users/ldago/Downloads",
     "map.height": 15,
     "map.lastUsedFormat": "tmx",
-    "map.tileHeight": 64,
-    "map.tileWidth": 64,
+    "map.tileHeight": 32,
+    "map.tileWidth": 32,
     "map.width": 15,
     "openFiles": [
         "act_3/environment_v1/room_spawn_01.tmx",
         "act_3/environment_v1/corridor_straight_01.tmx",
-        "act_3/environment_v1/act_3_environment_v1.tsx"
+        "act_3/environment_v1/act_3_environment_v1.tsx",
+        "C:/Users/ldago/Downloads/act2.tsx"
     ],
     "project": "act3.tiled-project",
     "recentFiles": [
         "act_3/environment_v1/room_spawn_01.tmx",
         "act_3/environment_v1/corridor_straight_01.tmx",
         "act_3/environment_v1/act_3_environment_v1.tsx",
+        "C:/Users/ldago/Downloads/act2.tsx",
         "act_3/environment_v1/test_room_01.tmx",
         "act_3/environment_v2/act_3_environment.tmx"
-    ]
+    ],
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.type": 1
 }

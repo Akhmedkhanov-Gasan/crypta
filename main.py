@@ -325,7 +325,7 @@ def _draw_ambient_margin(window, rectangle):
     window.blit(margin, rectangle)
 
 
-def present_game(window, game_surface):
+def present_game(window, game_surface, preserve_pixels=False):
     window_width, window_height = window.get_size()
     scale = min(
         window_width / GAME_WIDTH,
@@ -336,7 +336,7 @@ def present_game(window, game_surface):
     scale_is_integer = abs(scale - round(scale)) < 0.001
     transform = (
         pygame.transform.scale
-        if scale_is_integer
+        if preserve_pixels or scale_is_integer
         else pygame.transform.smoothscale
     )
     scaled_surface = transform(game_surface, (scaled_width, scaled_height))
@@ -3595,7 +3595,11 @@ def main():
                     else "THE DESCENT CONTINUES"
                 ),
             )
-        present_game(screen, game_surface)
+        present_game(
+            screen,
+            game_surface,
+            preserve_pixels=current_act == 2,
+        )
         clock.tick(FPS)
 
     pygame.quit()

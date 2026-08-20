@@ -42,16 +42,16 @@ _ACT_TWO_SIDEBAR_HIGHLIGHT_RECTS = {
     "settings": pygame.Rect(1207, 346, 47, 44),
 }
 _ACT_TWO_ATTRIBUTE_PLUS_RECTS = {
-    "strength": pygame.Rect(1123, 243, 26, 22),
-    "dexterity": pygame.Rect(1123, 271, 26, 22),
-    "intelligence": pygame.Rect(1123, 299, 26, 22),
-    "vitality": pygame.Rect(1123, 327, 26, 22),
+    "strength": pygame.Rect(1127, 243, 26, 22),
+    "dexterity": pygame.Rect(1127, 271, 26, 22),
+    "intelligence": pygame.Rect(1127, 299, 26, 22),
+    "vitality": pygame.Rect(1127, 327, 26, 22),
 }
 _ACT_TWO_ATTRIBUTE_MINUS_RECTS = {
-    "strength": pygame.Rect(1085, 243, 26, 22),
-    "dexterity": pygame.Rect(1085, 271, 26, 22),
-    "intelligence": pygame.Rect(1085, 299, 26, 22),
-    "vitality": pygame.Rect(1085, 327, 26, 22),
+    "strength": pygame.Rect(1080, 243, 26, 22),
+    "dexterity": pygame.Rect(1080, 271, 26, 22),
+    "intelligence": pygame.Rect(1080, 299, 26, 22),
+    "vitality": pygame.Rect(1080, 327, 26, 22),
 }
 _ACT_TWO_CONFIRM_BUTTON_RECT = pygame.Rect(
     987,
@@ -79,6 +79,27 @@ _ACT_TWO_ABILITY_DESCRIPTIONS = {
 _ACT_TWO_LEVEL_UP_POSITION = (1185, 207)
 _ACT_TWO_GOLD_COUNTER_POSITION = (1167, 610)
 _ACT_TWO_GOLD_VALUE_CENTER = (1218, 675)
+
+
+def _draw_stat_value_backing(screen, center, width):
+    rectangle = pygame.Rect(0, 0, width, 22)
+    rectangle.center = center
+    backing = pygame.Surface(rectangle.size, pygame.SRCALPHA)
+    pygame.draw.rect(
+        backing,
+        (5, 5, 7, 172),
+        backing.get_rect(),
+        border_radius=3,
+    )
+    pygame.draw.rect(
+        backing,
+        (104, 88, 82, 105),
+        backing.get_rect(),
+        width=1,
+        border_radius=3,
+    )
+    screen.blit(backing, rectangle)
+
 
 def draw_act_two_sidebar(
     screen,
@@ -413,6 +434,11 @@ def draw_act_two_sidebar(
             True,
             (218, 165, 75) if is_pending else value_color,
         )
+        _draw_stat_value_backing(
+            screen,
+            (1117, center_y),
+            max(24, value_surface.get_width() + 10),
+        )
         screen.blit(
             value_surface,
             value_surface.get_rect(center=(1117, center_y)),
@@ -508,6 +534,11 @@ def draw_act_two_sidebar(
             value,
             True,
             value_color,
+        )
+        _draw_stat_value_backing(
+            screen,
+            (1117, center_y),
+            max(42, value_surface.get_width() + 10),
         )
         screen.blit(
             value_surface,

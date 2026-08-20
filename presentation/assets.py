@@ -91,6 +91,7 @@ def load_menu_assets():
 
 def load_act_two_fonts():
     pixelify_directory = FONT_ROOT / "Pixelify_Sans"
+    pixel_operator_bold_path = FONT_ROOT / "PixelOperator-Bold.ttf"
     regular_path = pixelify_directory / "PixelifySans-Regular.ttf"
     medium_path = pixelify_directory / "PixelifySans-Medium.ttf"
     semibold_path = pixelify_directory / "PixelifySans-SemiBold.ttf"
@@ -110,8 +111,8 @@ def load_act_two_fonts():
         ),
         "sidebar_text": pygame.font.Font(str(regular_path), 18),
         "sidebar_controls": pygame.font.Font(
-            str(medium_path),
-            16,
+            str(pixel_operator_bold_path),
+            18,
         ),
     }
 
