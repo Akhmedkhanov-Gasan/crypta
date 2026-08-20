@@ -3,6 +3,7 @@ import math
 import pygame
 
 from acts.act_two.presentation.death_scene import draw_act_two_death_scene
+from presentation.camera import camera_render_rectangle
 from acts.act_two.presentation.movement import (
     PlayerMovementPose,
     draw_mage_movement_grounding,
@@ -1088,11 +1089,14 @@ def draw_act_two_player_feedback_overlay(
     if player.player_class not in _CLASS_COLORS:
         return
     view_rectangle = (
-        pygame.Rect(
+        camera_render_rectangle(
+            pygame.Rect(
             ACT_TWO_VIEW_X,
             ACT_TWO_VIEW_Y,
             ACT_TWO_VIEW_WIDTH,
             ACT_TWO_VIEW_HEIGHT,
+            ),
+            camera.zoom,
         )
         if camera is not None
         else pygame.Rect(
