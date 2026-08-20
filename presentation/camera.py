@@ -49,18 +49,29 @@ def _camera_limits(world_size, viewport, zoom):
     )
 
 
-def center_pixel_camera(camera, world_size, viewport, focus):
+def center_pixel_camera(
+    camera,
+    world_size,
+    viewport,
+    focus,
+    constrain_to_world=True,
+):
     view_width, view_height = camera_world_view_size(
         viewport,
         camera.zoom,
     )
-    maximum_x, maximum_y = _camera_limits(
-        world_size,
-        viewport,
-        camera.zoom,
-    )
-    camera.x = _clamp(focus[0] - view_width / 2, maximum_x)
-    camera.y = _clamp(focus[1] - view_height / 2, maximum_y)
+    target_x = focus[0] - view_width / 2
+    target_y = focus[1] - view_height / 2
+    if constrain_to_world:
+        maximum_x, maximum_y = _camera_limits(
+            world_size,
+            viewport,
+            camera.zoom,
+        )
+        target_x = _clamp(target_x, maximum_x)
+        target_y = _clamp(target_y, maximum_y)
+    camera.x = target_x
+    camera.y = target_y
     camera.target_x = camera.x
     camera.target_y = camera.y
 
@@ -72,6 +83,7 @@ def change_pixel_camera_zoom(
     viewport,
     focus,
     zoom_levels=PIXEL_CAMERA_ZOOM_LEVELS,
+    constrain_to_world=True,
 ):
     current_index = zoom_levels.index(camera.zoom)
     next_index = max(
@@ -82,7 +94,13 @@ def change_pixel_camera_zoom(
     if next_zoom == camera.zoom:
         return False
     camera.zoom = next_zoom
-    center_pixel_camera(camera, world_size, viewport, focus)
+    center_pixel_camera(
+        camera,
+        world_size,
+        viewport,
+        focus,
+        constrain_to_world=constrain_to_world,
+    )
     return True
 
 
@@ -95,6 +113,7 @@ def update_pixel_camera(
     current_time,
     dead_zone,
     response_ms=145,
+    constrain_to_world=True,
 ):
     view_width, view_height = camera_world_view_size(
         viewport,
@@ -106,24 +125,52 @@ def update_pixel_camera(
         camera.zoom,
     )
     if camera.floor_index != floor_index or camera.updated_at < 0:
-        center_pixel_camera(camera, world_size, viewport, focus)
+        center_pixel_camera(
+            camera,
+            world_size,
+            viewport,
+            focus,
+            constrain_to_world=constrain_to_world,
+        )
         camera.floor_index = floor_index
         camera.updated_at = current_time
         return
 
+    if len(dead_zone) == 2:
+        left_dead_zone = right_dead_zone = dead_zone[0]
+        top_dead_zone = bottom_dead_zone = dead_zone[1]
+    elif len(dead_zone) == 4:
+        (
+            left_dead_zone,
+            right_dead_zone,
+            top_dead_zone,
+            bottom_dead_zone,
+        ) = dead_zone
+    else:
+        raise ValueError("dead_zone must contain 2 or 4 values")
+
     center_x = camera.target_x + view_width / 2
     center_y = camera.target_y + view_height / 2
-    if focus[0] < center_x - dead_zone[0]:
-        camera.target_x = focus[0] + dead_zone[0] - view_width / 2
-    elif focus[0] > center_x + dead_zone[0]:
-        camera.target_x = focus[0] - dead_zone[0] - view_width / 2
-    if focus[1] < center_y - dead_zone[1]:
-        camera.target_y = focus[1] + dead_zone[1] - view_height / 2
-    elif focus[1] > center_y + dead_zone[1]:
-        camera.target_y = focus[1] - dead_zone[1] - view_height / 2
+    if focus[0] < center_x - left_dead_zone:
+        camera.target_x = (
+            focus[0] + left_dead_zone - view_width / 2
+        )
+    elif focus[0] > center_x + right_dead_zone:
+        camera.target_x = (
+            focus[0] - right_dead_zone - view_width / 2
+        )
+    if focus[1] < center_y - top_dead_zone:
+        camera.target_y = (
+            focus[1] + top_dead_zone - view_height / 2
+        )
+    elif focus[1] > center_y + bottom_dead_zone:
+        camera.target_y = (
+            focus[1] - bottom_dead_zone - view_height / 2
+        )
 
-    camera.target_x = _clamp(camera.target_x, maximum_x)
-    camera.target_y = _clamp(camera.target_y, maximum_y)
+    if constrain_to_world:
+        camera.target_x = _clamp(camera.target_x, maximum_x)
+        camera.target_y = _clamp(camera.target_y, maximum_y)
     elapsed = max(0, min(50, current_time - camera.updated_at))
     blend = 1 - math.exp(-elapsed / response_ms)
     camera.x += (camera.target_x - camera.x) * blend

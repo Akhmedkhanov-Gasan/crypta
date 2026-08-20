@@ -20,7 +20,12 @@ from presentation.layout import (
 from settings import BACKGROUND_COLOR, GAME_HEIGHT, GAME_WIDTH, TILE_SIZE
 
 
-_DEAD_ZONE = (TILE_SIZE * 2, TILE_SIZE)
+_DEAD_ZONE = (
+    TILE_SIZE * 2,
+    TILE_SIZE * 2,
+    TILE_SIZE + TILE_SIZE // 2,
+    TILE_SIZE * 3 // 4,
+)
 _VIEWPORT = pygame.Rect(
     ACT_TWO_VIEW_X,
     ACT_TWO_VIEW_Y,
@@ -68,6 +73,7 @@ def update_act_two_camera(
         floor_index,
         current_time,
         _DEAD_ZONE,
+        constrain_to_world=False,
     )
 
 
@@ -84,6 +90,7 @@ def change_act_two_camera_zoom(
         _map_world_size(dungeon_map),
         _VIEWPORT,
         _player_focus(player_column, player_row),
+        constrain_to_world=False,
     )
 
 

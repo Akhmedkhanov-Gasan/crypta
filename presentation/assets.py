@@ -642,62 +642,62 @@ def load_act_two_sprites():
         {
             "act_two_hud_frame": _load_scaled_image(
                 act_two_hud_directory / "hud_frame_act2(32).png",
-                (443, 125),
+                (315, 89),
             ),
             "act_two_hud_hp": _load_scaled_image(
                 act_two_hud_directory / "hp_bar_act2.png",
-                (363, 24),
+                (258, 17),
             ),
             "act_two_hud_xp": _load_scaled_image(
                 act_two_hud_directory / "xp_bar_act2.png",
-                (346, 23),
+                (246, 16),
             ),
             "act_two_bottom_bar": _load_scaled_image(
                 act_two_hud_directory
-                / "skill+belt_bar_act2.png",
-                (768, 256),
+                / "skill+belt_bar_act2_v2.png",
+                (367, 122),
             ),
             "act_two_stats_panel": _load_scaled_image(
-                act_two_hud_directory / "character_list(32).png",
-                (243, 479),
+                act_two_hud_directory / "character_list.png",
+                (236, 354),
             ),
             "act_two_side_buttons": _load_scaled_image(
                 act_two_hud_directory / "sidebar_act2(32).png",
-                (88, 228),
+                (67, 175),
             ),
             "act_two_level_up_indicator": _load_scaled_image(
                 act_two_hud_directory / "lvl_up.png",
-                (92, 92),
+                (70, 70),
             ),
             "act_two_confirm_button": _load_scaled_image(
                 act_two_hud_directory / "confirm_button.png",
-                (158, 53),
+                (121, 40),
             ),
             "act_two_gold_counter": _load_scaled_image(
                 act_two_hud_directory / "gold.png",
-                (102, 102),
+                (76, 76),
             ),
             "act_two_abilities_panel": _load_scaled_image(
                 act_two_hud_directory / "abilities.png",
-                (290, 218),
+                (214, 160),
             ),
         }
     )
-    chat_log_backing = pygame.Surface((208, 74), pygame.SRCALPHA)
+    chat_log_backing = pygame.Surface((276, 82), pygame.SRCALPHA)
     pygame.draw.rect(
         chat_log_backing,
         (42, 39, 39, 191),
-        pygame.Rect(4, 4, 200, 66),
+        pygame.Rect(4, 4, 268, 74),
         border_radius=11,
     )
     sprites["act_two_chat_log_backing"] = (
         pygame.transform.gaussian_blur(chat_log_backing, 2)
     )
-    ability_text_backing = pygame.Surface((159, 72), pygame.SRCALPHA)
+    ability_text_backing = pygame.Surface((119, 55), pygame.SRCALPHA)
     pygame.draw.rect(
         ability_text_backing,
         (42, 39, 39, 191),
-        pygame.Rect(4, 4, 151, 64),
+        pygame.Rect(4, 4, 111, 47),
         border_radius=11,
     )
     sprites["act_two_ability_text_backing"] = (

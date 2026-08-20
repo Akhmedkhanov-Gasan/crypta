@@ -3409,6 +3409,7 @@ def main():
                 game_state.player.damage_min,
                 game_state.player.damage_max,
                 game_state.player.crit_chance,
+                game_state.player.critical_damage_multiplier,
                 game_state.player.dodge_chance,
                 game_state.player.spell_power,
                 game_state.player.attribute_ranks,

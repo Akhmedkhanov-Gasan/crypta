@@ -3,7 +3,6 @@ import pygame
 from settings import MAX_ATTRIBUTE_RANK
 
 from acts.act_two.settings import (
-    ABILITY_HITS_REQUIRED,
     CONSUMABLE_BELT_SIZE,
 )
 from game.progression import experience_required_for_level
@@ -14,58 +13,60 @@ from presentation.hud import (
 )
 
 
-_ACT_TWO_BOTTOM_BAR_POSITION = (256, 529)
+_ACT_TWO_BOTTOM_BAR_POSITION = (456, 609)
 _ACT_TWO_BELT_ITEM_POSITIONS = (
-    (550, 643),
-    (610, 643),
-    (668, 643),
-    (728, 643),
-    (788, 643),
-    (850, 643),
+    (476, 656),
+    (519, 656),
+    (561, 656),
+    (605, 656),
+    (649, 657),
+    (694, 656),
 )
-_ACT_TWO_BELT_ITEM_SIZE = (36, 36)
-_ACT_TWO_ABILITY_RECT = pygame.Rect(931, 636, 42, 42)
-_ACT_TWO_ABILITY_CHARGE_RECTS = tuple(
-    pygame.Rect(936 + charge_index * 9, 675, 7, 3)
-    for charge_index in range(ABILITY_HITS_REQUIRED)
+_ACT_TWO_BELT_ITEM_SIZE = (26, 26)
+_ACT_TWO_ABILITY_RECT = pygame.Rect(754, 651, 30, 30)
+_ACT_TWO_ABILITY_CHARGE_RECTS = (
+    pygame.Rect(757, 679, 5, 3),
+    pygame.Rect(764, 679, 4, 3),
+    pygame.Rect(770, 679, 5, 3),
+    pygame.Rect(777, 679, 4, 3),
 )
-_ACT_TWO_LOG_TEXT_RECT = pygame.Rect(308, 625, 194, 65)
-_ACT_TWO_LOG_BACKING_POSITION = (301, 620)
+_ACT_TWO_LOG_TEXT_RECT = pygame.Rect(38, 630, 247, 60)
+_ACT_TWO_LOG_BACKING_POSITION = (23, 619)
 _ACT_TWO_SIDEBAR_BUTTON_RECTS = {
-    "stats": pygame.Rect(1195, 219, 72, 59),
-    "placeholder": pygame.Rect(1195, 277, 72, 59),
-    "settings": pygame.Rect(1195, 335, 72, 59),
+    "stats": pygame.Rect(1218, 267, 55, 45),
+    "placeholder": pygame.Rect(1218, 311, 55, 45),
+    "settings": pygame.Rect(1218, 355, 55, 45),
 }
 _ACT_TWO_SIDEBAR_HIGHLIGHT_RECTS = {
-    "stats": pygame.Rect(1207, 230, 47, 44),
-    "placeholder": pygame.Rect(1207, 288, 47, 44),
-    "settings": pygame.Rect(1207, 346, 47, 44),
+    "stats": pygame.Rect(1227, 276, 36, 34),
+    "placeholder": pygame.Rect(1227, 320, 36, 34),
+    "settings": pygame.Rect(1227, 364, 36, 34),
 }
 _ACT_TWO_ATTRIBUTE_PLUS_RECTS = {
-    "strength": pygame.Rect(1127, 243, 26, 22),
-    "dexterity": pygame.Rect(1127, 271, 26, 22),
-    "intelligence": pygame.Rect(1127, 299, 26, 22),
-    "vitality": pygame.Rect(1127, 327, 26, 22),
+    "strength": pygame.Rect(1162, 245, 22, 19),
+    "dexterity": pygame.Rect(1162, 266, 22, 19),
+    "intelligence": pygame.Rect(1162, 287, 22, 19),
+    "vitality": pygame.Rect(1162, 308, 22, 19),
 }
 _ACT_TWO_ATTRIBUTE_MINUS_RECTS = {
-    "strength": pygame.Rect(1080, 243, 26, 22),
-    "dexterity": pygame.Rect(1080, 271, 26, 22),
-    "intelligence": pygame.Rect(1080, 299, 26, 22),
-    "vitality": pygame.Rect(1080, 327, 26, 22),
+    "strength": pygame.Rect(1114, 245, 22, 19),
+    "dexterity": pygame.Rect(1114, 266, 22, 19),
+    "intelligence": pygame.Rect(1114, 287, 22, 19),
+    "vitality": pygame.Rect(1114, 308, 22, 19),
 }
 _ACT_TWO_CONFIRM_BUTTON_RECT = pygame.Rect(
-    987,
-    335,
-    158,
-    53,
+    1049,
+    326,
+    121,
+    40,
 )
 _ACT_TWO_CONFIRM_BUTTON_HIT_RECT = (
-    _ACT_TWO_CONFIRM_BUTTON_RECT.inflate(-32, -16)
+    _ACT_TWO_CONFIRM_BUTTON_RECT.inflate(-24, -12)
 )
-_ACT_TWO_ABILITIES_PANEL_POSITION = (809, 464)
-_ACT_TWO_ABILITIES_ICON_RECT = pygame.Rect(844, 546, 42, 42)
-_ACT_TWO_ABILITIES_TEXT_BACKING_POSITION = (905, 537)
-_ACT_TWO_ABILITIES_TEXT_RECT = pygame.Rect(917, 548, 135, 48)
+_ACT_TWO_ABILITIES_PANEL_POSITION = (659, 523)
+_ACT_TWO_ABILITIES_ICON_RECT = pygame.Rect(685, 583, 31, 31)
+_ACT_TWO_ABILITIES_TEXT_BACKING_POSITION = (729, 576)
+_ACT_TWO_ABILITIES_TEXT_RECT = pygame.Rect(733, 581, 111, 47)
 _ACT_TWO_ABILITY_ASSETS = {
     "warrior": "warrior_power_cleave_icon",
     "rogue": "rogue_invisibility_icon",
@@ -76,29 +77,9 @@ _ACT_TWO_ABILITY_DESCRIPTIONS = {
     "rogue": "Vanish. Your next attack is a sure critical.",
     "mage": "Blast up to 5 tiles with bonus spell damage.",
 }
-_ACT_TWO_LEVEL_UP_POSITION = (1185, 207)
-_ACT_TWO_GOLD_COUNTER_POSITION = (1167, 610)
-_ACT_TWO_GOLD_VALUE_CENTER = (1218, 675)
-
-
-def _draw_stat_value_backing(screen, center, width):
-    rectangle = pygame.Rect(0, 0, width, 22)
-    rectangle.center = center
-    backing = pygame.Surface(rectangle.size, pygame.SRCALPHA)
-    pygame.draw.rect(
-        backing,
-        (5, 5, 7, 172),
-        backing.get_rect(),
-        border_radius=3,
-    )
-    pygame.draw.rect(
-        backing,
-        (104, 88, 82, 105),
-        backing.get_rect(),
-        width=1,
-        border_radius=3,
-    )
-    screen.blit(backing, rectangle)
+_ACT_TWO_LEVEL_UP_POSITION = (1210, 258)
+_ACT_TWO_GOLD_COUNTER_POSITION = (1193, 631)
+_ACT_TWO_GOLD_VALUE_CENTER = (1231, 679)
 
 
 def draw_act_two_sidebar(
@@ -113,6 +94,7 @@ def draw_act_two_sidebar(
     player_damage_min,
     player_damage_max,
     player_crit_chance,
+    player_critical_damage_multiplier,
     player_dodge_chance,
     player_spell_power,
     attribute_ranks,
@@ -129,12 +111,22 @@ def draw_act_two_sidebar(
     sprites,
 
 ):
-    def draw_fill(asset_name, position, ratio):
+    def draw_fill(
+        asset_name,
+        position,
+        ratio,
+        hidden_leading_width=0,
+    ):
         asset = sprites[asset_name]
-        visible_width = round(
-            asset.get_width() * max(0.0, min(1.0, ratio))
+        clamped_ratio = max(0.0, min(1.0, ratio))
+        usable_width = max(
+            0,
+            asset.get_width() - hidden_leading_width,
         )
-        if visible_width > 0:
+        visible_width = hidden_leading_width + round(
+            usable_width * clamped_ratio
+        )
+        if clamped_ratio > 0 and visible_width > 0:
             screen.blit(
                 asset,
                 position,
@@ -144,12 +136,17 @@ def draw_act_two_sidebar(
     health_ratio = player_health / max(1, player_max_health)
     experience_required = experience_required_for_level(player_level)
     experience_ratio = player_experience / max(1, experience_required)
-    draw_fill("act_two_hud_hp", (114, 53), health_ratio)
-    draw_fill("act_two_hud_xp", (63, 89), experience_ratio)
+    draw_fill("act_two_hud_hp", (65, 41), health_ratio)
+    draw_fill(
+        "act_two_hud_xp",
+        (29, 67),
+        experience_ratio,
+        hidden_leading_width=54,
+    )
 
-    screen.blit(sprites["act_two_hud_frame"], (44, 19))
+    screen.blit(sprites["act_two_hud_frame"], (15, 17))
 
-    portrait_rectangle = pygame.Rect(70, 48, 55, 53)
+    portrait_rectangle = pygame.Rect(33, 38, 39, 38)
     if player_class is not None:
         portrait = pygame.transform.scale(
             sprites[f"player_{player_class}"],
@@ -165,20 +162,20 @@ def draw_act_two_sidebar(
     )
     screen.blit(
         level_surface,
-        level_surface.get_rect(center=(129, 115)),
+        level_surface.get_rect(center=(75, 85)),
     )
     hp_surface = controls_font.render(
         f"{player_health}/{player_max_health}",
         True,
         value_color,
     )
-    screen.blit(hp_surface, hp_surface.get_rect(center=(307, 64)))
+    screen.blit(hp_surface, hp_surface.get_rect(center=(194, 50)))
     xp_surface = controls_font.render(
         f"{player_experience}/{experience_required}",
         True,
         value_color,
     )
-    screen.blit(xp_surface, xp_surface.get_rect(center=(282, 101)))
+    screen.blit(xp_surface, xp_surface.get_rect(center=(176, 74)))
 
     screen.blit(
         sprites["act_two_bottom_bar"],
@@ -188,53 +185,36 @@ def draw_act_two_sidebar(
         sprites["act_two_chat_log_backing"],
         _ACT_TWO_LOG_BACKING_POSITION,
     )
-    line_height = 16
+    line_height = 14
     maximum_line_count = (
         _ACT_TWO_LOG_TEXT_RECT.height // line_height
     )
-    recent_messages = []
-    for message in combat_log[-3:]:
-        recent_messages.append(
-            (
-                wrap_text(
-                    log_font,
-                    message,
-                    _ACT_TWO_LOG_TEXT_RECT.width,
-                ),
-                get_event_color(message),
-            )
-        )
-
-    selected_messages = [
-        ([lines[0]] if lines else [""], color)
-        for lines, color in recent_messages
-    ]
-    remaining_line_count = max(
-        0,
-        maximum_line_count - len(selected_messages),
-    )
-    for message_index in range(len(recent_messages) - 1, -1, -1):
+    selected_messages = []
+    remaining_line_count = maximum_line_count
+    for message in reversed(combat_log):
         if remaining_line_count <= 0:
             break
-        wrapped_lines, _color = recent_messages[message_index]
-        extra_lines = wrapped_lines[1:1 + remaining_line_count]
-        selected_messages[message_index][0].extend(extra_lines)
-        remaining_line_count -= len(extra_lines)
-
-    visible_log_lines = []
-    for message_index, ((wrapped_lines, color), selected_message) in (
-        enumerate(zip(recent_messages, selected_messages))
-    ):
-        selected_lines, _selected_color = selected_message
+        wrapped_lines = wrap_text(
+            log_font,
+            message,
+            _ACT_TWO_LOG_TEXT_RECT.width,
+        ) or [""]
+        selected_lines = wrapped_lines[:remaining_line_count]
         if len(selected_lines) < len(wrapped_lines):
             selected_lines[-1] = fit_text_to_width(
                 log_font,
                 selected_lines[-1] + "...",
                 _ACT_TWO_LOG_TEXT_RECT.width,
             )
+        selected_messages.append(
+            (selected_lines, get_event_color(message))
+        )
+        remaining_line_count -= len(selected_lines)
+
+    visible_log_lines = []
+    for selected_lines, color in reversed(selected_messages):
         visible_log_lines.extend(
-            (line, color)
-            for line in selected_lines
+            (line, color) for line in selected_lines
         )
     log_y = _ACT_TWO_LOG_TEXT_RECT.y
     for line, line_color in visible_log_lines:
@@ -300,7 +280,7 @@ def draw_act_two_sidebar(
     )
 
     if stats_open:
-        screen.blit(sprites["act_two_stats_panel"], (948, 101))
+        screen.blit(sprites["act_two_stats_panel"], (991, 183))
     ability_hovered = (
         mouse_position is not None
         and _ACT_TWO_ABILITY_RECT.collidepoint(mouse_position)
@@ -340,18 +320,31 @@ def draw_act_two_sidebar(
                 visible_description_lines[-1] + "...",
                 _ACT_TWO_ABILITIES_TEXT_RECT.width,
             )
-        description_y = _ACT_TWO_ABILITIES_TEXT_RECT.y
+        description_line_height = 16
+        description_height = (
+            len(visible_description_lines) * description_line_height
+        )
+        description_y = (
+            _ACT_TWO_ABILITIES_TEXT_RECT.centery
+            - description_height // 2
+        )
         for description_line in visible_description_lines:
-            screen.blit(
-                ability_font.render(
-                    description_line,
-                    True,
-                    value_color,
-                ),
-                (_ACT_TWO_ABILITIES_TEXT_RECT.x, description_y),
+            description_surface = ability_font.render(
+                description_line,
+                True,
+                value_color,
             )
-            description_y += 14
-    screen.blit(sprites["act_two_side_buttons"], (1187, 195))
+            screen.blit(
+                description_surface,
+                description_surface.get_rect(
+                    midtop=(
+                        _ACT_TWO_ABILITIES_TEXT_RECT.centerx,
+                        description_y,
+                    )
+                ),
+            )
+            description_y += description_line_height
+    screen.blit(sprites["act_two_side_buttons"], (1212, 249))
     remaining_attribute_points = max(
         0,
         available_attribute_points
@@ -401,11 +394,12 @@ def draw_act_two_sidebar(
     if not stats_open:
         return
 
-    class_name = (player_class or "UNBOUND").upper()
-    class_surface = title_font.render(class_name, True, (174, 21, 24))
+    muted_color = (174, 154, 143)
+    class_name = (player_class or "UNBOUND").title()
+    class_surface = title_font.render(class_name, True, muted_color)
     screen.blit(
         class_surface,
-        class_surface.get_rect(center=(1069, 177)),
+        class_surface.get_rect(center=(1112, 230)),
     )
 
     attribute_names = (
@@ -424,8 +418,17 @@ def draw_act_two_sidebar(
     for attribute, value, center_y in zip(
             attribute_names,
             attribute_values,
-            (253, 281, 309, 337),
+            (254, 275, 296, 317),
     ):
+        label_surface = log_font.render(
+            attribute.title(),
+            True,
+            muted_color,
+        )
+        screen.blit(
+            label_surface,
+            label_surface.get_rect(midleft=(1034, center_y)),
+        )
         is_pending = (
                 pending_attribute_upgrades.get(attribute, 0) > 0
         )
@@ -434,115 +437,129 @@ def draw_act_two_sidebar(
             True,
             (218, 165, 75) if is_pending else value_color,
         )
-        _draw_stat_value_backing(
-            screen,
-            (1117, center_y),
-            max(24, value_surface.get_width() + 10),
-        )
         screen.blit(
             value_surface,
-            value_surface.get_rect(center=(1117, center_y)),
+            value_surface.get_rect(center=(1149, center_y)),
         )
-    for attribute, rectangle in (
-            _ACT_TWO_ATTRIBUTE_PLUS_RECTS.items()
-    ):
-        future_rank = (
-                attribute_ranks.get(attribute, 0)
-                + pending_attribute_upgrades.get(attribute, 0)
-        )
-        can_increase = (
-                remaining_attribute_points > 0
-                and future_rank < MAX_ATTRIBUTE_RANK
-        )
-        is_hovered = (
-                mouse_position is not None
-                and rectangle.collidepoint(mouse_position)
-        )
-
-        if can_increase and is_hovered:
-            pygame.draw.rect(
-                screen,
-                (0, 0, 0),
-                rectangle,
-                border_radius=4,
+    upgrade_mode = available_attribute_points > 0
+    if upgrade_mode:
+        for attribute, rectangle in (
+                _ACT_TWO_ATTRIBUTE_PLUS_RECTS.items()
+        ):
+            future_rank = (
+                    attribute_ranks.get(attribute, 0)
+                    + pending_attribute_upgrades.get(attribute, 0)
+            )
+            can_increase = (
+                    remaining_attribute_points > 0
+                    and future_rank < MAX_ATTRIBUTE_RANK
+            )
+            is_hovered = (
+                    mouse_position is not None
+                    and rectangle.collidepoint(mouse_position)
             )
 
-        if not can_increase:
-            plus_color = (75, 70, 72)
-        elif is_hovered:
-            plus_color = (245, 205, 105)
-        else:
-            plus_color = (190, 82, 64)
+            if can_increase and is_hovered:
+                pygame.draw.rect(
+                    screen,
+                    (0, 0, 0),
+                    rectangle,
+                    border_radius=4,
+                )
 
-        plus_surface = controls_font.render(
-            "+",
-            True,
-            plus_color,
-        )
-        screen.blit(
-            plus_surface,
-            plus_surface.get_rect(center=rectangle.center),
-        )
-
-    for attribute, rectangle in (
-            _ACT_TWO_ATTRIBUTE_MINUS_RECTS.items()
-    ):
-        can_decrease = (
-                pending_attribute_upgrades.get(attribute, 0) > 0
-        )
-        is_hovered = (
-                mouse_position is not None
-                and rectangle.collidepoint(mouse_position)
-        )
-
-        if can_decrease and is_hovered:
-            pygame.draw.rect(
-                screen,
-                (0, 0, 0),
-                rectangle,
-                border_radius=4,
+            plus_color = (
+                (75, 70, 72)
+                if not can_increase
+                else (245, 205, 105)
+                if is_hovered
+                else (190, 82, 64)
+            )
+            plus_surface = controls_font.render(
+                "+",
+                True,
+                plus_color,
+            )
+            screen.blit(
+                plus_surface,
+                plus_surface.get_rect(center=rectangle.center),
             )
 
-        if not can_decrease:
-            minus_color = (75, 70, 72)
-        elif is_hovered:
-            minus_color = (245, 205, 105)
-        else:
-            minus_color = (190, 82, 64)
+        for attribute, rectangle in (
+                _ACT_TWO_ATTRIBUTE_MINUS_RECTS.items()
+        ):
+            can_decrease = (
+                    pending_attribute_upgrades.get(attribute, 0) > 0
+            )
+            is_hovered = (
+                    mouse_position is not None
+                    and rectangle.collidepoint(mouse_position)
+            )
 
-        minus_surface = controls_font.render(
-            "-",
-            True,
-            minus_color,
-        )
-        screen.blit(
-            minus_surface,
-            minus_surface.get_rect(center=rectangle.center),
-        )
+            if can_decrease and is_hovered:
+                pygame.draw.rect(
+                    screen,
+                    (0, 0, 0),
+                    rectangle,
+                    border_radius=4,
+                )
 
-    combat_values = (
-        f"{player_damage_min}-{player_damage_max}",
-        f"{round(player_crit_chance * 100)}%",
-        f"{round(player_dodge_chance * 100)}%",
-        str(player_spell_power),
+            minus_color = (
+                (75, 70, 72)
+                if not can_decrease
+                else (245, 205, 105)
+                if is_hovered
+                else (190, 82, 64)
+            )
+            minus_surface = controls_font.render(
+                "-",
+                True,
+                minus_color,
+            )
+            screen.blit(
+                minus_surface,
+                minus_surface.get_rect(center=rectangle.center),
+            )
+
+    combat_heading = log_font.render(
+        "Combat stats",
+        True,
+        muted_color,
     )
-    for value, center_y in zip(
-        combat_values,
-        (417, 445, 473, 501),
+    screen.blit(
+        combat_heading,
+        combat_heading.get_rect(center=(1109, 371)),
+    )
+    combat_rows = (
+        ("Damage", f"{player_damage_min}-{player_damage_max}"),
+        (
+            "Critical",
+            f"{round(player_crit_chance * 100)}% "
+            f"x{player_critical_damage_multiplier:.1f}",
+        ),
+        ("Dodge", f"{round(player_dodge_chance * 100)}%"),
+        ("Magical power", str(player_spell_power)),
+    )
+    for (label, value), center_y in zip(
+        combat_rows,
+        (393, 413, 431, 453),
     ):
+        label_surface = log_font.render(
+            label,
+            True,
+            muted_color,
+        )
+        screen.blit(
+            label_surface,
+            label_surface.get_rect(midleft=(1034, center_y)),
+        )
         value_surface = controls_font.render(
             value,
             True,
-            value_color,
-        )
-        _draw_stat_value_backing(
-            screen,
-            (1117, center_y),
-            max(42, value_surface.get_width() + 10),
+            muted_color,
         )
         screen.blit(
             value_surface,
-            value_surface.get_rect(center=(1117, center_y)),
+            value_surface.get_rect(center=(1150, center_y)),
         )
 
     pending_points = sum(pending_attribute_upgrades.values())
@@ -586,10 +603,10 @@ def get_act_two_sidebar_button_rectangles():
 def get_act_two_belt_slot_rectangles():
     return tuple(
         pygame.Rect(
-            item_x - 7,
-            619,
-            52,
-            70,
+            item_x - 8,
+            638,
+            42,
+            64,
         )
         for item_x, _item_y in _ACT_TWO_BELT_ITEM_POSITIONS[
             :CONSUMABLE_BELT_SIZE
