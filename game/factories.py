@@ -202,8 +202,10 @@ def create_game_state(
     )
     if FLOOR_CONFIGS[floor_index]["act"] == 2:
         from acts.act_two.consumables import (
+            grant_act_two_test_scrolls,
             initialize_act_two_consumable_belt,
         )
 
         initialize_act_two_consumable_belt(game_state.player)
+        grant_act_two_test_scrolls(game_state.player)
     return game_state

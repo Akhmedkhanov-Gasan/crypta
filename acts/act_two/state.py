@@ -35,6 +35,14 @@ class FireZoneState:
 
 
 @dataclass
+class DroppedConsumableState:
+    kind: str
+    origin: tuple[int, int]
+    destination: tuple[int, int]
+    thrown_at: int
+
+
+@dataclass
 class SpikeTrapState:
     column: int
     row: int
@@ -143,6 +151,14 @@ class ActTwoPlayerState:
     consumable_belt_initialized: bool = False
     fire_bomb_aiming: bool = False
     fire_bomb_aiming_slot: int | None = None
+    scroll_aiming_kind: str | None = None
+    scroll_aiming_slot: int | None = None
+    stoneflesh_hits: int = 0
+    stoneflesh_effect_started_at: int = -1
+    scroll_effect_started_at: int = -1
+    scroll_effect_kind: str | None = None
+    scroll_effect_origin: tuple[int, int] | None = None
+    scroll_effect_target: tuple[int, int] | None = None
     selected_ability_direction: tuple[int, int] | None = None
     wait_effect_started_at: int = -1
     level_up_effect_started_at: int = -1

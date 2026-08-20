@@ -3,8 +3,13 @@ from game.events import GameEvent, GameEventType
 from acts.act_two.crates import collect_crate_loot
 from acts.act_two.consumables import (
     FIRE_BOMB,
+    HEALING_SCROLL,
     KEY,
     POTION,
+    SCROLLS,
+    SCROLL_OF_ARCANE_IMPULSE,
+    SCROLL_OF_BINDING,
+    SCROLL_OF_STONEFLESH,
     act_two_belt_is_full,
     consume_act_two_potion,
     consume_act_two_key,
@@ -111,11 +116,15 @@ def open_chest(
         else:
             player.key_count -= 1
 
-    if chest["contains"] in ("gold", POTION, FIRE_BOMB):
+    if chest["contains"] in ("gold", POTION, FIRE_BOMB, *SCROLLS):
         chest["loot_available"] = True
         loot_name = {
             POTION: "a healing potion",
             FIRE_BOMB: "a fire bomb",
+            SCROLL_OF_STONEFLESH: "a Scroll of Stoneflesh",
+            SCROLL_OF_BINDING: "a Scroll of Binding",
+            HEALING_SCROLL: "a Healing Scroll",
+            SCROLL_OF_ARCANE_IMPULSE: "a Scroll of Arcane Impulse",
             "gold": "gold",
         }[chest["contains"]]
         add_log_message(
@@ -329,7 +338,7 @@ def _collect_items(
 
     if (
         chest_with_loot
-        and chest_with_loot["contains"] in (POTION, FIRE_BOMB)
+        and chest_with_loot["contains"] in (POTION, FIRE_BOMB, *SCROLLS)
         and act_number == 2
         and act_two_belt_is_full(player)
     ):
@@ -350,6 +359,16 @@ def _collect_items(
             store_act_two_consumable(player, FIRE_BOMB)
             pickup_kind = FIRE_BOMB
             message = "Hero picks up a fire bomb."
+        elif loot_kind in SCROLLS:
+            store_act_two_consumable(player, loot_kind)
+            pickup_kind = loot_kind
+            scroll_name = {
+                SCROLL_OF_STONEFLESH: "Scroll of Stoneflesh",
+                SCROLL_OF_BINDING: "Scroll of Binding",
+                HEALING_SCROLL: "Healing Scroll",
+                SCROLL_OF_ARCANE_IMPULSE: "Scroll of Arcane Impulse",
+            }[loot_kind]
+            message = f"Hero picks up a {scroll_name}."
         else:
             player.gold_count += 1
             pickup_kind = "gold"
@@ -364,6 +383,36 @@ def _collect_items(
         add_log_message(
             game_state.combat_log,
             message,
+        )
+
+    dropped_consumable = next(
+        (
+            dropped
+            for dropped in floor.dropped_consumables
+            if dropped.destination == player_position
+        ),
+        None,
+    )
+    if (
+        dropped_consumable is not None
+        and act_two_belt_is_full(player)
+    ):
+        add_log_message(
+            game_state.combat_log,
+            "The consumable belt is full.",
+        )
+    elif dropped_consumable is not None:
+        store_act_two_consumable(player, dropped_consumable.kind)
+        floor.dropped_consumables.remove(dropped_consumable)
+        _start_pickup_effect(
+            game_state,
+            dropped_consumable.kind,
+            player_position,
+            effect_started_at,
+        )
+        add_log_message(
+            game_state.combat_log,
+            "Hero picks up the dropped item.",
         )
 
     found_key = next(

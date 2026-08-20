@@ -81,6 +81,17 @@ def resolve_enemy_turn(
             enemy.attack_windup_turns_remaining = 0
             enemy["heal_target"] = None
             continue
+        if enemy.binding_turns > 0:
+            enemy.binding_turns -= 1
+            enemy.attack_targets = []
+            enemy.prepared_attack_mode = None
+            enemy.attack_windup_turns_remaining = 0
+            if enemy.binding_turns == 0:
+                add_log_message(
+                    game_state.combat_log,
+                    f"{enemy.name} breaks free of the binding.",
+                )
+            continue
 
         if (
             enemy.type == "warden"
@@ -204,6 +215,14 @@ def resolve_enemy_turn(
                     damage = damage_player(
                         game_state,
                         damage,
+                        damage_kind=(
+                            "magic"
+                            if (
+                                enemy.type in ("priest", "oracle")
+                                and attack_mode != "melee"
+                            )
+                            else "physical"
+                        ),
                     )
                     if game_state.player.invisibility_turns > 0:
                         game_state.player.invisibility_turns = 0

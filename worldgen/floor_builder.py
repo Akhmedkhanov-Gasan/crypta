@@ -1,7 +1,7 @@
 import random
 
 from acts.act_one.generation import generate_warden_floor
-from acts.act_two.settings import FIRE_BOMB_CHEST_DROP_CHANCE
+from acts.act_two.settings import ACT_TWO_CHEST_LOOT_WEIGHTS
 from enemies import ENEMY_TYPES
 from levels import FLOOR_CONFIGS
 from settings import MAP_COLUMNS, MAP_ROWS
@@ -923,12 +923,20 @@ def generate_floor(floor_index):
             {
                 "position": chest_position,
                 "contains": (
-                    "fire_bomb"
-                    if (
-                        config["act"] == 2
-                        and random.random()
-                        < FIRE_BOMB_CHEST_DROP_CHANCE
-                    )
+                    random.choices(
+                        [
+                            item
+                            for item, _weight
+                            in ACT_TWO_CHEST_LOOT_WEIGHTS
+                        ],
+                        weights=[
+                            weight
+                            for _item, weight
+                            in ACT_TWO_CHEST_LOOT_WEIGHTS
+                        ],
+                        k=1,
+                    )[0]
+                    if config["act"] == 2
                     else "gold"
                 ),
             }

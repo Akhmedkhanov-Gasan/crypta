@@ -17,6 +17,7 @@ from acts.act_two.presentation.items import (
     draw_fire_bomb as _draw_act_two_fire_bomb,
     draw_key as _draw_act_two_key,
     draw_potion as _draw_act_two_potion,
+    draw_scroll as _draw_act_two_scroll,
     draw_stairs as _draw_act_two_stairs,
 )
 from presentation.layout import (
@@ -2351,6 +2352,8 @@ def draw_player(
     act_two_blocked_movement_started_at=-1,
     act_two_blocked_movement_direction=(0, 1),
     act_two_level_up_effect_started_at=-1,
+    act_two_stoneflesh_hits=0,
+    act_two_stoneflesh_effect_started_at=-1,
 ):
     if act_number == 2 and player_class is not None:
         draw_act_two_player_actor(
@@ -2377,6 +2380,8 @@ def draw_player(
             attack_animation_started_at,
             attack_target,
             act_two_level_up_effect_started_at,
+            act_two_stoneflesh_hits,
+            act_two_stoneflesh_effect_started_at,
         )
         return
 
@@ -2994,6 +2999,11 @@ def draw_potion(screen, column, row, act_number, sprites):
 def draw_fire_bomb(screen, column, row, act_number, sprites):
     if act_number >= 2:
         _draw_act_two_fire_bomb(screen, column, row, sprites)
+
+
+def draw_scroll(screen, column, row, kind, act_number, sprites):
+    if act_number >= 2:
+        _draw_act_two_scroll(screen, column, row, kind, sprites)
 
 
 def draw_coin(screen, column, row, act_number, sprites):

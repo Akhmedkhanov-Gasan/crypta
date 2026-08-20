@@ -5,6 +5,7 @@ from typing import Any, Iterator
 from acts.act_two.state import (
     ActTwoPlayerState,
     BreakableCrateState,
+    DroppedConsumableState,
     FireZoneState,
     RuneRoomState,
     SpikeTrapPhase,
@@ -148,6 +149,7 @@ class EnemyState(AttributeMapping):
     heal_cooldown_duration: int = 0
     heal_range: int = 0
     curse_turns: int = 0
+    binding_turns: int = 0
     movement_animation_started_at: int = 0
     movement_origin: tuple[int, int] | None = None
     attack_animation_started_at: int = 0
@@ -264,6 +266,9 @@ class FloorState(AttributeMapping):
     connectors: list[dict[str, Any]] = field(default_factory=list)
     visual_seed: int = 0
     dropped_keys: list[tuple[int, int]] = field(
+        default_factory=list
+    )
+    dropped_consumables: list[DroppedConsumableState] = field(
         default_factory=list
     )
     projectiles: list[ProjectileState] = field(

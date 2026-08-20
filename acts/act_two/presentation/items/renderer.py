@@ -1,5 +1,10 @@
+import math
+
 from presentation.layout import MAP_OFFSET_X, MAP_OFFSET_Y
 from settings import TILE_SIZE
+
+
+_DROPPED_ITEM_FLIGHT_MS = 340
 
 
 def _position(column, row):
@@ -23,6 +28,45 @@ def draw_coin(screen, column, row, sprites):
 
 def draw_fire_bomb(screen, column, row, sprites):
     screen.blit(sprites["fire_bomb"], _position(column, row))
+
+
+def draw_scroll(screen, column, row, kind, sprites):
+    screen.blit(sprites[kind], _position(column, row))
+
+
+def draw_dropped_consumables(
+    screen,
+    dropped_consumables,
+    visible_cells,
+    sprites,
+    current_time,
+):
+    for dropped in dropped_consumables:
+        if dropped.destination not in visible_cells:
+            continue
+        origin_x, origin_y = _position(*dropped.origin)
+        target_x, target_y = _position(*dropped.destination)
+        elapsed = current_time - dropped.thrown_at
+        progress = max(
+            0.0,
+            min(1.0, elapsed / _DROPPED_ITEM_FLIGHT_MS),
+        )
+        eased = 1 - (1 - progress) ** 2
+        draw_x = origin_x + (target_x - origin_x) * eased
+        draw_y = (
+            origin_y
+            + (target_y - origin_y) * eased
+            - math.sin(progress * math.pi) * 18
+        )
+        sprite_name = {
+            "potion": "potion",
+            "fire_bomb": "fire_bomb",
+            "key": "key",
+        }.get(dropped.kind, dropped.kind)
+        screen.blit(
+            sprites[sprite_name],
+            (round(draw_x), round(draw_y)),
+        )
 
 
 def draw_chest(screen, chest, sprites):

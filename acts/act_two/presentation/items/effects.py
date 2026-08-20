@@ -17,7 +17,16 @@ def draw_pickup_effect(
     duration = 760
     elapsed = current_time - effect_started_at
     if (
-        kind not in ("potion", "gold", "key", "fire_bomb")
+        kind not in (
+            "potion",
+            "gold",
+            "key",
+            "fire_bomb",
+            "scroll_of_stoneflesh",
+            "scroll_of_binding",
+            "healing_scroll",
+            "scroll_of_arcane_impulse",
+        )
         or origin is None
         or effect_started_at < 0
         or not 0 <= elapsed < duration
@@ -38,12 +47,20 @@ def draw_pickup_effect(
         "gold": ((194, 137, 31), (255, 226, 91)),
         "key": ((151, 110, 42), (240, 197, 94)),
         "fire_bomb": ((130, 45, 25), (255, 131, 56)),
+        "scroll_of_stoneflesh": ((91, 83, 72), (216, 199, 164)),
+        "scroll_of_binding": ((76, 55, 112), (190, 139, 255)),
+        "healing_scroll": ((106, 45, 52), (255, 137, 143)),
+        "scroll_of_arcane_impulse": ((129, 31, 43), (255, 92, 100)),
     }
     sprite_names = {
         "potion": "potion",
         "gold": "coin",
         "key": "key",
         "fire_bomb": "fire_bomb",
+        "scroll_of_stoneflesh": "scroll_of_stoneflesh",
+        "scroll_of_binding": "scroll_of_binding",
+        "healing_scroll": "healing_scroll",
+        "scroll_of_arcane_impulse": "scroll_of_arcane_impulse",
     }
     base_color, bright_color = colors[kind]
 

@@ -298,6 +298,32 @@ def _draw_attack_warning(screen, enemy):
     )
 
 
+def _draw_binding_effect(screen, enemy, sprites, current_time):
+    if enemy.binding_turns <= 0:
+        return
+    half_width = enemy.footprint_width // 2
+    half_height = enemy.footprint_height // 2
+    left = (
+        MAP_OFFSET_X
+        + (enemy.column - half_width) * TILE_SIZE
+        + 3
+    )
+    top = (
+        MAP_OFFSET_Y
+        + (enemy.row - half_height) * TILE_SIZE
+        + 3
+    )
+    width = enemy.footprint_width * TILE_SIZE - 6
+    height = enemy.footprint_height * TILE_SIZE - 6
+    chains = pygame.transform.scale(
+        sprites["binding_chains"],
+        (width, height),
+    )
+    pulse = (current_time // 90) % 6
+    chains.set_alpha(205 + min(pulse, 5 - pulse) * 10)
+    screen.blit(chains, (left, top))
+
+
 def draw_act_two_enemy(
     screen,
     enemy,
@@ -319,6 +345,7 @@ def draw_act_two_enemy(
 
     if enemy_type == "oracle":
         _draw_oracle(screen, enemy, sprites)
+        _draw_binding_effect(screen, enemy, sprites, current_time)
         return
 
     if enemy_type in _STANDARD_ENEMY_TYPES:
@@ -334,3 +361,4 @@ def draw_act_two_enemy(
 
     _draw_health_bar(screen, enemy)
     _draw_attack_warning(screen, enemy)
+    _draw_binding_effect(screen, enemy, sprites, current_time)
