@@ -24,6 +24,15 @@ _ACT_TWO_BELT_ITEM_POSITIONS = (
 )
 _ACT_TWO_BELT_ITEM_SIZE = (26, 26)
 _ACT_TWO_ABILITY_RECT = pygame.Rect(754, 651, 30, 30)
+_ACT_TWO_CONSUMABLE_SPRITES = {
+    "potion": "potion_belt",
+    "fire_bomb": "fire_bomb_belt",
+    "key": "key_belt",
+    "scroll_of_stoneflesh": "scroll_of_stoneflesh",
+    "scroll_of_binding": "scroll_of_binding",
+    "healing_scroll": "healing_scroll",
+    "scroll_of_arcane_impulse": "scroll_of_arcane_impulse",
+}
 _ACT_TWO_ABILITY_CHARGE_RECTS = (
     pygame.Rect(757, 679, 5, 3),
     pygame.Rect(764, 679, 4, 3),
@@ -77,6 +86,19 @@ _ACT_TWO_ABILITY_DESCRIPTIONS = {
     "rogue": "Vanish. Your next attack is a sure critical.",
     "mage": "Blast up to 5 tiles with bonus spell damage.",
 }
+_ACT_TWO_CONSUMABLE_DESCRIPTIONS = {
+    "potion": "Restores 4 health.",
+    "fire_bomb": "Ignites a 3x3 area and burns everything inside.",
+    "key": "Opens one locked chest.",
+    "scroll_of_stoneflesh": (
+        "Reduces the next 6 physical hits by 60%."
+    ),
+    "scroll_of_binding": "Binds one visible enemy for 5 turns.",
+    "healing_scroll": "Restores 6 health.",
+    "scroll_of_arcane_impulse": (
+        "Deals 5 magic damage to one visible enemy."
+    ),
+}
 _ACT_TWO_LEVEL_UP_POSITION = (1210, 258)
 _ACT_TWO_GOLD_COUNTER_POSITION = (1193, 631)
 _ACT_TWO_GOLD_VALUE_CENTER = (1231, 679)
@@ -109,6 +131,7 @@ def draw_act_two_sidebar(
     stats_open,
     mouse_position,
     sprites,
+    dragged_consumable_slot=None,
 
 ):
     def draw_fill(
@@ -228,12 +251,12 @@ def draw_act_two_sidebar(
         )
         log_y += line_height
 
-    for slot_index, item in enumerate(consumable_slots[:5]):
-        sprite_name = {
-            "potion": "potion_belt",
-            "fire_bomb": "fire_bomb_belt",
-            "key": "key_belt",
-        }.get(item)
+    for slot_index, item in enumerate(
+        consumable_slots[:CONSUMABLE_BELT_SIZE]
+    ):
+        if slot_index == dragged_consumable_slot:
+            continue
+        sprite_name = _ACT_TWO_CONSUMABLE_SPRITES.get(item)
         if sprite_name is None:
             continue
         item_sprite = pygame.transform.scale(
@@ -244,6 +267,103 @@ def draw_act_two_sidebar(
             item_sprite,
             _ACT_TWO_BELT_ITEM_POSITIONS[slot_index],
         )
+
+    if (
+        dragged_consumable_slot is not None
+        and mouse_position is not None
+        and 0 <= dragged_consumable_slot < len(consumable_slots)
+    ):
+        dragged_item = consumable_slots[dragged_consumable_slot]
+        sprite_name = _ACT_TWO_CONSUMABLE_SPRITES.get(dragged_item)
+        if sprite_name is not None:
+            item_sprite = pygame.transform.scale(
+                sprites[sprite_name],
+                _ACT_TWO_BELT_ITEM_SIZE,
+            )
+            screen.blit(
+                item_sprite,
+                item_sprite.get_rect(center=mouse_position),
+            )
+
+    hovered_consumable_slot = None
+    if mouse_position is not None and dragged_consumable_slot is None:
+        hovered_consumable_slot = next(
+            (
+                slot_index
+                for slot_index, rectangle in enumerate(
+                    get_act_two_belt_slot_rectangles()
+                )
+                if (
+                    rectangle.collidepoint(mouse_position)
+                    and slot_index < len(consumable_slots)
+                    and consumable_slots[slot_index] is not None
+                )
+            ),
+            None,
+        )
+
+    if hovered_consumable_slot is not None:
+        hovered_item = consumable_slots[hovered_consumable_slot]
+        slot_rectangle = get_act_two_belt_slot_rectangles()[
+            hovered_consumable_slot
+        ]
+        panel = sprites["act_two_abilities_panel"]
+        panel_position = (
+            slot_rectangle.centerx - panel.get_width() // 2,
+            slot_rectangle.top - panel.get_height(),
+        )
+        icon_position = (
+            panel_position[0] + 26,
+            panel_position[1] + 60,
+        )
+        text_backing_position = (
+            panel_position[0] + 70,
+            panel_position[1] + 53,
+        )
+        text_rectangle = pygame.Rect(
+            panel_position[0] + 74,
+            panel_position[1] + 58,
+            111,
+            47,
+        )
+        screen.blit(panel, panel_position)
+        screen.blit(
+            sprites["act_two_ability_text_backing"],
+            text_backing_position,
+        )
+        sprite_name = _ACT_TWO_CONSUMABLE_SPRITES.get(hovered_item)
+        if sprite_name is not None:
+            panel_icon = pygame.transform.scale(
+                sprites[sprite_name],
+                _ACT_TWO_ABILITIES_ICON_RECT.size,
+            )
+            screen.blit(panel_icon, icon_position)
+
+        description_lines = wrap_text(
+            ability_font,
+            _ACT_TWO_CONSUMABLE_DESCRIPTIONS.get(
+                hovered_item,
+                "Consumable item.",
+            ),
+            text_rectangle.width,
+        )[:3]
+        description_y = (
+            text_rectangle.centery
+            - len(description_lines) * 16 // 2
+        )
+        for description_line in description_lines:
+            description_surface = ability_font.render(
+                description_line,
+                True,
+                value_color,
+            )
+            screen.blit(
+                description_surface,
+                description_surface.get_rect(
+                    midtop=(text_rectangle.centerx, description_y)
+                ),
+            )
+            description_y += 16
 
     ability_asset_name = _ACT_TWO_ABILITY_ASSETS.get(player_class)
     if ability_asset_name in sprites:

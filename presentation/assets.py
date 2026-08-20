@@ -386,6 +386,17 @@ def load_act_two_sprites():
         "potion_belt": "items/consumables/potion_belt.png",
         "fire_bomb": "items/consumables/fire_bomb.png",
         "fire_bomb_belt": "items/consumables/fire_bomb_belt.png",
+        "scroll_of_stoneflesh": (
+            "items/consumables/scroll_of_stoneflesh.png"
+        ),
+        "scroll_of_binding": (
+            "items/consumables/scroll_of_binding.png"
+        ),
+        "healing_scroll": "items/consumables/healing_scroll.png",
+        "scroll_of_arcane_impulse": (
+            "items/consumables/scroll_of_impulse .png"
+        ),
+        "binding_chains": "items/consumables/effects/chains.png",
         "fire_0": "environment/effects/fire/fire_00.png",
         "fire_1": "environment/effects/fire/fire_01.png",
         "fire_2": "environment/effects/fire/fire_02.png",
@@ -449,6 +460,12 @@ def load_act_two_sprites():
             sprites[name] = pygame.transform.scale(
                 source,
                 (TILE_SIZE * 3, TILE_SIZE * 3),
+            )
+            continue
+        if name == "binding_chains":
+            sprites[name] = pygame.transform.scale(
+                source,
+                (TILE_SIZE, TILE_SIZE),
             )
             continue
         if source.get_size() != (TILE_SIZE, TILE_SIZE):

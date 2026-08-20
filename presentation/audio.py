@@ -638,7 +638,7 @@ class ActTwoSoundBank:
             event.type is GameEventType.HEAL
             and event.actor == "hero"
             and event.target == "hero"
-            and event.data.get("kind") == "potion"
+            and event.data.get("kind") in ("potion", "healing_scroll")
             for event in events
         ):
             self._play("player_heal")
@@ -649,6 +649,14 @@ class ActTwoSoundBank:
             for event in events
         ):
             self._play("level_up")
+
+        if any(
+            event.type is GameEventType.HIT
+            and event.actor == "hero"
+            and event.data.get("kind") == "scroll_of_arcane_impulse"
+            for event in events
+        ):
+            self._play("mage_hit")
 
         self._play_enemy_events(events, floor)
 
@@ -671,7 +679,13 @@ class ActTwoSoundBank:
                     sound_key = "key_pickup"
                 elif event.data.get("kind") == "potion":
                     sound_key = "item_pickup"
-                elif event.data.get("kind") == "fire_bomb":
+                elif event.data.get("kind") in (
+                    "fire_bomb",
+                    "scroll_of_stoneflesh",
+                    "scroll_of_binding",
+                    "healing_scroll",
+                    "scroll_of_arcane_impulse",
+                ):
                     sound_key = "item_pickup"
             elif event.type is GameEventType.ENVIRONMENT:
                 candidate_key = event.data.get("kind")

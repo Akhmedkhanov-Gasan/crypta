@@ -609,6 +609,8 @@ def draw_act_two_player_actor(
     attack_started_at=0,
     attack_target=None,
     level_up_effect_started_at=-1,
+    stoneflesh_hits=0,
+    stoneflesh_effect_started_at=-1,
 ):
     sprite = sprites[f"player_{player_class}"]
     destination_position = (
@@ -1020,6 +1022,39 @@ def draw_act_two_player_actor(
             )
             visual_facing_direction = attack_direction
 
+    if stoneflesh_hits > 0:
+        pulse_elapsed = max(
+            0,
+            current_time - stoneflesh_effect_started_at,
+        )
+        pulse = (math.sin(pulse_elapsed / 180) + 1) / 2
+        center = (
+            position[0] + TILE_SIZE // 2,
+            position[1] + TILE_SIZE // 2,
+        )
+        effect = pygame.Surface((96, 96), pygame.SRCALPHA)
+        effect_center = (48, 48)
+        for ring_index in range(3):
+            radius = round(
+                22
+                + ring_index * 5
+                + pulse * (4 + ring_index)
+            )
+            alpha = round(
+                (92 - ring_index * 19) * (0.72 + pulse * 0.28)
+            )
+            pygame.draw.circle(
+                effect,
+                (20, 14, 28, alpha),
+                effect_center,
+                radius,
+                width=3 - min(1, ring_index),
+            )
+        screen.blit(
+            effect,
+            (center[0] - effect_center[0], center[1] - effect_center[1]),
+        )
+
     hit_elapsed = current_time - hit_started_at
     if (
         player_class == "warrior"
@@ -1028,6 +1063,12 @@ def draw_act_two_player_actor(
         and 0 <= hit_elapsed < ACT_TWO_PLAYER_HIT_REACTION_MS
     ):
         sprite = sprites["player_warrior_hurt"]
+    if stoneflesh_hits > 0:
+        sprite = sprite.copy()
+        sprite.fill(
+            (158, 150, 165, 255),
+            special_flags=pygame.BLEND_RGBA_MULT,
+        )
     hit_active = _draw_player_hit(
         screen,
         sprite,

@@ -21,14 +21,23 @@ from acts.act_two.abilities import (
 from acts.act_two.crates import break_crate
 from acts.act_two.consumables import (
     FIRE_BOMB,
+    HEALING_SCROLL,
     POTION,
+    SCROLLS,
+    TARGETED_SCROLLS,
     advance_fire_zones,
     cancel_fire_bomb_aiming,
+    cancel_scroll_aiming,
+    enemy_at_scroll_target,
     get_act_two_consumable_slots,
+    grant_act_two_test_scrolls,
     initialize_act_two_consumable_belt,
     is_valid_fire_bomb_target,
     request_fire_bomb_aiming,
+    request_scroll_aiming,
     throw_fire_bomb,
+    throw_act_two_consumable,
+    use_scroll,
 )
 from acts.act_two.progression import (
     cancel_queued_act_two_attribute_upgrade,
@@ -123,6 +132,7 @@ from rendering import (
     draw_fire_bomb_flight,
     draw_fire_bomb_targeting,
     draw_fire_zones,
+    draw_scroll_effect,
     draw_act_one_player_attack_effect,
     draw_act_two_player_attack_effect,
     draw_act_two_player_feedback_overlay,
@@ -141,6 +151,7 @@ from rendering import (
     draw_floor_transition,
     draw_coin,
     draw_dungeon,
+    draw_dropped_consumables,
     draw_enemy,
     draw_fire_bomb,
     draw_key,
@@ -150,6 +161,7 @@ from rendering import (
     draw_player,
     draw_player_attack_markers,
     draw_potion,
+    draw_scroll,
     draw_sidebar,
     draw_stairs,
     draw_status,
@@ -252,6 +264,7 @@ _ACT_TWO_CONSUMABLE_KEY_ORDER = (
     pygame.K_3,
     pygame.K_4,
     pygame.K_5,
+    pygame.K_6,
 )
 _ACT_TWO_CONSUMABLE_KEYS = {
     key: slot_index
@@ -385,12 +398,14 @@ def _complete_class_selection(game_state):
     clear_berserker_crushing_leap(game_state)
     game_state.player.key_count = 0
     initialize_act_two_consumable_belt(game_state.player)
+    grant_act_two_test_scrolls(game_state.player)
     game_state.class_selection_open = False
     game_state.class_transition_started_at = 0
     game_state.class_selection_choice = None
     game_state.class_selection_choice_started_at = 0
     game_state.player_attack_targets = []
     cancel_fire_bomb_aiming(game_state)
+    cancel_scroll_aiming(game_state)
     add_log_message(
         game_state.combat_log,
         f"The hero becomes a {chosen_class}.",
@@ -457,6 +472,7 @@ def _advance_floor_transition(game_state, current_time):
             game_state.player.key_count = 0
         game_state.player_attack_targets = []
         cancel_fire_bomb_aiming(game_state)
+        cancel_scroll_aiming(game_state)
         clear_archer_barrage_zone(game_state)
         clear_berserker_crushing_leap(game_state)
         add_log_message(
@@ -603,6 +619,7 @@ def main():
     act_two_auto_move_target = None
     act_two_auto_move_floor_index = None
     act_two_next_auto_move_at = 0
+    act_two_dragged_consumable_slot = None
 
     while running:
         current_act = FLOOR_CONFIGS[game_state.floor_index]["act"]
@@ -922,6 +939,68 @@ def main():
                 )
                 continue
             elif (
+                event.type == pygame.MOUSEBUTTONUP
+                and event.button == 1
+                and current_act == 2
+                and act_two_dragged_consumable_slot is not None
+            ):
+                dragged_slot = act_two_dragged_consumable_slot
+                act_two_dragged_consumable_slot = None
+                game_mouse_position = window_to_game_position(
+                    screen,
+                    event.pos,
+                )
+                released_belt_slot = None
+                if game_mouse_position is not None:
+                    released_belt_slot = next(
+                        (
+                            slot_index
+                            for slot_index, rectangle in enumerate(
+                                get_act_two_belt_slot_rectangles()
+                            )
+                            if rectangle.collidepoint(game_mouse_position)
+                        ),
+                        None,
+                    )
+                if released_belt_slot is not None:
+                    if released_belt_slot == dragged_slot:
+                        pygame.event.post(
+                            pygame.event.Event(
+                                pygame.KEYDOWN,
+                                key=_ACT_TWO_CONSUMABLE_KEY_ORDER[
+                                    dragged_slot
+                                ],
+                            )
+                        )
+                    else:
+                        slots = game_state.player.act_two.consumable_slots
+                        slots[dragged_slot], slots[released_belt_slot] = (
+                            slots[released_belt_slot],
+                            slots[dragged_slot],
+                        )
+                    continue
+                target_cell = (
+                    act_two_screen_to_cell(
+                        game_mouse_position,
+                        act_two_camera,
+                    )
+                    if game_mouse_position is not None
+                    else None
+                )
+                if target_cell is not None:
+                    pygame.event.post(
+                        pygame.event.Event(
+                            pygame.KEYDOWN,
+                            key=pygame.K_UNKNOWN,
+                            dropped_consumable_slot=dragged_slot,
+                            dropped_consumable_target=target_cell,
+                            dropped_consumable_started_at=(
+                                pygame.time.get_ticks()
+                            ),
+                        )
+                    )
+                continue
+            elif (
                 event.type == pygame.MOUSEBUTTONDOWN
                 and event.button == 1
                 and current_act == 2
@@ -1094,9 +1173,14 @@ def main():
                 event.type == pygame.MOUSEBUTTONDOWN
                 and event.button == 3
                 and current_act == 2
-                and game_state.player.act_two.fire_bomb_aiming
+                and (
+                    game_state.player.act_two.fire_bomb_aiming
+                    or game_state.player.act_two.scroll_aiming_kind
+                    is not None
+                )
             ):
                 cancel_fire_bomb_aiming(game_state)
+                cancel_scroll_aiming(game_state)
                 continue
             elif (
                 event.type == pygame.MOUSEBUTTONDOWN
@@ -1117,14 +1201,15 @@ def main():
                     ):
                         if not rectangle.collidepoint(game_mouse_position):
                             continue
-                        pygame.event.post(
-                            pygame.event.Event(
-                                pygame.KEYDOWN,
-                                key=(
-                                    _ACT_TWO_CONSUMABLE_KEY_ORDER[slot_index]
-                                ),
-                            )
-                        )
+                        if (
+                            game_state.player.act_two.consumable_slots[
+                                slot_index
+                            ]
+                            is not None
+                        ):
+                            cancel_fire_bomb_aiming(game_state)
+                            cancel_scroll_aiming(game_state)
+                            act_two_dragged_consumable_slot = slot_index
                         belt_slot_clicked = True
                         break
                 if belt_slot_clicked:
@@ -1149,6 +1234,22 @@ def main():
                                 fire_bomb_target=target_cell,
                                 fire_bomb_slot=(
                                     game_state.player.act_two.fire_bomb_aiming_slot
+                                ),
+                            )
+                        )
+                    continue
+                if (
+                    game_state.player.act_two.scroll_aiming_kind
+                    is not None
+                ):
+                    if enemy_at_scroll_target(game_state, target_cell):
+                        pygame.event.post(
+                            pygame.event.Event(
+                                pygame.KEYDOWN,
+                                key=pygame.K_UNKNOWN,
+                                scroll_target=target_cell,
+                                scroll_slot=(
+                                    game_state.player.act_two.scroll_aiming_slot
                                 ),
                             )
                         )
@@ -1550,6 +1651,23 @@ def main():
                     "fire_bomb_slot",
                     None,
                 )
+                scroll_target = getattr(event, "scroll_target", None)
+                scroll_slot = getattr(event, "scroll_slot", None)
+                dropped_consumable_slot = getattr(
+                    event,
+                    "dropped_consumable_slot",
+                    None,
+                )
+                dropped_consumable_target = getattr(
+                    event,
+                    "dropped_consumable_target",
+                    None,
+                )
+                dropped_consumable_started_at = getattr(
+                    event,
+                    "dropped_consumable_started_at",
+                    0,
+                )
                 consumable_slot = (
                     _ACT_TWO_CONSUMABLE_KEYS.get(event.key)
                     if current_act == 2
@@ -1586,6 +1704,23 @@ def main():
                         game_state,
                         consumable_slot,
                     )
+                    continue
+                if (
+                    current_act == 2
+                    and game_state.player.act_two.scroll_aiming_kind
+                    is not None
+                    and scroll_target is None
+                ):
+                    if (
+                        event.key == pygame.K_ESCAPE
+                        or selected_consumable in TARGETED_SCROLLS
+                    ):
+                        cancel_scroll_aiming(game_state)
+                    continue
+                if selected_consumable in TARGETED_SCROLLS:
+                    act_two_held_movement_keys.clear()
+                    act_two_held_direction = (0, 0)
+                    request_scroll_aiming(game_state, consumable_slot)
                     continue
 
                 column_change = 0
@@ -1777,6 +1912,23 @@ def main():
                         game_state,
                         fire_bomb_slot,
                         fire_bomb_target,
+                        pygame.time.get_ticks(),
+                    )
+                elif (
+                    dropped_consumable_slot is not None
+                    and dropped_consumable_target is not None
+                ):
+                    player_acted = throw_act_two_consumable(
+                        game_state,
+                        dropped_consumable_slot,
+                        dropped_consumable_target,
+                        dropped_consumable_started_at,
+                    )
+                elif scroll_target is not None and scroll_slot is not None:
+                    player_acted = use_scroll(
+                        game_state,
+                        scroll_slot,
+                        scroll_target,
                         pygame.time.get_ticks(),
                     )
                 elif (
@@ -1983,6 +2135,22 @@ def main():
                         consumable_slot,
                     )
                     if player_acted:
+                        game_state.player.potion_effect_started_at = (
+                            pygame.time.get_ticks()
+                        )
+                elif (
+                    current_act == 2
+                    and selected_consumable in SCROLLS
+                ):
+                    player_acted = use_scroll(
+                        game_state,
+                        consumable_slot,
+                        effect_started_at=pygame.time.get_ticks(),
+                    )
+                    if (
+                        player_acted
+                        and selected_consumable == HEALING_SCROLL
+                    ):
                         game_state.player.potion_effect_started_at = (
                             pygame.time.get_ticks()
                         )
@@ -3047,6 +3215,13 @@ def main():
                 ),
             )
         if current_act == 2:
+            draw_dropped_consumables(
+                world_target,
+                game_state.floor.dropped_consumables,
+                game_state.floor.visible_cells,
+                act_two_sprites,
+                current_time,
+            )
             for crate in game_state.floor.breakable_crates:
                 crate_is_visible = position_is_visible(
                     game_state.floor,
@@ -3128,6 +3303,15 @@ def main():
                         current_act,
                         act_two_sprites,
                     )
+                elif chest_loot_kind in SCROLLS:
+                    draw_scroll(
+                        world_target,
+                        remembered_chest["column"],
+                        remembered_chest["row"],
+                        chest_loot_kind,
+                        current_act,
+                        act_two_sprites,
+                    )
                 else:
                     draw_coin(
                         world_target,
@@ -3189,6 +3373,16 @@ def main():
             game_state.player.act_two_blocked_movement_direction,
             (
                 game_state.player.act_two.level_up_effect_started_at
+                if current_act == 2
+                else -1
+            ),
+            (
+                game_state.player.act_two.stoneflesh_hits
+                if current_act == 2
+                else 0
+            ),
+            (
+                game_state.player.act_two.stoneflesh_effect_started_at
                 if current_act == 2
                 else -1
             ),
@@ -3294,6 +3488,11 @@ def main():
                 current_time,
             )
             draw_act_two_arcane_burst_effect(
+                world_target,
+                game_state,
+                current_time,
+            )
+            draw_scroll_effect(
                 world_target,
                 game_state,
                 current_time,
@@ -3427,6 +3626,9 @@ def main():
                     pygame.mouse.get_pos(),
                 ),
                 act_two_sprites,
+                dragged_consumable_slot=(
+                    act_two_dragged_consumable_slot
+                ),
             )
         if current_act >= 3:
             draw_act_three_gameplay(

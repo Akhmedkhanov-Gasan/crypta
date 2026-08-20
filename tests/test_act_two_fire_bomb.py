@@ -10,6 +10,7 @@ from acts.act_two.consumables import (
     is_valid_fire_bomb_target,
     throw_fire_bomb,
 )
+from acts.act_two.settings import CONSUMABLE_BELT_SIZE
 from game.factories import create_game_state
 
 
@@ -45,7 +46,7 @@ class FireBombTests(unittest.TestCase):
         slots = get_act_two_consumable_slots(self.player)
 
         self.assertEqual(slots.count(FIRE_BOMB), 1)
-        self.assertEqual(len(slots), 5)
+        self.assertEqual(len(slots), CONSUMABLE_BELT_SIZE)
 
     def test_zone_is_clipped_to_walkable_cells(self):
         dungeon_map = [

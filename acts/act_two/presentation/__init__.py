@@ -25,6 +25,7 @@ from acts.act_two.presentation.hud import (
 )
 from acts.act_two.presentation.items import (
     draw_breakable_crate,
+    draw_dropped_consumables,
     draw_pickup_effect as draw_act_two_pickup_effect,
 )
 from acts.act_two.presentation.player import (
@@ -38,6 +39,7 @@ from acts.act_two.presentation.fire_bomb import (
     draw_fire_bomb_targeting,
     draw_fire_zones,
 )
+from acts.act_two.presentation.scrolls import draw_scroll_effect
 from acts.act_two.presentation.camera import (
     ActTwoCamera,
     act_two_screen_to_cell,
@@ -67,6 +69,7 @@ __all__ = [
     "draw_fire_bomb_flight",
     "draw_fire_bomb_targeting",
     "draw_fire_zones",
+    "draw_scroll_effect",
     "draw_act_two_pickup_effect",
     "draw_act_two_player_attack_effect",
     "draw_act_two_power_cleave_effect",
@@ -79,6 +82,7 @@ __all__ = [
     "draw_act_two_player_feedback_overlay",
     "draw_act_two_wait_indicator",
     "draw_breakable_crate",
+    "draw_dropped_consumables",
     "draw_oracle_emitters",
     "draw_oracle_projectiles",
     "update_act_two_camera",

@@ -2,7 +2,10 @@ import random
 from collections.abc import Callable
 from math import ceil
 
-from acts.act_two.settings import ABILITY_HITS_REQUIRED
+from acts.act_two.settings import (
+    ABILITY_HITS_REQUIRED,
+    STONEFLESH_PHYSICAL_DAMAGE_MULTIPLIER,
+)
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from game.progression import (
@@ -61,8 +64,17 @@ OracleHitReaction = Callable[
 def damage_player(
     game_state: GameState,
     damage: int,
+    damage_kind: str = "physical",
 ) -> int:
     player = game_state.player
+    stoneflesh_applied = (
+        damage_kind == "physical"
+        and player.act_two.stoneflesh_hits > 0
+    )
+    if stoneflesh_applied:
+        damage = ceil(
+            damage * STONEFLESH_PHYSICAL_DAMAGE_MULTIPLIER
+        )
     if (
         player.subclass == "paladin"
         and player.paladin_holy_shield_turns > 0
@@ -92,6 +104,13 @@ def damage_player(
             player.summoner_bond_active = False
             player.summoner_familiar_death_penalty = True
     damage_dealt = previous_health - player.health
+    if stoneflesh_applied and damage_dealt > 0:
+        player.act_two.stoneflesh_hits -= 1
+        if player.act_two.stoneflesh_hits == 0:
+            add_log_message(
+                game_state.combat_log,
+                "The hero's stoneflesh crumbles away.",
+            )
 
     if damage_dealt > 0 and player.subclass == "summoner":
         player.summoner_bond_charge = min(
