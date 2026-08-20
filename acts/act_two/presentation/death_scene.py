@@ -1,7 +1,6 @@
 import pygame
 
 from presentation.hud import wrap_text
-from presentation.layout import ACT_TWO_RENDER_SCALE
 from settings import TILE_SIZE
 
 
@@ -62,29 +61,30 @@ def _draw_old_man(
         )
         echo_distance = 3
     else:
+        render_scale = camera.zoom
         source_width, source_height = sprite.get_size()
         sprite = pygame.transform.scale(
             sprite,
             (
-                source_width * ACT_TWO_RENDER_SCALE,
-                source_height * ACT_TWO_RENDER_SCALE,
+                source_width * render_scale,
+                source_height * render_scale,
             ),
         )
         position = (
             view_rectangle.x
             + round(
                 (old_man_cell[0] * TILE_SIZE - camera.x)
-                * ACT_TWO_RENDER_SCALE
+                * render_scale
             )
-            - (sprite.get_width() - TILE_SIZE * ACT_TWO_RENDER_SCALE) // 2,
+            - (sprite.get_width() - TILE_SIZE * render_scale) // 2,
             view_rectangle.y
             + round(
                 (old_man_cell[1] * TILE_SIZE - camera.y)
-                * ACT_TWO_RENDER_SCALE
+                * render_scale
             )
-            - (sprite.get_height() - TILE_SIZE * ACT_TWO_RENDER_SCALE),
+            - (sprite.get_height() - TILE_SIZE * render_scale),
         )
-        echo_distance = 6
+        echo_distance = 3 * render_scale
     for echo_index in range(2, 0, -1):
         echo = sprite.copy()
         echo.set_alpha(round(42 * fade / echo_index))

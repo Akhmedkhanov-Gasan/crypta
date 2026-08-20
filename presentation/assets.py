@@ -170,8 +170,8 @@ def load_act_two_sprites():
     asset_directory = ASSET_ROOT / "act_2"
     ui_directory = ASSET_ROOT / "ui" / "act_2"
     sprite_paths = {
-        "player_level_up_0": "player/lvl_up_1.png",
-        "player_level_up_1": "player/lvl_up_2.png",
+        "player_level_up_0": "player/lvl_up_1111.png",
+        "player_level_up_1": "player/lvl_up_211.png",
         "player_warrior": "player/warrior/idle/idle_00.png",
         "player_warrior_hurt": "player/warrior/hurt/hurt_00.png",
         "player_warrior_walk_0": "player/warrior/walk/down/walk_00.png",
@@ -440,15 +440,25 @@ def load_act_two_sprites():
         "rune_spiral": "environment/runes/rune_spiral.png",
     }
 
-    sprites = {
-        name: pygame.transform.scale(
-            pygame.image.load(
-                str(asset_directory / relative_path)
-            ).convert_alpha(),
-            (TILE_SIZE, TILE_SIZE),
-        )
-        for name, relative_path in sprite_paths.items()
-    }
+    sprites = {}
+    oversized_sprite_names = {"oracle_idle", "oracle_awake"}
+    for name, relative_path in sprite_paths.items():
+        source_path = asset_directory / relative_path
+        source = pygame.image.load(str(source_path)).convert_alpha()
+        if name in oversized_sprite_names:
+            sprites[name] = pygame.transform.scale(
+                source,
+                (TILE_SIZE * 3, TILE_SIZE * 3),
+            )
+            continue
+        if source.get_size() != (TILE_SIZE, TILE_SIZE):
+            raise ValueError(
+                "Act Two gameplay asset must be "
+                f"{TILE_SIZE}x{TILE_SIZE}, got "
+                f"{source.get_width()}x{source.get_height()}: "
+                f"{source_path}"
+            )
+        sprites[name] = source
     sprites["treasury_gate_vertical"] = pygame.transform.rotate(
         sprites["treasury_gate_horizontal"],
         90,
@@ -489,15 +499,6 @@ def load_act_two_sprites():
                 True,
                 False,
             )
-        )
-    for oracle_sprite_name in ("oracle_idle", "oracle_awake"):
-        sprites[oracle_sprite_name] = pygame.transform.scale(
-            pygame.image.load(
-                str(
-                    asset_directory / sprite_paths[oracle_sprite_name]
-                )
-            ).convert_alpha(),
-            (TILE_SIZE * 3, TILE_SIZE * 3),
         )
     for floor_sprite_name in (
         "floor",

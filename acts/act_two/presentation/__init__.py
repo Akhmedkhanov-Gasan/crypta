@@ -42,6 +42,7 @@ from acts.act_two.presentation.camera import (
     ActTwoCamera,
     act_two_screen_to_cell,
     act_two_world_surface_size,
+    change_act_two_camera_zoom,
     draw_act_two_camera_view,
     update_act_two_camera,
 )
@@ -57,6 +58,7 @@ __all__ = [
     "ActTwoCamera",
     "act_two_screen_to_cell",
     "act_two_world_surface_size",
+    "change_act_two_camera_zoom",
     "draw_act_two_camera_view",
     "draw_act_two_ability_preview",
     "draw_act_two_arcane_burst_effect",

@@ -57,6 +57,7 @@ from acts.act_two.presentation.camera import (
     ActTwoCamera,
     act_two_screen_to_cell,
     act_two_world_surface_size,
+    change_act_two_camera_zoom,
     draw_act_two_camera_view,
     update_act_two_camera,
 )
@@ -1192,6 +1193,30 @@ def main():
                         )
 
                     fullscreen = not fullscreen
+                    continue
+
+                if current_act == 2 and event.key in (
+                    pygame.K_EQUALS,
+                    pygame.K_KP_PLUS,
+                    pygame.K_MINUS,
+                    pygame.K_KP_MINUS,
+                ):
+                    zoom_direction = (
+                        1
+                        if event.key in (pygame.K_EQUALS, pygame.K_KP_PLUS)
+                        else -1
+                    )
+                    if change_act_two_camera_zoom(
+                        act_two_camera,
+                        game_state.floor.map,
+                        game_state.floor.player_column,
+                        game_state.floor.player_row,
+                        zoom_direction,
+                    ):
+                        add_log_message(
+                            game_state.combat_log,
+                            f"Camera zoom: {act_two_camera.zoom}x.",
+                        )
                     continue
 
                 if event.key == pygame.K_F1:
