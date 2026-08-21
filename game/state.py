@@ -150,8 +150,13 @@ class EnemyState(AttributeMapping):
     heal_range: int = 0
     curse_turns: int = 0
     binding_turns: int = 0
+    stun_turns: int = 0
+    bleed_turns: int = 0
+    bleed_damage: int = 0
     movement_animation_started_at: int = 0
     movement_origin: tuple[int, int] | None = None
+    movement_animation_kind: str | None = None
+    skip_next_movement: bool = False
     attack_animation_started_at: int = 0
     attack_effect_mode: str | None = None
     attack_effect_positions: tuple[tuple[int, int], ...] = ()
@@ -162,6 +167,8 @@ class EnemyState(AttributeMapping):
     hit_blocked: bool = False
     hit_origin: tuple[int, int] | None = None
     hit_attacker_class: str | None = None
+    aftershock_hit_started_at: int = -1
+    aftershock_hit_damage: int = 0
     death_animation_started_at: int = -1
     movement_bounds: tuple[int, int, int, int] | None = None
     warden_attacks_since_reposition: int = 0
@@ -373,6 +380,8 @@ class GameState:
     class_selection_choice: str | None = None
     class_selection_choice_started_at: int = 0
     act_two_stats_open: bool = False
+    rune_selection_open: bool = False
+    rune_selection_pending_id: str | None = None
     upgrade_message: str = ""
     upgrade_reward_pending: bool = False
     floor_transition_started_at: int = -1

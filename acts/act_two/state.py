@@ -145,6 +145,7 @@ class RuneRoomState:
 
 @dataclass
 class ActTwoPlayerState:
+    selected_rune_id: str | None = None
     consumable_slots: list[str | None] = field(
         default_factory=lambda: [None] * CONSUMABLE_BELT_SIZE
     )
@@ -164,8 +165,13 @@ class ActTwoPlayerState:
     level_up_effect_started_at: int = -1
     ability_effect_started_at: int = 0
     ability_effect_direction: tuple[int, int] = (0, 1)
+    ability_effect_target: tuple[int, int] | None = None
+    ability_effect_kind: str | None = None
     ability_effect_cells: tuple[tuple[int, int], ...] = ()
     ability_effect_hit_positions: tuple[tuple[int, int], ...] = ()
+    ability_effect_aftershock_positions: tuple[
+        tuple[int, int], ...
+    ] = ()
     class_upgrade_ranks: dict[str, int] = field(
         default_factory=lambda: {
             "warrior_cleave": 0,

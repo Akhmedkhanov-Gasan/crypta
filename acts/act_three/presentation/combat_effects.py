@@ -25,6 +25,7 @@ _TOP_VOID_DOUBLE_CORNER_CROP_WIDTH = 24
 
 _ENEMY_HIT_REACTION_DURATION_MS = 190
 _ENEMY_HIT_FEEDBACK_DURATION_MS = 680
+_AFTERSHOCK_FEEDBACK_DELAY_MS = 330
 _PLAYER_HIT_REACTION_DURATION_MS = 210
 _PLAYER_HIT_SPRITE_DURATION_MS = 270
 _PLAYER_HIT_FEEDBACK_DURATION_MS = 680
@@ -61,28 +62,50 @@ def record_enemy_hit_feedback(game_state, started_at):
         if not hit_events:
             continue
 
+        regular_hit_events = [
+            event
+            for event in hit_events
+            if event.data.get("kind") != "aftershock"
+        ]
+        aftershock_hit_events = [
+            event
+            for event in hit_events
+            if event.data.get("kind") == "aftershock"
+        ]
+        if aftershock_hit_events:
+            enemy.aftershock_hit_started_at = (
+                started_at + _AFTERSHOCK_FEEDBACK_DELAY_MS
+            )
+            enemy.aftershock_hit_damage = sum(
+                event.amount for event in aftershock_hit_events
+            )
+        if not regular_hit_events:
+            continue
+
         enemy.hit_animation_started_at = started_at
-        enemy.hit_damage = sum(event.amount for event in hit_events)
+        enemy.hit_damage = sum(
+            event.amount for event in regular_hit_events
+        )
         enemy.hit_critical = any(
             event.data.get("critical", False)
-            for event in hit_events
+            for event in regular_hit_events
         )
         enemy.hit_origin = next(
             (
                 event.origin
-                for event in reversed(hit_events)
+                for event in reversed(regular_hit_events)
                 if event.origin is not None
             ),
             None,
         )
         enemy.hit_blocked = any(
             event.data.get("blocked", False)
-            for event in hit_events
+            for event in regular_hit_events
         )
         enemy.hit_attacker_class = next(
             (
                 event.data.get("player_class")
-                for event in reversed(hit_events)
+                for event in reversed(regular_hit_events)
                 if event.data.get("player_class") is not None
             ),
             None,
@@ -90,18 +113,24 @@ def record_enemy_hit_feedback(game_state, started_at):
 
 
 def record_enemy_death_feedback(game_state, started_at):
-    defeated_enemy_names = {
-        event.actor
+    defeated_enemy_events = {
+        event.actor: event
         for event in game_state.events
         if event.type is GameEventType.DEATH
     }
 
     for enemy in game_state.floor.enemies:
+        death_event = defeated_enemy_events.get(enemy.name)
         if (
-            enemy.name in defeated_enemy_names
+            death_event is not None
             and enemy.death_animation_started_at < 0
         ):
-            enemy.death_animation_started_at = started_at
+            delay = (
+                _AFTERSHOCK_FEEDBACK_DELAY_MS
+                if death_event.data.get("cause") == "aftershock"
+                else 0
+            )
+            enemy.death_animation_started_at = started_at + delay
 
 
 def record_player_hit_feedback(game_state, started_at):

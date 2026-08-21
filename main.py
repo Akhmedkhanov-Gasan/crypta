@@ -16,6 +16,7 @@ from acts.act_two.settings import (
     ACT_TWO_STARTING_LEVEL,
 )
 from acts.act_two.abilities import (
+    is_valid_mage_arcane_burst_target,
     select_directional_ability_direction,
 )
 from acts.act_two.crates import break_crate
@@ -52,11 +53,14 @@ from acts.act_two.visibility import (
 )
 from acts.act_two.traps import advance_spike_traps
 from acts.act_two.runes import (
+    cancel_rune_selection,
     interact_with_rune_pedestal,
     rune_pedestal_is_at,
     rune_wall_is_at,
+    select_rune,
     strike_wall_rune,
 )
+from acts.act_two.rune_catalog import runes_for_class
 from acts.act_two.treasury import (
     activate_treasury_trial,
     treasury_chest_is_at,
@@ -139,6 +143,7 @@ from rendering import (
     draw_act_two_wait_indicator,
     draw_act_two_power_cleave_effect,
     draw_act_two_rune_room,
+    draw_rune_selection,
     draw_act_two_upgrade_screen,
     draw_act_two_spike_traps,
     draw_act_two_treasury,
@@ -185,6 +190,8 @@ from rendering import (
     get_act_two_attribute_plus_rectangles,
     get_act_two_attribute_minus_rectangles,
     get_act_two_confirm_button_rectangle,
+    get_rune_selection_card_rectangles,
+    get_rune_selection_confirm_rectangle,
 )
 from presentation.layout import (
     ACT_THREE_AWAKENING_END_MS,
@@ -229,6 +236,7 @@ from systems.player_actions import (
     try_use_potion,
 )
 from systems.player_combat import (
+    basic_attack_damage_range,
     perform_archer_attack,
     perform_basic_attack,
     perform_summoner_attack,
@@ -243,6 +251,7 @@ from systems.player_abilities import (
     advance_warlock_demon_form,
     cancel_ability_aiming,
     cast_directional_ability,
+    cast_mage_arcane_burst,
     resolve_assassin_ultimate,
     request_class_ability,
     perform_archer_empowered_shot,
@@ -623,6 +632,11 @@ def main():
 
     while running:
         current_act = FLOOR_CONFIGS[game_state.floor_index]["act"]
+        if current_act == 2 and game_state.upgrade_screen_open:
+            _finish_upgrade_descent(
+                game_state,
+                pygame.time.get_ticks(),
+            )
         continuous_move_time = pygame.time.get_ticks()
         continuous_movement_available = (
             current_act == 2
@@ -630,12 +644,17 @@ def main():
             and game_state.floor_transition_started_at < 0
             and not game_state.class_selection_open
             and not game_state.upgrade_screen_open
+            and not game_state.rune_selection_open
             and not game_state.subclass_selection_open
             and not game_state.player.directional_ability_aiming
             and not game_state.player.act_two.fire_bomb_aiming
             and game_state.player.health > 0
             and not game_state.game_won
         )
+        if game_state.rune_selection_open:
+            act_two_auto_move_target = None
+            act_two_auto_move_floor_index = None
+            act_two_dragged_consumable_slot = None
         held_direction = _movement_direction_for_keys(
             act_two_held_movement_keys
         )
@@ -839,6 +858,78 @@ def main():
                     )
                 continue
             elif game_state.floor_transition_started_at >= 0:
+                continue
+            elif game_state.rune_selection_open:
+                available_runes = runes_for_class(
+                    game_state.player.player_class
+                )
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        cancel_rune_selection(game_state)
+                    elif event.key in (
+                        pygame.K_1,
+                        pygame.K_2,
+                        pygame.K_3,
+                    ):
+                        rune_index = event.key - pygame.K_1
+                        if rune_index < len(available_runes):
+                            game_state.rune_selection_pending_id = (
+                                available_runes[rune_index].id
+                            )
+                    elif (
+                        event.key in (pygame.K_RETURN, pygame.K_KP_ENTER)
+                        and game_state.rune_selection_pending_id is not None
+                    ):
+                        select_rune(
+                            game_state,
+                            game_state.rune_selection_pending_id,
+                        )
+                elif (
+                    event.type == pygame.MOUSEBUTTONDOWN
+                    and event.button == 3
+                ):
+                    cancel_rune_selection(game_state)
+                elif (
+                    event.type == pygame.MOUSEBUTTONDOWN
+                    and event.button == 1
+                ):
+                    game_mouse_position = window_to_game_position(
+                        screen,
+                        event.pos,
+                    )
+                    if game_mouse_position is not None:
+                        confirm_rectangle = (
+                            get_rune_selection_confirm_rectangle()
+                        )
+                        clicked_rune_id = next(
+                            (
+                                rune_id
+                                for rune_id, rectangle in (
+                                    get_rune_selection_card_rectangles(
+                                        game_state.player.player_class
+                                    ).items()
+                                )
+                                if rectangle.collidepoint(
+                                    game_mouse_position
+                                )
+                            ),
+                            None,
+                        )
+                        if clicked_rune_id is not None:
+                            game_state.rune_selection_pending_id = (
+                                clicked_rune_id
+                            )
+                        elif (
+                            game_state.rune_selection_pending_id
+                            is not None
+                            and confirm_rectangle.collidepoint(
+                                game_mouse_position
+                            )
+                        ):
+                            select_rune(
+                                game_state,
+                                game_state.rune_selection_pending_id,
+                            )
                 continue
             elif (
                     event.type == pygame.MOUSEBUTTONDOWN
@@ -1174,11 +1265,15 @@ def main():
                 and event.button == 3
                 and current_act == 2
                 and (
+                    game_state.player.directional_ability_aiming
+                    or
                     game_state.player.act_two.fire_bomb_aiming
                     or game_state.player.act_two.scroll_aiming_kind
                     is not None
                 )
             ):
+                if game_state.player.directional_ability_aiming:
+                    cancel_ability_aiming(game_state)
                 cancel_fire_bomb_aiming(game_state)
                 cancel_scroll_aiming(game_state)
                 continue
@@ -1222,6 +1317,22 @@ def main():
                     if game_mouse_position is not None
                     else None
                 )
+                if (
+                    game_state.player.player_class == "mage"
+                    and game_state.player.directional_ability_aiming
+                ):
+                    if is_valid_mage_arcane_burst_target(
+                        game_state,
+                        target_cell,
+                    ):
+                        pygame.event.post(
+                            pygame.event.Event(
+                                pygame.KEYDOWN,
+                                key=pygame.K_UNKNOWN,
+                                mage_ability_target=target_cell,
+                            )
+                        )
+                    continue
                 if game_state.player.act_two.fire_bomb_aiming:
                     if is_valid_fire_bomb_target(
                         game_state,
@@ -1653,6 +1764,11 @@ def main():
                 )
                 scroll_target = getattr(event, "scroll_target", None)
                 scroll_slot = getattr(event, "scroll_slot", None)
+                mage_ability_target = getattr(
+                    event,
+                    "mage_ability_target",
+                    None,
+                )
                 dropped_consumable_slot = getattr(
                     event,
                     "dropped_consumable_slot",
@@ -1767,14 +1883,14 @@ def main():
                     column_change != 0 or row_change != 0
                 )
                 directional_ability_cast = (
-                    game_state.player.player_class in ("warrior", "mage")
+                    game_state.player.player_class == "warrior"
                     and game_state.player.directional_ability_aiming
                     and player_tried_to_move
                 )
                 if (
                     directional_ability_cast
                     and FLOOR_CONFIGS[game_state.floor_index]["act"] == 2
-                    and game_state.player.player_class in ("warrior", "mage")
+                    and game_state.player.player_class == "warrior"
                     and game_state.player.subclass is None
                 ):
                     directional_ability_cast = (
@@ -1793,7 +1909,10 @@ def main():
                     and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
                     and game_state.player.subclass == "assassin"
                 )
-                if event.key == pygame.K_e or assassin_ability_pressed:
+                if (
+                    event.key == pygame.K_e
+                    or assassin_ability_pressed
+                ):
                     ability_request = request_class_ability(
                         game_state
                     )
@@ -1810,7 +1929,17 @@ def main():
 
                 if (
                     game_state.player.directional_ability_aiming
+                    and game_state.player.player_class == "mage"
+                    and mage_ability_target is None
+                ):
+                    if event.key == pygame.K_ESCAPE:
+                        cancel_ability_aiming(game_state)
+                    continue
+
+                if (
+                    game_state.player.directional_ability_aiming
                     and not player_tried_to_move
+                    and mage_ability_target is None
                 ):
                     if event.key == pygame.K_ESCAPE:
                         cancel_ability_aiming(
@@ -1907,7 +2036,10 @@ def main():
                 player_acted = False
                 game_state.player_attack_targets = []
 
-                if fire_bomb_target is not None and fire_bomb_slot is not None:
+                if (
+                    fire_bomb_target is not None
+                    and fire_bomb_slot is not None
+                ):
                     player_acted = throw_fire_bomb(
                         game_state,
                         fire_bomb_slot,
@@ -2106,6 +2238,20 @@ def main():
                         "The assassin teleports through the shadows.",
                     )
                     player_acted = True
+                elif mage_ability_target is not None:
+                    player_acted = cast_mage_arcane_burst(
+                        game_state,
+                        mage_ability_target,
+                        resolve_oracle_hit_reaction,
+                    )
+                    if player_acted:
+                        ability_started_at = pygame.time.get_ticks()
+                        game_state.player.attack_animation_started_at = (
+                            ability_started_at
+                        )
+                        game_state.player.act_two.ability_effect_started_at = (
+                            ability_started_at
+                        )
                 elif directional_ability_cast:
                     player_acted = cast_directional_ability(
                         game_state,
@@ -2444,6 +2590,14 @@ def main():
                             )
                             if movement_event is not None:
                                 enemy.movement_origin = movement_event.origin
+                                enemy.movement_animation_kind = (
+                                    movement_event.data.get("kind")
+                                )
+                                if (
+                                    enemy.movement_animation_kind
+                                    == "arcane_burst_knockback"
+                                ):
+                                    enemy.movement_animation_started_at += 220
                         if (
                             enemy.name in attacked_enemy_names
                             or enemy.name in healed_enemy_names
@@ -3070,7 +3224,12 @@ def main():
         act_two_ability_effect_duration = (
             620
             if game_state.player.player_class == "mage"
-            else 460
+            else (
+                760
+                if game_state.player.act_two.selected_rune_id
+                == "rune_of_aftershock"
+                else 460
+            )
         )
         act_two_ability_effect_elapsed = (
             current_time
@@ -3119,10 +3278,23 @@ def main():
             ),
         )
         if current_act == 2:
+            mage_preview_mouse_position = window_to_game_position(
+                screen,
+                pygame.mouse.get_pos(),
+            )
+            mage_preview_target = (
+                act_two_screen_to_cell(
+                    mage_preview_mouse_position,
+                    act_two_camera,
+                )
+                if mage_preview_mouse_position is not None
+                else None
+            )
             draw_act_two_ability_preview(
                 world_target,
                 game_state,
                 current_time,
+                mage_preview_target,
             )
         draw_attack_markers(
             world_target,
@@ -3596,6 +3768,10 @@ def main():
                 act_one_gameplay_assets,
             )
         elif current_act == 2:
+            (
+                displayed_damage_minimum,
+                displayed_damage_maximum,
+            ) = basic_attack_damage_range(game_state.player)
             draw_act_two_sidebar(
                 game_surface,
                 active_heading_font,
@@ -3605,8 +3781,8 @@ def main():
                 game_state.combat_log,
                 game_state.player.health,
                 game_state.player.max_health,
-                game_state.player.damage_min,
-                game_state.player.damage_max,
+                displayed_damage_minimum,
+                displayed_damage_maximum,
                 game_state.player.crit_chance,
                 game_state.player.critical_damage_multiplier,
                 game_state.player.dodge_chance,
@@ -3616,6 +3792,7 @@ def main():
                 get_act_two_consumable_slots(game_state.player),
                 game_state.player.gold_count,
                 game_state.player.player_class,
+                game_state.player.act_two.selected_rune_id,
                 game_state.player.level,
                 game_state.player.experience,
                 game_state.player.ability_kill_charge,
@@ -3630,6 +3807,17 @@ def main():
                     act_two_dragged_consumable_slot
                 ),
             )
+            if game_state.rune_selection_open:
+                draw_rune_selection(
+                    game_surface,
+                    game_state,
+                    act_two_fonts,
+                    act_two_sprites,
+                    window_to_game_position(
+                        screen,
+                        pygame.mouse.get_pos(),
+                    ),
+                )
         if current_act >= 3:
             draw_act_three_gameplay(
                 game_surface,

@@ -987,7 +987,8 @@ def _draw_legacy_class_selection_screen(
             "ability": "POWER CLEAVE",
             "description": (
                 "After 4 hits, press E and choose a direction twice. "
-                "Cleave three cells in front with +2 damage."
+                "Cleave three cells, knock enemies back, and deal "
+                "extra damage when they hit a wall."
             ),
         },
         "rogue": {
@@ -1021,9 +1022,10 @@ def _draw_legacy_class_selection_screen(
             ),
             "ability": "ARCANE BURST",
             "description": (
-                "After 4 hits, press E and choose a direction. "
-                "Magic hits every enemy in a line up to 5 cells "
-                "away with +2 damage plus spell power."
+                "After 4 hits, press E and choose a cell within 4 tiles. "
+                "The center takes full damage; the four arms take half "
+                "damage and hurl enemies outward. Basic attacks scale "
+                "with Intelligence instead of Strength."
             ),
         },
     }

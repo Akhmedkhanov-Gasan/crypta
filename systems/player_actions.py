@@ -454,6 +454,7 @@ def _collect_items(
 def _resolve_stairs(
     game_state: GameState,
     first_act_final_floor: int,
+    transition_started_at: int,
 ) -> bool:
     floor = game_state.floor
     reached_open_stairs = (
@@ -499,6 +500,17 @@ def _resolve_stairs(
             "The Crypta is conquered.",
         )
         return True
+
+    if current_floor_config["act"] == 2:
+        game_state.floor_transition_started_at = transition_started_at
+        game_state.floor_transition_target_index = (
+            game_state.floor_index + 1
+        )
+        game_state.floor_transition_swapped = False
+        game_state.upgrade_screen_open = False
+        game_state.upgrade_message = ""
+        game_state.player_attack_targets = []
+        return False
 
     if game_state.floor_index == len(FLOOR_CONFIGS) - 1:
         game_state.game_won = True
@@ -656,6 +668,7 @@ def try_move_player(
     player_acted = _resolve_stairs(
         game_state,
         first_act_final_floor,
+        transition_started_at,
     )
 
     if game_state.class_selection_open:

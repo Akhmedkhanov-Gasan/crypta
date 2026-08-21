@@ -1,3 +1,5 @@
+import math
+
 import pygame
 
 from acts.act_two.presentation.enemy_effects import (
@@ -29,6 +31,9 @@ from settings import (
 
 
 ACT_TWO_ENEMY_ATTACK_FRAME_MS = 240
+ACT_TWO_ENEMY_MOVE_MS = 180
+ACT_TWO_ENEMY_KNOCKBACK_MS = 260
+_AFTERSHOCK_HIT_FEEDBACK_MS = 520
 
 _STANDARD_ENEMY_TYPES = (
     "goblin",
@@ -51,6 +56,43 @@ _HIT_FEEDBACK_RENDERERS = {
     "sentinel": _draw_act_two_sentinel_hit_feedback,
     "priest": _draw_act_two_priest_hit_feedback,
 }
+
+
+def _movement_offset(enemy, current_time):
+    origin = enemy.get("movement_origin")
+    started_at = enemy.get("movement_animation_started_at", 0)
+    movement_kind = enemy.get("movement_animation_kind")
+    duration = (
+        ACT_TWO_ENEMY_KNOCKBACK_MS
+        if movement_kind in (
+            "power_cleave_knockback",
+            "arcane_burst_knockback",
+        )
+        else ACT_TWO_ENEMY_MOVE_MS
+    )
+    elapsed = current_time - started_at
+    if (
+        origin is None
+        or started_at <= 0
+        or not 0 <= elapsed < duration
+    ):
+        return 0, 0
+
+    progress = elapsed / duration
+    if movement_kind in (
+        "power_cleave_knockback",
+        "arcane_burst_knockback",
+    ):
+        travel = 1 - (1 - progress) ** 3
+        lift = round(math.sin(math.pi * progress) * 7)
+    else:
+        travel = progress * progress * (3 - 2 * progress)
+        lift = round(math.sin(math.pi * progress) * 2)
+    remaining = 1 - travel
+    return (
+        round((origin[0] - enemy["column"]) * TILE_SIZE * remaining),
+        round((origin[1] - enemy["row"]) * TILE_SIZE * remaining) - lift,
+    )
 
 
 def _draw_oracle(screen, enemy, sprites):
@@ -214,9 +256,14 @@ def _draw_standard_enemy(
     damage_font,
 ):
     sprite = sprites[_enemy_sprite_name(enemy, current_time)]
+    movement_offset = _movement_offset(enemy, current_time)
     position = (
-        MAP_OFFSET_X + enemy["column"] * TILE_SIZE,
-        MAP_OFFSET_Y + enemy["row"] * TILE_SIZE,
+        MAP_OFFSET_X
+        + enemy["column"] * TILE_SIZE
+        + movement_offset[0],
+        MAP_OFFSET_Y
+        + enemy["row"] * TILE_SIZE
+        + movement_offset[1],
     )
     _HIT_FEEDBACK_RENDERERS[enemy["type"]](
         screen,
@@ -244,10 +291,21 @@ def _draw_standard_enemy(
         )
 
 
-def _draw_fallback_enemy(screen, enemy):
+def _draw_fallback_enemy(screen, enemy, current_time):
     padding = TILE_SIZE // 5
-    x = MAP_OFFSET_X + enemy["column"] * TILE_SIZE + padding
-    y = MAP_OFFSET_Y + enemy["row"] * TILE_SIZE + padding
+    movement_offset = _movement_offset(enemy, current_time)
+    x = (
+        MAP_OFFSET_X
+        + enemy["column"] * TILE_SIZE
+        + padding
+        + movement_offset[0]
+    )
+    y = (
+        MAP_OFFSET_Y
+        + enemy["row"] * TILE_SIZE
+        + padding
+        + movement_offset[1]
+    )
     size = TILE_SIZE - padding * 2
     color = (
         enemy["color"]
@@ -324,6 +382,116 @@ def _draw_binding_effect(screen, enemy, sprites, current_time):
     screen.blit(chains, (left, top))
 
 
+def _draw_rune_status_effects(screen, enemy, current_time):
+    center_x = MAP_OFFSET_X + enemy.column * TILE_SIZE + TILE_SIZE // 2
+    top_y = (
+        MAP_OFFSET_Y
+        + (enemy.row - enemy.footprint_height // 2) * TILE_SIZE
+    )
+    if enemy.stun_turns > 0:
+        rotation = current_time / 190
+        for star_index in range(3):
+            angle = rotation + star_index * math.tau / 3
+            star_center = (
+                round(center_x + math.cos(angle) * 13),
+                round(top_y + 7 + math.sin(angle) * 4),
+            )
+            pygame.draw.circle(
+                screen,
+                (246, 203, 77),
+                star_center,
+                3,
+            )
+            pygame.draw.circle(
+                screen,
+                (255, 244, 176),
+                star_center,
+                1,
+            )
+
+    if enemy.bleed_turns > 0:
+        pulse = 0.5 + 0.5 * math.sin(current_time / 125)
+        for drop_index, x_offset in enumerate((-8, 0, 8)):
+            drop_y = round(top_y + 4 + (drop_index % 2) * 5 + pulse * 3)
+            pygame.draw.circle(
+                screen,
+                (145, 18, 28),
+                (center_x + x_offset, drop_y),
+                3,
+            )
+            pygame.draw.line(
+                screen,
+                (220, 47, 48),
+                (center_x + x_offset, drop_y - 4),
+                (center_x + x_offset, drop_y),
+                2,
+            )
+
+
+def _draw_aftershock_hit_feedback(
+    screen,
+    enemy,
+    current_time,
+    damage_font,
+):
+    started_at = enemy.get("aftershock_hit_started_at", -1)
+    elapsed = current_time - started_at
+    if started_at < 0 or not 0 <= elapsed < _AFTERSHOCK_HIT_FEEDBACK_MS:
+        return
+
+    progress = elapsed / _AFTERSHOCK_HIT_FEEDBACK_MS
+    visibility = max(0.0, 1.0 - progress)
+    center = (
+        MAP_OFFSET_X + enemy["column"] * TILE_SIZE + TILE_SIZE // 2,
+        MAP_OFFSET_Y + enemy["row"] * TILE_SIZE + TILE_SIZE // 2,
+    )
+    effect = pygame.Surface(
+        (TILE_SIZE * 2, TILE_SIZE * 2),
+        pygame.SRCALPHA,
+    )
+    local_center = (TILE_SIZE, TILE_SIZE)
+    radius = round(8 + min(1.0, progress * 2.5) * 19)
+    pygame.draw.circle(
+        effect,
+        (232, 49, 43, round(190 * visibility)),
+        local_center,
+        radius,
+        width=5,
+    )
+    pygame.draw.circle(
+        effect,
+        (255, 184, 104, round(235 * visibility)),
+        local_center,
+        max(3, radius - 4),
+        width=2,
+    )
+    for slash_offset in (-7, 7):
+        pygame.draw.line(
+            effect,
+            (255, 219, 162, round(230 * visibility)),
+            (TILE_SIZE - 13 + slash_offset, TILE_SIZE + 11),
+            (TILE_SIZE + 8 + slash_offset, TILE_SIZE - 12),
+            3,
+        )
+    screen.blit(
+        effect,
+        (center[0] - TILE_SIZE, center[1] - TILE_SIZE),
+    )
+
+    damage = enemy.get("aftershock_hit_damage", 0)
+    if damage_font is None or damage <= 0:
+        return
+    number = damage_font.render(str(damage), True, (255, 174, 102))
+    number.set_alpha(round(255 * min(1.0, visibility * 1.8)))
+    rectangle = number.get_rect(
+        midbottom=(
+            center[0] + 13,
+            center[1] - 10 - round(progress * 13),
+        )
+    )
+    screen.blit(number, rectangle)
+
+
 def draw_act_two_enemy(
     screen,
     enemy,
@@ -341,11 +509,18 @@ def draw_act_two_enemy(
             current_time,
             damage_font,
         )
+        _draw_aftershock_hit_feedback(
+            screen, enemy, current_time, damage_font
+        )
         return
 
     if enemy_type == "oracle":
         _draw_oracle(screen, enemy, sprites)
         _draw_binding_effect(screen, enemy, sprites, current_time)
+        _draw_rune_status_effects(screen, enemy, current_time)
+        _draw_aftershock_hit_feedback(
+            screen, enemy, current_time, damage_font
+        )
         return
 
     if enemy_type in _STANDARD_ENEMY_TYPES:
@@ -357,8 +532,12 @@ def draw_act_two_enemy(
             damage_font,
         )
     else:
-        _draw_fallback_enemy(screen, enemy)
+        _draw_fallback_enemy(screen, enemy, current_time)
 
     _draw_health_bar(screen, enemy)
     _draw_attack_warning(screen, enemy)
     _draw_binding_effect(screen, enemy, sprites, current_time)
+    _draw_rune_status_effects(screen, enemy, current_time)
+    _draw_aftershock_hit_feedback(
+        screen, enemy, current_time, damage_font
+    )

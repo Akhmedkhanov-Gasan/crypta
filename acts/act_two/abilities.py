@@ -2,7 +2,7 @@ from acts.act_two.settings import (
     ABILITY_HITS_REQUIRED,
     MAGE_ARCANE_BURST_RANGE,
 )
-from logic import get_directional_line
+from logic import can_move_to, distance_between, get_directional_line
 
 
 CARDINAL_DIRECTIONS = {
@@ -51,6 +51,26 @@ def get_warrior_cleave_cells(
     return cells
 
 
+def get_warrior_aftershock_cells(
+    floor,
+    column_change: int,
+    row_change: int,
+) -> list[tuple[int, int]]:
+    aftershock_cells = []
+    for column, row in get_warrior_cleave_cells(
+        floor,
+        column_change,
+        row_change,
+    ):
+        destination = (
+            column + column_change,
+            row + row_change,
+        )
+        if can_move_to(floor.map, *destination):
+            aftershock_cells.append(destination)
+    return aftershock_cells
+
+
 def get_mage_arcane_cells(
     floor,
     column_change: int,
@@ -81,6 +101,44 @@ def get_mage_arcane_cells(
     )
 
 
+def get_mage_arcane_burst_cells(
+    floor,
+    target: tuple[int, int],
+) -> list[tuple[int, int]]:
+    candidates = (
+        target,
+        (target[0], target[1] - 1),
+        (target[0] + 1, target[1]),
+        (target[0], target[1] + 1),
+        (target[0] - 1, target[1]),
+    )
+    return [
+        position
+        for position in candidates
+        if can_move_to(floor.map, position[0], position[1])
+    ]
+
+
+def is_valid_mage_arcane_burst_target(
+    game_state,
+    target: tuple[int, int] | None,
+) -> bool:
+    if target is None:
+        return False
+    floor = game_state.floor
+    return (
+        target in floor.visible_cells
+        and can_move_to(floor.map, target[0], target[1])
+        and distance_between(
+            floor.player_column,
+            floor.player_row,
+            target[0],
+            target[1],
+        )
+        <= MAGE_ARCANE_BURST_RANGE
+    )
+
+
 def select_directional_ability_direction(
     game_state,
     column_change: int,
@@ -91,23 +149,17 @@ def select_directional_ability_direction(
         return False
 
     player = game_state.player
+    if player.player_class != "warrior":
+        return False
     if player.act_two.selected_ability_direction == direction:
         return True
 
     player.act_two.selected_ability_direction = direction
     player.act_two_facing_direction = direction
-    game_state.player_attack_targets = (
-        get_warrior_cleave_cells(
-            game_state.floor,
-            column_change,
-            row_change,
-        )
-        if player.player_class == "warrior"
-        else get_mage_arcane_cells(
-            game_state.floor,
-            column_change,
-            row_change,
-        )
+    game_state.player_attack_targets = get_warrior_cleave_cells(
+        game_state.floor,
+        column_change,
+        row_change,
     )
     return False
 
