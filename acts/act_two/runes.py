@@ -1,3 +1,4 @@
+from acts.act_two.rune_catalog import RUNES_BY_ID, runes_for_class
 from acts.act_two.state import RunePuzzlePhase
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
@@ -86,29 +87,97 @@ def interact_with_rune_pedestal(game_state: GameState) -> bool:
         return True
 
     if room.phase is RunePuzzlePhase.CLAIMED:
-        return False
+        selected_rune = RUNES_BY_ID.get(
+            game_state.player.act_two.selected_rune_id
+        )
+        add_log_message(
+            game_state.combat_log,
+            (
+                f"The pedestal bears {selected_rune.name}."
+                if selected_rune is not None
+                else "The pedestal's blessing has already been claimed."
+            ),
+        )
+        return True
 
-    room.phase = RunePuzzlePhase.CLAIMED
-    game_state.player.gold_count += 2
+    available_runes = runes_for_class(game_state.player.player_class)
+    if not available_runes:
+        add_log_message(
+            game_state.combat_log,
+            "The pedestal does not answer an unbound soul.",
+        )
+        return True
+
+    if game_state.rune_selection_open:
+        return True
+
+    game_state.rune_selection_open = True
+    game_state.rune_selection_pending_id = None
     game_state.player_attack_targets = []
     game_state.emit(
         GameEvent(
             type=GameEventType.ENVIRONMENT,
-            actor="rune reward",
+            actor="rune pedestal",
             origin=room.pedestal_position,
-            data={"kind": "room_reward"},
+            data={
+                "kind": "rune_selection_opened",
+                "rune_ids": tuple(rune.id for rune in available_runes),
+            },
         )
     )
     add_log_message(
         game_state.combat_log,
-        "The rune pedestal yields an ancient coin.",
+        "The pedestal offers three runes. Choose one blessing.",
     )
     return True
 
 
+def select_rune(game_state: GameState, rune_id: str) -> bool:
+    room = game_state.floor.rune_room
+    rune = RUNES_BY_ID.get(rune_id)
+    if (
+        room is None
+        or room.phase is not RunePuzzlePhase.REWARD_AVAILABLE
+        or not game_state.rune_selection_open
+        or game_state.player.act_two.selected_rune_id is not None
+        or rune is None
+        or rune.player_class != game_state.player.player_class
+    ):
+        return False
+
+    game_state.player.act_two.selected_rune_id = rune.id
+    game_state.rune_selection_open = False
+    game_state.rune_selection_pending_id = None
+    room.phase = RunePuzzlePhase.CLAIMED
+    game_state.emit(
+        GameEvent(
+            type=GameEventType.ENVIRONMENT,
+            actor="rune pedestal",
+            origin=room.pedestal_position,
+            data={
+                "kind": "rune_selected",
+                "rune_id": rune.id,
+                "player_class": rune.player_class,
+            },
+        )
+    )
+    add_log_message(
+        game_state.combat_log,
+        f"The hero binds {rune.name}.",
+    )
+    return True
+
+
+def cancel_rune_selection(game_state: GameState) -> None:
+    game_state.rune_selection_open = False
+    game_state.rune_selection_pending_id = None
+
+
 __all__ = [
+    "cancel_rune_selection",
     "interact_with_rune_pedestal",
     "rune_pedestal_is_at",
     "rune_wall_is_at",
+    "select_rune",
     "strike_wall_rune",
 ]

@@ -74,6 +74,10 @@ def try_prepare_attack(
 
 
 def movement_is_ready(enemy: EnemyState) -> bool:
+    if enemy.skip_next_movement:
+        enemy.skip_next_movement = False
+        return False
+
     enemy.move_counter += 1
 
     if enemy.move_counter < enemy.move_every:

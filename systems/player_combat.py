@@ -4,8 +4,12 @@ from math import ceil
 
 from acts.act_two.settings import (
     ABILITY_HITS_REQUIRED,
+    ROGUE_CRUELTY_BLEED_DAMAGE,
+    ROGUE_CRUELTY_BLEED_TURNS,
+    ROGUE_SHADE_INVISIBILITY_TURNS,
     STONEFLESH_PHYSICAL_DAMAGE_MULTIPLIER,
 )
+from acts.player_stats import attribute_stat_changes_for_rank
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from game.progression import (
@@ -513,6 +517,29 @@ def remove_enemy_corpses_at_position(
     ]
 
 
+def basic_attack_damage_range(player) -> tuple[int, int]:
+    if player.player_class != "mage":
+        return player.damage_min, player.damage_max
+
+    strength_contribution = attribute_stat_changes_for_rank(
+        "strength",
+        player.attribute_ranks.get("strength", 0),
+    )
+    minimum = max(
+        1,
+        player.damage_min
+        - strength_contribution.damage_min
+        + player.spell_power,
+    )
+    maximum = max(
+        minimum,
+        player.damage_max
+        - strength_contribution.damage_max
+        + player.spell_power,
+    )
+    return minimum, maximum
+
+
 def perform_basic_attack(
     game_state: GameState,
     column_change: int,
@@ -525,6 +552,7 @@ def perform_basic_attack(
         player.player_class == "rogue"
         and player.invisibility_turns > 0
     )
+    selected_rune_id = player.act_two.selected_rune_id
 
     if attack_was_from_invisibility:
         player.invisibility_turns = 0
@@ -575,14 +603,20 @@ def perform_basic_attack(
         )
     )
 
+    damage_minimum, damage_maximum = basic_attack_damage_range(player)
+
     for hit_enemy in enemies_hit:
+        health_before_attack = hit_enemy.health
         enemy_was_defeated = attack_enemy(
             game_state,
             hit_enemy,
-            player.damage_min,
-            player.damage_max,
+            damage_minimum,
+            damage_maximum,
             player.crit_chance,
-            force_critical=attack_was_from_invisibility,
+            force_critical=(
+                attack_was_from_invisibility
+                and selected_rune_id != "rune_of_the_veil"
+            ),
             attacker_position=(
                 floor.player_column,
                 floor.player_row,
@@ -600,6 +634,28 @@ def perform_basic_attack(
             resolve_enemy_defeat(
                 game_state,
                 hit_enemy,
+            )
+            if (
+                attack_was_from_invisibility
+                and selected_rune_id == "rune_of_the_shade"
+            ):
+                player.invisibility_turns = (
+                    ROGUE_SHADE_INVISIBILITY_TURNS
+                )
+                add_log_message(
+                    game_state.combat_log,
+                    "Rune of the Shade renews invisibility.",
+                )
+        elif (
+            attack_was_from_invisibility
+            and selected_rune_id == "rune_of_cruelty"
+            and hit_enemy.health < health_before_attack
+        ):
+            hit_enemy.bleed_turns = ROGUE_CRUELTY_BLEED_TURNS
+            hit_enemy.bleed_damage = ROGUE_CRUELTY_BLEED_DAMAGE
+            add_log_message(
+                game_state.combat_log,
+                f"Rune of Cruelty makes {hit_enemy.name} bleed.",
             )
 
 from acts.act_three.combat import (

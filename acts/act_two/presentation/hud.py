@@ -1,5 +1,6 @@
 import pygame
 
+from acts.act_two.rune_catalog import RUNES_BY_ID
 from settings import MAX_ATTRIBUTE_RANK
 
 from acts.act_two.settings import (
@@ -24,6 +25,7 @@ _ACT_TWO_BELT_ITEM_POSITIONS = (
 )
 _ACT_TWO_BELT_ITEM_SIZE = (26, 26)
 _ACT_TWO_ABILITY_RECT = pygame.Rect(754, 651, 30, 30)
+_ACT_TWO_RUNE_RECT = pygame.Rect(718, 651, 30, 30)
 _ACT_TWO_CONSUMABLE_SPRITES = {
     "potion": "potion_belt",
     "fire_bomb": "fire_bomb_belt",
@@ -72,19 +74,26 @@ _ACT_TWO_CONFIRM_BUTTON_RECT = pygame.Rect(
 _ACT_TWO_CONFIRM_BUTTON_HIT_RECT = (
     _ACT_TWO_CONFIRM_BUTTON_RECT.inflate(-24, -12)
 )
-_ACT_TWO_ABILITIES_PANEL_POSITION = (659, 523)
-_ACT_TWO_ABILITIES_ICON_RECT = pygame.Rect(685, 583, 31, 31)
-_ACT_TWO_ABILITIES_TEXT_BACKING_POSITION = (729, 576)
-_ACT_TWO_ABILITIES_TEXT_RECT = pygame.Rect(733, 581, 111, 47)
+_ACT_TWO_ABILITIES_PANEL_POSITION = (637, 496)
+_ACT_TWO_ABILITIES_ICON_RECT = pygame.Rect(671, 570, 36, 36)
+_ACT_TWO_ABILITIES_TEXT_BACKING_POSITION = (724, 562)
+_ACT_TWO_ABILITIES_TEXT_RECT = pygame.Rect(732, 570, 130, 50)
+_ACT_TWO_ABILITIES_NAME_BACKING_POSITION = (747, 544)
+_ACT_TWO_ABILITIES_NAME_RECT = pygame.Rect(751, 548, 78, 15)
 _ACT_TWO_ABILITY_ASSETS = {
     "warrior": "warrior_power_cleave_icon",
     "rogue": "rogue_invisibility_icon",
     "mage": "mage_arcane_burst_icon",
 }
 _ACT_TWO_ABILITY_DESCRIPTIONS = {
-    "warrior": "Cleave several tiles for bonus damage.",
+    "warrior": "Cleave three tiles and knock enemies back.",
     "rogue": "Vanish. Your next attack is a sure critical.",
-    "mage": "Blast up to 5 tiles with bonus spell damage.",
+    "mage": "Burst a cross at range and scatter enemies outward.",
+}
+_ACT_TWO_ABILITY_NAMES = {
+    "warrior": "POWER CLEAVE",
+    "rogue": "INVISIBILITY",
+    "mage": "ARCANE BURST",
 }
 _ACT_TWO_CONSUMABLE_DESCRIPTIONS = {
     "potion": "Restores 4 health.",
@@ -99,9 +108,110 @@ _ACT_TWO_CONSUMABLE_DESCRIPTIONS = {
         "Deals 5 magic damage to one visible enemy."
     ),
 }
+_ACT_TWO_CONSUMABLE_NAMES = {
+    "potion": "POTION",
+    "fire_bomb": "FIRE BOMB",
+    "key": "KEY",
+    "scroll_of_stoneflesh": "STONEFLESH",
+    "scroll_of_binding": "BINDING",
+    "healing_scroll": "HEALING",
+    "scroll_of_arcane_impulse": "IMPULSE",
+}
 _ACT_TWO_LEVEL_UP_POSITION = (1210, 258)
 _ACT_TWO_GOLD_COUNTER_POSITION = (1193, 631)
 _ACT_TWO_GOLD_VALUE_CENTER = (1231, 679)
+
+
+def _draw_act_two_hover_panel(
+    screen,
+    ability_font,
+    sprites,
+    panel_position,
+    icon_asset_name,
+    name,
+    description,
+    text_color,
+):
+    panel_offset = (
+        panel_position[0] - _ACT_TWO_ABILITIES_PANEL_POSITION[0],
+        panel_position[1] - _ACT_TWO_ABILITIES_PANEL_POSITION[1],
+    )
+    relative_icon_rect = _ACT_TWO_ABILITIES_ICON_RECT.move(*panel_offset)
+    relative_text_backing_position = (
+        _ACT_TWO_ABILITIES_TEXT_BACKING_POSITION[0] + panel_offset[0],
+        _ACT_TWO_ABILITIES_TEXT_BACKING_POSITION[1] + panel_offset[1],
+    )
+    relative_text_rect = _ACT_TWO_ABILITIES_TEXT_RECT.move(
+        *panel_offset
+    )
+    relative_name_backing_position = (
+        _ACT_TWO_ABILITIES_NAME_BACKING_POSITION[0] + panel_offset[0],
+        _ACT_TWO_ABILITIES_NAME_BACKING_POSITION[1] + panel_offset[1],
+    )
+    relative_name_rect = _ACT_TWO_ABILITIES_NAME_RECT.move(
+        *panel_offset
+    )
+
+    screen.blit(sprites["act_two_abilities_panel"], panel_position)
+    screen.blit(
+        sprites["act_two_ability_text_backing"],
+        relative_text_backing_position,
+    )
+    screen.blit(
+        sprites["act_two_ability_name_backing"],
+        relative_name_backing_position,
+    )
+    if icon_asset_name in sprites:
+        panel_icon = pygame.transform.scale(
+            sprites[icon_asset_name],
+            relative_icon_rect.size,
+        )
+        screen.blit(panel_icon, relative_icon_rect)
+
+    visible_name = fit_text_to_width(
+        ability_font,
+        name,
+        relative_name_rect.width - 4,
+    )
+    name_surface = ability_font.render(
+        visible_name,
+        True,
+        text_color,
+    )
+    screen.blit(
+        name_surface,
+        name_surface.get_rect(center=relative_name_rect.center),
+    )
+
+    description_lines = wrap_text(
+        ability_font,
+        description,
+        relative_text_rect.width,
+    )
+    maximum_description_lines = 3
+    visible_description_lines = description_lines[
+        :maximum_description_lines
+    ]
+    if len(description_lines) > maximum_description_lines:
+        visible_description_lines[-1] = fit_text_to_width(
+            ability_font,
+            visible_description_lines[-1] + "...",
+            relative_text_rect.width,
+        )
+    line_height = 16
+    description_y = (
+        relative_text_rect.centery
+        - len(visible_description_lines) * line_height // 2
+    )
+    for line in visible_description_lines:
+        line_surface = ability_font.render(line, True, text_color)
+        screen.blit(
+            line_surface,
+            line_surface.get_rect(
+                midtop=(relative_text_rect.centerx, description_y)
+            ),
+        )
+        description_y += line_height
 
 
 def draw_act_two_sidebar(
@@ -124,6 +234,7 @@ def draw_act_two_sidebar(
     consumable_slots,
     gold_count,
     player_class,
+    selected_rune_id,
     player_level,
     player_experience,
     ability_kill_charge,
@@ -310,60 +421,60 @@ def draw_act_two_sidebar(
         panel = sprites["act_two_abilities_panel"]
         panel_position = (
             slot_rectangle.centerx - panel.get_width() // 2,
-            slot_rectangle.top - panel.get_height(),
-        )
-        icon_position = (
-            panel_position[0] + 26,
-            panel_position[1] + 60,
-        )
-        text_backing_position = (
-            panel_position[0] + 70,
-            panel_position[1] + 53,
-        )
-        text_rectangle = pygame.Rect(
-            panel_position[0] + 74,
-            panel_position[1] + 58,
-            111,
-            47,
-        )
-        screen.blit(panel, panel_position)
-        screen.blit(
-            sprites["act_two_ability_text_backing"],
-            text_backing_position,
+            _ACT_TWO_ABILITIES_PANEL_POSITION[1],
         )
         sprite_name = _ACT_TWO_CONSUMABLE_SPRITES.get(hovered_item)
-        if sprite_name is not None:
-            panel_icon = pygame.transform.scale(
-                sprites[sprite_name],
-                _ACT_TWO_ABILITIES_ICON_RECT.size,
-            )
-            screen.blit(panel_icon, icon_position)
-
-        description_lines = wrap_text(
+        _draw_act_two_hover_panel(
+            screen,
             ability_font,
+            sprites,
+            panel_position,
+            sprite_name,
+            _ACT_TWO_CONSUMABLE_NAMES.get(
+                hovered_item,
+                "ITEM",
+            ),
             _ACT_TWO_CONSUMABLE_DESCRIPTIONS.get(
                 hovered_item,
                 "Consumable item.",
             ),
-            text_rectangle.width,
-        )[:3]
-        description_y = (
-            text_rectangle.centery
-            - len(description_lines) * 16 // 2
+            value_color,
         )
-        for description_line in description_lines:
-            description_surface = ability_font.render(
-                description_line,
-                True,
-                value_color,
-            )
-            screen.blit(
-                description_surface,
-                description_surface.get_rect(
-                    midtop=(text_rectangle.centerx, description_y)
-                ),
-            )
-            description_y += 16
+
+    selected_rune = RUNES_BY_ID.get(selected_rune_id)
+    rune_asset_name = (
+        f"{selected_rune.id}_icon"
+        if selected_rune is not None
+        else None
+    )
+    if rune_asset_name in sprites:
+        rune_icon = pygame.transform.scale(
+            sprites[rune_asset_name],
+            _ACT_TWO_RUNE_RECT.size,
+        )
+        screen.blit(rune_icon, _ACT_TWO_RUNE_RECT)
+
+    rune_hovered = (
+        selected_rune is not None
+        and mouse_position is not None
+        and _ACT_TWO_RUNE_RECT.collidepoint(mouse_position)
+    )
+    if rune_hovered:
+        panel = sprites["act_two_abilities_panel"]
+        panel_position = (
+            _ACT_TWO_RUNE_RECT.centerx - panel.get_width() // 2,
+            _ACT_TWO_ABILITIES_PANEL_POSITION[1],
+        )
+        _draw_act_two_hover_panel(
+            screen,
+            ability_font,
+            sprites,
+            panel_position,
+            rune_asset_name,
+            selected_rune.name,
+            selected_rune.description,
+            value_color,
+        )
 
     ability_asset_name = _ACT_TWO_ABILITY_ASSETS.get(player_class)
     if ability_asset_name in sprites:
@@ -406,64 +517,19 @@ def draw_act_two_sidebar(
         and _ACT_TWO_ABILITY_RECT.collidepoint(mouse_position)
     )
     if ability_hovered:
-        screen.blit(
-            sprites["act_two_abilities_panel"],
-            _ACT_TWO_ABILITIES_PANEL_POSITION,
-        )
-        screen.blit(
-            sprites["act_two_ability_text_backing"],
-            _ACT_TWO_ABILITIES_TEXT_BACKING_POSITION,
-        )
-        if ability_asset_name in sprites:
-            panel_icon = pygame.transform.scale(
-                sprites[ability_asset_name],
-                _ACT_TWO_ABILITIES_ICON_RECT.size,
-            )
-            screen.blit(panel_icon, _ACT_TWO_ABILITIES_ICON_RECT)
-
-        description = _ACT_TWO_ABILITY_DESCRIPTIONS.get(
-            player_class,
-            "Choose a class to unlock its ability.",
-        )
-        description_lines = wrap_text(
+        _draw_act_two_hover_panel(
+            screen,
             ability_font,
-            description,
-            _ACT_TWO_ABILITIES_TEXT_RECT.width,
+            sprites,
+            _ACT_TWO_ABILITIES_PANEL_POSITION,
+            ability_asset_name,
+            _ACT_TWO_ABILITY_NAMES.get(player_class, "ABILITY"),
+            _ACT_TWO_ABILITY_DESCRIPTIONS.get(
+                player_class,
+                "Choose a class to unlock its ability.",
+            ),
+            value_color,
         )
-        maximum_description_lines = 3
-        visible_description_lines = description_lines[
-            :maximum_description_lines
-        ]
-        if len(description_lines) > maximum_description_lines:
-            visible_description_lines[-1] = fit_text_to_width(
-                ability_font,
-                visible_description_lines[-1] + "...",
-                _ACT_TWO_ABILITIES_TEXT_RECT.width,
-            )
-        description_line_height = 16
-        description_height = (
-            len(visible_description_lines) * description_line_height
-        )
-        description_y = (
-            _ACT_TWO_ABILITIES_TEXT_RECT.centery
-            - description_height // 2
-        )
-        for description_line in visible_description_lines:
-            description_surface = ability_font.render(
-                description_line,
-                True,
-                value_color,
-            )
-            screen.blit(
-                description_surface,
-                description_surface.get_rect(
-                    midtop=(
-                        _ACT_TWO_ABILITIES_TEXT_RECT.centerx,
-                        description_y,
-                    )
-                ),
-            )
-            description_y += description_line_height
     screen.blit(sprites["act_two_side_buttons"], (1212, 249))
     remaining_attribute_points = max(
         0,

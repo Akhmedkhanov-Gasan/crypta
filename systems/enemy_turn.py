@@ -32,7 +32,69 @@ from systems.enemy_ai import (
     try_raise_shield,
     try_start_healing,
 )
-from systems.player_combat import damage_player
+from systems.player_combat import damage_player, resolve_enemy_defeat
+
+
+def _advance_enemy_bleed(game_state: GameState, enemy) -> bool:
+    if enemy.bleed_turns <= 0 or enemy.bleed_damage <= 0:
+        return False
+
+    damage = min(enemy.health, enemy.bleed_damage)
+    enemy.health -= damage
+    enemy.bleed_turns -= 1
+    game_state.emit(
+        GameEvent(
+            type=GameEventType.HIT,
+            actor="bleed",
+            target=enemy.name,
+            destination=(enemy.column, enemy.row),
+            amount=damage,
+            data={
+                "critical": False,
+                "blocked": False,
+                "player_class": "rogue",
+                "enemy_type": enemy.type,
+                "kind": "bleed",
+            },
+        )
+    )
+    add_log_message(
+        game_state.combat_log,
+        f"{enemy.name} bleeds for {damage} damage.",
+    )
+
+    if (
+        enemy.type in ("warden", "oracle")
+        and enemy.health > 0
+        and enemy.health <= enemy.max_health // 2
+        and not enemy.second_phase_announced
+    ):
+        enemy.second_phase_announced = True
+        if enemy.type == "oracle":
+            enemy.phase_transition_pending = True
+        add_log_message(
+            game_state.combat_log,
+            f"{enemy.name} enters phase two!",
+        )
+
+    if enemy.health > 0:
+        return False
+
+    enemy.behavior_state = EnemyBehaviorState.DEAD
+    game_state.emit(
+        GameEvent(
+            type=GameEventType.DEATH,
+            actor=enemy.name,
+            destination=(enemy.column, enemy.row),
+            data={"enemy_type": enemy.type, "cause": "bleed"},
+        )
+    )
+    add_log_message(
+        game_state.combat_log,
+        f"{enemy.name} bleeds out.",
+    )
+    resolve_enemy_defeat(game_state, enemy)
+    return True
 
 
 def resolve_enemy_turn(
@@ -73,6 +135,20 @@ def resolve_enemy_turn(
         if not enemy["is_active"]:
             enemy.behavior_state = EnemyBehaviorState.INACTIVE
             continue
+        if _advance_enemy_bleed(game_state, enemy):
+            continue
+        if enemy.stun_turns > 0:
+            enemy.stun_turns -= 1
+            enemy.attack_targets = []
+            enemy.prepared_attack_mode = None
+            enemy.attack_windup_turns_remaining = 0
+            enemy.heal_target = None
+            if enemy.stun_turns == 0:
+                add_log_message(
+                    game_state.combat_log,
+                    f"{enemy.name} recovers from the stun.",
+                )
+            continue
         if game_state.player.invisibility_turns > 0:
             enemy["is_aggro"] = False
             enemy.behavior_state = EnemyBehaviorState.IDLE
@@ -80,6 +156,13 @@ def resolve_enemy_turn(
             enemy["prepared_attack_mode"] = None
             enemy.attack_windup_turns_remaining = 0
             enemy["heal_target"] = None
+            continue
+        if enemy.skip_next_movement:
+            enemy.skip_next_movement = False
+            enemy.attack_targets = []
+            enemy.prepared_attack_mode = None
+            enemy.attack_windup_turns_remaining = 0
+            enemy.heal_target = None
             continue
         if enemy.binding_turns > 0:
             enemy.binding_turns -= 1

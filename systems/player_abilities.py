@@ -3,6 +3,7 @@ from systems.base_abilities import (
     request_class_ability,
     cancel_ability_aiming,
     cast_directional_ability,
+    cast_mage_arcane_burst,
 )
 
 from acts.act_three.abilities.summoner import (
@@ -84,6 +85,7 @@ __all__ = [
     "request_class_ability",
     "cancel_ability_aiming",
     "cast_directional_ability",
+    "cast_mage_arcane_burst",
     "release_summoner_familiar",
     "request_summoner_bond",
     "request_summoner_true_form",

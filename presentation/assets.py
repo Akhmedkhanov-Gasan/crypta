@@ -1,6 +1,7 @@
 import pygame
 import xml.etree.ElementTree as ET
 
+from acts.act_two.rune_catalog import RUNE_DEFINITIONS
 from levels import FLOOR_CONFIGS
 from presentation.layout import (
     ACT_THREE_TILE_SIZE,
@@ -650,6 +651,20 @@ def load_act_two_sprites():
         sprites[asset_name] = pygame.image.load(
             str(ability_directory / file_name)
         ).convert_alpha()
+    rune_directory = ability_directory / "runes"
+    for rune in RUNE_DEFINITIONS:
+        sprites[f"{rune.id}_icon"] = pygame.image.load(
+            str(rune_directory / rune.icon_filename)
+        ).convert_alpha()
+        rune_original = pygame.image.load(
+            str(rune_directory / rune.original_filename)
+        ).convert_alpha()
+        sprites[f"{rune.id}_original"] = (
+            pygame.transform.smoothscale(
+                rune_original,
+                (151, 151),
+            )
+        )
     sprites["upgrade_window"] = pygame.image.load(
         str(ui_directory / "upgrade" / "upgrade_window.png")
     ).convert_alpha()
@@ -690,13 +705,21 @@ def load_act_two_sprites():
                 act_two_hud_directory / "confirm_button.png",
                 (121, 40),
             ),
+            "act_two_rune_confirm_button": _load_scaled_image(
+                act_two_hud_directory / "confirm_button.png",
+                (132, 44),
+            ),
             "act_two_gold_counter": _load_scaled_image(
                 act_two_hud_directory / "gold.png",
                 (76, 76),
             ),
             "act_two_abilities_panel": _load_scaled_image(
                 act_two_hud_directory / "abilities.png",
-                (214, 160),
+                (264, 198),
+            ),
+            "act_two_rune_window": _load_scaled_image(
+                act_two_hud_directory / "runes.png",
+                (756, 426),
             ),
         }
     )
@@ -710,15 +733,25 @@ def load_act_two_sprites():
     sprites["act_two_chat_log_backing"] = (
         pygame.transform.gaussian_blur(chat_log_backing, 2)
     )
-    ability_text_backing = pygame.Surface((119, 55), pygame.SRCALPHA)
+    ability_text_backing = pygame.Surface((146, 66), pygame.SRCALPHA)
     pygame.draw.rect(
         ability_text_backing,
         (42, 39, 39, 191),
-        pygame.Rect(4, 4, 111, 47),
+        pygame.Rect(4, 4, 138, 58),
         border_radius=11,
     )
     sprites["act_two_ability_text_backing"] = (
         pygame.transform.gaussian_blur(ability_text_backing, 2)
+    )
+    ability_name_backing = pygame.Surface((86, 23), pygame.SRCALPHA)
+    pygame.draw.rect(
+        ability_name_backing,
+        (10, 8, 9, 220),
+        pygame.Rect(4, 4, 78, 15),
+        border_radius=4,
+    )
+    sprites["act_two_ability_name_backing"] = (
+        pygame.transform.gaussian_blur(ability_name_backing, 1)
     )
 
     return sprites

@@ -58,7 +58,6 @@ FLOOR_CONFIGS = [
         "minimum_start_exit_distance": 28,
         "secret_room_chance": 1.0,
         "treasury_room": True,
-        "rune_room": True,
         "spike_trap_count": 7,
         "breakable_crate_count": 9,
         "enemy_counts": {
@@ -81,7 +80,6 @@ FLOOR_CONFIGS = [
         "minimum_start_exit_distance": 34,
         "secret_room_chance": 1.0,
         "treasury_room": True,
-        "rune_room": True,
         "spike_trap_count": 7,
         "breakable_crate_count": 9,
         "enemy_counts": {
