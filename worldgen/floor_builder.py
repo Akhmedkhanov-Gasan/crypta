@@ -828,8 +828,16 @@ def generate_floor(floor_index):
     random.shuffle(enemy_candidate_positions)
 
     enemies = []
+    enemy_types = config.get("enemy_types")
 
-    for enemy_type in config["enemy_types"]:
+    if enemy_types is None:
+        enemy_types = [
+            enemy_type
+            for enemy_type, count in config["enemy_counts"].items()
+            for _ in range(count)
+        ]
+
+    for enemy_type in enemy_types:
         aggro_radius = ENEMY_TYPES[enemy_type]["aggro_radius"]
         distant_positions = [
             position
