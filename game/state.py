@@ -11,6 +11,7 @@ from acts.act_two.state import (
     SpikeTrapPhase,
     SpikeTrapState,
     TreasuryRoomState,
+    TraderState,
 )
 from acts.act_three.state import (
     ACT_THREE_PLAYER_FIELD_NAMES,
@@ -253,6 +254,7 @@ class FloorState(AttributeMapping):
     seal_boss_door_during_fight: bool
     boss_fight_started: bool
     upgrade_altar: tuple[int, int] | None = None
+    trader: TraderState | None = None
     breakable_crates: list[BreakableCrateState] = field(
         default_factory=list
     )
@@ -380,6 +382,7 @@ class GameState:
     class_selection_choice: str | None = None
     class_selection_choice_started_at: int = 0
     act_two_stats_open: bool = False
+    trade_screen_open: bool = False
     rune_selection_open: bool = False
     rune_selection_pending_id: str | None = None
     upgrade_message: str = ""

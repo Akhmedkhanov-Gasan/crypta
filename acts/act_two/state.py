@@ -61,6 +61,12 @@ class BreakableCrateState:
 
 
 @dataclass
+class TraderState:
+    column: int
+    row: int
+
+
+@dataclass
 class TreasuryRoomState:
     x: int
     y: int

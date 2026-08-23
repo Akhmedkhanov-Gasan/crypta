@@ -38,6 +38,7 @@ def can_move_to(dungeon_map, column, row):
         "H",
         "P",
         "T",
+        "M",
     )
 
 

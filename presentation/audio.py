@@ -439,6 +439,9 @@ class ActTwoSoundBank:
     def set_master_volume(self, volume: float) -> None:
         self.master_volume = max(0.0, min(1.0, volume))
 
+    def play_ui_sound(self, sound_key):
+        self._play(sound_key)
+
     @staticmethod
     def _fire_channel(channel_index: int):
         if pygame.mixer.get_init() is None:

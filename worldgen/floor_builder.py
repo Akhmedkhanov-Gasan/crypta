@@ -788,8 +788,34 @@ def generate_floor(floor_index):
         boss_columns = []
 
     player_start = room_center(rooms[0])
+
+    trader_position = None
+    if config.get("trader", False):
+        trader_candidates = [
+            position
+            for position in positions_inside_room(rooms[0])
+            if (
+                position != player_start
+                and abs(position[0] - player_start[0])
+                + abs(position[1] - player_start[1])
+                >= 2
+            )
+        ]
+        if trader_candidates:
+            trader_position = random.choice(trader_candidates)
+            _set_map_tile(
+                dungeon_map,
+                trader_position[0],
+                trader_position[1],
+                "M",
+            )
+
     stairs = room_center(boss_room or rooms[-1])
     occupied_positions = {player_start, stairs}
+
+    if trader_position is not None:
+        occupied_positions.add(trader_position)
+
     all_floor_positions = [
         (column, row)
         for row, map_row in enumerate(dungeon_map)
@@ -1012,6 +1038,11 @@ def generate_floor(floor_index):
         "spike_traps": spike_traps,
         "treasury_room": treasury_room,
         "rune_room": rune_room,
+        "trader": (
+            {"position": trader_position}
+            if trader_position is not None
+            else None
+        ),
         "rooms": rooms,
         "stairs": stairs,
         "boss_door": (
