@@ -1,0 +1,395 @@
+{
+  "frame": {
+    "name": "Trade",
+    "width": 1280,
+    "height": 720
+  },
+  "background": {
+    "x": 271,
+    "y": 152,
+    "width": 738,
+    "height": 416
+  },
+  "slots": {
+    "slot_left_01": {
+      "rect": {
+        "x": 326,
+        "y": 205,
+        "width": 300,
+        "height": 45
+      },
+      "icon": {
+        "x": 326,
+        "y": 205,
+        "width": 45,
+        "height": 45
+      },
+      "name": {
+        "x": 434,
+        "y": 209,
+        "width": 35,
+        "height": 12
+      },
+      "description": {
+        "x": 376,
+        "y": 215,
+        "width": 165,
+        "height": 34
+      },
+      "price": {
+        "x": 582,
+        "y": 219,
+        "width": 15,
+        "height": 18
+      },
+      "buy_hitbox": {
+        "x": 332,
+        "y": 205,
+        "width": 288,
+        "height": 42
+      }
+    },
+    "slot_left_02": {
+      "rect": {
+        "x": 326,
+        "y": 267,
+        "width": 300,
+        "height": 45
+      },
+      "icon": {
+        "x": 326,
+        "y": 267,
+        "width": 45,
+        "height": 45
+      },
+      "name": {
+        "x": 404,
+        "y": 271,
+        "width": 95,
+        "height": 12
+      },
+      "description": {
+        "x": 376,
+        "y": 277,
+        "width": 165,
+        "height": 34
+      },
+      "price": {
+        "x": 582,
+        "y": 281,
+        "width": 15,
+        "height": 18
+      },
+      "buy_hitbox": {
+        "x": 332,
+        "y": 267,
+        "width": 288,
+        "height": 42
+      }
+    },
+    "slot_left_03": {
+      "rect": {
+        "x": 324,
+        "y": 328,
+        "width": 300,
+        "height": 45
+      },
+      "icon": {
+        "x": 324,
+        "y": 328,
+        "width": 45,
+        "height": 45
+      },
+      "name": {
+        "x": 402,
+        "y": 332,
+        "width": 95,
+        "height": 12
+      },
+      "description": {
+        "x": 374,
+        "y": 338,
+        "width": 165,
+        "height": 34
+      },
+      "price": {
+        "x": 580,
+        "y": 342,
+        "width": 15,
+        "height": 18
+      },
+      "buy_hitbox": {
+        "x": 330,
+        "y": 328,
+        "width": 288,
+        "height": 42
+      }
+    },
+    "slot_left_04": {
+      "rect": {
+        "x": 325,
+        "y": 392,
+        "width": 300,
+        "height": 45
+      },
+      "icon": {
+        "x": 325,
+        "y": 392,
+        "width": 45,
+        "height": 45
+      },
+      "name": {
+        "x": 412,
+        "y": 396,
+        "width": 76,
+        "height": 12
+      },
+      "description": {
+        "x": 375,
+        "y": 402,
+        "width": 165,
+        "height": 34
+      },
+      "price": {
+        "x": 581,
+        "y": 406,
+        "width": 15,
+        "height": 18
+      },
+      "buy_hitbox": {
+        "x": 331,
+        "y": 392,
+        "width": 288,
+        "height": 42
+      }
+    },
+    "slot_left_05": {
+      "rect": {
+        "x": 325,
+        "y": 453,
+        "width": 300,
+        "height": 45
+      },
+      "icon": {
+        "x": 325,
+        "y": 453,
+        "width": 45,
+        "height": 45
+      },
+      "name": {
+        "x": 395,
+        "y": 457,
+        "width": 110,
+        "height": 12
+      },
+      "description": {
+        "x": 375,
+        "y": 463,
+        "width": 165,
+        "height": 34
+      },
+      "price": {
+        "x": 581,
+        "y": 467,
+        "width": 15,
+        "height": 18
+      },
+      "buy_hitbox": {
+        "x": 331,
+        "y": 453,
+        "width": 288,
+        "height": 42
+      }
+    },
+    "slot_right_01": {
+      "rect": {
+        "x": 659,
+        "y": 205,
+        "width": 300,
+        "height": 45
+      },
+      "icon": {
+        "x": 659,
+        "y": 205,
+        "width": 45,
+        "height": 45
+      },
+      "name": {
+        "x": 769,
+        "y": 209,
+        "width": 30,
+        "height": 12
+      },
+      "description": {
+        "x": 709,
+        "y": 215,
+        "width": 165,
+        "height": 34
+      },
+      "price": {
+        "x": 915,
+        "y": 219,
+        "width": 15,
+        "height": 18
+      },
+      "buy_hitbox": {
+        "x": 665,
+        "y": 205,
+        "width": 288,
+        "height": 42
+      }
+    },
+    "slot_right_02": {
+      "rect": {
+        "x": 659,
+        "y": 267,
+        "width": 300,
+        "height": 45
+      },
+      "icon": {
+        "x": 659,
+        "y": 267,
+        "width": 45,
+        "height": 45
+      },
+      "name": {
+        "x": 769,
+        "y": 271,
+        "width": 30,
+        "height": 12
+      },
+      "description": {
+        "x": 709,
+        "y": 277,
+        "width": 165,
+        "height": 34
+      },
+      "price": {
+        "x": 915,
+        "y": 281,
+        "width": 15,
+        "height": 18
+      },
+      "buy_hitbox": {
+        "x": 665,
+        "y": 267,
+        "width": 288,
+        "height": 42
+      }
+    },
+    "slot_right_03": {
+      "rect": {
+        "x": 657,
+        "y": 328,
+        "width": 300,
+        "height": 45
+      },
+      "icon": {
+        "x": 657,
+        "y": 328,
+        "width": 45,
+        "height": 45
+      },
+      "name": {
+        "x": 767,
+        "y": 332,
+        "width": 30,
+        "height": 12
+      },
+      "description": {
+        "x": 707,
+        "y": 338,
+        "width": 165,
+        "height": 34
+      },
+      "price": {
+        "x": 913,
+        "y": 342,
+        "width": 15,
+        "height": 18
+      },
+      "buy_hitbox": {
+        "x": 663,
+        "y": 328,
+        "width": 288,
+        "height": 42
+      }
+    },
+    "slot_right_04": {
+      "rect": {
+        "x": 658,
+        "y": 392,
+        "width": 300,
+        "height": 45
+      },
+      "icon": {
+        "x": 658,
+        "y": 392,
+        "width": 45,
+        "height": 45
+      },
+      "name": {
+        "x": 768,
+        "y": 396,
+        "width": 30,
+        "height": 12
+      },
+      "description": {
+        "x": 708,
+        "y": 402,
+        "width": 165,
+        "height": 34
+      },
+      "price": {
+        "x": 914,
+        "y": 406,
+        "width": 15,
+        "height": 18
+      },
+      "buy_hitbox": {
+        "x": 664,
+        "y": 392,
+        "width": 288,
+        "height": 42
+      }
+    },
+    "slot_right_05": {
+      "rect": {
+        "x": 658,
+        "y": 453,
+        "width": 300,
+        "height": 45
+      },
+      "icon": {
+        "x": 658,
+        "y": 453,
+        "width": 45,
+        "height": 45
+      },
+      "name": {
+        "x": 768,
+        "y": 457,
+        "width": 30,
+        "height": 12
+      },
+      "description": {
+        "x": 708,
+        "y": 463,
+        "width": 165,
+        "height": 34
+      },
+      "price": {
+        "x": 914,
+        "y": 467,
+        "width": 15,
+        "height": 18
+      },
+      "buy_hitbox": {
+        "x": 664,
+        "y": 453,
+        "width": 288,
+        "height": 42
+      }
+    }
+  }
+}

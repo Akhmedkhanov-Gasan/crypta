@@ -1,12 +1,15 @@
 import pygame
 import xml.etree.ElementTree as ET
 
+import json
+
 from acts.act_two.rune_catalog import RUNE_DEFINITIONS
 from levels import FLOOR_CONFIGS
 from presentation.layout import (
     ACT_THREE_TILE_SIZE,
     ASSET_ROOT,
     FONT_ROOT,
+    PROJECT_ROOT,
 )
 from settings import GAME_HEIGHT, GAME_WIDTH, TILE_SIZE
 
@@ -97,25 +100,37 @@ def load_act_two_fonts():
     medium_path = pixelify_directory / "PixelifySans-Medium.ttf"
     semibold_path = pixelify_directory / "PixelifySans-SemiBold.ttf"
     bold_path = pixelify_directory / "PixelifySans-Bold.ttf"
+    alagard_path = FONT_ROOT / "alagard" / "alagard.ttf"
 
     return {
-        "title": pygame.font.Font(str(bold_path), 42),
-        "heading": pygame.font.Font(str(semibold_path), 25),
-        "status": pygame.font.Font(str(semibold_path), 22),
-        "text": pygame.font.Font(str(regular_path), 18),
-        "log": pygame.font.Font(str(regular_path), 15),
-        "ability_text": pygame.font.Font(str(regular_path), 12),
-        "controls": pygame.font.Font(str(medium_path), 17),
-        "sidebar_heading": pygame.font.Font(
-            str(bold_path),
-            22,
-        ),
-        "sidebar_text": pygame.font.Font(str(regular_path), 18),
-        "sidebar_controls": pygame.font.Font(
-            str(pixel_operator_bold_path),
-            18,
-        ),
+        "title": pygame.font.Font(str(alagard_path), 42),
+        "heading": pygame.font.Font(str(alagard_path), 20),
+        "status": pygame.font.Font(str(alagard_path), 22),
+        "text": pygame.font.Font(str(alagard_path), 18),
+        "log": pygame.font.Font(str(alagard_path), 15),
+        "ability_text": pygame.font.Font(str(alagard_path), 12),
+        "controls": pygame.font.Font(str(alagard_path), 17),
+        "sidebar_heading": pygame.font.Font(str(alagard_path), 15), # lvl
+        "sidebar_text": pygame.font.Font(str(alagard_path), 15),
+        "sidebar_controls": pygame.font.Font(str(alagard_path), 12), # HP and XP
+        "trade_name": pygame.font.Font(str(alagard_path), 12),
+        "trade_description": pygame.font.Font(str(alagard_path), 10),
+        "trade_price": pygame.font.Font(str(alagard_path), 12),
     }
+
+
+def load_act_two_trade_layout():
+    layout_path = (
+        PROJECT_ROOT
+        / "assets"
+        / "ui"
+        / "layouts"
+        / "act_2"
+        / "trade.json"
+    )
+
+    with layout_path.open(encoding="utf-8") as file:
+        return json.load(file)
 
 
 def load_act_three_fonts():
@@ -275,6 +290,10 @@ def load_act_two_sprites():
         "player_mage_death_1": "player/mage/death/death_01.png",
         "old_man_standing": "npcs/old_man/standing/standing_00.png",
         "old_man_kneeling": "npcs/old_man/kneeling/kneeling_00.png",
+        "trader_idle_0": "npcs/trader/trader_1.png",
+        "trader_idle_1": "npcs/trader/trader_2.png",
+        "trader_idle_2": "npcs/trader/trader_3.png",
+        "trader_idle_3": "npcs/trader/trader_4.png",
         "goblin": "enemies/goblin/idle/idle_00.png",
         "goblin_attack": "enemies/goblin/attack/attack_00.png",
         "goblin_death": "enemies/goblin/death/death_00.png",
@@ -395,7 +414,7 @@ def load_act_two_sprites():
         ),
         "healing_scroll": "items/consumables/healing_scroll.png",
         "scroll_of_arcane_impulse": (
-            "items/consumables/scroll_of_impulse .png"
+            "items/consumables/scroll_of_impulse.png"
         ),
         "binding_chains": "items/consumables/effects/chains.png",
         "fire_0": "environment/effects/fire/fire_00.png",
@@ -481,6 +500,45 @@ def load_act_two_sprites():
         sprites["treasury_gate_horizontal"],
         90,
     )
+
+    trade_item_directory = asset_directory / "items" / "consumables"
+
+    sprites.update(
+        {
+            "trader_potion": pygame.image.load(
+                str(trade_item_directory / "potion_original.png")
+            ).convert_alpha(),
+
+            "trader_scroll_of_binding": pygame.image.load(
+                str(
+                    trade_item_directory
+                    / "scroll_of_binding_original.png"
+                )
+            ).convert_alpha(),
+
+            "trader_scroll_of_arcane_impulse": pygame.image.load(
+                str(
+                    trade_item_directory
+                    / "scroll_of_impulse_original.png"
+                )
+            ).convert_alpha(),
+
+            "trader_healing_scroll": pygame.image.load(
+                str(
+                    trade_item_directory
+                    / "healing_scroll_original.png"
+                )
+            ).convert_alpha(),
+
+            "trader_scroll_of_stoneflesh": pygame.image.load(
+                str(
+                    trade_item_directory
+                    / "scroll_of_stoneflesh_original.png"
+                )
+            ).convert_alpha(),
+        }
+    )
+
     for frame_index in range(3):
         sprites[f"player_warrior_walk_side_left_{frame_index}"] = (
             pygame.transform.flip(
@@ -672,6 +730,9 @@ def load_act_two_sprites():
     act_two_hud_directory = ui_directory / "ui_v.0.2"
     sprites.update(
         {
+            "act_two_trade_background": pygame.image.load(
+                str(act_two_hud_directory / "trade_background.png")
+            ).convert_alpha(),
             "act_two_hud_frame": _load_scaled_image(
                 act_two_hud_directory / "hud_frame_act2(32).png",
                 (315, 89),

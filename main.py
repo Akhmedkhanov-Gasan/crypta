@@ -147,6 +147,10 @@ from rendering import (
     draw_act_two_upgrade_screen,
     draw_act_two_spike_traps,
     draw_act_two_treasury,
+    draw_act_two_trader,
+    draw_act_two_trade_window,
+    load_act_two_trade_layout,
+    get_act_two_trade_buy_rectangles,
     draw_act_one_pickup_effect,
     draw_act_two_pickup_effect,
     draw_boss_door,
@@ -260,6 +264,8 @@ from systems.player_abilities import (
     perform_warlock_curse,
     perform_warlock_soul_exchange,
 )
+from acts.act_two.trader_logic import buy_trader_item
+
 FIRST_ACT_FINAL_FLOOR = 2
 FIRST_ACT_THREE_FLOOR = next(
     index
@@ -568,6 +574,7 @@ def main():
     log_font = act_one_fonts["text"]
     act_two_fonts = load_act_two_fonts()
     act_two_sprites = load_act_two_sprites()
+    act_two_trade_layout = load_act_two_trade_layout()
     act_three_fonts = load_act_three_fonts()
     menu_fonts = {
         1: act_one_fonts,
@@ -650,6 +657,7 @@ def main():
             and not game_state.player.act_two.fire_bomb_aiming
             and game_state.player.health > 0
             and not game_state.game_won
+            and not game_state.trade_screen_open
         )
         if game_state.rune_selection_open:
             act_two_auto_move_target = None
@@ -859,6 +867,50 @@ def main():
                 continue
             elif game_state.floor_transition_started_at >= 0:
                 continue
+            elif game_state.trade_screen_open:
+                if (
+                        event.type == pygame.KEYDOWN
+                        and event.key == pygame.K_ESCAPE
+                ):
+                    game_state.trade_screen_open = False
+                    act_two_held_movement_keys.clear()
+                    act_two_held_direction = (0, 0)
+                elif (
+                        event.type == pygame.MOUSEBUTTONDOWN
+                        and event.button == 1
+                ):
+                    game_mouse_position = window_to_game_position(
+                        screen,
+                        event.pos,
+                    )
+
+                    if game_mouse_position is not None:
+                        clicked_slot = next(
+                            (
+                                slot_name
+                                for slot_name, rectangle
+                                in get_act_two_trade_buy_rectangles(
+                                act_two_trade_layout
+                            ).items()
+                                if rectangle.collidepoint(
+                                game_mouse_position
+                            )
+                            ),
+                            None,
+                        )
+
+                        if clicked_slot is not None:
+                            purchase_succeeded = buy_trader_item(
+                                game_state,
+                                clicked_slot,
+                            )
+
+                            if purchase_succeeded:
+                                act_two_sounds.play_ui_sound(
+                                    "gold_pickup"
+                                )
+                continue
+
             elif game_state.rune_selection_open:
                 available_runes = runes_for_class(
                     game_state.player.player_class
@@ -2024,6 +2076,16 @@ def main():
                         (new_column, new_row),
                     )
                 )
+                target_trader = (
+                    current_act == 2
+                    and player_tried_to_move
+                    and game_state.floor.trader is not None
+                    and (
+                        game_state.floor.trader.column,
+                        game_state.floor.trader.row,
+                    )
+                    == (new_column, new_row)
+                )
                 target_secret_wall = (
                     player_tried_to_move
                     and 0 <= new_row < len(game_state.floor["map"])
@@ -2374,6 +2436,10 @@ def main():
                         player_acted = activate_treasury_trial(
                             game_state
                         )
+                    elif target_trader:
+                        game_state.trade_screen_open = True
+                        act_two_held_movement_keys.clear()
+                        act_two_held_direction = (0, 0)
                     elif target_chest:
                         player_acted = open_chest(
                             game_state,
@@ -3181,6 +3247,13 @@ def main():
                 game_state.floor.visible_cells,
                 current_time,
             )
+            draw_act_two_trader(
+                world_target,
+                game_state.floor.trader,
+                act_two_sprites,
+                game_state.floor.visible_cells,
+                current_time,
+            )
             draw_fire_zones(
                 world_target,
                 game_state,
@@ -3813,6 +3886,17 @@ def main():
                     game_state,
                     act_two_fonts,
                     act_two_sprites,
+                    window_to_game_position(
+                        screen,
+                        pygame.mouse.get_pos(),
+                    ),
+                )
+            if game_state.trade_screen_open:
+                draw_act_two_trade_window(
+                    game_surface,
+                    act_two_sprites,
+                    act_two_trade_layout,
+                    act_two_fonts,
                     window_to_game_position(
                         screen,
                         pygame.mouse.get_pos(),

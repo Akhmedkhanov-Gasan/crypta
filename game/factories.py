@@ -20,6 +20,7 @@ from game.state import (
     RuneRoomState,
     SpikeTrapState,
     TreasuryRoomState,
+    TraderState,
 )
 
 
@@ -141,6 +142,16 @@ def create_floor_state(floor_index: int) -> FloorState:
         else None
     )
 
+    trader_data = floor.get("trader")
+    trader = (
+        TraderState(
+            column=trader_data["position"][0],
+            row=trader_data["position"][1],
+        )
+        if trader_data is not None
+        else None
+    )
+
     return FloorState(
         map=floor["map"],
         player_column=player_column,
@@ -159,6 +170,7 @@ def create_floor_state(floor_index: int) -> FloorState:
         ],
         boss_fight_started=floor["boss_door"] is None,
         upgrade_altar=floor.get("upgrade_altar"),
+        trader=trader,
         breakable_crates=breakable_crates,
         spike_traps=spike_traps,
         treasury_room=treasury_room,

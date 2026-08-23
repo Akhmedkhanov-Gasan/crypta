@@ -36,6 +36,7 @@ FLOOR_CONFIGS = [
         "secret_room_chance": 0.75,
         "treasury_room": True,
         "rune_room": True,
+        "trader": True,
         "spike_trap_count": 5,
         "breakable_crate_count": 7,
         "enemy_counts": {
