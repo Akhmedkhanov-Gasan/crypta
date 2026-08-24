@@ -1,0 +1,218 @@
+{
+  "screen": "bloody_altar",
+  "frame": {
+    "name": "BloodyAltar",
+    "width": 1280,
+    "height": 720
+  },
+  "window": {
+    "x": 146,
+    "y": 30,
+    "width": 988,
+    "height": 659
+  },
+  "title": {
+    "x": 574,
+    "y": 214,
+    "width": 133,
+    "height": 26
+  },
+  "options": {
+    "open_wound": {
+      "rect": {
+        "x": 290,
+        "y": 244,
+        "width": 170,
+        "height": 300
+      },
+      "card": {
+        "x": 290,
+        "y": 432,
+        "width": 170,
+        "height": 100
+      },
+      "icon": {
+        "x": 296,
+        "y": 244,
+        "width": 150,
+        "height": 150
+      },
+      "name": {
+        "x": 319,
+        "y": 432,
+        "width": 113,
+        "height": 34
+      },
+      "reward": {
+        "x": 290,
+        "y": 473,
+        "width": 170,
+        "height": 21
+      },
+      "sacrifice": {
+        "x": 290,
+        "y": 501,
+        "width": 170,
+        "height": 24
+      },
+      "hitbox": {
+        "x": 290,
+        "y": 244,
+        "width": 183,
+        "height": 297
+      }
+    },
+    "broken_seal": {
+      "rect": {
+        "x": 468,
+        "y": 244,
+        "width": 170,
+        "height": 300
+      },
+      "card": {
+        "x": 468,
+        "y": 432,
+        "width": 170,
+        "height": 100
+      },
+      "icon": {
+        "x": 474,
+        "y": 244,
+        "width": 150,
+        "height": 150
+      },
+      "name": {
+        "x": 497,
+        "y": 432,
+        "width": 113,
+        "height": 34
+      },
+      "reward": {
+        "x": 468,
+        "y": 473,
+        "width": 170,
+        "height": 21
+      },
+      "sacrifice": {
+        "x": 468,
+        "y": 501,
+        "width": 170,
+        "height": 24
+      },
+      "hitbox": {
+        "x": 468,
+        "y": 244,
+        "width": 183,
+        "height": 297
+      }
+    },
+    "glass_heart": {
+      "rect": {
+        "x": 646,
+        "y": 244,
+        "width": 170,
+        "height": 300
+      },
+      "card": {
+        "x": 646,
+        "y": 432,
+        "width": 170,
+        "height": 100
+      },
+      "icon": {
+        "x": 652,
+        "y": 244,
+        "width": 150,
+        "height": 150
+      },
+      "name": {
+        "x": 675,
+        "y": 432,
+        "width": 113,
+        "height": 34
+      },
+      "reward": {
+        "x": 646,
+        "y": 473,
+        "width": 170,
+        "height": 21
+      },
+      "sacrifice": {
+        "x": 646,
+        "y": 501,
+        "width": 170,
+        "height": 24
+      },
+      "hitbox": {
+        "x": 646,
+        "y": 244,
+        "width": 183,
+        "height": 297
+      }
+    },
+    "blood_hunger": {
+      "rect": {
+        "x": 824,
+        "y": 244,
+        "width": 170,
+        "height": 300
+      },
+      "card": {
+        "x": 824,
+        "y": 432,
+        "width": 170,
+        "height": 100
+      },
+      "icon": {
+        "x": 830,
+        "y": 244,
+        "width": 150,
+        "height": 150
+      },
+      "name": {
+        "x": 853,
+        "y": 432,
+        "width": 113,
+        "height": 34
+      },
+      "reward": {
+        "x": 824,
+        "y": 473,
+        "width": 170,
+        "height": 21
+      },
+      "sacrifice": {
+        "x": 824,
+        "y": 501,
+        "width": 170,
+        "height": 24
+      },
+      "hitbox": {
+        "x": 824,
+        "y": 244,
+        "width": 183,
+        "height": 297
+      }
+    }
+  },
+  "confirm": {
+    "rect": {
+      "x": 533,
+      "y": 563,
+      "width": 220,
+      "height": 44
+    },
+    "button": {
+      "x": 533,
+      "y": 549,
+      "width": 214,
+      "height": 71
+    },
+    "hitbox": {
+      "x": 547,
+      "y": 564,
+      "width": 186,
+      "height": 42
+    }
+  }
+}

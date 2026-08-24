@@ -4,6 +4,7 @@ from typing import Any, Iterator
 
 from acts.act_two.state import (
     ActTwoPlayerState,
+    BloodyAltarState,
     BreakableCrateState,
     DroppedConsumableState,
     FireZoneState,
@@ -254,6 +255,7 @@ class FloorState(AttributeMapping):
     seal_boss_door_during_fight: bool
     boss_fight_started: bool
     upgrade_altar: tuple[int, int] | None = None
+    bloody_altar: BloodyAltarState | None = None
     trader: TraderState | None = None
     breakable_crates: list[BreakableCrateState] = field(
         default_factory=list
@@ -385,6 +387,8 @@ class GameState:
     trade_screen_open: bool = False
     rune_selection_open: bool = False
     rune_selection_pending_id: str | None = None
+    bloody_altar_open: bool = False
+    bloody_altar_pending_id: str | None = None
     upgrade_message: str = ""
     upgrade_reward_pending: bool = False
     floor_transition_started_at: int = -1
@@ -424,6 +428,7 @@ __all__ = [
     "ArcherBarrageShotState",
     "AttributeMapping",
     "BreakableCrateState",
+    "BloodyAltarState",
     "ChestState",
     "EnemyBehaviorState",
     "EnemyState",

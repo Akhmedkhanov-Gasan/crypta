@@ -25,6 +25,13 @@ class RunePuzzlePhase(Enum):
 
 
 @dataclass
+class BloodyAltarState:
+    column: int
+    row: int
+    claimed: bool = False
+
+
+@dataclass
 class FireZoneState:
     center: tuple[int, int]
     cells: tuple[tuple[int, int], ...]
@@ -152,6 +159,7 @@ class RuneRoomState:
 @dataclass
 class ActTwoPlayerState:
     selected_rune_id: str | None = None
+    bloody_pact_id: str | None = None
     consumable_slots: list[str | None] = field(
         default_factory=lambda: [None] * CONSUMABLE_BELT_SIZE
     )

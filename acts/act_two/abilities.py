@@ -2,6 +2,7 @@ from acts.act_two.settings import (
     ABILITY_HITS_REQUIRED,
     MAGE_ARCANE_BURST_RANGE,
 )
+from acts.act_two.bloody_altar import BROKEN_SEAL, has_bloody_pact
 from logic import can_move_to, distance_between, get_directional_line
 
 
@@ -15,6 +16,8 @@ CARDINAL_DIRECTIONS = {
 
 def ability_charge_required(player) -> int:
     if player.player_class is not None and player.subclass is None:
+        if has_bloody_pact(player, BROKEN_SEAL):
+            return 2
         return ABILITY_HITS_REQUIRED
     return 2
 

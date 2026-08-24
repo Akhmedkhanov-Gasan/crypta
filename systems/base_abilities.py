@@ -9,6 +9,7 @@ from acts.act_two.abilities import (
     get_warrior_cleave_cells,
     is_valid_mage_arcane_burst_target,
 )
+from acts.act_two.bloody_altar import OPEN_WOUND, has_bloody_pact
 from acts.act_two.progression import (
     get_warrior_upgrade_rank,
 )
@@ -250,6 +251,7 @@ def cast_directional_ability(
     damage_bonus = (
         WARRIOR_CLEAVE_DAMAGE_BONUS
         + cleave_rank * WARRIOR_CLEAVE_DAMAGE_PER_RANK
+        + (2 if has_bloody_pact(player, OPEN_WOUND) else 0)
     )
     ability_name = "power cleave"
     selected_rune_id = player.act_two.selected_rune_id
@@ -697,7 +699,10 @@ def cast_mage_arcane_burst(
             damage_minimum,
             damage_maximum,
             player.crit_chance,
-            damage_bonus=damage_bonus,
+            damage_bonus=(
+                damage_bonus
+                + (2 if has_bloody_pact(player, OPEN_WOUND) else 0)
+            ),
             grant_ability_charge=False,
             attacker_position=(floor.player_column, floor.player_row),
         )

@@ -143,7 +143,6 @@ def load_menu_layouts(act):
 
 def load_act_two_fonts():
     pixelify_directory = FONT_ROOT / "Pixelify_Sans"
-    pixel_operator_bold_path = FONT_ROOT / "PixelOperator-Bold.ttf"
     regular_path = pixelify_directory / "PixelifySans-Regular.ttf"
     medium_path = pixelify_directory / "PixelifySans-Medium.ttf"
     semibold_path = pixelify_directory / "PixelifySans-SemiBold.ttf"
@@ -154,16 +153,18 @@ def load_act_two_fonts():
         "title": pygame.font.Font(str(alagard_path), 42),
         "heading": pygame.font.Font(str(alagard_path), 20),
         "status": pygame.font.Font(str(alagard_path), 22),
-        "text": pygame.font.Font(str(alagard_path), 18),
-        "log": pygame.font.Font(str(alagard_path), 15),
-        "ability_text": pygame.font.Font(str(alagard_path), 12),
-        "controls": pygame.font.Font(str(alagard_path), 17),
-        "sidebar_heading": pygame.font.Font(str(alagard_path), 15), # lvl
-        "sidebar_text": pygame.font.Font(str(alagard_path), 15),
-        "sidebar_controls": pygame.font.Font(str(alagard_path), 12), # HP and XP
-        "trade_name": pygame.font.Font(str(alagard_path), 12),
-        "trade_description": pygame.font.Font(str(alagard_path), 10),
-        "trade_price": pygame.font.Font(str(alagard_path), 12),
+        "text": pygame.font.Font(str(regular_path), 17),
+        "log": pygame.font.Font(str(regular_path), 15),
+        "ability_text": pygame.font.Font(str(medium_path), 16),
+        "controls": pygame.font.Font(str(medium_path), 17),
+        "sidebar_heading": pygame.font.Font(str(semibold_path), 16),
+        "sidebar_text": pygame.font.Font(str(regular_path), 16),
+        "sidebar_controls": pygame.font.Font(str(medium_path), 15),
+        "trade_name": pygame.font.Font(str(semibold_path), 16),
+        "trade_description": pygame.font.Font(str(regular_path), 15),
+        "trade_price": pygame.font.Font(str(bold_path), 16),
+        "bloody_altar_name": pygame.font.Font(str(semibold_path), 17),
+        "bloody_altar_body": pygame.font.Font(str(regular_path), 15),
     }
 
 
@@ -514,6 +515,18 @@ def load_act_two_sprites():
         "rune_pedestal_reward": (
             "environment/objects/rune_pedestal_reward.png"
         ),
+        "bloody_altar_0": (
+            "environment/objects/bloody_altar/bloody_altar_1.png"
+        ),
+        "bloody_altar_1": (
+            "environment/objects/bloody_altar/bloody_altar_2.png"
+        ),
+        "bloody_altar_2": (
+            "environment/objects/bloody_altar/bloody_altar_3.png"
+        ),
+        "bloody_altar_3": (
+            "environment/objects/bloody_altar/bloody_altar_4.png"
+        ),
         "rune_trident": "environment/runes/rune_trident.png",
         "rune_eye": "environment/runes/rune_eye.png",
         "rune_spiral": "environment/runes/rune_spiral.png",
@@ -771,6 +784,26 @@ def load_act_two_sprites():
                 (151, 151),
             )
         )
+    bloody_altar_directory = ui_directory / "bloody_altar"
+    sprites["bloody_altar_window"] = pygame.image.load(
+        str(bloody_altar_directory / "window.png")
+    ).convert_alpha()
+    sprites["bloody_altar_confirm_button"] = pygame.image.load(
+        str(bloody_altar_directory / "confirm_button.png")
+    ).convert_alpha()
+    for pact_id in (
+        "open_wound",
+        "broken_seal",
+        "glass_heart",
+        "blood_hunger",
+    ):
+        sprites[f"bloody_pact_{pact_id}"] = pygame.image.load(
+            str(
+                bloody_altar_directory
+                / "icons"
+                / f"{pact_id}_original.png"
+            )
+        ).convert_alpha()
     sprites["upgrade_window"] = pygame.image.load(
         str(ui_directory / "upgrade" / "upgrade_window.png")
     ).convert_alpha()

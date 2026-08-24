@@ -37,6 +37,7 @@ FLOOR_CONFIGS = [
         "treasury_room": True,
         "rune_room": True,
         "trader": True,
+        "bloody_altar_near_trader": True,
         "spike_trap_count": 5,
         "breakable_crate_count": 7,
         "enemy_counts": {
@@ -52,6 +53,7 @@ FLOOR_CONFIGS = [
     {
         "act": 2,
         "act_floor": 2,
+        "bloody_altar": True,
         "map_columns": 47,
         "map_rows": 29,
         "room_count": 12,

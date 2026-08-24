@@ -16,8 +16,19 @@ from acts.act_two.settings import (
     ACT_TWO_STARTING_LEVEL,
 )
 from acts.act_two.abilities import (
+    ability_charge_required,
     is_valid_mage_arcane_burst_target,
     select_directional_ability_direction,
+)
+from acts.act_two.bloody_altar import (
+    bloody_altar_is_at,
+    interact_with_bloody_altar,
+)
+from acts.act_two.presentation.bloody_altar import (
+    draw_bloody_altar_object,
+    draw_bloody_altar_window,
+    handle_bloody_altar_event,
+    load_bloody_altar_layout,
 )
 from acts.act_two.crates import break_crate
 from acts.act_two.consumables import (
@@ -219,6 +230,12 @@ from presentation.audio import (
     warden_has_been_defeated,
     warden_music_should_play,
 )
+from presentation.display import (
+    enable_high_dpi,
+    get_initial_window_size,
+    present_game,
+    window_to_game_position,
+)
 from presentation.menu import (
     MenuState,
     draw_menu,
@@ -232,7 +249,6 @@ from settings import (
     FPS,
     GAME_HEIGHT,
     GAME_WIDTH,
-    INITIAL_WINDOW_SCALE,
 )
 from systems.player_actions import (
     break_secret_passage,
@@ -288,117 +304,6 @@ _ACT_TWO_CONSUMABLE_KEYS = {
 }
 
 
-def get_initial_window_size():
-    display_info = pygame.display.Info()
-    preferred_width = int(GAME_WIDTH * INITIAL_WINDOW_SCALE)
-    preferred_height = int(GAME_HEIGHT * INITIAL_WINDOW_SCALE)
-    maximum_width = int(display_info.current_w * 0.9)
-    maximum_height = int(display_info.current_h * 0.85)
-    scale = min(
-        preferred_width / GAME_WIDTH,
-        preferred_height / GAME_HEIGHT,
-        maximum_width / GAME_WIDTH,
-        maximum_height / GAME_HEIGHT,
-    )
-
-    return (
-        int(GAME_WIDTH * scale),
-        int(GAME_HEIGHT * scale),
-    )
-
-
-_AMBIENT_MARGIN_CACHE = {}
-
-
-def _draw_ambient_margin(window, rectangle):
-    if rectangle.width <= 0 or rectangle.height <= 0:
-        return
-
-    cache_key = rectangle.size
-    cached_margin = _AMBIENT_MARGIN_CACHE.get(cache_key)
-    if cached_margin is not None:
-        window.blit(cached_margin, rectangle)
-        return
-
-    margin = pygame.Surface(rectangle.size)
-    margin.fill((6, 8, 10))
-    brick_width = 72
-    brick_height = 48
-    for row, y in enumerate(range(0, rectangle.height, brick_height)):
-        pygame.draw.line(
-            margin,
-            (14, 18, 20),
-            (0, y),
-            (rectangle.width, y),
-        )
-        offset = -(brick_width // 2) if row % 2 else 0
-        for x in range(offset, rectangle.width, brick_width):
-            pygame.draw.line(
-                margin,
-                (11, 15, 17),
-                (x, y),
-                (x, min(rectangle.height, y + brick_height)),
-            )
-    shade = pygame.Surface(rectangle.size, pygame.SRCALPHA)
-    for x in range(rectangle.width):
-        distance_from_game = rectangle.width - x
-        alpha = min(178, 70 + distance_from_game // 3)
-        pygame.draw.line(
-            shade,
-            (0, 0, 0, alpha),
-            (x, 0),
-            (x, rectangle.height),
-        )
-    margin.blit(shade, (0, 0))
-    _AMBIENT_MARGIN_CACHE.clear()
-    _AMBIENT_MARGIN_CACHE[cache_key] = margin
-    window.blit(margin, rectangle)
-
-
-def present_game(window, game_surface, preserve_pixels=False):
-    window_width, window_height = window.get_size()
-    scale = min(
-        window_width / GAME_WIDTH,
-        window_height / GAME_HEIGHT,
-    )
-    scaled_width = max(1, int(GAME_WIDTH * scale))
-    scaled_height = max(1, int(GAME_HEIGHT * scale))
-    scale_is_integer = abs(scale - round(scale)) < 0.001
-    transform = (
-        pygame.transform.scale
-        if preserve_pixels or scale_is_integer
-        else pygame.transform.smoothscale
-    )
-    scaled_surface = transform(game_surface, (scaled_width, scaled_height))
-    offset_x = window_width - scaled_width
-    offset_y = (window_height - scaled_height) // 2
-
-    window.fill(BACKGROUND_COLOR)
-    if offset_x > 0:
-        _draw_ambient_margin(
-            window,
-            pygame.Rect(0, offset_y, offset_x, scaled_height),
-        )
-    if offset_y > 0:
-        pygame.draw.rect(
-            window,
-            (6, 8, 10),
-            (offset_x, 0, scaled_width, offset_y),
-        )
-        pygame.draw.rect(
-            window,
-            (6, 8, 10),
-            (
-                offset_x,
-                offset_y + scaled_height,
-                scaled_width,
-                window_height - scaled_height - offset_y,
-            ),
-        )
-    window.blit(scaled_surface, (offset_x, offset_y))
-    pygame.display.flip()
-
-
 def _complete_class_selection(game_state):
     chosen_class = game_state.class_selection_choice
     if chosen_class is None:
@@ -429,30 +334,6 @@ def _complete_class_selection(game_state):
     add_log_message(
         game_state.combat_log,
         "Act II begins. The world gains shape.",
-    )
-
-
-def window_to_game_position(window, window_position):
-    window_width, window_height = window.get_size()
-    scale = min(
-        window_width / GAME_WIDTH,
-        window_height / GAME_HEIGHT,
-    )
-    scaled_width = int(GAME_WIDTH * scale)
-    scaled_height = int(GAME_HEIGHT * scale)
-    offset_x = window_width - scaled_width
-    offset_y = (window_height - scaled_height) // 2
-    mouse_x, mouse_y = window_position
-
-    if not (
-        offset_x <= mouse_x < offset_x + scaled_width
-        and offset_y <= mouse_y < offset_y + scaled_height
-    ):
-        return None
-
-    return (
-        int((mouse_x - offset_x) / scale),
-        int((mouse_y - offset_y) / scale),
     )
 
 
@@ -558,6 +439,7 @@ def _act_two_visual_direction(direction):
 
 
 def main():
+    enable_high_dpi()
     pygame.init()
 
     windowed_size = get_initial_window_size()
@@ -576,6 +458,7 @@ def main():
     act_two_fonts = load_act_two_fonts()
     act_two_sprites = load_act_two_sprites()
     act_two_trade_layout = load_act_two_trade_layout()
+    bloody_altar_layout = load_bloody_altar_layout()
     act_three_fonts = load_act_three_fonts()
     menu_fonts = {
         1: act_two_fonts,
@@ -655,6 +538,7 @@ def main():
             and not game_state.class_selection_open
             and not game_state.upgrade_screen_open
             and not game_state.rune_selection_open
+            and not game_state.bloody_altar_open
             and not game_state.subclass_selection_open
             and not game_state.player.directional_ability_aiming
             and not game_state.player.act_two.fire_bomb_aiming
@@ -663,6 +547,10 @@ def main():
             and not game_state.trade_screen_open
         )
         if game_state.rune_selection_open:
+            act_two_auto_move_target = None
+            act_two_auto_move_floor_index = None
+            act_two_dragged_consumable_slot = None
+        if game_state.bloody_altar_open:
             act_two_auto_move_target = None
             act_two_auto_move_floor_index = None
             act_two_dragged_consumable_slot = None
@@ -760,8 +648,8 @@ def main():
                 running = False
             elif event.type == pygame.VIDEORESIZE and not fullscreen:
                 windowed_size = (
-                    max(640, event.w),
-                    max(360, event.h),
+                    max(GAME_WIDTH, event.w),
+                    max(GAME_HEIGHT, event.h),
                 )
                 screen = pygame.display.set_mode(
                     windowed_size,
@@ -883,6 +771,21 @@ def main():
                     )
                 continue
             elif game_state.floor_transition_started_at >= 0:
+                continue
+            elif game_state.bloody_altar_open:
+                event_position = getattr(
+                    event,
+                    "pos",
+                    pygame.mouse.get_pos(),
+                )
+                handle_bloody_altar_event(
+                    event,
+                    game_state,
+                    bloody_altar_layout,
+                    window_to_game_position(screen, event_position),
+                )
+                act_two_held_movement_keys.clear()
+                act_two_held_direction = (0, 0)
                 continue
             elif game_state.trade_screen_open:
                 if (
@@ -2103,6 +2006,14 @@ def main():
                     )
                     == (new_column, new_row)
                 )
+                target_bloody_altar = (
+                    current_act == 2
+                    and player_tried_to_move
+                    and bloody_altar_is_at(
+                        game_state,
+                        (new_column, new_row),
+                    )
+                )
                 target_secret_wall = (
                     player_tried_to_move
                     and 0 <= new_row < len(game_state.floor["map"])
@@ -2455,6 +2366,10 @@ def main():
                         )
                     elif target_trader:
                         game_state.trade_screen_open = True
+                        act_two_held_movement_keys.clear()
+                        act_two_held_direction = (0, 0)
+                    elif target_bloody_altar:
+                        interact_with_bloody_altar(game_state)
                         act_two_held_movement_keys.clear()
                         act_two_held_direction = (0, 0)
                     elif target_chest:
@@ -3165,6 +3080,13 @@ def main():
                 floor_decor_excluded_positions.add(
                     game_state.floor.upgrade_altar
                 )
+            if game_state.floor.bloody_altar is not None:
+                floor_decor_excluded_positions.add(
+                    (
+                        game_state.floor.bloody_altar.column,
+                        game_state.floor.bloody_altar.row,
+                    )
+                )
             if game_state.floor.treasury_room is not None:
                 treasury_room = game_state.floor.treasury_room
                 floor_decor_excluded_positions.update(
@@ -3267,6 +3189,13 @@ def main():
             draw_act_two_trader(
                 world_target,
                 game_state.floor.trader,
+                act_two_sprites,
+                game_state.floor.visible_cells,
+                current_time,
+            )
+            draw_bloody_altar_object(
+                world_target,
+                game_state.floor.bloody_altar,
                 act_two_sprites,
                 game_state.floor.visible_cells,
                 current_time,
@@ -3886,6 +3815,7 @@ def main():
                 game_state.player.level,
                 game_state.player.experience,
                 game_state.player.ability_kill_charge,
+                ability_charge_required(game_state.player),
                 game_state.player.attribute_points,
                 game_state.act_two_stats_open,
                 window_to_game_position(
@@ -3914,6 +3844,18 @@ def main():
                     act_two_sprites,
                     act_two_trade_layout,
                     act_two_fonts,
+                    window_to_game_position(
+                        screen,
+                        pygame.mouse.get_pos(),
+                    ),
+                )
+            if game_state.bloody_altar_open:
+                draw_bloody_altar_window(
+                    game_surface,
+                    game_state,
+                    act_two_sprites,
+                    act_two_fonts,
+                    bloody_altar_layout,
                     window_to_game_position(
                         screen,
                         pygame.mouse.get_pos(),
@@ -4112,11 +4054,7 @@ def main():
                     else "THE DESCENT CONTINUES"
                 ),
             )
-        present_game(
-            screen,
-            game_surface,
-            preserve_pixels=current_act == 2,
-        )
+        present_game(screen, game_surface)
         clock.tick(FPS)
 
     pygame.quit()

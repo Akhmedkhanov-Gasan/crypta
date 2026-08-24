@@ -1,6 +1,7 @@
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from acts.act_two.crates import collect_crate_loot
+from acts.act_two.bloody_altar import adjusted_consumable_healing
 from acts.act_two.consumables import (
     FIRE_BOMB,
     HEALING_SCROLL,
@@ -56,7 +57,8 @@ def try_use_potion(
     previous_health = player.health
     player.health = min(
         player.max_health,
-        player.health + POTION_HEALING,
+        player.health
+        + adjusted_consumable_healing(player, POTION_HEALING),
     )
     if act_number == 2:
         consume_act_two_potion(player, slot_index)

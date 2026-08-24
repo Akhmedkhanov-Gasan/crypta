@@ -3,11 +3,16 @@ from collections.abc import Callable
 from math import ceil
 
 from acts.act_two.settings import (
-    ABILITY_HITS_REQUIRED,
     ROGUE_CRUELTY_BLEED_DAMAGE,
     ROGUE_CRUELTY_BLEED_TURNS,
     ROGUE_SHADE_INVISIBILITY_TURNS,
     STONEFLESH_PHYSICAL_DAMAGE_MULTIPLIER,
+)
+from acts.act_two.abilities import ability_charge_required
+from acts.act_two.bloody_altar import (
+    BLOOD_HUNGER,
+    OPEN_WOUND,
+    has_bloody_pact,
 )
 from acts.player_stats import attribute_stat_changes_for_rank
 from game.combat_log import add_log_message
@@ -84,6 +89,8 @@ def damage_player(
         and player.paladin_holy_shield_turns > 0
     ):
         damage = ceil(damage / 2)
+    if damage > 0 and has_bloody_pact(player, OPEN_WOUND):
+        damage += 1
     previous_health = player.health
     minimum_health = (
         1
@@ -273,7 +280,7 @@ def attack_enemy(
         and player.subclass is None
     ):
         player.ability_kill_charge = min(
-            ABILITY_HITS_REQUIRED,
+            ability_charge_required(player),
             player.ability_kill_charge + 1,
         )
     elif (
@@ -467,6 +474,25 @@ def resolve_enemy_defeat(
                 ),
             )
 
+    if (
+        has_bloody_pact(player, BLOOD_HUNGER)
+        and player.health < player.max_health
+    ):
+        player.health += 1
+        game_state.emit(
+            GameEvent(
+                type=GameEventType.HEAL,
+                actor="hero",
+                target="hero",
+                amount=1,
+                data={"kind": BLOOD_HUNGER},
+            )
+        )
+        add_log_message(
+            game_state.combat_log,
+            "Blood Hunger restores 1 health.",
+        )
+
     if enemy.type == "oracle":
         floor.projectiles.clear()
 
@@ -613,6 +639,14 @@ def perform_basic_attack(
             damage_minimum,
             damage_maximum,
             player.crit_chance,
+            damage_bonus=(
+                2
+                if (
+                    attack_was_from_invisibility
+                    and has_bloody_pact(player, OPEN_WOUND)
+                )
+                else 0
+            ),
             force_critical=(
                 attack_was_from_invisibility
                 and selected_rune_id != "rune_of_the_veil"

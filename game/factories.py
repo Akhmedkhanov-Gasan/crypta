@@ -10,6 +10,7 @@ from generation import generate_floor
 from levels import FLOOR_CONFIGS
 from game.state import (
     BreakableCrateState,
+    BloodyAltarState,
     ChestState,
     EnemyState,
     FloorState,
@@ -151,6 +152,15 @@ def create_floor_state(floor_index: int) -> FloorState:
         if trader_data is not None
         else None
     )
+    bloody_altar_data = floor.get("bloody_altar")
+    bloody_altar = (
+        BloodyAltarState(
+            column=bloody_altar_data["position"][0],
+            row=bloody_altar_data["position"][1],
+        )
+        if bloody_altar_data is not None
+        else None
+    )
 
     return FloorState(
         map=floor["map"],
@@ -170,6 +180,7 @@ def create_floor_state(floor_index: int) -> FloorState:
         ],
         boss_fight_started=floor["boss_door"] is None,
         upgrade_altar=floor.get("upgrade_altar"),
+        bloody_altar=bloody_altar,
         trader=trader,
         breakable_crates=breakable_crates,
         spike_traps=spike_traps,

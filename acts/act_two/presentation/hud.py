@@ -238,6 +238,7 @@ def draw_act_two_sidebar(
     player_level,
     player_experience,
     ability_kill_charge,
+    ability_charge_required,
     available_attribute_points,
     stats_open,
     mouse_position,
@@ -483,6 +484,10 @@ def draw_act_two_sidebar(
             _ACT_TWO_ABILITY_RECT.size,
         )
         screen.blit(ability_icon, _ACT_TWO_ABILITY_RECT)
+    displayed_charge = round(
+        min(1.0, ability_kill_charge / max(1, ability_charge_required))
+        * len(_ACT_TWO_ABILITY_CHARGE_RECTS)
+    )
     for charge_index, charge_rectangle in enumerate(
         _ACT_TWO_ABILITY_CHARGE_RECTS
     ):
@@ -490,7 +495,7 @@ def draw_act_two_sidebar(
             screen,
             (
                 (177, 40, 48)
-                if charge_index < ability_kill_charge
+                if charge_index < displayed_charge
                 else (40, 35, 39)
             ),
             charge_rectangle,

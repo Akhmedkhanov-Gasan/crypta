@@ -8,6 +8,7 @@ from acts.act_two.settings import (
     HEALING_SCROLL_HEALING,
     STONEFLESH_SCROLL_HITS,
 )
+from acts.act_two.bloody_altar import adjusted_consumable_healing
 from acts.act_two.state import DroppedConsumableState, FireZoneState
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
@@ -385,7 +386,11 @@ def use_scroll(
         previous_health = player.health
         player.health = min(
             player.max_health,
-            player.health + HEALING_SCROLL_HEALING,
+            player.health
+            + adjusted_consumable_healing(
+                player,
+                HEALING_SCROLL_HEALING,
+            ),
         )
         healed = player.health - previous_health
         game_state.emit(
