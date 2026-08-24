@@ -1,0 +1,131 @@
+{
+  "screen": "menu_settings",
+  "act": 1,
+  "frame": {
+    "name": "Menu_Act1_Settings",
+    "width": 1280,
+    "height": 720
+  },
+  "art": {
+    "background": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720
+    },
+    "menu_frame": {
+      "x": 422,
+      "y": 104,
+      "width": 429,
+      "height": 437
+    },
+    "title": {
+      "x": 407,
+      "y": 571,
+      "width": 466,
+      "height": 104
+    }
+  },
+  "shades": {
+    "title": {
+      "x": 433,
+      "y": 571,
+      "width": 413,
+      "height": 107
+    },
+    "settings": {
+      "x": 566,
+      "y": 277,
+      "width": 152,
+      "height": 159
+    }
+  },
+  "fullscreen": {
+    "rect": {
+      "x": 568,
+      "y": 282,
+      "width": 148,
+      "height": 25
+    },
+    "label": {
+      "x": 577,
+      "y": 282,
+      "width": 130,
+      "height": 25
+    },
+    "value": {
+      "x": 700,
+      "y": 287,
+      "width": 14,
+      "height": 15
+    }
+  },
+  "sliders": {
+    "music": {
+      "rect": {
+        "x": 566,
+        "y": 315,
+        "width": 151,
+        "height": 38
+      },
+      "label": {
+        "x": 597,
+        "y": 315,
+        "width": 90,
+        "height": 25
+      },
+      "track": {
+        "x": 568,
+        "y": 340,
+        "width": 148,
+        "height": 10
+      },
+      "thumb": {
+        "x": 568,
+        "y": 340,
+        "width": 78,
+        "height": 10
+      }
+    },
+    "effects": {
+      "rect": {
+        "x": 566,
+        "y": 361,
+        "width": 151,
+        "height": 38
+      },
+      "label": {
+        "x": 597,
+        "y": 361,
+        "width": 90,
+        "height": 25
+      },
+      "track": {
+        "x": 568,
+        "y": 386,
+        "width": 148,
+        "height": 10
+      },
+      "thumb": {
+        "x": 568,
+        "y": 386,
+        "width": 78,
+        "height": 10
+      }
+    }
+  },
+  "back": {
+    "rect": {
+      "x": 597,
+      "y": 407,
+      "width": 90,
+      "height": 25
+    },
+    "label": {
+      "x": 597,
+      "y": 407,
+      "width": 90,
+      "height": 25
+    }
+  }
+}

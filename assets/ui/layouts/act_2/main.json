@@ -1,0 +1,154 @@
+{
+  "screen": "menu",
+  "frame": {
+    "name": "Menu",
+    "width": 1280,
+    "height": 720
+  },
+  "art": {
+    "background": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720
+    },
+    "menu_frame": {
+      "x": 422,
+      "y": 104,
+      "width": 436,
+      "height": 437
+    },
+    "title": {
+      "x": 438,
+      "y": 571,
+      "width": 404,
+      "height": 104
+    }
+  },
+  "shades": {
+    "title": {
+      "x": 433,
+      "y": 571,
+      "width": 413,
+      "height": 107
+    },
+    "menu_bar": {
+      "x": 581,
+      "y": 290,
+      "width": 118,
+      "height": 127
+    },
+    "theme_selector": {
+      "x": 1210,
+      "y": 284,
+      "width": 50,
+      "height": 126
+    }
+  },
+  "entries": {
+    "resume": {
+      "rect": {
+        "x": 595,
+        "y": 299,
+        "width": 90,
+        "height": 25
+      },
+      "label": {
+        "x": 595,
+        "y": 299,
+        "width": 90,
+        "height": 25
+      }
+    },
+    "settings": {
+      "rect": {
+        "x": 595,
+        "y": 341,
+        "width": 90,
+        "height": 25
+      },
+      "label": {
+        "x": 595,
+        "y": 341,
+        "width": 90,
+        "height": 25
+      }
+    },
+    "quit": {
+      "rect": {
+        "x": 609,
+        "y": 383,
+        "width": 62,
+        "height": 25
+      },
+      "label": {
+        "x": 609,
+        "y": 383,
+        "width": 62,
+        "height": 25
+      }
+    }
+  },
+  "themes": {
+    "1": {
+      "rect": {
+        "x": 1216,
+        "y": 284,
+        "width": 39,
+        "height": 39
+      },
+      "frame": {
+        "x": 1216,
+        "y": 284,
+        "width": 39,
+        "height": 39
+      },
+      "label": {
+        "x": 1232,
+        "y": 294,
+        "width": 8,
+        "height": 20
+      }
+    },
+    "2": {
+      "rect": {
+        "x": 1216,
+        "y": 327,
+        "width": 39,
+        "height": 39
+      },
+      "frame": {
+        "x": 1216,
+        "y": 327,
+        "width": 39,
+        "height": 39
+      },
+      "label": {
+        "x": 1228,
+        "y": 337,
+        "width": 16,
+        "height": 20
+      }
+    },
+    "3": {
+      "rect": {
+        "x": 1216,
+        "y": 370,
+        "width": 39,
+        "height": 39
+      },
+      "frame": {
+        "x": 1216,
+        "y": 370,
+        "width": 39,
+        "height": 39
+      },
+      "label": {
+        "x": 1224,
+        "y": 380,
+        "width": 25,
+        "height": 20
+      }
+    }
+  }
+}

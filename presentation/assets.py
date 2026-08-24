@@ -83,15 +83,63 @@ def _create_act_one_health_potion():
 def load_menu_assets():
     menu_directory = ASSET_ROOT / "ui" / "menu"
 
+    act_one_directory = menu_directory / "act_1"
+    act_two_directory = menu_directory / "act_2"
+    act_three_directory = menu_directory / "act_3"
+
     return {
         "act_two_background": pygame.image.load(
-            str(menu_directory / "act_2_background.png")
+            str(act_two_directory / "act_2_background.png")
         ).convert(),
+
         "act_three_background": pygame.image.load(
-            str(menu_directory / "act_3_background.png")
+            str(act_three_directory / "act_3_background.png")
         ).convert(),
+
+        "act_three_menu_frame": pygame.image.load(
+            str(act_three_directory / "menu_frame.png")
+        ).convert_alpha(),
+
+        "act_three_menu_title": pygame.image.load(
+            str(act_three_directory / "menu_title.png")
+        ).convert_alpha(),
+
+        "act_two_menu_frame": pygame.image.load(
+            str(act_two_directory / "menu_frame.png")
+        ).convert_alpha(),
+
+        "act_two_menu_title": pygame.image.load(
+            str(act_two_directory / "menu_title.png")
+        ).convert_alpha(),
+
+        "act_one_menu_frame": pygame.image.load(
+            str(act_one_directory / "menu_frame.png")
+        ).convert_alpha(),
+
+        "act_one_menu_title": pygame.image.load(
+            str(act_one_directory / "menu_title.png")
+        ).convert_alpha(),
     }
 
+
+def load_menu_layouts(act):
+    layout_directory = (
+        PROJECT_ROOT
+        / "assets"
+        / "ui"
+        / "layouts"
+        / f"act_{act}"
+    )
+
+    layouts = {}
+
+    for page in ("main", "settings", "confirm"):
+        layout_path = layout_directory / f"{page}.json"
+
+        with layout_path.open(encoding="utf-8") as file:
+            layouts[page] = json.load(file)
+
+    return layouts
 
 def load_act_two_fonts():
     pixelify_directory = FONT_ROOT / "Pixelify_Sans"
@@ -760,7 +808,7 @@ def load_act_two_sprites():
             ),
             "act_two_level_up_indicator": _load_scaled_image(
                 act_two_hud_directory / "lvl_up.png",
-                (70, 70),
+                (68, 65),
             ),
             "act_two_confirm_button": _load_scaled_image(
                 act_two_hud_directory / "confirm_button.png",
