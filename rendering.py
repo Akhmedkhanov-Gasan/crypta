@@ -7,6 +7,7 @@ from presentation.assets import (
     load_act_two_fonts,
     load_act_two_sprites,
     load_menu_assets,
+    load_menu_layouts,
     load_act_two_trade_layout,
 )
 from acts.act_three.presentation import (
@@ -55,7 +56,7 @@ from acts.act_two.presentation import (
     get_rune_selection_confirm_rectangle,
     draw_act_two_trader,
     draw_act_two_trade_window,
-    get_act_two_trade_buy_rectangles
+    get_act_two_trade_buy_rectangles,
 )
 from presentation.layout import CLASS_SELECTION_READY_MS
 from presentation.screens import (
@@ -118,7 +119,7 @@ __all__ = [
     "draw_act_two_trader",
     "draw_act_two_trade_window",
     "load_act_two_trade_layout",
-    "get_act_two_trade_buy_rectangles"
+    "get_act_two_trade_buy_rectangles",
     "draw_fire_bomb_flight",
     "draw_fire_bomb_targeting",
     "draw_fire_zones",
@@ -179,5 +180,5 @@ __all__ = [
     "load_act_two_fonts",
     "load_act_two_sprites",
     "load_menu_assets",
-
+    "load_menu_layout",
 ]

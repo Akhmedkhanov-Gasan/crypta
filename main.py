@@ -190,6 +190,7 @@ from rendering import (
     load_act_two_fonts,
     load_act_two_sprites,
     load_menu_assets,
+    load_menu_layouts,
     draw_act_two_sidebar,
     get_act_two_attribute_plus_rectangles,
     get_act_two_attribute_minus_rectangles,
@@ -577,12 +578,9 @@ def main():
     act_two_trade_layout = load_act_two_trade_layout()
     act_three_fonts = load_act_three_fonts()
     menu_fonts = {
-        1: act_one_fonts,
+        1: act_two_fonts,
         2: act_two_fonts,
-        3: {
-            **act_three_fonts,
-            "status": act_three_fonts["sidebar_heading"],
-        },
+        3: act_two_fonts,
     }
     act_three_gameplay_assets = (
         load_act_three_gameplay_assets()
@@ -591,6 +589,11 @@ def main():
         load_act_three_transition_assets()
     )
     menu_assets = load_menu_assets()
+    menu_layouts = {
+        1: load_menu_layouts(1),
+        2: load_menu_layouts(2),
+        3: load_menu_layouts(3),
+    }
     act_one_sounds = ActOneSoundBank.load(ACT_ONE_SOUNDS_PATH)
     act_two_transition_sounds = ActTwoTransitionSoundBank.load(
         ACT_TWO_SOUNDS_PATH
@@ -730,6 +733,15 @@ def main():
                 else:
                     act_two_auto_move_target = None
                     act_two_auto_move_floor_index = None
+        menu_visual_theme = (
+            FLOOR_CONFIGS[game_state.floor_index]["act"]
+            if game_started
+            else menu_state.menu_theme
+        )
+
+        active_menu_layouts = menu_layouts[
+            menu_visual_theme
+        ]
 
         for event in pygame.event.get():
             if event.type == pygame.WINDOWFOCUSLOST:
@@ -768,6 +780,11 @@ def main():
                     game_started,
                     fullscreen,
                     menu_progress.highest_act_reached,
+                    menu_layout=active_menu_layouts[
+                        "confirm"
+                        if menu_state.page == "confirm_abandon"
+                        else menu_state.page
+                    ],
                 )
 
                 if menu_action == "resume":
@@ -2779,11 +2796,6 @@ def main():
                 act_two_transition_sounds.play("eyes_open")
 
         if menu_open:
-            menu_visual_theme = (
-                FLOOR_CONFIGS[game_state.floor_index]["act"]
-                if game_started
-                else menu_state.menu_theme
-            )
             should_play_act_one_menu_music = (
                 not game_started and menu_visual_theme == 1
             )
@@ -2854,6 +2866,11 @@ def main():
                 menu_assets,
                 menu_visual_theme,
                 menu_progress.highest_act_reached,
+                menu_layout=active_menu_layouts[
+                    "confirm"
+                    if menu_state.page == "confirm_abandon"
+                    else menu_state.page
+                ],
             )
             present_game(screen, game_surface)
             clock.tick(FPS)
