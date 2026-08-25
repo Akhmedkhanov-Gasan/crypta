@@ -71,11 +71,17 @@ def _movement_offset(enemy, current_time):
         else ACT_TWO_ENEMY_MOVE_MS
     )
     elapsed = current_time - started_at
-    if (
-        origin is None
-        or started_at <= 0
-        or not 0 <= elapsed < duration
-    ):
+
+    if origin is None or started_at <= 0:
+        return 0, 0
+
+    if elapsed < 0:
+        return (
+            (origin[0] - enemy.column) * TILE_SIZE,
+            (origin[1] - enemy.row) * TILE_SIZE,
+        )
+
+    if elapsed >= duration:
         return 0, 0
 
     progress = elapsed / duration
@@ -315,11 +321,27 @@ def _draw_fallback_enemy(screen, enemy, current_time):
     pygame.draw.rect(screen, color, (x, y, size, size), border_radius=6)
 
 
-def _draw_health_bar(screen, enemy):
+def _draw_health_bar(screen, enemy, current_time):
+    movement_offset = _movement_offset(
+        enemy,
+        current_time,
+    )
+
     health_ratio = enemy["health"] / enemy["max_health"]
-    bar_x = MAP_OFFSET_X + enemy["column"] * TILE_SIZE + 4
-    bar_y = MAP_OFFSET_Y + (enemy["row"] + 1) * TILE_SIZE - 5
+    bar_x = (
+        MAP_OFFSET_X
+        + enemy["column"] * TILE_SIZE
+        + movement_offset[0]
+        + 4
+    )
+    bar_y = (
+        MAP_OFFSET_Y
+        + (enemy["row"] + 1) * TILE_SIZE
+        + movement_offset[1]
+        - 5
+    )
     bar_width = TILE_SIZE - 8
+
     pygame.draw.rect(
         screen,
         HEALTH_BAR_BACKGROUND,
@@ -534,7 +556,11 @@ def draw_act_two_enemy(
     else:
         _draw_fallback_enemy(screen, enemy, current_time)
 
-    _draw_health_bar(screen, enemy)
+    _draw_health_bar(
+        screen,
+        enemy,
+        current_time,
+    )
     _draw_attack_warning(screen, enemy)
     _draw_binding_effect(screen, enemy, sprites, current_time)
     _draw_rune_status_effects(screen, enemy, current_time)

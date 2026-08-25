@@ -85,6 +85,10 @@ from acts.act_two.presentation.camera import (
     draw_act_two_camera_view,
     update_act_two_camera,
 )
+from acts.act_two.presentation.turn_events import (
+    present_act_two_turn_events,
+)
+from acts.act_two.turns import act_two_combat_is_active
 from acts.act_three.input import (
     handle_act_three_key_event,
     handle_act_three_pointer_event,
@@ -532,19 +536,20 @@ def main():
             )
         continuous_move_time = pygame.time.get_ticks()
         continuous_movement_available = (
-            current_act == 2
-            and not menu_open
-            and game_state.floor_transition_started_at < 0
-            and not game_state.class_selection_open
-            and not game_state.upgrade_screen_open
-            and not game_state.rune_selection_open
-            and not game_state.bloody_altar_open
-            and not game_state.subclass_selection_open
-            and not game_state.player.directional_ability_aiming
-            and not game_state.player.act_two.fire_bomb_aiming
-            and game_state.player.health > 0
-            and not game_state.game_won
-            and not game_state.trade_screen_open
+                current_act == 2
+                and game_started
+                and not menu_open
+                and game_state.floor_transition_started_at < 0
+                and not game_state.class_selection_open
+                and not game_state.upgrade_screen_open
+                and not game_state.rune_selection_open
+                and not game_state.bloody_altar_open
+                and not game_state.subclass_selection_open
+                and not game_state.player.directional_ability_aiming
+                and not game_state.player.act_two.fire_bomb_aiming
+                and game_state.player.health > 0
+                and not game_state.game_won
+                and not game_state.trade_screen_open
         )
         if game_state.rune_selection_open:
             act_two_auto_move_target = None
@@ -2405,8 +2410,49 @@ def main():
                             FIRST_ACT_FINAL_FLOOR,
                             pygame.time.get_ticks(),
                         )
+                if player_acted and current_act == 2:
+                    action_started_at = pygame.time.get_ticks()
 
-                if player_acted:
+                    game_state.player.familiar_turn_started_at = (
+                        action_started_at
+                    )
+
+                    advance_spike_traps(game_state)
+                    update_treasury_trial(game_state)
+
+                    if game_state.player.health > 0:
+                        resolve_enemy_turn(
+                            game_state,
+                            player_position_before_action,
+                            rogue_ability_activated,
+                        )
+
+                    advance_fire_zones(game_state)
+                    update_treasury_trial(game_state)
+
+                    enemy_reaction_delay_ms = (
+                        200
+                        if act_two_combat_is_active(game_state)
+                        else 0
+                    )
+
+                    player_was_interrupted = present_act_two_turn_events(
+                        game_state,
+                        action_started_at,
+                        enemy_reaction_delay_ms,
+                    )
+
+                    act_two_sounds.play_events(
+                        game_state.events,
+                        game_state.player.player_class,
+                        game_state.floor,
+                    )
+
+                    if player_was_interrupted:
+                        act_two_auto_move_target = None
+                        act_two_auto_move_floor_index = None
+
+                if player_acted and current_act != 2:
                     game_state.player.familiar_turn_started_at = (
                         pygame.time.get_ticks()
                     )
