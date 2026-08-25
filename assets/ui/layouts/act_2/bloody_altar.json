@@ -1,21 +1,46 @@
 {
+  "schema_version": 2,
   "screen": "bloody_altar",
   "frame": {
     "name": "BloodyAltar",
     "width": 1280,
     "height": 720
   },
-  "window": {
+  "background": {
     "x": 146,
     "y": 30,
     "width": 988,
     "height": 659
   },
   "title": {
-    "x": 574,
-    "y": 214,
-    "width": 133,
-    "height": 26
+    "rect": {
+      "x": 574,
+      "y": 214,
+      "width": 133,
+      "height": 26
+    },
+    "text": "Choose wisely",
+    "font": {
+      "family": "Alagard",
+      "style": "Medium",
+      "size": 20
+    },
+    "line_height": {
+      "unit": "AUTO"
+    },
+    "letter_spacing": {
+      "unit": "PERCENT",
+      "value": 0
+    },
+    "horizontal_align": "CENTER",
+    "vertical_align": "CENTER",
+    "text_case": "ORIGINAL",
+    "color": {
+      "r": 174,
+      "g": 154,
+      "b": 143,
+      "a": 255
+    }
   },
   "options": {
     "open_wound": {
@@ -38,23 +63,96 @@
         "height": 150
       },
       "name": {
-        "x": 319,
-        "y": 432,
-        "width": 113,
-        "height": 34
+        "rect": {
+          "x": 319,
+          "y": 432,
+          "width": 113,
+          "height": 34
+        },
+        "text": "Open Wound",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 13
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 174,
+          "g": 154,
+          "b": 143,
+          "a": 255
+        }
       },
       "reward": {
-        "x": 290,
-        "y": 473,
-        "width": 170,
-        "height": 21
+        "rect": {
+          "x": 290,
+          "y": 466,
+          "width": 170,
+          "height": 30
+        },
+        "text": "Ability damage +2.",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 12
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 167,
+          "g": 167,
+          "b": 167,
+          "a": 255
+        }
       },
       "sacrifice": {
-        "x": 290,
-        "y": 501,
-        "width": 170,
-        "height": 24
+        "rect": {
+          "x": 290,
+          "y": 485,
+          "width": 170,
+          "height": 29
+        },
+        "text": "Incoming damage +1.",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 12
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 152,
+          "g": 51,
+          "b": 51,
+          "a": 255
+        }
       },
+      "sacrifice_disabled": null,
       "hitbox": {
         "x": 290,
         "y": 244,
@@ -82,22 +180,124 @@
         "height": 150
       },
       "name": {
-        "x": 497,
-        "y": 432,
-        "width": 113,
-        "height": 34
+        "rect": {
+          "x": 497,
+          "y": 432,
+          "width": 113,
+          "height": 34
+        },
+        "text": "Broken Seal",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 13
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 174,
+          "g": 154,
+          "b": 143,
+          "a": 255
+        }
       },
       "reward": {
-        "x": 468,
-        "y": 473,
-        "width": 170,
-        "height": 21
+        "rect": {
+          "x": 468,
+          "y": 468,
+          "width": 170,
+          "height": 30
+        },
+        "text": "Ability charges after 2 hits.",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 12
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 167,
+          "g": 167,
+          "b": 167,
+          "a": 255
+        }
       },
       "sacrifice": {
-        "x": 468,
-        "y": 501,
-        "width": 170,
-        "height": 24
+        "rect": {
+          "x": 468,
+          "y": 491,
+          "width": 170,
+          "height": 29
+        },
+        "text": "Chosen rune is destroyed.",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 12
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 152,
+          "g": 51,
+          "b": 51,
+          "a": 255
+        }
+      },
+      "sacrifice_disabled": {
+        "rect": {
+          "x": 468,
+          "y": 491,
+          "width": 170,
+          "height": 29
+        },
+        "text": "Requires a rune.",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 12
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 152,
+          "g": 51,
+          "b": 51,
+          "a": 255
+        }
       },
       "hitbox": {
         "x": 468,
@@ -126,23 +326,96 @@
         "height": 150
       },
       "name": {
-        "x": 675,
-        "y": 432,
-        "width": 113,
-        "height": 34
+        "rect": {
+          "x": 675,
+          "y": 432,
+          "width": 113,
+          "height": 34
+        },
+        "text": "Glass Heart",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 13
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 174,
+          "g": 154,
+          "b": 143,
+          "a": 255
+        }
       },
       "reward": {
-        "x": 646,
-        "y": 473,
-        "width": 170,
-        "height": 21
+        "rect": {
+          "x": 646,
+          "y": 473,
+          "width": 170,
+          "height": 30
+        },
+        "text": "Minimum and maximum \ndamage +1.",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 12
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 167,
+          "g": 167,
+          "b": 167,
+          "a": 255
+        }
       },
       "sacrifice": {
-        "x": 646,
-        "y": 501,
-        "width": 170,
-        "height": 24
+        "rect": {
+          "x": 646,
+          "y": 495,
+          "width": 170,
+          "height": 29
+        },
+        "text": "Maximum health -4.",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 12
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 152,
+          "g": 51,
+          "b": 51,
+          "a": 255
+        }
       },
+      "sacrifice_disabled": null,
       "hitbox": {
         "x": 646,
         "y": 244,
@@ -170,23 +443,96 @@
         "height": 150
       },
       "name": {
-        "x": 853,
-        "y": 432,
-        "width": 113,
-        "height": 34
+        "rect": {
+          "x": 853,
+          "y": 432,
+          "width": 113,
+          "height": 34
+        },
+        "text": "Blood Hunger",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 13
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 174,
+          "g": 154,
+          "b": 143,
+          "a": 255
+        }
       },
       "reward": {
-        "x": 824,
-        "y": 473,
-        "width": 170,
-        "height": 21
+        "rect": {
+          "x": 824,
+          "y": 469,
+          "width": 170,
+          "height": 30
+        },
+        "text": "Kills restore 1 health.",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 12
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 167,
+          "g": 167,
+          "b": 167,
+          "a": 255
+        }
       },
       "sacrifice": {
-        "x": 824,
-        "y": 501,
-        "width": 170,
-        "height": 24
+        "rect": {
+          "x": 824,
+          "y": 492,
+          "width": 170,
+          "height": 29
+        },
+        "text": "Potions and scrolls\n heal 50% less.",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 12
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 152,
+          "g": 51,
+          "b": 51,
+          "a": 255
+        }
       },
+      "sacrifice_disabled": null,
       "hitbox": {
         "x": 824,
         "y": 244,

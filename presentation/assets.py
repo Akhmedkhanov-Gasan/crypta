@@ -163,8 +163,6 @@ def load_act_two_fonts():
         "trade_name": pygame.font.Font(str(semibold_path), 16),
         "trade_description": pygame.font.Font(str(regular_path), 15),
         "trade_price": pygame.font.Font(str(bold_path), 16),
-        "bloody_altar_name": pygame.font.Font(str(semibold_path), 17),
-        "bloody_altar_body": pygame.font.Font(str(regular_path), 15),
     }
 
 
@@ -515,17 +513,20 @@ def load_act_two_sprites():
         "rune_pedestal_reward": (
             "environment/objects/rune_pedestal_reward.png"
         ),
-        "bloody_altar_0": (
-            "environment/objects/bloody_altar/bloody_altar_1.png"
+        "bloody_altar_base": (
+            "environment/objects/bloody_altar/bloody_altar.png"
         ),
-        "bloody_altar_1": (
-            "environment/objects/bloody_altar/bloody_altar_2.png"
+        "bloody_altar_blood_0": (
+            "environment/objects/bloody_altar/blood_1.png"
         ),
-        "bloody_altar_2": (
-            "environment/objects/bloody_altar/bloody_altar_3.png"
+        "bloody_altar_blood_1": (
+            "environment/objects/bloody_altar/blood_2.png"
         ),
-        "bloody_altar_3": (
-            "environment/objects/bloody_altar/bloody_altar_4.png"
+        "bloody_altar_blood_2": (
+            "environment/objects/bloody_altar/blood_3.png"
+        ),
+        "bloody_altar_blood_3": (
+            "environment/objects/bloody_altar/blood_4.png"
         ),
         "rune_trident": "environment/runes/rune_trident.png",
         "rune_eye": "environment/runes/rune_eye.png",

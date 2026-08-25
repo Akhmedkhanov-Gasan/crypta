@@ -3854,7 +3854,6 @@ def main():
                     game_surface,
                     game_state,
                     act_two_sprites,
-                    act_two_fonts,
                     bloody_altar_layout,
                     window_to_game_position(
                         screen,

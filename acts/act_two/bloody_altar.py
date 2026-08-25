@@ -9,14 +9,21 @@ OPEN_WOUND = "open_wound"
 BROKEN_SEAL = "broken_seal"
 GLASS_HEART = "glass_heart"
 BLOOD_HUNGER = "blood_hunger"
+BLOODY_PACT_ORDER = (
+    OPEN_WOUND,
+    BROKEN_SEAL,
+    GLASS_HEART,
+    BLOOD_HUNGER,
+)
 
+_BLOODY_PACT_IDS = frozenset(BLOODY_PACT_ORDER)
 
 def has_bloody_pact(player, pact_id: str) -> bool:
     return player.act_two.bloody_pact_id == pact_id
 
 
 def bloody_pact_is_available(player, pact_id: str) -> bool:
-    if pact_id not in BLOODY_PACTS_BY_ID:
+    if pact_id not in _BLOODY_PACT_IDS:
         return False
     if pact_id == BROKEN_SEAL:
         return player.act_two.selected_rune_id is not None
