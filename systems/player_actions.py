@@ -17,6 +17,9 @@ from acts.act_two.consumables import (
     get_act_two_consumable_slots,
     store_act_two_consumable,
 )
+from acts.act_two.quests.trader_seal import (
+    collect_guild_seal,
+)
 from game.state import (
     ChestState,
     EnemyBehaviorState,
@@ -34,7 +37,7 @@ def try_use_potion(
     slot_index: int | None = None,
 ) -> bool:
     player = game_state.player
-    act_number = FLOOR_CONFIGS[game_state.floor_index]["act"]
+    act_number = game_state.floor.presentation_act
     if act_number == 2:
         slots = get_act_two_consumable_slots(player)
         potion_is_available = (
@@ -88,7 +91,7 @@ def open_chest(
     effect_started_at: int = 0,
 ) -> bool:
     player = game_state.player
-    act_number = FLOOR_CONFIGS[game_state.floor_index]["act"]
+    act_number = game_state.floor.presentation_act
 
     has_required_key = (
         KEY in get_act_two_consumable_slots(player)
@@ -245,7 +248,7 @@ def _start_pickup_effect(
             data={"kind": kind},
         )
     )
-    act_number = FLOOR_CONFIGS[game_state.floor_index]["act"]
+    act_number = game_state.floor.presentation_act
     if act_number == 1:
         player.act_one_pickup_kind = kind
         player.act_one_pickup_origin = position
@@ -266,7 +269,11 @@ def _collect_items(
         floor.player_column,
         floor.player_row,
     )
-    act_number = FLOOR_CONFIGS[game_state.floor_index]["act"]
+    act_number = game_state.floor.presentation_act
+    collect_guild_seal(
+        game_state,
+        player_position,
+    )
     collect_treasury_reward(game_state, player_position)
     crate_loot_kind = collect_crate_loot(
         game_state,
@@ -453,32 +460,26 @@ def _collect_items(
         )
 
 
-def _resolve_stairs(
+def _resolve_floor_exit(
     game_state: GameState,
     first_act_final_floor: int,
     transition_started_at: int,
+    target_floor_index: int | None,
+    target_passage_id: str | None = None,
 ) -> bool:
-    floor = game_state.floor
-    reached_open_stairs = (
-        not any(enemy.health > 0 for enemy in floor.enemies)
-        and (floor.player_column, floor.player_row)
-        == (floor.stairs_column, floor.stairs_row)
-    )
-
-    if not reached_open_stairs:
-        return True
-
     current_floor_config = FLOOR_CONFIGS[
         game_state.floor_index
     ]
-    next_act = (
-        FLOOR_CONFIGS[game_state.floor_index + 1]["act"]
-        if game_state.floor_index + 1 < len(FLOOR_CONFIGS)
+    target_act = (
+        FLOOR_CONFIGS[target_floor_index]["act"]
+        if target_floor_index is not None
         else None
     )
     reached_end_of_act_two = (
         current_floor_config["act"] == 2
-        and next_act != 2
+        and target_floor_index is not None
+        and target_floor_index > game_state.floor_index
+        and target_act != 2
     )
 
     if reached_end_of_act_two:
@@ -503,10 +504,23 @@ def _resolve_stairs(
         )
         return True
 
-    if current_floor_config["act"] == 2:
-        game_state.floor_transition_started_at = transition_started_at
+    revisiting_act_one = (
+            current_floor_config["act"] == 1
+            and game_state.player.player_class is not None
+    )
+
+    if (
+            current_floor_config["act"] == 2
+            or revisiting_act_one
+    ):
+        game_state.floor_transition_started_at = (
+            transition_started_at
+        )
         game_state.floor_transition_target_index = (
-            game_state.floor_index + 1
+            target_floor_index
+        )
+        game_state.floor_transition_target_passage_id = (
+            target_passage_id
         )
         game_state.floor_transition_swapped = False
         game_state.upgrade_screen_open = False
@@ -514,7 +528,7 @@ def _resolve_stairs(
         game_state.player_attack_targets = []
         return False
 
-    if game_state.floor_index == len(FLOOR_CONFIGS) - 1:
+    if target_floor_index is None:
         game_state.game_won = True
         add_log_message(
             game_state.combat_log,
@@ -535,16 +549,13 @@ def _resolve_stairs(
         return False
 
     if current_floor_config["act"] == 1:
-        game_state.act_one_upgrades_remaining = current_floor_config[
-            "act_floor"
-        ]
+        game_state.act_one_upgrades_remaining = (
+            current_floor_config["act_floor"]
+        )
+
     game_state.upgrade_screen_open = True
     game_state.upgrade_message = ""
     game_state.player_attack_targets = []
-    add_log_message(
-        game_state.combat_log,
-        "The descent altar opens.",
-    )
 
     return False
 
@@ -563,18 +574,57 @@ def try_move_player(
         if enemy.health > 0
     ]
     target_position = (new_column, new_row)
+    player_position = (
+        floor.player_column,
+        floor.player_row,
+    )
+    activated_passage = next(
+        (
+            passage
+            for passage in floor.passages
+            if (
+                passage.wall_position == target_position
+                and passage.trigger_position == player_position
+            )
+        ),
+        None,
+    )
+
+    if activated_passage is not None:
+        passage_is_locked = (
+            activated_passage.requires_clear
+            and game_state.player.player_class is None
+            and bool(living_enemies)
+        )
+        if passage_is_locked:
+            return False
+
+        player_acted = _resolve_floor_exit(
+            game_state,
+            first_act_final_floor,
+            transition_started_at,
+            activated_passage.target_floor_index,
+            activated_passage.target_passage_id,
+        )
+
+        if game_state.class_selection_open:
+            game_state.class_transition_started_at = (
+                transition_started_at
+            )
+
+        if game_state.act_three_transition_open:
+            game_state.act_three_transition_started_at = (
+                transition_started_at
+            )
+
+        return player_acted
+
     if any(
         not crate.is_broken
         and (crate.column, crate.row) == target_position
         for crate in floor.breakable_crates
     ):
         return False
-    stairs_are_open = not living_enemies
-    target_is_locked_stairs = (
-        not stairs_are_open
-        and target_position
-        == (floor.stairs_column, floor.stairs_row)
-    )
     target_is_boss_door = (
         floor.boss_door is not None
         and target_position == floor.boss_door
@@ -614,16 +664,13 @@ def try_move_player(
         )
         return False
 
-    if (
-        target_is_locked_stairs
-        or not can_player_move_between(
+    if not can_player_move_between(
             floor.map,
             floor.player_column,
             floor.player_row,
             new_column,
             new_row,
             floor.barriers,
-        )
     ):
         return False
 
@@ -667,11 +714,27 @@ def try_move_player(
         _activate_boss_fight(game_state)
 
     _collect_items(game_state, transition_started_at)
-    player_acted = _resolve_stairs(
-        game_state,
-        first_act_final_floor,
-        transition_started_at,
+    reached_legacy_exit = (
+        not floor.passages
+        and (floor.player_column, floor.player_row)
+        == (floor.stairs_column, floor.stairs_row)
     )
+
+    if reached_legacy_exit:
+        next_floor_index = game_state.floor_index + 1
+        target_floor_index = (
+            next_floor_index
+            if next_floor_index < len(FLOOR_CONFIGS)
+            else None
+        )
+        player_acted = _resolve_floor_exit(
+            game_state,
+            first_act_final_floor,
+            transition_started_at,
+            target_floor_index,
+        )
+    else:
+        player_acted = True
 
     if game_state.class_selection_open:
         game_state.class_transition_started_at = (

@@ -10,7 +10,8 @@ from acts.act_two.presentation.items.renderer import (
     draw_key,
     draw_potion,
     draw_scroll,
-    draw_stairs,
+    draw_passage,
+    draw_act_one_revisit_corpses,
 )
 
 
@@ -24,5 +25,6 @@ __all__ = [
     "draw_potion",
     "draw_scroll",
     "draw_pickup_effect",
-    "draw_stairs",
+    "draw_passage",
+    "draw_act_one_revisit_corpses",
 ]

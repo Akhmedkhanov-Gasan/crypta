@@ -1,6 +1,7 @@
 import random
 
 from acts.act_one.generation import generate_warden_floor
+from worldgen.passages import create_north_wall_passage
 from acts.act_two.settings import ACT_TWO_CHEST_LOOT_WEIGHTS
 from enemies import ENEMY_TYPES
 from levels import FLOOR_CONFIGS
@@ -711,8 +712,15 @@ def _place_spike_traps(
     ]
 
 
-def generate_floor(floor_index):
-    config = FLOOR_CONFIGS[floor_index]
+def generate_floor(
+    floor_index,
+    config_override=None,
+):
+    config = (
+        config_override
+        if config_override is not None
+        else FLOOR_CONFIGS[floor_index]
+    )
 
     if config.get("room_template_directory"):
         return generate_tmx_room_floor(
@@ -728,10 +736,10 @@ def generate_floor(floor_index):
     boss_room_layout = config.get("boss_room_layout")
 
     if boss_room_layout == "warden_arena":
-        return generate_warden_floor(config)
+        return generate_warden_floor(config, floor_index)
 
     if boss_room_layout == "oracle_arena":
-        return generate_oracle_floor(config)
+        return generate_oracle_floor(config, floor_index)
 
     boss_room = (
         create_reserved_boss_room(
@@ -788,14 +796,76 @@ def generate_floor(floor_index):
         boss_columns = []
 
     player_start = room_center(rooms[0])
+    passages = []
+
+    previous_floor_index = floor_index - 1
+
+    if config["act"] == 2 and previous_floor_index >= 0:
+        passages.append(
+            create_north_wall_passage(
+                dungeon_map,
+                rooms[0],
+                "entrance",
+                previous_floor_index,
+                "exit",
+            )
+        )
+
+    next_floor_index = floor_index + 1
+    next_floor_exists = next_floor_index < len(FLOOR_CONFIGS)
+
+    if config["act"] == 1 and next_floor_exists:
+        next_floor_config = FLOOR_CONFIGS[next_floor_index]
+        passages.append(
+            create_north_wall_passage(
+                dungeon_map,
+                rooms[-1],
+                "exit",
+                next_floor_index,
+                (
+                    "entrance"
+                    if next_floor_config["act"] == 2
+                    else None
+                ),
+                requires_clear=True,
+            )
+        )
+
+    if config["act"] == 2 and next_floor_exists:
+        next_floor_config = FLOOR_CONFIGS[next_floor_index]
+        next_floor_has_regular_entrance = (
+            next_floor_config["act"] == 2
+            and next_floor_config.get("boss_room_layout")
+            != "oracle_arena"
+        )
+        passages.append(
+            create_north_wall_passage(
+                dungeon_map,
+                rooms[-1],
+                "exit",
+                next_floor_index,
+                (
+                    "entrance"
+                    if next_floor_has_regular_entrance
+                    else None
+                ),
+            )
+        )
+
+    passage_trigger_positions = {
+        passage["trigger_position"]
+        for passage in passages
+    }
 
     trader_position = None
+
     if config.get("trader", False):
         trader_candidates = [
             position
             for position in positions_inside_room(rooms[0])
             if (
                 position != player_start
+                and position not in passage_trigger_positions
                 and abs(position[0] - player_start[0])
                 + abs(position[1] - player_start[1])
                 >= 2
@@ -811,7 +881,11 @@ def generate_floor(floor_index):
             )
 
     stairs = room_center(boss_room or rooms[-1])
-    occupied_positions = {player_start, stairs}
+    occupied_positions = {
+        player_start,
+        stairs,
+        *passage_trigger_positions,
+    }
 
     if trader_position is not None:
         occupied_positions.add(trader_position)
@@ -1119,6 +1193,7 @@ def generate_floor(floor_index):
             else None
         ),
         "rooms": rooms,
+        "passages": passages,
         "stairs": stairs,
         "boss_door": (
             boss_door

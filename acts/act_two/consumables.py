@@ -24,6 +24,7 @@ from systems.player_combat import damage_player, resolve_enemy_defeat
 POTION = "potion"
 FIRE_BOMB = "fire_bomb"
 KEY = "key"
+GUILD_SEAL = "guild_seal"
 SCROLL_OF_STONEFLESH = "scroll_of_stoneflesh"
 SCROLL_OF_BINDING = "scroll_of_binding"
 HEALING_SCROLL = "healing_scroll"
@@ -112,6 +113,25 @@ def remove_act_two_consumable(player, slot_index: int) -> str | None:
     return item
 
 
+def remove_act_two_consumable_kind(
+    player,
+    item_kind,
+):
+    for slot_index, stored_item in enumerate(
+        player.act_two.consumable_slots
+    ):
+        if stored_item != item_kind:
+            continue
+
+        remove_act_two_consumable(
+            player,
+            slot_index,
+        )
+        return True
+
+    return False
+
+
 def throw_act_two_consumable(
     game_state: GameState,
     slot_index: int,
@@ -120,6 +140,17 @@ def throw_act_two_consumable(
 ) -> bool:
     floor = game_state.floor
     player = game_state.player
+    slots = player.act_two.consumable_slots
+
+    if (
+        0 <= slot_index < len(slots)
+        and slots[slot_index] == GUILD_SEAL
+    ):
+        add_log_message(
+            game_state.combat_log,
+            "The guild seal must be returned to the trader.",
+        )
+        return False
     origin = (floor.player_column, floor.player_row)
     if not can_player_move_between(
         floor.map,
@@ -685,4 +716,6 @@ __all__ = [
     "throw_fire_bomb",
     "throw_act_two_consumable",
     "use_scroll",
+    "GUILD_SEAL",
+    "remove_act_two_consumable_kind",
 ]

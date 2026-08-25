@@ -34,6 +34,7 @@ _ACT_TWO_CONSUMABLE_SPRITES = {
     "scroll_of_binding": "scroll_of_binding",
     "healing_scroll": "healing_scroll",
     "scroll_of_arcane_impulse": "scroll_of_arcane_impulse",
+    "guild_seal": "guild_seal",
 }
 _ACT_TWO_ABILITY_CHARGE_RECTS = (
     pygame.Rect(757, 679, 5, 3),
@@ -107,6 +108,10 @@ _ACT_TWO_CONSUMABLE_DESCRIPTIONS = {
     "scroll_of_arcane_impulse": (
         "Deals 5 magic damage to one visible enemy."
     ),
+    "guild_seal": (
+        "The trader's lost guild seal. "
+        "It cannot be used or discarded."
+    ),
 }
 _ACT_TWO_CONSUMABLE_NAMES = {
     "potion": "POTION",
@@ -116,6 +121,7 @@ _ACT_TWO_CONSUMABLE_NAMES = {
     "scroll_of_binding": "BINDING",
     "healing_scroll": "HEALING",
     "scroll_of_arcane_impulse": "IMPULSE",
+    "guild_seal": "GUILD SEAL",
 }
 _ACT_TWO_LEVEL_UP_POSITION = (1212, 262)
 _ACT_TWO_GOLD_COUNTER_POSITION = (1193, 631)

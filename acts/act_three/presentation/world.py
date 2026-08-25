@@ -524,13 +524,8 @@ def _draw_act_three_world(
                 link_seed ^ 0x9E3779B9
             )
 
-    stairs_sprite = (
-        assets["stairs_open"]
-        if not living_enemies
-        else assets["stairs_locked"]
-    )
     view_surface.blit(
-        stairs_sprite,
+        assets["stairs"],
         _view_position(
             floor.stairs_column,
             floor.stairs_row,

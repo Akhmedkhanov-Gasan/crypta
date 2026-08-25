@@ -1,4 +1,8 @@
-from acts.act_two.consumables import store_act_two_consumable
+from acts.act_two.consumables import (
+    GUILD_SEAL,
+    remove_act_two_consumable_kind,
+    store_act_two_consumable,
+)
 from acts.act_two.trader_catalog import (
     DEFAULT_TRADER_STOCK,
     TRADER_ITEMS,
@@ -6,7 +10,101 @@ from acts.act_two.trader_catalog import (
 from game.combat_log import add_log_message
 
 
+def interact_with_trader(
+    game_state,
+    dialogue_started_at,
+):
+    quest = game_state.act_two_quests.trader_seal
+
+    if quest.completed:
+        dialogue = (
+            "Good to see you again. "
+            "Take a look at my wares."
+        )
+
+        game_state.trader_dialogue_text = dialogue
+        game_state.trader_dialogue_started_at = (
+            dialogue_started_at
+        )
+        game_state.trader_dialogue_dismiss_started_at = -1
+        game_state.trade_screen_open = True
+
+        add_log_message(
+            game_state.combat_log,
+            f"Trader: {dialogue}",
+        )
+        return "trader_normal"
+
+    if quest.seal_recovered:
+        quest.started = True
+        quest.completed = True
+        remove_act_two_consumable_kind(
+            game_state.player,
+            GUILD_SEAL,
+        )
+
+        dialogue = (
+            "You found the guild seal... "
+            "I thought it was lost with them. "
+            "Thank you. Let us trade."
+        )
+
+        game_state.trader_dialogue_text = dialogue
+        game_state.trader_dialogue_started_at = (
+            dialogue_started_at
+        )
+        game_state.trader_dialogue_dismiss_started_at = -1
+        game_state.trade_screen_open = True
+
+        add_log_message(
+            game_state.combat_log,
+            f"Trader: {dialogue}",
+        )
+        add_log_message(
+            game_state.combat_log,
+            "The trader's wares are now available.",
+        )
+        return "trader_normal"
+
+    if not quest.started:
+        quest.started = True
+
+        dialogue = (
+            "I cannot trade without my guild seal. "
+            "My group carried it when we were attacked. "
+            "I was afraid... and I left them behind. "
+            "Please, return to the upper crypt "
+            "and find the seal."
+        )
+    else:
+        dialogue = (
+            "Please, find the guild seal. "
+            "It should still be near the remains "
+            "of my group in the upper crypt."
+        )
+
+    game_state.trader_dialogue_text = dialogue
+    game_state.trader_dialogue_started_at = (
+        dialogue_started_at
+    )
+    game_state.trader_dialogue_dismiss_started_at = -1
+    add_log_message(
+        game_state.combat_log,
+        f"Trader: {dialogue}",
+    )
+
+    return "trader_meeting"
+
+
 def buy_trader_item(game_state, slot_name):
+    quest = game_state.act_two_quests.trader_seal
+
+    if not quest.completed:
+        add_log_message(
+            game_state.combat_log,
+            "The trader cannot trade without the guild seal.",
+        )
+        return False
     item_id = DEFAULT_TRADER_STOCK.get(slot_name)
 
     if item_id is None:

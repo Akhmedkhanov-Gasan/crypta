@@ -447,8 +447,26 @@ def load_act_two_sprites():
         "decor_wall_mourner_statue": (
             "environment/decor/wall/mourner_statue.png"
         ),
-        "stairs_locked": "environment/stairs/locked.png",
-        "stairs_open": "environment/stairs/open.png",
+        "passage_gate_open": "environment/passages/gate.png",
+        "passage_gate_closed": "environment/passages/gate.png",
+        "act_one_dead_boss": (
+            "environment/objects/act1_dead_boss.png"
+        ),
+        "guild_seal": (
+            "environment/objects/guild_seal.png"
+        ),
+        "trader_corpse_1": (
+            "npcs/trader_corpse/trader_corpse_1.png"
+        ),
+        "trader_corpse_2": (
+            "npcs/trader_corpse/trader_corpse_2.png"
+        ),
+        "trader_corpse_3": (
+            "npcs/trader_corpse/trader_corpse_3.png"
+        ),
+        "trader_corpse_4": (
+            "npcs/trader_corpse/trader_corpse_4.png"
+        ),
         "potion": "items/consumables/potion.png",
         "potion_belt": "items/consumables/potion_belt.png",
         "fire_bomb": "items/consumables/fire_bomb.png",
@@ -545,6 +563,19 @@ def load_act_two_sprites():
             )
             continue
         if name == "binding_chains":
+            sprites[name] = pygame.transform.scale(
+                source,
+                (TILE_SIZE, TILE_SIZE),
+            )
+            continue
+        if name in (
+                "act_one_dead_boss",
+                "guild_seal",
+                "trader_corpse_1",
+                "trader_corpse_2",
+                "trader_corpse_3",
+                "trader_corpse_4",
+        ):
             sprites[name] = pygame.transform.scale(
                 source,
                 (TILE_SIZE, TILE_SIZE),
@@ -1186,13 +1217,7 @@ def load_act_three_gameplay_assets():
             / "potion_health.png",
             (tile_size, tile_size),
         ),
-        "stairs_locked": _load_scaled_image(
-            environment_directory
-            / "stairs"
-            / "stairs_locked_original.png",
-            (tile_size, tile_size),
-        ),
-        "stairs_open": _load_scaled_image(
+                "stairs": _load_scaled_image(
             environment_directory
             / "stairs"
             / "stairs_open_original.png",

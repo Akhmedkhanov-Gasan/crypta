@@ -119,13 +119,24 @@ from acts.turns import resolve_enemy_turn
 from bosses.oracle import resolve_oracle_hit_reaction
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
-from game.factories import create_floor_state, create_game_state
+from game.factories import (
+    create_floor_state,
+    create_game_state,
+    prepare_act_one_revisit_floors,
+)
+
 from game.progress_store import (
     load_progress,
     record_act_reached,
     select_menu_theme,
 )
 from acts.act_two.navigation import find_act_two_path
+from acts.act_two.presentation.items import (
+    draw_act_one_revisit_corpses,
+)
+from acts.act_two.presentation.trader_dialogue import (
+    draw_trader_dialogue,
+)
 from game.progression import apply_attribute_upgrade
 from acts.player_stats import (
     apply_attribute_rank_transition,
@@ -187,7 +198,7 @@ from rendering import (
     draw_potion,
     draw_scroll,
     draw_sidebar,
-    draw_stairs,
+    draw_passage,
     draw_status,
     draw_subclass_selection_screen,
     draw_upgrade_screen,
@@ -285,7 +296,10 @@ from systems.player_abilities import (
     perform_warlock_curse,
     perform_warlock_soul_exchange,
 )
-from acts.act_two.trader_logic import buy_trader_item
+from acts.act_two.trader_logic import (
+    buy_trader_item,
+    interact_with_trader,
+)
 
 FIRST_ACT_FINAL_FLOOR = 2
 FIRST_ACT_THREE_FLOOR = next(
@@ -317,8 +331,36 @@ def _complete_class_selection(game_state):
     game_state.player.experience = 8
     game_state.player.attribute_points = 1
     # ---TEST---
+
+    prepare_act_one_revisit_floors(game_state)
+
     game_state.floor_index += 1
-    game_state.floor = create_floor_state(game_state.floor_index)
+
+    next_floor = game_state.visited_floors.get(
+        game_state.floor_index
+    )
+    if next_floor is None:
+        next_floor = create_floor_state(game_state.floor_index)
+        game_state.visited_floors[
+            game_state.floor_index
+        ] = next_floor
+
+    game_state.floor = next_floor
+
+    entrance_passage = next(
+        (
+            passage
+            for passage in next_floor.passages
+            if passage.passage_id == "entrance"
+        ),
+        None,
+    )
+    if entrance_passage is not None:
+        (
+            next_floor.player_column,
+            next_floor.player_row,
+        ) = entrance_passage.trigger_position
+
     clear_archer_barrage_zone(game_state)
     clear_berserker_crushing_leap(game_state)
     game_state.player.key_count = 0
@@ -366,8 +408,38 @@ def _advance_floor_transition(game_state, current_time):
         not game_state.floor_transition_swapped
         and elapsed >= FLOOR_TRANSITION_CLOSE_END_MS
     ):
+        target_floor = game_state.visited_floors.get(target_index)
+
+        if target_floor is None:
+            target_floor = create_floor_state(target_index)
+            game_state.visited_floors[target_index] = target_floor
+
         game_state.floor_index = target_index
-        game_state.floor = create_floor_state(target_index)
+        game_state.floor = target_floor
+
+        target_passage_id = (
+            game_state.floor_transition_target_passage_id
+        )
+        if target_passage_id is not None:
+            target_passage = next(
+                (
+                    passage
+                    for passage in target_floor.passages
+                    if passage.passage_id == target_passage_id
+                ),
+                None,
+            )
+            if target_passage is None:
+                raise RuntimeError(
+                    "Target passage not found: "
+                    f"{target_passage_id!r} on floor {target_index}"
+                )
+
+            (
+                target_floor.player_column,
+                target_floor.player_row,
+            ) = target_passage.trigger_position
+
         game_state.floor_transition_swapped = True
         if FLOOR_CONFIGS[target_index]["act"] != 2:
             game_state.player.key_count = 0
@@ -384,6 +456,7 @@ def _advance_floor_transition(game_state, current_time):
     if elapsed >= FLOOR_TRANSITION_END_MS:
         game_state.floor_transition_started_at = -1
         game_state.floor_transition_target_index = None
+        game_state.floor_transition_target_passage_id = None
         game_state.floor_transition_swapped = False
 
 
@@ -528,7 +601,7 @@ def main():
     act_two_dragged_consumable_slot = None
 
     while running:
-        current_act = FLOOR_CONFIGS[game_state.floor_index]["act"]
+        current_act = game_state.floor.presentation_act
         if current_act == 2 and game_state.upgrade_screen_open:
             _finish_upgrade_descent(
                 game_state,
@@ -1859,16 +1932,27 @@ def main():
                 player_tried_to_move = (
                     column_change != 0 or row_change != 0
                 )
+                if (
+                        player_tried_to_move
+                        and game_state.trader_dialogue_started_at >= 0
+                        and (
+                        game_state.trader_dialogue_dismiss_started_at
+                        < game_state.trader_dialogue_started_at
+                )
+                ):
+                    game_state.trader_dialogue_dismiss_started_at = (
+                        pygame.time.get_ticks()
+                    )
                 directional_ability_cast = (
                     game_state.player.player_class == "warrior"
                     and game_state.player.directional_ability_aiming
                     and player_tried_to_move
                 )
                 if (
-                    directional_ability_cast
-                    and FLOOR_CONFIGS[game_state.floor_index]["act"] == 2
-                    and game_state.player.player_class == "warrior"
-                    and game_state.player.subclass is None
+                        directional_ability_cast
+                        and current_act == 2
+                        and game_state.player.player_class == "warrior"
+                        and game_state.player.subclass is None
                 ):
                     directional_ability_cast = (
                         select_directional_ability_direction(
@@ -2370,7 +2454,16 @@ def main():
                             game_state
                         )
                     elif target_trader:
-                        game_state.trade_screen_open = True
+                        trader_sound = interact_with_trader(
+                            game_state,
+                            pygame.time.get_ticks(),
+                        )
+
+                        if trader_sound is not None:
+                            act_two_sounds.play_ui_sound(
+                                trader_sound
+                            )
+
                         act_two_held_movement_keys.clear()
                         act_two_held_direction = (0, 0)
                     elif target_bloody_altar:
@@ -2924,7 +3017,7 @@ def main():
         ):
             _complete_class_selection(game_state)
 
-        current_act = FLOOR_CONFIGS[game_state.floor_index]["act"]
+        current_act = game_state.floor.presentation_act
         current_act_floor = FLOOR_CONFIGS[game_state.floor_index][
             "act_floor"
         ]
@@ -3411,25 +3504,30 @@ def main():
                 game_state.floor["boss_door"][1],
                 boss_door_is_open,
             )
-        stairs_are_open = not any(
-            enemy["health"] > 0
-            for enemy in game_state.floor["enemies"]
-        )
-        if current_act == 2:
-            remembered_stairs_open = (
-                game_state.floor.act_two_remembered_stairs_open
+        if game_state.floor.passages:
+            living_enemies_remain = any(
+                enemy["health"] > 0
+                for enemy in game_state.floor["enemies"]
             )
-        else:
-            remembered_stairs_open = stairs_are_open
-        if remembered_stairs_open is not None:
-            draw_stairs(
-                world_target,
-                game_state.floor["stairs_column"],
-                game_state.floor["stairs_row"],
-                remembered_stairs_open,
-                current_act,
-                act_two_sprites,
-            )
+
+            for passage in game_state.floor.passages:
+                if current_act == 2 and not passage.discovered:
+                    continue
+
+                passage_is_open = (
+                    not passage.requires_clear
+                    or game_state.player.player_class is not None
+                    or not living_enemies_remain
+                )
+
+                draw_passage(
+                    world_target,
+                    passage.wall_position[0],
+                    passage.wall_position[1],
+                    passage_is_open,
+                    current_act,
+                    act_two_sprites,
+                )
         for potion in game_state.floor["potions"]:
             if (
                 current_act == 2
@@ -3557,6 +3655,14 @@ def main():
                         current_act,
                         act_two_sprites,
                     )
+        if current_act == 2:
+            draw_act_one_revisit_corpses(
+                world_target,
+                game_state.floor.act_one_revisit,
+                game_state.floor.visible_cells,
+                act_two_sprites,
+            )
+
         for dropped_key in game_state.floor["dropped_keys"]:
             if (
                 current_act == 2
@@ -3895,6 +4001,14 @@ def main():
                         pygame.mouse.get_pos(),
                     ),
                 )
+            draw_trader_dialogue(
+                game_surface,
+                game_state.trader_dialogue_text,
+                game_state.trader_dialogue_started_at,
+                game_state.trader_dialogue_dismiss_started_at,
+                current_time,
+                act_two_fonts,
+            )
             if game_state.bloody_altar_open:
                 draw_bloody_altar_window(
                     game_surface,
