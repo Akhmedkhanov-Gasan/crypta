@@ -18,7 +18,7 @@ from acts.act_two.presentation.items import (
     draw_key as _draw_act_two_key,
     draw_potion as _draw_act_two_potion,
     draw_scroll as _draw_act_two_scroll,
-    draw_stairs as _draw_act_two_stairs,
+    draw_passage as _draw_act_two_passage,
 )
 from presentation.layout import (
     MAP_HEIGHT,
@@ -3206,28 +3206,58 @@ def draw_chest(screen, chest, act_number, sprites, current_time=0):
     )
 
 
-def draw_stairs(
+def _draw_act_one_passage(
     screen,
     column,
     row,
     is_open,
-    act_number,
-    sprites,
 ):
-    if act_number >= 2:
-        _draw_act_two_stairs(screen, column, row, is_open, sprites)
-        return
-
     cell_x = MAP_OFFSET_X + column * TILE_SIZE
     cell_y = MAP_OFFSET_Y + row * TILE_SIZE
-    center = (cell_x + TILE_SIZE // 2, cell_y + TILE_SIZE // 2)
+    center = (
+        cell_x + TILE_SIZE // 2,
+        cell_y + TILE_SIZE // 2,
+    )
+
     if is_open:
-        _draw_act_one_glow(screen, center, (89, 100, 132), 20)
-    frame_color = (103, 104, 115) if is_open else (60, 59, 67)
+        _draw_act_one_glow(
+            screen,
+            center,
+            (89, 100, 132),
+            20,
+        )
+
+    frame_color = (
+        (103, 104, 115)
+        if is_open
+        else (60, 59, 67)
+    )
+    interior_color = (
+        (8, 9, 13)
+        if is_open
+        else (31, 28, 30)
+    )
+
+    pygame.draw.rect(
+        screen,
+        interior_color,
+        (
+            cell_x + 7,
+            cell_y + 9,
+            TILE_SIZE - 14,
+            TILE_SIZE - 11,
+        ),
+    )
+
     pygame.draw.arc(
         screen,
         frame_color,
-        (cell_x + 6, cell_y + 4, TILE_SIZE - 12, 23),
+        (
+            cell_x + 5,
+            cell_y + 3,
+            TILE_SIZE - 10,
+            22,
+        ),
         0,
         3.14159,
         3,
@@ -3235,29 +3265,72 @@ def draw_stairs(
     pygame.draw.line(
         screen,
         frame_color,
-        (cell_x + 6, cell_y + 15),
-        (cell_x + 6, cell_y + 28),
+        (cell_x + 5, cell_y + 14),
+        (cell_x + 5, cell_y + TILE_SIZE - 3),
         3,
     )
     pygame.draw.line(
         screen,
         frame_color,
-        (cell_x + TILE_SIZE - 6, cell_y + 15),
-        (cell_x + TILE_SIZE - 6, cell_y + 28),
+        (cell_x + TILE_SIZE - 5, cell_y + 14),
+        (
+            cell_x + TILE_SIZE - 5,
+            cell_y + TILE_SIZE - 3,
+        ),
         3,
     )
-    pygame.draw.rect(
-        screen,
-        (11, 12, 17),
-        (cell_x + 9, cell_y + 14, TILE_SIZE - 18, 14),
-    )
-    for step_number in range(3):
-        step_y = cell_y + 20 + step_number * 4
-        inset = step_number * 2
+
+    if not is_open:
+        for bar_offset in (-6, 0, 6):
+            bar_x = cell_x + TILE_SIZE // 2 + bar_offset
+            pygame.draw.line(
+                screen,
+                ACT_ONE_IRON,
+                (bar_x, cell_y + 10),
+                (bar_x, cell_y + TILE_SIZE - 4),
+                2,
+            )
+
         pygame.draw.line(
             screen,
-            frame_color,
-            (cell_x + 9 - inset, step_y),
-            (cell_x + TILE_SIZE - 9 + inset, step_y),
+            ACT_ONE_IRON,
+            (cell_x + 7, cell_y + 20),
+            (cell_x + TILE_SIZE - 7, cell_y + 20),
             2,
         )
+        pygame.draw.rect(
+            screen,
+            ACT_ONE_GOLD,
+            (
+                cell_x + TILE_SIZE // 2 - 2,
+                cell_y + 18,
+                4,
+                5,
+            ),
+        )
+
+
+def draw_passage(
+    screen,
+    column,
+    row,
+    is_open,
+    act_number,
+    sprites,
+):
+    if act_number == 1:
+        _draw_act_one_passage(
+            screen,
+            column,
+            row,
+            is_open,
+        )
+        return
+
+    _draw_act_two_passage(
+        screen,
+        column,
+        row,
+        is_open,
+        sprites,
+    )

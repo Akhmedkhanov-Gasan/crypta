@@ -1,8 +1,7 @@
 from settings import MAP_COLUMNS, MAP_ROWS
+from worldgen.passages import create_north_wall_passage
 
-
-def generate_warden_floor(config):
-    """Build the fixed Act One finale: staging room and boss arena."""
+def generate_warden_floor(config, floor_index):
     dungeon_map = [
         ["#" for _ in range(MAP_COLUMNS)]
         for _ in range(MAP_ROWS)
@@ -17,7 +16,6 @@ def generate_warden_floor(config):
     carve_rectangle(1, 5, 5, 9)
     carve_rectangle(5, 6, 7, 8)
 
-    # The player must clear this room before reaching the Warden.
     guard_room = {
         "x": 7,
         "y": 3,
@@ -26,7 +24,6 @@ def generate_warden_floor(config):
     }
     carve_rectangle(7, 3, 13, 11)
 
-    # A sealed arena with a single guaranteed, unobstructed entrance.
     boss_room = {
         "x": 14,
         "y": 2,
@@ -69,12 +66,24 @@ def generate_warden_floor(config):
         for enemy_type, position in boss_positions
     )
 
+    passages = [
+        create_north_wall_passage(
+            dungeon_map,
+            boss_room,
+            "exit",
+            floor_index + 1,
+            "entrance",
+            requires_clear=True,
+        )
+    ]
+
     return {
         "map": ["".join(row) for row in dungeon_map],
         "player_start": (2, 7),
         "enemies": enemies,
         "chests": [],
         "potions": [(4, 8), (12, 10)],
+        "passages": passages,
         "stairs": (19, 7),
         "boss_door": boss_door,
         "boss_room": boss_room,
@@ -82,7 +91,6 @@ def generate_warden_floor(config):
         "boss_emitters": [],
         "seal_boss_door_during_fight": True,
         "torches": [],
-        # Fixed seed keeps procedural cracks and decoration consistent.
         "visual_seed": 10301,
     }
 

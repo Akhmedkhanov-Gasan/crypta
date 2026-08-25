@@ -9,7 +9,6 @@ from acts.act_three.turns import (
 from acts.act_two.turns import (
     resolve_enemy_turn as resolve_act_two_enemy_turn,
 )
-from levels import FLOOR_CONFIGS
 
 
 TurnResolver = Callable[..., None]
@@ -22,7 +21,7 @@ _TURN_RESOLVERS: dict[int, TurnResolver] = {
 
 
 def resolve_enemy_turn(game_state, *args, **kwargs):
-    act_number = FLOOR_CONFIGS[game_state.floor_index]["act"]
+    act_number = game_state.floor.presentation_act
 
     try:
         resolver = _TURN_RESOLVERS[act_number]

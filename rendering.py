@@ -92,7 +92,7 @@ from presentation.world import (
     draw_player_attack_markers,
     draw_potion,
     draw_scroll,
-    draw_stairs,
+    draw_passage,
 )
 
 
@@ -156,7 +156,7 @@ __all__ = [
     "draw_potion",
     "draw_scroll",
     "draw_sidebar",
-    "draw_stairs",
+    "draw_passage",
     "draw_status",
     "draw_subclass_selection_screen",
     "draw_upgrade_screen",

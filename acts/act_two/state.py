@@ -25,6 +25,25 @@ class RunePuzzlePhase(Enum):
 
 
 @dataclass
+class ActOneRevisitCorpseState:
+    enemy_type: str
+    column: int
+    row: int
+
+
+@dataclass
+class ActOneRevisitState:
+    dead_boss_position: tuple[int, int] | None = None
+    guild_seal_position: tuple[int, int] | None = None
+    trader_corpse_positions: list[
+        tuple[int, int]
+    ] = field(default_factory=list)
+    enemy_corpses: list[
+        ActOneRevisitCorpseState
+    ] = field(default_factory=list)
+
+
+@dataclass
 class BloodyAltarState:
     column: int
     row: int

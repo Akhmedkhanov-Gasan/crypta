@@ -7,7 +7,6 @@ def _line_of_sight(
     target,
     blockers=(),
 ):
-    """Return whether a grid ray reaches a cell before hitting a wall."""
     x0, y0 = origin
     x1, y1 = target
     delta_x = abs(x1 - x0)
@@ -38,7 +37,6 @@ def _line_of_sight(
 
 
 def update_act_two_visibility(floor):
-    """Update current sight and remember terrain visited on this floor."""
     origin = (floor.player_column, floor.player_row)
     radius_squared = VISION_RADIUS_TILES * VISION_RADIUS_TILES
     visible_cells = set()
@@ -72,12 +70,12 @@ def position_is_visible(floor, column, row):
 
 
 def _update_remembered_objects(floor):
-    stairs_position = (floor.stairs_column, floor.stairs_row)
-    if stairs_position in floor.visible_cells:
-        floor.act_two_remembered_stairs_open = not any(
-            enemy.health > 0
-            for enemy in floor.enemies
-        )
+    for passage in floor.passages:
+        if (
+            passage.wall_position in floor.visible_cells
+            or passage.trigger_position in floor.visible_cells
+        ):
+            passage.discovered = True
 
     for chest in floor.chests:
         position = (chest.column, chest.row)

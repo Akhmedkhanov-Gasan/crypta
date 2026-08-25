@@ -1,5 +1,7 @@
 import random
 
+from levels import FLOOR_CONFIGS
+from worldgen.passages import create_north_wall_passage
 from worldgen.geometry import (
     carve_horizontal_corridor,
     carve_room,
@@ -146,7 +148,7 @@ def create_oracle_arena(dungeon_map, boss_room):
     return columns
 
 
-def generate_oracle_floor(config):
+def generate_oracle_floor(config, floor_index):
     dungeon_map = [
         ["#" for _ in range(MAP_COLUMNS)]
         for _ in range(MAP_ROWS)
@@ -187,6 +189,34 @@ def generate_oracle_floor(config):
         if abs(position[0] - boss_column) == 6
     ]
 
+    approach_room = {
+        "x": 1,
+        "y": boss_row - 2,
+        "width": boss_room["x"] - 1,
+        "height": 5,
+    }
+
+    passages = [
+        create_north_wall_passage(
+            dungeon_map,
+            approach_room,
+            "entrance",
+            floor_index - 1,
+            "exit",
+        ),
+        create_north_wall_passage(
+            dungeon_map,
+            boss_room,
+            "exit",
+            (
+                floor_index + 1
+                if floor_index + 1 < len(FLOOR_CONFIGS)
+                else None
+            ),
+            None,
+        ),
+    ]
+
     return {
         "map": ["".join(row) for row in dungeon_map],
         "player_start": (2, boss_row),
@@ -199,6 +229,7 @@ def generate_oracle_floor(config):
         ],
         "chests": [],
         "potions": [],
+        "passages": passages,
         "stairs": (boss_column, boss_row),
         "boss_door": boss_door,
         "boss_room": boss_room,

@@ -3,6 +3,7 @@ from enum import Enum, auto
 from typing import Any, Iterator
 
 from acts.act_two.state import (
+    ActOneRevisitState,
     ActTwoPlayerState,
     BloodyAltarState,
     BreakableCrateState,
@@ -14,6 +15,7 @@ from acts.act_two.state import (
     TreasuryRoomState,
     TraderState,
 )
+from acts.act_two.quests import ActTwoQuestState
 from acts.act_three.state import (
     ACT_THREE_PLAYER_FIELD_NAMES,
     ACT_THREE_SESSION_FIELD_NAMES,
@@ -239,6 +241,17 @@ class EnemyState(AttributeMapping):
 
 
 @dataclass(eq=False)
+class PassageState(AttributeMapping):
+    passage_id: str
+    wall_position: tuple[int, int]
+    trigger_position: tuple[int, int]
+    target_floor_index: int | None
+    target_passage_id: str | None = None
+    requires_clear: bool = False
+    discovered: bool = False
+
+
+@dataclass(eq=False)
 class FloorState(AttributeMapping):
     map: list[str]
     player_column: int
@@ -254,6 +267,8 @@ class FloorState(AttributeMapping):
     boss_emitters: list[tuple[int, int]]
     seal_boss_door_during_fight: bool
     boss_fight_started: bool
+    passages: list[PassageState] = field(default_factory=list)
+    act_one_revisit: ActOneRevisitState | None = None
     upgrade_altar: tuple[int, int] | None = None
     bloody_altar: BloodyAltarState | None = None
     trader: TraderState | None = None
@@ -276,6 +291,7 @@ class FloorState(AttributeMapping):
     ] = field(default_factory=set)
     connectors: list[dict[str, Any]] = field(default_factory=list)
     visual_seed: int = 0
+    presentation_act: int = 1
     dropped_keys: list[tuple[int, int]] = field(
         default_factory=list
     )
@@ -297,7 +313,6 @@ class FloorState(AttributeMapping):
     act_two_remembered_crates: dict[
         tuple[int, int], dict[str, Any]
     ] = field(default_factory=dict)
-    act_two_remembered_stairs_open: bool | None = None
     fire_zones: list[FireZoneState] = field(default_factory=list)
 
 
@@ -376,6 +391,11 @@ class GameState:
     floor: FloorState
     player: PlayerState
     combat_log: list[str]
+    visited_floors: dict[int, FloorState] = field(default_factory=dict)
+    act_two_quests: ActTwoQuestState = field(
+        default_factory=ActTwoQuestState,
+    )
+    act_one_revisit_prepared: bool = False
     game_won: bool = False
     upgrade_screen_open: bool = False
     act_one_upgrades_remaining: int = 0
@@ -385,6 +405,9 @@ class GameState:
     class_selection_choice_started_at: int = 0
     act_two_stats_open: bool = False
     trade_screen_open: bool = False
+    trader_dialogue_text: str = ""
+    trader_dialogue_started_at: int = -1
+    trader_dialogue_dismiss_started_at: int = -1
     rune_selection_open: bool = False
     rune_selection_pending_id: str | None = None
     bloody_altar_open: bool = False
@@ -393,6 +416,7 @@ class GameState:
     upgrade_reward_pending: bool = False
     floor_transition_started_at: int = -1
     floor_transition_target_index: int | None = None
+    floor_transition_target_passage_id: str | None = None
     floor_transition_swapped: bool = False
     player_attack_targets: list[tuple[int, int]] = field(
         default_factory=list

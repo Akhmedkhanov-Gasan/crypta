@@ -188,6 +188,18 @@ ACT_TWO_ENVIRONMENT_SOUND_FILES = {
 }
 
 
+ACT_TWO_TRADER_SOUND_FILES = {
+    "trader_meeting": (
+        "trader_meeting_1.mp3",
+        "trader_meeting_2.mp3",
+    ),
+    "trader_normal": (
+        "trader_normal_1.mp3",
+        "trader_normal_2.mp3",
+    ),
+}
+
+
 ACT_TWO_FIRE_BOMB_SOUND_FILES = {
     "fire_bomb_break": (
         "fire_bomb_break_1.mp3",
@@ -254,6 +266,8 @@ ACT_TWO_SOUND_VOLUMES = {
     "fire_bomb_break": 0.68,
     "fire_bomb_ignite": 0.50,
     "fire_bomb_burning": 0.22,
+    "trader_meeting": 0.82,
+    "trader_normal": 0.82,
 }
 
 
@@ -420,7 +434,34 @@ class ActTwoSoundBank:
                     continue
             if variants:
                 loaded_sounds[sound_key] = variants
+        trader_path = sounds_path / "trader"
 
+        for (
+            sound_key,
+            filenames,
+        ) in ACT_TWO_TRADER_SOUND_FILES.items():
+            variants = []
+
+            for filename in filenames:
+                try:
+                    variants.append(
+                        pygame.mixer.Sound(
+                            str(
+                                trader_path
+                                / filename
+                            )
+                        )
+                    )
+                except (
+                    FileNotFoundError,
+                    pygame.error,
+                ):
+                    continue
+
+            if variants:
+                loaded_sounds[
+                    sound_key
+                ] = variants
         fire_bomb_path = sounds_path / "items" / "fire_bomb"
         for sound_key, filenames in ACT_TWO_FIRE_BOMB_SOUND_FILES.items():
             variants = []
@@ -680,7 +721,10 @@ class ActTwoSoundBank:
                     sound_key = "gold_pickup"
                 elif event.data.get("kind") == "key":
                     sound_key = "key_pickup"
-                elif event.data.get("kind") == "potion":
+                elif event.data.get("kind") in (
+                        "potion",
+                        "guild_seal",
+                    ):
                     sound_key = "item_pickup"
                 elif event.data.get("kind") in (
                     "fire_bomb",

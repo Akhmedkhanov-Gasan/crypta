@@ -4,6 +4,10 @@ from acts.act_one.settings import (
     PLAYER_STARTING_ATTRIBUTE_RANKS,
     PLAYER_STARTING_STATS,
 )
+from acts.act_two.state import (
+    ActOneRevisitCorpseState,
+    ActOneRevisitState,
+)
 from acts.player_stats import ATTRIBUTE_NAMES
 from enemies import ENEMY_TYPES
 from generation import generate_floor
@@ -15,6 +19,7 @@ from game.state import (
     EnemyState,
     FloorState,
     GameState,
+    PassageState,
     PlayerState,
     PotionState,
     RoomState,
@@ -25,8 +30,15 @@ from game.state import (
 )
 
 
-def create_floor_state(floor_index: int) -> FloorState:
-    floor = generate_floor(floor_index)
+def create_floor_state(
+    floor_index: int,
+    floor_data=None,
+) -> FloorState:
+    floor = (
+        floor_data
+        if floor_data is not None
+        else generate_floor(floor_index)
+    )
     player_column, player_row = floor["player_start"]
     enemies = []
     enemy_type_counts = {}
@@ -161,7 +173,80 @@ def create_floor_state(floor_index: int) -> FloorState:
         if bloody_altar_data is not None
         else None
     )
-
+    act_one_revisit_data = floor.get("act_one_revisit")
+    act_one_revisit = (
+        ActOneRevisitState(
+            dead_boss_position=(
+                tuple(
+                    act_one_revisit_data[
+                        "dead_boss_position"
+                    ]
+                )
+                if act_one_revisit_data.get(
+                    "dead_boss_position"
+                )
+                   is not None
+                else None
+            ),
+            guild_seal_position=(
+                tuple(
+                    act_one_revisit_data[
+                        "guild_seal_position"
+                    ]
+                )
+                if act_one_revisit_data.get(
+                    "guild_seal_position"
+                )
+                   is not None
+                else None
+            ),
+            trader_corpse_positions=[
+                tuple(position)
+                for position in (
+                    act_one_revisit_data.get(
+                        "trader_corpse_positions",
+                        [],
+                    )
+                )
+            ],
+            enemy_corpses=[
+                ActOneRevisitCorpseState(
+                    enemy_type=corpse_data[
+                        "enemy_type"
+                    ],
+                    column=corpse_data[
+                        "position"
+                    ][0],
+                    row=corpse_data[
+                        "position"
+                    ][1],
+                )
+                for corpse_data in (
+                    act_one_revisit_data.get(
+                        "enemy_corpses",
+                        [],
+                    )
+                )
+            ],
+        )
+        if act_one_revisit_data is not None
+        else None
+    )
+    passages = [
+        PassageState(
+            passage_id=passage_data["passage_id"],
+            wall_position=passage_data["wall_position"],
+            trigger_position=passage_data["trigger_position"],
+            target_floor_index=passage_data["target_floor_index"],
+            target_passage_id=passage_data.get("target_passage_id"),
+            requires_clear=passage_data.get(
+                "requires_clear",
+                False,
+            ),
+            discovered=passage_data.get("discovered", False),
+        )
+        for passage_data in floor.get("passages", [])
+    ]
     return FloorState(
         map=floor["map"],
         player_column=player_column,
@@ -179,6 +264,8 @@ def create_floor_state(floor_index: int) -> FloorState:
             "seal_boss_door_during_fight"
         ],
         boss_fight_started=floor["boss_door"] is None,
+        passages=passages,
+        act_one_revisit=act_one_revisit,
         upgrade_altar=floor.get("upgrade_altar"),
         bloody_altar=bloody_altar,
         trader=trader,
@@ -191,8 +278,32 @@ def create_floor_state(floor_index: int) -> FloorState:
         barriers=floor.get("barriers", set()),
         connectors=floor.get("connectors", []),
         visual_seed=floor.get("visual_seed", 0),
+        presentation_act=floor.get(
+            "presentation_act",
+            FLOOR_CONFIGS[floor_index]["act"],
+        ),
     )
 
+
+def prepare_act_one_revisit_floors(game_state: GameState):
+    if game_state.act_one_revisit_prepared:
+        return
+
+    from acts.act_two.generation.act_one_revisit import (
+        generate_act_one_revisit_floors,
+    )
+
+    generated_floors = generate_act_one_revisit_floors()
+
+    for floor_index, floor_data in generated_floors.items():
+        game_state.visited_floors[floor_index] = (
+            create_floor_state(
+                floor_index,
+                floor_data,
+            )
+        )
+
+    game_state.act_one_revisit_prepared = True
 
 def create_player_state() -> PlayerState:
     return PlayerState(
@@ -223,6 +334,7 @@ def create_game_state(
         player=create_player_state(),
         combat_log=[opening_message],
     )
+    game_state.visited_floors[floor_index] = game_state.floor
     if FLOOR_CONFIGS[floor_index]["act"] == 2:
         from acts.act_two.consumables import (
             grant_act_two_test_scrolls,

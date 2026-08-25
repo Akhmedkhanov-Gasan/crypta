@@ -40,9 +40,6 @@ def draw_status(
         config["act"] == act_number
         for config in FLOOR_CONFIGS
     )
-    living_enemy_count = sum(enemy["health"] > 0 for enemy in enemies)
-    total_enemy_count = len(enemies)
-    stairs_are_open = living_enemy_count == 0
     displayed_map_left = (
         (GAME_WIDTH - MAP_WIDTH) // 2
         if act_number in (1, 2)
@@ -60,11 +57,12 @@ def draw_status(
         )
     else:
         status = (
-            f"Act {act_number} - Floor {act_floor}/{act_floor_count}  |  "
-            f"Enemies {living_enemy_count}/{total_enemy_count}  |  "
-            f"Stairs {'open' if stairs_are_open else 'locked'}"
+            f"Act {act_number} - Floor {act_floor}/{act_floor_count}"
         )
-        screen.blit(font.render(status, True, TEXT_COLOR), (MAP_OFFSET_X, 8))
+        screen.blit(
+            font.render(status, True, TEXT_COLOR),
+            (MAP_OFFSET_X, 8),
+        )
 
     living_boss = next(
         (
@@ -270,9 +268,6 @@ def draw_status(
         message_color = ENEMY_COLOR
     elif game_won:
         message = "Victory - press R to restart"
-        message_color = PLAYER_COLOR
-    elif stairs_are_open:
-        message = "Enemies defeated - find the stairs"
         message_color = PLAYER_COLOR
 
     if message:

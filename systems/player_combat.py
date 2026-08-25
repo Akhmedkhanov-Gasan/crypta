@@ -61,8 +61,6 @@ from settings import (
 from settings import ASSASSIN_TELEPORT_CHARGES
 from settings import ASSASSIN_ULTIMATE_CHARGES
 
-from levels import FLOOR_CONFIGS
-
 
 OracleHitReaction = Callable[
     [EnemyState, FloorState, list[str]],
@@ -449,7 +447,7 @@ def resolve_enemy_defeat(
     floor = game_state.floor
     player.enemies_defeated += 1
 
-    current_act = FLOOR_CONFIGS[game_state.floor_index]["act"]
+    current_act = game_state.floor.presentation_act
     if current_act == 2:
         experience_reward = experience_reward_for_enemy(enemy.type)
         levels_gained = grant_experience(player, experience_reward)

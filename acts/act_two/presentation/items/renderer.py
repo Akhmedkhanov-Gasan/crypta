@@ -82,9 +82,22 @@ def draw_chest(screen, chest, sprites):
     )
 
 
-def draw_stairs(screen, column, row, is_open, sprites):
-    sprite_name = "stairs_open" if is_open else "stairs_locked"
-    screen.blit(sprites[sprite_name], _position(column, row))
+def draw_passage(
+    screen,
+    column,
+    row,
+    is_open,
+    sprites,
+):
+    sprite_name = (
+        "passage_gate_open"
+        if is_open
+        else "passage_gate_closed"
+    )
+    screen.blit(
+        sprites[sprite_name],
+        _position(column, row),
+    )
 
 
 def draw_breakable_crate(screen, crate, sprites):
@@ -94,3 +107,70 @@ def draw_breakable_crate(screen, crate, sprites):
         sprites[sprite_name],
         _position(crate["column"], crate["row"]),
     )
+
+
+def draw_act_one_revisit_corpses(
+    screen,
+    revisit_state,
+    visible_cells,
+    sprites,
+):
+    if revisit_state is None:
+        return
+    for corpse_index, position in enumerate(
+        revisit_state.trader_corpse_positions,
+        start=1,
+    ):
+        if position not in visible_cells:
+            continue
+
+        screen.blit(
+            sprites[
+                f"trader_corpse_{corpse_index}"
+            ],
+            _position(*position),
+        )
+
+    guild_seal_position = (
+        revisit_state.guild_seal_position
+    )
+
+    if (
+        guild_seal_position is not None
+        and guild_seal_position in visible_cells
+    ):
+        screen.blit(
+            sprites["guild_seal"],
+            _position(*guild_seal_position),
+        )
+    for corpse in revisit_state.enemy_corpses:
+        position = (
+            corpse.column,
+            corpse.row,
+        )
+
+        if position not in visible_cells:
+            continue
+
+        screen.blit(
+            sprites[
+                f"{corpse.enemy_type}_death"
+            ],
+            _position(
+                corpse.column,
+                corpse.row,
+            ),
+        )
+
+    dead_boss_position = (
+        revisit_state.dead_boss_position
+    )
+
+    if (
+        dead_boss_position is not None
+        and dead_boss_position in visible_cells
+    ):
+        screen.blit(
+            sprites["act_one_dead_boss"],
+            _position(*dead_boss_position),
+        )
