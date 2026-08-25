@@ -1132,10 +1132,10 @@ def draw_act_two_player_feedback_overlay(
     view_rectangle = (
         camera_render_rectangle(
             pygame.Rect(
-            ACT_TWO_VIEW_X,
-            ACT_TWO_VIEW_Y,
-            ACT_TWO_VIEW_WIDTH,
-            ACT_TWO_VIEW_HEIGHT,
+                ACT_TWO_VIEW_X,
+                ACT_TWO_VIEW_Y,
+                ACT_TWO_VIEW_WIDTH,
+                ACT_TWO_VIEW_HEIGHT,
             ),
             camera.zoom,
         )
@@ -1147,27 +1147,58 @@ def draw_act_two_player_feedback_overlay(
             MAP_HEIGHT,
         )
     )
-    hit_elapsed = current_time - player.hit_animation_started_at
-    if (
-        player.health > 0
-        and player.hit_animation_started_at >= 0
-        and 0 <= hit_elapsed < 330
-    ):
-        visibility = math.sin(math.pi * hit_elapsed / 330)
-        vignette = pygame.Surface(view_rectangle.size, pygame.SRCALPHA)
-        for inset, strength in ((0, 1), (7, 0.6), (15, 0.28)):
+
+    critical_health = max(
+        3,
+        math.ceil(player.max_health * 0.30),
+    )
+
+    if 0 < player.health <= critical_health:
+        severity = (
+                           critical_health - player.health + 1
+                   ) / critical_health
+
+        pulse = (
+                0.5
+                + 0.5 * math.sin(current_time / 320)
+        )
+        visibility = 0.80 + 0.20 * pulse
+        base_alpha = round(
+            (70 + severity * 65) * visibility
+        )
+
+        low_health_vignette = pygame.Surface(
+            view_rectangle.size,
+            pygame.SRCALPHA,
+        )
+
+        for inset, strength, width in (
+                (0, 1.0, 22),
+                (16, 0.58, 16),
+                (34, 0.25, 11),
+        ):
             pygame.draw.rect(
-                vignette,
-                (118, 13, 20, round(105 * strength * visibility)),
+                low_health_vignette,
+                (
+                    145,
+                    8,
+                    20,
+                    round(base_alpha * strength),
+                ),
                 (
                     inset,
                     inset,
                     view_rectangle.width - inset * 2,
                     view_rectangle.height - inset * 2,
                 ),
-                width=9,
+                width=width,
+                border_radius=10,
             )
-        screen.blit(vignette, view_rectangle)
+
+        screen.blit(
+            low_health_vignette,
+            view_rectangle,
+        )
 
     draw_act_two_death_scene(
         screen,
