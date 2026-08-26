@@ -13,6 +13,7 @@ from acts.act_two.presentation.enemies.brute import (
 )
 from acts.act_two.presentation.enemies.goblin import (
     _draw_act_two_goblin_hit_feedback,
+    draw_goblin_summon_effects,
 )
 from acts.act_two.presentation.enemies.priest import (
     _draw_act_two_priest_hit_feedback,
@@ -28,11 +29,13 @@ from settings import (
     HEALTH_BAR_COLOR,
     TILE_SIZE,
 )
-
+from acts.act_two.presentation.enemies.timing import (
+    ACT_TWO_ENEMY_KNOCKBACK_MS,
+    attack_telegraph_is_visible,
+    enemy_movement_duration,
+)
 
 ACT_TWO_ENEMY_ATTACK_FRAME_MS = 240
-ACT_TWO_ENEMY_MOVE_MS = 180
-ACT_TWO_ENEMY_KNOCKBACK_MS = 260
 _AFTERSHOCK_HIT_FEEDBACK_MS = 520
 
 _STANDARD_ENEMY_TYPES = (
@@ -62,14 +65,7 @@ def _movement_offset(enemy, current_time):
     origin = enemy.get("movement_origin")
     started_at = enemy.get("movement_animation_started_at", 0)
     movement_kind = enemy.get("movement_animation_kind")
-    duration = (
-        ACT_TWO_ENEMY_KNOCKBACK_MS
-        if movement_kind in (
-            "power_cleave_knockback",
-            "arcane_burst_knockback",
-        )
-        else ACT_TWO_ENEMY_MOVE_MS
-    )
+    duration = enemy_movement_duration(enemy)
     elapsed = current_time - started_at
 
     if origin is None or started_at <= 0:
@@ -101,7 +97,12 @@ def _movement_offset(enemy, current_time):
     )
 
 
-def _draw_oracle(screen, enemy, sprites):
+def _draw_oracle(
+    screen,
+    enemy,
+    sprites,
+    current_time,
+):
     body_size = TILE_SIZE * 3
     body_left = MAP_OFFSET_X + (enemy["column"] - 1) * TILE_SIZE
     body_top = MAP_OFFSET_Y + (enemy["row"] - 1) * TILE_SIZE
@@ -141,7 +142,10 @@ def _draw_oracle(screen, enemy, sprites):
         (bar_x, bar_y, int(bar_width * health_ratio), 5),
     )
 
-    if enemy["attack_targets"]:
+    if attack_telegraph_is_visible(
+        enemy,
+        current_time,
+    ):
         warning_x = body_left + body_size // 2
         warning_top = body_top + 8
         pygame.draw.line(
@@ -161,7 +165,14 @@ def _draw_oracle(screen, enemy, sprites):
 
 def _enemy_sprite_name(enemy, current_time):
     if enemy["type"] == "brute":
-        return "brute_attack" if enemy["attack_targets"] else "brute"
+        return (
+            "brute_attack"
+            if attack_telegraph_is_visible(
+                enemy,
+                current_time,
+            )
+            else "brute"
+        )
 
     sprite_name = enemy["type"]
     attack_started_at = enemy.get("attack_animation_started_at", 0)
@@ -188,7 +199,13 @@ def _enemy_sprite_name(enemy, current_time):
     if enemy["type"] == "priest":
         return (
             "priest_cast"
-            if enemy["attack_targets"] or enemy["heal_target"] is not None
+            if (
+                attack_telegraph_is_visible(
+                    enemy,
+                    current_time,
+                )
+                or enemy["heal_target"] is not None
+            )
             else "priest_idle"
         )
     return sprite_name
@@ -231,29 +248,6 @@ def _draw_sentinel_vulnerable_side(screen, enemy):
         )
 
 
-def _draw_priest_heal_target(screen, enemy):
-    if (
-        enemy["type"] != "priest"
-        or enemy["heal_target"] is None
-        or enemy["heal_target"]["health"] <= 0
-    ):
-        return
-
-    heal_target = enemy["heal_target"]
-    pygame.draw.rect(
-        screen,
-        (80, 220, 130),
-        (
-            MAP_OFFSET_X + heal_target["column"] * TILE_SIZE + 3,
-            MAP_OFFSET_Y + heal_target["row"] * TILE_SIZE + 3,
-            TILE_SIZE - 6,
-            TILE_SIZE - 6,
-        ),
-        width=2,
-        border_radius=4,
-    )
-
-
 def _draw_standard_enemy(
     screen,
     enemy,
@@ -279,8 +273,14 @@ def _draw_standard_enemy(
         current_time,
         damage_font,
     )
+    if enemy.type == "goblin":
+        draw_goblin_summon_effects(
+            screen,
+            enemy,
+            position,
+            current_time,
+        )
     _draw_sentinel_vulnerable_side(screen, enemy)
-    _draw_priest_heal_target(screen, enemy)
 
     if enemy["is_aggro"]:
         pygame.draw.rect(
@@ -354,8 +354,15 @@ def _draw_health_bar(screen, enemy, current_time):
     )
 
 
-def _draw_attack_warning(screen, enemy):
-    if not enemy["attack_targets"]:
+def _draw_attack_warning(
+    screen,
+    enemy,
+    current_time,
+):
+    if not attack_telegraph_is_visible(
+        enemy,
+        current_time,
+    ):
         return
     warning_x = (
         MAP_OFFSET_X
@@ -537,7 +544,12 @@ def draw_act_two_enemy(
         return
 
     if enemy_type == "oracle":
-        _draw_oracle(screen, enemy, sprites)
+        _draw_oracle(
+            screen,
+            enemy,
+            sprites,
+            current_time,
+        )
         _draw_binding_effect(screen, enemy, sprites, current_time)
         _draw_rune_status_effects(screen, enemy, current_time)
         _draw_aftershock_hit_feedback(
@@ -561,7 +573,11 @@ def draw_act_two_enemy(
         enemy,
         current_time,
     )
-    _draw_attack_warning(screen, enemy)
+    _draw_attack_warning(
+        screen,
+        enemy,
+        current_time,
+    )
     _draw_binding_effect(screen, enemy, sprites, current_time)
     _draw_rune_status_effects(screen, enemy, current_time)
     _draw_aftershock_hit_feedback(

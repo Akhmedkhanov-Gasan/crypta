@@ -1,7 +1,10 @@
 import random
 
 from acts.act_one.generation import generate_warden_floor
-from worldgen.passages import create_north_wall_passage
+from worldgen.passages import (
+    can_create_north_wall_passage,
+    create_north_wall_passage,
+)
 from acts.act_two.settings import ACT_TWO_CHEST_LOOT_WEIGHTS
 from enemies import ENEMY_TYPES
 from levels import FLOOR_CONFIGS
@@ -452,7 +455,10 @@ def _create_room_floor(config, boss_room):
     map_rows = config.get("map_rows", MAP_ROWS)
     treasury_enabled = config.get("treasury_room", False)
     rune_room_enabled = config.get("rune_room", False)
-    generation_attempts = config.get("generation_attempts", 1)
+    generation_attempts = max(
+        12,
+        config.get("generation_attempts", 1),
+    )
     if treasury_enabled or rune_room_enabled:
         generation_attempts = max(80, generation_attempts)
     best_generation = None
@@ -484,6 +490,19 @@ def _create_room_floor(config, boss_room):
             abs(room_center(farthest_room)[0] - start_column)
             + abs(room_center(farthest_room)[1] - start_row)
         )
+        passage_rooms_are_valid = all(
+            can_create_north_wall_passage(
+                dungeon_map,
+                passage_room,
+            )
+            for passage_room in (
+                rooms[0],
+                farthest_room,
+            )
+        )
+
+        if not passage_rooms_are_valid:
+            continue
         treasury_candidates = (
             _treasury_room_candidates(dungeon_map)
             if treasury_enabled

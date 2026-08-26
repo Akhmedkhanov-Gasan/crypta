@@ -21,6 +21,7 @@ from logic import (
     move_enemy_randomly,
     roll_enemy_damage,
     update_enemy_aggro,
+    has_line_of_sight,
 )
 from systems.enemy_ai import (
     note_warden_attack_completed,
@@ -31,6 +32,12 @@ from systems.enemy_ai import (
     take_warden_turn,
     try_raise_shield,
     try_start_healing,
+    priest_should_join_combat,
+    take_brute_turn,
+    take_goblin_turn,
+    goblin_should_join_combat,
+    take_priest_turn,
+    resolve_goblin_summon,
 )
 from systems.player_combat import damage_player, resolve_enemy_defeat
 
@@ -101,7 +108,11 @@ def resolve_enemy_turn(
     game_state: GameState,
     player_position_before_action: tuple[int, int],
     rogue_ability_activated: bool,
+    hazard_costs: dict[tuple[int, int], int] | None = None,
+    goblin_summoning_enabled: bool = False,
 ) -> None:
+    if hazard_costs is None:
+        hazard_costs = {}
     update_oracle_projectiles(game_state)
     resolve_summoner_familiar_turn(game_state)
 
@@ -125,8 +136,17 @@ def resolve_enemy_turn(
             game_state.combat_log,
             "The hero has fallen.",
         )
-
-    for enemy in game_state.floor["enemies"]:
+    damaged_enemy_names = {
+        event.target
+        for event in game_state.events
+        if (
+                event.type is GameEventType.HIT
+                and event.target is not None
+                and event.amount is not None
+                and event.amount > 0
+        )
+    }
+    for enemy in tuple(game_state.floor.enemies):
         if game_state.player.health <= 0:
             break
         if enemy["health"] <= 0:
@@ -135,6 +155,22 @@ def resolve_enemy_turn(
         if not enemy["is_active"]:
             enemy.behavior_state = EnemyBehaviorState.INACTIVE
             continue
+
+        if (
+                enemy.behavior_state
+                is EnemyBehaviorState.PREPARING_SUMMON
+                and enemy.name in damaged_enemy_names
+        ):
+            enemy.behavior_state = EnemyBehaviorState.CHASING
+            enemy.summon_windup_turns_remaining = 0
+            enemy.summon_animation_started_at = -1
+
+            add_log_message(
+                game_state.combat_log,
+                f"{enemy.name}'s summoning ritual is interrupted.",
+            )
+            continue
+
         if _advance_enemy_bleed(game_state, enemy):
             continue
         if enemy.stun_turns > 0:
@@ -181,7 +217,26 @@ def resolve_enemy_turn(
             and resolve_warden_reposition(game_state, enemy)
         ):
             continue
+        if (
+                enemy.behavior_state
+                is EnemyBehaviorState.PREPARING_SUMMON
+        ):
+            if not goblin_summoning_enabled:
+                enemy.behavior_state = EnemyBehaviorState.CHASING
+                enemy.summon_windup_turns_remaining = 0
+                enemy.summon_animation_started_at = -1
+                continue
 
+            if enemy.summon_windup_turns_remaining > 0:
+                enemy.summon_windup_turns_remaining -= 1
+                continue
+
+            resolve_goblin_summon(
+                game_state,
+                enemy,
+                hazard_costs,
+            )
+            continue
         if (
             enemy.behavior_state
             is EnemyBehaviorState.PREPARING_ATTACK
@@ -396,16 +451,22 @@ def resolve_enemy_turn(
                 continue
 
             if (
-                heal_target["health"] > 0
-                and heal_target["health"]
-                < heal_target["max_health"]
-                and distance_between(
-                    enemy["column"],
-                    enemy["row"],
-                    heal_target["column"],
-                    heal_target["row"],
-                )
-                == 1
+                    heal_target.health > 0
+                    and heal_target.health < heal_target.max_health
+                    and distance_between(
+                enemy.column,
+                enemy.row,
+                heal_target.column,
+                heal_target.row,
+            )
+                    <= enemy.heal_range
+                    and has_line_of_sight(
+                game_state.floor.map,
+                enemy.column,
+                enemy.row,
+                heal_target.column,
+                heal_target.row,
+            )
             ):
                 previous_health = heal_target["health"]
                 heal_target["health"] = min(
@@ -473,19 +534,58 @@ def resolve_enemy_turn(
 
             continue
 
-        enemy_was_aggro = enemy["is_aggro"]
+        enemy_was_aggro = enemy.is_aggro
+
         update_enemy_aggro(
-            game_state.floor["map"],
+            game_state.floor.map,
             enemy,
-            game_state.floor["player_column"],
-            game_state.floor["player_row"],
+            game_state.floor.player_column,
+            game_state.floor.player_row,
         )
 
-        if not enemy_was_aggro and enemy["is_aggro"]:
+        priest_joined_to_support = (
+                enemy.type == "priest"
+                and not enemy.is_aggro
+                and priest_should_join_combat(
+                    enemy,
+                    game_state.floor.enemies,
+                )
+        )
+
+        goblin_joined_to_support = (
+            enemy.type == "goblin"
+            and not enemy.is_aggro
+            and goblin_should_join_combat(
+                game_state,
+                enemy,
+            )
+        )
+
+        if (
+            priest_joined_to_support
+            or goblin_joined_to_support
+        ):
+            enemy.is_aggro = True
+
+        if not enemy_was_aggro and enemy.is_aggro:
             enemy.behavior_state = EnemyBehaviorState.CHASING
+
+            if priest_joined_to_support:
+                message = (
+                    f"{enemy.name} joins the fight "
+                    "to support its allies."
+                )
+            elif goblin_joined_to_support:
+                message = (
+                    f"{enemy.name} answers "
+                    "the pack's battle cry."
+                )
+            else:
+                message = f"{enemy.name} spots the hero."
+
             add_log_message(
                 game_state.combat_log,
-                f"{enemy['name']} spots the hero.",
+                message,
             )
 
         occupied_positions = {
@@ -564,12 +664,13 @@ def resolve_enemy_turn(
                 enemy["column"],
                 enemy["row"],
             ) = move_enemy_randomly(
-                game_state.floor["map"],
+                game_state.floor.map,
                 enemy,
-                game_state.floor["player_column"],
-                game_state.floor["player_row"],
+                game_state.floor.player_column,
+                game_state.floor.player_row,
                 occupied_positions,
                 game_state.floor.barriers,
+                hazard_costs,
             )
             if enemy.movement_bounds is not None:
                 left, top, right, bottom = enemy.movement_bounds
@@ -683,6 +784,32 @@ def resolve_enemy_turn(
                 occupied_positions,
                 attack_blocking_positions,
                 distance_to_player,
+                hazard_costs,
+            )
+        elif enemy.type == "brute":
+            take_brute_turn(
+                game_state,
+                enemy,
+                occupied_positions,
+                attack_blocking_positions,
+                hazard_costs,
+            )
+        elif enemy.type == "priest":
+            take_priest_turn(
+                game_state,
+                enemy,
+                occupied_positions,
+                attack_blocking_positions,
+                hazard_costs,
+            )
+        elif enemy.type == "goblin":
+            take_goblin_turn(
+                game_state,
+                enemy,
+                occupied_positions,
+                attack_blocking_positions,
+                hazard_costs,
+                summoning_enabled=goblin_summoning_enabled,
             )
         else:
             take_standard_turn(
@@ -690,6 +817,7 @@ def resolve_enemy_turn(
                 enemy,
                 occupied_positions,
                 attack_blocking_positions,
+                hazard_costs,
             )
 
     if (

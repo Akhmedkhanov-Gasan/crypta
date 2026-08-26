@@ -1,10 +1,23 @@
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from game.state import EnemyBehaviorState, EnemyState, GameState
-from logic import distance_between, move_enemy_toward_position
+from logic import (
+    distance_between,
+    has_line_of_sight,
+    move_enemy_away,
+    move_enemy_toward_position,
+)
 from systems.player_abilities import (
     resolve_archer_barrage_zone_entry,
 )
+from systems.enemy_ai.common import (
+    move_toward_player,
+    movement_is_ready,
+    try_prepare_attack,
+)
+
+PRIEST_RETREAT_INTERVAL = 2
+PRIEST_RETREAT_TRIGGER_DISTANCE = 3
 
 
 def get_heal_candidate(
@@ -58,6 +71,29 @@ def get_heal_candidate(
     )
 
 
+def priest_should_join_combat(
+    priest: EnemyState,
+    enemies: list[EnemyState],
+) -> bool:
+    return any(
+        enemy is not priest
+        and enemy.health > 0
+        and enemy.is_active
+        and distance_between(
+            priest.column,
+            priest.row,
+            enemy.column,
+            enemy.row,
+        )
+        <= priest.heal_range
+        and (
+            enemy.is_aggro
+            or enemy.health < enemy.max_health
+        )
+        for enemy in enemies
+    )
+
+
 def try_start_healing(
     game_state: GameState,
     priest: EnemyState,
@@ -82,7 +118,18 @@ def try_start_healing(
         heal_candidate.row,
     )
 
-    if distance_to_ally == 1:
+    can_heal_from_current_position = (
+        distance_to_ally <= priest.heal_range
+        and has_line_of_sight(
+            game_state.floor.map,
+            priest.column,
+            priest.row,
+            heal_candidate.column,
+            heal_candidate.row,
+        )
+    )
+
+    if can_heal_from_current_position:
         priest.heal_target = heal_candidate
         priest.behavior_state = (
             EnemyBehaviorState.PREPARING_HEAL
@@ -144,3 +191,147 @@ def try_start_healing(
         previous_position,
     )
     return True
+
+
+def _priest_retreat_is_due(
+    priest: EnemyState,
+) -> bool:
+    priest.priest_retreat_counter += 1
+
+    if (
+        priest.priest_retreat_counter
+        < PRIEST_RETREAT_INTERVAL
+    ):
+        return False
+
+    priest.priest_retreat_counter = 0
+    return True
+
+
+def take_priest_turn(
+    game_state: GameState,
+    priest: EnemyState,
+    occupied_positions: set[tuple[int, int]],
+    attack_blocking_positions: set[tuple[int, int]],
+    hazard_costs: dict[tuple[int, int], int],
+) -> None:
+    floor = game_state.floor
+    priest_position = (
+        priest.column,
+        priest.row,
+    )
+    distance_to_player = distance_between(
+        priest.column,
+        priest.row,
+        floor.player_column,
+        floor.player_row,
+    )
+    standing_in_danger = (
+        hazard_costs.get(priest_position, 0) > 0
+    )
+    scheduled_retreat = (
+        _priest_retreat_is_due(priest)
+        and distance_to_player
+        <= PRIEST_RETREAT_TRIGGER_DISTANCE
+    )
+    should_retreat = (
+        standing_in_danger
+        or scheduled_retreat
+    )
+
+    if should_retreat:
+        if priest.is_immobile:
+            try_prepare_attack(
+                game_state,
+                priest,
+                attack_blocking_positions,
+            )
+            return
+
+        if not movement_is_ready(priest):
+            try_prepare_attack(
+                game_state,
+                priest,
+                attack_blocking_positions,
+            )
+            return
+
+        previous_position = (
+            priest.column,
+            priest.row,
+        )
+        priest.column, priest.row = move_enemy_away(
+            floor.map,
+            priest,
+            floor.player_column,
+            floor.player_row,
+            occupied_positions,
+            1,
+            floor.barriers,
+            hazard_costs,
+        )
+        new_position = (
+            priest.column,
+            priest.row,
+        )
+
+        if new_position != previous_position:
+            game_state.emit(
+                GameEvent(
+                    type=GameEventType.MOVE,
+                    actor=priest.name,
+                    origin=previous_position,
+                    destination=new_position,
+                    data={"kind": "support_retreat"},
+                )
+            )
+            resolve_archer_barrage_zone_entry(
+                game_state,
+                priest,
+                previous_position,
+            )
+
+            if priest.health <= 0:
+                return
+
+            try_prepare_attack(
+                game_state,
+                priest,
+                attack_blocking_positions,
+            )
+            return
+
+        # Отступить некуда. Не заставляем жреца вместо этого
+        # приближаться к игроку в тот же ход.
+        try_prepare_attack(
+            game_state,
+            priest,
+            attack_blocking_positions,
+        )
+        return
+
+    if try_prepare_attack(
+        game_state,
+        priest,
+        attack_blocking_positions,
+    ):
+        return
+
+    if priest.is_immobile or not movement_is_ready(priest):
+        return
+
+    move_toward_player(
+        game_state,
+        priest,
+        occupied_positions,
+        hazard_costs,
+    )
+
+    if priest.health <= 0:
+        return
+
+    try_prepare_attack(
+        game_state,
+        priest,
+        attack_blocking_positions,
+    )

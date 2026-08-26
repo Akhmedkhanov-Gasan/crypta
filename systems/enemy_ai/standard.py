@@ -11,6 +11,7 @@ def take_standard_turn(
     enemy: EnemyState,
     occupied_positions: set[tuple[int, int]],
     attack_blocking_positions: set[tuple[int, int]],
+    hazard_costs: dict[tuple[int, int], int],
 ) -> None:
     if try_prepare_attack(
         game_state,
@@ -26,6 +27,7 @@ def take_standard_turn(
         game_state,
         enemy,
         occupied_positions,
+        hazard_costs,
     )
     if enemy.health <= 0:
         return

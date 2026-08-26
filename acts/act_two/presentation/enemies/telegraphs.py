@@ -4,7 +4,9 @@ import pygame
 
 from presentation.layout import MAP_OFFSET_X, MAP_OFFSET_Y
 from settings import TILE_SIZE
-
+from acts.act_two.presentation.enemies.timing import (
+    attack_telegraph_is_visible,
+)
 
 def _draw_standard_attack_tile(screen, column, row, current_time):
     left = MAP_OFFSET_X + column * TILE_SIZE
@@ -284,6 +286,157 @@ def _draw_archer_telegraph(
     )
     screen.blit(overlay, (0, 0))
 
+def _draw_priest_heal_telegraph(
+    screen,
+    priest,
+    target,
+    priest_is_visible,
+    current_time,
+):
+    target_center = pygame.Vector2(
+        MAP_OFFSET_X
+        + target.column * TILE_SIZE
+        + TILE_SIZE // 2,
+        MAP_OFFSET_Y
+        + target.row * TILE_SIZE
+        + TILE_SIZE // 2,
+    )
+    source_center = pygame.Vector2(
+        MAP_OFFSET_X
+        + priest.column * TILE_SIZE
+        + TILE_SIZE // 2,
+        MAP_OFFSET_Y
+        + priest.row * TILE_SIZE
+        + TILE_SIZE // 2,
+    )
+
+    overlay = pygame.Surface(
+        screen.get_size(),
+        pygame.SRCALPHA,
+    )
+    pulse = (math.sin(current_time / 125) + 1) / 2
+    radius = round(TILE_SIZE * 0.42 + pulse * 4)
+    center = (
+        round(target_center.x),
+        round(target_center.y),
+    )
+
+    pygame.draw.circle(
+        overlay,
+        (44, 188, 111, round(35 + pulse * 35)),
+        center,
+        radius,
+    )
+    pygame.draw.circle(
+        overlay,
+        (91, 238, 151, round(185 + pulse * 65)),
+        center,
+        radius,
+        width=2,
+    )
+
+    aura_rectangle = pygame.Rect(
+        0,
+        0,
+        radius * 2,
+        radius * 2,
+    )
+    aura_rectangle.center = center
+
+    rotation = current_time / 420
+    for arc_index in range(3):
+        start_angle = rotation + arc_index * math.tau / 3
+        pygame.draw.arc(
+            overlay,
+            (148, 255, 190, round(180 + pulse * 70)),
+            aura_rectangle,
+            start_angle,
+            start_angle + 0.75,
+            3,
+        )
+
+    cross_size = 5
+    pygame.draw.line(
+        overlay,
+        (211, 255, 226, 245),
+        (center[0] - cross_size, center[1]),
+        (center[0] + cross_size, center[1]),
+        2,
+    )
+    pygame.draw.line(
+        overlay,
+        (211, 255, 226, 245),
+        (center[0], center[1] - cross_size),
+        (center[0], center[1] + cross_size),
+        2,
+    )
+
+    direction = target_center - source_center
+    if direction.length_squared() > 0:
+        direction = direction.normalize()
+        line_end = target_center - direction * (radius + 2)
+
+        if priest_is_visible:
+            line_start = source_center + direction * 13
+        else:
+            line_start = line_end - direction * TILE_SIZE
+
+        line_length = max(1, (line_end - line_start).length())
+        travel = (current_time / 22) % 10
+
+        while travel < line_length:
+            point = line_start + direction * travel
+            pygame.draw.circle(
+                overlay,
+                (106, 239, 160, round(170 + pulse * 70)),
+                (round(point.x), round(point.y)),
+                2,
+            )
+            travel += 10
+
+    screen.blit(overlay, (0, 0))
+
+def _draw_priest_heal_telegraphs(
+    screen,
+    enemies,
+    visible_cells,
+    current_time,
+):
+    for priest in enemies:
+        target = priest.heal_target
+
+        if (
+            priest.type != "priest"
+            or priest.health <= 0
+            or target is None
+            or target.health <= 0
+        ):
+            continue
+
+        target_position = (
+            target.column,
+            target.row,
+        )
+
+        if (
+            visible_cells is not None
+            and target_position not in visible_cells
+        ):
+            continue
+
+        priest_is_visible = (
+            visible_cells is None
+            or (priest.column, priest.row) in visible_cells
+        )
+
+        _draw_priest_heal_telegraph(
+            screen,
+            priest,
+            target,
+            priest_is_visible,
+            current_time,
+        )
+
 
 def draw_act_two_attack_markers(
     screen,
@@ -293,8 +446,13 @@ def draw_act_two_attack_markers(
     player_position=None,
     foreground=False,
 ):
-    # Draw broad brute warnings first and the smaller archer reticle last.
-    # When their targets overlap, both shapes remain visible.
+    if foreground:
+        _draw_priest_heal_telegraphs(
+            screen,
+            enemies,
+            visible_cells,
+            current_time,
+        )
     draw_order = {
         "brute": 0,
         "archer": 2,
@@ -306,7 +464,11 @@ def draw_act_two_attack_markers(
     for enemy in ordered_enemies:
         if enemy["health"] <= 0:
             continue
-
+        if not attack_telegraph_is_visible(
+            enemy,
+            current_time,
+        ):
+            continue
         attack_targets = enemy["attack_targets"]
         if visible_cells is not None:
             attack_targets = [

@@ -91,6 +91,7 @@ def move_toward_player(
     game_state: GameState,
     enemy: EnemyState,
     occupied_positions: set[tuple[int, int]],
+    hazard_costs: dict[tuple[int, int], int],
 ) -> None:
     floor = game_state.floor
     previous_position = (enemy.column, enemy.row)
@@ -101,6 +102,7 @@ def move_toward_player(
         floor.player_row,
         occupied_positions,
         floor.barriers,
+        hazard_costs,
     )
     if enemy.movement_bounds is not None:
         left, top, right, bottom = enemy.movement_bounds

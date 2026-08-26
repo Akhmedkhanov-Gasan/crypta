@@ -1,3 +1,4 @@
+import heapq
 import random
 from collections import deque
 
@@ -633,12 +634,35 @@ def get_enemy_attack_targets(
 
         return []
 
-    if not player_is_adjacent:
-        return []
-
     if attack_kind == "cleave":
-        column_change = player_column - enemy_column
-        row_change = player_row - enemy_row
+        player_is_in_straight_line = (
+                enemy_column == player_column
+                or enemy_row == player_row
+        )
+        player_is_in_cleave_range = (
+                player_is_adjacent
+                or (
+                        player_is_in_straight_line
+                        and distance_to_player <= enemy["attack_range"]
+                )
+        )
+
+        if not player_is_in_cleave_range:
+            return []
+
+        raw_column_change = player_column - enemy_column
+        raw_row_change = player_row - enemy_row
+        column_change = (
+            0
+            if raw_column_change == 0
+            else 1 if raw_column_change > 0 else -1
+        )
+        row_change = (
+            0
+            if raw_row_change == 0
+            else 1 if raw_row_change > 0 else -1
+        )
+
         return get_directional_line(
             dungeon_map,
             enemy_column,
@@ -648,6 +672,9 @@ def get_enemy_attack_targets(
             3,
             blocking_positions,
         )
+
+    if not player_is_adjacent:
+        return []
 
     return [(player_column, player_row)]
 
@@ -787,7 +814,10 @@ def move_enemy(
     player_row,
     occupied_positions,
     barriers=(),
+    hazard_costs=None,
 ):
+    if hazard_costs is None:
+        hazard_costs = {}
     start_position = (enemy["column"], enemy["row"])
     player_position = (player_column, player_row)
 
@@ -798,14 +828,20 @@ def move_enemy(
         player_row,
     ):
         return start_position
-
-    positions_to_visit = deque([start_position])
+    positions_to_visit = [(0, start_position)]
+    path_costs = {start_position: 0}
     previous_position = {start_position: None}
 
     while positions_to_visit:
-        current_column, current_row = positions_to_visit.popleft()
+        current_cost, current_position = heapq.heappop(
+            positions_to_visit
+        )
+        current_column, current_row = current_position
 
-        if (current_column, current_row) == player_position:
+        if current_cost != path_costs[current_position]:
+            continue
+
+        if current_position == player_position:
             break
 
         neighboring_positions = ordered_neighboring_positions(
@@ -816,9 +852,6 @@ def move_enemy(
         )
 
         for next_position in neighboring_positions:
-            if next_position in previous_position:
-                continue
-
             next_column, next_row = next_position
             target_is_player = next_position == player_position
 
@@ -832,19 +865,125 @@ def move_enemy(
             ):
                 continue
 
-            if not target_is_player and next_position in occupied_positions:
+            if (
+                not target_is_player
+                and next_position in occupied_positions
+            ):
                 continue
 
-            previous_position[next_position] = (
-                current_column,
-                current_row,
+            step_cost = 1 + hazard_costs.get(next_position, 0)
+            next_cost = current_cost + step_cost
+
+            if next_cost >= path_costs.get(
+                next_position,
+                float("inf"),
+            ):
+                continue
+
+            path_costs[next_position] = next_cost
+            previous_position[next_position] = current_position
+            heapq.heappush(
+                positions_to_visit,
+                (next_cost, next_position),
             )
-            positions_to_visit.append(next_position)
 
     if player_position not in previous_position:
         return start_position
 
     next_step = player_position
+
+    while previous_position[next_step] != start_position:
+        next_step = previous_position[next_step]
+
+    return next_step
+
+def move_enemy_toward_cell(
+    dungeon_map,
+    enemy,
+    target_column,
+    target_row,
+    occupied_positions,
+    barriers=(),
+    hazard_costs=None,
+):
+    if hazard_costs is None:
+        hazard_costs = {}
+
+    start_position = (
+        enemy["column"],
+        enemy["row"],
+    )
+    target_position = (
+        target_column,
+        target_row,
+    )
+
+    if start_position == target_position:
+        return start_position
+
+    positions_to_visit = [(0, start_position)]
+    path_costs = {start_position: 0}
+    previous_position = {start_position: None}
+
+    while positions_to_visit:
+        current_cost, current_position = heapq.heappop(
+            positions_to_visit
+        )
+
+        if current_cost != path_costs[current_position]:
+            continue
+
+        if current_position == target_position:
+            break
+
+        current_column, current_row = current_position
+        neighboring_positions = ordered_neighboring_positions(
+            current_column,
+            current_row,
+            target_column,
+            target_row,
+        )
+
+        for next_position in neighboring_positions:
+            if (
+                next_position != target_position
+                and next_position in occupied_positions
+            ):
+                continue
+
+            if not can_move_between(
+                dungeon_map,
+                current_column,
+                current_row,
+                next_position[0],
+                next_position[1],
+                barriers,
+            ):
+                continue
+
+            next_cost = (
+                current_cost
+                + 1
+                + hazard_costs.get(next_position, 0)
+            )
+
+            if next_cost >= path_costs.get(
+                next_position,
+                float("inf"),
+            ):
+                continue
+
+            path_costs[next_position] = next_cost
+            previous_position[next_position] = current_position
+            heapq.heappush(
+                positions_to_visit,
+                (next_cost, next_position),
+            )
+
+    if target_position not in previous_position:
+        return start_position
+
+    next_step = target_position
 
     while previous_position[next_step] != start_position:
         next_step = previous_position[next_step]
@@ -859,12 +998,24 @@ def move_enemy_randomly(
     player_row,
     occupied_positions,
     barriers=(),
+    hazard_costs=None,
 ):
-    enemy_column = enemy["column"]
-    enemy_row = enemy["row"]
+    if hazard_costs is None:
+        hazard_costs = {}
 
-    if random.random() >= enemy["wander_chance"]:
-        return enemy_column, enemy_row
+    enemy_position = (
+        enemy["column"],
+        enemy["row"],
+    )
+    enemy_column, enemy_row = enemy_position
+    current_danger = hazard_costs.get(enemy_position, 0)
+    must_escape = current_danger > 0
+
+    if (
+        not must_escape
+        and random.random() >= enemy["wander_chance"]
+    ):
+        return enemy_position
 
     possible_moves = [
         (enemy_column, enemy_row - 1),
@@ -872,26 +1023,50 @@ def move_enemy_randomly(
         (enemy_column - 1, enemy_row),
         (enemy_column + 1, enemy_row),
     ]
-    random.shuffle(possible_moves)
 
-    for new_column, new_row in possible_moves:
-        target_position = (new_column, new_row)
-
+    valid_moves = [
+        position
+        for position in possible_moves
         if (
-            target_position != (player_column, player_row)
-            and target_position not in occupied_positions
+            position != (player_column, player_row)
+            and position not in occupied_positions
             and can_move_between(
                 dungeon_map,
                 enemy_column,
                 enemy_row,
-                new_column,
-                new_row,
+                position[0],
+                position[1],
                 barriers,
             )
-        ):
-            return new_column, new_row
+        )
+    ]
 
-    return enemy_column, enemy_row
+    if not valid_moves:
+        return enemy_position
+
+    safe_moves = [
+        position
+        for position in valid_moves
+        if hazard_costs.get(position, 0) == 0
+    ]
+
+    if safe_moves:
+        return random.choice(safe_moves)
+
+    if not must_escape:
+        return enemy_position
+
+    lowest_danger = min(
+        hazard_costs.get(position, 0)
+        for position in valid_moves
+    )
+    least_dangerous_moves = [
+        position
+        for position in valid_moves
+        if hazard_costs.get(position, 0) == lowest_danger
+    ]
+
+    return random.choice(least_dangerous_moves)
 
 
 def move_enemy_away(
@@ -902,7 +1077,10 @@ def move_enemy_away(
     occupied_positions,
     maximum_steps=1,
     barriers=(),
+    hazard_costs=None,
 ):
+    if hazard_costs is None:
+        hazard_costs = {}
     enemy_column = enemy["column"]
     enemy_row = enemy["row"]
     directions = [
@@ -944,25 +1122,27 @@ def move_enemy_away(
     if not valid_moves:
         return enemy_column, enemy_row
 
-    greatest_distance = max(
-        distance_between(
+    def move_priority(
+        position: tuple[int, int],
+    ) -> tuple[int, int]:
+        danger = hazard_costs.get(position, 0)
+        player_distance = distance_between(
             position[0],
             position[1],
             player_column,
             player_row,
         )
+
+        return danger, -player_distance
+
+    best_priority = min(
+        move_priority(position)
         for position in valid_moves
     )
     best_moves = [
         position
         for position in valid_moves
-        if distance_between(
-            position[0],
-            position[1],
-            player_column,
-            player_row,
-        )
-        == greatest_distance
+        if move_priority(position) == best_priority
     ]
 
     return random.choice(best_moves)
