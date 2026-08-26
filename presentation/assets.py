@@ -344,6 +344,9 @@ def load_act_two_sprites():
         "goblin": "enemies/goblin/idle/idle_00.png",
         "goblin_attack": "enemies/goblin/attack/attack_00.png",
         "goblin_death": "enemies/goblin/death/death_00.png",
+        "mimic": "enemies/mimic/idle/idle_00.png",
+        "mimic_attack": "enemies/mimic/attack/attack_00.png",
+        "mimic_death": "enemies/mimic/death/death_00.png",
         "brute": "enemies/brute/idle/idle_00.png",
         "brute_attack": "enemies/brute/attack/attack_00.png",
         "brute_death": "enemies/brute/death/death_00.png",
@@ -358,6 +361,18 @@ def load_act_two_sprites():
         "priest_attack": "enemies/priest/attack/attack_00.png",
         "priest_cast": "enemies/priest/cast/cast_00.png",
         "priest_death": "enemies/priest/death/death_00.png",
+        "priest_ghost_idle": (
+            "enemies/priest_ghost/idle/idle_00.png"
+        ),
+        "priest_ghost_attack": (
+            "enemies/priest_ghost/attack/attack_00.png"
+        ),
+        "priest_ghost_cast": (
+            "enemies/priest_ghost/cast/cast_00.png"
+        ),
+        "priest_ghost_death": (
+            "enemies/priest_ghost/death/death_00.png"
+        ),
         "oracle_idle": "bosses/oracle/idle/idle_00.png",
         "oracle_awake": "bosses/oracle/awake/awake_00.png",
         "oracle_projectile": "bosses/oracle/projectiles/projectile.png",

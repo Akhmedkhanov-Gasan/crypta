@@ -12,7 +12,9 @@ ENEMY_EXPERIENCE_REWARDS = {
     "goblin": 2,
     "archer": 2,
     "priest": 2,
+    "priest_ghost": 3,
     "sentinel": 3,
+    "mimic": 4,
     "oracle": 8,
 
 }

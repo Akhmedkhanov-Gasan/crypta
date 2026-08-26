@@ -70,6 +70,13 @@ def draw_dropped_consumables(
 
 
 def draw_chest(screen, chest, sprites):
+    appearance = chest.get("appearance", "standard")
+    if (
+        appearance.startswith("mimic:")
+        or appearance == "mimic_defeated"
+    ):
+        return
+
     prefix = (
         "stash"
         if chest.get("appearance", "standard") == "stash"

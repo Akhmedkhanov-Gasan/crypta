@@ -2354,6 +2354,7 @@ def draw_player(
     act_two_level_up_effect_started_at=-1,
     act_two_stoneflesh_hits=0,
     act_two_stoneflesh_effect_started_at=-1,
+    act_two_dodge_effect_started_at=-1,
 ):
     if act_number == 2 and player_class is not None:
         draw_act_two_player_actor(
@@ -2382,6 +2383,7 @@ def draw_player(
             act_two_level_up_effect_started_at,
             act_two_stoneflesh_hits,
             act_two_stoneflesh_effect_started_at,
+            act_two_dodge_effect_started_at,
         )
         return
 

@@ -117,6 +117,7 @@ class EnemyState(AttributeMapping):
     sleeping_color: tuple[int, int, int]
     retreat_jump_chance: float
     phase_two_damage_by_mode: dict | None = None
+    dodge_chance: float = 0.0
     behavior_state: EnemyBehaviorState = EnemyBehaviorState.IDLE
     is_aggro: bool = False
     has_key: bool = False
@@ -170,6 +171,7 @@ class EnemyState(AttributeMapping):
     hit_damage: int = 0
     hit_critical: bool = False
     hit_blocked: bool = False
+    hit_dodged: bool = False
     hit_origin: tuple[int, int] | None = None
     hit_attacker_class: str | None = None
     aftershock_hit_started_at: int = -1
@@ -218,6 +220,7 @@ class EnemyState(AttributeMapping):
             color=config["color"],
             sleeping_color=config["sleeping_color"],
             retreat_jump_chance=config["retreat_jump_chance"],
+            dodge_chance=config.get("dodge_chance", 0.0),
             behavior_state=(
                 EnemyBehaviorState.INACTIVE
                 if belongs_to_boss_group

@@ -3597,6 +3597,36 @@ def main():
                         current_act,
                         act_two_sprites,
                     )
+
+        if current_act == 2:
+            corpse_enemy_types = {
+                "goblin",
+                "mimic",
+                "archer",
+                "brute",
+                "sentinel",
+                "priest",
+                "priest_ghost",
+            }
+
+            for enemy in game_state.floor.enemies:
+                if (
+                        enemy.type in corpse_enemy_types
+                        and enemy.health <= 0
+                        and position_is_visible(
+                    game_state.floor,
+                    enemy.column,
+                    enemy.row,
+                )
+                ):
+                    draw_enemy(
+                        world_target,
+                        enemy,
+                        current_act,
+                        act_two_sprites,
+                        current_time,
+                        active_status_font,
+                    )
         for chest in game_state.floor["chests"]:
             remembered_chest = chest
             if current_act == 2:
@@ -3729,6 +3759,11 @@ def main():
                 if current_act == 2
                 else -1
             ),
+            (
+                game_state.player.act_two.dodge_effect_started_at
+                if current_act == 2
+                else -1
+            ),
         )
         if current_act == 2 and game_state.player.health > 0:
             draw_act_two_wait_indicator(
@@ -3739,6 +3774,9 @@ def main():
                 game_state.player.act_two.wait_effect_started_at,
             )
         for enemy in game_state.floor["enemies"]:
+            if current_act == 2 and enemy.health <= 0:
+                continue
+
             if (
                 current_act == 2
                 and not any(
@@ -3758,22 +3796,10 @@ def main():
                 current_act < 2
                 and enemy.death_animation_started_at >= 0
             )
-            has_act_two_death_effect = (
-                current_act == 2
-                and enemy.type in (
-                    "goblin",
-                    "archer",
-                    "brute",
-                    "sentinel",
-                    "priest",
-                )
-                and enemy.death_animation_started_at >= 0
-            )
             if (
                 enemy["health"] > 0
                 or recent_act_one_hit
                 or has_act_one_death_effect
-                or has_act_two_death_effect
             ):
                 draw_enemy(
                     world_target,

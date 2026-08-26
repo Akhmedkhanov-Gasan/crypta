@@ -611,6 +611,7 @@ def draw_act_two_player_actor(
     level_up_effect_started_at=-1,
     stoneflesh_hits=0,
     stoneflesh_effect_started_at=-1,
+    dodge_effect_started_at=-1,
 ):
     sprite = sprites[f"player_{player_class}"]
     destination_position = (
@@ -1116,7 +1117,40 @@ def draw_act_two_player_actor(
         shadow.set_alpha(alpha)
         screen.blit(shadow, number_position.move(1, 2))
         screen.blit(number, number_position)
+    dodge_elapsed = current_time - dodge_effect_started_at
+    if (
+        damage_font is not None
+        and dodge_effect_started_at >= 0
+        and 0
+        <= dodge_elapsed
+        < ACT_TWO_PLAYER_HIT_FEEDBACK_MS
+    ):
+        progress = dodge_elapsed / ACT_TWO_PLAYER_HIT_FEEDBACK_MS
+        alpha = round(255 * min(1, (1 - progress) * 2.4))
 
+        label = damage_font.render(
+            "DODGE",
+            True,
+            (102, 226, 237),
+        )
+        label.set_alpha(alpha)
+
+        label_position = label.get_rect(
+            midbottom=(
+                position[0] + TILE_SIZE // 2,
+                position[1] - 6 - round(progress * 14),
+            )
+        )
+
+        shadow = damage_font.render(
+            "DODGE",
+            True,
+            (6, 16, 20),
+        )
+        shadow.set_alpha(alpha)
+
+        screen.blit(shadow, label_position.move(1, 2))
+        screen.blit(label, label_position)
 
 def draw_act_two_player_feedback_overlay(
     screen,

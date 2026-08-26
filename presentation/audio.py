@@ -146,6 +146,18 @@ ACT_TWO_ENEMY_SOUND_FILES = {
     "priest_heal": ("priest_heal_1.mp3", "priest_heal_2.mp3"),
     "priest_hurt": ("priest_hurt_1.mp3", "priest_hurt_2.mp3"),
     "priest_death": ("priest_death_1.mp3", "priest_death_2.mp3"),
+    "mimic_attack": (
+        "mimic_attack_1.mp3",
+        "mimic_attack_2.mp3",
+    ),
+    "mimic_hurt": (
+        "mimic_hurt_1.mp3",
+        "mimic_hurt_2.mp3",
+    ),
+    "mimic_death": (
+        "mimic_death_1.mp3",
+        "mimic_death_2.mp3",
+    ),
 }
 
 
@@ -232,6 +244,9 @@ ACT_TWO_SOUND_VOLUMES = {
     "goblin_attack": 0.68,
     "goblin_hurt": 0.66,
     "goblin_death": 0.70,
+    "mimic_attack": 0.78,
+    "mimic_hurt": 0.70,
+    "mimic_death": 0.80,
     "brute_prepare": 0.68,
     "brute_attack": 0.82,
     "brute_hurt": 0.72,
@@ -971,13 +986,27 @@ class ActTwoSoundBank:
             enemy_type = event.data.get("enemy_type")
             if enemy_type is None and enemy is not None:
                 enemy_type = enemy.type
-            if enemy_type not in ("goblin", "brute", "archer", "sentinel", "priest"):
+            if enemy_type not in (
+                "goblin",
+                "mimic",
+                "brute",
+                "archer",
+                "sentinel",
+                "priest",
+                "priest_ghost",
+            ):
                 continue
+
+            audio_enemy_type = (
+                "priest"
+                if enemy_type == "priest_ghost"
+                else enemy_type
+            )
 
             sound_key = None
             priority = 0
             if event.type is GameEventType.PREPARE_ATTACK:
-                candidate_key = f"{enemy_type}_prepare"
+                candidate_key = f"{audio_enemy_type}_prepare"
                 if candidate_key in ACT_TWO_ENEMY_SOUND_FILES:
                     sound_key = candidate_key
                     priority = 1
@@ -985,7 +1014,7 @@ class ActTwoSoundBank:
                 sound_key = "priest_heal_prepare"
                 priority = 2
             elif event.type is GameEventType.ATTACK and event.actor != "hero":
-                sound_key = f"{enemy_type}_attack"
+                sound_key = f"{audio_enemy_type}_attack"
                 priority = 3
             elif (
                 event.type is GameEventType.HEAL
@@ -1006,11 +1035,11 @@ class ActTwoSoundBank:
                     sound_key = "sentinel_block"
                     priority = 5
                 elif event.target not in defeated_enemies:
-                    sound_key = f"{enemy_type}_hurt"
+                    sound_key = f"{audio_enemy_type}_hurt"
                     priority = 3
-            elif event.type is GameEventType.DEATH and event.actor != "hero":
-                sound_key = f"{enemy_type}_death"
-                priority = 5
+                elif event.type is GameEventType.DEATH and event.actor != "hero":
+                    sound_key = f"{audio_enemy_type}_death"
+                    priority = 5
 
             if sound_key is None:
                 continue

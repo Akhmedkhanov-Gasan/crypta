@@ -13,6 +13,49 @@ from acts.act_two.presentation.enemies.timing import (
     enemy_movement_duration,
 )
 
+def _record_enemy_dodge_feedback(game_state, started_at: int) -> None:
+    feedback_events_by_target = {
+        event.target: event
+        for event in game_state.events
+        if (
+            event.target not in (None, "hero", "familiar")
+            and event.type in (
+                GameEventType.HIT,
+                GameEventType.DODGE,
+            )
+        )
+    }
+
+    for enemy in game_state.floor.enemies:
+        event = feedback_events_by_target.get(enemy.name)
+        if event is None:
+            continue
+
+        enemy.hit_dodged = event.type is GameEventType.DODGE
+
+        if not enemy.hit_dodged:
+            continue
+
+        enemy.hit_animation_started_at = started_at
+        enemy.hit_damage = 0
+        enemy.hit_critical = False
+        enemy.hit_blocked = False
+        enemy.hit_origin = event.origin
+        enemy.hit_attacker_class = event.data.get("player_class")
+
+def _record_player_dodge_feedback(
+    game_state,
+    started_at: int,
+) -> None:
+    player_dodged = any(
+        event.type is GameEventType.DODGE
+        and event.target == "hero"
+        for event in game_state.events
+    )
+
+    if player_dodged:
+        game_state.player.act_two.dodge_effect_started_at = started_at
+
 
 def _visual_direction(
     direction: tuple[int, int],
@@ -38,6 +81,11 @@ def present_act_two_turn_events(
     )
     events = game_state.events
 
+    _record_enemy_dodge_feedback(game_state, started_at)
+    _record_player_dodge_feedback(
+        game_state,
+        world_started_at,
+    )
     record_enemy_hit_feedback(game_state, started_at)
     record_enemy_death_feedback(game_state, started_at)
     record_player_hit_feedback(
