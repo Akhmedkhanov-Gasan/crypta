@@ -1,6 +1,16 @@
 from systems.enemy_ai.archer import take_archer_turn
 from systems.enemy_ai.oracle import take_oracle_turn
-from systems.enemy_ai.priest import try_start_healing
+from systems.enemy_ai.priest import (
+    priest_should_join_combat,
+    take_priest_turn,
+    try_start_healing,
+)
+from systems.enemy_ai.brute import take_brute_turn
+from systems.enemy_ai.goblin import (
+    goblin_should_join_combat,
+    resolve_goblin_summon,
+    take_goblin_turn,
+)
 from systems.enemy_ai.sentinel import try_raise_shield
 from systems.enemy_ai.standard import take_standard_turn
 from systems.enemy_ai.warden import (
@@ -19,4 +29,10 @@ __all__ = [
     "resolve_warden_reposition",
     "try_raise_shield",
     "try_start_healing",
+    "priest_should_join_combat",
+    "take_brute_turn",
+    "take_goblin_turn",
+    "goblin_should_join_combat",
+    "take_priest_turn",
+    "resolve_goblin_summon",
 ]

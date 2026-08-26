@@ -1,3 +1,23 @@
+def can_create_north_wall_passage(
+    dungeon_map,
+    room,
+) -> bool:
+    candidate_wall_rows = (
+        room["y"] - 1,
+        room["y"],
+    )
+
+    return any(
+        dungeon_map[wall_row][column] == "#"
+        and dungeon_map[wall_row + 1][column] == "."
+        for wall_row in candidate_wall_rows
+        for column in range(
+            room["x"],
+            room["x"] + room["width"],
+        )
+    )
+
+
 def create_north_wall_passage(
     dungeon_map,
     room,

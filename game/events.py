@@ -20,6 +20,8 @@ class GameEventType(Enum):
     CHEST_OPEN = auto()
     ENVIRONMENT = auto()
     LEVEL_UP = auto()
+    PREPARE_SUMMON = auto()
+    SUMMON = auto()
 
 
 @dataclass(frozen=True)

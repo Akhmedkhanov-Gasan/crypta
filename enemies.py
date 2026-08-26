@@ -39,7 +39,7 @@ ENEMY_TYPES = {
         "wander_chance": 0.15,
         "move_every": 2,
         "attack_kind": "cleave",
-        "attack_range": 1,
+        "attack_range": 2,
         "damage_by_mode": {
             "cleave": ((2, 3), (80, 20)),
         },

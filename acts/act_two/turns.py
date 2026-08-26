@@ -1,11 +1,23 @@
 from game.events import GameEventType
 from game.state import GameState
+from acts.act_two.hazards import (
+    get_act_two_enemy_hazard_costs,
+)
 
-
-def resolve_enemy_turn(*args, **kwargs):
+def resolve_enemy_turn(
+    game_state: GameState,
+    *args,
+    **kwargs,
+):
     from systems.enemy_turn import resolve_enemy_turn as shared_turn
 
-    return shared_turn(*args, **kwargs)
+    return shared_turn(
+        game_state,
+        *args,
+        hazard_costs=get_act_two_enemy_hazard_costs(game_state),
+        goblin_summoning_enabled=True,
+        **kwargs,
+    )
 
 
 def act_two_combat_is_active(game_state: GameState) -> bool:

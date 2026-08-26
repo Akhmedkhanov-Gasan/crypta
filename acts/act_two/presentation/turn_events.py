@@ -9,6 +9,9 @@ from game.events import GameEventType
 from systems.player_combat import (
     remove_enemy_corpses_at_position,
 )
+from acts.act_two.presentation.enemies.timing import (
+    enemy_movement_duration,
+)
 
 
 def _visual_direction(
@@ -111,12 +114,30 @@ def present_act_two_turn_events(
         for event in events
         if event.type is GameEventType.ATTACK
     }
+    prepared_enemy_names = {
+        event.actor
+        for event in events
+        if event.type is GameEventType.PREPARE_ATTACK
+    }
     healed_enemy_names = {
         event.actor
         for event in events
         if event.type is GameEventType.HEAL
     }
-
+    prepared_summon_enemy_names = {
+        event.actor
+        for event in events
+        if event.type is GameEventType.PREPARE_SUMMON
+    }
+    summoned_enemy_names = {
+        summoned_name
+        for event in events
+        if event.type is GameEventType.SUMMON
+        for summoned_name in event.data.get(
+            "summoned_names",
+            (),
+        )
+    }
     for enemy in game_state.floor.enemies:
         if enemy.name in moved_enemy_names:
             movement_event = next(
@@ -154,7 +175,30 @@ def present_act_two_turn_events(
             enemy.attack_animation_started_at = (
                 world_started_at
             )
+        if enemy.name in prepared_enemy_names:
+            telegraph_visible_at = world_started_at
 
+            if enemy.name in moved_enemy_names:
+                movement_duration = (
+                    enemy_movement_duration(enemy)
+                )
+                telegraph_visible_at = (
+                    enemy.movement_animation_started_at
+                    + movement_duration
+                )
+
+            enemy.attack_telegraph_visible_at = (
+                telegraph_visible_at
+            )
+        if enemy.name in prepared_summon_enemy_names:
+            enemy.summon_animation_started_at = (
+                world_started_at
+            )
+
+        if enemy.name in summoned_enemy_names:
+            enemy.summon_spawn_animation_started_at = (
+                world_started_at
+            )
         if enemy.name in attacked_enemy_names:
             attack_event = next(
                 (

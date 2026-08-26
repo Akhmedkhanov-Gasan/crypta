@@ -34,11 +34,10 @@ class EnemyBehaviorState(Enum):
     PREPARING_HEAL = auto()
     GUARDING = auto()
     DEAD = auto()
+    PREPARING_SUMMON = auto()
 
 
 class AttributeMapping:
-    """Temporary mapping compatibility for incremental state migration."""
-
     def __getitem__(self, key: str) -> Any:
         return getattr(self, key)
 
@@ -124,6 +123,7 @@ class EnemyState(AttributeMapping):
     attack_targets: list[tuple[int, int]] = field(
         default_factory=list
     )
+    attack_telegraph_visible_at: int = 0
     move_counter: int = 0
     is_immobile: bool = False
     footprint_width: int = 1
@@ -148,6 +148,7 @@ class EnemyState(AttributeMapping):
     shield_duration: int = 0
     shield_cooldown_duration: int = 0
     heal_target: "EnemyState | None" = None
+    priest_retreat_counter: int = 0
     heal_cooldown: int = 0
     heal_amount: int = 0
     heal_cooldown_duration: int = 0
@@ -180,6 +181,11 @@ class EnemyState(AttributeMapping):
     warden_reposition_target: tuple[int, int] | None = None
     defeat_rewards_claimed: bool = False
     treasury_trial_enemy: bool = False
+    is_summoned: bool = False
+    goblin_summon_used: bool = False
+    summon_animation_started_at: int = -1
+    summon_spawn_animation_started_at: int = -1
+    summon_windup_turns_remaining: int = 0
 
     @classmethod
     def from_config(

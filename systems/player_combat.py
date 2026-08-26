@@ -443,6 +443,8 @@ def resolve_enemy_defeat(
         return
 
     enemy.defeat_rewards_claimed = True
+    if enemy.is_summoned:
+        return
     player = game_state.player
     floor = game_state.floor
     player.enemies_defeated += 1
