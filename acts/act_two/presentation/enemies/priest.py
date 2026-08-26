@@ -45,11 +45,18 @@ def _draw_act_two_priest_hit_feedback(
         1 + reaction * 0.025,
     )
     sprite_position = reacted_sprite.get_rect(center=center)
-    pygame.draw.ellipse(
-        screen,
-        (3, 7, 7),
-        (center[0] - 10, position[1] + TILE_SIZE - 6, 20, 5),
-    )
+    if enemy.type != "priest_ghost":
+        pygame.draw.ellipse(
+            screen,
+            (3, 7, 7),
+            (
+                center[0] - 10,
+                position[1] + TILE_SIZE - 6,
+                20,
+                5,
+            ),
+        )
+
     screen.blit(reacted_sprite, sprite_position)
 
     if elapsed < ACT_TWO_HIT_REACTION_MS:

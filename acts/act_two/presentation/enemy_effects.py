@@ -17,6 +17,48 @@ ACT_TWO_CLASS_EFFECT_COLORS = {
     "mage": (61, 146, 216),
 }
 
+def draw_act_two_dodge_feedback(
+    screen,
+    enemy,
+    sprite,
+    position,
+    current_time,
+    damage_font,
+) -> bool:
+    started_at = enemy.get("hit_animation_started_at", -1)
+    elapsed = current_time - started_at
+
+    if (
+        not enemy.get("hit_dodged", False)
+        or started_at < 0
+        or not 0 <= elapsed < ACT_TWO_HIT_FEEDBACK_MS
+    ):
+        return False
+
+    screen.blit(sprite, position)
+
+    if damage_font is None:
+        return True
+
+    progress = elapsed / ACT_TWO_HIT_FEEDBACK_MS
+    alpha = round(255 * min(1, (1 - progress) * 2.4))
+    color = (102, 226, 237)
+
+    label = damage_font.render("DODGE", True, color)
+    label.set_alpha(alpha)
+    shadow = damage_font.render("DODGE", True, (6, 16, 20))
+    shadow.set_alpha(alpha)
+
+    rectangle = label.get_rect(
+        midbottom=(
+            position[0] + TILE_SIZE // 2,
+            position[1] - 6 - round(progress * 14),
+        )
+    )
+    screen.blit(shadow, rectangle.move(1, 2))
+    screen.blit(label, rectangle)
+    return True
+
 
 def act_two_hit_offset(enemy, elapsed):
     if elapsed >= ACT_TWO_HIT_REACTION_MS:
@@ -138,19 +180,21 @@ def draw_act_two_enemy_death(
             / (ACT_TWO_DEATH_SETTLE_MS - ACT_TWO_DEATH_IMPACT_MS),
         )
         lift = round((1 - settle_progress) * 5)
-        shadow = pygame.Surface((28, 7), pygame.SRCALPHA)
-        pygame.draw.ellipse(
-            shadow,
-            (5, 6, 8, round(105 + settle_progress * 45)),
-            shadow.get_rect(),
-        )
-        screen.blit(
-            shadow,
-            (
-                center[0] - 14,
-                tile_position[1] + TILE_SIZE - 8,
-            ),
-        )
+        if enemy.type != "priest_ghost":
+            shadow = pygame.Surface((28, 7), pygame.SRCALPHA)
+            pygame.draw.ellipse(
+                shadow,
+                (5, 6, 8, round(105 + settle_progress * 45)),
+                shadow.get_rect(),
+            )
+            screen.blit(
+                shadow,
+                (
+                    center[0] - 14,
+                    tile_position[1] + TILE_SIZE - 8,
+                ),
+            )
+
         screen.blit(
             corpse_sprite,
             (tile_position[0], tile_position[1] - lift),

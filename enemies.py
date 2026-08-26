@@ -13,6 +13,10 @@ from settings import (
     PRIEST_COLOR,
     SENTINEL_COLOR,
     WARDEN_COLOR,
+    PRIEST_GHOST_COLOR,
+    SLEEPING_PRIEST_GHOST_COLOR,
+    MIMIC_COLOR,
+    SLEEPING_MIMIC_COLOR,
 )
 
 
@@ -31,6 +35,23 @@ ENEMY_TYPES = {
         "color": ENEMY_COLOR,
         "sleeping_color": SLEEPING_ENEMY_COLOR,
         "retreat_jump_chance": 0.0,
+        "dodge_chance": 0.15,
+    },
+    "mimic": {
+        "display_name": "Mimic",
+        "max_health": 9,
+        "aggro_radius": 99,
+        "wander_chance": 0.0,
+        "move_every": 1,
+        "attack_kind": "melee",
+        "attack_range": 1,
+        "damage_by_mode": {
+            "melee": ((2, 3), (75, 25)),
+        },
+        "color": MIMIC_COLOR,
+        "sleeping_color": SLEEPING_MIMIC_COLOR,
+        "retreat_jump_chance": 0.0,
+        "dodge_chance": 0.0,
     },
     "brute": {
         "display_name": "Brute",
@@ -46,6 +67,7 @@ ENEMY_TYPES = {
         "color": BRUTE_COLOR,
         "sleeping_color": SLEEPING_BRUTE_COLOR,
         "retreat_jump_chance": 0.0,
+        "dodge_chance": 0.0,
     },
     "archer": {
         "display_name": "Archer",
@@ -62,6 +84,7 @@ ENEMY_TYPES = {
         "color": ARCHER_COLOR,
         "sleeping_color": SLEEPING_ARCHER_COLOR,
         "retreat_jump_chance": 0.35,
+        "dodge_chance": 0.15,
     },
     "sentinel": {
         "display_name": "Sentinel",
@@ -77,6 +100,7 @@ ENEMY_TYPES = {
         "color": SENTINEL_COLOR,
         "sleeping_color": SLEEPING_SENTINEL_COLOR,
         "retreat_jump_chance": 0.0,
+        "dodge_chance": 0.0,
         "shield_duration": 3,
         "shield_cooldown": 2,
     },
@@ -95,9 +119,33 @@ ENEMY_TYPES = {
         "color": PRIEST_COLOR,
         "sleeping_color": SLEEPING_PRIEST_COLOR,
         "retreat_jump_chance": 0.0,
+        "dodge_chance": 0.0,
         "heal_amount": 2,
         "heal_cooldown": 3,
         "heal_range": 6,
+        "death_spawn": {
+            "enemy_type": "priest_ghost",
+            "chance": 0.60,
+            "starts_aggro": True,
+            "message": "The Grave Priest's spirit rises from its corpse!",
+        },
+    },
+    "priest_ghost": {
+        "display_name": "Priest Ghost",
+        "max_health": 6,
+        "aggro_radius": 99,
+        "wander_chance": 0.0,
+        "move_every": 1,
+        "attack_kind": "priest_magic",
+        "attack_range": 4,
+        "damage_by_mode": {
+            "magic": ((3, 4), (70, 30)),
+            "melee": ((2,), (1,)),
+        },
+        "color": PRIEST_GHOST_COLOR,
+        "sleeping_color": SLEEPING_PRIEST_GHOST_COLOR,
+        "retreat_jump_chance": 0.0,
+        "dodge_chance": 0.60,
     },
     "warden": {
         "display_name": "Crypt Warden",

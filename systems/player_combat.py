@@ -60,6 +60,8 @@ from settings import (
 )
 from settings import ASSASSIN_TELEPORT_CHARGES
 from settings import ASSASSIN_ULTIMATE_CHARGES
+from systems.enemy_spawning import try_spawn_enemy_after_death
+from systems.mimic import release_mimic_loot
 
 
 OracleHitReaction = Callable[
@@ -196,6 +198,32 @@ def attack_enemy(
                 f"{enemy.name}'s shield blocks the attack.",
             )
             return False
+
+    if (
+        enemy.dodge_chance > 0
+        and random.random() < enemy.dodge_chance
+    ):
+        game_state.emit(
+            GameEvent(
+                type=GameEventType.DODGE,
+                actor=attacker_name,
+                target=enemy.name,
+                origin=attacker_position,
+                destination=(enemy.column, enemy.row),
+                data={
+                    "player_class": player.player_class,
+                    "enemy_type": enemy.type,
+                },
+            )
+        )
+        attacker_label = (
+            "Hero" if attacker_name == "hero" else "Familiar"
+        )
+        add_log_message(
+            game_state.combat_log,
+            f"{enemy.name} dodges {attacker_label.lower()}'s attack.",
+        )
+        return False
 
     damage = (
         roll_player_damage(damage_minimum, damage_maximum)
@@ -473,7 +501,8 @@ def resolve_enemy_defeat(
                     f"Attribute point +{levels_gained}."
                 ),
             )
-
+    try_spawn_enemy_after_death(game_state, enemy)
+    release_mimic_loot(game_state, enemy)
     if (
         has_bloody_pact(player, BLOOD_HUNGER)
         and player.health < player.max_health

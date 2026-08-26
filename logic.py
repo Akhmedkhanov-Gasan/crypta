@@ -684,7 +684,7 @@ def get_enemy_attack_mode(enemy, player_column, player_row):
         return enemy["selected_attack_mode"]
 
     if (
-        enemy["type"] in ("archer", "priest")
+        enemy["type"] in ("archer", "priest", "priest_ghost")
         and distance_between(
             enemy["column"],
             enemy["row"],
@@ -695,7 +695,7 @@ def get_enemy_attack_mode(enemy, player_column, player_row):
     ):
         return "melee"
 
-    if enemy["type"] == "priest":
+    if enemy["type"] in ("priest", "priest_ghost"):
         return "magic"
 
     return enemy["attack_kind"]

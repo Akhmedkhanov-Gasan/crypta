@@ -356,7 +356,8 @@ def resolve_enemy_turn(
                         damage_kind=(
                             "magic"
                             if (
-                                enemy.type in ("priest", "oracle")
+                                enemy.type
+                                in ("priest", "priest_ghost", "oracle")
                                 and attack_mode != "melee"
                             )
                             else "physical"

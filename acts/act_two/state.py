@@ -195,6 +195,7 @@ class ActTwoPlayerState:
     scroll_effect_target: tuple[int, int] | None = None
     selected_ability_direction: tuple[int, int] | None = None
     wait_effect_started_at: int = -1
+    dodge_effect_started_at: int = -1
     level_up_effect_started_at: int = -1
     ability_effect_started_at: int = 0
     ability_effect_direction: tuple[int, int] = (0, 1)

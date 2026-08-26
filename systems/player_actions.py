@@ -1,5 +1,6 @@
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
+from systems.mimic import awaken_mimic
 from acts.act_two.crates import collect_crate_loot
 from acts.act_two.bloody_altar import adjusted_consumable_healing
 from acts.act_two.consumables import (
@@ -120,6 +121,9 @@ def open_chest(
             consume_act_two_key(player)
         else:
             player.key_count -= 1
+
+    if awaken_mimic(game_state, chest):
+        return True
 
     if chest["contains"] in ("gold", POTION, FIRE_BOMB, *SCROLLS):
         chest["loot_available"] = True

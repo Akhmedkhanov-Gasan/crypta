@@ -5,6 +5,7 @@ from worldgen.passages import (
     can_create_north_wall_passage,
     create_north_wall_passage,
 )
+from systems.mimic import mark_mimic_chests
 from acts.act_two.settings import ACT_TWO_CHEST_LOOT_WEIGHTS
 from enemies import ENEMY_TYPES
 from levels import FLOOR_CONFIGS
@@ -1138,7 +1139,10 @@ def generate_floor(
                 ),
             }
         )
-
+    mark_mimic_chests(
+        chests,
+        config.get("mimic_count", 0),
+    )
     potion_positions = non_boss_floor_positions
 
     potions = []

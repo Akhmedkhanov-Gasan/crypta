@@ -3,6 +3,7 @@ import math
 import pygame
 
 from acts.act_two.presentation.enemy_effects import (
+    draw_act_two_dodge_feedback,
     draw_act_two_enemy_death,
 )
 from acts.act_two.presentation.enemies.archer import (
@@ -40,10 +41,12 @@ _AFTERSHOCK_HIT_FEEDBACK_MS = 520
 
 _STANDARD_ENEMY_TYPES = (
     "goblin",
+    "mimic",
     "archer",
     "brute",
     "sentinel",
     "priest",
+    "priest_ghost",
 )
 _STANDING_SPRITE_NAMES = {
     "goblin": "goblin",
@@ -51,13 +54,17 @@ _STANDING_SPRITE_NAMES = {
     "brute": "brute",
     "sentinel": "sentinel_idle",
     "priest": "priest_idle",
+    "priest_ghost": "priest_ghost_idle",
+    "mimic": "mimic",
 }
 _HIT_FEEDBACK_RENDERERS = {
     "goblin": _draw_act_two_goblin_hit_feedback,
+    "mimic": _draw_act_two_goblin_hit_feedback,
     "archer": _draw_act_two_archer_hit_feedback,
     "brute": _draw_act_two_brute_hit_feedback,
     "sentinel": _draw_act_two_sentinel_hit_feedback,
     "priest": _draw_act_two_priest_hit_feedback,
+    "priest_ghost": _draw_act_two_priest_hit_feedback,
 }
 
 
@@ -190,6 +197,13 @@ def _enemy_sprite_name(enemy, current_time):
             else f"{enemy['type']}_attack"
         )
 
+    if enemy["type"] == "priest_ghost":
+        return (
+            "priest_ghost_cast"
+            if attack_telegraph_is_visible(enemy, current_time)
+            else "priest_ghost_idle"
+        )
+
     if enemy["type"] == "sentinel":
         return (
             "sentinel_guard"
@@ -265,7 +279,7 @@ def _draw_standard_enemy(
         + enemy["row"] * TILE_SIZE
         + movement_offset[1],
     )
-    _HIT_FEEDBACK_RENDERERS[enemy["type"]](
+    dodge_was_drawn = draw_act_two_dodge_feedback(
         screen,
         enemy,
         sprite,
@@ -273,6 +287,15 @@ def _draw_standard_enemy(
         current_time,
         damage_font,
     )
+    if not dodge_was_drawn:
+        _HIT_FEEDBACK_RENDERERS[enemy["type"]](
+            screen,
+            enemy,
+            sprite,
+            position,
+            current_time,
+            damage_font,
+        )
     if enemy.type == "goblin":
         draw_goblin_summon_effects(
             screen,
