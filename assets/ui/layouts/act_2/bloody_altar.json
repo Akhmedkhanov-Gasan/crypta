@@ -42,6 +42,12 @@
       "a": 255
     }
   },
+  "close_hitbox": {
+    "x": 1036,
+    "y": 146,
+    "width": 40,
+    "height": 40
+  },
   "options": {
     "open_wound": {
       "rect": {
@@ -99,7 +105,7 @@
           "width": 170,
           "height": 30
         },
-        "text": "Ability damage +2.",
+        "text": "Abilities require no charge.",
         "font": {
           "family": "Alagard",
           "style": "Medium",
@@ -125,11 +131,11 @@
       "sacrifice": {
         "rect": {
           "x": 290,
-          "y": 485,
+          "y": 491,
           "width": 170,
           "height": 29
         },
-        "text": "Incoming damage +1.",
+        "text": "Each use consumes 10% maximum health.",
         "font": {
           "family": "Alagard",
           "style": "Medium",
@@ -362,7 +368,7 @@
           "width": 170,
           "height": 30
         },
-        "text": "Minimum and maximum \ndamage +1.",
+        "text": "Maximum damage +50%",
         "font": {
           "family": "Alagard",
           "style": "Medium",
@@ -392,7 +398,7 @@
           "width": 170,
           "height": 29
         },
-        "text": "Maximum health -4.",
+        "text": "Maximum health -25%.",
         "font": {
           "family": "Alagard",
           "style": "Medium",
@@ -479,7 +485,7 @@
           "width": 170,
           "height": 30
         },
-        "text": "Kills restore 1 health.",
+        "text": "Damage dealt restores 20% as\nhealth.",
         "font": {
           "family": "Alagard",
           "style": "Medium",
@@ -505,11 +511,11 @@
       "sacrifice": {
         "rect": {
           "x": 824,
-          "y": 492,
+          "y": 496,
           "width": 170,
           "height": 29
         },
-        "text": "Potions and scrolls\n heal 50% less.",
+        "text": "Healing consumables cannot\nbe used.",
         "font": {
           "family": "Alagard",
           "style": "Medium",
@@ -549,16 +555,16 @@
       "height": 44
     },
     "button": {
-      "x": 533,
-      "y": 549,
-      "width": 214,
-      "height": 71
+      "x": 547,
+      "y": 564,
+      "width": 186,
+      "height": 45
     },
     "hitbox": {
       "x": 547,
       "y": 564,
       "width": 186,
-      "height": 42
+      "height": 45
     }
   }
 }

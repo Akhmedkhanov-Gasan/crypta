@@ -1,6 +1,14 @@
 import pygame
 
-from presentation.hud import wrap_text
+from presentation.figma_ui import (
+    draw_figma_text,
+    figma_rect,
+    get_figma_font,
+)
+from presentation.hud import (
+    fit_text_to_width,
+    wrap_text,
+)
 
 from acts.act_two.trader_catalog import (
     DEFAULT_TRADER_STOCK,
@@ -21,6 +29,61 @@ def _get_scaled_icon(sprites, sprite_name, size):
 
     return _scaled_icon_cache[cache_key]
 
+def _draw_dynamic_text(
+    screen,
+    text_spec,
+    value,
+):
+    runtime_spec = {
+        **text_spec,
+        "text": str(value),
+    }
+
+    draw_figma_text(
+        screen,
+        runtime_spec,
+    )
+
+
+def _draw_wrapped_text(
+    screen,
+    text_spec,
+    value,
+):
+    rectangle = figma_rect(text_spec["rect"])
+    font = get_figma_font(text_spec)
+
+    lines = wrap_text(
+        font,
+        str(value),
+        rectangle.width,
+    ) or [""]
+
+    line_height = max(
+        1,
+        font.get_linesize(),
+    )
+
+    maximum_lines = max(
+        1,
+        rectangle.height // line_height,
+    )
+
+    visible_lines = lines[:maximum_lines]
+
+    if len(lines) > maximum_lines:
+        visible_lines[-1] = fit_text_to_width(
+            font,
+            visible_lines[-1] + "...",
+            rectangle.width,
+        )
+
+    _draw_dynamic_text(
+        screen,
+        text_spec,
+        "\n".join(visible_lines),
+    )
+
 
 def draw_act_two_trade_window(
     screen,
@@ -29,63 +92,44 @@ def draw_act_two_trade_window(
     fonts,
     mouse_position,
 ):
-    background = layout["background"]
+    background_rectangle = figma_rect(
+        layout["background"]
+    )
+
+    background = _get_scaled_icon(
+        sprites,
+        "act_two_trade_background",
+        background_rectangle.size,
+    )
 
     screen.blit(
-        sprites["act_two_trade_background"],
-        (background["x"], background["y"]),
+        background,
+        background_rectangle,
     )
 
     for slot_name, item_id in DEFAULT_TRADER_STOCK.items():
         slot = layout["slots"].get(slot_name)
 
-        if slot is None or slot["icon"] is None:
+        if slot is None:
             continue
 
         item = TRADER_ITEMS[item_id]
-        icon_layout = slot["icon"]
 
-        icon_rectangle = pygame.Rect(
-            icon_layout["x"],
-            icon_layout["y"],
-            icon_layout["width"],
-            icon_layout["height"],
+        slot_rectangle = figma_rect(
+            slot["rect"]
         )
-
-        icon = _get_scaled_icon(
-            sprites,
-            item.sprite_name,
-            icon_rectangle.size,
+        icon_rectangle = figma_rect(
+            slot["icon"]
         )
-
-        screen.blit(icon, icon_rectangle)
-        name_rectangle = _layout_rectangle(slot["name"])
-        price_rectangle = _layout_rectangle(slot["price"])
-
-        name_surface = fonts["trade_name"].render(
-            item.name,
-            True,
-            (218, 211, 197),
+        buy_rectangle = figma_rect(
+            slot["buy_hitbox"]
         )
-        screen.blit(
-            name_surface,
-            name_surface.get_rect(center=name_rectangle.center),
-        )
-
-        price_surface = fonts["trade_price"].render(
-            str(item.price),
-            True,
-            (218, 211, 197),
-        )
-        description_rectangle = _layout_rectangle(
-            slot["description"]
-        )
-        buy_rectangle = _layout_rectangle(slot["buy_hitbox"])
-        slot_rectangle = _layout_rectangle(slot["rect"])
 
         hovered = (
-                mouse_position is not None
-                and buy_rectangle.collidepoint(mouse_position)
+            mouse_position is not None
+            and buy_rectangle.collidepoint(
+                mouse_position
+            )
         )
 
         if hovered:
@@ -93,11 +137,14 @@ def draw_act_two_trade_window(
                 slot_rectangle.size,
                 pygame.SRCALPHA,
             )
-            highlight.fill((225, 174, 77, 28))
+
+            highlight.fill(
+                (225, 174, 77, 28)
+            )
 
             screen.blit(
                 highlight,
-                slot_rectangle.topleft,
+                slot_rectangle,
             )
 
             pygame.draw.rect(
@@ -107,63 +154,45 @@ def draw_act_two_trade_window(
                 width=1,
                 border_radius=3,
             )
-        description_font = fonts["trade_description"]
 
-        description_lines = wrap_text(
-            description_font,
-            item.description,
-            description_rectangle.width,
+        icon = _get_scaled_icon(
+            sprites,
+            item.sprite_name,
+            icon_rectangle.size,
         )
 
-        line_height = description_font.get_linesize()
-        maximum_lines = max(
-            1,
-            description_rectangle.height // line_height,
-        )
-        description_lines = description_lines[:maximum_lines]
-
-        total_height = len(description_lines) * line_height
-        line_y = description_rectangle.centery - total_height // 2
-
-        for line in description_lines:
-            line_surface = description_font.render(
-                line,
-                True,
-                (166, 157, 157),
-            )
-            screen.blit(
-                line_surface,
-                line_surface.get_rect(
-                    midtop=(description_rectangle.centerx, line_y)
-                ),
-            )
-            line_y += line_height
         screen.blit(
-            price_surface,
-            price_surface.get_rect(center=price_rectangle.center),
+            icon,
+            icon_rectangle,
         )
 
+        _draw_dynamic_text(
+            screen,
+            slot["name"],
+            item.name,
+        )
 
-def _layout_rectangle(data):
-    return pygame.Rect(
-        data["x"],
-        data["y"],
-        data["width"],
-        data["height"],
-    )
+        _draw_wrapped_text(
+            screen,
+            slot["description"],
+            item.description,
+        )
+
+        _draw_dynamic_text(
+            screen,
+            slot["price"],
+            item.price,
+        )
 
 
 def get_act_two_trade_buy_rectangles(layout):
-    rectangles = {}
-
-    for slot_name in DEFAULT_TRADER_STOCK:
-        slot = layout["slots"].get(slot_name)
-
-        if slot is None or slot["buy_hitbox"] is None:
-            continue
-
-        rectangles[slot_name] = _layout_rectangle(
-            slot["buy_hitbox"]
+    return {
+        slot_name: figma_rect(
+            layout["slots"][slot_name]["buy_hitbox"]
         )
+        for slot_name in DEFAULT_TRADER_STOCK
+        if slot_name in layout["slots"]
+    }
 
-    return rectangles
+def get_act_two_trade_close_rectangle(layout):
+    return figma_rect(layout["close_hitbox"])

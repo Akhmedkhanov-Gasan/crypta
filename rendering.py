@@ -58,6 +58,7 @@ from acts.act_two.presentation import (
     draw_act_two_trader,
     draw_act_two_trade_window,
     get_act_two_trade_buy_rectangles,
+    get_act_two_trade_close_rectangle,
 )
 from presentation.layout import CLASS_SELECTION_READY_MS
 from presentation.screens import (
@@ -121,6 +122,7 @@ __all__ = [
     "draw_act_two_trade_window",
     "load_act_two_trade_layout",
     "get_act_two_trade_buy_rectangles",
+    "get_act_two_trade_close_rectangle",
     "draw_fire_bomb_flight",
     "draw_fire_bomb_targeting",
     "draw_fire_zones",

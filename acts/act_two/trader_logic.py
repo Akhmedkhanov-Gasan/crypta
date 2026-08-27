@@ -17,21 +17,17 @@ def interact_with_trader(
     quest = game_state.act_two_quests.trader_seal
 
     if quest.completed:
-        dialogue = (
-            "Good to see you again. "
-            "Take a look at my wares."
-        )
-
-        game_state.trader_dialogue_text = dialogue
-        game_state.trader_dialogue_started_at = (
-            dialogue_started_at
-        )
+        game_state.trader_dialogue_text = ""
+        game_state.trader_dialogue_started_at = -1
         game_state.trader_dialogue_dismiss_started_at = -1
         game_state.trade_screen_open = True
 
         add_log_message(
             game_state.combat_log,
-            f"Trader: {dialogue}",
+            (
+                "Trader: Good to see you again. "
+                "Take a look at my wares."
+            ),
         )
         return "trader_normal"
 
@@ -43,22 +39,18 @@ def interact_with_trader(
             GUILD_SEAL,
         )
 
-        dialogue = (
-            "You found the guild seal... "
-            "I thought it was lost with them. "
-            "Thank you. Let us trade."
-        )
-
-        game_state.trader_dialogue_text = dialogue
-        game_state.trader_dialogue_started_at = (
-            dialogue_started_at
-        )
+        game_state.trader_dialogue_text = ""
+        game_state.trader_dialogue_started_at = -1
         game_state.trader_dialogue_dismiss_started_at = -1
         game_state.trade_screen_open = True
 
         add_log_message(
             game_state.combat_log,
-            f"Trader: {dialogue}",
+            (
+                "Trader: You found the guild seal... "
+                "I thought it was lost with them. "
+                "Thank you. Let us trade."
+            ),
         )
         add_log_message(
             game_state.combat_log,

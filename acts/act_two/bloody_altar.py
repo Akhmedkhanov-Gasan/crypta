@@ -1,3 +1,5 @@
+from math import ceil
+
 from acts.act_two.bloody_altar_catalog import BLOODY_PACTS_BY_ID
 from acts.player_stats import PlayerStatChanges, apply_player_stat_changes
 from game.combat_log import add_log_message
@@ -15,7 +17,10 @@ BLOODY_PACT_ORDER = (
     GLASS_HEART,
     BLOOD_HUNGER,
 )
-
+OPEN_WOUND_HEALTH_COST_RATIO = 0.10
+GLASS_HEART_DAMAGE_MULTIPLIER = 1.50
+GLASS_HEART_HEALTH_PENALTY_RATIO = 0.25
+BLOOD_HUNGER_LIFESTEAL_RATIO = 0.20
 _BLOODY_PACT_IDS = frozenset(BLOODY_PACT_ORDER)
 
 def has_bloody_pact(player, pact_id: str) -> bool:
@@ -90,12 +95,18 @@ def confirm_bloody_pact(game_state: GameState) -> bool:
         player.act_two.selected_rune_id = None
         player.ability_kill_charge = min(2, player.ability_kill_charge)
     elif pact.id == GLASS_HEART:
+        health_penalty = max(
+            1,
+            ceil(
+                player.max_health
+                * GLASS_HEART_HEALTH_PENALTY_RATIO
+            ),
+        )
+
         apply_player_stat_changes(
             player,
             PlayerStatChanges(
-                max_health=-4,
-                damage_min=1,
-                damage_max=1,
+                max_health=-health_penalty,
             ),
         )
 
@@ -127,6 +138,73 @@ def adjusted_consumable_healing(player, amount: int) -> int:
     if has_bloody_pact(player, BLOOD_HUNGER):
         return max(1, amount // 2)
     return amount
+
+
+def open_wound_ability_health_cost(player) -> int:
+    return max(
+        1,
+        ceil(
+            player.max_health
+            * OPEN_WOUND_HEALTH_COST_RATIO
+        ),
+    )
+
+
+def open_wound_ability_is_affordable(player) -> bool:
+    if not has_bloody_pact(player, OPEN_WOUND):
+        return True
+
+    return (
+        player.health
+        > open_wound_ability_health_cost(player)
+    )
+
+
+def pay_open_wound_ability_cost(
+    game_state: GameState,
+) -> bool:
+    player = game_state.player
+
+    if not has_bloody_pact(player, OPEN_WOUND):
+        return True
+
+    health_cost = open_wound_ability_health_cost(player)
+
+    if player.health <= health_cost:
+        add_log_message(
+            game_state.combat_log,
+            "Not enough health to invoke Open Wound.",
+        )
+        return False
+
+    player.health -= health_cost
+
+    add_log_message(
+        game_state.combat_log,
+        (
+            f"Open Wound consumes "
+            f"{health_cost} health."
+        ),
+    )
+    return True
+
+
+def adjusted_attack_damage_range(
+    player,
+    minimum: int,
+    maximum: int,
+) -> tuple[int, int]:
+    if has_bloody_pact(player, GLASS_HEART):
+        maximum = ceil(
+            maximum
+            * GLASS_HEART_DAMAGE_MULTIPLIER
+        )
+
+    return minimum, max(minimum, maximum)
+
+
+def healing_consumables_are_blocked(player) -> bool:
+    return has_bloody_pact(player, BLOOD_HUNGER)
 
 
 __all__ = [

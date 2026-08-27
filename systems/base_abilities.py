@@ -9,7 +9,13 @@ from acts.act_two.abilities import (
     get_warrior_cleave_cells,
     is_valid_mage_arcane_burst_target,
 )
-from acts.act_two.bloody_altar import OPEN_WOUND, has_bloody_pact
+from acts.act_two.bloody_altar import (
+    BROKEN_SEAL,
+    OPEN_WOUND,
+    has_bloody_pact,
+    open_wound_ability_is_affordable,
+    pay_open_wound_ability_cost,
+)
 from acts.act_two.progression import (
     get_warrior_upgrade_rank,
 )
@@ -76,6 +82,9 @@ def request_class_ability(
         return AbilityRequestResult.NOT_READY
 
     if player.player_class == "rogue":
+        if not pay_open_wound_ability_cost(game_state):
+            return AbilityRequestResult.NOT_READY
+
         player.ability_kill_charge = 0
         invisibility_turns = (
             ASSASSIN_INVISIBILITY_TURNS
@@ -114,7 +123,16 @@ def request_class_ability(
             "The rogue vanishes from sight.",
         )
         return AbilityRequestResult.ROGUE_ACTIVATED
-
+    if (
+            player.player_class in ("warrior", "mage")
+            and not player.directional_ability_aiming
+            and not open_wound_ability_is_affordable(player)
+    ):
+        add_log_message(
+            game_state.combat_log,
+            "Not enough health to invoke Open Wound.",
+        )
+        return AbilityRequestResult.NOT_READY
     if player.player_class in ("warrior", "mage"):
         player.directional_ability_aiming = (
             not player.directional_ability_aiming
@@ -238,7 +256,9 @@ def cast_directional_ability(
 
     if player.player_class != "warrior":
         return False
-
+    if not pay_open_wound_ability_cost(game_state):
+        player.directional_ability_aiming = False
+        return False
     player.directional_ability_aiming = False
     cleave_rank = get_warrior_upgrade_rank(
         player,
@@ -249,9 +269,9 @@ def cast_directional_ability(
         "warrior_rhythm",
     )
     damage_bonus = (
-        WARRIOR_CLEAVE_DAMAGE_BONUS
-        + cleave_rank * WARRIOR_CLEAVE_DAMAGE_PER_RANK
-        + (2 if has_bloody_pact(player, OPEN_WOUND) else 0)
+            WARRIOR_CLEAVE_DAMAGE_BONUS
+            + cleave_rank
+            * WARRIOR_CLEAVE_DAMAGE_PER_RANK
     )
     ability_name = "power cleave"
     selected_rune_id = player.act_two.selected_rune_id
@@ -286,15 +306,18 @@ def cast_directional_ability(
     player.act_two.ability_effect_kind = "power_cleave"
     player.act_two.ability_effect_aftershock_positions = ()
     aftershock_positions = []
-    player.ability_kill_charge = min(
-        ability_charge_required(player),
-        rhythm_rank
-        + (
-            len(ability_targets)
-            if selected_rune_id == "rune_of_reaping"
-            else 0
-        ),
-    )
+    if has_bloody_pact(player, BROKEN_SEAL):
+        player.ability_kill_charge = 0
+    else:
+        player.ability_kill_charge = min(
+            ability_charge_required(player),
+            rhythm_rank
+            + (
+                len(ability_targets)
+                if selected_rune_id == "rune_of_reaping"
+                else 0
+            ),
+        )
     if selected_rune_id == "rune_of_reaping" and ability_targets:
         add_log_message(
             game_state.combat_log,
@@ -548,6 +571,9 @@ def cast_mage_arcane_burst(
         or not is_valid_mage_arcane_burst_target(game_state, target)
     ):
         return False
+    if not pay_open_wound_ability_cost(game_state):
+        player.directional_ability_aiming = False
+        return False
 
     concentration_active = (
         player.act_two.selected_rune_id == "rune_of_concentration"
@@ -699,10 +725,7 @@ def cast_mage_arcane_burst(
             damage_minimum,
             damage_maximum,
             player.crit_chance,
-            damage_bonus=(
-                damage_bonus
-                + (2 if has_bloody_pact(player, OPEN_WOUND) else 0)
-            ),
+            damage_bonus=damage_bonus,
             grant_ability_charge=False,
             attacker_position=(floor.player_column, floor.player_row),
         )
