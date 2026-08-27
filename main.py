@@ -177,6 +177,7 @@ from rendering import (
     draw_act_two_trade_window,
     load_act_two_trade_layout,
     get_act_two_trade_buy_rectangles,
+    get_act_two_trade_close_rectangle,
     draw_act_one_pickup_effect,
     draw_act_two_pickup_effect,
     draw_boss_door,
@@ -885,30 +886,43 @@ def main():
                     )
 
                     if game_mouse_position is not None:
-                        clicked_slot = next(
-                            (
-                                slot_name
-                                for slot_name, rectangle
-                                in get_act_two_trade_buy_rectangles(
+                        close_rectangle = (
+                            get_act_two_trade_close_rectangle(
                                 act_two_trade_layout
-                            ).items()
-                                if rectangle.collidepoint(
-                                game_mouse_position
                             )
-                            ),
-                            None,
                         )
 
-                        if clicked_slot is not None:
-                            purchase_succeeded = buy_trader_item(
-                                game_state,
-                                clicked_slot,
+                        if close_rectangle.collidepoint(
+                                game_mouse_position
+                        ):
+                            game_state.trade_screen_open = False
+                            act_two_held_movement_keys.clear()
+                            act_two_held_direction = (0, 0)
+                        else:
+                            clicked_slot = next(
+                                (
+                                    slot_name
+                                    for slot_name, rectangle
+                                    in get_act_two_trade_buy_rectangles(
+                                    act_two_trade_layout
+                                ).items()
+                                    if rectangle.collidepoint(
+                                    game_mouse_position
+                                )
+                                ),
+                                None,
                             )
 
-                            if purchase_succeeded:
-                                act_two_sounds.play_ui_sound(
-                                    "gold_pickup"
+                            if clicked_slot is not None:
+                                purchase_succeeded = buy_trader_item(
+                                    game_state,
+                                    clicked_slot,
                                 )
+
+                                if purchase_succeeded:
+                                    act_two_sounds.play_ui_sound(
+                                        "gold_pickup"
+                                    )
                 continue
 
             elif game_state.rune_selection_open:

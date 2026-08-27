@@ -1,394 +1,691 @@
 {
+  "schema_version": 3,
+  "screen": "trade",
+  "act": 2,
   "frame": {
-    "name": "Trade",
+    "name": "Trade_Act2",
     "width": 1280,
     "height": 720
   },
+  "trade": {
+    "rect": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
   "background": {
-    "x": 271,
-    "y": 152,
-    "width": 738,
-    "height": 416
+    "x": 205,
+    "y": 33,
+    "width": 871,
+    "height": 653
+  },
+  "close_hitbox": {
+    "x": 987,
+    "y": 133,
+    "width": 40,
+    "height": 40
   },
   "slots": {
-    "slot_left_01": {
+    "slot_01": {
       "rect": {
-        "x": 326,
-        "y": 205,
-        "width": 300,
-        "height": 45
+        "x": 322,
+        "y": 181,
+        "width": 639,
+        "height": 63
       },
       "icon": {
-        "x": 326,
-        "y": 205,
-        "width": 45,
-        "height": 45
+        "x": 322,
+        "y": 184,
+        "width": 60,
+        "height": 60
       },
       "name": {
-        "x": 434,
-        "y": 209,
-        "width": 35,
-        "height": 12
+        "rect": {
+          "x": 465,
+          "y": 194,
+          "width": 239,
+          "height": 19
+        },
+        "text": "Potion",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 14
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 221,
+          "g": 210,
+          "b": 205,
+          "a": 255
+        }
       },
       "description": {
-        "x": 376,
-        "y": 215,
-        "width": 165,
-        "height": 34
+        "rect": {
+          "x": 446,
+          "y": 208,
+          "width": 289,
+          "height": 34
+        },
+        "text": "Restores 4 health.",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 13
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 174,
+          "g": 154,
+          "b": 143,
+          "a": 255
+        }
       },
       "price": {
-        "x": 582,
-        "y": 219,
-        "width": 15,
-        "height": 18
+        "rect": {
+          "x": 856,
+          "y": 194,
+          "width": 64,
+          "height": 41
+        },
+        "text": "2",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 24
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 174,
+          "g": 154,
+          "b": 143,
+          "a": 255
+        }
       },
       "buy_hitbox": {
-        "x": 332,
-        "y": 205,
-        "width": 288,
-        "height": 42
+        "x": 322,
+        "y": 181,
+        "width": 639,
+        "height": 63
       }
     },
-    "slot_left_02": {
+    "slot_02": {
       "rect": {
-        "x": 326,
-        "y": 267,
-        "width": 300,
-        "height": 45
+        "x": 322,
+        "y": 255,
+        "width": 639,
+        "height": 63
       },
       "icon": {
-        "x": 326,
-        "y": 267,
-        "width": 45,
-        "height": 45
+        "x": 322,
+        "y": 259,
+        "width": 60,
+        "height": 60
       },
       "name": {
-        "x": 404,
-        "y": 271,
-        "width": 95,
-        "height": 12
+        "rect": {
+          "x": 465,
+          "y": 268,
+          "width": 239,
+          "height": 19
+        },
+        "text": "Scroll of Binding",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 14
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 221,
+          "g": 210,
+          "b": 205,
+          "a": 255
+        }
       },
       "description": {
-        "x": 376,
-        "y": 277,
-        "width": 165,
-        "height": 34
+        "rect": {
+          "x": 416,
+          "y": 281,
+          "width": 345,
+          "height": 34
+        },
+        "text": "Completely prevents one visible enemy from taking any\nactions for 5 turns and interrupts a prepared attack",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 13
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 174,
+          "g": 154,
+          "b": 143,
+          "a": 255
+        }
       },
       "price": {
-        "x": 582,
-        "y": 281,
-        "width": 15,
-        "height": 18
+        "rect": {
+          "x": 856,
+          "y": 268,
+          "width": 64,
+          "height": 41
+        },
+        "text": "6",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 24
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 174,
+          "g": 154,
+          "b": 143,
+          "a": 255
+        }
       },
       "buy_hitbox": {
-        "x": 332,
-        "y": 267,
-        "width": 288,
-        "height": 42
+        "x": 322,
+        "y": 255,
+        "width": 639,
+        "height": 63
       }
     },
-    "slot_left_03": {
+    "slot_03": {
       "rect": {
-        "x": 324,
+        "x": 322,
         "y": 328,
-        "width": 300,
-        "height": 45
+        "width": 639,
+        "height": 63
       },
       "icon": {
-        "x": 324,
-        "y": 328,
-        "width": 45,
-        "height": 45
+        "x": 320,
+        "y": 331,
+        "width": 60,
+        "height": 60
       },
       "name": {
-        "x": 402,
-        "y": 332,
-        "width": 95,
-        "height": 12
+        "rect": {
+          "x": 465,
+          "y": 341,
+          "width": 239,
+          "height": 19
+        },
+        "text": "Scroll of Impulse",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 14
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 221,
+          "g": 210,
+          "b": 205,
+          "a": 255
+        }
       },
       "description": {
-        "x": 374,
-        "y": 338,
-        "width": 165,
-        "height": 34
+        "rect": {
+          "x": 413,
+          "y": 354,
+          "width": 351,
+          "height": 34
+        },
+        "text": "Deals a fixed 5 points of magical \ndamage to one visible enemy",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 13
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 174,
+          "g": 154,
+          "b": 143,
+          "a": 255
+        }
       },
       "price": {
-        "x": 580,
-        "y": 342,
-        "width": 15,
-        "height": 18
+        "rect": {
+          "x": 856,
+          "y": 341,
+          "width": 64,
+          "height": 41
+        },
+        "text": "4",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 24
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 174,
+          "g": 154,
+          "b": 143,
+          "a": 255
+        }
       },
       "buy_hitbox": {
-        "x": 330,
+        "x": 322,
         "y": 328,
-        "width": 288,
-        "height": 42
+        "width": 639,
+        "height": 63
       }
     },
-    "slot_left_04": {
+    "slot_04": {
       "rect": {
-        "x": 325,
-        "y": 392,
-        "width": 300,
-        "height": 45
-      },
-      "icon": {
-        "x": 325,
-        "y": 392,
-        "width": 45,
-        "height": 45
-      },
-      "name": {
-        "x": 412,
-        "y": 396,
-        "width": 76,
-        "height": 12
-      },
-      "description": {
-        "x": 375,
+        "x": 320,
         "y": 402,
-        "width": 165,
-        "height": 34
-      },
-      "price": {
-        "x": 581,
-        "y": 406,
-        "width": 15,
-        "height": 18
-      },
-      "buy_hitbox": {
-        "x": 331,
-        "y": 392,
-        "width": 288,
-        "height": 42
-      }
-    },
-    "slot_left_05": {
-      "rect": {
-        "x": 325,
-        "y": 453,
-        "width": 300,
-        "height": 45
+        "width": 639,
+        "height": 63
       },
       "icon": {
-        "x": 325,
-        "y": 453,
-        "width": 45,
-        "height": 45
+        "x": 320,
+        "y": 405,
+        "width": 60,
+        "height": 60
       },
       "name": {
-        "x": 395,
-        "y": 457,
-        "width": 110,
-        "height": 12
+        "rect": {
+          "x": 463,
+          "y": 415,
+          "width": 239,
+          "height": 19
+        },
+        "text": "Healing Scroll",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 14
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 221,
+          "g": 210,
+          "b": 205,
+          "a": 255
+        }
       },
       "description": {
-        "x": 375,
-        "y": 463,
-        "width": 165,
-        "height": 34
+        "rect": {
+          "x": 438,
+          "y": 428,
+          "width": 289,
+          "height": 34
+        },
+        "text": "Restores 6 HP",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 13
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 174,
+          "g": 154,
+          "b": 143,
+          "a": 255
+        }
       },
       "price": {
-        "x": 581,
-        "y": 467,
-        "width": 15,
-        "height": 18
+        "rect": {
+          "x": 854,
+          "y": 415,
+          "width": 64,
+          "height": 41
+        },
+        "text": "4",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 24
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 174,
+          "g": 154,
+          "b": 143,
+          "a": 255
+        }
       },
       "buy_hitbox": {
-        "x": 331,
-        "y": 453,
-        "width": 288,
-        "height": 42
-      }
-    },
-    "slot_right_01": {
-      "rect": {
-        "x": 659,
-        "y": 205,
-        "width": 300,
-        "height": 45
-      },
-      "icon": {
-        "x": 659,
-        "y": 205,
-        "width": 45,
-        "height": 45
-      },
-      "name": {
-        "x": 769,
-        "y": 209,
-        "width": 30,
-        "height": 12
-      },
-      "description": {
-        "x": 709,
-        "y": 215,
-        "width": 165,
-        "height": 34
-      },
-      "price": {
-        "x": 915,
-        "y": 219,
-        "width": 15,
-        "height": 18
-      },
-      "buy_hitbox": {
-        "x": 665,
-        "y": 205,
-        "width": 288,
-        "height": 42
-      }
-    },
-    "slot_right_02": {
-      "rect": {
-        "x": 659,
-        "y": 267,
-        "width": 300,
-        "height": 45
-      },
-      "icon": {
-        "x": 659,
-        "y": 267,
-        "width": 45,
-        "height": 45
-      },
-      "name": {
-        "x": 769,
-        "y": 271,
-        "width": 30,
-        "height": 12
-      },
-      "description": {
-        "x": 709,
-        "y": 277,
-        "width": 165,
-        "height": 34
-      },
-      "price": {
-        "x": 915,
-        "y": 281,
-        "width": 15,
-        "height": 18
-      },
-      "buy_hitbox": {
-        "x": 665,
-        "y": 267,
-        "width": 288,
-        "height": 42
-      }
-    },
-    "slot_right_03": {
-      "rect": {
-        "x": 657,
-        "y": 328,
-        "width": 300,
-        "height": 45
-      },
-      "icon": {
-        "x": 657,
-        "y": 328,
-        "width": 45,
-        "height": 45
-      },
-      "name": {
-        "x": 767,
-        "y": 332,
-        "width": 30,
-        "height": 12
-      },
-      "description": {
-        "x": 707,
-        "y": 338,
-        "width": 165,
-        "height": 34
-      },
-      "price": {
-        "x": 913,
-        "y": 342,
-        "width": 15,
-        "height": 18
-      },
-      "buy_hitbox": {
-        "x": 663,
-        "y": 328,
-        "width": 288,
-        "height": 42
-      }
-    },
-    "slot_right_04": {
-      "rect": {
-        "x": 658,
-        "y": 392,
-        "width": 300,
-        "height": 45
-      },
-      "icon": {
-        "x": 658,
-        "y": 392,
-        "width": 45,
-        "height": 45
-      },
-      "name": {
-        "x": 768,
-        "y": 396,
-        "width": 30,
-        "height": 12
-      },
-      "description": {
-        "x": 708,
+        "x": 320,
         "y": 402,
-        "width": 165,
-        "height": 34
-      },
-      "price": {
-        "x": 914,
-        "y": 406,
-        "width": 15,
-        "height": 18
-      },
-      "buy_hitbox": {
-        "x": 664,
-        "y": 392,
-        "width": 288,
-        "height": 42
+        "width": 639,
+        "height": 63
       }
     },
-    "slot_right_05": {
+    "slot_05": {
       "rect": {
-        "x": 658,
-        "y": 453,
-        "width": 300,
-        "height": 45
+        "x": 320,
+        "y": 476,
+        "width": 639,
+        "height": 63
       },
       "icon": {
-        "x": 658,
-        "y": 453,
-        "width": 45,
-        "height": 45
+        "x": 320,
+        "y": 478,
+        "width": 60,
+        "height": 60
       },
       "name": {
-        "x": 768,
-        "y": 457,
-        "width": 30,
-        "height": 12
+        "rect": {
+          "x": 463,
+          "y": 489,
+          "width": 239,
+          "height": 19
+        },
+        "text": "Scroll of Stoneflesh",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 14
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 221,
+          "g": 210,
+          "b": 205,
+          "a": 255
+        }
       },
       "description": {
-        "x": 708,
-        "y": 463,
-        "width": 165,
-        "height": 34
+        "rect": {
+          "x": 438,
+          "y": 502,
+          "width": 289,
+          "height": 34
+        },
+        "text": "The next 6 physical hits deal only 40% damage - a 60% reduction",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 13
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 174,
+          "g": 154,
+          "b": 143,
+          "a": 255
+        }
       },
       "price": {
-        "x": 914,
-        "y": 467,
-        "width": 15,
-        "height": 18
+        "rect": {
+          "x": 854,
+          "y": 489,
+          "width": 64,
+          "height": 41
+        },
+        "text": "5",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 24
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 174,
+          "g": 154,
+          "b": 143,
+          "a": 255
+        }
       },
       "buy_hitbox": {
-        "x": 664,
-        "y": 453,
-        "width": 288,
-        "height": 42
+        "x": 320,
+        "y": 476,
+        "width": 639,
+        "height": 63
+      }
+    },
+    "slot_06": {
+      "rect": {
+        "x": 321,
+        "y": 549,
+        "width": 639,
+        "height": 63
+      },
+      "icon": {
+        "x": 321,
+        "y": 552,
+        "width": 60,
+        "height": 60
+      },
+      "name": {
+        "rect": {
+          "x": 464,
+          "y": 562,
+          "width": 239,
+          "height": 19
+        },
+        "text": "Fire bomb",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 14
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 221,
+          "g": 210,
+          "b": 205,
+          "a": 255
+        }
+      },
+      "description": {
+        "rect": {
+          "x": 417,
+          "y": 575,
+          "width": 338,
+          "height": 34
+        },
+        "text": "Creates fire in a 3×3 area for 9 ticks; each \ntick deals 1 damage to all creatures inside",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 13
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 174,
+          "g": 154,
+          "b": 143,
+          "a": 255
+        }
+      },
+      "price": {
+        "rect": {
+          "x": 855,
+          "y": 562,
+          "width": 64,
+          "height": 41
+        },
+        "text": "5",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 24
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 174,
+          "g": 154,
+          "b": 143,
+          "a": 255
+        }
+      },
+      "buy_hitbox": {
+        "x": 321,
+        "y": 549,
+        "width": 639,
+        "height": 63
       }
     }
   }

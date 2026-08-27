@@ -11,8 +11,11 @@ from acts.act_two.settings import (
 from acts.act_two.abilities import ability_charge_required
 from acts.act_two.bloody_altar import (
     BLOOD_HUNGER,
+    BROKEN_SEAL,
     OPEN_WOUND,
+    adjusted_attack_damage_range,
     has_bloody_pact,
+    BLOOD_HUNGER_LIFESTEAL_RATIO,
 )
 from acts.player_stats import attribute_stat_changes_for_rank
 from game.combat_log import add_log_message
@@ -225,12 +228,24 @@ def attack_enemy(
         )
         return False
 
-    damage = (
-        roll_player_damage(damage_minimum, damage_maximum)
-        + damage_bonus
+    damage_minimum, damage_maximum = (
+        adjusted_attack_damage_range(
+            player,
+            damage_minimum,
+            damage_maximum,
+        )
     )
+
+    damage = (
+            roll_player_damage(
+                damage_minimum,
+                damage_maximum,
+            )
+            + damage_bonus
+    )
+
     if (
-        player.subclass == "summoner"
+            player.subclass == "summoner"
         and player.summoner_bond_active
     ):
         damage += SUMMONER_BOND_DAMAGE_BONUS
@@ -271,9 +286,60 @@ def attack_enemy(
     )
 
     if critical_hit:
-        damage = ceil(damage * player.critical_damage_multiplier)
+        damage = ceil(
+            damage
+            * player.critical_damage_multiplier
+        )
 
-    enemy.health = max(0, enemy.health - damage)
+    enemy_health_before_hit = enemy.health
+    enemy.health = max(
+        0,
+        enemy.health - damage,
+    )
+
+    damage_dealt = (
+            enemy_health_before_hit
+            - enemy.health
+    )
+
+    if (
+            attacker_name == "hero"
+            and damage_dealt > 0
+            and has_bloody_pact(player, BLOOD_HUNGER)
+    ):
+        if player.health < player.max_health:
+            player.act_two.blood_hunger_healing_progress += (
+                    damage_dealt
+                    * BLOOD_HUNGER_LIFESTEAL_RATIO
+            )
+
+            restored_health = min(
+                player.max_health - player.health,
+                int(
+                    player.act_two.blood_hunger_healing_progress
+                ),
+            )
+
+            if restored_health > 0:
+                player.health += restored_health
+                player.act_two.blood_hunger_healing_progress -= (
+                    restored_health
+                )
+
+                game_state.emit(
+                    GameEvent(
+                        type=GameEventType.HEAL,
+                        actor="hero",
+                        target="hero",
+                        amount=restored_health,
+                        data={"kind": BLOOD_HUNGER},
+                    )
+                )
+
+            if player.health >= player.max_health:
+                player.act_two.blood_hunger_healing_progress = 0.0
+        else:
+            player.act_two.blood_hunger_healing_progress = 0.0
     if (
         player.subclass == "paladin"
         and player.paladin_holy_shield_turns > 0
@@ -503,24 +569,6 @@ def resolve_enemy_defeat(
             )
     try_spawn_enemy_after_death(game_state, enemy)
     release_mimic_loot(game_state, enemy)
-    if (
-        has_bloody_pact(player, BLOOD_HUNGER)
-        and player.health < player.max_health
-    ):
-        player.health += 1
-        game_state.emit(
-            GameEvent(
-                type=GameEventType.HEAL,
-                actor="hero",
-                target="hero",
-                amount=1,
-                data={"kind": BLOOD_HUNGER},
-            )
-        )
-        add_log_message(
-            game_state.combat_log,
-            "Blood Hunger restores 1 health.",
-        )
 
     if enemy.type == "oracle":
         floor.projectiles.clear()
@@ -668,17 +716,17 @@ def perform_basic_attack(
             damage_minimum,
             damage_maximum,
             player.crit_chance,
-            damage_bonus=(
-                2
-                if (
-                    attack_was_from_invisibility
-                    and has_bloody_pact(player, OPEN_WOUND)
-                )
-                else 0
-            ),
+            damage_bonus=0,
             force_critical=(
-                attack_was_from_invisibility
-                and selected_rune_id != "rune_of_the_veil"
+                    attack_was_from_invisibility
+                    and selected_rune_id != "rune_of_the_veil"
+            ),
+            grant_ability_charge=not (
+                    attack_was_from_invisibility
+                    and has_bloody_pact(
+                player,
+                BROKEN_SEAL,
+            )
             ),
             attacker_position=(
                 floor.player_column,

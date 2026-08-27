@@ -63,7 +63,8 @@ from acts.act_two.presentation.treasury import draw_act_two_treasury
 from acts.act_two.presentation.trader import draw_act_two_trader
 from acts.act_two.presentation.trade_window import (
     draw_act_two_trade_window,
-    get_act_two_trade_buy_rectangles
+    get_act_two_trade_buy_rectangles,
+    get_act_two_trade_close_rectangle,
 )
 
 __all__ = [
@@ -91,6 +92,7 @@ __all__ = [
     "draw_act_two_trader",
     "draw_act_two_trade_window",
     "get_act_two_trade_buy_rectangles",
+    "get_act_two_trade_close_rectangle",
     "get_act_two_upgrade_card_rectangles",
     "draw_act_two_player_actor",
     "draw_act_two_player_feedback_overlay",

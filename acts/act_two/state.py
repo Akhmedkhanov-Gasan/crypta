@@ -190,6 +190,7 @@ class ActTwoPlayerState:
     stoneflesh_hits: int = 0
     stoneflesh_effect_started_at: int = -1
     scroll_effect_started_at: int = -1
+    blood_hunger_healing_progress: float = 0.0
     scroll_effect_kind: str | None = None
     scroll_effect_origin: tuple[int, int] | None = None
     scroll_effect_target: tuple[int, int] | None = None

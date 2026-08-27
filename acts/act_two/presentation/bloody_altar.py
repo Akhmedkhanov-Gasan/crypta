@@ -53,6 +53,9 @@ def get_bloody_altar_confirm_rectangle(layout):
     return _rect(layout["confirm"]["hitbox"])
 
 
+def get_bloody_altar_close_rectangle(layout):
+    return _rect(layout["close_hitbox"])
+
 def handle_bloody_altar_event(
     event,
     game_state,
@@ -82,6 +85,12 @@ def handle_bloody_altar_event(
         cancel_bloody_altar(game_state)
         return
     if event.button != 1 or mouse_position is None:
+        return
+
+    if get_bloody_altar_close_rectangle(layout).collidepoint(
+            mouse_position
+    ):
+        cancel_bloody_altar(game_state)
         return
 
     clicked_pact_id = next(
@@ -251,4 +260,5 @@ __all__ = [
     "get_bloody_altar_option_rectangles",
     "handle_bloody_altar_event",
     "load_bloody_altar_layout",
+    "get_bloody_altar_close_rectangle",
 ]
