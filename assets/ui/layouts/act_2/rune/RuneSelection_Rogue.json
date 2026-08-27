@@ -1,0 +1,296 @@
+{
+  "schema_version": 2,
+  "screen": "rune_selection",
+  "player_class": "rogue",
+  "frame": {
+    "name": "RuneSelection_Rogue",
+    "width": 1280,
+    "height": 720
+  },
+  "background": {
+    "x": 151,
+    "y": 33,
+    "width": 979,
+    "height": 653
+  },
+  "options": {
+    "rune_of_the_shade": {
+      "rect": {
+        "x": 332,
+        "y": 268,
+        "width": 160,
+        "height": 241
+      },
+      "icon": {
+        "x": 350,
+        "y": 296,
+        "width": 130,
+        "height": 130
+      },
+      "name": {
+        "rect": {
+          "x": 339,
+          "y": 426,
+          "width": 153,
+          "height": 34
+        },
+        "text": "Rune of the Shade",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 14
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 120,
+          "g": 10,
+          "b": 255,
+          "a": 255
+        }
+      },
+      "description": {
+        "rect": {
+          "x": 339,
+          "y": 449,
+          "width": 153,
+          "height": 54
+        },
+        "text": "Killing from stealth refreshes\nstealth, allowing one more\nstealth attack.",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 10
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 174,
+          "g": 154,
+          "b": 143,
+          "a": 255
+        }
+      },
+      "card": {
+        "x": 339,
+        "y": 426,
+        "width": 153,
+        "height": 83
+      },
+      "hitbox": {
+        "x": 339,
+        "y": 426,
+        "width": 153,
+        "height": 83
+      }
+    },
+    "rune_of_cruelty": {
+      "rect": {
+        "x": 553,
+        "y": 268,
+        "width": 160,
+        "height": 241
+      },
+      "icon": {
+        "x": 571,
+        "y": 296,
+        "width": 130,
+        "height": 130
+      },
+      "name": {
+        "rect": {
+          "x": 560,
+          "y": 426,
+          "width": 153,
+          "height": 34
+        },
+        "text": "Rune of Cruelty",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 14
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 120,
+          "g": 10,
+          "b": 255,
+          "a": 255
+        }
+      },
+      "description": {
+        "rect": {
+          "x": 560,
+          "y": 449,
+          "width": 153,
+          "height": 54
+        },
+        "text": "An attack from invisibility\ninflicts 2 bleed damage for \n3 turns.",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 10
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 174,
+          "g": 154,
+          "b": 143,
+          "a": 255
+        }
+      },
+      "card": {
+        "x": 560,
+        "y": 426,
+        "width": 153,
+        "height": 83
+      },
+      "hitbox": {
+        "x": 560,
+        "y": 426,
+        "width": 153,
+        "height": 83
+      }
+    },
+    "rune_of_the_veil": {
+      "rect": {
+        "x": 786,
+        "y": 268,
+        "width": 160,
+        "height": 241
+      },
+      "icon": {
+        "x": 804,
+        "y": 296,
+        "width": 130,
+        "height": 130
+      },
+      "name": {
+        "rect": {
+          "x": 793,
+          "y": 426,
+          "width": 153,
+          "height": 34
+        },
+        "text": "Rune of the Veil",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 14
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 120,
+          "g": 10,
+          "b": 255,
+          "a": 255
+        }
+      },
+      "description": {
+        "rect": {
+          "x": 793,
+          "y": 449,
+          "width": 153,
+          "height": 54
+        },
+        "text": "Invisibility lasts four times\nlonger, but no longer\nguarantees \na critical strike.",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 10
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 174,
+          "g": 154,
+          "b": 143,
+          "a": 255
+        }
+      },
+      "card": {
+        "x": 793,
+        "y": 426,
+        "width": 153,
+        "height": 83
+      },
+      "hitbox": {
+        "x": 793,
+        "y": 426,
+        "width": 153,
+        "height": 83
+      }
+    }
+  },
+  "confirm": {
+    "rect": {
+      "x": 549,
+      "y": 613,
+      "width": 183,
+      "height": 61
+    },
+    "button": {
+      "x": 549,
+      "y": 613,
+      "width": 183,
+      "height": 61
+    },
+    "hitbox": {
+      "x": 565,
+      "y": 629,
+      "width": 151,
+      "height": 28
+    }
+  }
+}

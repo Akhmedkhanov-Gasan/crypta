@@ -949,7 +949,9 @@ def main():
                     )
                     if game_mouse_position is not None:
                         confirm_rectangle = (
-                            get_rune_selection_confirm_rectangle()
+                            get_rune_selection_confirm_rectangle(
+                                game_state.player.player_class
+                            )
                         )
                         clicked_rune_id = next(
                             (
@@ -3323,6 +3325,7 @@ def main():
                 game_state.floor.rune_room,
                 act_two_sprites,
                 game_state.floor.visible_cells,
+                game_state.floor.explored_cells,
                 current_time,
             )
             draw_act_two_trader(

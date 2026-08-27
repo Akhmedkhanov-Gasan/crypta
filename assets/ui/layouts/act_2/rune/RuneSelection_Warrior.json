@@ -1,0 +1,296 @@
+{
+  "schema_version": 2,
+  "screen": "rune_selection",
+  "player_class": "warrior",
+  "frame": {
+    "name": "RuneSelection_Warrior",
+    "width": 1280,
+    "height": 720
+  },
+  "background": {
+    "x": 151,
+    "y": 33,
+    "width": 979,
+    "height": 653
+  },
+  "options": {
+    "rune_of_impact": {
+      "rect": {
+        "x": 337,
+        "y": 308,
+        "width": 155,
+        "height": 201
+      },
+      "icon": {
+        "x": 349,
+        "y": 292,
+        "width": 130,
+        "height": 130
+      },
+      "name": {
+        "rect": {
+          "x": 337,
+          "y": 422,
+          "width": 153,
+          "height": 34
+        },
+        "text": "Rune of Impact",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 14
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 152,
+          "g": 51,
+          "b": 51,
+          "a": 255
+        }
+      },
+      "description": {
+        "rect": {
+          "x": 337,
+          "y": 444,
+          "width": 153,
+          "height": 54
+        },
+        "text": "Enemies knocked into a wall or\nanother enemy are stunned for\n2 turns.",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 10
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 174,
+          "g": 154,
+          "b": 143,
+          "a": 255
+        }
+      },
+      "card": {
+        "x": 336,
+        "y": 420,
+        "width": 155,
+        "height": 74
+      },
+      "hitbox": {
+        "x": 336,
+        "y": 420,
+        "width": 155,
+        "height": 74
+      }
+    },
+    "rune_of_reaping": {
+      "rect": {
+        "x": 560,
+        "y": 308,
+        "width": 155,
+        "height": 201
+      },
+      "icon": {
+        "x": 572,
+        "y": 296,
+        "width": 130,
+        "height": 130
+      },
+      "name": {
+        "rect": {
+          "x": 560,
+          "y": 422,
+          "width": 153,
+          "height": 34
+        },
+        "text": "Rune of Reaping",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 14
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 152,
+          "g": 51,
+          "b": 51,
+          "a": 255
+        }
+      },
+      "description": {
+        "rect": {
+          "x": 560,
+          "y": 436,
+          "width": 153,
+          "height": 54
+        },
+        "text": "Each enemy struck by Power\nCleave restores 1 ability charge.",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 10
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 174,
+          "g": 154,
+          "b": 143,
+          "a": 255
+        }
+      },
+      "card": {
+        "x": 559,
+        "y": 420,
+        "width": 155,
+        "height": 74
+      },
+      "hitbox": {
+        "x": 559,
+        "y": 420,
+        "width": 155,
+        "height": 74
+      }
+    },
+    "rune_of_aftershock": {
+      "rect": {
+        "x": 792,
+        "y": 308,
+        "width": 155,
+        "height": 201
+      },
+      "icon": {
+        "x": 804,
+        "y": 298,
+        "width": 130,
+        "height": 130
+      },
+      "name": {
+        "rect": {
+          "x": 792,
+          "y": 422,
+          "width": 153,
+          "height": 34
+        },
+        "text": "Rune of Aftershock",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 14
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 152,
+          "g": 51,
+          "b": 51,
+          "a": 255
+        }
+      },
+      "description": {
+        "rect": {
+          "x": 792,
+          "y": 439,
+          "width": 153,
+          "height": 54
+        },
+        "text": "Power Cleave strikes enemies\nagain after knockback \nfor 50% damage.",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 10
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 174,
+          "g": 154,
+          "b": 143,
+          "a": 255
+        }
+      },
+      "card": {
+        "x": 791,
+        "y": 420,
+        "width": 155,
+        "height": 74
+      },
+      "hitbox": {
+        "x": 791,
+        "y": 420,
+        "width": 155,
+        "height": 74
+      }
+    }
+  },
+  "confirm": {
+    "rect": {
+      "x": 549,
+      "y": 613,
+      "width": 183,
+      "height": 61
+    },
+    "button": {
+      "x": 549,
+      "y": 613,
+      "width": 183,
+      "height": 61
+    },
+    "hitbox": {
+      "x": 565,
+      "y": 629,
+      "width": 151,
+      "height": 28
+    }
+  }
+}

@@ -1,32 +1,84 @@
+import json
+from functools import lru_cache
+from pathlib import Path
+
 import pygame
 
-from acts.act_two.rune_catalog import runes_for_class
-from presentation.hud import fit_text_to_width, wrap_text
+from presentation.figma_ui import draw_figma_text, figma_rect
 from settings import GAME_HEIGHT, GAME_WIDTH
 
 
-_WINDOW_RECT = pygame.Rect(240, 153, 756, 426)
-_CARD_RECTS = (
-    pygame.Rect(311, 247, 194, 240),
-    pygame.Rect(514, 247, 194, 240),
-    pygame.Rect(717, 247, 194, 240),
-)
-_CONFIRM_RECT = pygame.Rect(545, 491, 132, 44)
-_CONFIRM_HIT_RECT = _CONFIRM_RECT.inflate(-16, -8)
+_PROJECT_ROOT = Path(__file__).resolve().parents[3]
+
+_LAYOUT_FILENAMES = {
+    "warrior": "RuneSelection_Warrior.json",
+    "rogue": "RuneSelection_Rogue.json",
+    "mage": "RuneSelection_Mage.json",
+}
+
+
+@lru_cache(maxsize=1)
+def load_rune_selection_layouts():
+    layout_directory = (
+        _PROJECT_ROOT
+        / "assets"
+        / "ui"
+        / "layouts"
+        / "act_2"
+        / "rune"
+    )
+
+    layouts = {}
+
+    for player_class, filename in _LAYOUT_FILENAMES.items():
+        path = layout_directory / filename
+
+        with path.open(encoding="utf-8") as file:
+            layout = json.load(file)
+
+        if layout.get("player_class") != player_class:
+            raise ValueError(
+                f"Rune layout {filename} has wrong player_class."
+            )
+
+        layouts[player_class] = layout
+
+    return layouts
+
+
+def _layout_for_class(player_class):
+    layout = load_rune_selection_layouts().get(player_class)
+
+    if layout is None:
+        raise ValueError(
+            f"No rune selection layout for class: {player_class}"
+        )
+
+    return layout
 
 
 def get_rune_selection_card_rectangles(player_class):
+    layout = _layout_for_class(player_class)
+
     return {
-        rune.id: rectangle.copy()
-        for rune, rectangle in zip(
-            runes_for_class(player_class),
-            _CARD_RECTS,
-        )
+        rune_id: figma_rect(option["hitbox"])
+        for rune_id, option in layout["options"].items()
     }
 
 
-def get_rune_selection_confirm_rectangle():
-    return _CONFIRM_HIT_RECT.copy()
+def get_rune_selection_confirm_rectangle(player_class):
+    layout = _layout_for_class(player_class)
+    return figma_rect(layout["confirm"]["hitbox"])
+
+
+def _option_accent_color(option):
+    color = option["name"]["color"]
+
+    return (
+        color["r"],
+        color["g"],
+        color["b"],
+    )
 
 
 def draw_rune_selection(
@@ -36,160 +88,113 @@ def draw_rune_selection(
     sprites,
     mouse_position,
 ):
-    veil = pygame.Surface((GAME_WIDTH, GAME_HEIGHT), pygame.SRCALPHA)
-    veil.fill((4, 3, 5, 205))
+    del fonts
+
+    player_class = game_state.player.player_class
+    layout = _layout_for_class(player_class)
+
+    veil = pygame.Surface(
+        (GAME_WIDTH, GAME_HEIGHT),
+        pygame.SRCALPHA,
+    )
+    veil.fill((4, 3, 5, 215))
     screen.blit(veil, (0, 0))
-    screen.blit(sprites["act_two_rune_window"], _WINDOW_RECT)
 
-    title_color = (229, 205, 154)
-    body_color = (205, 197, 184)
-    muted_color = (149, 136, 128)
-    accent_color = (168, 45, 43)
-    selected_color = (225, 174, 77)
-
-    title = fonts["heading"].render(
-        "CHOOSE ONE RUNE",
-        True,
-        title_color,
-    )
-    screen.blit(title, title.get_rect(center=(GAME_WIDTH // 2, 197)))
-
-    class_name = (game_state.player.player_class or "unbound").upper()
-    subtitle = fonts["ability_text"].render(
-        f"{class_name}  -  ONE BLESSING FOR THIS RUN",
-        True,
-        muted_color,
-    )
+    background_rect = figma_rect(layout["background"])
     screen.blit(
-        subtitle,
-        subtitle.get_rect(center=(GAME_WIDTH // 2, 228)),
+        sprites["rune_selection_background"],
+        background_rect,
     )
 
     pending_id = game_state.rune_selection_pending_id
-    available_runes = runes_for_class(game_state.player.player_class)
-    for rune_index, (rune, card_rect) in enumerate(
-        zip(available_runes, _CARD_RECTS),
-        start=1,
-    ):
+
+    for rune_id, option in layout["options"].items():
+        card_rect = figma_rect(option["card"])
+        hitbox = figma_rect(option["hitbox"])
+
         hovered = (
             mouse_position is not None
-            and card_rect.collidepoint(mouse_position)
+            and hitbox.collidepoint(mouse_position)
         )
-        selected = pending_id == rune.id
+        selected = pending_id == rune_id
+        accent_color = _option_accent_color(option)
 
-        card = pygame.Surface(card_rect.size, pygame.SRCALPHA)
-        pygame.draw.rect(
-            card,
-            (30, 20, 23, 118 if hovered or selected else 56),
-            card.get_rect(),
-            border_radius=6,
+        card = pygame.Surface(
+            card_rect.size,
+            pygame.SRCALPHA,
         )
         pygame.draw.rect(
             card,
-            (
-                selected_color
-                if selected
-                else accent_color
-                if hovered
-                else (83, 68, 65)
-            ),
+            (45, 43, 44, 225),
             card.get_rect(),
-            3 if selected else 1,
-            border_radius=6,
+            border_radius=12,
         )
         screen.blit(card, card_rect)
 
-        rune_image = sprites[f"{rune.id}_original"]
-        image_rect = rune_image.get_rect(
-            midtop=(card_rect.centerx, card_rect.y + 21)
-        )
-        screen.blit(rune_image, image_rect)
-
-        number_surface = fonts["ability_text"].render(
-            str(rune_index),
-            True,
-            selected_color if selected else muted_color,
-        )
-        screen.blit(
-            number_surface,
-            number_surface.get_rect(
-                topright=(card_rect.right - 10, card_rect.top + 8)
-            ),
-        )
-
-        name_surface = fonts["ability_text"].render(
-            rune.name,
-            True,
-            selected_color if selected else title_color,
-        )
-        if name_surface.get_width() > card_rect.width - 20:
-            name_text = fit_text_to_width(
-                fonts["ability_text"],
-                rune.name,
-                card_rect.width - 20,
+        if hovered or selected:
+            highlight = pygame.Surface(
+                hitbox.size,
+                pygame.SRCALPHA,
             )
-            name_surface = fonts["ability_text"].render(
-                name_text,
-                True,
-                selected_color if selected else title_color,
-            )
-        screen.blit(
-            name_surface,
-            name_surface.get_rect(
-                center=(card_rect.centerx, card_rect.y + 181)
-            ),
-        )
-
-        description_rect = pygame.Rect(
-            card_rect.x + 20,
-            card_rect.y + 198,
-            card_rect.width - 40,
-            40,
-        )
-        description_lines = wrap_text(
-            fonts["ability_text"],
-            rune.description,
-            description_rect.width,
-        )[:3]
-        description_y = description_rect.y
-        for line in description_lines:
-            line_surface = fonts["ability_text"].render(
-                line,
-                True,
-                body_color,
-            )
-            screen.blit(
-                line_surface,
-                line_surface.get_rect(
-                    midtop=(description_rect.centerx, description_y)
+            pygame.draw.rect(
+                highlight,
+                (
+                    *accent_color,
+                    225 if selected else 145,
                 ),
+                highlight.get_rect(),
+                width=3 if selected else 2,
+                border_radius=12,
             )
-            description_y += 14
+            screen.blit(highlight, hitbox)
 
-    if pending_id is not None:
-        confirm_button = sprites["act_two_rune_confirm_button"]
-        screen.blit(confirm_button, _CONFIRM_RECT)
-        if (
-            mouse_position is not None
-            and _CONFIRM_HIT_RECT.collidepoint(mouse_position)
-        ):
-            highlight = confirm_button.copy()
-            highlight.fill(
-                (38, 20, 7, 0),
-                special_flags=pygame.BLEND_RGBA_ADD,
+        icon_rect = figma_rect(option["icon"])
+        icon = sprites[f"{rune_id}_selection"]
+
+        if icon.get_size() != icon_rect.size:
+            raise ValueError(
+                f"{rune_id} selection icon must be "
+                f"{icon_rect.width}x{icon_rect.height}, "
+                f"got {icon.get_width()}x{icon.get_height()}."
             )
-            screen.blit(highlight, _CONFIRM_RECT)
 
-    hint = fonts["ability_text"].render(
-        "CLICK A RUNE, THEN CONFIRM  -  ESC / RMB TO RETURN",
-        True,
-        muted_color,
+        screen.blit(icon, icon_rect)
+
+        draw_figma_text(
+            screen,
+            option["name"],
+        )
+        draw_figma_text(
+            screen,
+            option["description"],
+        )
+
+    button_rect = figma_rect(layout["confirm"]["button"])
+    confirm_hitbox = get_rune_selection_confirm_rectangle(
+        player_class
     )
-    screen.blit(hint, hint.get_rect(center=(GAME_WIDTH // 2, 556)))
+    button = sprites["rune_selection_confirm_button"].copy()
+
+    confirm_hovered = (
+        pending_id is not None
+        and mouse_position is not None
+        and confirm_hitbox.collidepoint(mouse_position)
+    )
+
+    if pending_id is None:
+        button.set_alpha(95)
+    elif confirm_hovered:
+        button.fill(
+            (34, 12, 8, 0),
+            special_flags=pygame.BLEND_RGBA_ADD,
+        )
+
+    screen.blit(button, button_rect)
 
 
 __all__ = [
     "draw_rune_selection",
     "get_rune_selection_card_rectangles",
     "get_rune_selection_confirm_rectangle",
+    "load_rune_selection_layouts",
 ]

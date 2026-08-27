@@ -174,6 +174,7 @@ def draw_act_two_rune_room(
     room,
     sprites,
     visible_cells,
+    explored_cells,
     current_time,
 ) -> None:
     if room is None:
@@ -240,7 +241,7 @@ def draw_act_two_rune_room(
             room.activation_effect_started_at.get(rune_index),
         )
 
-    if room.pedestal_position not in visible_cells:
+    if room.pedestal_position not in explored_cells:
         return
     sprite_name = (
         "rune_pedestal_reward"

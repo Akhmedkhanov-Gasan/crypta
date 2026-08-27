@@ -817,20 +817,28 @@ def load_act_two_sprites():
         sprites[asset_name] = pygame.image.load(
             str(ability_directory / file_name)
         ).convert_alpha()
-    rune_directory = ability_directory / "runes"
+    rune_ui_directory = ui_directory / "rune"
+    rune_directory = rune_ui_directory / "runes"
+
+    sprites["rune_selection_background"] = pygame.image.load(
+        str(rune_ui_directory / "background.png")
+    ).convert_alpha()
+
+    sprites["rune_selection_confirm_button"] = pygame.image.load(
+        str(rune_ui_directory / "button.png")
+    ).convert_alpha()
+
     for rune in RUNE_DEFINITIONS:
         sprites[f"{rune.id}_icon"] = pygame.image.load(
             str(rune_directory / rune.icon_filename)
         ).convert_alpha()
-        rune_original = pygame.image.load(
-            str(rune_directory / rune.original_filename)
-        ).convert_alpha()
-        sprites[f"{rune.id}_original"] = (
-            pygame.transform.smoothscale(
-                rune_original,
-                (151, 151),
+
+        sprites[f"{rune.id}_selection"] = pygame.image.load(
+            str(
+                rune_directory
+                / f"{rune.id}_selection.png"
             )
-        )
+        ).convert_alpha()
     bloody_altar_directory = ui_directory / "bloody_altar"
     sprites["bloody_altar_window"] = pygame.image.load(
         str(bloody_altar_directory / "window.png")
@@ -894,10 +902,6 @@ def load_act_two_sprites():
                 act_two_hud_directory / "confirm_button.png",
                 (121, 40),
             ),
-            "act_two_rune_confirm_button": _load_scaled_image(
-                act_two_hud_directory / "confirm_button.png",
-                (132, 44),
-            ),
             "act_two_gold_counter": _load_scaled_image(
                 act_two_hud_directory / "gold.png",
                 (76, 76),
@@ -905,10 +909,6 @@ def load_act_two_sprites():
             "act_two_abilities_panel": _load_scaled_image(
                 act_two_hud_directory / "abilities.png",
                 (264, 198),
-            ),
-            "act_two_rune_window": _load_scaled_image(
-                act_two_hud_directory / "runes.png",
-                (756, 426),
             ),
         }
     )

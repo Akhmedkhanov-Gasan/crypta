@@ -25,7 +25,6 @@ _ACT_TWO_BELT_ITEM_POSITIONS = (
 )
 _ACT_TWO_BELT_ITEM_SIZE = (26, 26)
 _ACT_TWO_ABILITY_RECT = pygame.Rect(754, 651, 30, 30)
-_ACT_TWO_RUNE_RECT = pygame.Rect(718, 651, 30, 30)
 _ACT_TWO_CONSUMABLE_SPRITES = {
     "potion": "potion_belt",
     "fire_bomb": "fire_bomb_belt",
@@ -449,44 +448,33 @@ def draw_act_two_sidebar(
         )
 
     selected_rune = RUNES_BY_ID.get(selected_rune_id)
-    rune_asset_name = (
+
+    base_ability_asset_name = _ACT_TWO_ABILITY_ASSETS.get(player_class)
+
+    displayed_ability_asset_name = (
         f"{selected_rune.id}_icon"
         if selected_rune is not None
-        else None
+        else base_ability_asset_name
     )
-    if rune_asset_name in sprites:
-        rune_icon = pygame.transform.scale(
-            sprites[rune_asset_name],
-            _ACT_TWO_RUNE_RECT.size,
-        )
-        screen.blit(rune_icon, _ACT_TWO_RUNE_RECT)
 
-    rune_hovered = (
-        selected_rune is not None
-        and mouse_position is not None
-        and _ACT_TWO_RUNE_RECT.collidepoint(mouse_position)
+    displayed_ability_name = (
+        selected_rune.name
+        if selected_rune is not None
+        else _ACT_TWO_ABILITY_NAMES.get(player_class, "ABILITY")
     )
-    if rune_hovered:
-        panel = sprites["act_two_abilities_panel"]
-        panel_position = (
-            _ACT_TWO_RUNE_RECT.centerx - panel.get_width() // 2,
-            _ACT_TWO_ABILITIES_PANEL_POSITION[1],
-        )
-        _draw_act_two_hover_panel(
-            screen,
-            ability_font,
-            sprites,
-            panel_position,
-            rune_asset_name,
-            selected_rune.name,
-            selected_rune.description,
-            value_color,
-        )
 
-    ability_asset_name = _ACT_TWO_ABILITY_ASSETS.get(player_class)
-    if ability_asset_name in sprites:
+    displayed_ability_description = (
+        selected_rune.description
+        if selected_rune is not None
+        else _ACT_TWO_ABILITY_DESCRIPTIONS.get(
+            player_class,
+            "Choose a class to unlock its ability.",
+        )
+    )
+
+    if displayed_ability_asset_name in sprites:
         ability_icon = pygame.transform.scale(
-            sprites[ability_asset_name],
+            sprites[displayed_ability_asset_name],
             _ACT_TWO_ABILITY_RECT.size,
         )
         screen.blit(ability_icon, _ACT_TWO_ABILITY_RECT)
@@ -533,12 +521,9 @@ def draw_act_two_sidebar(
             ability_font,
             sprites,
             _ACT_TWO_ABILITIES_PANEL_POSITION,
-            ability_asset_name,
-            _ACT_TWO_ABILITY_NAMES.get(player_class, "ABILITY"),
-            _ACT_TWO_ABILITY_DESCRIPTIONS.get(
-                player_class,
-                "Choose a class to unlock its ability.",
-            ),
+            displayed_ability_asset_name,
+            displayed_ability_name,
+            displayed_ability_description,
             value_color,
         )
     screen.blit(sprites["act_two_side_buttons"], (1212, 249))

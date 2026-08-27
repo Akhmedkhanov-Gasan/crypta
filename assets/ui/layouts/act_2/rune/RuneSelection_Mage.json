@@ -1,0 +1,296 @@
+{
+  "schema_version": 2,
+  "screen": "rune_selection",
+  "player_class": "mage",
+  "frame": {
+    "name": "RuneSelection_Mage",
+    "width": 1280,
+    "height": 720
+  },
+  "background": {
+    "x": 151,
+    "y": 33,
+    "width": 979,
+    "height": 653
+  },
+  "options": {
+    "rune_of_fracture": {
+      "rect": {
+        "x": 337,
+        "y": 308,
+        "width": 155,
+        "height": 201
+      },
+      "icon": {
+        "x": 348,
+        "y": 290,
+        "width": 130,
+        "height": 130
+      },
+      "name": {
+        "rect": {
+          "x": 337,
+          "y": 422,
+          "width": 153,
+          "height": 34
+        },
+        "text": "Rune of Fracture",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 14
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 51,
+          "g": 92,
+          "b": 152,
+          "a": 255
+        }
+      },
+      "description": {
+        "rect": {
+          "x": 338,
+          "y": 439,
+          "width": 153,
+          "height": 54
+        },
+        "text": "The central target takes 25%\nmore damage for every \nadjacent enemy.",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 10
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 174,
+          "g": 154,
+          "b": 143,
+          "a": 255
+        }
+      },
+      "card": {
+        "x": 336,
+        "y": 420,
+        "width": 155,
+        "height": 74
+      },
+      "hitbox": {
+        "x": 336,
+        "y": 420,
+        "width": 155,
+        "height": 74
+      }
+    },
+    "rune_of_resonance": {
+      "rect": {
+        "x": 560,
+        "y": 308,
+        "width": 155,
+        "height": 201
+      },
+      "icon": {
+        "x": 569,
+        "y": 290,
+        "width": 130,
+        "height": 130
+      },
+      "name": {
+        "rect": {
+          "x": 560,
+          "y": 422,
+          "width": 153,
+          "height": 34
+        },
+        "text": "Rune of Resonance",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 14
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 51,
+          "g": 92,
+          "b": 152,
+          "a": 255
+        }
+      },
+      "description": {
+        "rect": {
+          "x": 560,
+          "y": 436,
+          "width": 153,
+          "height": 54
+        },
+        "text": "Each enemy struck by Arcane\nBurst restores 1 ability charge.",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 10
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 174,
+          "g": 154,
+          "b": 143,
+          "a": 255
+        }
+      },
+      "card": {
+        "x": 559,
+        "y": 420,
+        "width": 155,
+        "height": 74
+      },
+      "hitbox": {
+        "x": 559,
+        "y": 420,
+        "width": 155,
+        "height": 74
+      }
+    },
+    "rune_of_concentration": {
+      "rect": {
+        "x": 792,
+        "y": 308,
+        "width": 155,
+        "height": 201
+      },
+      "icon": {
+        "x": 804,
+        "y": 290,
+        "width": 130,
+        "height": 130
+      },
+      "name": {
+        "rect": {
+          "x": 792,
+          "y": 422,
+          "width": 153,
+          "height": 34
+        },
+        "text": "Rune of Concentration",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 14
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 51,
+          "g": 92,
+          "b": 152,
+          "a": 255
+        }
+      },
+      "description": {
+        "rect": {
+          "x": 793,
+          "y": 439,
+          "width": 153,
+          "height": 54
+        },
+        "text": "Arcane Burst instantly strikes\none cell for 100% bonus \ndamage without knockback.",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 10
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 174,
+          "g": 154,
+          "b": 143,
+          "a": 255
+        }
+      },
+      "card": {
+        "x": 791,
+        "y": 420,
+        "width": 155,
+        "height": 74
+      },
+      "hitbox": {
+        "x": 791,
+        "y": 420,
+        "width": 155,
+        "height": 74
+      }
+    }
+  },
+  "confirm": {
+    "rect": {
+      "x": 549,
+      "y": 613,
+      "width": 183,
+      "height": 61
+    },
+    "button": {
+      "x": 549,
+      "y": 613,
+      "width": 183,
+      "height": 61
+    },
+    "hitbox": {
+      "x": 565,
+      "y": 629,
+      "width": 151,
+      "height": 28
+    }
+  }
+}
