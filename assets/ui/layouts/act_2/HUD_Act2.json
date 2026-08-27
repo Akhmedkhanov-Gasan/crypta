@@ -1122,10 +1122,10 @@
         "height": 190
       },
       "level_up_indicator": {
-        "x": 1210,
-        "y": 258,
-        "width": 70,
-        "height": 70
+        "x": 1214,
+        "y": 261,
+        "width": 64,
+        "height": 64
       },
       "buttons": {
         "stats": {
@@ -1841,22 +1841,22 @@
       },
       "confirm": {
         "rect": {
-          "x": 1050,
-          "y": 328,
-          "width": 121,
-          "height": 40
+          "x": 1049,
+          "y": 338,
+          "width": 123,
+          "height": 30
         },
         "button": {
-          "x": 1049,
-          "y": 333,
+          "x": 1048,
+          "y": 338,
           "width": 123,
           "height": 30
         },
         "hitbox": {
-          "x": 1050,
-          "y": 336,
-          "width": 121,
-          "height": 23
+          "x": 1048,
+          "y": 338,
+          "width": 123,
+          "height": 30
         }
       },
       "combat_stats": {
