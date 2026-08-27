@@ -33,6 +33,88 @@ def figma_rect(data: dict[str, Any]) -> pygame.Rect:
         round(data["height"]),
     )
 
+def _figma_color(
+    color_data: dict[str, Any] | None,
+) -> tuple[int, int, int, int] | None:
+    if color_data is None:
+        return None
+
+    return (
+        round(color_data.get("r", 255)),
+        round(color_data.get("g", 255)),
+        round(color_data.get("b", 255)),
+        round(color_data.get("a", 255)),
+    )
+
+
+def draw_figma_rectangle(
+    screen: pygame.Surface,
+    rectangle_spec: dict[str, Any] | None,
+) -> None:
+    if rectangle_spec is None:
+        return
+
+    rect = figma_rect(rectangle_spec["rect"])
+    fill_color = _figma_color(rectangle_spec.get("fill"))
+    stroke_color = _figma_color(rectangle_spec.get("stroke"))
+
+    stroke_width = max(
+        0,
+        round(rectangle_spec.get("stroke_weight", 0)),
+    )
+    corner_radius = max(
+        0,
+        round(rectangle_spec.get("corner_radius", 0)),
+    )
+    blur_radius = max(
+        0,
+        round(rectangle_spec.get("blur_radius", 0)),
+    )
+
+    padding = blur_radius * 2
+    layer = pygame.Surface(
+        (
+            max(1, rect.width + padding * 2),
+            max(1, rect.height + padding * 2),
+        ),
+        pygame.SRCALPHA,
+    )
+
+    local_rect = pygame.Rect(
+        padding,
+        padding,
+        rect.width,
+        rect.height,
+    )
+
+    if fill_color is not None:
+        pygame.draw.rect(
+            layer,
+            fill_color,
+            local_rect,
+            border_radius=corner_radius,
+        )
+
+    if stroke_color is not None and stroke_width > 0:
+        pygame.draw.rect(
+            layer,
+            stroke_color,
+            local_rect,
+            width=stroke_width,
+            border_radius=corner_radius,
+        )
+
+    if blur_radius > 0:
+        layer = pygame.transform.gaussian_blur(
+            layer,
+            blur_radius,
+        )
+
+    screen.blit(
+        layer,
+        (rect.x - padding, rect.y - padding),
+    )
+
 
 def _load_figma_font(text_spec: dict[str, Any]) -> pygame.font.Font:
     font_spec = text_spec["font"]
@@ -58,6 +140,12 @@ def _load_figma_font(text_spec: dict[str, Any]) -> pygame.font.Font:
     font = pygame.font.Font(str(font_path), size)
     _FONT_CACHE[cache_key] = font
     return font
+
+
+def get_figma_font(
+    text_spec: dict[str, Any],
+) -> pygame.font.Font:
+    return _load_figma_font(text_spec)
 
 
 def _apply_text_case(text: str, text_case: str) -> str:

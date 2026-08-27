@@ -13,18 +13,13 @@ from presentation.hud import (
     wrap_text,
 )
 
-
-_ACT_TWO_BOTTOM_BAR_POSITION = (456, 609)
-_ACT_TWO_BELT_ITEM_POSITIONS = (
-    (476, 656),
-    (519, 656),
-    (561, 656),
-    (605, 656),
-    (649, 657),
-    (694, 656),
+from presentation.figma_ui import (
+    draw_figma_rectangle,
+    draw_figma_text,
+    figma_rect,
+    get_figma_font,
 )
-_ACT_TWO_BELT_ITEM_SIZE = (26, 26)
-_ACT_TWO_ABILITY_RECT = pygame.Rect(754, 651, 30, 30)
+
 _ACT_TWO_CONSUMABLE_SPRITES = {
     "potion": "potion_belt",
     "fire_bomb": "fire_bomb_belt",
@@ -35,36 +30,6 @@ _ACT_TWO_CONSUMABLE_SPRITES = {
     "scroll_of_arcane_impulse": "scroll_of_arcane_impulse",
     "guild_seal": "guild_seal",
 }
-_ACT_TWO_ABILITY_CHARGE_RECTS = (
-    pygame.Rect(757, 679, 5, 3),
-    pygame.Rect(764, 679, 4, 3),
-    pygame.Rect(770, 679, 5, 3),
-    pygame.Rect(777, 679, 4, 3),
-)
-_ACT_TWO_LOG_TEXT_RECT = pygame.Rect(38, 630, 247, 60)
-_ACT_TWO_LOG_BACKING_POSITION = (23, 619)
-_ACT_TWO_SIDEBAR_BUTTON_RECTS = {
-    "stats": pygame.Rect(1218, 267, 55, 45),
-    "placeholder": pygame.Rect(1218, 311, 55, 45),
-    "settings": pygame.Rect(1218, 355, 55, 45),
-}
-_ACT_TWO_SIDEBAR_HIGHLIGHT_RECTS = {
-    "stats": pygame.Rect(1227, 276, 36, 34),
-    "placeholder": pygame.Rect(1227, 320, 36, 34),
-    "settings": pygame.Rect(1227, 364, 36, 34),
-}
-_ACT_TWO_ATTRIBUTE_PLUS_RECTS = {
-    "strength": pygame.Rect(1162, 245, 22, 19),
-    "dexterity": pygame.Rect(1162, 266, 22, 19),
-    "intelligence": pygame.Rect(1162, 287, 22, 19),
-    "vitality": pygame.Rect(1162, 308, 22, 19),
-}
-_ACT_TWO_ATTRIBUTE_MINUS_RECTS = {
-    "strength": pygame.Rect(1114, 245, 22, 19),
-    "dexterity": pygame.Rect(1114, 266, 22, 19),
-    "intelligence": pygame.Rect(1114, 287, 22, 19),
-    "vitality": pygame.Rect(1114, 308, 22, 19),
-}
 _ACT_TWO_CONFIRM_BUTTON_RECT = pygame.Rect(
     1049,
     326,
@@ -74,12 +39,6 @@ _ACT_TWO_CONFIRM_BUTTON_RECT = pygame.Rect(
 _ACT_TWO_CONFIRM_BUTTON_HIT_RECT = (
     _ACT_TWO_CONFIRM_BUTTON_RECT.inflate(-24, -12)
 )
-_ACT_TWO_ABILITIES_PANEL_POSITION = (637, 496)
-_ACT_TWO_ABILITIES_ICON_RECT = pygame.Rect(671, 570, 36, 36)
-_ACT_TWO_ABILITIES_TEXT_BACKING_POSITION = (724, 562)
-_ACT_TWO_ABILITIES_TEXT_RECT = pygame.Rect(732, 570, 130, 50)
-_ACT_TWO_ABILITIES_NAME_BACKING_POSITION = (747, 544)
-_ACT_TWO_ABILITIES_NAME_RECT = pygame.Rect(751, 548, 78, 15)
 _ACT_TWO_ABILITY_ASSETS = {
     "warrior": "warrior_power_cleave_icon",
     "rogue": "rogue_invisibility_icon",
@@ -122,101 +81,206 @@ _ACT_TWO_CONSUMABLE_NAMES = {
     "scroll_of_arcane_impulse": "IMPULSE",
     "guild_seal": "GUILD SEAL",
 }
-_ACT_TWO_LEVEL_UP_POSITION = (1212, 262)
-_ACT_TWO_GOLD_COUNTER_POSITION = (1193, 631)
-_ACT_TWO_GOLD_VALUE_CENTER = (1231, 679)
+
+
+def _blit_layout_image(
+    screen,
+    image,
+    rectangle_data,
+):
+    rectangle = figma_rect(rectangle_data)
+
+    if image.get_size() != rectangle.size:
+        image = pygame.transform.smoothscale(
+            image,
+            rectangle.size,
+        )
+
+    screen.blit(image, rectangle)
+
+
+def _blit_layout_fill(
+    screen,
+    image,
+    rectangle_data,
+    ratio,
+):
+    rectangle = figma_rect(rectangle_data)
+    ratio = max(0.0, min(1.0, ratio))
+
+    if ratio <= 0:
+        return
+
+    if image.get_size() != rectangle.size:
+        image = pygame.transform.smoothscale(
+            image,
+            rectangle.size,
+        )
+
+    visible_width = round(rectangle.width * ratio)
+
+    if visible_width <= 0:
+        return
+
+    screen.blit(
+        image,
+        rectangle,
+        pygame.Rect(
+            0,
+            0,
+            visible_width,
+            rectangle.height,
+        ),
+    )
+
+
+def _draw_dynamic_figma_text(
+    screen,
+    text_spec,
+    value,
+    color=None,
+):
+    runtime_spec = {
+        **text_spec,
+        "text": str(value),
+    }
+
+    if color is not None:
+        runtime_spec["color"] = {
+            "r": color[0],
+            "g": color[1],
+            "b": color[2],
+            "a": color[3] if len(color) > 3 else 255,
+        }
+
+    draw_figma_text(screen, runtime_spec)
+def _offset_layout(
+    value,
+    offset_x,
+    offset_y,
+):
+    if isinstance(value, dict):
+        shifted = {
+            key: _offset_layout(
+                child,
+                offset_x,
+                offset_y,
+            )
+            for key, child in value.items()
+        }
+
+        if (
+            "x" in value
+            and "y" in value
+            and "width" in value
+            and "height" in value
+        ):
+            shifted["x"] = value["x"] + offset_x
+            shifted["y"] = value["y"] + offset_y
+
+        return shifted
+
+    if isinstance(value, list):
+        return [
+            _offset_layout(
+                child,
+                offset_x,
+                offset_y,
+            )
+            for child in value
+        ]
+
+    return value
+
+
+def _draw_wrapped_figma_text(
+    screen,
+    text_spec,
+    value,
+):
+    text_rectangle = figma_rect(text_spec["rect"])
+    text_font = get_figma_font(text_spec)
+
+    wrapped_lines = wrap_text(
+        text_font,
+        str(value),
+        text_rectangle.width,
+    ) or [""]
+
+    line_height = max(1, text_font.get_linesize())
+    maximum_line_count = max(
+        1,
+        text_rectangle.height // line_height,
+    )
+
+    visible_lines = wrapped_lines[:maximum_line_count]
+
+    if len(wrapped_lines) > maximum_line_count:
+        visible_lines[-1] = fit_text_to_width(
+            text_font,
+            visible_lines[-1] + "...",
+            text_rectangle.width,
+        )
+
+    _draw_dynamic_figma_text(
+        screen,
+        text_spec,
+        "\n".join(visible_lines),
+    )
 
 
 def _draw_act_two_hover_panel(
     screen,
-    ability_font,
     sprites,
-    panel_position,
+    info_layout,
     icon_asset_name,
     name,
     description,
-    text_color,
 ):
-    panel_offset = (
-        panel_position[0] - _ACT_TWO_ABILITIES_PANEL_POSITION[0],
-        panel_position[1] - _ACT_TWO_ABILITIES_PANEL_POSITION[1],
-    )
-    relative_icon_rect = _ACT_TWO_ABILITIES_ICON_RECT.move(*panel_offset)
-    relative_text_backing_position = (
-        _ACT_TWO_ABILITIES_TEXT_BACKING_POSITION[0] + panel_offset[0],
-        _ACT_TWO_ABILITIES_TEXT_BACKING_POSITION[1] + panel_offset[1],
-    )
-    relative_text_rect = _ACT_TWO_ABILITIES_TEXT_RECT.move(
-        *panel_offset
-    )
-    relative_name_backing_position = (
-        _ACT_TWO_ABILITIES_NAME_BACKING_POSITION[0] + panel_offset[0],
-        _ACT_TWO_ABILITIES_NAME_BACKING_POSITION[1] + panel_offset[1],
-    )
-    relative_name_rect = _ACT_TWO_ABILITIES_NAME_RECT.move(
-        *panel_offset
+    _blit_layout_image(
+        screen,
+        sprites["act_two_abilities_panel"],
+        info_layout["frame"],
     )
 
-    screen.blit(sprites["act_two_abilities_panel"], panel_position)
-    screen.blit(
-        sprites["act_two_ability_text_backing"],
-        relative_text_backing_position,
+    draw_figma_rectangle(
+        screen,
+        info_layout["description_backing"],
     )
-    screen.blit(
-        sprites["act_two_ability_name_backing"],
-        relative_name_backing_position,
+
+    draw_figma_rectangle(
+        screen,
+        info_layout["name_backing"],
     )
+
     if icon_asset_name in sprites:
-        panel_icon = pygame.transform.scale(
+        _blit_layout_image(
+            screen,
             sprites[icon_asset_name],
-            relative_icon_rect.size,
+            info_layout["icon"],
         )
-        screen.blit(panel_icon, relative_icon_rect)
+
+    name_spec = info_layout["name"]
+    name_font = get_figma_font(name_spec)
+    name_rectangle = figma_rect(name_spec["rect"])
 
     visible_name = fit_text_to_width(
-        ability_font,
+        name_font,
         name,
-        relative_name_rect.width - 4,
-    )
-    name_surface = ability_font.render(
-        visible_name,
-        True,
-        text_color,
-    )
-    screen.blit(
-        name_surface,
-        name_surface.get_rect(center=relative_name_rect.center),
+        name_rectangle.width,
     )
 
-    description_lines = wrap_text(
-        ability_font,
+    _draw_dynamic_figma_text(
+        screen,
+        name_spec,
+        visible_name,
+    )
+
+    _draw_wrapped_figma_text(
+        screen,
+        info_layout["description"],
         description,
-        relative_text_rect.width,
     )
-    maximum_description_lines = 3
-    visible_description_lines = description_lines[
-        :maximum_description_lines
-    ]
-    if len(description_lines) > maximum_description_lines:
-        visible_description_lines[-1] = fit_text_to_width(
-            ability_font,
-            visible_description_lines[-1] + "...",
-            relative_text_rect.width,
-        )
-    line_height = 16
-    description_y = (
-        relative_text_rect.centery
-        - len(visible_description_lines) * line_height // 2
-    )
-    for line in visible_description_lines:
-        line_surface = ability_font.render(line, True, text_color)
-        screen.blit(
-            line_surface,
-            line_surface.get_rect(
-                midtop=(relative_text_rect.centerx, description_y)
-            ),
-        )
-        description_y += line_height
 
 
 def draw_act_two_sidebar(
@@ -248,141 +312,247 @@ def draw_act_two_sidebar(
     stats_open,
     mouse_position,
     sprites,
+    hud_layout,
+    invisibility_turns,
+    stoneflesh_hits,
+    bloody_pact_id,
     dragged_consumable_slot=None,
-
 ):
-    def draw_fill(
-        asset_name,
-        position,
-        ratio,
-        hidden_leading_width=0,
-    ):
-        asset = sprites[asset_name]
-        clamped_ratio = max(0.0, min(1.0, ratio))
-        usable_width = max(
-            0,
-            asset.get_width() - hidden_leading_width,
-        )
-        visible_width = hidden_leading_width + round(
-            usable_width * clamped_ratio
-        )
-        if clamped_ratio > 0 and visible_width > 0:
-            screen.blit(
-                asset,
-                position,
-                pygame.Rect(0, 0, visible_width, asset.get_height()),
-            )
+    top_bar_layout = hud_layout["top_bar"]
 
     health_ratio = player_health / max(1, player_max_health)
-    experience_required = experience_required_for_level(player_level)
-    experience_ratio = player_experience / max(1, experience_required)
-    draw_fill("act_two_hud_hp", (65, 41), health_ratio)
-    draw_fill(
-        "act_two_hud_xp",
-        (29, 67),
-        experience_ratio,
-        hidden_leading_width=54,
+
+    experience_required = experience_required_for_level(
+        player_level
+    )
+    experience_ratio = (
+            player_experience / max(1, experience_required)
     )
 
-    screen.blit(sprites["act_two_hud_frame"], (15, 17))
+    _blit_layout_fill(
+        screen,
+        sprites["act_two_hud_hp"],
+        top_bar_layout["hp_fill"],
+        health_ratio,
+    )
 
-    portrait_rectangle = pygame.Rect(33, 38, 39, 38)
+    _blit_layout_fill(
+        screen,
+        sprites["act_two_hud_xp"],
+        top_bar_layout["xp_fill"],
+        experience_ratio,
+    )
+
+    _blit_layout_image(
+        screen,
+        sprites["act_two_hud_frame"],
+        top_bar_layout["frame"],
+    )
+
     if player_class is not None:
-        portrait = pygame.transform.scale(
+        _blit_layout_image(
+            screen,
             sprites[f"player_{player_class}"],
-            portrait_rectangle.size,
+            top_bar_layout["portrait"],
         )
-        screen.blit(portrait, portrait_rectangle)
+
+    _draw_dynamic_figma_text(
+        screen,
+        top_bar_layout["level"],
+        player_level,
+    )
+
+    _draw_dynamic_figma_text(
+        screen,
+        top_bar_layout["hp_text"],
+        f"{player_health}/{player_max_health}",
+    )
+
+    _draw_dynamic_figma_text(
+        screen,
+        top_bar_layout["xp_text"],
+        f"{player_experience}/{experience_required}",
+    )
+
+    status_layout = top_bar_layout["status_effects"]
+
+    active_status_effects = []
+
+    if invisibility_turns > 0:
+        active_status_effects.append(
+            (
+                "rogue_invisibility_icon",
+                invisibility_turns,
+            )
+        )
+
+    if selected_rune_id is not None:
+        active_status_effects.append(
+            (
+                f"{selected_rune_id}_icon",
+                None,
+            )
+        )
+
+    if bloody_pact_id is not None:
+        active_status_effects.append(
+            (
+                f"bloody_pact_{bloody_pact_id}",
+                None,
+            )
+        )
+
+    if stoneflesh_hits > 0:
+        active_status_effects.append(
+            (
+                "trader_scroll_of_stoneflesh",
+                stoneflesh_hits,
+            )
+        )
+
+    status_slots = tuple(
+        status_layout["slots"][slot_name]
+        for slot_name in sorted(status_layout["slots"])
+    )
+
+    for slot_layout, status_effect in zip(
+        status_slots,
+        active_status_effects,
+    ):
+        sprite_name, remaining_value = status_effect
+
+        if sprite_name not in sprites:
+            continue
+
+        draw_figma_rectangle(
+            screen,
+            slot_layout["frame"],
+        )
+
+        _blit_layout_image(
+            screen,
+            sprites[sprite_name],
+            slot_layout["icon"],
+        )
+
+        if remaining_value is not None:
+            _draw_dynamic_figma_text(
+                screen,
+                slot_layout["value"],
+                remaining_value,
+            )
 
     value_color = (239, 235, 225)
-    level_surface = title_font.render(
-        str(player_level),
-        True,
-        value_color,
-    )
-    screen.blit(
-        level_surface,
-        level_surface.get_rect(center=(75, 85)),
-    )
-    hp_surface = controls_font.render(
-        f"{player_health}/{player_max_health}",
-        True,
-        value_color,
-    )
-    screen.blit(hp_surface, hp_surface.get_rect(center=(194, 50)))
-    xp_surface = controls_font.render(
-        f"{player_experience}/{experience_required}",
-        True,
-        value_color,
-    )
-    screen.blit(xp_surface, xp_surface.get_rect(center=(176, 74)))
 
-    screen.blit(
+    down_bar_layout = hud_layout["down_bar"]
+
+    _blit_layout_image(
+        screen,
         sprites["act_two_bottom_bar"],
-        _ACT_TWO_BOTTOM_BAR_POSITION,
+        down_bar_layout["frame"],
     )
-    screen.blit(
-        sprites["act_two_chat_log_backing"],
-        _ACT_TWO_LOG_BACKING_POSITION,
+    combat_log_layout = down_bar_layout["combat_log"]
+
+    draw_figma_rectangle(
+        screen,
+        combat_log_layout["backing"],
     )
-    line_height = 14
-    maximum_line_count = (
-        _ACT_TWO_LOG_TEXT_RECT.height // line_height
+
+    log_line_specs = tuple(
+        combat_log_layout["lines"][line_name]
+        for line_name in sorted(combat_log_layout["lines"])
     )
+
+    maximum_line_count = len(log_line_specs)
     selected_messages = []
     remaining_line_count = maximum_line_count
+
     for message in reversed(combat_log):
         if remaining_line_count <= 0:
             break
+
+        reference_spec = log_line_specs[0]
+        reference_rect = figma_rect(reference_spec["rect"])
+        reference_font = get_figma_font(reference_spec)
+
         wrapped_lines = wrap_text(
-            log_font,
+            reference_font,
             message,
-            _ACT_TWO_LOG_TEXT_RECT.width,
+            reference_rect.width,
         ) or [""]
+
         selected_lines = wrapped_lines[:remaining_line_count]
+
         if len(selected_lines) < len(wrapped_lines):
-            selected_lines[-1] = fit_text_to_width(
-                log_font,
-                selected_lines[-1] + "...",
-                _ACT_TWO_LOG_TEXT_RECT.width,
+            last_line_spec = log_line_specs[
+                remaining_line_count - 1
+            ]
+            last_line_rect = figma_rect(
+                last_line_spec["rect"]
             )
+            last_line_font = get_figma_font(last_line_spec)
+
+            selected_lines[-1] = fit_text_to_width(
+                last_line_font,
+                selected_lines[-1] + "...",
+                last_line_rect.width,
+            )
+
         selected_messages.append(
-            (selected_lines, get_event_color(message))
+            (
+                selected_lines,
+                get_event_color(message),
+            )
         )
+
         remaining_line_count -= len(selected_lines)
 
     visible_log_lines = []
-    for selected_lines, color in reversed(selected_messages):
+
+    for selected_lines, line_color in reversed(selected_messages):
         visible_log_lines.extend(
-            (line, color) for line in selected_lines
+            (line, line_color)
+            for line in selected_lines
         )
-    log_y = _ACT_TWO_LOG_TEXT_RECT.y
-    for line, line_color in visible_log_lines:
-        screen.blit(
-            log_font.render(
-                line,
-                True,
-                line_color,
-            ),
-            (_ACT_TWO_LOG_TEXT_RECT.x, log_y),
+
+    for line_spec, visible_line in zip(
+        log_line_specs,
+        visible_log_lines,
+    ):
+        line_text, line_color = visible_line
+
+        _draw_dynamic_figma_text(
+            screen,
+            line_spec,
+            line_text,
+            color=line_color,
         )
-        log_y += line_height
+
+    consumable_slots_layout = tuple(
+        down_bar_layout["consumable_belt"]["slots"][slot_name]
+        for slot_name in sorted(
+            down_bar_layout["consumable_belt"]["slots"]
+        )
+    )
 
     for slot_index, item in enumerate(
         consumable_slots[:CONSUMABLE_BELT_SIZE]
     ):
         if slot_index == dragged_consumable_slot:
             continue
+
+        if slot_index >= len(consumable_slots_layout):
+            break
+
         sprite_name = _ACT_TWO_CONSUMABLE_SPRITES.get(item)
+
         if sprite_name is None:
             continue
-        item_sprite = pygame.transform.scale(
+
+        _blit_layout_image(
+            screen,
             sprites[sprite_name],
-            _ACT_TWO_BELT_ITEM_SIZE,
-        )
-        screen.blit(
-            item_sprite,
-            _ACT_TWO_BELT_ITEM_POSITIONS[slot_index],
+            consumable_slots_layout[slot_index]["icon"],
         )
 
     if (
@@ -393,9 +563,22 @@ def draw_act_two_sidebar(
         dragged_item = consumable_slots[dragged_consumable_slot]
         sprite_name = _ACT_TWO_CONSUMABLE_SPRITES.get(dragged_item)
         if sprite_name is not None:
-            item_sprite = pygame.transform.scale(
+            dragged_icon_size = (
+                figma_rect(
+                    consumable_slots_layout[
+                        dragged_consumable_slot
+                    ]["icon"]
+                ).size
+                if (
+                    dragged_consumable_slot
+                    < len(consumable_slots_layout)
+                )
+                else (26, 26)
+            )
+
+            item_sprite = pygame.transform.smoothscale(
                 sprites[sprite_name],
-                _ACT_TWO_BELT_ITEM_SIZE,
+                dragged_icon_size,
             )
             screen.blit(
                 item_sprite,
@@ -408,7 +591,7 @@ def draw_act_two_sidebar(
             (
                 slot_index
                 for slot_index, rectangle in enumerate(
-                    get_act_two_belt_slot_rectangles()
+                    get_act_two_belt_slot_rectangles(hud_layout)
                 )
                 if (
                     rectangle.collidepoint(mouse_position)
@@ -420,21 +603,49 @@ def draw_act_two_sidebar(
         )
 
     if hovered_consumable_slot is not None:
-        hovered_item = consumable_slots[hovered_consumable_slot]
-        slot_rectangle = get_act_two_belt_slot_rectangles()[
+        hovered_item = consumable_slots[
             hovered_consumable_slot
         ]
-        panel = sprites["act_two_abilities_panel"]
-        panel_position = (
-            slot_rectangle.centerx - panel.get_width() // 2,
-            _ACT_TWO_ABILITIES_PANEL_POSITION[1],
+
+        sprite_name = _ACT_TWO_CONSUMABLE_SPRITES.get(
+            hovered_item
         )
-        sprite_name = _ACT_TWO_CONSUMABLE_SPRITES.get(hovered_item)
+
+        slot_rectangle = (
+            get_act_two_belt_slot_rectangles(
+                hud_layout
+            )[hovered_consumable_slot]
+        )
+
+        base_info_layout = hud_layout["info"]
+        base_info_rectangle = figma_rect(
+            base_info_layout["rect"]
+        )
+
+        target_left = (
+            slot_rectangle.centerx
+            - base_info_rectangle.width // 2
+        )
+
+        target_left = max(
+            0,
+            min(
+                screen.get_width()
+                - base_info_rectangle.width,
+                target_left,
+            ),
+        )
+
+        info_layout = _offset_layout(
+            base_info_layout,
+            target_left - base_info_rectangle.left,
+            0,
+        )
+
         _draw_act_two_hover_panel(
             screen,
-            ability_font,
             sprites,
-            panel_position,
+            info_layout,
             sprite_name,
             _ACT_TWO_CONSUMABLE_NAMES.get(
                 hovered_item,
@@ -444,7 +655,6 @@ def draw_act_two_sidebar(
                 hovered_item,
                 "Consumable item.",
             ),
-            value_color,
         )
 
     selected_rune = RUNES_BY_ID.get(selected_rune_id)
@@ -472,116 +682,173 @@ def draw_act_two_sidebar(
         )
     )
 
+    ability_layout = down_bar_layout["ability"]
+    ability_hitbox = figma_rect(ability_layout["hitbox"])
+
     if displayed_ability_asset_name in sprites:
-        ability_icon = pygame.transform.scale(
-            sprites[displayed_ability_asset_name],
-            _ACT_TWO_ABILITY_RECT.size,
-        )
-        screen.blit(ability_icon, _ACT_TWO_ABILITY_RECT)
-    displayed_charge = round(
-        min(1.0, ability_kill_charge / max(1, ability_charge_required))
-        * len(_ACT_TWO_ABILITY_CHARGE_RECTS)
-    )
-    for charge_index, charge_rectangle in enumerate(
-        _ACT_TWO_ABILITY_CHARGE_RECTS
-    ):
-        pygame.draw.rect(
+        _blit_layout_image(
             screen,
-            (
-                (177, 40, 48)
-                if charge_index < displayed_charge
-                else (40, 35, 39)
-            ),
-            charge_rectangle,
+            sprites[displayed_ability_asset_name],
+            ability_layout["icon"],
         )
 
-    screen.blit(
+    charge_layouts = tuple(
+        ability_layout["charges"][charge_name]
+        for charge_name in sorted(ability_layout["charges"])
+    )
+
+    displayed_charge = round(
+        min(
+            1.0,
+            ability_kill_charge / max(1, ability_charge_required),
+        )
+        * len(charge_layouts)
+    )
+
+    active_charge_fill = (
+        charge_layouts[0].get("fill")
+        if charge_layouts
+        else None
+    )
+
+    inactive_charge_fill = (
+        charge_layouts[1].get("fill")
+        if len(charge_layouts) > 1
+        else active_charge_fill
+    )
+
+    for charge_index, charge_layout in enumerate(charge_layouts):
+        runtime_charge_layout = {
+            **charge_layout,
+            "fill": (
+                active_charge_fill
+                if charge_index < displayed_charge
+                else inactive_charge_fill
+            ),
+        }
+
+        draw_figma_rectangle(
+            screen,
+            runtime_charge_layout,
+        )
+
+    gold_layout = down_bar_layout["gold"]
+
+    _blit_layout_image(
+        screen,
         sprites["act_two_gold_counter"],
-        _ACT_TWO_GOLD_COUNTER_POSITION,
+        gold_layout["icon"],
     )
-    gold_surface = controls_font.render(
-        str(gold_count),
-        True,
-        value_color,
+
+    _draw_dynamic_figma_text(
+        screen,
+        gold_layout["value"],
+        gold_count,
     )
-    screen.blit(
-        gold_surface,
-        gold_surface.get_rect(center=_ACT_TWO_GOLD_VALUE_CENTER),
-    )
+
+    right_bar_layout = hud_layout["right_bar"]
+    tabs_layout = right_bar_layout["tabs"]
+    tabs_buttons = tabs_layout["buttons"]
+    stats_panel_layout = right_bar_layout["stats_panel"]
 
     if stats_open:
-        screen.blit(sprites["act_two_stats_panel"], (991, 183))
+        _blit_layout_image(
+            screen,
+            sprites["act_two_stats_panel"],
+            stats_panel_layout["frame"],
+        )
+
     ability_hovered = (
         mouse_position is not None
-        and _ACT_TWO_ABILITY_RECT.collidepoint(mouse_position)
+        and ability_hitbox.collidepoint(mouse_position)
     )
+
     if ability_hovered:
         _draw_act_two_hover_panel(
             screen,
-            ability_font,
             sprites,
-            _ACT_TWO_ABILITIES_PANEL_POSITION,
+            hud_layout["info"],
             displayed_ability_asset_name,
             displayed_ability_name,
             displayed_ability_description,
-            value_color,
         )
-    screen.blit(sprites["act_two_side_buttons"], (1212, 249))
+
+    _blit_layout_image(
+        screen,
+        sprites["act_two_side_buttons"],
+        tabs_layout["frame"],
+    )
+
     remaining_attribute_points = max(
         0,
         available_attribute_points
         - sum(pending_attribute_upgrades.values()),
     )
+
     if remaining_attribute_points > 0:
         pulse_progress = (
-                                 pygame.time.get_ticks() % 1200
-                         ) / 1200
-        pulse_strength = 1.0 - abs(pulse_progress * 2.0 - 1.0)
+            pygame.time.get_ticks() % 1200
+        ) / 1200
 
-        indicator = sprites["act_two_level_up_indicator"].copy()
+        pulse_strength = (
+            1.0 - abs(pulse_progress * 2.0 - 1.0)
+        )
+
+        indicator_rectangle = figma_rect(
+            tabs_layout["level_up_indicator"]
+        )
+
+        indicator = pygame.transform.smoothscale(
+            sprites["act_two_level_up_indicator"],
+            indicator_rectangle.size,
+        )
+
         indicator.set_alpha(
             round(145 + 110 * pulse_strength)
         )
+
         screen.blit(
             indicator,
-            _ACT_TWO_LEVEL_UP_POSITION,
+            indicator_rectangle,
         )
 
-    for button_name, button_rectangle in (
-        _ACT_TWO_SIDEBAR_BUTTON_RECTS.items()
-    ):
+    for button_name, button_layout in tabs_buttons.items():
+        button_rectangle = figma_rect(
+            button_layout["hitbox"]
+        )
+
         is_hovered = (
             mouse_position is not None
             and button_rectangle.collidepoint(mouse_position)
         )
-        is_selected = button_name == "stats" and stats_open
+
+        is_selected = (
+            button_name == "stats"
+            and stats_open
+        )
+
         if not (is_hovered or is_selected):
             continue
-        highlight_rectangle = _ACT_TWO_SIDEBAR_HIGHLIGHT_RECTS[
-            button_name
-        ]
-        highlight = pygame.Surface(
-            highlight_rectangle.size,
-            pygame.SRCALPHA,
+
+        draw_figma_rectangle(
+            screen,
+            button_layout["highlight"],
         )
-        pygame.draw.rect(
-            highlight,
-            (145, 26, 26, 42 if is_hovered else 25),
-            highlight.get_rect(),
-            border_radius=10,
-        )
-        screen.blit(highlight, highlight_rectangle)
 
 
     if not stats_open:
         return
 
     muted_color = (174, 154, 143)
-    class_name = (player_class or "UNBOUND").title()
-    class_surface = title_font.render(class_name, True, muted_color)
-    screen.blit(
-        class_surface,
-        class_surface.get_rect(center=(1112, 230)),
+
+    class_name = (
+            player_class or "UNBOUND"
+    ).title()
+
+    _draw_dynamic_figma_text(
+        screen,
+        stats_panel_layout["class_name"],
+        class_name,
     )
 
     attribute_names = (
@@ -591,115 +858,111 @@ def draw_act_two_sidebar(
         "vitality",
     )
 
-    attribute_values = tuple(
-        attribute_ranks.get(attribute, 0)
-        + pending_attribute_upgrades.get(attribute, 0)
-        for attribute in attribute_names
+    attribute_rows = (
+        stats_panel_layout["attributes"]["rows"]
     )
 
-    for attribute, value, center_y in zip(
-            attribute_names,
-            attribute_values,
-            (254, 275, 296, 317),
-    ):
-        label_surface = log_font.render(
+    attribute_values = {
+        attribute: (
+                attribute_ranks.get(attribute, 0)
+                + pending_attribute_upgrades.get(attribute, 0)
+        )
+        for attribute in attribute_names
+    }
+
+    for attribute in attribute_names:
+        row_layout = attribute_rows[attribute]
+
+        _draw_dynamic_figma_text(
+            screen,
+            row_layout["label"],
             attribute.title(),
-            True,
-            muted_color,
         )
-        screen.blit(
-            label_surface,
-            label_surface.get_rect(midleft=(1034, center_y)),
-        )
+
         is_pending = (
                 pending_attribute_upgrades.get(attribute, 0) > 0
         )
-        value_surface = controls_font.render(
-            str(value),
-            True,
-            (218, 165, 75) if is_pending else value_color,
+
+        _draw_dynamic_figma_text(
+            screen,
+            row_layout["value"],
+            attribute_values[attribute],
+            color=(
+                (218, 165, 75, 255)
+                if is_pending
+                else None
+            ),
         )
-        screen.blit(
-            value_surface,
-            value_surface.get_rect(center=(1149, center_y)),
-        )
+
     upgrade_mode = available_attribute_points > 0
+
     if upgrade_mode:
-        for attribute, rectangle in (
-                _ACT_TWO_ATTRIBUTE_PLUS_RECTS.items()
-        ):
-            future_rank = (
-                    attribute_ranks.get(attribute, 0)
-                    + pending_attribute_upgrades.get(attribute, 0)
+        for attribute in attribute_names:
+            row_layout = attribute_rows[attribute]
+
+            plus_rectangle = figma_rect(
+                row_layout["plus_hitbox"]
             )
+            minus_rectangle = figma_rect(
+                row_layout["minus_hitbox"]
+            )
+
+            future_rank = attribute_values[attribute]
+
             can_increase = (
                     remaining_attribute_points > 0
                     and future_rank < MAX_ATTRIBUTE_RANK
             )
-            is_hovered = (
-                    mouse_position is not None
-                    and rectangle.collidepoint(mouse_position)
+
+            can_decrease = (
+                    pending_attribute_upgrades.get(
+                        attribute,
+                        0,
+                    ) > 0
             )
 
-            if can_increase and is_hovered:
-                pygame.draw.rect(
-                    screen,
-                    (0, 0, 0),
-                    rectangle,
-                    border_radius=4,
-                )
+            plus_hovered = (
+                    mouse_position is not None
+                    and plus_rectangle.collidepoint(
+                mouse_position
+            )
+            )
+
+            minus_hovered = (
+                    mouse_position is not None
+                    and minus_rectangle.collidepoint(
+                mouse_position
+            )
+            )
 
             plus_color = (
-                (75, 70, 72)
+                (75, 70, 72, 255)
                 if not can_increase
-                else (245, 205, 105)
-                if is_hovered
-                else (190, 82, 64)
+                else (245, 205, 105, 255)
+                if plus_hovered
+                else None
             )
-            plus_surface = controls_font.render(
-                "+",
-                True,
-                plus_color,
-            )
-            screen.blit(
-                plus_surface,
-                plus_surface.get_rect(center=rectangle.center),
-            )
-
-        for attribute, rectangle in (
-                _ACT_TWO_ATTRIBUTE_MINUS_RECTS.items()
-        ):
-            can_decrease = (
-                    pending_attribute_upgrades.get(attribute, 0) > 0
-            )
-            is_hovered = (
-                    mouse_position is not None
-                    and rectangle.collidepoint(mouse_position)
-            )
-
-            if can_decrease and is_hovered:
-                pygame.draw.rect(
-                    screen,
-                    (0, 0, 0),
-                    rectangle,
-                    border_radius=4,
-                )
 
             minus_color = (
-                (75, 70, 72)
+                (75, 70, 72, 255)
                 if not can_decrease
-                else (245, 205, 105)
-                if is_hovered
-                else (190, 82, 64)
+                else (245, 205, 105, 255)
+                if minus_hovered
+                else None
             )
-            minus_surface = controls_font.render(
+
+            _draw_dynamic_figma_text(
+                screen,
+                row_layout["plus"],
+                "+",
+                color=plus_color,
+            )
+
+            _draw_dynamic_figma_text(
+                screen,
+                row_layout["minus"],
                 "-",
-                True,
-                minus_color,
-            )
-            screen.blit(
-                minus_surface,
-                minus_surface.get_rect(center=rectangle.center),
+                color=minus_color,
             )
 
     combat_heading = log_font.render(
@@ -773,44 +1036,49 @@ def draw_act_two_sidebar(
                 confirm_rectangle,
             )
 
-def get_act_two_sidebar_button_rectangles():
+def get_act_two_sidebar_button_rectangles(hud_layout):
+    buttons = hud_layout["right_bar"]["tabs"]["buttons"]
+
     return {
-        button_name: button_rectangle.copy()
-        for button_name, button_rectangle in (
-            _ACT_TWO_SIDEBAR_BUTTON_RECTS.items()
-        )
+        button_name: figma_rect(button_layout["hitbox"])
+        for button_name, button_layout in buttons.items()
     }
 
 
-def get_act_two_belt_slot_rectangles():
+def get_act_two_belt_slot_rectangles(hud_layout):
+    slots = hud_layout["down_bar"]["consumable_belt"]["slots"]
+
     return tuple(
-        pygame.Rect(
-            item_x - 8,
-            638,
-            42,
-            64,
-        )
-        for item_x, _item_y in _ACT_TWO_BELT_ITEM_POSITIONS[
-            :CONSUMABLE_BELT_SIZE
-        ]
+        figma_rect(slots[slot_name]["hitbox"])
+        for slot_name in sorted(slots)
+    )[:CONSUMABLE_BELT_SIZE]
+
+
+def get_act_two_attribute_plus_rectangles(hud_layout):
+    rows = (
+        hud_layout["right_bar"]
+        ["stats_panel"]
+        ["attributes"]
+        ["rows"]
     )
 
-
-def get_act_two_attribute_plus_rectangles():
     return {
-        attribute: rectangle.copy()
-        for attribute, rectangle in (
-            _ACT_TWO_ATTRIBUTE_PLUS_RECTS.items()
-        )
+        attribute: figma_rect(row["plus_hitbox"])
+        for attribute, row in rows.items()
     }
 
 
-def get_act_two_attribute_minus_rectangles():
+def get_act_two_attribute_minus_rectangles(hud_layout):
+    rows = (
+        hud_layout["right_bar"]
+        ["stats_panel"]
+        ["attributes"]
+        ["rows"]
+    )
+
     return {
-        attribute: rectangle.copy()
-        for attribute, rectangle in (
-            _ACT_TWO_ATTRIBUTE_MINUS_RECTS.items()
-        )
+        attribute: figma_rect(row["minus_hitbox"])
+        for attribute, row in rows.items()
     }
 
 

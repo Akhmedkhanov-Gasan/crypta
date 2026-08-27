@@ -1,0 +1,2176 @@
+{
+  "schema_version": 3,
+  "screen": "hud",
+  "act": 2,
+  "frame": {
+    "name": "HUD_Act2",
+    "width": 1280,
+    "height": 720
+  },
+  "hud": {
+    "rect": {
+      "x": 12,
+      "y": 12,
+      "width": 1268,
+      "height": 701
+    }
+  },
+  "top_bar": {
+    "rect": {
+      "x": 12,
+      "y": 12,
+      "width": 404,
+      "height": 192
+    },
+    "frame": {
+      "x": 12,
+      "y": 12,
+      "width": 404,
+      "height": 135
+    },
+    "portrait": {
+      "x": 53,
+      "y": 48,
+      "width": 44,
+      "height": 43
+    },
+    "hp_fill": {
+      "x": 163,
+      "y": 53,
+      "width": 214,
+      "height": 16
+    },
+    "xp_fill": {
+      "x": 155,
+      "y": 94,
+      "width": 204,
+      "height": 17
+    },
+    "level": {
+      "rect": {
+        "x": 88,
+        "y": 107,
+        "width": 16,
+        "height": 15
+      },
+      "text": "1",
+      "font": {
+        "family": "Alagard",
+        "style": "Medium",
+        "size": 14
+      },
+      "line_height": {
+        "unit": "AUTO"
+      },
+      "letter_spacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "horizontal_align": "CENTER",
+      "vertical_align": "CENTER",
+      "text_case": "ORIGINAL",
+      "color": {
+        "r": 174,
+        "g": 154,
+        "b": 143,
+        "a": 255
+      }
+    },
+    "hp_text": {
+      "rect": {
+        "x": 227,
+        "y": 56,
+        "width": 67,
+        "height": 10
+      },
+      "text": "10/10",
+      "font": {
+        "family": "Alagard",
+        "style": "Medium",
+        "size": 12
+      },
+      "line_height": {
+        "unit": "AUTO"
+      },
+      "letter_spacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "horizontal_align": "CENTER",
+      "vertical_align": "CENTER",
+      "text_case": "ORIGINAL",
+      "color": {
+        "r": 174,
+        "g": 154,
+        "b": 143,
+        "a": 255
+      }
+    },
+    "xp_text": {
+      "rect": {
+        "x": 227,
+        "y": 97,
+        "width": 45,
+        "height": 12
+      },
+      "text": "10/10",
+      "font": {
+        "family": "Alagard",
+        "style": "Medium",
+        "size": 12
+      },
+      "line_height": {
+        "unit": "AUTO"
+      },
+      "letter_spacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "horizontal_align": "CENTER",
+      "vertical_align": "CENTER",
+      "text_case": "ORIGINAL",
+      "color": {
+        "r": 174,
+        "g": 154,
+        "b": 143,
+        "a": 255
+      }
+    },
+    "status_effects": {
+      "rect": {
+        "x": 28,
+        "y": 145,
+        "width": 291,
+        "height": 59
+      },
+      "slots": {
+        "slot_01": {
+          "rect": {
+            "x": 28,
+            "y": 145,
+            "width": 45,
+            "height": 55
+          },
+          "frame": {
+            "rect": {
+              "x": 32,
+              "y": 148,
+              "width": 37,
+              "height": 39
+            },
+            "fill": null,
+            "stroke": {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 255
+            },
+            "stroke_weight": 3,
+            "corner_radius": 11,
+            "blur_radius": 0
+          },
+          "icon": {
+            "x": 34,
+            "y": 152,
+            "width": 32,
+            "height": 32
+          },
+          "value": {
+            "rect": {
+              "x": 43,
+              "y": 190,
+              "width": 14,
+              "height": 10
+            },
+            "text": "0",
+            "font": {
+              "family": "Alagard",
+              "style": "Medium",
+              "size": 12
+            },
+            "line_height": {
+              "unit": "AUTO"
+            },
+            "letter_spacing": {
+              "unit": "PERCENT",
+              "value": 0
+            },
+            "horizontal_align": "CENTER",
+            "vertical_align": "CENTER",
+            "text_case": "ORIGINAL",
+            "color": {
+              "r": 174,
+              "g": 154,
+              "b": 143,
+              "a": 255
+            }
+          },
+          "hitbox": {
+            "x": 32,
+            "y": 148,
+            "width": 37,
+            "height": 39
+          }
+        },
+        "slot_02": {
+          "rect": {
+            "x": 73,
+            "y": 145,
+            "width": 45,
+            "height": 55
+          },
+          "frame": {
+            "rect": {
+              "x": 77,
+              "y": 148,
+              "width": 37,
+              "height": 39
+            },
+            "fill": null,
+            "stroke": {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 255
+            },
+            "stroke_weight": 3,
+            "corner_radius": 11,
+            "blur_radius": 0
+          },
+          "icon": {
+            "x": 79,
+            "y": 152,
+            "width": 32,
+            "height": 32
+          },
+          "value": {
+            "rect": {
+              "x": 88,
+              "y": 190,
+              "width": 14,
+              "height": 10
+            },
+            "text": "0",
+            "font": {
+              "family": "Alagard",
+              "style": "Medium",
+              "size": 12
+            },
+            "line_height": {
+              "unit": "AUTO"
+            },
+            "letter_spacing": {
+              "unit": "PERCENT",
+              "value": 0
+            },
+            "horizontal_align": "CENTER",
+            "vertical_align": "CENTER",
+            "text_case": "ORIGINAL",
+            "color": {
+              "r": 174,
+              "g": 154,
+              "b": 143,
+              "a": 255
+            }
+          },
+          "hitbox": {
+            "x": 77,
+            "y": 148,
+            "width": 37,
+            "height": 39
+          }
+        },
+        "slot_03": {
+          "rect": {
+            "x": 118,
+            "y": 145,
+            "width": 45,
+            "height": 55
+          },
+          "frame": {
+            "rect": {
+              "x": 122,
+              "y": 148,
+              "width": 37,
+              "height": 39
+            },
+            "fill": null,
+            "stroke": {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 255
+            },
+            "stroke_weight": 3,
+            "corner_radius": 11,
+            "blur_radius": 0
+          },
+          "icon": {
+            "x": 124,
+            "y": 152,
+            "width": 32,
+            "height": 32
+          },
+          "value": {
+            "rect": {
+              "x": 133,
+              "y": 190,
+              "width": 14,
+              "height": 10
+            },
+            "text": "0",
+            "font": {
+              "family": "Alagard",
+              "style": "Medium",
+              "size": 12
+            },
+            "line_height": {
+              "unit": "AUTO"
+            },
+            "letter_spacing": {
+              "unit": "PERCENT",
+              "value": 0
+            },
+            "horizontal_align": "CENTER",
+            "vertical_align": "CENTER",
+            "text_case": "ORIGINAL",
+            "color": {
+              "r": 174,
+              "g": 154,
+              "b": 143,
+              "a": 255
+            }
+          },
+          "hitbox": {
+            "x": 122,
+            "y": 148,
+            "width": 37,
+            "height": 39
+          }
+        },
+        "slot_04": {
+          "rect": {
+            "x": 163,
+            "y": 145,
+            "width": 45,
+            "height": 55
+          },
+          "frame": {
+            "rect": {
+              "x": 167,
+              "y": 148,
+              "width": 37,
+              "height": 39
+            },
+            "fill": null,
+            "stroke": {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 255
+            },
+            "stroke_weight": 3,
+            "corner_radius": 11,
+            "blur_radius": 0
+          },
+          "icon": {
+            "x": 169,
+            "y": 152,
+            "width": 32,
+            "height": 32
+          },
+          "value": {
+            "rect": {
+              "x": 178,
+              "y": 190,
+              "width": 14,
+              "height": 10
+            },
+            "text": "0",
+            "font": {
+              "family": "Alagard",
+              "style": "Medium",
+              "size": 12
+            },
+            "line_height": {
+              "unit": "AUTO"
+            },
+            "letter_spacing": {
+              "unit": "PERCENT",
+              "value": 0
+            },
+            "horizontal_align": "CENTER",
+            "vertical_align": "CENTER",
+            "text_case": "ORIGINAL",
+            "color": {
+              "r": 174,
+              "g": 154,
+              "b": 143,
+              "a": 255
+            }
+          },
+          "hitbox": {
+            "x": 167,
+            "y": 148,
+            "width": 37,
+            "height": 39
+          }
+        },
+        "slot_05": {
+          "rect": {
+            "x": 208,
+            "y": 145,
+            "width": 45,
+            "height": 55
+          },
+          "frame": {
+            "rect": {
+              "x": 212,
+              "y": 148,
+              "width": 37,
+              "height": 39
+            },
+            "fill": null,
+            "stroke": {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 255
+            },
+            "stroke_weight": 3,
+            "corner_radius": 11,
+            "blur_radius": 0
+          },
+          "icon": {
+            "x": 214,
+            "y": 152,
+            "width": 32,
+            "height": 32
+          },
+          "value": {
+            "rect": {
+              "x": 223,
+              "y": 190,
+              "width": 14,
+              "height": 10
+            },
+            "text": "0",
+            "font": {
+              "family": "Alagard",
+              "style": "Medium",
+              "size": 12
+            },
+            "line_height": {
+              "unit": "AUTO"
+            },
+            "letter_spacing": {
+              "unit": "PERCENT",
+              "value": 0
+            },
+            "horizontal_align": "CENTER",
+            "vertical_align": "CENTER",
+            "text_case": "ORIGINAL",
+            "color": {
+              "r": 174,
+              "g": 154,
+              "b": 143,
+              "a": 255
+            }
+          },
+          "hitbox": {
+            "x": 212,
+            "y": 148,
+            "width": 37,
+            "height": 39
+          }
+        },
+        "slot_06": {
+          "rect": {
+            "x": 253,
+            "y": 145,
+            "width": 45,
+            "height": 55
+          },
+          "frame": {
+            "rect": {
+              "x": 257,
+              "y": 148,
+              "width": 37,
+              "height": 39
+            },
+            "fill": null,
+            "stroke": {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 255
+            },
+            "stroke_weight": 3,
+            "corner_radius": 11,
+            "blur_radius": 0
+          },
+          "icon": {
+            "x": 259,
+            "y": 152,
+            "width": 32,
+            "height": 32
+          },
+          "value": {
+            "rect": {
+              "x": 268,
+              "y": 190,
+              "width": 14,
+              "height": 10
+            },
+            "text": "0",
+            "font": {
+              "family": "Alagard",
+              "style": "Medium",
+              "size": 12
+            },
+            "line_height": {
+              "unit": "AUTO"
+            },
+            "letter_spacing": {
+              "unit": "PERCENT",
+              "value": 0
+            },
+            "horizontal_align": "CENTER",
+            "vertical_align": "CENTER",
+            "text_case": "ORIGINAL",
+            "color": {
+              "r": 174,
+              "g": 154,
+              "b": 143,
+              "a": 255
+            }
+          },
+          "hitbox": {
+            "x": 257,
+            "y": 148,
+            "width": 37,
+            "height": 39
+          }
+        }
+      }
+    }
+  },
+  "down_bar": {
+    "rect": {
+      "x": 27,
+      "y": 600,
+      "width": 1242,
+      "height": 113
+    },
+    "frame": {
+      "x": 460,
+      "y": 617,
+      "width": 377,
+      "height": 96
+    },
+    "combat_log": {
+      "rect": {
+        "x": 27,
+        "y": 600,
+        "width": 393,
+        "height": 97
+      },
+      "backing": {
+        "rect": {
+          "x": 27,
+          "y": 600,
+          "width": 393,
+          "height": 97
+        },
+        "fill": {
+          "r": 42,
+          "g": 39,
+          "b": 39,
+          "a": 191
+        },
+        "stroke": null,
+        "stroke_weight": 1,
+        "corner_radius": 11,
+        "blur_radius": 4
+      },
+      "lines": {
+        "line_01": {
+          "rect": {
+            "x": 34,
+            "y": 609,
+            "width": 366,
+            "height": 21
+          },
+          "text": "Action 1 ~ Fuckup_1_test_test, long_ass_text",
+          "font": {
+            "family": "Pixelify Sans",
+            "style": "Medium",
+            "size": 15
+          },
+          "line_height": {
+            "unit": "AUTO"
+          },
+          "letter_spacing": {
+            "unit": "PERCENT",
+            "value": 0
+          },
+          "horizontal_align": "LEFT",
+          "vertical_align": "CENTER",
+          "text_case": "ORIGINAL",
+          "color": {
+            "r": 0,
+            "g": 168,
+            "b": 6,
+            "a": 255
+          }
+        },
+        "line_02": {
+          "rect": {
+            "x": 34,
+            "y": 630,
+            "width": 366,
+            "height": 21
+          },
+          "text": "Action 1 ~ Fuckup_1_test_test, long_ass_text",
+          "font": {
+            "family": "Pixelify Sans",
+            "style": "Medium",
+            "size": 15
+          },
+          "line_height": {
+            "unit": "AUTO"
+          },
+          "letter_spacing": {
+            "unit": "PERCENT",
+            "value": 0
+          },
+          "horizontal_align": "LEFT",
+          "vertical_align": "CENTER",
+          "text_case": "ORIGINAL",
+          "color": {
+            "r": 0,
+            "g": 168,
+            "b": 6,
+            "a": 255
+          }
+        },
+        "line_03": {
+          "rect": {
+            "x": 34,
+            "y": 649,
+            "width": 366,
+            "height": 21
+          },
+          "text": "Action 1 ~ Fuckup_1_test_test, long_ass_text",
+          "font": {
+            "family": "Pixelify Sans",
+            "style": "Medium",
+            "size": 15
+          },
+          "line_height": {
+            "unit": "AUTO"
+          },
+          "letter_spacing": {
+            "unit": "PERCENT",
+            "value": 0
+          },
+          "horizontal_align": "LEFT",
+          "vertical_align": "CENTER",
+          "text_case": "ORIGINAL",
+          "color": {
+            "r": 0,
+            "g": 168,
+            "b": 6,
+            "a": 255
+          }
+        },
+        "line_04": {
+          "rect": {
+            "x": 34,
+            "y": 668,
+            "width": 366,
+            "height": 21
+          },
+          "text": "Action 1 ~ Fuckup_1_test_test, long_ass_text",
+          "font": {
+            "family": "Pixelify Sans",
+            "style": "Medium",
+            "size": 15
+          },
+          "line_height": {
+            "unit": "AUTO"
+          },
+          "letter_spacing": {
+            "unit": "PERCENT",
+            "value": 0
+          },
+          "horizontal_align": "LEFT",
+          "vertical_align": "CENTER",
+          "text_case": "ORIGINAL",
+          "color": {
+            "r": 0,
+            "g": 168,
+            "b": 6,
+            "a": 255
+          }
+        }
+      }
+    },
+    "consumable_belt": {
+      "rect": {
+        "x": 456,
+        "y": 615,
+        "width": 383,
+        "height": 98
+      },
+      "slots": {
+        "slot_01": {
+          "rect": {
+            "x": 471,
+            "y": 655,
+            "width": 31,
+            "height": 31
+          },
+          "icon": {
+            "x": 473,
+            "y": 658,
+            "width": 26,
+            "height": 26
+          },
+          "hitbox": {
+            "x": 471,
+            "y": 655,
+            "width": 31,
+            "height": 31
+          }
+        },
+        "slot_02": {
+          "rect": {
+            "x": 517,
+            "y": 655,
+            "width": 31,
+            "height": 31
+          },
+          "icon": {
+            "x": 519,
+            "y": 658,
+            "width": 26,
+            "height": 26
+          },
+          "hitbox": {
+            "x": 517,
+            "y": 655,
+            "width": 31,
+            "height": 31
+          }
+        },
+        "slot_03": {
+          "rect": {
+            "x": 562,
+            "y": 655,
+            "width": 31,
+            "height": 31
+          },
+          "icon": {
+            "x": 564,
+            "y": 658,
+            "width": 26,
+            "height": 26
+          },
+          "hitbox": {
+            "x": 562,
+            "y": 655,
+            "width": 31,
+            "height": 31
+          }
+        },
+        "slot_04": {
+          "rect": {
+            "x": 606,
+            "y": 655,
+            "width": 31,
+            "height": 31
+          },
+          "icon": {
+            "x": 608,
+            "y": 658,
+            "width": 26,
+            "height": 26
+          },
+          "hitbox": {
+            "x": 606,
+            "y": 655,
+            "width": 31,
+            "height": 31
+          }
+        },
+        "slot_05": {
+          "rect": {
+            "x": 652,
+            "y": 655,
+            "width": 31,
+            "height": 31
+          },
+          "icon": {
+            "x": 654,
+            "y": 658,
+            "width": 26,
+            "height": 26
+          },
+          "hitbox": {
+            "x": 652,
+            "y": 655,
+            "width": 31,
+            "height": 31
+          }
+        },
+        "slot_06": {
+          "rect": {
+            "x": 698,
+            "y": 655,
+            "width": 31,
+            "height": 31
+          },
+          "icon": {
+            "x": 700,
+            "y": 658,
+            "width": 26,
+            "height": 26
+          },
+          "hitbox": {
+            "x": 698,
+            "y": 655,
+            "width": 31,
+            "height": 31
+          }
+        }
+      }
+    },
+    "ability": {
+      "rect": {
+        "x": 765,
+        "y": 653,
+        "width": 30,
+        "height": 31
+      },
+      "icon": {
+        "x": 765,
+        "y": 653,
+        "width": 30,
+        "height": 30
+      },
+      "hitbox": {
+        "x": 765,
+        "y": 653,
+        "width": 30,
+        "height": 31
+      },
+      "charges": {
+        "charge_01": {
+          "rect": {
+            "x": 768,
+            "y": 681,
+            "width": 5,
+            "height": 3
+          },
+          "fill": {
+            "r": 161,
+            "g": 28,
+            "b": 28,
+            "a": 255
+          },
+          "stroke": null,
+          "stroke_weight": 1,
+          "corner_radius": 0,
+          "blur_radius": 0
+        },
+        "charge_02": {
+          "rect": {
+            "x": 775,
+            "y": 681,
+            "width": 4,
+            "height": 3
+          },
+          "fill": {
+            "r": 77,
+            "g": 73,
+            "b": 73,
+            "a": 255
+          },
+          "stroke": null,
+          "stroke_weight": 1,
+          "corner_radius": 0,
+          "blur_radius": 0
+        },
+        "charge_03": {
+          "rect": {
+            "x": 781,
+            "y": 681,
+            "width": 5,
+            "height": 3
+          },
+          "fill": {
+            "r": 77,
+            "g": 73,
+            "b": 73,
+            "a": 255
+          },
+          "stroke": null,
+          "stroke_weight": 1,
+          "corner_radius": 0,
+          "blur_radius": 0
+        },
+        "charge_04": {
+          "rect": {
+            "x": 788,
+            "y": 681,
+            "width": 4,
+            "height": 3
+          },
+          "fill": {
+            "r": 77,
+            "g": 73,
+            "b": 73,
+            "a": 255
+          },
+          "stroke": null,
+          "stroke_weight": 1,
+          "corner_radius": 0,
+          "blur_radius": 0
+        }
+      }
+    },
+    "gold": {
+      "rect": {
+        "x": 1193,
+        "y": 631,
+        "width": 76,
+        "height": 76
+      },
+      "icon": {
+        "x": 1193,
+        "y": 631,
+        "width": 76,
+        "height": 76
+      },
+      "value": {
+        "rect": {
+          "x": 1227,
+          "y": 670,
+          "width": 11,
+          "height": 18
+        },
+        "text": "1",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 20
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 174,
+          "g": 154,
+          "b": 143,
+          "a": 255
+        }
+      }
+    }
+  },
+  "info": {
+    "rect": {
+      "x": 649,
+      "y": 549,
+      "width": 261,
+      "height": 104
+    },
+    "frame": {
+      "x": 649,
+      "y": 549,
+      "width": 261,
+      "height": 104
+    },
+    "icon": {
+      "x": 671,
+      "y": 582,
+      "width": 36,
+      "height": 36
+    },
+    "name_backing": {
+      "rect": {
+        "x": 735,
+        "y": 562,
+        "width": 116,
+        "height": 13
+      },
+      "fill": {
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "a": 207
+      },
+      "stroke": null,
+      "stroke_weight": 1,
+      "corner_radius": 7,
+      "blur_radius": 0
+    },
+    "name": {
+      "rect": {
+        "x": 735,
+        "y": 562,
+        "width": 116,
+        "height": 14
+      },
+      "text": "Invisibility",
+      "font": {
+        "family": "Alagard",
+        "style": "Medium",
+        "size": 14
+      },
+      "line_height": {
+        "unit": "AUTO"
+      },
+      "letter_spacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "horizontal_align": "CENTER",
+      "vertical_align": "CENTER",
+      "text_case": "ORIGINAL",
+      "color": {
+        "r": 174,
+        "g": 154,
+        "b": 143,
+        "a": 255
+      }
+    },
+    "description_backing": {
+      "rect": {
+        "x": 735,
+        "y": 573,
+        "width": 137,
+        "height": 58
+      },
+      "fill": {
+        "r": 42,
+        "g": 39,
+        "b": 39,
+        "a": 0
+      },
+      "stroke": null,
+      "stroke_weight": 1,
+      "corner_radius": 11,
+      "blur_radius": 4
+    },
+    "description": {
+      "rect": {
+        "x": 734,
+        "y": 568,
+        "width": 143,
+        "height": 67
+      },
+      "text": "Vanish. Your next attack is a sure critical.",
+      "font": {
+        "family": "Alagard",
+        "style": "Medium",
+        "size": 14
+      },
+      "line_height": {
+        "unit": "AUTO"
+      },
+      "letter_spacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "horizontal_align": "CENTER",
+      "vertical_align": "CENTER",
+      "text_case": "ORIGINAL",
+      "color": {
+        "r": 174,
+        "g": 154,
+        "b": 143,
+        "a": 255
+      }
+    }
+  },
+  "right_bar": {
+    "rect": {
+      "x": 998,
+      "y": 160,
+      "width": 282,
+      "height": 399
+    },
+    "tabs": {
+      "rect": {
+        "x": 1210,
+        "y": 249,
+        "width": 70,
+        "height": 174
+      },
+      "frame": {
+        "x": 1210,
+        "y": 245,
+        "width": 70,
+        "height": 190
+      },
+      "level_up_indicator": {
+        "x": 1210,
+        "y": 258,
+        "width": 70,
+        "height": 70
+      },
+      "buttons": {
+        "stats": {
+          "rect": {
+            "x": 1227,
+            "y": 276,
+            "width": 36,
+            "height": 33
+          },
+          "highlight": {
+            "rect": {
+              "x": 1227,
+              "y": 276,
+              "width": 36,
+              "height": 34
+            },
+            "fill": {
+              "r": 145,
+              "g": 26,
+              "b": 26,
+              "a": 41
+            },
+            "stroke": null,
+            "stroke_weight": 1,
+            "corner_radius": 10,
+            "blur_radius": 0
+          },
+          "hitbox": {
+            "x": 1227,
+            "y": 276,
+            "width": 36,
+            "height": 33
+          }
+        },
+        "journal": {
+          "rect": {
+            "x": 1227,
+            "y": 320,
+            "width": 36,
+            "height": 34
+          },
+          "highlight": {
+            "rect": {
+              "x": 1227,
+              "y": 320,
+              "width": 36,
+              "height": 34
+            },
+            "fill": {
+              "r": 145,
+              "g": 26,
+              "b": 26,
+              "a": 41
+            },
+            "stroke": null,
+            "stroke_weight": 1,
+            "corner_radius": 10,
+            "blur_radius": 0
+          },
+          "hitbox": {
+            "x": 1227,
+            "y": 320,
+            "width": 36,
+            "height": 33
+          }
+        },
+        "settings": {
+          "rect": {
+            "x": 1227,
+            "y": 364,
+            "width": 36,
+            "height": 34
+          },
+          "highlight": {
+            "rect": {
+              "x": 1227,
+              "y": 364,
+              "width": 36,
+              "height": 34
+            },
+            "fill": {
+              "r": 145,
+              "g": 26,
+              "b": 26,
+              "a": 41
+            },
+            "stroke": null,
+            "stroke_weight": 1,
+            "corner_radius": 10,
+            "blur_radius": 0
+          },
+          "hitbox": {
+            "x": 1227,
+            "y": 364,
+            "width": 36,
+            "height": 33
+          }
+        }
+      }
+    },
+    "stats_panel": {
+      "rect": {
+        "x": 998,
+        "y": 160,
+        "width": 224,
+        "height": 399
+      },
+      "frame": {
+        "x": 998,
+        "y": 160,
+        "width": 224,
+        "height": 399
+      },
+      "class_name": {
+        "rect": {
+          "x": 1066,
+          "y": 205,
+          "width": 89,
+          "height": 26
+        },
+        "text": "Warrior",
+        "font": {
+          "family": "Alagard",
+          "style": "Medium",
+          "size": 20
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 174,
+          "g": 154,
+          "b": 143,
+          "a": 255
+        }
+      },
+      "attributes": {
+        "rect": {
+          "x": 1036,
+          "y": 245,
+          "width": 159,
+          "height": 78
+        },
+        "rows": {
+          "strength": {
+            "rect": {
+              "x": 1036,
+              "y": 245,
+              "width": 58,
+              "height": 14
+            },
+            "label": {
+              "rect": {
+                "x": 1036,
+                "y": 245,
+                "width": 58,
+                "height": 14
+              },
+              "text": "Strenght",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 14
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "value": {
+              "rect": {
+                "x": 1154,
+                "y": 245,
+                "width": 13,
+                "height": 15
+              },
+              "text": "10",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 15
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "minus": {
+              "rect": {
+                "x": 1136,
+                "y": 247,
+                "width": 7,
+                "height": 9
+              },
+              "text": "-",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 15
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "minus_hitbox": {
+              "x": 1133,
+              "y": 247,
+              "width": 11,
+              "height": 12
+            },
+            "plus": {
+              "rect": {
+                "x": 1175,
+                "y": 245,
+                "width": 11,
+                "height": 15
+              },
+              "text": "+",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 15
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "plus_hitbox": {
+              "x": 1174,
+              "y": 247,
+              "width": 11,
+              "height": 12
+            }
+          },
+          "dexterity": {
+            "rect": {
+              "x": 1036,
+              "y": 267,
+              "width": 62,
+              "height": 14
+            },
+            "label": {
+              "rect": {
+                "x": 1036,
+                "y": 267,
+                "width": 62,
+                "height": 14
+              },
+              "text": "Dexterity",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 14
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "value": {
+              "rect": {
+                "x": 1154,
+                "y": 267,
+                "width": 13,
+                "height": 15
+              },
+              "text": "10",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 15
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "minus": {
+              "rect": {
+                "x": 1136,
+                "y": 269,
+                "width": 7,
+                "height": 9
+              },
+              "text": "-",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 15
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "minus_hitbox": {
+              "x": 1133,
+              "y": 269,
+              "width": 11,
+              "height": 12
+            },
+            "plus": {
+              "rect": {
+                "x": 1175,
+                "y": 267,
+                "width": 11,
+                "height": 15
+              },
+              "text": "+",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 15
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "plus_hitbox": {
+              "x": 1174,
+              "y": 269,
+              "width": 11,
+              "height": 12
+            }
+          },
+          "intelligence": {
+            "rect": {
+              "x": 1036,
+              "y": 288,
+              "width": 77,
+              "height": 14
+            },
+            "label": {
+              "rect": {
+                "x": 1036,
+                "y": 288,
+                "width": 77,
+                "height": 14
+              },
+              "text": "Intelligence",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 14
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "value": {
+              "rect": {
+                "x": 1154,
+                "y": 288,
+                "width": 13,
+                "height": 15
+              },
+              "text": "10",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 15
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "minus": {
+              "rect": {
+                "x": 1136,
+                "y": 290,
+                "width": 7,
+                "height": 9
+              },
+              "text": "-",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 15
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "minus_hitbox": {
+              "x": 1133,
+              "y": 290,
+              "width": 11,
+              "height": 12
+            },
+            "plus": {
+              "rect": {
+                "x": 1175,
+                "y": 288,
+                "width": 11,
+                "height": 15
+              },
+              "text": "+",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 15
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "plus_hitbox": {
+              "x": 1174,
+              "y": 290,
+              "width": 11,
+              "height": 12
+            }
+          },
+          "vitality": {
+            "rect": {
+              "x": 1036,
+              "y": 309,
+              "width": 47,
+              "height": 14
+            },
+            "label": {
+              "rect": {
+                "x": 1036,
+                "y": 309,
+                "width": 47,
+                "height": 14
+              },
+              "text": "Vitality",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 14
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "value": {
+              "rect": {
+                "x": 1154,
+                "y": 309,
+                "width": 13,
+                "height": 15
+              },
+              "text": "10",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 15
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "minus": {
+              "rect": {
+                "x": 1136,
+                "y": 311,
+                "width": 7,
+                "height": 9
+              },
+              "text": "-",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 15
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "minus_hitbox": {
+              "x": 1133,
+              "y": 311,
+              "width": 11,
+              "height": 12
+            },
+            "plus": {
+              "rect": {
+                "x": 1175,
+                "y": 309,
+                "width": 11,
+                "height": 15
+              },
+              "text": "+",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 15
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "plus_hitbox": {
+              "x": 1174,
+              "y": 311,
+              "width": 11,
+              "height": 12
+            }
+          }
+        }
+      },
+      "confirm": {
+        "rect": {
+          "x": 1050,
+          "y": 328,
+          "width": 121,
+          "height": 40
+        },
+        "button": {
+          "x": 1049,
+          "y": 333,
+          "width": 123,
+          "height": 30
+        },
+        "hitbox": {
+          "x": 1050,
+          "y": 336,
+          "width": 121,
+          "height": 23
+        }
+      },
+      "combat_stats": {
+        "rect": {
+          "x": 1035,
+          "y": 381,
+          "width": 155,
+          "height": 96
+        },
+        "heading": {
+          "rect": {
+            "x": 1074,
+            "y": 381,
+            "width": 83,
+            "height": 14
+          },
+          "text": "Combat Stats",
+          "font": {
+            "family": "Alagard",
+            "style": "Medium",
+            "size": 14
+          },
+          "line_height": {
+            "unit": "AUTO"
+          },
+          "letter_spacing": {
+            "unit": "PERCENT",
+            "value": 0
+          },
+          "horizontal_align": "LEFT",
+          "vertical_align": "TOP",
+          "text_case": "ORIGINAL",
+          "color": {
+            "r": 174,
+            "g": 154,
+            "b": 143,
+            "a": 255
+          }
+        },
+        "rows": {
+          "damage": {
+            "rect": {
+              "x": 1035,
+              "y": 403,
+              "width": 49,
+              "height": 14
+            },
+            "label": {
+              "rect": {
+                "x": 1035,
+                "y": 403,
+                "width": 49,
+                "height": 14
+              },
+              "text": "Damage",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 14
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "value": {
+              "rect": {
+                "x": 1141,
+                "y": 404,
+                "width": 27,
+                "height": 14
+              },
+              "text": "2-3",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 15
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            }
+          },
+          "critical": {
+            "rect": {
+              "x": 1035,
+              "y": 424,
+              "width": 44,
+              "height": 13
+            },
+            "label": {
+              "rect": {
+                "x": 1035,
+                "y": 424,
+                "width": 44,
+                "height": 13
+              },
+              "text": "Critical",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 13
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "value": {
+              "rect": {
+                "x": 1124,
+                "y": 422,
+                "width": 66,
+                "height": 14
+              },
+              "text": "0% x2.0",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 15
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            }
+          },
+          "dodge": {
+            "rect": {
+              "x": 1035,
+              "y": 442,
+              "width": 36,
+              "height": 13
+            },
+            "label": {
+              "rect": {
+                "x": 1035,
+                "y": 442,
+                "width": 36,
+                "height": 13
+              },
+              "text": "Dodge",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 13
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "value": {
+              "rect": {
+                "x": 1142,
+                "y": 442,
+                "width": 26,
+                "height": 14
+              },
+              "text": "0%",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 15
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            }
+          },
+          "magical_power": {
+            "rect": {
+              "x": 1035,
+              "y": 463,
+              "width": 93,
+              "height": 14
+            },
+            "label": {
+              "rect": {
+                "x": 1035,
+                "y": 463,
+                "width": 93,
+                "height": 14
+              },
+              "text": "Magical power",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 14
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "value": {
+              "rect": {
+                "x": 1149,
+                "y": 463,
+                "width": 11,
+                "height": 14
+              },
+              "text": "0",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 15
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

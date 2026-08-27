@@ -6,6 +6,7 @@ from presentation.assets import (
     load_act_three_transition_assets,
     load_act_two_fonts,
     load_act_two_sprites,
+    load_act_two_hud_layout,
     load_menu_assets,
     load_menu_layouts,
     load_act_two_trade_layout,
@@ -179,6 +180,7 @@ __all__ = [
     "load_act_three_transition_assets",
     "load_act_two_fonts",
     "load_act_two_sprites",
+    "load_act_two_hud_layout",
     "load_menu_assets",
-    "load_menu_layout",
+    "load_menu_layouts",
 ]

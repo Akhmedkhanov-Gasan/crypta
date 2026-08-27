@@ -165,6 +165,31 @@ def load_act_two_fonts():
         "trade_price": pygame.font.Font(str(bold_path), 16),
     }
 
+def load_act_two_hud_layout():
+    layout_path = (
+        PROJECT_ROOT
+        / "assets"
+        / "ui"
+        / "layouts"
+        / "act_2"
+        / "HUD_Act2.json"
+    )
+
+    with layout_path.open(encoding="utf-8") as file:
+        layout = json.load(file)
+
+    if layout.get("screen") != "hud":
+        raise ValueError(
+            'Act II HUD layout must have screen: "hud".'
+        )
+
+    if layout.get("act") != 2:
+        raise ValueError(
+            "Act II HUD layout must have act: 2."
+        )
+
+    return layout
+
 
 def load_act_two_trade_layout():
     layout_path = (

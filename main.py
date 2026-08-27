@@ -215,6 +215,7 @@ from rendering import (
     load_act_three_transition_assets,
     load_act_two_fonts,
     load_act_two_sprites,
+    load_act_two_hud_layout,
     load_menu_assets,
     load_menu_layouts,
     draw_act_two_sidebar,
@@ -534,6 +535,7 @@ def main():
     log_font = act_one_fonts["text"]
     act_two_fonts = load_act_two_fonts()
     act_two_sprites = load_act_two_sprites()
+    act_two_hud_layout = load_act_two_hud_layout()
     act_two_trade_layout = load_act_two_trade_layout()
     bloody_altar_layout = load_bloody_altar_layout()
     act_three_fonts = load_act_three_fonts()
@@ -1034,7 +1036,9 @@ def main():
                                 (
                                         attribute
                                         for attribute, rectangle in (
-                                        get_act_two_attribute_minus_rectangles().items()
+                                        get_act_two_attribute_minus_rectangles(
+                                            act_two_hud_layout
+                                        ).items()
                                 )
                                         if rectangle.collidepoint(game_mouse_position)
                                 ),
@@ -1067,7 +1071,9 @@ def main():
                                 (
                                         attribute
                                         for attribute, rectangle in (
-                                        get_act_two_attribute_plus_rectangles().items()
+                                        get_act_two_attribute_plus_rectangles(
+                                            act_two_hud_layout
+                                        ).items()
                                 )
                                         if rectangle.collidepoint(game_mouse_position)
                                 ),
@@ -1099,7 +1105,9 @@ def main():
                         (
                             slot_index
                             for slot_index, rectangle in enumerate(
-                                get_act_two_belt_slot_rectangles()
+                            get_act_two_belt_slot_rectangles(
+                                act_two_hud_layout
+                            )
                             )
                             if rectangle.collidepoint(game_mouse_position)
                         ),
@@ -1161,7 +1169,9 @@ def main():
                         (
                             button_name
                             for button_name, rectangle in (
-                                get_act_two_sidebar_button_rectangles().items()
+                                get_act_two_sidebar_button_rectangles(
+                                    act_two_hud_layout
+                                ).items()
                             )
                             if rectangle.collidepoint(game_mouse_position)
                         ),
@@ -1175,7 +1185,7 @@ def main():
                         not game_state.act_two_stats_open
                     )
                     continue
-                if clicked_sidebar_button == "placeholder":
+                if clicked_sidebar_button == "journal":
                     continue
                 if clicked_sidebar_button == "settings":
                     pygame.event.post(
@@ -1344,7 +1354,9 @@ def main():
                 belt_slot_clicked = False
                 if game_mouse_position is not None:
                     for slot_index, rectangle in enumerate(
-                        get_act_two_belt_slot_rectangles()
+                            get_act_two_belt_slot_rectangles(
+                                act_two_hud_layout
+                            )
                     ):
                         if not rectangle.collidepoint(game_mouse_position):
                             continue
@@ -4004,6 +4016,10 @@ def main():
                     pygame.mouse.get_pos(),
                 ),
                 act_two_sprites,
+                act_two_hud_layout,
+                game_state.player.invisibility_turns,
+                game_state.player.act_two.stoneflesh_hits,
+                game_state.player.act_two.bloody_pact_id,
                 dragged_consumable_slot=(
                     act_two_dragged_consumable_slot
                 ),
