@@ -1013,9 +1013,11 @@ def main():
                             )
                     )
                     is not None
-                    and get_act_two_confirm_button_rectangle().collidepoint(
-                game_mouse_position
-            )
+                    and get_act_two_confirm_button_rectangle(
+                            act_two_hud_layout
+                        ).collidepoint(
+                            game_mouse_position
+                        )
             ):
                 confirmed, message = (
                     confirm_queued_act_two_attribute_upgrades(
@@ -2953,6 +2955,7 @@ def main():
                     if menu_state.page == "confirm_abandon"
                     else menu_state.page
                 ],
+                menu_layouts=menu_layouts,
             )
             present_game(screen, game_surface)
             clock.tick(FPS)

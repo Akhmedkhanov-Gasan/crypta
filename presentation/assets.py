@@ -96,12 +96,8 @@ def load_menu_assets():
             str(act_three_directory / "act_3_background.png")
         ).convert(),
 
-        "act_three_menu_frame": pygame.image.load(
-            str(act_three_directory / "menu_frame.png")
-        ).convert_alpha(),
-
-        "act_three_menu_title": pygame.image.load(
-            str(act_three_directory / "menu_title.png")
+        "act_one_menu_frame": pygame.image.load(
+            str(act_one_directory / "menu_frame.png")
         ).convert_alpha(),
 
         "act_two_menu_frame": pygame.image.load(
@@ -109,15 +105,15 @@ def load_menu_assets():
         ).convert_alpha(),
 
         "act_two_menu_title": pygame.image.load(
-            str(act_two_directory / "menu_title.png")
+            str(act_two_directory / "title.png")
         ).convert_alpha(),
 
-        "act_one_menu_frame": pygame.image.load(
-            str(act_one_directory / "menu_frame.png")
+        "act_three_menu_frame": pygame.image.load(
+            str(act_three_directory / "menu_frame.png")
         ).convert_alpha(),
 
-        "act_one_menu_title": pygame.image.load(
-            str(act_one_directory / "menu_title.png")
+        "act_three_menu_title": pygame.image.load(
+            str(act_three_directory / "menu_title.png")
         ).convert_alpha(),
     }
 
@@ -137,7 +133,19 @@ def load_menu_layouts(act):
         layout_path = layout_directory / f"{page}.json"
 
         with layout_path.open(encoding="utf-8") as file:
-            layouts[page] = json.load(file)
+            layout = json.load(file)
+
+        if layout.get("schema_version") != 2:
+            raise ValueError(
+                f"Menu layout {layout_path} must use schema_version: 2."
+            )
+
+        if layout.get("act") != act:
+            raise ValueError(
+                f"Menu layout {layout_path} must use act: {act}."
+            )
+
+        layouts[page] = layout
 
     return layouts
 
@@ -884,9 +892,6 @@ def load_act_two_sprites():
                 / f"{pact_id}_original.png"
             )
         ).convert_alpha()
-    sprites["upgrade_window"] = pygame.image.load(
-        str(ui_directory / "upgrade" / "upgrade_window.png")
-    ).convert_alpha()
 
     act_two_hud_directory = ui_directory / "ui_v.0.2"
     sprites.update(

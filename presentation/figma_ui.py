@@ -19,6 +19,15 @@ _FONT_PATHS = {
         FONT_ROOT / "Pixelify_Sans" / "static" / "PixelifySans-SemiBold.ttf",
     ("pixelify sans", "bold"):
         FONT_ROOT / "Pixelify_Sans" / "static" / "PixelifySans-Bold.ttf",
+    ("iswasted", "regular"):
+        FONT_ROOT / "IsWasted.ttf",
+    ("iswasted", "medium"):
+        FONT_ROOT / "IsWasted.ttf",
+
+    ("birch leaf", "regular"):
+        FONT_ROOT / "BirchLeaf.ttf",
+    ("birch leaf", "medium"):
+        FONT_ROOT / "BirchLeaf.ttf",
 }
 
 
@@ -243,6 +252,8 @@ def draw_figma_text(
     screen: pygame.Surface,
     text_spec: dict[str, Any] | None,
     *,
+    text_override: str | None = None,
+    color_override: tuple[int, int, int] | None = None,
     opacity_multiplier: float = 1.0,
 ) -> None:
     if text_spec is None:
@@ -251,8 +262,14 @@ def draw_figma_text(
     rect = figma_rect(text_spec["rect"])
     font = _load_figma_font(text_spec)
 
+    source_text = (
+        text_override
+        if text_override is not None
+        else str(text_spec.get("text", ""))
+    )
+
     text = _apply_text_case(
-        str(text_spec.get("text", "")),
+        source_text,
         str(text_spec.get("text_case", "ORIGINAL")),
     )
 
@@ -265,10 +282,17 @@ def draw_figma_text(
         color_data.get("a", 255) * max(0.0, min(1.0, opacity_multiplier))
     )
 
+    if color_override is None:
+        red = color_data.get("r", 255)
+        green = color_data.get("g", 255)
+        blue = color_data.get("b", 255)
+    else:
+        red, green, blue = color_override
+
     color = (
-        color_data.get("r", 255),
-        color_data.get("g", 255),
-        color_data.get("b", 255),
+        red,
+        green,
+        blue,
         alpha,
     )
 

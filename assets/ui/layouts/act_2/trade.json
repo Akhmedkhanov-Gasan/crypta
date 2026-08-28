@@ -16,35 +16,35 @@
     }
   },
   "background": {
-    "x": 205,
-    "y": 33,
-    "width": 871,
-    "height": 653
+    "x": 224,
+    "y": 47,
+    "width": 833,
+    "height": 625
   },
   "close_hitbox": {
-    "x": 987,
-    "y": 133,
+    "x": 1003,
+    "y": 123,
     "width": 40,
     "height": 40
   },
   "slots": {
     "slot_01": {
       "rect": {
-        "x": 322,
-        "y": 181,
-        "width": 639,
+        "x": 291,
+        "y": 182,
+        "width": 701,
         "height": 63
       },
       "icon": {
-        "x": 322,
-        "y": 184,
-        "width": 60,
-        "height": 60
+        "x": 294,
+        "y": 190,
+        "width": 55,
+        "height": 55
       },
       "name": {
         "rect": {
-          "x": 465,
-          "y": 194,
+          "x": 469,
+          "y": 199,
           "width": 239,
           "height": 19
         },
@@ -73,8 +73,8 @@
       },
       "description": {
         "rect": {
-          "x": 446,
-          "y": 208,
+          "x": 444,
+          "y": 209,
           "width": 289,
           "height": 34
         },
@@ -103,8 +103,8 @@
       },
       "price": {
         "rect": {
-          "x": 856,
-          "y": 194,
+          "x": 903,
+          "y": 199,
           "width": 64,
           "height": 41
         },
@@ -132,29 +132,29 @@
         }
       },
       "buy_hitbox": {
-        "x": 322,
-        "y": 181,
-        "width": 639,
+        "x": 291,
+        "y": 182,
+        "width": 701,
         "height": 63
       }
     },
     "slot_02": {
       "rect": {
-        "x": 322,
-        "y": 255,
-        "width": 639,
+        "x": 291,
+        "y": 260,
+        "width": 701,
         "height": 63
       },
       "icon": {
-        "x": 322,
-        "y": 259,
-        "width": 60,
-        "height": 60
+        "x": 293,
+        "y": 264,
+        "width": 55,
+        "height": 55
       },
       "name": {
         "rect": {
-          "x": 465,
-          "y": 268,
+          "x": 485,
+          "y": 271,
           "width": 239,
           "height": 19
         },
@@ -183,9 +183,9 @@
       },
       "description": {
         "rect": {
-          "x": 416,
+          "x": 383,
           "y": 281,
-          "width": 345,
+          "width": 437,
           "height": 34
         },
         "text": "Completely prevents one visible enemy from taking any\nactions for 5 turns and interrupts a prepared attack",
@@ -213,8 +213,8 @@
       },
       "price": {
         "rect": {
-          "x": 856,
-          "y": 268,
+          "x": 902,
+          "y": 271,
           "width": 64,
           "height": 41
         },
@@ -242,29 +242,29 @@
         }
       },
       "buy_hitbox": {
-        "x": 322,
-        "y": 255,
-        "width": 639,
+        "x": 291,
+        "y": 260,
+        "width": 701,
         "height": 63
       }
     },
     "slot_03": {
       "rect": {
-        "x": 322,
-        "y": 328,
-        "width": 639,
+        "x": 289,
+        "y": 333,
+        "width": 703,
         "height": 63
       },
       "icon": {
-        "x": 320,
-        "y": 331,
-        "width": 60,
-        "height": 60
+        "x": 294,
+        "y": 337,
+        "width": 55,
+        "height": 55
       },
       "name": {
         "rect": {
-          "x": 465,
-          "y": 341,
+          "x": 489,
+          "y": 346,
           "width": 239,
           "height": 19
         },
@@ -293,8 +293,8 @@
       },
       "description": {
         "rect": {
-          "x": 413,
-          "y": 354,
+          "x": 433,
+          "y": 358,
           "width": 351,
           "height": 34
         },
@@ -323,8 +323,8 @@
       },
       "price": {
         "rect": {
-          "x": 856,
-          "y": 341,
+          "x": 902,
+          "y": 345,
           "width": 64,
           "height": 41
         },
@@ -352,29 +352,29 @@
         }
       },
       "buy_hitbox": {
-        "x": 322,
-        "y": 328,
+        "x": 289,
+        "y": 333,
         "width": 639,
         "height": 63
       }
     },
     "slot_04": {
       "rect": {
-        "x": 320,
-        "y": 402,
-        "width": 639,
+        "x": 291,
+        "y": 406,
+        "width": 701,
         "height": 63
       },
       "icon": {
-        "x": 320,
-        "y": 405,
-        "width": 60,
-        "height": 60
+        "x": 294,
+        "y": 411,
+        "width": 55,
+        "height": 55
       },
       "name": {
         "rect": {
-          "x": 463,
-          "y": 415,
+          "x": 479,
+          "y": 419,
           "width": 239,
           "height": 19
         },
@@ -403,8 +403,8 @@
       },
       "description": {
         "rect": {
-          "x": 438,
-          "y": 428,
+          "x": 454,
+          "y": 432,
           "width": 289,
           "height": 34
         },
@@ -433,8 +433,8 @@
       },
       "price": {
         "rect": {
-          "x": 854,
-          "y": 415,
+          "x": 902,
+          "y": 419,
           "width": 64,
           "height": 41
         },
@@ -462,29 +462,29 @@
         }
       },
       "buy_hitbox": {
-        "x": 320,
-        "y": 402,
+        "x": 291,
+        "y": 406,
         "width": 639,
         "height": 63
       }
     },
     "slot_05": {
       "rect": {
-        "x": 320,
-        "y": 476,
-        "width": 639,
-        "height": 63
+        "x": 289,
+        "y": 479,
+        "width": 703,
+        "height": 64
       },
       "icon": {
-        "x": 320,
-        "y": 478,
+        "x": 289,
+        "y": 481,
         "width": 60,
         "height": 60
       },
       "name": {
         "rect": {
-          "x": 463,
-          "y": 489,
+          "x": 481,
+          "y": 490,
           "width": 239,
           "height": 19
         },
@@ -513,8 +513,8 @@
       },
       "description": {
         "rect": {
-          "x": 438,
-          "y": 502,
+          "x": 456,
+          "y": 503,
           "width": 289,
           "height": 34
         },
@@ -543,8 +543,8 @@
       },
       "price": {
         "rect": {
-          "x": 854,
-          "y": 489,
+          "x": 902,
+          "y": 492,
           "width": 64,
           "height": 41
         },
@@ -572,28 +572,28 @@
         }
       },
       "buy_hitbox": {
-        "x": 320,
-        "y": 476,
+        "x": 289,
+        "y": 479,
         "width": 639,
         "height": 63
       }
     },
     "slot_06": {
       "rect": {
-        "x": 321,
-        "y": 549,
-        "width": 639,
+        "x": 289,
+        "y": 552,
+        "width": 703,
         "height": 63
       },
       "icon": {
-        "x": 321,
-        "y": 552,
+        "x": 292,
+        "y": 554,
         "width": 60,
         "height": 60
       },
       "name": {
         "rect": {
-          "x": 464,
+          "x": 486,
           "y": 562,
           "width": 239,
           "height": 19
@@ -623,7 +623,7 @@
       },
       "description": {
         "rect": {
-          "x": 417,
+          "x": 439,
           "y": 575,
           "width": 338,
           "height": 34
@@ -653,8 +653,8 @@
       },
       "price": {
         "rect": {
-          "x": 855,
-          "y": 562,
+          "x": 902,
+          "y": 565,
           "width": 64,
           "height": 41
         },
@@ -682,8 +682,8 @@
         }
       },
       "buy_hitbox": {
-        "x": 321,
-        "y": 549,
+        "x": 289,
+        "y": 552,
         "width": 639,
         "height": 63
       }

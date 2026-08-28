@@ -9,24 +9,24 @@
   },
   "hud": {
     "rect": {
-      "x": 12,
-      "y": 12,
-      "width": 1268,
-      "height": 701
+      "x": 23,
+      "y": 14,
+      "width": 1257,
+      "height": 699
     }
   },
   "top_bar": {
     "rect": {
-      "x": 12,
-      "y": 12,
-      "width": 404,
-      "height": 192
+      "x": 23,
+      "y": 14,
+      "width": 393,
+      "height": 167
     },
     "frame": {
-      "x": 12,
-      "y": 12,
-      "width": 404,
-      "height": 135
+      "x": 23,
+      "y": 14,
+      "width": 393,
+      "height": 131
     },
     "portrait": {
       "x": 53,
@@ -35,21 +35,21 @@
       "height": 43
     },
     "hp_fill": {
-      "x": 163,
+      "x": 146,
       "y": 53,
-      "width": 214,
-      "height": 16
+      "width": 245,
+      "height": 19
     },
     "xp_fill": {
-      "x": 155,
-      "y": 94,
-      "width": 204,
+      "x": 147,
+      "y": 82,
+      "width": 185,
       "height": 17
     },
     "level": {
       "rect": {
-        "x": 88,
-        "y": 107,
+        "x": 92,
+        "y": 94,
         "width": 16,
         "height": 15
       },
@@ -78,8 +78,8 @@
     },
     "hp_text": {
       "rect": {
-        "x": 227,
-        "y": 56,
+        "x": 230,
+        "y": 58,
         "width": 67,
         "height": 10
       },
@@ -108,8 +108,8 @@
     },
     "xp_text": {
       "rect": {
-        "x": 227,
-        "y": 97,
+        "x": 202,
+        "y": 85,
         "width": 45,
         "height": 12
       },
@@ -138,23 +138,23 @@
     },
     "status_effects": {
       "rect": {
-        "x": 28,
-        "y": 145,
+        "x": 31,
+        "y": 122,
         "width": 291,
         "height": 59
       },
       "slots": {
         "slot_01": {
           "rect": {
-            "x": 28,
-            "y": 145,
+            "x": 31,
+            "y": 122,
             "width": 45,
             "height": 55
           },
           "frame": {
             "rect": {
-              "x": 32,
-              "y": 148,
+              "x": 35,
+              "y": 125,
               "width": 37,
               "height": 39
             },
@@ -170,15 +170,15 @@
             "blur_radius": 0
           },
           "icon": {
-            "x": 34,
-            "y": 152,
+            "x": 37,
+            "y": 129,
             "width": 32,
             "height": 32
           },
           "value": {
             "rect": {
-              "x": 43,
-              "y": 190,
+              "x": 46,
+              "y": 167,
               "width": 14,
               "height": 10
             },
@@ -206,23 +206,23 @@
             }
           },
           "hitbox": {
-            "x": 32,
-            "y": 148,
+            "x": 35,
+            "y": 125,
             "width": 37,
             "height": 39
           }
         },
         "slot_02": {
           "rect": {
-            "x": 73,
-            "y": 145,
+            "x": 76,
+            "y": 122,
             "width": 45,
             "height": 55
           },
           "frame": {
             "rect": {
-              "x": 77,
-              "y": 148,
+              "x": 80,
+              "y": 125,
               "width": 37,
               "height": 39
             },
@@ -238,15 +238,15 @@
             "blur_radius": 0
           },
           "icon": {
-            "x": 79,
-            "y": 152,
+            "x": 82,
+            "y": 129,
             "width": 32,
             "height": 32
           },
           "value": {
             "rect": {
-              "x": 88,
-              "y": 190,
+              "x": 91,
+              "y": 167,
               "width": 14,
               "height": 10
             },
@@ -274,23 +274,23 @@
             }
           },
           "hitbox": {
-            "x": 77,
-            "y": 148,
+            "x": 80,
+            "y": 125,
             "width": 37,
             "height": 39
           }
         },
         "slot_03": {
           "rect": {
-            "x": 118,
-            "y": 145,
+            "x": 121,
+            "y": 122,
             "width": 45,
             "height": 55
           },
           "frame": {
             "rect": {
-              "x": 122,
-              "y": 148,
+              "x": 125,
+              "y": 125,
               "width": 37,
               "height": 39
             },
@@ -306,15 +306,15 @@
             "blur_radius": 0
           },
           "icon": {
-            "x": 124,
-            "y": 152,
+            "x": 127,
+            "y": 129,
             "width": 32,
             "height": 32
           },
           "value": {
             "rect": {
-              "x": 133,
-              "y": 190,
+              "x": 136,
+              "y": 167,
               "width": 14,
               "height": 10
             },
@@ -342,23 +342,23 @@
             }
           },
           "hitbox": {
-            "x": 122,
-            "y": 148,
+            "x": 125,
+            "y": 125,
             "width": 37,
             "height": 39
           }
         },
         "slot_04": {
           "rect": {
-            "x": 163,
-            "y": 145,
+            "x": 166,
+            "y": 122,
             "width": 45,
             "height": 55
           },
           "frame": {
             "rect": {
-              "x": 167,
-              "y": 148,
+              "x": 170,
+              "y": 125,
               "width": 37,
               "height": 39
             },
@@ -374,15 +374,15 @@
             "blur_radius": 0
           },
           "icon": {
-            "x": 169,
-            "y": 152,
+            "x": 172,
+            "y": 129,
             "width": 32,
             "height": 32
           },
           "value": {
             "rect": {
-              "x": 178,
-              "y": 190,
+              "x": 181,
+              "y": 167,
               "width": 14,
               "height": 10
             },
@@ -410,23 +410,23 @@
             }
           },
           "hitbox": {
-            "x": 167,
-            "y": 148,
+            "x": 170,
+            "y": 125,
             "width": 37,
             "height": 39
           }
         },
         "slot_05": {
           "rect": {
-            "x": 208,
-            "y": 145,
+            "x": 211,
+            "y": 122,
             "width": 45,
             "height": 55
           },
           "frame": {
             "rect": {
-              "x": 212,
-              "y": 148,
+              "x": 215,
+              "y": 125,
               "width": 37,
               "height": 39
             },
@@ -442,15 +442,15 @@
             "blur_radius": 0
           },
           "icon": {
-            "x": 214,
-            "y": 152,
+            "x": 217,
+            "y": 129,
             "width": 32,
             "height": 32
           },
           "value": {
             "rect": {
-              "x": 223,
-              "y": 190,
+              "x": 226,
+              "y": 167,
               "width": 14,
               "height": 10
             },
@@ -478,23 +478,23 @@
             }
           },
           "hitbox": {
-            "x": 212,
-            "y": 148,
+            "x": 215,
+            "y": 125,
             "width": 37,
             "height": 39
           }
         },
         "slot_06": {
           "rect": {
-            "x": 253,
-            "y": 145,
+            "x": 256,
+            "y": 122,
             "width": 45,
             "height": 55
           },
           "frame": {
             "rect": {
-              "x": 257,
-              "y": 148,
+              "x": 260,
+              "y": 125,
               "width": 37,
               "height": 39
             },
@@ -510,15 +510,15 @@
             "blur_radius": 0
           },
           "icon": {
-            "x": 259,
-            "y": 152,
+            "x": 262,
+            "y": 129,
             "width": 32,
             "height": 32
           },
           "value": {
             "rect": {
-              "x": 268,
-              "y": 190,
+              "x": 271,
+              "y": 167,
               "width": 14,
               "height": 10
             },
@@ -546,8 +546,8 @@
             }
           },
           "hitbox": {
-            "x": 257,
-            "y": 148,
+            "x": 260,
+            "y": 125,
             "width": 37,
             "height": 39
           }
@@ -559,14 +559,14 @@
     "rect": {
       "x": 27,
       "y": 600,
-      "width": 1242,
+      "width": 1235,
       "height": 113
     },
     "frame": {
       "x": 460,
-      "y": 617,
-      "width": 377,
-      "height": 96
+      "y": 627,
+      "width": 355,
+      "height": 84
     },
     "combat_log": {
       "rect": {
@@ -726,120 +726,120 @@
       "slots": {
         "slot_01": {
           "rect": {
-            "x": 471,
-            "y": 655,
+            "x": 473,
+            "y": 653,
             "width": 31,
             "height": 31
           },
           "icon": {
-            "x": 473,
-            "y": 658,
+            "x": 475,
+            "y": 656,
             "width": 26,
             "height": 26
           },
           "hitbox": {
-            "x": 471,
-            "y": 655,
+            "x": 473,
+            "y": 653,
             "width": 31,
             "height": 31
           }
         },
         "slot_02": {
           "rect": {
-            "x": 517,
-            "y": 655,
+            "x": 520,
+            "y": 653,
             "width": 31,
             "height": 31
           },
           "icon": {
-            "x": 519,
-            "y": 658,
+            "x": 522,
+            "y": 656,
             "width": 26,
             "height": 26
           },
           "hitbox": {
-            "x": 517,
-            "y": 655,
+            "x": 520,
+            "y": 653,
             "width": 31,
             "height": 31
           }
         },
         "slot_03": {
           "rect": {
-            "x": 562,
-            "y": 655,
+            "x": 567,
+            "y": 653,
             "width": 31,
             "height": 31
           },
           "icon": {
-            "x": 564,
-            "y": 658,
+            "x": 569,
+            "y": 656,
             "width": 26,
             "height": 26
           },
           "hitbox": {
-            "x": 562,
-            "y": 655,
+            "x": 567,
+            "y": 653,
             "width": 31,
             "height": 31
           }
         },
         "slot_04": {
           "rect": {
-            "x": 606,
-            "y": 655,
+            "x": 613,
+            "y": 653,
             "width": 31,
             "height": 31
           },
           "icon": {
-            "x": 608,
-            "y": 658,
+            "x": 615,
+            "y": 656,
             "width": 26,
             "height": 26
           },
           "hitbox": {
-            "x": 606,
-            "y": 655,
+            "x": 613,
+            "y": 653,
             "width": 31,
             "height": 31
           }
         },
         "slot_05": {
           "rect": {
-            "x": 652,
-            "y": 655,
+            "x": 658,
+            "y": 653,
             "width": 31,
             "height": 31
           },
           "icon": {
-            "x": 654,
-            "y": 658,
+            "x": 660,
+            "y": 656,
             "width": 26,
             "height": 26
           },
           "hitbox": {
-            "x": 652,
-            "y": 655,
+            "x": 658,
+            "y": 653,
             "width": 31,
             "height": 31
           }
         },
         "slot_06": {
           "rect": {
-            "x": 698,
-            "y": 655,
+            "x": 704,
+            "y": 653,
             "width": 31,
             "height": 31
           },
           "icon": {
-            "x": 700,
-            "y": 658,
+            "x": 706,
+            "y": 656,
             "width": 26,
             "height": 26
           },
           "hitbox": {
-            "x": 698,
-            "y": 655,
+            "x": 704,
+            "y": 653,
             "width": 31,
             "height": 31
           }
@@ -848,28 +848,28 @@
     },
     "ability": {
       "rect": {
-        "x": 765,
-        "y": 653,
-        "width": 30,
-        "height": 31
+        "x": 762,
+        "y": 650,
+        "width": 36,
+        "height": 36
       },
       "icon": {
-        "x": 765,
-        "y": 653,
-        "width": 30,
-        "height": 30
+        "x": 763,
+        "y": 647,
+        "width": 37,
+        "height": 37
       },
       "hitbox": {
-        "x": 765,
-        "y": 653,
-        "width": 30,
-        "height": 31
+        "x": 763,
+        "y": 648,
+        "width": 37,
+        "height": 35
       },
       "charges": {
         "charge_01": {
           "rect": {
             "x": 768,
-            "y": 681,
+            "y": 683,
             "width": 5,
             "height": 3
           },
@@ -887,7 +887,7 @@
         "charge_02": {
           "rect": {
             "x": 775,
-            "y": 681,
+            "y": 683,
             "width": 4,
             "height": 3
           },
@@ -905,7 +905,7 @@
         "charge_03": {
           "rect": {
             "x": 781,
-            "y": 681,
+            "y": 683,
             "width": 5,
             "height": 3
           },
@@ -923,7 +923,7 @@
         "charge_04": {
           "rect": {
             "x": 788,
-            "y": 681,
+            "y": 683,
             "width": 4,
             "height": 3
           },
@@ -942,29 +942,29 @@
     },
     "gold": {
       "rect": {
-        "x": 1193,
-        "y": 631,
-        "width": 76,
-        "height": 76
+        "x": 1209,
+        "y": 636,
+        "width": 53,
+        "height": 65
       },
       "icon": {
-        "x": 1193,
-        "y": 631,
-        "width": 76,
-        "height": 76
+        "x": 1209,
+        "y": 636,
+        "width": 53,
+        "height": 65
       },
       "value": {
         "rect": {
-          "x": 1227,
-          "y": 670,
-          "width": 11,
-          "height": 18
+          "x": 1233,
+          "y": 675,
+          "width": 8,
+          "height": 17
         },
         "text": "1",
         "font": {
           "family": "Alagard",
           "style": "Medium",
-          "size": 20
+          "size": 16
         },
         "line_height": {
           "unit": "AUTO"
@@ -988,34 +988,34 @@
   "info": {
     "rect": {
       "x": 649,
-      "y": 549,
-      "width": 261,
-      "height": 104
+      "y": 553,
+      "width": 254,
+      "height": 97
     },
     "frame": {
       "x": 649,
-      "y": 549,
-      "width": 261,
-      "height": 104
+      "y": 553,
+      "width": 254,
+      "height": 97
     },
     "icon": {
-      "x": 671,
-      "y": 582,
-      "width": 36,
-      "height": 36
+      "x": 667,
+      "y": 573,
+      "width": 49,
+      "height": 49
     },
     "name_backing": {
       "rect": {
-        "x": 735,
-        "y": 562,
-        "width": 116,
-        "height": 13
+        "x": 760,
+        "y": 574,
+        "width": 104,
+        "height": 7
       },
       "fill": {
         "r": 0,
         "g": 0,
         "b": 0,
-        "a": 207
+        "a": 0
       },
       "stroke": null,
       "stroke_weight": 1,
@@ -1024,9 +1024,9 @@
     },
     "name": {
       "rect": {
-        "x": 735,
-        "y": 562,
-        "width": 116,
+        "x": 738,
+        "y": 567,
+        "width": 147,
         "height": 14
       },
       "text": "Invisibility",
@@ -1072,16 +1072,16 @@
     },
     "description": {
       "rect": {
-        "x": 734,
-        "y": 568,
-        "width": 143,
-        "height": 67
+        "x": 740,
+        "y": 591,
+        "width": 149,
+        "height": 40
       },
       "text": "Vanish. Your next attack is a sure critical.",
       "font": {
         "family": "Alagard",
         "style": "Medium",
-        "size": 14
+        "size": 12
       },
       "line_height": {
         "unit": "AUTO"
@@ -1103,10 +1103,10 @@
   },
   "right_bar": {
     "rect": {
-      "x": 998,
-      "y": 160,
-      "width": 282,
-      "height": 399
+      "x": 1001,
+      "y": 117,
+      "width": 279,
+      "height": 450
     },
     "tabs": {
       "rect": {
@@ -1116,31 +1116,31 @@
         "height": 174
       },
       "frame": {
-        "x": 1210,
-        "y": 245,
-        "width": 70,
-        "height": 190
+        "x": 1214,
+        "y": 249,
+        "width": 62,
+        "height": 194
       },
       "level_up_indicator": {
         "x": 1214,
-        "y": 261,
-        "width": 64,
-        "height": 64
+        "y": 262,
+        "width": 61,
+        "height": 61
       },
       "buttons": {
         "stats": {
           "rect": {
             "x": 1227,
-            "y": 276,
+            "y": 274,
             "width": 36,
-            "height": 33
+            "height": 38
           },
           "highlight": {
             "rect": {
               "x": 1227,
-              "y": 276,
+              "y": 273,
               "width": 36,
-              "height": 34
+              "height": 38
             },
             "fill": {
               "r": 145,
@@ -1155,24 +1155,24 @@
           },
           "hitbox": {
             "x": 1227,
-            "y": 276,
+            "y": 273,
             "width": 36,
-            "height": 33
+            "height": 38
           }
         },
         "journal": {
           "rect": {
             "x": 1227,
-            "y": 320,
+            "y": 325,
             "width": 36,
-            "height": 34
+            "height": 36
           },
           "highlight": {
             "rect": {
               "x": 1227,
-              "y": 320,
+              "y": 325,
               "width": 36,
-              "height": 34
+              "height": 37
             },
             "fill": {
               "r": 145,
@@ -1187,24 +1187,24 @@
           },
           "hitbox": {
             "x": 1227,
-            "y": 320,
+            "y": 325,
             "width": 36,
-            "height": 33
+            "height": 37
           }
         },
         "settings": {
           "rect": {
-            "x": 1227,
-            "y": 364,
+            "x": 1226,
+            "y": 377,
             "width": 36,
-            "height": 34
+            "height": 38
           },
           "highlight": {
             "rect": {
-              "x": 1227,
-              "y": 364,
+              "x": 1226,
+              "y": 377,
               "width": 36,
-              "height": 34
+              "height": 37
             },
             "fill": {
               "r": 145,
@@ -1218,31 +1218,31 @@
             "blur_radius": 0
           },
           "hitbox": {
-            "x": 1227,
-            "y": 364,
+            "x": 1226,
+            "y": 377,
             "width": 36,
-            "height": 33
+            "height": 37
           }
         }
       }
     },
     "stats_panel": {
       "rect": {
-        "x": 998,
-        "y": 160,
-        "width": 224,
-        "height": 399
+        "x": 1001,
+        "y": 117,
+        "width": 211,
+        "height": 450
       },
       "frame": {
-        "x": 998,
-        "y": 160,
-        "width": 224,
-        "height": 399
+        "x": 1001,
+        "y": 117,
+        "width": 211,
+        "height": 450
       },
       "class_name": {
         "rect": {
-          "x": 1066,
-          "y": 205,
+          "x": 1062,
+          "y": 171,
           "width": 89,
           "height": 26
         },
@@ -1271,23 +1271,23 @@
       },
       "attributes": {
         "rect": {
-          "x": 1036,
-          "y": 245,
+          "x": 1031,
+          "y": 210,
           "width": 159,
           "height": 78
         },
         "rows": {
           "strength": {
             "rect": {
-              "x": 1036,
-              "y": 245,
+              "x": 1031,
+              "y": 210,
               "width": 58,
               "height": 14
             },
             "label": {
               "rect": {
-                "x": 1036,
-                "y": 245,
+                "x": 1040,
+                "y": 210,
                 "width": 58,
                 "height": 14
               },
@@ -1316,8 +1316,8 @@
             },
             "value": {
               "rect": {
-                "x": 1154,
-                "y": 245,
+                "x": 1149,
+                "y": 210,
                 "width": 13,
                 "height": 15
               },
@@ -1346,8 +1346,8 @@
             },
             "minus": {
               "rect": {
-                "x": 1136,
-                "y": 247,
+                "x": 1131,
+                "y": 212,
                 "width": 7,
                 "height": 9
               },
@@ -1375,15 +1375,15 @@
               }
             },
             "minus_hitbox": {
-              "x": 1133,
-              "y": 247,
+              "x": 1128,
+              "y": 212,
               "width": 11,
               "height": 12
             },
             "plus": {
               "rect": {
-                "x": 1175,
-                "y": 245,
+                "x": 1170,
+                "y": 210,
                 "width": 11,
                 "height": 15
               },
@@ -1411,23 +1411,23 @@
               }
             },
             "plus_hitbox": {
-              "x": 1174,
-              "y": 247,
+              "x": 1169,
+              "y": 212,
               "width": 11,
               "height": 12
             }
           },
           "dexterity": {
             "rect": {
-              "x": 1036,
-              "y": 267,
+              "x": 1031,
+              "y": 232,
               "width": 62,
               "height": 14
             },
             "label": {
               "rect": {
-                "x": 1036,
-                "y": 267,
+                "x": 1040,
+                "y": 232,
                 "width": 62,
                 "height": 14
               },
@@ -1456,8 +1456,8 @@
             },
             "value": {
               "rect": {
-                "x": 1154,
-                "y": 267,
+                "x": 1149,
+                "y": 232,
                 "width": 13,
                 "height": 15
               },
@@ -1486,8 +1486,8 @@
             },
             "minus": {
               "rect": {
-                "x": 1136,
-                "y": 269,
+                "x": 1131,
+                "y": 234,
                 "width": 7,
                 "height": 9
               },
@@ -1515,15 +1515,15 @@
               }
             },
             "minus_hitbox": {
-              "x": 1133,
-              "y": 269,
+              "x": 1128,
+              "y": 234,
               "width": 11,
               "height": 12
             },
             "plus": {
               "rect": {
-                "x": 1175,
-                "y": 267,
+                "x": 1170,
+                "y": 232,
                 "width": 11,
                 "height": 15
               },
@@ -1551,23 +1551,23 @@
               }
             },
             "plus_hitbox": {
-              "x": 1174,
-              "y": 269,
+              "x": 1169,
+              "y": 234,
               "width": 11,
               "height": 12
             }
           },
           "intelligence": {
             "rect": {
-              "x": 1036,
-              "y": 288,
+              "x": 1031,
+              "y": 253,
               "width": 77,
               "height": 14
             },
             "label": {
               "rect": {
-                "x": 1036,
-                "y": 288,
+                "x": 1040,
+                "y": 253,
                 "width": 77,
                 "height": 14
               },
@@ -1596,8 +1596,8 @@
             },
             "value": {
               "rect": {
-                "x": 1154,
-                "y": 288,
+                "x": 1149,
+                "y": 253,
                 "width": 13,
                 "height": 15
               },
@@ -1626,8 +1626,8 @@
             },
             "minus": {
               "rect": {
-                "x": 1136,
-                "y": 290,
+                "x": 1131,
+                "y": 255,
                 "width": 7,
                 "height": 9
               },
@@ -1655,15 +1655,15 @@
               }
             },
             "minus_hitbox": {
-              "x": 1133,
-              "y": 290,
+              "x": 1128,
+              "y": 255,
               "width": 11,
               "height": 12
             },
             "plus": {
               "rect": {
-                "x": 1175,
-                "y": 288,
+                "x": 1170,
+                "y": 253,
                 "width": 11,
                 "height": 15
               },
@@ -1691,23 +1691,23 @@
               }
             },
             "plus_hitbox": {
-              "x": 1174,
-              "y": 290,
+              "x": 1169,
+              "y": 255,
               "width": 11,
               "height": 12
             }
           },
           "vitality": {
             "rect": {
-              "x": 1036,
-              "y": 309,
+              "x": 1031,
+              "y": 274,
               "width": 47,
               "height": 14
             },
             "label": {
               "rect": {
-                "x": 1036,
-                "y": 309,
+                "x": 1040,
+                "y": 274,
                 "width": 47,
                 "height": 14
               },
@@ -1736,8 +1736,8 @@
             },
             "value": {
               "rect": {
-                "x": 1154,
-                "y": 309,
+                "x": 1149,
+                "y": 274,
                 "width": 13,
                 "height": 15
               },
@@ -1766,8 +1766,8 @@
             },
             "minus": {
               "rect": {
-                "x": 1136,
-                "y": 311,
+                "x": 1131,
+                "y": 276,
                 "width": 7,
                 "height": 9
               },
@@ -1795,15 +1795,15 @@
               }
             },
             "minus_hitbox": {
-              "x": 1133,
-              "y": 311,
+              "x": 1128,
+              "y": 276,
               "width": 11,
               "height": 12
             },
             "plus": {
               "rect": {
-                "x": 1175,
-                "y": 309,
+                "x": 1170,
+                "y": 274,
                 "width": 11,
                 "height": 15
               },
@@ -1831,8 +1831,8 @@
               }
             },
             "plus_hitbox": {
-              "x": 1174,
-              "y": 311,
+              "x": 1169,
+              "y": 276,
               "width": 11,
               "height": 12
             }
@@ -1841,35 +1841,35 @@
       },
       "confirm": {
         "rect": {
-          "x": 1049,
-          "y": 338,
-          "width": 123,
-          "height": 30
+          "x": 1061,
+          "y": 297,
+          "width": 98,
+          "height": 26
         },
         "button": {
-          "x": 1048,
-          "y": 338,
-          "width": 123,
-          "height": 30
+          "x": 1061,
+          "y": 297,
+          "width": 98,
+          "height": 26
         },
         "hitbox": {
-          "x": 1048,
-          "y": 338,
-          "width": 123,
-          "height": 30
+          "x": 1061,
+          "y": 297,
+          "width": 98,
+          "height": 26
         }
       },
       "combat_stats": {
         "rect": {
-          "x": 1035,
-          "y": 381,
+          "x": 1032,
+          "y": 377,
           "width": 155,
           "height": 96
         },
         "heading": {
           "rect": {
-            "x": 1074,
-            "y": 381,
+            "x": 1068,
+            "y": 370,
             "width": 83,
             "height": 14
           },
@@ -1899,15 +1899,15 @@
         "rows": {
           "damage": {
             "rect": {
-              "x": 1035,
-              "y": 403,
+              "x": 1040,
+              "y": 399,
               "width": 49,
               "height": 14
             },
             "label": {
               "rect": {
-                "x": 1035,
-                "y": 403,
+                "x": 1040,
+                "y": 399,
                 "width": 49,
                 "height": 14
               },
@@ -1936,8 +1936,8 @@
             },
             "value": {
               "rect": {
-                "x": 1141,
-                "y": 404,
+                "x": 1146,
+                "y": 400,
                 "width": 27,
                 "height": 14
               },
@@ -1967,15 +1967,15 @@
           },
           "critical": {
             "rect": {
-              "x": 1035,
-              "y": 424,
+              "x": 1040,
+              "y": 420,
               "width": 44,
               "height": 13
             },
             "label": {
               "rect": {
-                "x": 1035,
-                "y": 424,
+                "x": 1040,
+                "y": 420,
                 "width": 44,
                 "height": 13
               },
@@ -2004,8 +2004,8 @@
             },
             "value": {
               "rect": {
-                "x": 1124,
-                "y": 422,
+                "x": 1129,
+                "y": 418,
                 "width": 66,
                 "height": 14
               },
@@ -2035,15 +2035,15 @@
           },
           "dodge": {
             "rect": {
-              "x": 1035,
-              "y": 442,
+              "x": 1040,
+              "y": 438,
               "width": 36,
               "height": 13
             },
             "label": {
               "rect": {
-                "x": 1035,
-                "y": 442,
+                "x": 1040,
+                "y": 438,
                 "width": 36,
                 "height": 13
               },
@@ -2072,8 +2072,8 @@
             },
             "value": {
               "rect": {
-                "x": 1142,
-                "y": 442,
+                "x": 1147,
+                "y": 438,
                 "width": 26,
                 "height": 14
               },
@@ -2103,15 +2103,15 @@
           },
           "magical_power": {
             "rect": {
-              "x": 1035,
-              "y": 463,
+              "x": 1040,
+              "y": 459,
               "width": 93,
               "height": 14
             },
             "label": {
               "rect": {
-                "x": 1035,
-                "y": 463,
+                "x": 1040,
+                "y": 459,
                 "width": 93,
                 "height": 14
               },
@@ -2140,8 +2140,8 @@
             },
             "value": {
               "rect": {
-                "x": 1149,
-                "y": 463,
+                "x": 1154,
+                "y": 459,
                 "width": 11,
                 "height": 14
               },

@@ -1,5 +1,6 @@
 {
   "screen": "menu",
+  "schema_version": 2,
   "act": 1,
   "frame": {
     "name": "Menu_Act1_Main",
@@ -14,81 +15,64 @@
       "height": 720
     },
     "menu_frame": {
-      "x": 422,
-      "y": 104,
-      "width": 429,
-      "height": 437
+      "x": 440,
+      "y": 160,
+      "width": 400,
+      "height": 400
     },
     "title": {
-      "x": 407,
-      "y": 571,
-      "width": 466,
-      "height": 104
+      "kind": "text",
+      "rect": {
+        "x": 439,
+        "y": 522,
+        "width": 401,
+        "height": 103
+      },
+      "text": "Crypta",
+      "font": {
+        "family": "Alagard",
+        "style": "Medium",
+        "size": 96
+      },
+      "line_height": {
+        "unit": "AUTO"
+      },
+      "letter_spacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "horizontal_align": "CENTER",
+      "vertical_align": "CENTER",
+      "text_case": "ORIGINAL",
+      "color": {
+        "r": 65,
+        "g": 70,
+        "b": 80,
+        "a": 255
+      }
     }
   },
   "shades": {
-    "title": {
-      "x": 433,
-      "y": 571,
-      "width": 413,
-      "height": 107
-    },
-    "menu_bar": {
-      "x": 581,
-      "y": 290,
-      "width": 118,
-      "height": 127
-    },
+    "title": null,
     "theme_selector": {
-      "x": 1210,
-      "y": 284,
-      "width": 50,
-      "height": 126
-    }
-  },
-  "entries": {
-    "resume": {
       "rect": {
-        "x": 595,
-        "y": 299,
-        "width": 90,
-        "height": 25
+        "x": 1210,
+        "y": 284,
+        "width": 50,
+        "height": 126
       },
-      "label": {
-        "x": 595,
-        "y": 299,
-        "width": 90,
-        "height": 25
-      }
+      "fill": {
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "a": 156
+      },
+      "stroke": null,
+      "stroke_weight": 1,
+      "corner_radius": 0,
+      "blur_radius": 26.3
     },
-    "settings": {
-      "rect": {
-        "x": 595,
-        "y": 341,
-        "width": 90,
-        "height": 25
-      },
-      "label": {
-        "x": 595,
-        "y": 341,
-        "width": 90,
-        "height": 25
-      }
-    },
-    "quit": {
-      "rect": {
-        "x": 609,
-        "y": 383,
-        "width": 62,
-        "height": 25
-      },
-      "label": {
-        "x": 609,
-        "y": 383,
-        "width": 62,
-        "height": 25
-      }
-    }
+    "content": null
   },
   "themes": {
     "1": {
@@ -99,16 +83,52 @@
         "height": 39
       },
       "frame": {
-        "x": 1216,
-        "y": 284,
-        "width": 39,
-        "height": 39
+        "rect": {
+          "x": 1216,
+          "y": 284,
+          "width": 39,
+          "height": 39
+        },
+        "fill": {
+          "r": 217,
+          "g": 217,
+          "b": 217,
+          "a": 33
+        },
+        "stroke": null,
+        "stroke_weight": 1,
+        "corner_radius": 13,
+        "blur_radius": 0
       },
       "label": {
-        "x": 1232,
-        "y": 294,
-        "width": 8,
-        "height": 20
+        "rect": {
+          "x": 1231,
+          "y": 292,
+          "width": 8,
+          "height": 20
+        },
+        "text": "l",
+        "font": {
+          "family": "Pixelify Sans",
+          "style": "Medium",
+          "size": 24
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 167,
+          "g": 167,
+          "b": 167,
+          "a": 255
+        }
       }
     },
     "2": {
@@ -119,16 +139,52 @@
         "height": 39
       },
       "frame": {
-        "x": 1216,
-        "y": 327,
-        "width": 39,
-        "height": 39
+        "rect": {
+          "x": 1216,
+          "y": 327,
+          "width": 39,
+          "height": 39
+        },
+        "fill": {
+          "r": 217,
+          "g": 217,
+          "b": 217,
+          "a": 33
+        },
+        "stroke": null,
+        "stroke_weight": 1,
+        "corner_radius": 13,
+        "blur_radius": 0
       },
       "label": {
-        "x": 1228,
-        "y": 337,
-        "width": 16,
-        "height": 20
+        "rect": {
+          "x": 1227,
+          "y": 335,
+          "width": 16,
+          "height": 20
+        },
+        "text": "ll",
+        "font": {
+          "family": "Pixelify Sans",
+          "style": "Medium",
+          "size": 24
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 167,
+          "g": 167,
+          "b": 167,
+          "a": 255
+        }
       }
     },
     "3": {
@@ -139,16 +195,168 @@
         "height": 39
       },
       "frame": {
-        "x": 1216,
-        "y": 370,
-        "width": 39,
-        "height": 39
+        "rect": {
+          "x": 1216,
+          "y": 370,
+          "width": 39,
+          "height": 39
+        },
+        "fill": {
+          "r": 217,
+          "g": 217,
+          "b": 217,
+          "a": 33
+        },
+        "stroke": null,
+        "stroke_weight": 1,
+        "corner_radius": 13,
+        "blur_radius": 0
       },
       "label": {
-        "x": 1224,
-        "y": 380,
-        "width": 25,
-        "height": 20
+        "rect": {
+          "x": 1223,
+          "y": 378,
+          "width": 25,
+          "height": 20
+        },
+        "text": "lll",
+        "font": {
+          "family": "Pixelify Sans",
+          "style": "Medium",
+          "size": 24
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 167,
+          "g": 167,
+          "b": 167,
+          "a": 255
+        }
+      }
+    }
+  },
+  "entries": {
+    "resume": {
+      "rect": {
+        "x": 581,
+        "y": 313,
+        "width": 118,
+        "height": 25
+      },
+      "label": {
+        "rect": {
+          "x": 581,
+          "y": 313,
+          "width": 118,
+          "height": 25
+        },
+        "text": "Descend",
+        "font": {
+          "family": "IsWasted",
+          "style": "Medium",
+          "size": 20
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 167,
+          "g": 167,
+          "b": 167,
+          "a": 255
+        }
+      }
+    },
+    "settings": {
+      "rect": {
+        "x": 581,
+        "y": 352,
+        "width": 118,
+        "height": 25
+      },
+      "label": {
+        "rect": {
+          "x": 581,
+          "y": 352,
+          "width": 118,
+          "height": 25
+        },
+        "text": "Settings",
+        "font": {
+          "family": "IsWasted",
+          "style": "Medium",
+          "size": 20
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 167,
+          "g": 167,
+          "b": 167,
+          "a": 255
+        }
+      }
+    },
+    "quit": {
+      "rect": {
+        "x": 581,
+        "y": 391,
+        "width": 118,
+        "height": 25
+      },
+      "label": {
+        "rect": {
+          "x": 581,
+          "y": 391,
+          "width": 118,
+          "height": 25
+        },
+        "text": "Leave",
+        "font": {
+          "family": "IsWasted",
+          "style": "Medium",
+          "size": 20
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 167,
+          "g": 167,
+          "b": 167,
+          "a": 255
+        }
       }
     }
   }

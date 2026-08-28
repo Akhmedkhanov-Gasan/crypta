@@ -30,15 +30,6 @@ _ACT_TWO_CONSUMABLE_SPRITES = {
     "scroll_of_arcane_impulse": "scroll_of_arcane_impulse",
     "guild_seal": "guild_seal",
 }
-_ACT_TWO_CONFIRM_BUTTON_RECT = pygame.Rect(
-    1049,
-    326,
-    121,
-    40,
-)
-_ACT_TWO_CONFIRM_BUTTON_HIT_RECT = (
-    _ACT_TWO_CONFIRM_BUTTON_RECT.inflate(-24, -12)
-)
 _ACT_TWO_ABILITY_ASSETS = {
     "warrior": "warrior_power_cleave_icon",
     "rogue": "rogue_invisibility_icon",
@@ -1010,8 +1001,24 @@ def draw_act_two_sidebar(
     pending_points = sum(pending_attribute_upgrades.values())
 
     if pending_points > 0:
-        confirm_rectangle = _ACT_TWO_CONFIRM_BUTTON_RECT
-        confirm_button = sprites["act_two_confirm_button"]
+        confirm_layout = stats_panel_layout["confirm"]
+
+        confirm_rectangle = figma_rect(
+            confirm_layout["button"]
+        )
+        confirm_hitbox = figma_rect(
+            confirm_layout["hitbox"]
+        )
+
+        confirm_button = sprites[
+            "act_two_confirm_button"
+        ]
+
+        if confirm_button.get_size() != confirm_rectangle.size:
+            confirm_button = pygame.transform.smoothscale(
+                confirm_button,
+                confirm_rectangle.size,
+            )
 
         screen.blit(
             confirm_button,
@@ -1020,9 +1027,9 @@ def draw_act_two_sidebar(
 
         confirm_hovered = (
                 mouse_position is not None
-                and _ACT_TWO_CONFIRM_BUTTON_HIT_RECT.collidepoint(
-                mouse_position
-            )
+                and confirm_hitbox.collidepoint(
+            mouse_position
+        )
         )
 
         if confirm_hovered:
@@ -1082,5 +1089,10 @@ def get_act_two_attribute_minus_rectangles(hud_layout):
     }
 
 
-def get_act_two_confirm_button_rectangle():
-    return _ACT_TWO_CONFIRM_BUTTON_HIT_RECT.copy()
+def get_act_two_confirm_button_rectangle(hud_layout):
+    return figma_rect(
+        hud_layout["right_bar"]
+        ["stats_panel"]
+        ["confirm"]
+        ["hitbox"]
+    )
