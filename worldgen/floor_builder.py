@@ -910,6 +910,36 @@ def generate_floor(
     if trader_position is not None:
         occupied_positions.add(trader_position)
 
+    quest_trader_position = None
+
+    if config.get("quest_trader", False):
+        quest_trader_rooms = rooms[1:-1] or rooms[1:]
+
+        quest_trader_candidates = [
+            position
+            for room in quest_trader_rooms
+            for position in positions_inside_room(room)
+            if (
+                    dungeon_map[position[1]][position[0]] == "."
+                    and position not in special_room_reserved_positions
+                    and position not in occupied_positions
+            )
+        ]
+
+        quest_trader_position = choose_free_position(
+            quest_trader_candidates,
+            occupied_positions,
+        )
+
+        if quest_trader_position is not None:
+            occupied_positions.add(quest_trader_position)
+            _set_map_tile(
+                dungeon_map,
+                quest_trader_position[0],
+                quest_trader_position[1],
+                "M",
+            )
+
     bloody_altar_position = None
     if config.get("bloody_altar_near_trader", False):
         if trader_position is not None:
@@ -979,6 +1009,48 @@ def generate_floor(
             bloody_altar_position[1],
             "A",
         )
+
+    debug_guild_seal_position = None
+
+    if (
+            config.get("debug_guild_seal_near_trader", False)
+            and trader_position is not None
+    ):
+        trader_column, trader_row = trader_position
+
+        seal_candidates = [
+            (
+                trader_column + column_change,
+                trader_row + row_change,
+            )
+            for column_change, row_change in (
+                (-1, 0),
+                (1, 0),
+                (0, -1),
+                (0, 1),
+            )
+            if (
+                    dungeon_map[trader_row + row_change][
+                        trader_column + column_change
+                        ]
+                    == "."
+                    and (
+                        trader_column + column_change,
+                        trader_row + row_change,
+                    )
+                    not in occupied_positions
+            )
+        ]
+
+        debug_guild_seal_position = choose_free_position(
+            seal_candidates,
+            occupied_positions,
+        )
+
+        if debug_guild_seal_position is not None:
+            occupied_positions.add(
+                debug_guild_seal_position
+            )
 
     all_floor_positions = [
         (column, row)
@@ -1187,6 +1259,12 @@ def generate_floor(
         *(crate["position"] for crate in breakable_crates),
         *special_room_reserved_positions,
     }
+
+    if debug_guild_seal_position is not None:
+        protected_positions.add(
+            debug_guild_seal_position
+        )
+
     spike_traps = _place_spike_traps(
         dungeon_map,
         config.get("spike_trap_count", 0),
@@ -1213,6 +1291,23 @@ def generate_floor(
         "trader": (
             {"position": trader_position}
             if trader_position is not None
+            else None
+        ),
+        "quest_trader": (
+            {"position": quest_trader_position}
+            if quest_trader_position is not None
+            else None
+        ),
+        "act_one_revisit": (
+            {
+                "dead_boss_position": None,
+                "guild_seal_position": (
+                    debug_guild_seal_position
+                ),
+                "trader_corpse_positions": [],
+                "enemy_corpses": [],
+            }
+            if debug_guild_seal_position is not None
             else None
         ),
         "rooms": rooms,

@@ -284,6 +284,7 @@ class FloorState(AttributeMapping):
     upgrade_altar: tuple[int, int] | None = None
     bloody_altar: BloodyAltarState | None = None
     trader: TraderState | None = None
+    quest_trader: TraderState | None = None
     breakable_crates: list[BreakableCrateState] = field(
         default_factory=list
     )
@@ -410,6 +411,7 @@ class GameState:
     act_two_quests: ActTwoQuestState = field(
         default_factory=ActTwoQuestState,
     )
+    act_two_trader_floor_index: int | None = None
     act_one_revisit_prepared: bool = False
     game_won: bool = False
     upgrade_screen_open: bool = False
@@ -424,9 +426,6 @@ class GameState:
     act_two_journal_dragging: bool = False
     act_two_journal_drag_offset: int = 0
     trade_screen_open: bool = False
-    trader_dialogue_text: str = ""
-    trader_dialogue_started_at: int = -1
-    trader_dialogue_dismiss_started_at: int = -1
     rune_selection_open: bool = False
     rune_selection_pending_id: str | None = None
     bloody_altar_open: bool = False

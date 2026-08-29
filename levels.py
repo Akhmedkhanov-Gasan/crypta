@@ -38,6 +38,7 @@ FLOOR_CONFIGS = [
         "rune_room": True,
         "trader": True,
         "bloody_altar_near_trader": True,
+        "debug_guild_seal_near_trader": True,
         "spike_trap_count": 5,
         "breakable_crate_count": 7,
         "enemy_counts": {

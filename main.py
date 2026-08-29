@@ -138,9 +138,6 @@ from acts.act_two.navigation import find_act_two_path
 from acts.act_two.presentation.items import (
     draw_act_one_revisit_corpses,
 )
-from acts.act_two.presentation.trader_dialogue import (
-    draw_trader_dialogue,
-)
 from game.progression import apply_attribute_upgrade
 from acts.player_stats import (
     apply_attribute_rank_transition,
@@ -350,7 +347,13 @@ def _complete_class_selection(game_state):
         game_state.floor_index
     )
     if next_floor is None:
-        next_floor = create_floor_state(game_state.floor_index)
+        next_floor = create_floor_state(
+            game_state.floor_index,
+            spawn_quest_trader=(
+                    game_state.floor_index
+                    == game_state.act_two_trader_floor_index
+            ),
+        )
         game_state.visited_floors[
             game_state.floor_index
         ] = next_floor
@@ -423,7 +426,13 @@ def _advance_floor_transition(game_state, current_time):
         target_floor = game_state.visited_floors.get(target_index)
 
         if target_floor is None:
-            target_floor = create_floor_state(target_index)
+            target_floor = create_floor_state(
+                target_index,
+                spawn_quest_trader=(
+                        target_index
+                        == game_state.act_two_trader_floor_index
+                ),
+            )
             game_state.visited_floors[target_index] = target_floor
 
         game_state.floor_index = target_index
@@ -2123,17 +2132,6 @@ def main():
                 player_tried_to_move = (
                     column_change != 0 or row_change != 0
                 )
-                if (
-                        player_tried_to_move
-                        and game_state.trader_dialogue_started_at >= 0
-                        and (
-                        game_state.trader_dialogue_dismiss_started_at
-                        < game_state.trader_dialogue_started_at
-                )
-                ):
-                    game_state.trader_dialogue_dismiss_started_at = (
-                        pygame.time.get_ticks()
-                    )
                 directional_ability_cast = (
                     game_state.player.player_class == "warrior"
                     and game_state.player.directional_ability_aiming
@@ -2277,14 +2275,20 @@ def main():
                     )
                 )
                 target_trader = (
-                    current_act == 2
-                    and player_tried_to_move
-                    and game_state.floor.trader is not None
+                        current_act == 2
+                        and player_tried_to_move
+                        and any(
+                    trader is not None
                     and (
-                        game_state.floor.trader.column,
-                        game_state.floor.trader.row,
+                        trader.column,
+                        trader.row,
                     )
                     == (new_column, new_row)
+                    for trader in (
+                        game_state.floor.trader,
+                        game_state.floor.quest_trader,
+                    )
+                )
                 )
                 target_bloody_altar = (
                     current_act == 2
@@ -2647,10 +2651,7 @@ def main():
                             game_state
                         )
                     elif target_trader:
-                        trader_sound = interact_with_trader(
-                            game_state,
-                            pygame.time.get_ticks(),
-                        )
+                        trader_sound = interact_with_trader(game_state)
 
                         if trader_sound is not None:
                             act_two_sounds.play_ui_sound(
@@ -3527,13 +3528,17 @@ def main():
                 game_state.floor.explored_cells,
                 current_time,
             )
-            draw_act_two_trader(
-                world_target,
-                game_state.floor.trader,
-                act_two_sprites,
-                game_state.floor.visible_cells,
-                current_time,
-            )
+            for trader in (
+                    game_state.floor.trader,
+                    game_state.floor.quest_trader,
+            ):
+                draw_act_two_trader(
+                    world_target,
+                    trader,
+                    act_two_sprites,
+                    game_state.floor.visible_cells,
+                    current_time,
+                )
             draw_bloody_altar_object(
                 world_target,
                 game_state.floor.bloody_altar,
@@ -4235,14 +4240,6 @@ def main():
                         pygame.mouse.get_pos(),
                     ),
                 )
-            draw_trader_dialogue(
-                game_surface,
-                game_state.trader_dialogue_text,
-                game_state.trader_dialogue_started_at,
-                game_state.trader_dialogue_dismiss_started_at,
-                current_time,
-                act_two_fonts,
-            )
             if game_state.bloody_altar_open:
                 draw_bloody_altar_window(
                     game_surface,

@@ -11,8 +11,7 @@ from game.combat_log import add_log_message
 
 
 def interact_with_trader(
-    game_state,
-    dialogue_started_at,
+    game_state
 ):
     quest = game_state.act_two_quests.trader_seal
 
@@ -40,9 +39,6 @@ def interact_with_trader(
             GUILD_SEAL,
         )
 
-        game_state.trader_dialogue_text = ""
-        game_state.trader_dialogue_started_at = -1
-        game_state.trader_dialogue_dismiss_started_at = -1
         game_state.trade_screen_open = True
 
         add_log_message(
@@ -78,11 +74,6 @@ def interact_with_trader(
             "of my group in the upper crypt."
         )
 
-    game_state.trader_dialogue_text = dialogue
-    game_state.trader_dialogue_started_at = (
-        dialogue_started_at
-    )
-    game_state.trader_dialogue_dismiss_started_at = -1
     add_log_message(
         game_state.combat_log,
         f"Trader: {dialogue}",

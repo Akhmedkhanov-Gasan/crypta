@@ -33,12 +33,19 @@ from game.state import (
 def create_floor_state(
     floor_index: int,
     floor_data=None,
+    spawn_quest_trader: bool = False,
 ) -> FloorState:
-    floor = (
-        floor_data
-        if floor_data is not None
-        else generate_floor(floor_index)
-    )
+    if floor_data is not None:
+        floor = floor_data
+    else:
+        floor_config = {
+            **FLOOR_CONFIGS[floor_index],
+            "quest_trader": spawn_quest_trader,
+        }
+        floor = generate_floor(
+            floor_index,
+            config_override=floor_config,
+        )
     player_column, player_row = floor["player_start"]
     enemies = []
     enemy_type_counts = {}
@@ -164,6 +171,17 @@ def create_floor_state(
         if trader_data is not None
         else None
     )
+
+    quest_trader_data = floor.get("quest_trader")
+    quest_trader = (
+        TraderState(
+            column=quest_trader_data["position"][0],
+            row=quest_trader_data["position"][1],
+        )
+        if quest_trader_data is not None
+        else None
+    )
+
     bloody_altar_data = floor.get("bloody_altar")
     bloody_altar = (
         BloodyAltarState(
@@ -269,6 +287,7 @@ def create_floor_state(
         upgrade_altar=floor.get("upgrade_altar"),
         bloody_altar=bloody_altar,
         trader=trader,
+        quest_trader=quest_trader,
         breakable_crates=breakable_crates,
         spike_traps=spike_traps,
         treasury_room=treasury_room,
@@ -328,11 +347,36 @@ def create_game_state(
     floor_index: int = 0,
     opening_message: str = "The descent begins.",
 ) -> GameState:
+    possible_trader_floors = [
+        index
+        for index, config in enumerate(FLOOR_CONFIGS)
+        if (
+            config["act"] == 2
+            and config["act_floor"] in (1, 2)
+        )
+    ]
+
+    act_two_trader_floor_index = (
+        random.choice(possible_trader_floors)
+        if possible_trader_floors
+        else None
+    )
+
+    initial_floor = create_floor_state(
+        floor_index,
+        spawn_quest_trader=(
+            floor_index == act_two_trader_floor_index
+        ),
+    )
+
     game_state = GameState(
         floor_index=floor_index,
-        floor=create_floor_state(floor_index),
+        floor=initial_floor,
         player=create_player_state(),
         combat_log=[opening_message],
+        act_two_trader_floor_index=(
+            act_two_trader_floor_index
+        ),
     )
     game_state.visited_floors[floor_index] = game_state.floor
     if FLOOR_CONFIGS[floor_index]["act"] == 2:
