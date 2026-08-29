@@ -7,6 +7,10 @@ from settings import TILE_SIZE
 from acts.act_two.presentation.enemies.timing import (
     attack_telegraph_is_visible,
 )
+from acts.act_two.presentation.enemies.telegraph_styles import (
+    draw_attack_lane,
+    draw_attack_tile_base,
+)
 
 def _draw_standard_attack_tile(screen, column, row, current_time):
     left = MAP_OFFSET_X + column * TILE_SIZE
@@ -140,92 +144,19 @@ def _draw_attack_foreground(
     current_time,
     is_player_cell,
     enemy_type,
+    attack_mode,
+    lane,
 ):
-    left = MAP_OFFSET_X + column * TILE_SIZE
-    top = MAP_OFFSET_Y + row * TILE_SIZE
-    phase = (column * 0.73) + (row * 0.41)
-    pulse = (math.sin(current_time / 105 + phase) + 1) / 2
-    marker = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
-    if enemy_type == "brute":
-        inset = 1 + round(pulse)
-        arm = 11
-        color = (255, 47, 42, round(220 + pulse * 35))
-        shadow_width = 5
-        line_width = 3
-    elif enemy_type == "archer":
-        inset = max(7, TILE_SIZE // 5) + round(pulse)
-        arm = 5
-        color = (255, 142, 61, round(195 + pulse * 60))
-        shadow_width = 3
-        line_width = 1
-    else:
-        inset = 2 + round(pulse)
-        arm = 8
-        color = (255, 76, 60, round(205 + pulse * 50))
-        shadow_width = 4
-        line_width = 2
-    shadow = (38, 3, 7, 225)
-
-    corner_segments = (
-        ((inset, inset + arm), (inset, inset), (inset + arm, inset)),
-        (
-            (TILE_SIZE - inset - arm, inset),
-            (TILE_SIZE - inset, inset),
-            (TILE_SIZE - inset, inset + arm),
-        ),
-        (
-            (inset, TILE_SIZE - inset - arm),
-            (inset, TILE_SIZE - inset),
-            (inset + arm, TILE_SIZE - inset),
-        ),
-        (
-            (TILE_SIZE - inset - arm, TILE_SIZE - inset),
-            (TILE_SIZE - inset, TILE_SIZE - inset),
-            (TILE_SIZE - inset, TILE_SIZE - inset - arm),
-        ),
+    draw_attack_lane(
+        screen,
+        column,
+        row,
+        current_time,
+        lane,
+        enemy_type,
+        attack_mode,
+        is_player_cell,
     )
-    for points in corner_segments:
-        pygame.draw.lines(
-            marker,
-            shadow,
-            False,
-            points,
-            shadow_width,
-        )
-        pygame.draw.lines(
-            marker,
-            color,
-            False,
-            points,
-            line_width,
-        )
-
-    if is_player_cell:
-        badge_center_x = TILE_SIZE // 2
-        badge_top = 1
-        badge_points = (
-            (badge_center_x, badge_top),
-            (badge_center_x + 6, badge_top + 6),
-            (badge_center_x, badge_top + 12),
-            (badge_center_x - 6, badge_top + 6),
-        )
-        pygame.draw.polygon(marker, (34, 3, 7, 240), badge_points)
-        pygame.draw.polygon(marker, color, badge_points, width=2)
-        pygame.draw.line(
-            marker,
-            (255, 226, 201, 255),
-            (badge_center_x, badge_top + 3),
-            (badge_center_x, badge_top + 7),
-            2,
-        )
-        pygame.draw.circle(
-            marker,
-            (255, 226, 201, 255),
-            (badge_center_x, badge_top + 9),
-            1,
-        )
-
-    screen.blit(marker, (left, top))
 
 
 def _draw_archer_telegraph(
@@ -236,54 +167,131 @@ def _draw_archer_telegraph(
     current_time,
 ):
     source = pygame.Vector2(
-        MAP_OFFSET_X + enemy["column"] * TILE_SIZE + TILE_SIZE // 2,
-        MAP_OFFSET_Y + enemy["row"] * TILE_SIZE + TILE_SIZE // 2,
+        MAP_OFFSET_X
+        + enemy["column"] * TILE_SIZE
+        + TILE_SIZE // 2,
+        MAP_OFFSET_Y
+        + enemy["row"] * TILE_SIZE
+        + TILE_SIZE // 2,
     )
     destination = pygame.Vector2(
-        MAP_OFFSET_X + target[0] * TILE_SIZE + TILE_SIZE // 2,
-        MAP_OFFSET_Y + target[1] * TILE_SIZE + TILE_SIZE // 2,
+        MAP_OFFSET_X
+        + target[0] * TILE_SIZE
+        + TILE_SIZE // 2,
+        MAP_OFFSET_Y
+        + target[1] * TILE_SIZE
+        + TILE_SIZE // 2,
     )
+
     direction = destination - source
+
     if direction.length_squared() == 0:
         return
+
     direction = direction.normalize()
-    end = destination - direction * 11
-    start = source + direction * 13
-    if not enemy_is_visible:
-        start = end - direction * 26
+    perpendicular = pygame.Vector2(
+        -direction.y,
+        direction.x,
+    )
 
-    overlay = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
-    distance = max(1, (end - start).length())
-    pulse = (math.sin(current_time / 95) + 1) / 2
-    step = 11
-    segment_length = 6
-    travel = (current_time / 18) % step
-    while travel < distance:
-        segment_start = start + direction * travel
-        segment_end = start + direction * min(
-            distance,
-            travel + segment_length,
-        )
-        pygame.draw.line(
-            overlay,
-            (255, 79, 51, round(145 + pulse * 75)),
-            segment_start,
-            segment_end,
-            2,
-        )
-        travel += step
+    pulse = (
+        math.sin(current_time / 105)
+        + 1
+    ) / 2
 
-    perpendicular = pygame.Vector2(-direction.y, direction.x)
-    arrow_back = end - direction * 8
+    overlay = pygame.Surface(
+        screen.get_size(),
+        pygame.SRCALPHA,
+    )
+
+    target_edge = (
+        destination
+        - direction * (TILE_SIZE * 0.43)
+    )
+    arrow_tip = (
+        target_edge
+        + direction * (7 + pulse * 2)
+    )
+    arrow_back = (
+        arrow_tip
+        - direction * 8
+    )
+
+    arrow_points = (
+        arrow_tip,
+        arrow_back + perpendicular * 5,
+        arrow_back - perpendicular * 5,
+    )
+
+    glow_points = (
+        arrow_tip + direction * 1,
+        arrow_back + perpendicular * 7,
+        arrow_back - perpendicular * 7,
+    )
+
     pygame.draw.polygon(
         overlay,
-        (255, 93, 59, round(205 + pulse * 50)),
         (
-            end,
-            arrow_back + perpendicular * 5,
-            arrow_back - perpendicular * 5,
+            49,
+            136,
+            43,
+            round(65 + pulse * 50),
         ),
+        glow_points,
     )
+    pygame.draw.polygon(
+        overlay,
+        (
+            112,
+            224,
+            83,
+            round(210 + pulse * 45),
+        ),
+        arrow_points,
+    )
+    pygame.draw.line(
+        overlay,
+        (
+            190,
+            255,
+            157,
+            round(210 + pulse * 45),
+        ),
+        arrow_back,
+        arrow_tip,
+        2,
+    )
+
+    feather_center = (
+        arrow_back
+        - direction * 3
+    )
+
+    pygame.draw.line(
+        overlay,
+        (
+            112,
+            224,
+            83,
+            round(175 + pulse * 60),
+        ),
+        feather_center,
+        feather_center + perpendicular * 4,
+        2,
+    )
+    pygame.draw.line(
+        overlay,
+        (
+            112,
+            224,
+            83,
+            round(175 + pulse * 60),
+        ),
+        feather_center,
+        feather_center - perpendicular * 4,
+        2,
+    )
+
     screen.blit(overlay, (0, 0))
 
 def _draw_priest_heal_telegraph(
@@ -437,6 +445,85 @@ def _draw_priest_heal_telegraphs(
             current_time,
         )
 
+_MAX_TELEGRAPH_LANES = 5
+
+
+def _collect_attack_entries(
+    enemies,
+    current_time,
+    visible_cells,
+):
+    entries = []
+
+    for source_order, enemy in enumerate(enemies):
+        if enemy["health"] <= 0:
+            continue
+
+        if not attack_telegraph_is_visible(
+            enemy,
+            current_time,
+        ):
+            continue
+
+        targets = tuple(
+            position
+            for position in enemy["attack_targets"]
+            if (
+                visible_cells is None
+                or position in visible_cells
+            )
+        )
+
+        if not targets:
+            continue
+
+        entries.append(
+            {
+                "enemy": enemy,
+                "source_order": source_order,
+                "targets": targets,
+                "target_set": frozenset(targets),
+                "lane": 0,
+            }
+        )
+
+    for entry in entries:
+        occupied_lanes = {
+            previous_entry["lane"]
+            for previous_entry in entries
+            if (
+                previous_entry is not entry
+                and previous_entry["source_order"]
+                < entry["source_order"]
+                and previous_entry["target_set"]
+                & entry["target_set"]
+            )
+        }
+
+        entry["lane"] = next(
+            (
+                lane
+                for lane in range(_MAX_TELEGRAPH_LANES)
+                if lane not in occupied_lanes
+            ),
+            _MAX_TELEGRAPH_LANES - 1,
+        )
+
+    return entries
+
+
+def _group_attack_entries_by_cell(entries):
+    entries_by_cell = {}
+
+    for entry in entries:
+        for position in entry["targets"]:
+            entries_by_cell.setdefault(
+                position,
+                [],
+            ).append(entry)
+
+    return entries_by_cell
+
 
 def draw_act_two_attack_markers(
     screen,
@@ -453,46 +540,50 @@ def draw_act_two_attack_markers(
             visible_cells,
             current_time,
         )
-    draw_order = {
-        "brute": 0,
-        "archer": 2,
-    }
-    ordered_enemies = sorted(
-        enemies,
-        key=lambda enemy: draw_order.get(enemy["type"], 1),
-    )
-    for enemy in ordered_enemies:
-        if enemy["health"] <= 0:
-            continue
-        if not attack_telegraph_is_visible(
-            enemy,
-            current_time,
-        ):
-            continue
-        attack_targets = enemy["attack_targets"]
-        if visible_cells is not None:
-            attack_targets = [
-                position
-                for position in attack_targets
-                if position in visible_cells
-            ]
-        if not attack_targets:
-            continue
 
-        enemy_is_visible = (
-            visible_cells is None
-            or (enemy["column"], enemy["row"]) in visible_cells
-        )
-        if (
-            not foreground
-            and enemy["type"] == "archer"
-            and enemy.get("prepared_attack_mode") == "ranged"
-        ):
+    entries = _collect_attack_entries(
+        enemies,
+        current_time,
+        visible_cells,
+    )
+    entries_by_cell = _group_attack_entries_by_cell(
+        entries,
+    )
+
+    if not foreground:
+        for (column, row), cell_entries in entries_by_cell.items():
+            draw_attack_tile_base(
+                screen,
+                column,
+                row,
+                len(cell_entries),
+                current_time,
+            )
+
+        for entry in entries:
+            enemy = entry["enemy"]
+
+            if (
+                enemy["type"] != "archer"
+                or enemy.get("prepared_attack_mode") != "ranged"
+            ):
+                continue
+
+            attack_targets = entry["targets"]
             direct_target = (
                 player_position
                 if player_position in attack_targets
                 else attack_targets[0]
             )
+            enemy_is_visible = (
+                visible_cells is None
+                or (
+                    enemy["column"],
+                    enemy["row"],
+                )
+                in visible_cells
+            )
+
             _draw_archer_telegraph(
                 screen,
                 enemy,
@@ -501,34 +592,19 @@ def draw_act_two_attack_markers(
                 current_time,
             )
 
-        for column, row in attack_targets:
-            if foreground:
-                _draw_attack_foreground(
-                    screen,
-                    column,
-                    row,
-                    current_time,
-                    (column, row) == player_position,
-                    enemy["type"],
-                )
-            elif enemy["type"] == "brute":
-                _draw_brute_attack_tile(
-                    screen,
-                    column,
-                    row,
-                    current_time,
-                )
-            elif enemy["type"] == "archer":
-                _draw_archer_attack_tile(
-                    screen,
-                    column,
-                    row,
-                    current_time,
-                )
-            else:
-                _draw_standard_attack_tile(
-                    screen,
-                    column,
-                    row,
-                    current_time,
-                )
+        return
+
+    for (column, row), cell_entries in entries_by_cell.items():
+        for entry in cell_entries:
+            enemy = entry["enemy"]
+
+            _draw_attack_foreground(
+                screen,
+                column,
+                row,
+                current_time,
+                (column, row) == player_position,
+                enemy["type"],
+                enemy.get("prepared_attack_mode"),
+                entry["lane"],
+            )
