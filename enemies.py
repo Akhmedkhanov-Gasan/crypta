@@ -88,7 +88,7 @@ ENEMY_TYPES = {
     },
     "sentinel": {
         "display_name": "Sentinel",
-        "max_health": 9,
+        "max_health": 11,
         "aggro_radius": 6,
         "wander_chance": 0.10,
         "move_every": 2,
@@ -96,12 +96,13 @@ ENEMY_TYPES = {
         "attack_range": 1,
         "damage_by_mode": {
             "melee": ((2, 3), (75, 25)),
+            "shield_counter": ((2, 3), (75, 25)),
         },
         "color": SENTINEL_COLOR,
         "sleeping_color": SLEEPING_SENTINEL_COLOR,
         "retreat_jump_chance": 0.0,
         "dodge_chance": 0.0,
-        "shield_duration": 3,
+        "shield_durability": 3,
         "shield_cooldown": 2,
     },
     "priest": {

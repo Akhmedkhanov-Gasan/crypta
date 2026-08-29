@@ -14,7 +14,11 @@ from acts.act_three.abilities.summoner import (
 from bosses.oracle import update_oracle_projectiles
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
-from game.state import EnemyBehaviorState, GameState
+from game.state import (
+    EnemyBehaviorState,
+    EnemyState,
+    GameState,
+)
 from logic import (
     distance_between,
     get_enemy_occupied_positions,
@@ -38,6 +42,7 @@ from systems.enemy_ai import (
     goblin_should_join_combat,
     take_priest_turn,
     resolve_goblin_summon,
+    sentinel_counter_knockback_destination,
 )
 from systems.player_combat import damage_player, resolve_enemy_defeat
 
@@ -102,6 +107,81 @@ def _advance_enemy_bleed(game_state: GameState, enemy) -> bool:
     )
     resolve_enemy_defeat(game_state, enemy)
     return True
+
+def _apply_sentinel_counter_knockback(
+    game_state: GameState,
+    sentinel: EnemyState,
+) -> None:
+    floor = game_state.floor
+    origin = (
+        floor.player_column,
+        floor.player_row,
+    )
+    destination, collided = (
+        sentinel_counter_knockback_destination(
+            game_state,
+            sentinel,
+        )
+    )
+
+    if destination != origin:
+        floor.player_column = destination[0]
+        floor.player_row = destination[1]
+
+        game_state.emit(
+            GameEvent(
+                type=GameEventType.MOVE,
+                actor="hero",
+                origin=origin,
+                destination=destination,
+                data={
+                    "kind": "sentinel_shield_knockback",
+                },
+            )
+        )
+
+        add_log_message(
+            game_state.combat_log,
+            (
+                f"{sentinel.name} knocks the hero "
+                f"to {destination}."
+            ),
+        )
+
+    if not collided:
+        return
+
+    collision_damage = damage_player(
+        game_state,
+        1,
+        damage_kind="physical",
+    )
+
+    game_state.emit(
+        GameEvent(
+            type=GameEventType.HIT,
+            actor=sentinel.name,
+            target="hero",
+            origin=(
+                sentinel.column,
+                sentinel.row,
+            ),
+            destination=destination,
+            amount=collision_damage,
+            data={
+                "mode": "shield_collision",
+                "enemy_type": sentinel.type,
+            },
+        )
+    )
+
+    add_log_message(
+        game_state.combat_log,
+        (
+            f"The hero crashes into an obstacle "
+            f"for {collision_damage} damage."
+        ),
+    )
 
 
 def resolve_enemy_turn(
@@ -390,6 +470,14 @@ def resolve_enemy_turn(
                             f"for {damage}."
                         ),
                     )
+                    if (
+                            attack_mode == "shield_counter"
+                            and game_state.player.health > 0
+                    ):
+                        _apply_sentinel_counter_knockback(
+                            game_state,
+                            enemy,
+                        )
             else:
                 add_log_message(
                     game_state.combat_log,
@@ -507,33 +595,6 @@ def resolve_enemy_turn(
                     ),
                 )
                 continue
-
-        if (
-            enemy.behavior_state
-            is EnemyBehaviorState.GUARDING
-        ):
-            if enemy["shield_turns"] > 0:
-                enemy["shield_turns"] -= 1
-
-            if enemy["shield_turns"] == 0:
-                enemy["shield_direction"] = None
-                enemy["shield_cooldown"] = (
-                    enemy[
-                        "shield_cooldown_duration"
-                    ]
-                )
-                add_log_message(
-                    game_state.combat_log,
-                    (
-                        f"{enemy['name']} "
-                        "lowers its shield."
-                    ),
-                )
-                enemy.behavior_state = (
-                    EnemyBehaviorState.CHASING
-                )
-
-            continue
 
         enemy_was_aggro = enemy.is_aggro
 
@@ -725,7 +786,10 @@ def resolve_enemy_turn(
         ):
             continue
 
-        shield_is_ready = enemy.shield_cooldown == 0
+        shield_is_ready = (
+                enemy.shield_blocks_remaining == 0
+                and enemy.shield_cooldown == 0
+        )
         heal_is_ready = enemy.heal_cooldown == 0
 
         if enemy.shield_cooldown > 0:

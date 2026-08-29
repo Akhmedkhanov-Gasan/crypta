@@ -8,7 +8,10 @@ from acts.act_two.settings import (
     HEALING_SCROLL_HEALING,
     STONEFLESH_SCROLL_HITS,
 )
-from acts.act_two.bloody_altar import adjusted_consumable_healing
+from acts.act_two.bloody_altar import (
+    adjusted_consumable_healing,
+    healing_consumables_are_blocked,
+)
 from acts.act_two.state import DroppedConsumableState, FireZoneState
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
@@ -403,6 +406,16 @@ def use_scroll(
     ):
         return False
     scroll_kind = slots[slot_index]
+
+    if (
+            scroll_kind == HEALING_SCROLL
+            and healing_consumables_are_blocked(player)
+    ):
+        add_log_message(
+            game_state.combat_log,
+            "Blood Hunger prevents you from using healing consumables.",
+        )
+        return False
 
     if scroll_kind == SCROLL_OF_STONEFLESH:
         player.act_two.stoneflesh_hits = STONEFLESH_SCROLL_HITS

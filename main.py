@@ -63,6 +63,10 @@ from acts.act_two.visibility import (
     update_act_two_visibility,
 )
 from acts.act_two.traps import advance_spike_traps
+from acts.act_two.brute_aftershocks import (
+    advance_brute_aftershocks,
+    create_brute_aftershocks_from_events,
+)
 from acts.act_two.runes import (
     cancel_rune_selection,
     interact_with_rune_pedestal,
@@ -156,6 +160,7 @@ from rendering import (
     draw_act_one_boss_effects,
     draw_act_one_atmosphere,
     draw_act_two_atmosphere,
+    draw_brute_aftershocks,
     draw_act_two_ability_preview,
     draw_act_two_arcane_burst_effect,
     draw_act_two_fog_of_war,
@@ -2541,6 +2546,7 @@ def main():
                     )
 
                     advance_spike_traps(game_state)
+                    advance_brute_aftershocks(game_state)
                     update_treasury_trial(game_state)
 
                     if game_state.player.health > 0:
@@ -2550,6 +2556,7 @@ def main():
                             rogue_ability_activated,
                         )
 
+                    create_brute_aftershocks_from_events(game_state)
                     advance_fire_zones(game_state)
                     update_treasury_trial(game_state)
 
@@ -3340,6 +3347,11 @@ def main():
                 game_state.floor.spike_traps,
                 act_two_sprites,
                 game_state.floor.visible_cells,
+                current_time,
+            )
+            draw_brute_aftershocks(
+                world_target,
+                game_state.floor,
                 current_time,
             )
             draw_act_two_treasury(

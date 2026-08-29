@@ -14,6 +14,7 @@ from acts.act_two.state import (
     SpikeTrapState,
     TreasuryRoomState,
     TraderState,
+    BruteAftershockState,
 )
 from acts.act_two.quests import ActTwoQuestState
 from acts.act_three.state import (
@@ -143,10 +144,9 @@ class EnemyState(AttributeMapping):
     second_phase_announced: bool = False
     boss_group: bool = False
     is_active: bool = True
-    shield_turns: int = 0
-    shield_direction: tuple[int, int] | None = None
+    shield_blocks_remaining: int = 0
+    shield_durability: int = 0
     shield_cooldown: int = 0
-    shield_duration: int = 0
     shield_cooldown_duration: int = 0
     heal_target: "EnemyState | None" = None
     priest_retreat_counter: int = 0
@@ -235,7 +235,10 @@ class EnemyState(AttributeMapping):
             ),
             boss_group=belongs_to_boss_group,
             is_active=not belongs_to_boss_group,
-            shield_duration=config.get("shield_duration", 0),
+            shield_durability=config.get(
+                "shield_durability",
+                0,
+            ),
             shield_cooldown_duration=config.get(
                 "shield_cooldown",
                 0,
@@ -323,6 +326,9 @@ class FloorState(AttributeMapping):
         tuple[int, int], dict[str, Any]
     ] = field(default_factory=dict)
     fire_zones: list[FireZoneState] = field(default_factory=list)
+    brute_aftershocks: list[
+        BruteAftershockState
+    ] = field(default_factory=list)
 
 
 @dataclass

@@ -127,7 +127,6 @@ from acts.act_three.presentation.animation import (
     _stable_text_seed,
 )
 from acts.act_three.presentation.class_effects import (
-    _draw_sentinel_vulnerable_side,
     _draw_summoner_bond_pentagram,
     _draw_summoner_familiar_attack_glow,
     _draw_summoner_idle_lights,
@@ -718,14 +717,6 @@ def _draw_act_three_world(
             current_time,
             fonts["sidebar_numbers"],
         )
-        if enemy.health > 0:
-            _draw_sentinel_vulnerable_side(
-                view_surface,
-                enemy,
-                enemy_position[0],
-                enemy_position[1],
-            )
-
         if enemy.health > 0 and enemy.is_aggro:
             pygame.draw.rect(
                 view_surface,

@@ -2,7 +2,10 @@ from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from systems.mimic import awaken_mimic
 from acts.act_two.crates import collect_crate_loot
-from acts.act_two.bloody_altar import adjusted_consumable_healing
+from acts.act_two.bloody_altar import (
+    adjusted_consumable_healing,
+    healing_consumables_are_blocked,
+)
 from acts.act_two.consumables import (
     FIRE_BOMB,
     HEALING_SCROLL,
@@ -52,10 +55,17 @@ def try_use_potion(
     else:
         potion_is_available = player.potion_count > 0
 
-    if (
-        not potion_is_available
-        or player.health >= player.max_health
-    ):
+    if not potion_is_available:
+        return False
+
+    if healing_consumables_are_blocked(player):
+        add_log_message(
+            game_state.combat_log,
+            "Blood Hunger prevents you from using healing consumables.",
+        )
+        return False
+
+    if player.health >= player.max_health:
         return False
 
     previous_health = player.health

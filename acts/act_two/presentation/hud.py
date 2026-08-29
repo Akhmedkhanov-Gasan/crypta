@@ -6,6 +6,7 @@ from settings import MAX_ATTRIBUTE_RANK
 from acts.act_two.settings import (
     CONSUMABLE_BELT_SIZE,
 )
+from acts.act_two.bloody_altar import BLOOD_HUNGER
 from game.progression import experience_required_for_level
 from presentation.hud import (
     fit_text_to_width,
@@ -72,6 +73,12 @@ _ACT_TWO_CONSUMABLE_NAMES = {
     "scroll_of_arcane_impulse": "IMPULSE",
     "guild_seal": "GUILD SEAL",
 }
+_ACT_TWO_HEALING_CONSUMABLES = frozenset(
+    (
+        "potion",
+        "healing_scroll",
+    )
+)
 
 
 def _blit_layout_image(
@@ -525,7 +532,9 @@ def draw_act_two_sidebar(
             down_bar_layout["consumable_belt"]["slots"]
         )
     )
-
+    healing_consumables_blocked = (
+            bloody_pact_id == BLOOD_HUNGER
+    )
     for slot_index, item in enumerate(
         consumable_slots[:CONSUMABLE_BELT_SIZE]
     ):
@@ -540,11 +549,30 @@ def draw_act_two_sidebar(
         if sprite_name is None:
             continue
 
+        icon_layout = consumable_slots_layout[slot_index]["icon"]
+
         _blit_layout_image(
             screen,
             sprites[sprite_name],
-            consumable_slots_layout[slot_index]["icon"],
+            icon_layout,
         )
+
+        if (
+                healing_consumables_blocked
+                and item in _ACT_TWO_HEALING_CONSUMABLES
+        ):
+            icon_rectangle = figma_rect(icon_layout)
+
+            disabled_overlay = pygame.Surface(
+                icon_rectangle.size,
+                pygame.SRCALPHA,
+            )
+            disabled_overlay.fill((10, 7, 12, 175))
+
+            screen.blit(
+                disabled_overlay,
+                icon_rectangle,
+            )
 
     if (
         dragged_consumable_slot is not None
@@ -598,6 +626,19 @@ def draw_act_two_sidebar(
             hovered_consumable_slot
         ]
 
+        hovered_description = _ACT_TWO_CONSUMABLE_DESCRIPTIONS.get(
+            hovered_item,
+            "Consumable item.",
+        )
+
+        if (
+                healing_consumables_blocked
+                and hovered_item in _ACT_TWO_HEALING_CONSUMABLES
+        ):
+            hovered_description = (
+                "Blood Hunger prevents the use of this healing item."
+            )
+
         sprite_name = _ACT_TWO_CONSUMABLE_SPRITES.get(
             hovered_item
         )
@@ -614,8 +655,8 @@ def draw_act_two_sidebar(
         )
 
         target_left = (
-            slot_rectangle.centerx
-            - base_info_rectangle.width // 2
+                slot_rectangle.centerx
+                - base_info_rectangle.width // 2
         )
 
         target_left = max(
@@ -642,10 +683,7 @@ def draw_act_two_sidebar(
                 hovered_item,
                 "ITEM",
             ),
-            _ACT_TWO_CONSUMABLE_DESCRIPTIONS.get(
-                hovered_item,
-                "Consumable item.",
-            ),
+            hovered_description,
         )
 
     selected_rune = RUNES_BY_ID.get(selected_rune_id)

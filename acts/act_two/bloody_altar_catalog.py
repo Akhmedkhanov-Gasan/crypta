@@ -31,8 +31,8 @@ BLOODY_PACTS = (
     BloodyPactDefinition(
         id="blood_hunger",
         name="Blood Hunger",
-        reward="Kills restore 1 health.",
-        sacrifice="Potions and scrolls heal 50% less.",
+        reward="Damage dealt restores 20% as health.",
+        sacrifice="Healing consumables cannot be used.",
     ),
 )
 

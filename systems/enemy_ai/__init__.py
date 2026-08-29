@@ -11,7 +11,10 @@ from systems.enemy_ai.goblin import (
     resolve_goblin_summon,
     take_goblin_turn,
 )
-from systems.enemy_ai.sentinel import try_raise_shield
+from systems.enemy_ai.sentinel import (
+    sentinel_counter_knockback_destination,
+    try_raise_shield,
+)
 from systems.enemy_ai.standard import take_standard_turn
 from systems.enemy_ai.warden import (
     note_warden_attack_completed,
@@ -28,6 +31,7 @@ __all__ = [
     "note_warden_attack_completed",
     "resolve_warden_reposition",
     "try_raise_shield",
+    "sentinel_counter_knockback_destination",
     "try_start_healing",
     "priest_should_join_combat",
     "take_brute_turn",

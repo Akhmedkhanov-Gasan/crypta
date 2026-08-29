@@ -31,7 +31,6 @@ from game.state import (
     GameState,
 )
 from logic import (
-    direction_toward,
     get_directional_line,
     get_enemy_occupied_positions,
     roll_player_damage,
@@ -149,6 +148,50 @@ def damage_player(
 
     return damage_dealt
 
+def _prepare_sentinel_counter(
+    game_state: GameState,
+    sentinel: EnemyState,
+) -> None:
+    if sentinel.prepared_attack_mode == "shield_counter":
+        return
+
+    target = (
+        game_state.floor.player_column,
+        game_state.floor.player_row,
+    )
+
+    sentinel.attack_targets = [target]
+    sentinel.prepared_attack_mode = "shield_counter"
+    sentinel.prepared_attack_target = "hero"
+    sentinel.attack_windup_turns_remaining = 1
+    sentinel.behavior_state = (
+        EnemyBehaviorState.PREPARING_ATTACK
+    )
+
+    game_state.emit(
+        GameEvent(
+            type=GameEventType.PREPARE_ATTACK,
+            actor=sentinel.name,
+            origin=(
+                sentinel.column,
+                sentinel.row,
+            ),
+            positions=(target,),
+            data={
+                "mode": "shield_counter",
+                "enemy_type": sentinel.type,
+            },
+        )
+    )
+
+    add_log_message(
+        game_state.combat_log,
+        (
+            f"{sentinel.name} prepares "
+            "a shield counterattack."
+        ),
+    )
+
 
 def attack_enemy(
     game_state: GameState,
@@ -164,44 +207,54 @@ def attack_enemy(
 ) -> bool:
     player = game_state.player
     if (
-        enemy.type == "sentinel"
-        and enemy.shield_turns > 0
-        and attacker_position is not None
+            enemy.type == "sentinel"
+            and enemy.shield_blocks_remaining > 0
     ):
-        attack_direction = direction_toward(
-            enemy.column,
-            enemy.row,
-            attacker_position[0],
-            attacker_position[1],
-        )
-        shield_direction = enemy.shield_direction
-        vulnerable_direction = (
-            -shield_direction[0],
-            -shield_direction[1],
+        enemy.shield_blocks_remaining -= 1
+
+        game_state.emit(
+            GameEvent(
+                type=GameEventType.HIT,
+                actor=attacker_name,
+                target=enemy.name,
+                origin=attacker_position,
+                destination=(enemy.column, enemy.row),
+                amount=0,
+                data={
+                    "blocked": True,
+                    "player_class": player.player_class,
+                    "enemy_type": enemy.type,
+                    "shield_blocks_remaining": (
+                        enemy.shield_blocks_remaining
+                    ),
+                },
+            )
         )
 
-        if attack_direction != vulnerable_direction:
-            game_state.emit(
-                GameEvent(
-                    type=GameEventType.HIT,
-                    actor=attacker_name,
-                    target=enemy.name,
-                    origin=attacker_position,
-                    destination=(enemy.column, enemy.row),
-                    amount=0,
-                    data={
-                        "blocked": True,
-                        "player_class": player.player_class,
-                        "enemy_type": enemy.type,
-                    },
-                )
+        add_log_message(
+            game_state.combat_log,
+            (
+                f"{enemy.name}'s shield blocks the attack. "
+                f"{enemy.shield_blocks_remaining}/"
+                f"{enemy.shield_durability} guard remains."
+            ),
+        )
+
+        if enemy.shield_blocks_remaining == 0:
+            enemy.shield_cooldown = (
+                enemy.shield_cooldown_duration
             )
             add_log_message(
                 game_state.combat_log,
-                f"{enemy.name}'s shield blocks the attack.",
+                f"{enemy.name}'s shield guard breaks.",
             )
-            return False
+        elif attacker_name == "hero":
+            _prepare_sentinel_counter(
+                game_state,
+                enemy,
+            )
 
+        return False
     if (
         enemy.dodge_chance > 0
         and random.random() < enemy.dodge_chance

@@ -1,5 +1,3 @@
-"""Act Two presentation boundary."""
-
 from acts.act_two.presentation.abilities import (
     draw_act_two_arcane_burst_effect,
     draw_act_two_ability_preview,
@@ -66,6 +64,9 @@ from acts.act_two.presentation.trade_window import (
     get_act_two_trade_buy_rectangles,
     get_act_two_trade_close_rectangle,
 )
+from acts.act_two.presentation.brute_aftershocks import (
+    draw_brute_aftershocks,
+)
 
 __all__ = [
     "ActTwoCamera",
@@ -110,4 +111,5 @@ __all__ = [
     "get_act_two_confirm_button_rectangle",
     "get_rune_selection_card_rectangles",
     "get_rune_selection_confirm_rectangle",
+    "draw_brute_aftershocks",
 ]

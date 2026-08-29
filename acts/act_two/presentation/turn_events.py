@@ -12,6 +12,7 @@ from systems.player_combat import (
 from acts.act_two.presentation.enemies.timing import (
     enemy_movement_duration,
 )
+from acts.act_two.state import BruteAftershockPhase
 
 def _record_enemy_dodge_feedback(game_state, started_at: int) -> None:
     feedback_events_by_target = {
@@ -100,7 +101,22 @@ def present_act_two_turn_events(
         game_state,
         world_started_at,
     )
+    for aftershock in game_state.floor.brute_aftershocks:
+        if (
+                aftershock.phase
+                is BruteAftershockPhase.WARNING
+                and aftershock.warning_visible_at < 0
+        ):
+            aftershock.warning_visible_at = (
+                    world_started_at + 240
+            )
 
+        elif (
+                aftershock.phase
+                is BruteAftershockPhase.ERUPTING
+                and aftershock.eruption_started_at < 0
+        ):
+            aftershock.eruption_started_at = started_at
     if any(
         event.type is GameEventType.LEVEL_UP
         and event.actor == "hero"
@@ -139,7 +155,12 @@ def present_act_two_turn_events(
 
     if hero_move_event is not None:
         player = game_state.player
-        player.act_two_movement_started_at = started_at
+        movement_kind = hero_move_event.data.get("kind")
+        player.act_two_movement_started_at = (
+            world_started_at
+            if movement_kind == "sentinel_shield_knockback"
+            else started_at
+        )
         player.act_two_movement_origin = hero_move_event.origin
 
         movement_direction = (

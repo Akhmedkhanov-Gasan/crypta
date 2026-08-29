@@ -59,6 +59,21 @@ class FireZoneState:
     ticks_remaining: int
     skip_next_advance: bool = True
 
+class BruteAftershockPhase(Enum):
+    WARNING = auto()
+    ERUPTING = auto()
+
+
+@dataclass
+class BruteAftershockState:
+    cells: tuple[tuple[int, int], ...]
+    source_name: str
+    phase: BruteAftershockPhase = (
+        BruteAftershockPhase.WARNING
+    )
+    warning_visible_at: int = -1
+    eruption_started_at: int = -1
+
 
 @dataclass
 class DroppedConsumableState:

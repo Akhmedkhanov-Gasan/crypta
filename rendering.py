@@ -39,6 +39,7 @@ from acts.act_two.presentation import (
     draw_act_two_wait_indicator,
     draw_act_two_power_cleave_effect,
     draw_act_two_rune_room,
+    draw_brute_aftershocks,
     draw_rune_selection,
     draw_act_two_upgrade_screen,
     draw_act_two_spike_traps,
@@ -185,4 +186,5 @@ __all__ = [
     "load_act_two_hud_layout",
     "load_menu_assets",
     "load_menu_layouts",
+    "draw_brute_aftershocks",
 ]

@@ -135,8 +135,8 @@ def cancel_bloody_altar(game_state: GameState) -> None:
 
 
 def adjusted_consumable_healing(player, amount: int) -> int:
-    if has_bloody_pact(player, BLOOD_HUNGER):
-        return max(1, amount // 2)
+    if healing_consumables_are_blocked(player):
+        return 0
     return amount
 
 
@@ -218,6 +218,7 @@ __all__ = [
     "cancel_bloody_altar",
     "confirm_bloody_pact",
     "has_bloody_pact",
+    "healing_consumables_are_blocked",
     "interact_with_bloody_altar",
     "select_bloody_pact",
 ]

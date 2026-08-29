@@ -7,10 +7,10 @@
     "height": 720
   },
   "background": {
-    "x": 146,
-    "y": 30,
-    "width": 988,
-    "height": 659
+    "x": 177,
+    "y": 19,
+    "width": 926,
+    "height": 695
   },
   "title": {
     "rect": {
@@ -63,8 +63,8 @@
         "height": 100
       },
       "icon": {
-        "x": 296,
-        "y": 244,
+        "x": 300,
+        "y": 264,
         "width": 150,
         "height": 150
       },
@@ -135,7 +135,7 @@
           "width": 170,
           "height": 29
         },
-        "text": "Each use consumes 10% maximum health.",
+        "text": "Each use consumes 10%\nmaximum health.",
         "font": {
           "family": "Alagard",
           "style": "Medium",
@@ -180,8 +180,8 @@
         "height": 100
       },
       "icon": {
-        "x": 474,
-        "y": 244,
+        "x": 478,
+        "y": 264,
         "width": 150,
         "height": 150
       },
@@ -326,8 +326,8 @@
         "height": 100
       },
       "icon": {
-        "x": 652,
-        "y": 244,
+        "x": 656,
+        "y": 264,
         "width": 150,
         "height": 150
       },
@@ -443,8 +443,8 @@
         "height": 100
       },
       "icon": {
-        "x": 830,
-        "y": 244,
+        "x": 834,
+        "y": 264,
         "width": 150,
         "height": 150
       },
@@ -549,20 +549,20 @@
   },
   "confirm": {
     "rect": {
-      "x": 533,
-      "y": 563,
+      "x": 530,
+      "y": 580,
       "width": 220,
       "height": 44
     },
     "button": {
-      "x": 547,
-      "y": 564,
-      "width": 186,
+      "x": 553,
+      "y": 581,
+      "width": 169,
       "height": 45
     },
     "hitbox": {
-      "x": 547,
-      "y": 564,
+      "x": 544,
+      "y": 581,
       "width": 186,
       "height": 45
     }

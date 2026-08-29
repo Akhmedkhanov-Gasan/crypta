@@ -207,7 +207,7 @@ def _enemy_sprite_name(enemy, current_time):
     if enemy["type"] == "sentinel":
         return (
             "sentinel_guard"
-            if enemy["shield_turns"] > 0
+            if enemy["shield_blocks_remaining"] > 0
             else "sentinel_idle"
         )
     if enemy["type"] == "priest":
@@ -223,43 +223,6 @@ def _enemy_sprite_name(enemy, current_time):
             else "priest_idle"
         )
     return sprite_name
-
-
-def _draw_sentinel_vulnerable_side(screen, enemy):
-    if enemy["type"] != "sentinel" or enemy["shield_turns"] <= 0:
-        return
-
-    tile_left = MAP_OFFSET_X + enemy["column"] * TILE_SIZE
-    tile_top = MAP_OFFSET_Y + enemy["row"] * TILE_SIZE
-    shield_direction = enemy["shield_direction"]
-    vulnerable_direction = (-shield_direction[0], -shield_direction[1])
-    opening_lines = {
-        (0, -1): (
-            (tile_left + 5, tile_top + 3),
-            (tile_left + TILE_SIZE - 5, tile_top + 3),
-        ),
-        (0, 1): (
-            (tile_left + 5, tile_top + TILE_SIZE - 3),
-            (tile_left + TILE_SIZE - 5, tile_top + TILE_SIZE - 3),
-        ),
-        (-1, 0): (
-            (tile_left + 3, tile_top + 5),
-            (tile_left + 3, tile_top + TILE_SIZE - 5),
-        ),
-        (1, 0): (
-            (tile_left + TILE_SIZE - 3, tile_top + 5),
-            (tile_left + TILE_SIZE - 3, tile_top + TILE_SIZE - 5),
-        ),
-    }
-    opening_line = opening_lines.get(vulnerable_direction)
-    if opening_line is not None:
-        pygame.draw.line(
-            screen,
-            (235, 185, 75),
-            opening_line[0],
-            opening_line[1],
-            3,
-        )
 
 
 def _draw_standard_enemy(
@@ -303,7 +266,6 @@ def _draw_standard_enemy(
             position,
             current_time,
         )
-    _draw_sentinel_vulnerable_side(screen, enemy)
 
     if enemy["is_aggro"]:
         pygame.draw.rect(

@@ -95,8 +95,8 @@ def _enemy_sprite(
         ]
 
     if (
-        enemy.type == "sentinel"
-        and enemy.shield_turns > 0
+            enemy.type == "sentinel"
+            and enemy.shield_blocks_remaining > 0
     ):
         return assets["sentinel_guard"]
 

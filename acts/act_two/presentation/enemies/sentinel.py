@@ -122,7 +122,16 @@ def _draw_act_two_sentinel_hit_feedback(
     if blocked and damage_font is not None:
         progress = elapsed / ACT_TWO_HIT_FEEDBACK_MS
         alpha = round(255 * min(1, (1 - progress) * 2.3))
-        label = damage_font.render("BLOCK", True, (245, 199, 83))
+        block_label = (
+            f"BLOCK "
+            f"{enemy.shield_blocks_remaining}/"
+            f"{enemy.shield_durability}"
+        )
+        label = damage_font.render(
+            block_label,
+            True,
+            (183, 199, 205),
+        )
         label.set_alpha(alpha)
         label_rectangle = label.get_rect(
             midbottom=(
@@ -130,7 +139,11 @@ def _draw_act_two_sentinel_hit_feedback(
                 position[1] - 6 - round(progress * 12),
             )
         )
-        shadow = damage_font.render("BLOCK", True, (16, 10, 7))
+        shadow = damage_font.render(
+            block_label,
+            True,
+            (11, 13, 16),
+        )
         shadow.set_alpha(alpha)
         screen.blit(shadow, label_rectangle.move(1, 2))
         screen.blit(label, label_rectangle)
