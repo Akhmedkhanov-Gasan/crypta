@@ -49,7 +49,7 @@ PANEL_COLOR = (26, 23, 29)
 PANEL_BORDER_COLOR = (74, 67, 78)
 
 POTION_HEALING = 4
-COMBAT_LOG_LIMIT = 5
+COMBAT_LOG_LIMIT = 200
 
 # Core attributes. Keep the values here deliberately boring and editable:
 # acts decide the starting ranks, while these constants define what a rank does.

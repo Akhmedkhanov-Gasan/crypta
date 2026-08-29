@@ -236,6 +236,7 @@ def try_start_goblin_summon(
     add_log_message(
         game_state.combat_log,
         f"{goblin.name} begins calling for reinforcements.",
+        category="warning",
     )
     return True
 
@@ -473,9 +474,11 @@ def resolve_goblin_summon(
                 f"{summoner.name} calls "
                 f"{len(summoned_names)} reinforcements."
             ),
+            category="enemy_attack",
         )
     else:
         add_log_message(
             game_state.combat_log,
             f"{summoner.name}'s call goes unanswered.",
+            category="system",
         )

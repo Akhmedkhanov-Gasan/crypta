@@ -82,6 +82,7 @@ def activate_treasury_trial(game_state: GameState) -> bool:
         add_log_message(
             game_state.combat_log,
             "The sealed reliquary will not open while its guardians live.",
+            category="warning",
         )
         return True
 
@@ -122,6 +123,7 @@ def activate_treasury_trial(game_state: GameState) -> bool:
     add_log_message(
         game_state.combat_log,
         "The treasury gate slams shut. Four guardians awaken.",
+        category="warning",
     )
     return True
 
@@ -160,6 +162,7 @@ def update_treasury_trial(game_state: GameState) -> bool:
     add_log_message(
         game_state.combat_log,
         "The reliquary dissolves. A treasury blessing remains.",
+        category="loot",
     )
     return True
 
@@ -190,6 +193,7 @@ def collect_treasury_reward(
     add_log_message(
         game_state.combat_log,
         "The hero claims four treasury coins.",
+        category="loot",
     )
     return True
 

@@ -153,6 +153,7 @@ def try_start_healing(
                 f"{priest.name} prepares to heal "
                 f"{heal_candidate.name}."
             ),
+            category="warning",
         )
         return True
 

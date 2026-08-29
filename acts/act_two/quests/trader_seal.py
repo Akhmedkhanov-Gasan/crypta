@@ -37,6 +37,7 @@ def collect_guild_seal(
                 "The consumable belt is full. "
                 "Make room for the guild seal."
             ),
+            category="warning",
         )
         return False
 
@@ -55,12 +56,14 @@ def collect_guild_seal(
     add_log_message(
         game_state.combat_log,
         "The hero recovers the lost guild seal.",
+        category="quest",
     )
 
     if quest.started:
         add_log_message(
             game_state.combat_log,
             "The trader will want this returned.",
+            category="quest",
         )
     else:
         add_log_message(
@@ -69,6 +72,7 @@ def collect_guild_seal(
                 "The seal bears the mark "
                 "of a merchant guild."
             ),
+            category="quest",
         )
 
     return True

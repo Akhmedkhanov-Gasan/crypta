@@ -63,6 +63,7 @@ def awaken_mimic(
     add_log_message(
         game_state.combat_log,
         "The chest reveals itself as a Mimic!",
+        category="warning",
     )
     return True
 
@@ -94,5 +95,6 @@ def release_mimic_loot(
     add_log_message(
         game_state.combat_log,
         "The Mimic releases the treasure it swallowed.",
+        category="loot",
     )
     return True

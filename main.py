@@ -213,6 +213,9 @@ from rendering import (
     get_act_two_upgrade_card_rectangles,
     get_act_two_belt_slot_rectangles,
     get_act_two_sidebar_button_rectangles,
+    get_act_two_journal_close_rectangle,
+    get_act_two_journal_viewport_rectangle,
+    get_act_two_journal_scrollbar_rectangles,
     get_class_selection_rectangles,
     load_act_one_fonts,
     load_act_one_gameplay_assets,
@@ -383,10 +386,12 @@ def _complete_class_selection(game_state):
     add_log_message(
         game_state.combat_log,
         f"The hero becomes a {chosen_class}.",
+        category="progress",
     )
     add_log_message(
         game_state.combat_log,
         "Act II begins. The world gains shape.",
+        category="progress",
     )
 
 
@@ -458,6 +463,7 @@ def _advance_floor_transition(game_state, current_time):
         add_log_message(
             game_state.combat_log,
             f"Hero descends to floor {target_index + 1}.",
+            category="progress",
         )
 
     if elapsed >= FLOOR_TRANSITION_END_MS:
@@ -1034,6 +1040,7 @@ def main():
                     add_log_message(
                         game_state.combat_log,
                         message,
+                        category="progress",
                     )
 
                 continue
@@ -1205,8 +1212,18 @@ def main():
                     game_state.act_two_stats_open = (
                         not game_state.act_two_stats_open
                     )
+                    game_state.act_two_journal_open = False
                     continue
+
                 if clicked_sidebar_button == "journal":
+                    game_state.act_two_journal_open = (
+                        not game_state.act_two_journal_open
+                    )
+
+                    if game_state.act_two_journal_open:
+                        game_state.act_two_journal_scroll = 1.0
+
+                    game_state.act_two_stats_open = False
                     continue
                 if clicked_sidebar_button == "settings":
                     pygame.event.post(
@@ -1361,6 +1378,142 @@ def main():
                 cancel_scroll_aiming(game_state)
                 continue
             elif (
+                event.type == pygame.MOUSEWHEEL
+                and current_act == 2
+                and game_state.act_two_journal_open
+                and (
+                    game_mouse_position := window_to_game_position(
+                        screen,
+                        pygame.mouse.get_pos(),
+                    )
+                )
+                is not None
+                and get_act_two_journal_viewport_rectangle(
+                    act_two_hud_layout
+                ).collidepoint(game_mouse_position)
+            ):
+                game_state.act_two_journal_scroll = max(
+                    0.0,
+                    min(
+                        1.0,
+                        game_state.act_two_journal_scroll
+                        - event.y * 0.08,
+                    ),
+                )
+                continue
+            elif (
+                event.type == pygame.MOUSEBUTTONDOWN
+                and event.button == 1
+                and current_act == 2
+                and game_state.act_two_journal_open
+                and (
+                    game_mouse_position := window_to_game_position(
+                        screen,
+                        event.pos,
+                    )
+                )
+                is not None
+                and (
+                    journal_scrollbar_rectangles
+                    := get_act_two_journal_scrollbar_rectangles(
+                        act_two_hud_layout,
+                        game_state.act_two_journal_scroll,
+                    )
+                )
+                and journal_scrollbar_rectangles[1].collidepoint(
+                    game_mouse_position
+                )
+            ):
+                journal_thumb_rectangle = (
+                    journal_scrollbar_rectangles[1]
+                )
+
+                game_state.act_two_journal_dragging = True
+                game_state.act_two_journal_drag_offset = (
+                    game_mouse_position[1]
+                    - journal_thumb_rectangle.y
+                )
+                continue
+
+            elif (
+                event.type == pygame.MOUSEMOTION
+                and current_act == 2
+                and game_state.act_two_journal_open
+                and game_state.act_two_journal_dragging
+                and (
+                    game_mouse_position := window_to_game_position(
+                        screen,
+                        event.pos,
+                    )
+                )
+                is not None
+            ):
+                (
+                    journal_track_rectangle,
+                    journal_thumb_rectangle,
+                ) = get_act_two_journal_scrollbar_rectangles(
+                    act_two_hud_layout,
+                    game_state.act_two_journal_scroll,
+                )
+
+                thumb_travel = max(
+                    0,
+                    journal_track_rectangle.height
+                    - journal_thumb_rectangle.height,
+                )
+
+                desired_thumb_y = (
+                    game_mouse_position[1]
+                    - game_state.act_two_journal_drag_offset
+                )
+
+                clamped_thumb_y = max(
+                    journal_track_rectangle.top,
+                    min(
+                        journal_track_rectangle.bottom
+                        - journal_thumb_rectangle.height,
+                        desired_thumb_y,
+                    ),
+                )
+
+                if thumb_travel > 0:
+                    game_state.act_two_journal_scroll = (
+                        clamped_thumb_y
+                        - journal_track_rectangle.top
+                    ) / thumb_travel
+                else:
+                    game_state.act_two_journal_scroll = 0.0
+
+                continue
+
+            elif (
+                event.type == pygame.MOUSEBUTTONUP
+                and event.button == 1
+                and current_act == 2
+                and game_state.act_two_journal_dragging
+            ):
+                game_state.act_two_journal_dragging = False
+                continue
+            elif (
+                event.type == pygame.MOUSEBUTTONDOWN
+                and event.button == 1
+                and current_act == 2
+                and game_state.act_two_journal_open
+                and (
+                    game_mouse_position := window_to_game_position(
+                        screen,
+                        event.pos,
+                    )
+                )
+                is not None
+                and get_act_two_journal_close_rectangle(
+                    act_two_hud_layout
+                ).collidepoint(game_mouse_position)
+            ):
+                game_state.act_two_journal_open = False
+                game_state.act_two_journal_dragging = False
+                continue
+            elif (
                 event.type == pygame.MOUSEBUTTONDOWN
                 and event.button == 1
                 and current_act == 2
@@ -1513,6 +1666,7 @@ def main():
                         add_log_message(
                             game_state.combat_log,
                             f"Camera zoom: {act_two_camera.zoom}x.",
+                            category="system",
                         )
                     continue
 
@@ -1762,6 +1916,7 @@ def main():
                         add_log_message(
                             game_state.combat_log,
                             game_state.upgrade_message,
+                            category="progress",
                         )
                         continue
                     attribute_keys = {
@@ -1809,6 +1964,7 @@ def main():
                             add_log_message(
                                 game_state.combat_log,
                                 game_state.upgrade_message,
+                                category="progress",
                             )
                             if (
                                 current_upgrade_act == 1
@@ -2283,6 +2439,7 @@ def main():
                     add_log_message(
                         game_state.combat_log,
                         "The archer leaps backward.",
+                        category="ability",
                     )
                     set_archer_leap_cursor()
                     player_acted = True
@@ -2350,6 +2507,7 @@ def main():
                     add_log_message(
                         game_state.combat_log,
                         "The assassin teleports through the shadows.",
+                        category="ability",
                     )
                     player_acted = True
                 elif mage_ability_target is not None:
@@ -2869,7 +3027,7 @@ def main():
                     except pygame.error as audio_error:
                         add_log_message(
                             game_state.combat_log,
-                            f"Act II music unavailable: {audio_error}",
+                            f"Act II music unavailable: {audio_error}", category="system",
                         )
 
             if (
@@ -2912,7 +3070,7 @@ def main():
                 except pygame.error as audio_error:
                     add_log_message(
                         game_state.combat_log,
-                        f"Act I menu music unavailable: {audio_error}",
+                        f"Act I menu music unavailable: {audio_error}", category="system",
                     )
             elif (
                 should_play_act_two_menu_music
@@ -2933,7 +3091,7 @@ def main():
                 except pygame.error as audio_error:
                     add_log_message(
                         game_state.combat_log,
-                        f"Act II menu music unavailable: {audio_error}",
+                        f"Act II menu music unavailable: {audio_error}", category="system",
                     )
             elif (
                 not should_play_act_one_menu_music
@@ -3016,7 +3174,7 @@ def main():
             except pygame.error as audio_error:
                 add_log_message(
                     game_state.combat_log,
-                    f"Act III music unavailable: {audio_error}",
+                    f"Act III music unavailable: {audio_error}", category="system",
                 )
 
         if game_state.act_three_transition_open:
@@ -3094,7 +3252,7 @@ def main():
             except pygame.error as audio_error:
                 add_log_message(
                     game_state.combat_log,
-                    f"Warden music unavailable: {audio_error}",
+                    f"Warden music unavailable: {audio_error}", category="system",
                 )
         if (
             current_act == 1
@@ -3118,7 +3276,7 @@ def main():
             except pygame.error as audio_error:
                 add_log_message(
                     game_state.combat_log,
-                    f"Act I music unavailable: {audio_error}",
+                    f"Act I music unavailable: {audio_error}", category="system",
                 )
         elif (
             current_act != 1
@@ -3156,7 +3314,7 @@ def main():
             except pygame.error as audio_error:
                 add_log_message(
                     game_state.combat_log,
-                    f"Act II music unavailable: {audio_error}",
+                    f"Act II music unavailable: {audio_error}", category="system",
                 )
         if current_act == 2:
             update_act_two_visibility(game_state.floor)
@@ -4040,6 +4198,8 @@ def main():
                 ability_charge_required(game_state.player),
                 game_state.player.attribute_points,
                 game_state.act_two_stats_open,
+                game_state.act_two_journal_open,
+                game_state.act_two_journal_scroll,
                 window_to_game_position(
                     screen,
                     pygame.mouse.get_pos(),

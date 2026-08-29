@@ -73,6 +73,10 @@ def try_spawn_enemy_after_death(
 
     message = spawn_rule.get("message")
     if message is not None:
-        add_log_message(game_state.combat_log, message)
+        add_log_message(
+            game_state.combat_log,
+            message,
+            category="warning",
+        )
 
     return spawned_enemy

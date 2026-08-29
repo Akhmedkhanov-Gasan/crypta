@@ -78,6 +78,7 @@ def request_class_ability(
                 "Class ability is not charged "
                 f"({player.ability_kill_charge}/{required_charge} hits)."
             ),
+            category="warning",
         )
         return AbilityRequestResult.NOT_READY
 
@@ -121,6 +122,7 @@ def request_class_ability(
         add_log_message(
             game_state.combat_log,
             "The rogue vanishes from sight.",
+            category="ability",
         )
         return AbilityRequestResult.ROGUE_ACTIVATED
     if (
@@ -131,6 +133,7 @@ def request_class_ability(
         add_log_message(
             game_state.combat_log,
             "Not enough health to invoke Open Wound.",
+            category="warning",
         )
         return AbilityRequestResult.NOT_READY
     if player.player_class in ("warrior", "mage"):
@@ -149,6 +152,7 @@ def request_class_ability(
                 if player.directional_ability_aiming
                 else "Ability aiming cancelled."
             ),
+            category="ability",
         )
         return AbilityRequestResult.AIMING_TOGGLED
 
@@ -161,6 +165,7 @@ def cancel_ability_aiming(game_state: GameState) -> None:
     add_log_message(
         game_state.combat_log,
         "Ability aiming cancelled.",
+        category="ability",
     )
 
 
@@ -322,13 +327,14 @@ def cast_directional_ability(
         add_log_message(
             game_state.combat_log,
             f"Rune of Reaping restores {len(ability_targets)} charge.",
+            category="rune",
         )
 
-    if not ability_targets:
-        add_log_message(
-            game_state.combat_log,
-            f"The {ability_name} hits nothing.",
-        )
+    add_log_message(
+        game_state.combat_log,
+        f"The {ability_name} hits nothing.",
+        category="ability",
+    )
 
     game_state.emit(
         GameEvent(
@@ -388,6 +394,7 @@ def cast_directional_ability(
             add_log_message(
                 game_state.combat_log,
                 f"{ability_target.name} slams into the wall.",
+                category="environment",
             )
 
         if (
@@ -406,6 +413,7 @@ def cast_directional_ability(
             add_log_message(
                 game_state.combat_log,
                 f"Rune of Impact stuns {ability_target.name} for 2 turns.",
+                category="rune",
             )
 
         if knockback_destination is not None and not enemy_was_defeated:
@@ -418,6 +426,7 @@ def cast_directional_ability(
             add_log_message(
                 game_state.combat_log,
                 f"Power Cleave knocks {ability_target.name} back.",
+                category="ability",
             )
 
             if selected_rune_id == "rune_of_aftershock":
@@ -475,6 +484,7 @@ def cast_directional_ability(
                 add_log_message(
                     game_state.combat_log,
                     f"Rune of Aftershock strikes {ability_target.name}.",
+                    category="rune",
                 )
                 if ability_target.type == "oracle":
                     oracle_hit_reaction(
@@ -624,6 +634,7 @@ def cast_mage_arcane_burst(
         add_log_message(
             game_state.combat_log,
             "The arcane burst hits nothing.",
+            category="ability",
         )
 
     full_damage_bonus = (
@@ -698,6 +709,7 @@ def cast_mage_arcane_burst(
                     game_state.combat_log,
                     f"Rune of Fracture amplifies the center by "
                     f"{bonus_percent}%.",
+                    category="rune",
                 )
         else:
             damage_minimum = max(
@@ -748,6 +760,7 @@ def cast_mage_arcane_burst(
                 add_log_message(
                     game_state.combat_log,
                     f"Arcane Burst hurls {enemy.name} outward.",
+                    category="ability",
                 )
 
         if defeated:
@@ -764,6 +777,7 @@ def cast_mage_arcane_burst(
         add_log_message(
             game_state.combat_log,
             f"Rune of Resonance restores {len(targets)} charge.",
+            category="rune",
         )
 
     return True

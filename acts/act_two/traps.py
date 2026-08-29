@@ -45,6 +45,7 @@ def _damage_player_on_trap(
     add_log_message(
         game_state.combat_log,
         f"Floor spikes hit hero for {damage}.",
+        category="environment",
     )
 
     if player.invisibility_turns > 0:
@@ -52,6 +53,7 @@ def _damage_player_on_trap(
         add_log_message(
             game_state.combat_log,
             "The rogue becomes visible after taking damage.",
+            category="debuff",
         )
 
     if player.health <= 0:
@@ -66,6 +68,7 @@ def _damage_player_on_trap(
         add_log_message(
             game_state.combat_log,
             "The hero has fallen.",
+            category="death",
         )
 
 
@@ -100,6 +103,7 @@ def _damage_enemies_on_trap(
         add_log_message(
             game_state.combat_log,
             f"Floor spikes hit {enemy.name} for {damage}.",
+            category="environment",
         )
 
         if enemy.health > 0:
@@ -120,6 +124,7 @@ def _damage_enemies_on_trap(
         add_log_message(
             game_state.combat_log,
             f"{enemy.name} is defeated by floor spikes.",
+            category="death",
         )
         resolve_enemy_defeat(game_state, enemy)
 

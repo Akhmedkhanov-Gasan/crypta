@@ -258,6 +258,7 @@ def take_archer_turn(
             add_log_message(
                 game_state.combat_log,
                 f"{enemy.name} leaps away.",
+                category="defense",
             )
 
     else:

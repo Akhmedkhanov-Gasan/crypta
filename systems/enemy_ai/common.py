@@ -38,6 +38,7 @@ def prepare_enemy_attack(
             f"{enemy.name} prepares "
             f"{attack_mode.replace('_', ' ')} attack."
         ),
+        category="warning",
     )
 
 

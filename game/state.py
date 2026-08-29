@@ -419,6 +419,10 @@ class GameState:
     class_selection_choice: str | None = None
     class_selection_choice_started_at: int = 0
     act_two_stats_open: bool = False
+    act_two_journal_open: bool = False
+    act_two_journal_scroll: float = 1.0
+    act_two_journal_dragging: bool = False
+    act_two_journal_drag_offset: int = 0
     trade_screen_open: bool = False
     trader_dialogue_text: str = ""
     trader_dialogue_started_at: int = -1

@@ -51,6 +51,7 @@ def create_brute_aftershocks_from_events(
                 f"{event.actor}'s blow fractures "
                 "the ground."
             ),
+            category="warning",
         )
 
 
@@ -100,6 +101,7 @@ def _damage_player_with_aftershock(
             f"The ruptured ground hits hero "
             f"for {damage}."
         ),
+        category="enemy_attack",
     )
 
     if player.invisibility_turns > 0:
@@ -107,6 +109,7 @@ def _damage_player_with_aftershock(
         add_log_message(
             game_state.combat_log,
             "The rogue becomes visible after taking damage.",
+            category="debuff",
         )
 
     if player.health <= 0:
@@ -123,6 +126,7 @@ def _damage_player_with_aftershock(
         add_log_message(
             game_state.combat_log,
             "The hero has fallen.",
+            category="death",
         )
 
 

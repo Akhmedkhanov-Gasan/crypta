@@ -86,7 +86,11 @@ def break_crate(
         message = f"{message}: {loot_message}."
     else:
         message = f"{message}. It is empty."
-    add_log_message(game_state.combat_log, message)
+    add_log_message(
+        game_state.combat_log,
+        message,
+        category="neutral",
+    )
     return True
 
 
@@ -117,6 +121,7 @@ def collect_crate_loot(
         add_log_message(
             game_state.combat_log,
             "The consumable belt is full.",
+            category="warning",
         )
         return None
 
@@ -162,6 +167,7 @@ def advance_burning_crate_loot(
                 if burned_loot == "potion"
                 else "The dropped gold is lost in the fire."
             ),
+            category="environment",
         )
 
 

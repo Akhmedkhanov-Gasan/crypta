@@ -212,7 +212,7 @@ def _slider_rectangle(menu_layout, action):
     )
 
     return _pygame_rect(
-        menu_layout["sliders"][slider_name]["track"]
+        menu_layout["sliders"][slider_name]["track"]["rect"]
     )
 
 def _visible_menu_themes(highest_unlocked_theme):

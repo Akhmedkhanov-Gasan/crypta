@@ -73,6 +73,7 @@ def _advance_enemy_bleed(game_state: GameState, enemy) -> bool:
     add_log_message(
         game_state.combat_log,
         f"{enemy.name} bleeds for {damage} damage.",
+        category="debuff",
     )
 
     if (
@@ -87,6 +88,7 @@ def _advance_enemy_bleed(game_state: GameState, enemy) -> bool:
         add_log_message(
             game_state.combat_log,
             f"{enemy.name} enters phase two!",
+            category="warning",
         )
 
     if enemy.health > 0:
@@ -104,6 +106,7 @@ def _advance_enemy_bleed(game_state: GameState, enemy) -> bool:
     add_log_message(
         game_state.combat_log,
         f"{enemy.name} bleeds out.",
+        category="death",
     )
     resolve_enemy_defeat(game_state, enemy)
     return True
@@ -146,6 +149,7 @@ def _apply_sentinel_counter_knockback(
                 f"{sentinel.name} knocks the hero "
                 f"to {destination}."
             ),
+            category="enemy_attack",
         )
 
     if not collided:
@@ -181,6 +185,7 @@ def _apply_sentinel_counter_knockback(
             f"The hero crashes into an obstacle "
             f"for {collision_damage} damage."
         ),
+        category="enemy_attack",
     )
 
 
@@ -215,6 +220,7 @@ def resolve_enemy_turn(
         add_log_message(
             game_state.combat_log,
             "The hero has fallen.",
+            category="death",
         )
     damaged_enemy_names = {
         event.target
@@ -248,6 +254,7 @@ def resolve_enemy_turn(
             add_log_message(
                 game_state.combat_log,
                 f"{enemy.name}'s summoning ritual is interrupted.",
+                category="player_attack",
             )
             continue
 
@@ -263,6 +270,7 @@ def resolve_enemy_turn(
                 add_log_message(
                     game_state.combat_log,
                     f"{enemy.name} recovers from the stun.",
+                    category="buff",
                 )
             continue
         if game_state.player.invisibility_turns > 0:
@@ -289,6 +297,7 @@ def resolve_enemy_turn(
                 add_log_message(
                     game_state.combat_log,
                     f"{enemy.name} breaks free of the binding.",
+                    category="buff",
                 )
             continue
 
@@ -379,11 +388,13 @@ def resolve_enemy_turn(
                             f"{enemy.name} hits the familiar "
                             f"for {damage}."
                         ),
+                        category="enemy_attack",
                     )
                 else:
                     add_log_message(
                         game_state.combat_log,
                         f"{enemy.name} misses the familiar.",
+                        category="defense",
                     )
                 continue
 
@@ -420,6 +431,7 @@ def resolve_enemy_turn(
                             f"Hero dodges "
                             f"{enemy['name']}'s attack."
                         ),
+                        category="defense",
                     )
                 else:
                     damage = (
@@ -448,6 +460,7 @@ def resolve_enemy_turn(
                         add_log_message(
                             game_state.combat_log,
                             "The rogue becomes visible after taking damage.",
+                            category="debuff",
                         )
                     game_state.emit(
                         GameEvent(
@@ -469,6 +482,7 @@ def resolve_enemy_turn(
                             f"{enemy['name']} hits hero "
                             f"for {damage}."
                         ),
+                        category="enemy_attack",
                     )
                     if (
                             attack_mode == "shield_counter"
@@ -482,6 +496,7 @@ def resolve_enemy_turn(
                 add_log_message(
                     game_state.combat_log,
                     f"{enemy['name']} misses.",
+                    category="defense",
                 )
 
             if game_state.player.health <= 0:
@@ -503,6 +518,7 @@ def resolve_enemy_turn(
                 add_log_message(
                     game_state.combat_log,
                     "The hero has fallen.",
+                    category="death",
                 )
                 break
 
@@ -536,6 +552,7 @@ def resolve_enemy_turn(
                         f"The curse prevents healing "
                         f"{heal_target.name}."
                     ),
+                    category="debuff",
                 )
                 continue
 
@@ -593,6 +610,7 @@ def resolve_enemy_turn(
                         f"{heal_target['name']} "
                         f"for {healed_amount}."
                     ),
+                    category="enemy_healing",
                 )
                 continue
 
@@ -648,6 +666,7 @@ def resolve_enemy_turn(
             add_log_message(
                 game_state.combat_log,
                 message,
+                category="warning",
             )
 
         occupied_positions = {
@@ -778,6 +797,7 @@ def resolve_enemy_turn(
                 add_log_message(
                     game_state.combat_log,
                     f"{enemy['name']} spots the hero.",
+                    category="warning",
                 )
 
         if (
@@ -895,4 +915,5 @@ def resolve_enemy_turn(
             add_log_message(
                 game_state.combat_log,
                 "The rogue becomes visible.",
+                category="ability",
             )

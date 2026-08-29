@@ -23,6 +23,10 @@ _FONT_PATHS = {
         FONT_ROOT / "IsWasted.ttf",
     ("iswasted", "medium"):
         FONT_ROOT / "IsWasted.ttf",
+    ("ubuntu mono", "regular"):
+        FONT_ROOT / "UbuntuMono-Regular.ttf",
+    ("ubuntu mono", "medium"):
+        FONT_ROOT / "UbuntuMono-Regular.ttf",
 
     ("birch leaf", "regular"):
         FONT_ROOT / "BirchLeaf.ttf",

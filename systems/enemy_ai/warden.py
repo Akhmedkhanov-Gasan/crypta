@@ -156,6 +156,7 @@ def note_warden_attack_completed(
     add_log_message(
         game_state.combat_log,
         "The Crypt Warden marks a path through the chamber.",
+        category="warning",
     )
     return True
 
@@ -198,6 +199,7 @@ def resolve_warden_reposition(
     add_log_message(
         game_state.combat_log,
         "The Crypt Warden surges across the chamber.",
+        category="enemy_attack",
     )
     return True
 

@@ -123,6 +123,7 @@ def damage_player(
             add_log_message(
                 game_state.combat_log,
                 "The hero's stoneflesh crumbles away.",
+                category="buff",
             )
 
     if damage_dealt > 0 and player.subclass == "summoner":
@@ -190,6 +191,7 @@ def _prepare_sentinel_counter(
             f"{sentinel.name} prepares "
             "a shield counterattack."
         ),
+        category="warning",
     )
 
 
@@ -238,6 +240,7 @@ def attack_enemy(
                 f"{enemy.shield_blocks_remaining}/"
                 f"{enemy.shield_durability} guard remains."
             ),
+            category="defense",
         )
 
         if enemy.shield_blocks_remaining == 0:
@@ -247,6 +250,7 @@ def attack_enemy(
             add_log_message(
                 game_state.combat_log,
                 f"{enemy.name}'s shield guard breaks.",
+                category="defense",
             )
         elif attacker_name == "hero":
             _prepare_sentinel_counter(
@@ -278,6 +282,7 @@ def attack_enemy(
         add_log_message(
             game_state.combat_log,
             f"{enemy.name} dodges {attacker_label.lower()}'s attack.",
+            category="defense",
         )
         return False
 
@@ -418,6 +423,7 @@ def attack_enemy(
         add_log_message(
             game_state.combat_log,
             f"Holy Shield restores {healing} health.",
+            category="healing",
         )
     if (
         grant_ability_charge
@@ -540,11 +546,13 @@ def attack_enemy(
             game_state.combat_log,
             f"{attacker_label} critically hits "
             f"{enemy.name} for {damage}!",
+            category="critical",
         )
     else:
         add_log_message(
             game_state.combat_log,
             f"{attacker_label} hits {enemy.name} for {damage}.",
+            category="player_attack",
         )
 
     if (
@@ -561,6 +569,7 @@ def attack_enemy(
         add_log_message(
             game_state.combat_log,
             f"{enemy.name} enters phase two!",
+            category="warning",
         )
 
     if enemy.health <= 0:
@@ -576,6 +585,7 @@ def attack_enemy(
         add_log_message(
             game_state.combat_log,
             f"{enemy.name} is defeated.",
+            category="death",
         )
         return True
 
@@ -603,6 +613,7 @@ def resolve_enemy_defeat(
         add_log_message(
             game_state.combat_log,
             f"{enemy.name} grants {experience_reward} XP.",
+            category="progress",
         )
         if levels_gained:
             game_state.emit(
@@ -619,6 +630,7 @@ def resolve_enemy_defeat(
                     f"Level {player.level} reached. "
                     f"Attribute point +{levels_gained}."
                 ),
+                category="progress",
             )
     try_spawn_enemy_after_death(game_state, enemy)
     release_mimic_loot(game_state, enemy)
@@ -637,8 +649,8 @@ def resolve_enemy_defeat(
             add_log_message(
                 game_state.combat_log,
                 "The second veil begins to fall.",
+                category="quest",
             )
-
     if (
         player.player_class is not None
         and player.subclass not in (None, "assassin")
@@ -656,6 +668,7 @@ def resolve_enemy_defeat(
     add_log_message(
         game_state.combat_log,
         f"{enemy.name} drops a key.",
+        category="loot",
     )
 
 
@@ -715,6 +728,7 @@ def perform_basic_attack(
         add_log_message(
             game_state.combat_log,
             "The rogue emerges to attack.",
+            category="ability",
         )
 
     blocking_positions = {
@@ -809,6 +823,7 @@ def perform_basic_attack(
                 add_log_message(
                     game_state.combat_log,
                     "Rune of the Shade renews invisibility.",
+                    category="rune",
                 )
         elif (
             attack_was_from_invisibility
@@ -820,6 +835,7 @@ def perform_basic_attack(
             add_log_message(
                 game_state.combat_log,
                 f"Rune of Cruelty makes {hit_enemy.name} bleed.",
+                category="rune",
             )
 
 from acts.act_three.combat import (

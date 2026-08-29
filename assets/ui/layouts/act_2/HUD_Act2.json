@@ -1,5 +1,5 @@
 {
-  "schema_version": 3,
+  "schema_version": 5,
   "screen": "hud",
   "act": 2,
   "frame": {
@@ -13,6 +13,108 @@
       "y": 14,
       "width": 1257,
       "height": 699
+    }
+  },
+  "journal_panel": {
+    "rect": {
+      "x": 23,
+      "y": 192,
+      "width": 344,
+      "height": 384
+    },
+    "frame": {
+      "x": 23,
+      "y": 192,
+      "width": 344,
+      "height": 384
+    },
+    "close_hitbox": {
+      "x": 332,
+      "y": 201,
+      "width": 22,
+      "height": 20
+    },
+    "viewport": {
+      "x": 64,
+      "y": 263,
+      "width": 237,
+      "height": 259
+    },
+    "row_template": {
+      "rect": {
+        "x": 64,
+        "y": 262,
+        "width": 237,
+        "height": 39
+      },
+      "text": {
+        "rect": {
+          "x": 64,
+          "y": 262,
+          "width": 231,
+          "height": 33
+        },
+        "text": "Action 1 ~ Fuckup_1_test_test, long_ass_text",
+        "font": {
+          "family": "Ubuntu Mono",
+          "style": "Medium",
+          "size": 13
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "LEFT",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 0,
+          "g": 168,
+          "b": 6,
+          "a": 255
+        }
+      },
+      "separator": {
+        "rect": {
+          "x": 64,
+          "y": 297,
+          "width": 231,
+          "height": 3
+        },
+        "fill": {
+          "r": 74,
+          "g": 70,
+          "b": 71,
+          "a": 92
+        },
+        "stroke": null,
+        "stroke_weight": 1,
+        "corner_radius": 10,
+        "blur_radius": 0
+      }
+    },
+    "scrollbar": {
+      "rect": {
+        "x": 316,
+        "y": 256,
+        "width": 15,
+        "height": 52
+      },
+      "track": {
+        "x": 316,
+        "y": 256,
+        "width": 15,
+        "height": 273
+      },
+      "thumb": {
+        "x": 316,
+        "y": 256,
+        "width": 15,
+        "height": 52
+      }
     }
   },
   "top_bar": {
@@ -557,10 +659,10 @@
   },
   "down_bar": {
     "rect": {
-      "x": 27,
-      "y": 600,
-      "width": 1235,
-      "height": 113
+      "x": 23,
+      "y": 588,
+      "width": 1239,
+      "height": 125
     },
     "frame": {
       "x": 460,
@@ -570,40 +672,40 @@
     },
     "combat_log": {
       "rect": {
-        "x": 27,
-        "y": 600,
-        "width": 393,
-        "height": 97
+        "x": 23,
+        "y": 588,
+        "width": 403,
+        "height": 123
       },
-      "backing": {
+      "frame": {
+        "x": 23,
+        "y": 588,
+        "width": 403,
+        "height": 123
+      },
+      "viewport": {
+        "x": 47,
+        "y": 608,
+        "width": 348,
+        "height": 79
+      },
+      "row_template": {
         "rect": {
-          "x": 27,
-          "y": 600,
-          "width": 393,
-          "height": 97
+          "x": 52,
+          "y": 608,
+          "width": 354,
+          "height": 26
         },
-        "fill": {
-          "r": 42,
-          "g": 39,
-          "b": 39,
-          "a": 191
-        },
-        "stroke": null,
-        "stroke_weight": 1,
-        "corner_radius": 11,
-        "blur_radius": 4
-      },
-      "lines": {
-        "line_01": {
+        "text": {
           "rect": {
-            "x": 34,
-            "y": 609,
-            "width": 366,
-            "height": 21
+            "x": 52,
+            "y": 608,
+            "width": 354,
+            "height": 26
           },
-          "text": "Action 1 ~ Fuckup_1_test_test, long_ass_text",
+          "text": "Action 2 ~ Fuckup_1_test_test",
           "font": {
-            "family": "Pixelify Sans",
+            "family": "Ubuntu Mono",
             "style": "Medium",
             "size": 15
           },
@@ -624,95 +726,23 @@
             "a": 255
           }
         },
-        "line_02": {
+        "separator": {
           "rect": {
-            "x": 34,
-            "y": 630,
-            "width": 366,
-            "height": 21
+            "x": 52,
+            "y": 631,
+            "width": 341,
+            "height": 3
           },
-          "text": "Action 1 ~ Fuckup_1_test_test, long_ass_text",
-          "font": {
-            "family": "Pixelify Sans",
-            "style": "Medium",
-            "size": 15
+          "fill": {
+            "r": 74,
+            "g": 70,
+            "b": 71,
+            "a": 92
           },
-          "line_height": {
-            "unit": "AUTO"
-          },
-          "letter_spacing": {
-            "unit": "PERCENT",
-            "value": 0
-          },
-          "horizontal_align": "LEFT",
-          "vertical_align": "CENTER",
-          "text_case": "ORIGINAL",
-          "color": {
-            "r": 0,
-            "g": 168,
-            "b": 6,
-            "a": 255
-          }
-        },
-        "line_03": {
-          "rect": {
-            "x": 34,
-            "y": 649,
-            "width": 366,
-            "height": 21
-          },
-          "text": "Action 1 ~ Fuckup_1_test_test, long_ass_text",
-          "font": {
-            "family": "Pixelify Sans",
-            "style": "Medium",
-            "size": 15
-          },
-          "line_height": {
-            "unit": "AUTO"
-          },
-          "letter_spacing": {
-            "unit": "PERCENT",
-            "value": 0
-          },
-          "horizontal_align": "LEFT",
-          "vertical_align": "CENTER",
-          "text_case": "ORIGINAL",
-          "color": {
-            "r": 0,
-            "g": 168,
-            "b": 6,
-            "a": 255
-          }
-        },
-        "line_04": {
-          "rect": {
-            "x": 34,
-            "y": 668,
-            "width": 366,
-            "height": 21
-          },
-          "text": "Action 1 ~ Fuckup_1_test_test, long_ass_text",
-          "font": {
-            "family": "Pixelify Sans",
-            "style": "Medium",
-            "size": 15
-          },
-          "line_height": {
-            "unit": "AUTO"
-          },
-          "letter_spacing": {
-            "unit": "PERCENT",
-            "value": 0
-          },
-          "horizontal_align": "LEFT",
-          "vertical_align": "CENTER",
-          "text_case": "ORIGINAL",
-          "color": {
-            "r": 0,
-            "g": 168,
-            "b": 6,
-            "a": 255
-          }
+          "stroke": null,
+          "stroke_weight": 1,
+          "corner_radius": 10,
+          "blur_radius": 0
         }
       }
     },

@@ -54,6 +54,7 @@ def interact_with_bloody_altar(game_state: GameState) -> bool:
         add_log_message(
             game_state.combat_log,
             "The bloody altar has fallen silent.",
+            category="altar",
         )
         return True
 
@@ -63,6 +64,7 @@ def interact_with_bloody_altar(game_state: GameState) -> bool:
     add_log_message(
         game_state.combat_log,
         "The altar offers four bloody pacts.",
+        category="altar",
     )
     return True
 
@@ -125,6 +127,7 @@ def confirm_bloody_pact(game_state: GameState) -> bool:
     add_log_message(
         game_state.combat_log,
         f"The hero accepts {pact.name}.",
+        category="altar",
     )
     return True
 
@@ -174,6 +177,7 @@ def pay_open_wound_ability_cost(
         add_log_message(
             game_state.combat_log,
             "Not enough health to invoke Open Wound.",
+            category="warning",
         )
         return False
 
@@ -185,6 +189,7 @@ def pay_open_wound_ability_cost(
             f"Open Wound consumes "
             f"{health_cost} health."
         ),
+        category="altar",
     )
     return True
 

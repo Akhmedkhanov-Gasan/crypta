@@ -62,6 +62,7 @@ def try_use_potion(
         add_log_message(
             game_state.combat_log,
             "Blood Hunger prevents you from using healing consumables.",
+            category="warning",
         )
         return False
 
@@ -91,8 +92,8 @@ def try_use_potion(
     add_log_message(
         game_state.combat_log,
         f"Hero heals {healed_health} HP.",
+        category="healing",
     )
-
     return True
 
 
@@ -113,6 +114,7 @@ def open_chest(
         add_log_message(
             game_state.combat_log,
             "The chest is locked.",
+            category="warning",
         )
         return True
 
@@ -149,6 +151,7 @@ def open_chest(
         add_log_message(
             game_state.combat_log,
             f"Chest opened: {loot_name} found.",
+            category="loot",
         )
 
     return True
@@ -185,6 +188,7 @@ def break_secret_passage(
     add_log_message(
         game_state.combat_log,
         "Hero shatters a weakened wall.",
+        category="environment",
     )
     return True
 
@@ -310,6 +314,7 @@ def _collect_items(
                 if crate_loot_kind == "potion"
                 else "Hero picks up one gold."
             ),
+            category="loot",
         )
     found_potion = next(
         (
@@ -338,11 +343,13 @@ def _collect_items(
         add_log_message(
             game_state.combat_log,
             "Hero picks up a potion.",
+            category="loot",
         )
     elif found_potion:
         add_log_message(
             game_state.combat_log,
             "The consumable belt is full.",
+            category="warning",
         )
 
     chest_with_loot = next(
@@ -368,6 +375,7 @@ def _collect_items(
         add_log_message(
             game_state.combat_log,
             "The consumable belt is full.",
+            category="warning",
         )
     elif chest_with_loot:
         loot_kind = chest_with_loot["contains"]
@@ -406,6 +414,7 @@ def _collect_items(
         add_log_message(
             game_state.combat_log,
             message,
+            category="loot",
         )
 
     dropped_consumable = next(
@@ -423,6 +432,7 @@ def _collect_items(
         add_log_message(
             game_state.combat_log,
             "The consumable belt is full.",
+            category="warning",
         )
     elif dropped_consumable is not None:
         store_act_two_consumable(player, dropped_consumable.kind)
@@ -436,6 +446,7 @@ def _collect_items(
         add_log_message(
             game_state.combat_log,
             "Hero picks up the dropped item.",
+            category="loot",
         )
 
     found_key = next(
@@ -455,6 +466,7 @@ def _collect_items(
         add_log_message(
             game_state.combat_log,
             "The consumable belt is full.",
+            category="warning",
         )
     elif found_key is not None:
         if act_number == 2:
@@ -471,6 +483,7 @@ def _collect_items(
         add_log_message(
             game_state.combat_log,
             "Hero picks up a key.",
+            category="loot",
         )
 
 
@@ -508,6 +521,7 @@ def _resolve_floor_exit(
             add_log_message(
                 game_state.combat_log,
                 "The second veil begins to fall.",
+                category="quest",
             )
             return False
 
@@ -515,6 +529,7 @@ def _resolve_floor_exit(
         add_log_message(
             game_state.combat_log,
             "The Crypta is conquered.",
+            category="progress",
         )
         return True
 
@@ -547,6 +562,7 @@ def _resolve_floor_exit(
         add_log_message(
             game_state.combat_log,
             "The Crypta is conquered.",
+            category="progress",
         )
         return True
 
@@ -559,6 +575,7 @@ def _resolve_floor_exit(
         add_log_message(
             game_state.combat_log,
             "The first veil falls.",
+            category="progress",
         )
         return False
 

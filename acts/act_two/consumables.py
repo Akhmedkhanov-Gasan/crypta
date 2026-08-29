@@ -152,6 +152,7 @@ def throw_act_two_consumable(
         add_log_message(
             game_state.combat_log,
             "The guild seal must be returned to the trader.",
+            category="quest",
         )
         return False
     origin = (floor.player_column, floor.player_row)
@@ -217,7 +218,11 @@ def throw_act_two_consumable(
             data={"kind": "consumable_drop", "item": item},
         )
     )
-    add_log_message(game_state.combat_log, "Hero drops an item.")
+    add_log_message(
+        game_state.combat_log,
+        "Hero drops an item.",
+        category="neutral",
+    )
     return True
 
 
@@ -272,6 +277,7 @@ def request_fire_bomb_aiming(game_state: GameState, slot_index: int) -> bool:
     add_log_message(
         game_state.combat_log,
         "Choose a visible tile for the fire bomb.",
+        category="ability",
     )
     return True
 
@@ -297,6 +303,7 @@ def request_scroll_aiming(
     add_log_message(
         game_state.combat_log,
         "Choose a visible enemy for the scroll.",
+        category="ability",
     )
     return True
 
@@ -352,6 +359,7 @@ def _damage_enemy_with_arcane_impulse(game_state, enemy) -> None:
     add_log_message(
         game_state.combat_log,
         f"Arcane Impulse hits {enemy.name} for {damage}.",
+        category="ability",
     )
     if (
         enemy.type in ("warden", "oracle")
@@ -365,6 +373,7 @@ def _damage_enemy_with_arcane_impulse(game_state, enemy) -> None:
         add_log_message(
             game_state.combat_log,
             f"{enemy.name} enters phase two!",
+            category="warning",
         )
     if enemy.type == "oracle":
         resolve_oracle_hit_reaction(
@@ -388,6 +397,7 @@ def _damage_enemy_with_arcane_impulse(game_state, enemy) -> None:
         add_log_message(
             game_state.combat_log,
             f"{enemy.name} is defeated.",
+            category="death",
         )
         resolve_enemy_defeat(game_state, enemy)
 
@@ -414,6 +424,7 @@ def use_scroll(
         add_log_message(
             game_state.combat_log,
             "Blood Hunger prevents you from using healing consumables.",
+            category="warning",
         )
         return False
 
@@ -477,8 +488,23 @@ def use_scroll(
             message = None
 
     _consume_scroll(player, slot_index)
+
     if message is not None:
-        add_log_message(game_state.combat_log, message)
+        message_category = {
+            SCROLL_OF_STONEFLESH: "buff",
+            HEALING_SCROLL: "healing",
+            SCROLL_OF_BINDING: "debuff",
+        }.get(
+            scroll_kind,
+            "ability",
+        )
+
+        add_log_message(
+            game_state.combat_log,
+            message,
+            category=message_category,
+        )
+
     return True
 
 
@@ -525,6 +551,7 @@ def _damage_enemy_with_fire(game_state, enemy, position) -> None:
     add_log_message(
         game_state.combat_log,
         f"Fire burns {enemy.name} for {damage}.",
+        category="environment",
     )
 
     if (
@@ -562,6 +589,7 @@ def _damage_enemy_with_fire(game_state, enemy, position) -> None:
     add_log_message(
         game_state.combat_log,
         f"{enemy.name} is defeated.",
+        category="death",
     )
     resolve_enemy_defeat(game_state, enemy)
 
@@ -593,12 +621,14 @@ def _damage_player_with_fire(game_state, zone) -> None:
     add_log_message(
         game_state.combat_log,
         f"Fire burns hero for {damage}.",
+        category="enemy_attack",
     )
     if player.invisibility_turns > 0:
         player.invisibility_turns = 0
         add_log_message(
             game_state.combat_log,
             "The rogue becomes visible after taking damage.",
+            category="debuff",
         )
     if player.health <= 0:
         game_state.emit(
@@ -609,7 +639,11 @@ def _damage_player_with_fire(game_state, zone) -> None:
                 data={"cause": "fire"},
             )
         )
-        add_log_message(game_state.combat_log, "The hero has fallen.")
+        add_log_message(
+            game_state.combat_log,
+            "The hero has fallen.",
+            category="death",
+        )
 
 
 def apply_fire_zone_tick(game_state: GameState, zone: FireZoneState) -> None:
@@ -674,7 +708,11 @@ def throw_fire_bomb(
             data={"kind": "fire_bomb", "target": target},
         )
     )
-    add_log_message(game_state.combat_log, "The fire bomb shatters.")
+    add_log_message(
+        game_state.combat_log,
+        "The fire bomb shatters.",
+        category="environment",
+    )
     apply_fire_zone_tick(game_state, zone)
     return True
 

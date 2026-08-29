@@ -227,6 +227,326 @@ def _draw_wrapped_figma_text(
     )
 
 
+
+def _draw_act_two_compact_combat_log_contents(
+    screen,
+    combat_log,
+    combat_log_layout,
+):
+    viewport_rectangle = figma_rect(
+        combat_log_layout["viewport"]
+    )
+
+    row_template = combat_log_layout["row_template"]
+    text_template = row_template["text"]
+    separator_template = row_template["separator"]
+
+    text_template_rectangle = figma_rect(
+        text_template["rect"]
+    )
+    separator_template_rectangle = figma_rect(
+        separator_template["rect"]
+    )
+
+    text_font = get_figma_font(text_template)
+    line_height = max(1, text_font.get_linesize())
+
+    text_x = max(
+        0,
+        text_template_rectangle.x
+        - viewport_rectangle.x,
+    )
+    separator_x = max(
+        0,
+        separator_template_rectangle.x
+        - viewport_rectangle.x,
+    )
+
+    text_width = min(
+        text_template_rectangle.width,
+        viewport_rectangle.width - text_x,
+    )
+    separator_width = min(
+        separator_template_rectangle.width,
+        viewport_rectangle.width - separator_x,
+    )
+
+    separator_gap = max(
+        0,
+        separator_template_rectangle.top
+        - text_template_rectangle.bottom,
+    )
+
+    rows = []
+    occupied_height = 0
+
+    for message in reversed(combat_log):
+        wrapped_lines = wrap_text(
+            text_font,
+            str(message),
+            text_width,
+        ) or [""]
+
+        text_height = max(
+            line_height,
+            len(wrapped_lines) * line_height,
+        )
+        row_height = (
+            text_height
+            + separator_gap
+            + separator_template_rectangle.height
+        )
+
+        if occupied_height + row_height > viewport_rectangle.height:
+            if rows:
+                break
+
+            maximum_line_count = max(
+                1,
+                (
+                    viewport_rectangle.height
+                    - separator_gap
+                    - separator_template_rectangle.height
+                )
+                // line_height,
+            )
+
+            visible_lines = wrapped_lines[
+                :maximum_line_count
+            ]
+
+            if len(visible_lines) < len(wrapped_lines):
+                visible_lines[-1] = fit_text_to_width(
+                    text_font,
+                    visible_lines[-1] + "...",
+                    text_width,
+                )
+
+            wrapped_lines = visible_lines
+            text_height = (
+                len(wrapped_lines) * line_height
+            )
+            row_height = (
+                text_height
+                + separator_gap
+                + separator_template_rectangle.height
+            )
+
+        rows.append(
+            (
+                wrapped_lines,
+                get_event_color(message),
+                text_height,
+                row_height,
+            )
+        )
+        occupied_height += row_height
+
+    rows.reverse()
+
+    content_surface = pygame.Surface(
+        viewport_rectangle.size,
+        pygame.SRCALPHA,
+    )
+
+    content_y = max(
+        0,
+        viewport_rectangle.height - occupied_height,
+    )
+
+    for (
+        wrapped_lines,
+        text_color,
+        text_height,
+        row_height,
+    ) in rows:
+        runtime_text_spec = {
+            **text_template,
+            "rect": {
+                "x": text_x,
+                "y": content_y,
+                "width": text_width,
+                "height": text_height,
+            },
+        }
+
+        _draw_dynamic_figma_text(
+            content_surface,
+            runtime_text_spec,
+            "\n".join(wrapped_lines),
+            color=text_color,
+        )
+
+        separator_y = (
+            content_y
+            + text_height
+            + separator_gap
+        )
+
+        runtime_separator_spec = {
+            **separator_template,
+            "rect": {
+                "x": separator_x,
+                "y": separator_y,
+                "width": separator_width,
+                "height": (
+                    separator_template_rectangle.height
+                ),
+            },
+        }
+
+        draw_figma_rectangle(
+            content_surface,
+            runtime_separator_spec,
+        )
+
+        content_y += row_height
+
+    screen.blit(
+        content_surface,
+        viewport_rectangle.topleft,
+    )
+
+
+def _draw_act_two_journal_contents(
+    screen,
+    combat_log,
+    journal_layout,
+    scroll_ratio,
+):
+    viewport_rectangle = figma_rect(
+        journal_layout["viewport"]
+    )
+
+    row_template = journal_layout["row_template"]
+    text_template = row_template["text"]
+    separator_template = row_template["separator"]
+
+    text_template_rectangle = figma_rect(
+        text_template["rect"]
+    )
+    separator_template_rectangle = figma_rect(
+        separator_template["rect"]
+    )
+
+    text_font = get_figma_font(text_template)
+    line_height = max(1, text_font.get_linesize())
+
+    separator_gap = max(
+        0,
+        separator_template_rectangle.top
+        - text_template_rectangle.bottom,
+    )
+
+    rows = []
+    content_height = 0
+
+    for message in combat_log:
+        wrapped_lines = wrap_text(
+            text_font,
+            message,
+            text_template_rectangle.width,
+        ) or [""]
+
+        text_height = max(
+            line_height,
+            len(wrapped_lines) * line_height,
+        )
+
+        rows.append(
+            (
+                wrapped_lines,
+                get_event_color(message),
+                text_height,
+            )
+        )
+
+        content_height += (
+            text_height
+            + separator_gap
+            + separator_template_rectangle.height
+        )
+
+    content_surface = pygame.Surface(
+        (
+            viewport_rectangle.width,
+            max(viewport_rectangle.height, content_height),
+        ),
+        pygame.SRCALPHA,
+    )
+
+    content_y = 0
+
+    for wrapped_lines, text_color, text_height in rows:
+        runtime_text_spec = {
+            **text_template,
+            "rect": {
+                "x": 0,
+                "y": content_y,
+                "width": text_template_rectangle.width,
+                "height": text_height,
+            },
+        }
+
+        _draw_dynamic_figma_text(
+            content_surface,
+            runtime_text_spec,
+            "\n".join(wrapped_lines),
+            color=text_color,
+        )
+
+        separator_y = (
+            content_y
+            + text_height
+            + separator_gap
+        )
+
+        runtime_separator_spec = {
+            **separator_template,
+            "rect": {
+                "x": 0,
+                "y": separator_y,
+                "width": separator_template_rectangle.width,
+                "height": separator_template_rectangle.height,
+            },
+        }
+
+        draw_figma_rectangle(
+            content_surface,
+            runtime_separator_spec,
+        )
+
+        content_y = (
+            separator_y
+            + separator_template_rectangle.height
+        )
+
+    maximum_scroll = max(
+        0,
+        content_height - viewport_rectangle.height,
+    )
+
+    scroll_ratio = max(
+        0.0,
+        min(1.0, scroll_ratio),
+    )
+
+    scroll_offset = round(
+        maximum_scroll * scroll_ratio
+    )
+
+    screen.blit(
+        content_surface,
+        viewport_rectangle.topleft,
+        pygame.Rect(
+            0,
+            scroll_offset,
+            viewport_rectangle.width,
+            viewport_rectangle.height,
+        ),
+    )
+
+
 def _draw_act_two_hover_panel(
     screen,
     sprites,
@@ -308,6 +628,8 @@ def draw_act_two_sidebar(
     ability_charge_required,
     available_attribute_points,
     stats_open,
+    journal_open,
+    journal_scroll,
     mouse_position,
     sprites,
     hud_layout,
@@ -451,80 +773,17 @@ def draw_act_two_sidebar(
     )
     combat_log_layout = down_bar_layout["combat_log"]
 
-    draw_figma_rectangle(
+    _blit_layout_image(
         screen,
-        combat_log_layout["backing"],
+        sprites["act_two_combat_log_frame"],
+        combat_log_layout["frame"],
     )
 
-    log_line_specs = tuple(
-        combat_log_layout["lines"][line_name]
-        for line_name in sorted(combat_log_layout["lines"])
+    _draw_act_two_compact_combat_log_contents(
+        screen,
+        combat_log,
+        combat_log_layout,
     )
-
-    maximum_line_count = len(log_line_specs)
-    selected_messages = []
-    remaining_line_count = maximum_line_count
-
-    for message in reversed(combat_log):
-        if remaining_line_count <= 0:
-            break
-
-        reference_spec = log_line_specs[0]
-        reference_rect = figma_rect(reference_spec["rect"])
-        reference_font = get_figma_font(reference_spec)
-
-        wrapped_lines = wrap_text(
-            reference_font,
-            message,
-            reference_rect.width,
-        ) or [""]
-
-        selected_lines = wrapped_lines[:remaining_line_count]
-
-        if len(selected_lines) < len(wrapped_lines):
-            last_line_spec = log_line_specs[
-                remaining_line_count - 1
-            ]
-            last_line_rect = figma_rect(
-                last_line_spec["rect"]
-            )
-            last_line_font = get_figma_font(last_line_spec)
-
-            selected_lines[-1] = fit_text_to_width(
-                last_line_font,
-                selected_lines[-1] + "...",
-                last_line_rect.width,
-            )
-
-        selected_messages.append(
-            (
-                selected_lines,
-                get_event_color(message),
-            )
-        )
-
-        remaining_line_count -= len(selected_lines)
-
-    visible_log_lines = []
-
-    for selected_lines, line_color in reversed(selected_messages):
-        visible_log_lines.extend(
-            (line, line_color)
-            for line in selected_lines
-        )
-
-    for line_spec, visible_line in zip(
-        log_line_specs,
-        visible_log_lines,
-    ):
-        line_text, line_color = visible_line
-
-        _draw_dynamic_figma_text(
-            screen,
-            line_spec,
-            line_text,
-            color=line_color,
-        )
 
     consumable_slots_layout = tuple(
         down_bar_layout["consumable_belt"]["slots"][slot_name]
@@ -786,7 +1045,45 @@ def draw_act_two_sidebar(
             sprites["act_two_stats_panel"],
             stats_panel_layout["frame"],
         )
+    if journal_open:
+        journal_layout = hud_layout["journal_panel"]
 
+        _blit_layout_image(
+            screen,
+            sprites["act_two_journal_panel"],
+            journal_layout["frame"],
+        )
+        _draw_act_two_journal_contents(
+            screen,
+            combat_log,
+            journal_layout,
+            journal_scroll,
+        )
+        track_rectangle = figma_rect(
+            journal_layout["scrollbar"]["track"]
+        )
+
+        thumb_layout = journal_layout["scrollbar"]["thumb"]
+        thumb_rectangle = figma_rect(thumb_layout)
+
+        thumb_travel = max(
+            0,
+            track_rectangle.height - thumb_rectangle.height,
+        )
+
+        runtime_thumb_layout = {
+            **thumb_layout,
+            "y": (
+                    track_rectangle.y
+                    + round(thumb_travel * journal_scroll)
+            ),
+        }
+
+        _blit_layout_image(
+            screen,
+            sprites["act_two_journal_thumb"],
+            runtime_thumb_layout,
+        )
     ability_hovered = (
         mouse_position is not None
         and ability_hitbox.collidepoint(mouse_position)
@@ -1090,6 +1387,12 @@ def get_act_two_sidebar_button_rectangles(hud_layout):
     }
 
 
+def get_act_two_journal_close_rectangle(hud_layout):
+    return figma_rect(
+        hud_layout["journal_panel"]["close_hitbox"]
+    )
+
+
 def get_act_two_belt_slot_rectangles(hud_layout):
     slots = hud_layout["down_bar"]["consumable_belt"]["slots"]
 
@@ -1134,3 +1437,42 @@ def get_act_two_confirm_button_rectangle(hud_layout):
         ["confirm"]
         ["hitbox"]
     )
+
+def get_act_two_journal_viewport_rectangle(hud_layout):
+    return figma_rect(
+        hud_layout["journal_panel"]["viewport"]
+    )
+
+
+def get_act_two_journal_scrollbar_rectangles(
+    hud_layout,
+    scroll_ratio,
+):
+    scrollbar_layout = (
+        hud_layout["journal_panel"]["scrollbar"]
+    )
+
+    track_rectangle = figma_rect(
+        scrollbar_layout["track"]
+    )
+
+    thumb_rectangle = figma_rect(
+        scrollbar_layout["thumb"]
+    )
+
+    thumb_travel = max(
+        0,
+        track_rectangle.height - thumb_rectangle.height,
+    )
+
+    scroll_ratio = max(
+        0.0,
+        min(1.0, scroll_ratio),
+    )
+
+    thumb_rectangle.y = (
+        track_rectangle.y
+        + round(thumb_travel * scroll_ratio)
+    )
+
+    return track_rectangle, thumb_rectangle

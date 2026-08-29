@@ -44,6 +44,7 @@ def strike_wall_rune(
         add_log_message(
             game_state.combat_log,
             "This wall rune is already awake.",
+            category="rune",
         )
         return True
 
@@ -55,12 +56,14 @@ def strike_wall_rune(
         add_log_message(
             game_state.combat_log,
             f"A wall rune awakens. {remaining} remain.",
+            category="rune",
         )
     else:
         room.phase = RunePuzzlePhase.REWARD_AVAILABLE
         add_log_message(
             game_state.combat_log,
             "The third rune awakens. A blessing forms on the pedestal.",
+            category="rune",
         )
     return True
 
@@ -83,6 +86,7 @@ def interact_with_rune_pedestal(game_state: GameState) -> bool:
         add_log_message(
             game_state.combat_log,
             f"The pedestal is empty. {remaining} runes remain dormant.",
+            category="warning",
         )
         return True
 
@@ -97,6 +101,7 @@ def interact_with_rune_pedestal(game_state: GameState) -> bool:
                 if selected_rune is not None
                 else "The pedestal's blessing has already been claimed."
             ),
+            category="rune",
         )
         return True
 
@@ -105,6 +110,7 @@ def interact_with_rune_pedestal(game_state: GameState) -> bool:
         add_log_message(
             game_state.combat_log,
             "The pedestal does not answer an unbound soul.",
+            category="warning",
         )
         return True
 
@@ -128,6 +134,7 @@ def interact_with_rune_pedestal(game_state: GameState) -> bool:
     add_log_message(
         game_state.combat_log,
         "The pedestal offers three runes. Choose one blessing.",
+        category="rune",
     )
     return True
 
@@ -164,6 +171,7 @@ def select_rune(game_state: GameState, rune_id: str) -> bool:
     add_log_message(
         game_state.combat_log,
         f"The hero binds {rune.name}.",
+        category="rune",
     )
     return True
 

@@ -940,6 +940,20 @@ def load_act_two_sprites():
                 act_two_hud_directory / "abilities.png",
                 (264, 198),
             ),
+            "act_two_combat_log_frame": pygame.image.load(
+                str(
+                    act_two_hud_directory
+                    / "combat_log_frame.png"
+                )
+            ).convert_alpha(),
+
+            "act_two_journal_panel": pygame.image.load(
+                str(act_two_hud_directory / "frame.png")
+            ).convert_alpha(),
+
+            "act_two_journal_thumb": pygame.image.load(
+                str(act_two_hud_directory / "thumb.png")
+            ).convert_alpha(),
         }
     )
     chat_log_backing = pygame.Surface((276, 82), pygame.SRCALPHA)

@@ -302,28 +302,47 @@ def draw_status(
         screen.blit(message_surface, message_rectangle)
 
 
+LOG_EVENT_COLORS = {
+    "neutral": TEXT_COLOR,
+
+    "player_attack": (191, 154, 91),
+    "enemy_attack": (181, 82, 82),
+    "critical": (214, 171, 87),
+    "defense": (105, 139, 158),
+    "death": (174, 66, 75),
+    "progress": (157, 143, 101),
+
+    "healing": (111, 161, 121),
+    "enemy_healing": (151, 132, 84),
+    "buff": (119, 157, 128),
+    "debuff": (160, 94, 113),
+
+    "loot": (126, 158, 123),
+    "trade": (181, 132, 84),
+    "dialogue": (158, 132, 174),
+    "quest": (133, 119, 169),
+
+    "ability": (102, 141, 169),
+    "rune": (135, 108, 174),
+    "altar": (155, 79, 96),
+
+    "environment": (132, 143, 145),
+    "warning": (190, 120, 74),
+    "system": (141, 136, 128),
+}
+
+
 def get_event_color(message):
-    lower_message = message.lower()
+    category = getattr(
+        message,
+        "category",
+        "neutral",
+    )
 
-    if "hits hero" in lower_message or "fallen" in lower_message:
-        return (220, 85, 90)
-    if "critical" in lower_message:
-        return (245, 195, 75)
-    if "hero hits" in lower_message or "defeated" in lower_message:
-        return (218, 165, 75)
-    if (
-        "picks up" in lower_message
-        or "heals" in lower_message
-        or "found" in lower_message
-        or "drops a key" in lower_message
-    ):
-        return (100, 190, 135)
-    if "dodges" in lower_message:
-        return (100, 175, 205)
-    if "prepares" in lower_message or "spots" in lower_message:
-        return (205, 125, 75)
-
-    return TEXT_COLOR
+    return LOG_EVENT_COLORS.get(
+        category,
+        LOG_EVENT_COLORS["neutral"],
+    )
 
 
 def fit_text_to_width(font, text, maximum_width):

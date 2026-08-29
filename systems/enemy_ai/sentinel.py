@@ -42,6 +42,7 @@ def try_raise_shield(
             f"{enemy.name} raises its shield "
             f"with {enemy.shield_durability} guard."
         ),
+        category="defense",
     )
     return True
 

@@ -28,6 +28,7 @@ def interact_with_trader(
                 "Trader: Good to see you again. "
                 "Take a look at my wares."
             ),
+            category="dialogue",
         )
         return "trader_normal"
 
@@ -51,10 +52,12 @@ def interact_with_trader(
                 "I thought it was lost with them. "
                 "Thank you. Let us trade."
             ),
+            category="dialogue",
         )
         add_log_message(
             game_state.combat_log,
             "The trader's wares are now available.",
+            category="quest",
         )
         return "trader_normal"
 
@@ -83,6 +86,7 @@ def interact_with_trader(
     add_log_message(
         game_state.combat_log,
         f"Trader: {dialogue}",
+        category="dialogue",
     )
 
     return "trader_meeting"
@@ -95,6 +99,7 @@ def buy_trader_item(game_state, slot_name):
         add_log_message(
             game_state.combat_log,
             "The trader cannot trade without the guild seal.",
+            category="warning",
         )
         return False
     item_id = DEFAULT_TRADER_STOCK.get(slot_name)
@@ -109,6 +114,7 @@ def buy_trader_item(game_state, slot_name):
         add_log_message(
             game_state.combat_log,
             "Not enough gold.",
+            category="warning",
         )
         return False
 
@@ -116,6 +122,7 @@ def buy_trader_item(game_state, slot_name):
         add_log_message(
             game_state.combat_log,
             "The consumable belt is full.",
+            category="warning",
         )
         return False
 
@@ -124,5 +131,6 @@ def buy_trader_item(game_state, slot_name):
     add_log_message(
         game_state.combat_log,
         f"Purchased {item.name} for {item.price} gold.",
+        category="trade",
     )
     return True
