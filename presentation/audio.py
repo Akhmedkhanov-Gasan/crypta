@@ -286,6 +286,8 @@ ACT_TWO_SOUND_VOLUMES = {
 }
 
 
+_LEVEL_UP_CHANNEL = 2
+
 _FIRE_BOMB_IGNITE_DELAY_MS = 90
 _FIRE_BOMB_LOOP_DELAY_MS = 220
 _FIRE_BOMB_BREAK_CHANNEL = 5
@@ -627,6 +629,30 @@ class ActTwoSoundBank:
                 )
             )
 
+    def _play_level_up(self) -> None:
+        variants = self.sounds.get("level_up")
+        if not variants or pygame.mixer.get_init() is None:
+            return
+
+        if pygame.mixer.get_num_channels() <= _LEVEL_UP_CHANNEL:
+            pygame.mixer.set_num_channels(
+                _LEVEL_UP_CHANNEL + 1
+            )
+
+        sound = random.choice(variants)
+        channel = pygame.mixer.Channel(_LEVEL_UP_CHANNEL)
+
+        channel.stop()
+        channel.play(sound)
+        channel.set_volume(
+            min(
+                1.0,
+                ACT_TWO_SOUND_VOLUMES["level_up"]
+                * self.master_volume,
+            )
+        )
+
+
     def _play(
         self,
         sound_key: str,
@@ -703,11 +729,11 @@ class ActTwoSoundBank:
             self._play("player_heal")
 
         if any(
-            event.type is GameEventType.LEVEL_UP
-            and event.actor == "hero"
-            for event in events
+                event.type is GameEventType.LEVEL_UP
+                and event.actor == "hero"
+                for event in events
         ):
-            self._play("level_up")
+            self._play_level_up()
 
         if any(
             event.type is GameEventType.HIT

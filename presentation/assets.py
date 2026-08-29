@@ -266,8 +266,6 @@ def load_act_two_sprites():
     asset_directory = ASSET_ROOT / "act_2"
     ui_directory = ASSET_ROOT / "ui" / "act_2"
     sprite_paths = {
-        "player_level_up_0": "player/lvl_up_1111.png",
-        "player_level_up_1": "player/lvl_up_211.png",
         "player_warrior": "player/warrior/idle/idle_00.png",
         "player_warrior_hurt": "player/warrior/hurt/hurt_00.png",
         "player_warrior_walk_0": "player/warrior/walk/down/walk_00.png",
@@ -648,6 +646,10 @@ def load_act_two_sprites():
         {
             "trader_potion": pygame.image.load(
                 str(trade_item_directory / "potion_original.png")
+            ).convert_alpha(),
+
+            "trader_fire_bomb": pygame.image.load(
+                str(trade_item_directory / "fire_bomb_original.png")
             ).convert_alpha(),
 
             "trader_scroll_of_binding": pygame.image.load(

@@ -80,7 +80,6 @@ ACT_TWO_MAGE_ATTACK_CAST_START_MS = 45
 ACT_TWO_MAGE_ATTACK_CAST_END_MS = 235
 ACT_TWO_PLAYER_HEAL_EFFECT_MS = 950
 ACT_TWO_PLAYER_LEVEL_UP_EFFECT_MS = 3000
-ACT_TWO_PLAYER_LEVEL_UP_FRAME_SWITCH_MS = 900
 ACT_TWO_PLAYER_DEATH_HOLD_MS = 480
 ACT_TWO_PLAYER_DEATH_COLLAPSE_MS = 2400
 ACT_TWO_WARRIOR_DEATH_FALL_MS = 1700
@@ -278,11 +277,10 @@ def _draw_healing_effect(
     )
     return True
 
-
 def _draw_level_up_effect(
     screen,
-    sprites,
     position,
+    player_class,
     current_time,
     effect_started_at,
 ):
@@ -293,39 +291,167 @@ def _draw_level_up_effect(
     ):
         return
 
-    fade_in = min(1.0, elapsed / 120)
+    fade_in = min(1.0, elapsed / 180)
     fade_out = min(
         1.0,
-        (ACT_TWO_PLAYER_LEVEL_UP_EFFECT_MS - elapsed) / 420,
+        (ACT_TWO_PLAYER_LEVEL_UP_EFFECT_MS - elapsed) / 500,
     )
     visibility = min(fade_in, fade_out)
-    transition = max(
-        0.0,
-        min(
-            1.0,
-            (
-                elapsed
-                - (ACT_TWO_PLAYER_LEVEL_UP_FRAME_SWITCH_MS - 120)
-            )
-            / 240,
+
+    pulse = 0.78 + math.sin(elapsed * 0.012) * 0.22
+    accent = _CLASS_COLORS.get(
+        player_class,
+        (190, 158, 92),
+    )
+    pale_gold = (238, 211, 143)
+    dark_gold = (133, 88, 39)
+
+    effect = pygame.Surface((96, 112), pygame.SRCALPHA)
+    center_x = effect.get_width() // 2
+    ground_y = 84
+
+    pygame.draw.ellipse(
+        effect,
+        (8, 5, 10, round(90 * visibility)),
+        pygame.Rect(
+            center_x - 22,
+            ground_y - 5,
+            44,
+            10,
         ),
     )
 
-    frame_alphas = (
-        round(255 * visibility * (1.0 - transition)),
-        round(255 * visibility * transition),
-    )
-    for frame_index, alpha in enumerate(frame_alphas):
-        if alpha <= 0:
-            continue
-        frame = sprites[f"player_level_up_{frame_index}"].copy()
-        frame.set_alpha(alpha)
-        screen.blit(
-            frame,
-            frame.get_rect(
-                topleft=(round(position[0]), round(position[1]))
+    for width, alpha in (
+        (22, 18),
+        (12, 28),
+        (4, 52),
+    ):
+        beam = pygame.Surface((width, 68), pygame.SRCALPHA)
+
+        pygame.draw.rect(
+            beam,
+            (
+                *accent,
+                round(alpha * visibility * pulse),
+            ),
+            beam.get_rect(),
+        )
+
+        effect.blit(
+            beam,
+            (
+                center_x - width // 2,
+                ground_y - 68,
             ),
         )
+
+    burst_progress = min(1.0, elapsed / 650)
+    burst_radius = round(8 + burst_progress * 28)
+    burst_alpha = round(
+        210
+        * visibility
+        * (1.0 - burst_progress)
+    )
+
+    if burst_alpha > 0:
+        pygame.draw.ellipse(
+            effect,
+            (*pale_gold, burst_alpha),
+            pygame.Rect(
+                center_x - burst_radius,
+                ground_y - burst_radius // 3,
+                burst_radius * 2,
+                max(6, burst_radius // 2),
+            ),
+            2,
+        )
+
+    ring_radius = 18 + round(
+        (math.sin(elapsed * 0.006) + 1.0) * 3
+    )
+    ring_alpha = round(115 * visibility * pulse)
+
+    pygame.draw.ellipse(
+        effect,
+        (*dark_gold, ring_alpha),
+        pygame.Rect(
+            center_x - ring_radius,
+            ground_y - 8,
+            ring_radius * 2,
+            16,
+        ),
+        1,
+    )
+
+    particle_offsets = (
+        -16,
+        12,
+        -7,
+        19,
+        5,
+        -21,
+        15,
+        -11,
+    )
+
+    for particle_index, offset_x in enumerate(particle_offsets):
+        particle_progress = (
+            (elapsed + particle_index * 173) % 1200
+        ) / 1200
+
+        particle_y = ground_y - round(
+            particle_progress * 70
+        )
+        particle_x = (
+            center_x
+            + offset_x
+            + round(
+                math.sin(
+                    elapsed * 0.007
+                    + particle_index * 1.7
+                )
+                * 2
+            )
+        )
+
+        particle_alpha = round(
+            255
+            * visibility
+            * math.sin(math.pi * particle_progress)
+        )
+
+        if particle_alpha <= 0:
+            continue
+
+        particle_size = (
+            2
+            if particle_index % 3 == 0
+            else 1
+        )
+
+        pygame.draw.rect(
+            effect,
+            (*pale_gold, particle_alpha),
+            pygame.Rect(
+                particle_x,
+                particle_y,
+                particle_size,
+                particle_size,
+            ),
+        )
+
+
+    screen.blit(
+        effect,
+        (
+            round(position[0])
+            + TILE_SIZE // 2
+            - center_x,
+            round(position[1])
+            + TILE_SIZE
+            - ground_y,
+        ),
+    )
 
 
 def _draw_player_hit(
@@ -1092,8 +1218,8 @@ def draw_act_two_player_actor(
     )
     _draw_level_up_effect(
         screen,
-        sprites,
         position,
+        player_class,
         current_time,
         level_up_effect_started_at,
     )
@@ -1151,6 +1277,158 @@ def draw_act_two_player_actor(
 
         screen.blit(shadow, label_position.move(1, 2))
         screen.blit(label, label_position)
+
+def _draw_level_up_label(
+    screen,
+    game_state,
+    font,
+    current_time,
+    view_rectangle,
+    camera,
+):
+    effect_started_at = (
+        game_state.player.act_two.level_up_effect_started_at
+    )
+    elapsed = current_time - effect_started_at
+
+    if (
+        effect_started_at < 0
+        or not 0 <= elapsed < ACT_TWO_PLAYER_LEVEL_UP_EFFECT_MS
+        or font is None
+    ):
+        return
+
+    fade_in = min(1.0, elapsed / 180)
+    fade_out = min(
+        1.0,
+        (ACT_TWO_PLAYER_LEVEL_UP_EFFECT_MS - elapsed) / 500,
+    )
+    visibility = min(fade_in, fade_out)
+
+    player_world_x = (
+        game_state.floor.player_column * TILE_SIZE
+        + TILE_SIZE // 2
+    )
+    player_world_y = (
+        game_state.floor.player_row * TILE_SIZE
+        + TILE_SIZE // 2
+    )
+
+    if camera is not None:
+        player_screen_x = (
+            view_rectangle.x
+            + round(
+                (
+                    player_world_x
+                    - round(camera.x)
+                )
+                * camera.zoom
+            )
+        )
+        player_screen_y = (
+            view_rectangle.y
+            + round(
+                (
+                    player_world_y
+                    - round(camera.y)
+                )
+                * camera.zoom
+            )
+        )
+        player_screen_size = TILE_SIZE * camera.zoom
+    else:
+        player_screen_x = (
+            MAP_OFFSET_X + player_world_x
+        )
+        player_screen_y = (
+            MAP_OFFSET_Y + player_world_y
+        )
+        player_screen_size = TILE_SIZE
+
+    pale_gold = (238, 211, 143)
+    outline_color = (18, 8, 7)
+
+    label = font.render(
+        "LEVEL UP",
+        False,
+        pale_gold,
+    )
+    outline = font.render(
+        "LEVEL UP",
+        False,
+        outline_color,
+    )
+
+    label_surface = pygame.Surface(
+        (
+            label.get_width() + 4,
+            label.get_height() + 4,
+        ),
+        pygame.SRCALPHA,
+    )
+
+    label_position = label.get_rect(
+        topleft=(2, 2),
+    )
+
+    for offset_x, offset_y in (
+            (-1, -1),
+            (0, -1),
+            (1, -1),
+            (-1, 0),
+            (1, 0),
+            (-1, 1),
+            (0, 1),
+            (1, 1),
+    ):
+        label_surface.blit(
+            outline,
+            label_position.move(
+                offset_x,
+                offset_y,
+            ),
+        )
+
+    label_surface.blit(
+        label,
+        label_position,
+    )
+
+    label_surface.set_alpha(
+        round(255 * visibility)
+    )
+
+    rise = round(
+        min(1.0, elapsed / 500) * 6
+    )
+
+    label_rectangle = label_surface.get_rect(
+        midbottom=(
+            player_screen_x,
+            player_screen_y
+            - player_screen_size // 2
+            - 10
+            - rise,
+        )
+    )
+
+    safe_rectangle = view_rectangle.inflate(-16, -16)
+
+    if label_rectangle.top < safe_rectangle.top:
+        label_rectangle.midtop = (
+            player_screen_x,
+            player_screen_y
+            + player_screen_size // 2
+            + 10,
+        )
+
+    label_rectangle.clamp_ip(safe_rectangle)
+
+    screen.blit(
+        label_surface,
+        label_rectangle,
+    )
+
 
 def draw_act_two_player_feedback_overlay(
     screen,
@@ -1233,7 +1511,14 @@ def draw_act_two_player_feedback_overlay(
             low_health_vignette,
             view_rectangle,
         )
-
+    _draw_level_up_label(
+        screen,
+        game_state,
+        fonts["status"],
+        current_time,
+        view_rectangle,
+        camera,
+    )
     draw_act_two_death_scene(
         screen,
         game_state,

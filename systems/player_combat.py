@@ -11,7 +11,6 @@ from acts.act_two.settings import (
 from acts.act_two.abilities import ability_charge_required
 from acts.act_two.bloody_altar import (
     BLOOD_HUNGER,
-    BROKEN_SEAL,
     OPEN_WOUND,
     adjusted_attack_damage_range,
     has_bloody_pact,
@@ -788,13 +787,7 @@ def perform_basic_attack(
                     attack_was_from_invisibility
                     and selected_rune_id != "rune_of_the_veil"
             ),
-            grant_ability_charge=not (
-                    attack_was_from_invisibility
-                    and has_bloody_pact(
-                player,
-                BROKEN_SEAL,
-            )
-            ),
+            grant_ability_charge=not attack_was_from_invisibility,
             attacker_position=(
                 floor.player_column,
                 floor.player_row,
