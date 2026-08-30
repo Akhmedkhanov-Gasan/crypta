@@ -2,7 +2,12 @@ from acts.act_two.state import TreasuryTrialPhase
 from enemies import ENEMY_TYPES
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
-from game.state import EnemyBehaviorState, EnemyState, GameState
+from game.state import (
+    EnemyBehaviorState,
+    EnemyState,
+    GameState,
+    TraderState,
+)
 
 
 TREASURY_CHEST_TILE = "H"
@@ -10,16 +15,96 @@ TREASURY_GATE_TILE = "G"
 TREASURY_REWARD_TILE = "R"
 
 
+def _set_floor_state_tile(
+    floor,
+    position: tuple[int, int],
+    tile: str,
+) -> None:
+    column, row = position
+    map_row = floor.map[row]
+    floor.map[row] = (
+        map_row[:column] + tile + map_row[column + 1 :]
+    )
+
+
 def _set_floor_tile(
     game_state: GameState,
     position: tuple[int, int],
     tile: str,
 ) -> None:
-    column, row = position
-    map_row = game_state.floor.map[row]
-    game_state.floor.map[row] = (
-        map_row[:column] + tile + map_row[column + 1 :]
+    _set_floor_state_tile(
+        game_state.floor,
+        position,
+        tile,
     )
+
+def _treasury_trader_position(
+    treasury,
+) -> tuple[int, int]:
+    door_column, door_row = treasury.door_position
+
+    if door_row < treasury.y:
+        return door_column + 1, treasury.y
+
+    if door_row >= treasury.y + treasury.height:
+        return (
+            door_column + 1,
+            treasury.y + treasury.height - 1,
+        )
+
+    if door_column < treasury.x:
+        return treasury.x, door_row + 1
+
+    return (
+        treasury.x + treasury.width - 1,
+        door_row + 1,
+    )
+
+
+def _relocate_quest_trader(game_state: GameState) -> None:
+    source_floor_index = game_state.act_two_trader_floor_index
+
+    if source_floor_index is not None:
+        source_floor = game_state.visited_floors.get(
+            source_floor_index
+        )
+
+        if (
+            source_floor is not None
+            and source_floor.quest_trader is not None
+        ):
+            old_trader = source_floor.quest_trader
+            old_position = (
+                old_trader.column,
+                old_trader.row,
+            )
+
+            if (
+                source_floor.map[old_position[1]][old_position[0]]
+                == "M"
+            ):
+                _set_floor_state_tile(
+                    source_floor,
+                    old_position,
+                    ".",
+                )
+
+            source_floor.quest_trader = None
+
+    treasury = game_state.floor.treasury_room
+    trader_position = _treasury_trader_position(treasury)
+
+    game_state.floor.quest_trader = TraderState(
+        column=trader_position[0],
+        row=trader_position[1],
+    )
+    _set_floor_state_tile(
+        game_state.floor,
+        trader_position,
+        "M",
+    )
+
+    game_state.act_two_trader_floor_index = game_state.floor_index
 
 
 def treasury_chest_is_at(
@@ -180,8 +265,11 @@ def collect_treasury_reward(
         return False
 
     treasury.phase = TreasuryTrialPhase.CLAIMED
-    game_state.player.gold_count += 4
+    game_state.player.gold_count += 10
     game_state.player_attack_targets = []
+
+    _relocate_quest_trader(game_state)
+
     game_state.emit(
         GameEvent(
             type=GameEventType.ENVIRONMENT,
@@ -192,8 +280,16 @@ def collect_treasury_reward(
     )
     add_log_message(
         game_state.combat_log,
-        "The hero claims four treasury coins.",
+        "The hero claims ten treasury coins.",
         category="loot",
+    )
+    add_log_message(
+        game_state.combat_log,
+        (
+            "Trader: Ah, you found the treasury. "
+            "Let me help you lighten that burden."
+        ),
+        category="dialogue",
     )
     return True
 

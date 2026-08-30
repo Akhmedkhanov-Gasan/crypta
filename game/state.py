@@ -308,6 +308,9 @@ class FloorState(AttributeMapping):
     dropped_keys: list[tuple[int, int]] = field(
         default_factory=list
     )
+    dropped_gold: list[tuple[int, int]] = field(
+        default_factory=list
+    )
     dropped_consumables: list[DroppedConsumableState] = field(
         default_factory=list
     )

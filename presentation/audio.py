@@ -758,7 +758,10 @@ class ActTwoSoundBank:
             elif event.type is GameEventType.CHEST_OPEN:
                 sound_key = "chest_open"
             elif event.type is GameEventType.PICKUP:
-                if event.data.get("kind") == "gold":
+                if event.data.get("kind") in (
+                    "gold",
+                    "gold_pile",
+                ):
                     sound_key = "gold_pickup"
                 elif event.data.get("kind") == "key":
                     sound_key = "key_pickup"

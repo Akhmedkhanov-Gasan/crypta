@@ -11,6 +11,7 @@ from acts.act_three.settings import (
 from acts.act_two.settings import (
     CLASS_BASE_ATTRIBUTE_RANKS,
     CLASS_BASE_STATS,
+    CLASS_STARTING_STATS,
 )
 from game.combat_log import add_log_message
 from game.factories import create_floor_state, create_game_state
@@ -46,7 +47,7 @@ def create_oracle_debug_state(
     apply_player_stat_transition(
         debug_player,
         PLAYER_STARTING_STATS,
-        CLASS_BASE_STATS[player_class],
+        CLASS_STARTING_STATS[player_class],
     )
     apply_attribute_rank_transition(
         debug_player,

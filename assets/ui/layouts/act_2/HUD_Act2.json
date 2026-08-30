@@ -1,5 +1,5 @@
 {
-  "schema_version": 5,
+  "schema_version": 6,
   "screen": "hud",
   "act": 2,
   "frame": {
@@ -972,25 +972,25 @@
     },
     "gold": {
       "rect": {
-        "x": 1209,
-        "y": 636,
-        "width": 53,
-        "height": 65
+        "x": 1203,
+        "y": 629,
+        "width": 59,
+        "height": 72
       },
       "icon": {
-        "x": 1209,
-        "y": 636,
-        "width": 53,
-        "height": 65
+        "x": 1203,
+        "y": 629,
+        "width": 59,
+        "height": 72
       },
       "value": {
         "rect": {
-          "x": 1233,
-          "y": 675,
-          "width": 8,
-          "height": 17
+          "x": 1225,
+          "y": 672,
+          "width": 18,
+          "height": 19
         },
-        "text": "1",
+        "text": "10",
         "font": {
           "family": "Alagard",
           "style": "Medium",
@@ -1892,14 +1892,14 @@
       "combat_stats": {
         "rect": {
           "x": 1032,
-          "y": 377,
-          "width": 155,
-          "height": 96
+          "y": 359,
+          "width": 152,
+          "height": 141
         },
         "heading": {
           "rect": {
-            "x": 1068,
-            "y": 370,
+            "x": 1067,
+            "y": 361,
             "width": 83,
             "height": 14
           },
@@ -1929,15 +1929,15 @@
         "rows": {
           "damage": {
             "rect": {
-              "x": 1040,
-              "y": 399,
-              "width": 49,
+              "x": 1041,
+              "y": 389,
+              "width": 140,
               "height": 14
             },
             "label": {
               "rect": {
-                "x": 1040,
-                "y": 399,
+                "x": 1041,
+                "y": 389,
                 "width": 49,
                 "height": 14
               },
@@ -1966,9 +1966,9 @@
             },
             "value": {
               "rect": {
-                "x": 1146,
-                "y": 400,
-                "width": 27,
+                "x": 1130,
+                "y": 389,
+                "width": 43,
                 "height": 14
               },
               "text": "2-3",
@@ -1984,7 +1984,7 @@
                 "unit": "PERCENT",
                 "value": 0
               },
-              "horizontal_align": "LEFT",
+              "horizontal_align": "CENTER",
               "vertical_align": "TOP",
               "text_case": "ORIGINAL",
               "color": {
@@ -1997,15 +1997,15 @@
           },
           "critical": {
             "rect": {
-              "x": 1040,
-              "y": 420,
-              "width": 44,
+              "x": 1041,
+              "y": 410,
+              "width": 140,
               "height": 13
             },
             "label": {
               "rect": {
-                "x": 1040,
-                "y": 420,
+                "x": 1041,
+                "y": 410,
                 "width": 44,
                 "height": 13
               },
@@ -2034,16 +2034,54 @@
             },
             "value": {
               "rect": {
-                "x": 1129,
-                "y": 418,
-                "width": 66,
-                "height": 14
+                "x": 1122,
+                "y": 410,
+                "width": 58,
+                "height": 13
               },
-              "text": "0% x2.0",
+              "text": "0%",
               "font": {
                 "family": "Alagard",
                 "style": "Medium",
                 "size": 15
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            }
+          },
+          "critical_power": {
+            "rect": {
+              "x": 1041,
+              "y": 430,
+              "width": 140,
+              "height": 13
+            },
+            "label": {
+              "rect": {
+                "x": 1041,
+                "y": 430,
+                "width": 86,
+                "height": 13
+              },
+              "text": "Critical power",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 13
               },
               "line_height": {
                 "unit": "AUTO"
@@ -2061,19 +2099,49 @@
                 "b": 143,
                 "a": 255
               }
+            },
+            "value": {
+              "rect": {
+                "x": 1131,
+                "y": 430,
+                "width": 40,
+                "height": 13
+              },
+              "text": "x2.0",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 15
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
             }
           },
           "dodge": {
             "rect": {
-              "x": 1040,
-              "y": 438,
-              "width": 36,
+              "x": 1041,
+              "y": 450,
+              "width": 140,
               "height": 13
             },
             "label": {
               "rect": {
-                "x": 1040,
-                "y": 438,
+                "x": 1041,
+                "y": 450,
                 "width": 36,
                 "height": 13
               },
@@ -2102,10 +2170,10 @@
             },
             "value": {
               "rect": {
-                "x": 1147,
-                "y": 438,
-                "width": 26,
-                "height": 14
+                "x": 1132,
+                "y": 450,
+                "width": 39,
+                "height": 13
               },
               "text": "0%",
               "font": {
@@ -2120,7 +2188,7 @@
                 "unit": "PERCENT",
                 "value": 0
               },
-              "horizontal_align": "LEFT",
+              "horizontal_align": "CENTER",
               "vertical_align": "TOP",
               "text_case": "ORIGINAL",
               "color": {
@@ -2133,15 +2201,15 @@
           },
           "magical_power": {
             "rect": {
-              "x": 1040,
-              "y": 459,
-              "width": 93,
+              "x": 1041,
+              "y": 470,
+              "width": 140,
               "height": 14
             },
             "label": {
               "rect": {
-                "x": 1040,
-                "y": 459,
+                "x": 1041,
+                "y": 470,
                 "width": 93,
                 "height": 14
               },
@@ -2170,10 +2238,10 @@
             },
             "value": {
               "rect": {
-                "x": 1154,
-                "y": 459,
-                "width": 11,
-                "height": 14
+                "x": 1135,
+                "y": 470,
+                "width": 30,
+                "height": 13
               },
               "text": "0",
               "font": {
@@ -2188,7 +2256,7 @@
                 "unit": "PERCENT",
                 "value": 0
               },
-              "horizontal_align": "LEFT",
+              "horizontal_align": "CENTER",
               "vertical_align": "TOP",
               "text_case": "ORIGINAL",
               "color": {

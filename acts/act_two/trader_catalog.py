@@ -33,7 +33,7 @@ TRADER_ITEMS = {
         description=(
             "Prevents one visible enemy from acting for 5 turns."
         ),
-        price=6,
+        price=3,
         sprite_name="trader_scroll_of_binding",
     ),
 
@@ -43,14 +43,14 @@ TRADER_ITEMS = {
         description=(
             "Deals 5 magic damage to one visible enemy."
         ),
-        price=4,
+        price=3,
         sprite_name="trader_scroll_of_arcane_impulse",
     ),
 
     HEALING_SCROLL: TraderItem(
         id=HEALING_SCROLL,
         name="Healing Scroll",
-        description="Restores 6 HP.",
+        description="Restores 8 HP.",
         price=4,
         sprite_name="trader_healing_scroll",
     ),
@@ -61,7 +61,7 @@ TRADER_ITEMS = {
         description=(
             "Reduces the next 6 physical hits by 60%."
         ),
-        price=6,
+        price=4,
         sprite_name="trader_scroll_of_stoneflesh",
     ),
 
@@ -71,7 +71,7 @@ TRADER_ITEMS = {
         description=(
             "Ignites a 3x3 area for 9 ticks, dealing 1 damage per tick."
         ),
-        price=5,
+        price=4,
         sprite_name="trader_fire_bomb",
     ),
 }
