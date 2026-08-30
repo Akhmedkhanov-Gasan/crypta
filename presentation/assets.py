@@ -535,6 +535,7 @@ def load_act_two_sprites():
         "key": "items/loot/key.png",
         "key_belt": "items/loot/key_belt.png",
         "coin": "items/loot/coin.png",
+        "coin_pile": "items/loot/coin_pile.png",
         "chest_closed": "items/chests/closed.png",
         "chest_open": "items/chests/open.png",
         "stash_closed": "items/chests/closed_stash.png",

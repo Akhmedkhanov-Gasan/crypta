@@ -183,6 +183,7 @@ def throw_act_two_consumable(
         for dropped in floor.dropped_consumables
     )
     occupied_positions.update(floor.dropped_keys)
+    occupied_positions.update(floor.dropped_gold)
     occupied_positions.update(
         (potion.column, potion.row)
         for potion in floor.potions

@@ -13,6 +13,7 @@ from acts.act_one.settings import (
 from acts.act_two.settings import (
     CLASS_BASE_ATTRIBUTE_RANKS,
     CLASS_BASE_STATS,
+    CLASS_STARTING_STATS,
     ACT_TWO_STARTING_LEVEL,
 )
 from acts.act_two.abilities import (
@@ -137,6 +138,7 @@ from game.progress_store import (
 from acts.act_two.navigation import find_act_two_path
 from acts.act_two.presentation.items import (
     draw_act_one_revisit_corpses,
+    draw_coin_pile,
 )
 from game.progression import apply_attribute_upgrade
 from acts.player_stats import (
@@ -1760,7 +1762,7 @@ def main():
                             apply_player_stat_transition(
                                 game_state.player,
                                 PLAYER_STARTING_STATS,
-                                CLASS_BASE_STATS[player_class],
+                                CLASS_STARTING_STATS[player_class],
                             )
                             apply_attribute_rank_transition(
                                 game_state.player,
@@ -1868,7 +1870,7 @@ def main():
                     apply_player_stat_transition(
                         game_state.player,
                         PLAYER_STARTING_STATS,
-                        CLASS_BASE_STATS[chosen_class],
+                        CLASS_STARTING_STATS[chosen_class],
                     )
                     apply_attribute_rank_transition(
                         game_state.player,
@@ -3884,6 +3886,20 @@ def main():
                         current_act,
                         act_two_sprites,
                     )
+                elif (
+                        chest_loot_kind == "gold"
+                        and current_act == 2
+                        and remembered_chest.get(
+                    "requires_key",
+                    True,
+                )
+                ):
+                    draw_coin_pile(
+                        world_target,
+                        remembered_chest["column"],
+                        remembered_chest["row"],
+                        act_two_sprites,
+                    )
                 else:
                     draw_coin(
                         world_target,
@@ -3899,7 +3915,23 @@ def main():
                 game_state.floor.visible_cells,
                 act_two_sprites,
             )
-
+        for dropped_gold in game_state.floor.dropped_gold:
+            if (
+                current_act == 2
+                and not position_is_visible(
+                    game_state.floor,
+                    dropped_gold[0],
+                    dropped_gold[1],
+                )
+            ):
+                continue
+            draw_coin(
+                world_target,
+                dropped_gold[0],
+                dropped_gold[1],
+                current_act,
+                act_two_sprites,
+            )
         for dropped_key in game_state.floor["dropped_keys"]:
             if (
                 current_act == 2

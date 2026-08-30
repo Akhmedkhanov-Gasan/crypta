@@ -54,7 +54,7 @@ _ACT_TWO_CONSUMABLE_DESCRIPTIONS = {
         "Reduces the next 6 physical hits by 60%."
     ),
     "scroll_of_binding": "Binds one visible enemy for 5 turns.",
-    "healing_scroll": "Restores 6 health.",
+    "healing_scroll": "Restores 8 health.",
     "scroll_of_arcane_impulse": (
         "Deals 5 magic damage to one visible enemy."
     ),
@@ -1165,8 +1165,6 @@ def draw_act_two_sidebar(
     if not stats_open:
         return
 
-    muted_color = (174, 154, 143)
-
     class_name = (
             player_class or "UNBOUND"
     ).title()
@@ -1291,46 +1289,46 @@ def draw_act_two_sidebar(
                 color=minus_color,
             )
 
-    combat_heading = log_font.render(
-        "Combat stats",
-        True,
-        muted_color,
+    combat_stats_layout = stats_panel_layout["combat_stats"]
+
+    combat_heading_spec = combat_stats_layout["heading"]
+
+    _draw_dynamic_figma_text(
+        screen,
+        combat_heading_spec,
+        combat_heading_spec["text"],
     )
-    screen.blit(
-        combat_heading,
-        combat_heading.get_rect(center=(1109, 371)),
-    )
-    combat_rows = (
-        ("Damage", f"{player_damage_min}-{player_damage_max}"),
-        (
-            "Critical",
-            f"{round(player_crit_chance * 100)}% "
-            f"x{player_critical_damage_multiplier:.1f}",
+
+    combat_values = {
+        "damage": (
+            f"{player_damage_min}-{player_damage_max}"
         ),
-        ("Dodge", f"{round(player_dodge_chance * 100)}%"),
-        ("Magical power", str(player_spell_power)),
-    )
-    for (label, value), center_y in zip(
-        combat_rows,
-        (393, 413, 431, 453),
-    ):
-        label_surface = log_font.render(
-            label,
-            True,
-            muted_color,
+        "critical": (
+            f"{round(player_crit_chance * 100)}%"
+        ),
+        "critical_power": (
+            f"x{player_critical_damage_multiplier:.1f}"
+        ),
+        "dodge": (
+            f"{round(player_dodge_chance * 100)}%"
+        ),
+        "magical_power": str(player_spell_power),
+    }
+
+    for row_name, value in combat_values.items():
+        row_layout = combat_stats_layout["rows"][row_name]
+        label_spec = row_layout["label"]
+
+        _draw_dynamic_figma_text(
+            screen,
+            label_spec,
+            label_spec["text"],
         )
-        screen.blit(
-            label_surface,
-            label_surface.get_rect(midleft=(1034, center_y)),
-        )
-        value_surface = controls_font.render(
+
+        _draw_dynamic_figma_text(
+            screen,
+            row_layout["value"],
             value,
-            True,
-            muted_color,
-        )
-        screen.blit(
-            value_surface,
-            value_surface.get_rect(center=(1150, center_y)),
         )
 
     pending_points = sum(pending_attribute_upgrades.values())

@@ -51,8 +51,8 @@
         "vertical_align": "CENTER",
         "text_case": "ORIGINAL",
         "color": {
-          "r": 120,
-          "g": 10,
+          "r": 142,
+          "g": 130,
           "b": 255,
           "a": 255
         }
@@ -137,8 +137,8 @@
         "vertical_align": "CENTER",
         "text_case": "ORIGINAL",
         "color": {
-          "r": 120,
-          "g": 10,
+          "r": 142,
+          "g": 130,
           "b": 255,
           "a": 255
         }
@@ -223,8 +223,8 @@
         "vertical_align": "CENTER",
         "text_case": "ORIGINAL",
         "color": {
-          "r": 120,
-          "g": 10,
+          "r": 142,
+          "g": 130,
           "b": 255,
           "a": 255
         }
@@ -281,14 +281,14 @@
       "height": 61
     },
     "button": {
-      "x": 549,
-      "y": 568,
-      "width": 183,
-      "height": 61
+      "x": 544,
+      "y": 569,
+      "width": 192,
+      "height": 59
     },
     "hitbox": {
       "x": 565,
-      "y": 584,
+      "y": 585,
       "width": 151,
       "height": 28
     }

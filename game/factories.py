@@ -352,7 +352,7 @@ def create_game_state(
         for index, config in enumerate(FLOOR_CONFIGS)
         if (
             config["act"] == 2
-            and config["act_floor"] in (1, 2)
+            and config["act_floor"] == 1
         )
     ]
 

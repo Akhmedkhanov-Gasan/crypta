@@ -139,15 +139,24 @@ def open_chest(
 
     if chest["contains"] in ("gold", POTION, FIRE_BOMB, *SCROLLS):
         chest["loot_available"] = True
-        loot_name = {
-            POTION: "a healing potion",
-            FIRE_BOMB: "a fire bomb",
-            SCROLL_OF_STONEFLESH: "a Scroll of Stoneflesh",
-            SCROLL_OF_BINDING: "a Scroll of Binding",
-            HEALING_SCROLL: "a Healing Scroll",
-            SCROLL_OF_ARCANE_IMPULSE: "a Scroll of Arcane Impulse",
-            "gold": "gold",
-        }[chest["contains"]]
+        if (
+            chest["contains"] == "gold"
+            and chest.requires_key
+            and act_number == 2
+        ):
+            loot_name = "a pile of gold"
+        else:
+            loot_name = {
+                POTION: "a healing potion",
+                FIRE_BOMB: "a fire bomb",
+                SCROLL_OF_STONEFLESH: "a Scroll of Stoneflesh",
+                SCROLL_OF_BINDING: "a Scroll of Binding",
+                HEALING_SCROLL: "a Healing Scroll",
+                SCROLL_OF_ARCANE_IMPULSE: (
+                    "a Scroll of Arcane Impulse"
+                ),
+                "gold": "gold",
+            }[chest["contains"]]
         add_log_message(
             game_state.combat_log,
             f"Chest opened: {loot_name} found.",
@@ -293,6 +302,36 @@ def _collect_items(
         player_position,
     )
     collect_treasury_reward(game_state, player_position)
+    dropped_gold_count = floor.dropped_gold.count(
+        player_position
+    )
+
+    if dropped_gold_count > 0:
+        player.gold_count += dropped_gold_count
+        floor.dropped_gold[:] = [
+            position
+            for position in floor.dropped_gold
+            if position != player_position
+        ]
+        _start_pickup_effect(
+            game_state,
+            "gold",
+            player_position,
+            effect_started_at,
+        )
+        add_log_message(
+            game_state.combat_log,
+            (
+                "Hero picks up one gold."
+                if dropped_gold_count == 1
+                else (
+                    f"Hero picks up "
+                    f"{dropped_gold_count} gold."
+                )
+            ),
+            category="loot",
+        )
+
     crate_loot_kind = collect_crate_loot(
         game_state,
         player_position,
@@ -401,9 +440,25 @@ def _collect_items(
             }[loot_kind]
             message = f"Hero picks up a {scroll_name}."
         else:
-            player.gold_count += 1
-            pickup_kind = "gold"
-            message = "Hero picks up one gold."
+            gold_amount = (
+                3
+                if (
+                        act_number == 2
+                        and chest_with_loot.requires_key
+                )
+                else 1
+            )
+            player.gold_count += gold_amount
+            pickup_kind = (
+                "gold_pile"
+                if gold_amount == 3
+                else "gold"
+            )
+            message = (
+                "Hero picks up three gold."
+                if gold_amount == 3
+                else "Hero picks up one gold."
+            )
         chest_with_loot["loot_available"] = False
         _start_pickup_effect(
             game_state,

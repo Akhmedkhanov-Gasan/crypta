@@ -3,6 +3,8 @@ from collections.abc import Callable
 from math import ceil
 
 from acts.act_two.settings import (
+    ENEMY_GOLD_DROP_CHANCE,
+    MAGE_BASIC_ATTACK_SPELL_POWER_SCALING,
     ROGUE_CRUELTY_BLEED_DAMAGE,
     ROGUE_CRUELTY_BLEED_TURNS,
     ROGUE_SHADE_INVISIBILITY_TURNS,
@@ -631,6 +633,29 @@ def resolve_enemy_defeat(
                 ),
                 category="progress",
             )
+        if random.random() < ENEMY_GOLD_DROP_CHANCE:
+            drop_position = (
+                enemy.column,
+                enemy.row,
+            )
+            floor.dropped_gold.append(drop_position)
+            game_state.emit(
+                GameEvent(
+                    type=GameEventType.ENVIRONMENT,
+                    actor=enemy.name,
+                    origin=drop_position,
+                    destination=drop_position,
+                    data={
+                        "kind": "enemy_gold_drop",
+                        "amount": 1,
+                    },
+                )
+            )
+            add_log_message(
+                game_state.combat_log,
+                f"{enemy.name} drops one gold.",
+                category="loot",
+            )
     try_spawn_enemy_after_death(game_state, enemy)
     release_mimic_loot(game_state, enemy)
 
@@ -693,17 +718,22 @@ def basic_attack_damage_range(player) -> tuple[int, int]:
         "strength",
         player.attribute_ranks.get("strength", 0),
     )
+    spell_damage_bonus = ceil(
+        player.spell_power
+        * MAGE_BASIC_ATTACK_SPELL_POWER_SCALING
+    )
+
     minimum = max(
         1,
         player.damage_min
         - strength_contribution.damage_min
-        + player.spell_power,
+        + spell_damage_bonus,
     )
     maximum = max(
         minimum,
         player.damage_max
         - strength_contribution.damage_max
-        + player.spell_power,
+        + spell_damage_bonus,
     )
     return minimum, maximum
 

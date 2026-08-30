@@ -34,7 +34,7 @@ FLOOR_CONFIGS = [
         "generation_attempts": 12,
         "minimum_start_exit_distance": 24,
         "secret_room_chance": 0.75,
-        "treasury_room": True,
+        "treasury_room": False,
         "rune_room": True,
         "trader": True,
         "bloody_altar_near_trader": True,
@@ -62,7 +62,7 @@ FLOOR_CONFIGS = [
         "generation_attempts": 12,
         "minimum_start_exit_distance": 28,
         "secret_room_chance": 1.0,
-        "treasury_room": True,
+        "treasury_room": False,
         "spike_trap_count": 7,
         "breakable_crate_count": 9,
         "enemy_counts": {

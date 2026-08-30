@@ -20,6 +20,7 @@ def draw_pickup_effect(
         kind not in (
             "potion",
             "gold",
+            "gold_pile",
             "key",
             "fire_bomb",
             "scroll_of_stoneflesh",
@@ -45,6 +46,7 @@ def draw_pickup_effect(
     colors = {
         "potion": ((183, 46, 59), (255, 126, 126)),
         "gold": ((194, 137, 31), (255, 226, 91)),
+        "gold_pile": ((194, 137, 31), (255, 226, 91)),
         "key": ((151, 110, 42), (240, 197, 94)),
         "fire_bomb": ((130, 45, 25), (255, 131, 56)),
         "scroll_of_stoneflesh": ((91, 83, 72), (216, 199, 164)),
@@ -55,6 +57,7 @@ def draw_pickup_effect(
     sprite_names = {
         "potion": "potion",
         "gold": "coin",
+        "gold_pile": "coin_pile",
         "key": "key",
         "fire_bomb": "fire_bomb",
         "scroll_of_stoneflesh": "scroll_of_stoneflesh",

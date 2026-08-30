@@ -281,10 +281,10 @@
       "height": 61
     },
     "button": {
-      "x": 549,
-      "y": 568,
-      "width": 183,
-      "height": 61
+      "x": 544,
+      "y": 569,
+      "width": 192,
+      "height": 59
     },
     "hitbox": {
       "x": 565,

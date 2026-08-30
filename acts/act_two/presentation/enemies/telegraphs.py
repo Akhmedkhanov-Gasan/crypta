@@ -165,6 +165,7 @@ def _draw_archer_telegraph(
     target,
     enemy_is_visible,
     current_time,
+    lane=0,
 ):
     source = pygame.Vector2(
         MAP_OFFSET_X
@@ -188,6 +189,7 @@ def _draw_archer_telegraph(
     if direction.length_squared() == 0:
         return
 
+
     direction = direction.normalize()
     perpendicular = pygame.Vector2(
         -direction.y,
@@ -204,58 +206,62 @@ def _draw_archer_telegraph(
         pygame.SRCALPHA,
     )
 
+
+    lane_offsets = (0, -5, 5, -9, 9)
+    lane_offset = lane_offsets[
+        min(lane, len(lane_offsets) - 1)
+    ]
+
     target_edge = (
         destination
-        - direction * (TILE_SIZE * 0.43)
+        - direction * (TILE_SIZE * 0.46)
+        + perpendicular * lane_offset
     )
+
     arrow_tip = (
         target_edge
-        + direction * (7 + pulse * 2)
+        + direction * (8 + pulse * 2)
     )
     arrow_back = (
         arrow_tip
-        - direction * 8
+        - direction * 10
     )
 
     arrow_points = (
         arrow_tip,
-        arrow_back + perpendicular * 5,
-        arrow_back - perpendicular * 5,
+        arrow_back + perpendicular * 6,
+        arrow_back - perpendicular * 6,
+    )
+    outline_points = (
+        arrow_tip + direction * 2,
+        arrow_back + perpendicular * 8,
+        arrow_back - perpendicular * 8,
     )
 
-    glow_points = (
-        arrow_tip + direction * 1,
-        arrow_back + perpendicular * 7,
-        arrow_back - perpendicular * 7,
+    pygame.draw.polygon(
+        overlay,
+        (10, 29, 12, 220),
+        outline_points,
     )
 
     pygame.draw.polygon(
         overlay,
         (
-            49,
-            136,
-            43,
-            round(65 + pulse * 50),
-        ),
-        glow_points,
-    )
-    pygame.draw.polygon(
-        overlay,
-        (
-            112,
-            224,
-            83,
-            round(210 + pulse * 45),
+            106,
+            229,
+            78,
+            round(220 + pulse * 35),
         ),
         arrow_points,
     )
+
     pygame.draw.line(
         overlay,
         (
-            190,
+            205,
             255,
-            157,
-            round(210 + pulse * 45),
+            176,
+            round(225 + pulse * 30),
         ),
         arrow_back,
         arrow_tip,
@@ -264,16 +270,16 @@ def _draw_archer_telegraph(
 
     feather_center = (
         arrow_back
-        - direction * 3
+        - direction * 2
     )
 
     pygame.draw.line(
         overlay,
         (
-            112,
-            224,
-            83,
-            round(175 + pulse * 60),
+            106,
+            229,
+            78,
+            round(190 + pulse * 55),
         ),
         feather_center,
         feather_center + perpendicular * 4,
@@ -282,10 +288,10 @@ def _draw_archer_telegraph(
     pygame.draw.line(
         overlay,
         (
-            112,
-            224,
-            83,
-            round(175 + pulse * 60),
+            106,
+            229,
+            78,
+            round(190 + pulse * 55),
         ),
         feather_center,
         feather_center - perpendicular * 4,
@@ -293,6 +299,7 @@ def _draw_archer_telegraph(
     )
 
     screen.blit(overlay, (0, 0))
+
 
 def _draw_priest_heal_telegraph(
     screen,
@@ -560,38 +567,6 @@ def draw_act_two_attack_markers(
                 current_time,
             )
 
-        for entry in entries:
-            enemy = entry["enemy"]
-
-            if (
-                enemy["type"] != "archer"
-                or enemy.get("prepared_attack_mode") != "ranged"
-            ):
-                continue
-
-            attack_targets = entry["targets"]
-            direct_target = (
-                player_position
-                if player_position in attack_targets
-                else attack_targets[0]
-            )
-            enemy_is_visible = (
-                visible_cells is None
-                or (
-                    enemy["column"],
-                    enemy["row"],
-                )
-                in visible_cells
-            )
-
-            _draw_archer_telegraph(
-                screen,
-                enemy,
-                direct_target,
-                enemy_is_visible,
-                current_time,
-            )
-
         return
 
     for (column, row), cell_entries in entries_by_cell.items():
@@ -608,3 +583,38 @@ def draw_act_two_attack_markers(
                 enemy.get("prepared_attack_mode"),
                 entry["lane"],
             )
+
+
+    for entry in entries:
+        enemy = entry["enemy"]
+
+        if (
+            enemy["type"] != "archer"
+            or enemy.get("prepared_attack_mode") != "ranged"
+        ):
+            continue
+
+        attack_targets = entry["targets"]
+        direct_target = (
+            player_position
+            if player_position in attack_targets
+            else attack_targets[0]
+        )
+
+        enemy_is_visible = (
+            visible_cells is None
+            or (
+                enemy["column"],
+                enemy["row"],
+            )
+            in visible_cells
+        )
+
+        _draw_archer_telegraph(
+            screen,
+            enemy,
+            direct_target,
+            enemy_is_visible,
+            current_time,
+            entry["lane"],
+        )
