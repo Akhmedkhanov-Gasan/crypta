@@ -20,7 +20,7 @@ BLOODY_PACT_ORDER = (
 OPEN_WOUND_HEALTH_COST_RATIO = 0.10
 GLASS_HEART_DAMAGE_MULTIPLIER = 1.50
 GLASS_HEART_HEALTH_PENALTY_RATIO = 0.25
-BLOOD_HUNGER_LIFESTEAL_RATIO = 0.20
+BLOOD_HUNGER_LIFESTEAL_RATIO = 0.25
 _BLOODY_PACT_IDS = frozenset(BLOODY_PACT_ORDER)
 
 def has_bloody_pact(player, pact_id: str) -> bool:
@@ -194,18 +194,17 @@ def pay_open_wound_ability_cost(
     return True
 
 
-def adjusted_attack_damage_range(
+def adjusted_outgoing_damage(
     player,
-    minimum: int,
-    maximum: int,
-) -> tuple[int, int]:
+    damage: int,
+) -> int:
     if has_bloody_pact(player, GLASS_HEART):
-        maximum = ceil(
-            maximum
+        damage = ceil(
+            damage
             * GLASS_HEART_DAMAGE_MULTIPLIER
         )
 
-    return minimum, max(minimum, maximum)
+    return damage
 
 
 def healing_consumables_are_blocked(player) -> bool:
@@ -226,4 +225,5 @@ __all__ = [
     "healing_consumables_are_blocked",
     "interact_with_bloody_altar",
     "select_bloody_pact",
+    "adjusted_outgoing_damage",
 ]

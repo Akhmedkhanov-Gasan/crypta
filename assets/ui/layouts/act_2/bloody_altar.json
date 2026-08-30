@@ -485,7 +485,7 @@
           "width": 170,
           "height": 30
         },
-        "text": "Damage dealt restores 20% as\nhealth.",
+        "text": "Damage dealt restores \n25% as health.",
         "font": {
           "family": "Alagard",
           "style": "Medium",

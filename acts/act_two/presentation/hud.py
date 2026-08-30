@@ -1,6 +1,7 @@
 import pygame
 
 from acts.act_two.rune_catalog import RUNES_BY_ID
+from acts.act_two.bloody_altar_catalog import BLOODY_PACTS_BY_ID
 from settings import MAX_ATTRIBUTE_RANK
 
 from acts.act_two.settings import (
@@ -696,6 +697,9 @@ def draw_act_two_sidebar(
 
     status_layout = top_bar_layout["status_effects"]
 
+    selected_rune = RUNES_BY_ID.get(selected_rune_id)
+    bloody_pact = BLOODY_PACTS_BY_ID.get(bloody_pact_id)
+
     active_status_effects = []
 
     if invisibility_turns > 0:
@@ -703,22 +707,31 @@ def draw_act_two_sidebar(
             (
                 "rogue_invisibility_icon",
                 invisibility_turns,
+                "Invisibility",
+                (
+                    "Enemies cannot see you. "
+                    "Your next attack is a guaranteed critical hit."
+                ),
             )
         )
 
-    if selected_rune_id is not None:
+    if selected_rune is not None:
         active_status_effects.append(
             (
-                f"{selected_rune_id}_icon",
+                f"{selected_rune.id}_icon",
                 None,
+                selected_rune.name,
+                selected_rune.description,
             )
         )
 
-    if bloody_pact_id is not None:
+    if bloody_pact is not None:
         active_status_effects.append(
             (
-                f"bloody_pact_{bloody_pact_id}",
+                f"bloody_pact_{bloody_pact.id}",
                 None,
+                bloody_pact.name,
+                f"{bloody_pact.reward} {bloody_pact.sacrifice}",
             )
         )
 
@@ -727,6 +740,11 @@ def draw_act_two_sidebar(
             (
                 "trader_scroll_of_stoneflesh",
                 stoneflesh_hits,
+                "Stoneflesh",
+                (
+                    "Reduces incoming physical damage by 60%. "
+                    f"{stoneflesh_hits} protected hits remain."
+                ),
             )
         )
 
@@ -735,11 +753,18 @@ def draw_act_two_sidebar(
         for slot_name in sorted(status_layout["slots"])
     )
 
+    hovered_status_effect = None
+
     for slot_layout, status_effect in zip(
-        status_slots,
-        active_status_effects,
+            status_slots,
+            active_status_effects,
     ):
-        sprite_name, remaining_value = status_effect
+        (
+            sprite_name,
+            remaining_value,
+            effect_name,
+            effect_description,
+        ) = status_effect
 
         if sprite_name not in sprites:
             continue
@@ -760,6 +785,18 @@ def draw_act_two_sidebar(
                 screen,
                 slot_layout["value"],
                 remaining_value,
+            )
+
+        if (
+                mouse_position is not None
+                and figma_rect(
+            slot_layout["hitbox"]
+        ).collidepoint(mouse_position)
+        ):
+            hovered_status_effect = (
+                sprite_name,
+                effect_name,
+                effect_description,
             )
 
     value_color = (239, 235, 225)
@@ -945,8 +982,6 @@ def draw_act_two_sidebar(
             hovered_description,
         )
 
-    selected_rune = RUNES_BY_ID.get(selected_rune_id)
-
     base_ability_asset_name = _ACT_TWO_ABILITY_ASSETS.get(player_class)
 
     displayed_ability_asset_name = (
@@ -1097,6 +1132,52 @@ def draw_act_two_sidebar(
             displayed_ability_asset_name,
             displayed_ability_name,
             displayed_ability_description,
+        )
+
+    if hovered_status_effect is not None:
+        (
+            status_sprite_name,
+            status_name,
+            status_description,
+        ) = hovered_status_effect
+
+        base_info_layout = hud_layout["info"]
+        base_info_rectangle = figma_rect(
+            base_info_layout["rect"]
+        )
+        status_rectangle = figma_rect(
+            status_layout["rect"]
+        )
+
+        target_left = max(
+            0,
+            min(
+                screen.get_width() - base_info_rectangle.width,
+                status_rectangle.left,
+            ),
+        )
+
+        target_top = max(
+            0,
+            min(
+                screen.get_height() - base_info_rectangle.height,
+                status_rectangle.bottom + 8,
+            ),
+        )
+
+        status_info_layout = _offset_layout(
+            base_info_layout,
+            target_left - base_info_rectangle.left,
+            target_top - base_info_rectangle.top,
+        )
+
+        _draw_act_two_hover_panel(
+            screen,
+            sprites,
+            status_info_layout,
+            status_sprite_name,
+            status_name,
+            status_description,
         )
 
     _blit_layout_image(

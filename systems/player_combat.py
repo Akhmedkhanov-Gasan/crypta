@@ -13,8 +13,7 @@ from acts.act_two.settings import (
 from acts.act_two.abilities import ability_charge_required
 from acts.act_two.bloody_altar import (
     BLOOD_HUNGER,
-    OPEN_WOUND,
-    adjusted_attack_damage_range,
+    adjusted_outgoing_damage,
     has_bloody_pact,
     BLOOD_HUNGER_LIFESTEAL_RATIO,
 )
@@ -92,8 +91,6 @@ def damage_player(
         and player.paladin_holy_shield_turns > 0
     ):
         damage = ceil(damage / 2)
-    if damage > 0 and has_bloody_pact(player, OPEN_WOUND):
-        damage += 1
     previous_health = player.health
     minimum_health = (
         1
@@ -287,14 +284,6 @@ def attack_enemy(
         )
         return False
 
-    damage_minimum, damage_maximum = (
-        adjusted_attack_damage_range(
-            player,
-            damage_minimum,
-            damage_maximum,
-        )
-    )
-
     damage = (
             roll_player_damage(
                 damage_minimum,
@@ -349,7 +338,11 @@ def attack_enemy(
             damage
             * player.critical_damage_multiplier
         )
-
+    if attacker_name == "hero":
+        damage = adjusted_outgoing_damage(
+            player,
+            damage,
+        )
     enemy_health_before_hit = enemy.health
     enemy.health = max(
         0,

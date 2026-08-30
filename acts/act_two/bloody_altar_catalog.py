@@ -13,26 +13,26 @@ BLOODY_PACTS = (
     BloodyPactDefinition(
         id="open_wound",
         name="Open Wound",
-        reward="Ability damage +2.",
-        sacrifice="Incoming damage +1.",
+        reward="Abilities no longer require charge.",
+        sacrifice="Each ability use costs 10% of maximum health.",
     ),
     BloodyPactDefinition(
         id="broken_seal",
         name="Broken Seal",
-        reward="Ability charges after 2 hits.",
-        sacrifice="Chosen rune is destroyed.",
+        reward="Abilities charge after 2 successful hits.",
+        sacrifice="The selected rune is permanently destroyed.",
     ),
     BloodyPactDefinition(
         id="glass_heart",
         name="Glass Heart",
-        reward="Minimum and maximum damage +1.",
-        sacrifice="Maximum health -4.",
+        reward="All damage dealt is increased by 50%.",
+        sacrifice="Maximum health is permanently reduced by 25%.",
     ),
     BloodyPactDefinition(
         id="blood_hunger",
         name="Blood Hunger",
-        reward="Damage dealt restores 20% as health.",
-        sacrifice="Healing consumables cannot be used.",
+        reward="Damage dealt restores 25% of that damage as health.",
+        sacrifice="Healing consumables can no longer be used.",
     ),
 )
 
