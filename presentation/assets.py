@@ -495,6 +495,12 @@ def load_act_two_sprites():
         ),
         "passage_gate_open": "environment/passages/gate.png",
         "passage_gate_closed": "environment/passages/gate.png",
+        "passage_gate_return_open": (
+            "environment/passages/gate_original_out.png"
+        ),
+        "passage_gate_return_closed": (
+            "environment/passages/gate_original_out.png"
+        ),
         "act_one_dead_boss": (
             "environment/objects/act1_dead_boss.png"
         ),

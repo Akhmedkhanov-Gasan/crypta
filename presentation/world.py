@@ -3319,6 +3319,7 @@ def draw_passage(
     is_open,
     act_number,
     sprites,
+    is_return=False,
 ):
     if act_number == 1:
         _draw_act_one_passage(
@@ -3335,4 +3336,5 @@ def draw_passage(
         row,
         is_open,
         sprites,
+        is_return=is_return,
     )

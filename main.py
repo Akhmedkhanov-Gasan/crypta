@@ -3728,7 +3728,30 @@ def main():
                     or game_state.player.player_class is not None
                     or not living_enemies_remain
                 )
+                for passage in game_state.floor.passages:
+                    if current_act == 2 and not passage.discovered:
+                        continue
 
+                    passage_is_open = (
+                            not passage.requires_clear
+                            or game_state.player.player_class is not None
+                            or not living_enemies_remain
+                    )
+
+                    passage_is_return = (
+                            current_act == 2
+                            and passage.passage_id == "entrance"
+                    )
+
+                    draw_passage(
+                        world_target,
+                        passage.wall_position[0],
+                        passage.wall_position[1],
+                        passage_is_open,
+                        current_act,
+                        act_two_sprites,
+                        is_return=passage_is_return,
+                    )
                 draw_passage(
                     world_target,
                     passage.wall_position[0],

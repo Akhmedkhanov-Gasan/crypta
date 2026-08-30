@@ -102,12 +102,16 @@ def draw_passage(
     row,
     is_open,
     sprites,
+    is_return=False,
 ):
+    state = "open" if is_open else "closed"
+
     sprite_name = (
-        "passage_gate_open"
-        if is_open
-        else "passage_gate_closed"
+        f"passage_gate_return_{state}"
+        if is_return
+        else f"passage_gate_{state}"
     )
+
     screen.blit(
         sprites[sprite_name],
         _position(column, row),
