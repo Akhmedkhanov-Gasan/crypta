@@ -48,7 +48,7 @@ def draw_status(
     if act_number in (1, 2):
         status = (
             f"ACT {'I' if act_number == 1 else 'II'}"
-            f"  ·  FLOOR {act_floor}/{act_floor_count}"
+            f"    FLOOR {act_floor}/{act_floor_count}"
         )
         status_surface = font.render(status, True, TEXT_COLOR)
         screen.blit(

@@ -47,19 +47,17 @@ def get_initial_window_size():
 
 
 def game_viewport(window_size):
-    """Return a centered viewport using integer upscale factors when possible."""
+    """Fit the game canvas inside the window without changing its proportions."""
     window_width, window_height = window_size
-    available_scale = min(
+
+    scale = min(
         window_width / GAME_WIDTH,
         window_height / GAME_HEIGHT,
     )
-    scale = (
-        max(1, math.floor(available_scale))
-        if available_scale >= 1
-        else available_scale
-    )
+
     width = max(1, round(GAME_WIDTH * scale))
     height = max(1, round(GAME_HEIGHT * scale))
+
     return (
         pygame.Rect(
             (window_width - width) // 2,
@@ -122,14 +120,29 @@ def present_game(window, game_surface):
 
 
 def window_to_game_position(window, window_position):
-    viewport, scale = game_viewport(window.get_size())
+    viewport, _ = game_viewport(window.get_size())
     mouse_x, mouse_y = window_position
+
     if not viewport.collidepoint(mouse_x, mouse_y):
         return None
 
     return (
-        min(GAME_WIDTH - 1, int((mouse_x - viewport.x) / scale)),
-        min(GAME_HEIGHT - 1, int((mouse_y - viewport.y) / scale)),
+        min(
+            GAME_WIDTH - 1,
+            int(
+                (mouse_x - viewport.x)
+                * GAME_WIDTH
+                / viewport.width
+            ),
+        ),
+        min(
+            GAME_HEIGHT - 1,
+            int(
+                (mouse_y - viewport.y)
+                * GAME_HEIGHT
+                / viewport.height
+            ),
+        ),
     )
 
 

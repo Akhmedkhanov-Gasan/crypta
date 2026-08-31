@@ -82,6 +82,36 @@ def present_act_two_turn_events(
     )
     events = game_state.events
 
+    hero_attack_event = next(
+        (
+            event
+            for event in reversed(events)
+            if (
+                event.type is GameEventType.ATTACK
+                and event.actor == "hero"
+            )
+        ),
+        None,
+    )
+
+    if hero_attack_event is not None:
+        player = game_state.player
+
+        player.attack_animation_started_at = started_at
+
+        player.act_one_attack_target = (
+            hero_attack_event.positions[0]
+            if hero_attack_event.positions
+            else None
+        )
+
+        player.act_one_attack_was_critical = any(
+            event.type is GameEventType.HIT
+            and event.actor == "hero"
+            and event.data.get("critical", False)
+            for event in events
+        )
+
     _record_enemy_dodge_feedback(game_state, started_at)
     _record_player_dodge_feedback(
         game_state,
