@@ -192,6 +192,10 @@ class RuneRoomState:
 
 @dataclass
 class ActTwoPlayerState:
+    death_score_open: bool = False
+    death_dialogue_skipped: bool = False
+    death_input_unlock_at: int = 0
+
     selected_rune_id: str | None = None
     bloody_pact_id: str | None = None
     consumable_slots: list[str | None] = field(

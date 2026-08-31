@@ -489,6 +489,7 @@ def use_scroll(
             message = None
 
     _consume_scroll(player, slot_index)
+    game_state.run_stats.consumables_used += 1
 
     if message is not None:
         message_category = {
@@ -686,6 +687,7 @@ def throw_fire_bomb(
         return False
 
     player.act_two.consumable_slots[slot_index] = None
+    game_state.run_stats.consumables_used += 1
     player.act_two.fire_bomb_aiming = False
     player.act_two.fire_bomb_aiming_slot = None
     origin = (

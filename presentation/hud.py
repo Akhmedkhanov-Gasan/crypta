@@ -263,7 +263,7 @@ def draw_status(
     message = None
     message_color = TEXT_COLOR
 
-    if player_health <= 0:
+    if player_health <= 0 and act_number != 2:
         message = "Defeat - press R to restart"
         message_color = ENEMY_COLOR
     elif game_won:

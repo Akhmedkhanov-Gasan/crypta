@@ -266,6 +266,8 @@ def collect_treasury_reward(
 
     treasury.phase = TreasuryTrialPhase.CLAIMED
     game_state.player.gold_count += 10
+    game_state.run_stats.gold_earned += 10
+    game_state.run_stats.chests_opened += 1
     game_state.player_attack_targets = []
 
     _relocate_quest_trader(game_state)

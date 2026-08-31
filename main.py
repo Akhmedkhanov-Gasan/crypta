@@ -31,6 +31,14 @@ from acts.act_two.presentation.bloody_altar import (
     handle_bloody_altar_event,
     load_bloody_altar_layout,
 )
+from acts.act_two.presentation.death_scene import (
+    draw_act_two_death_dialogue_overlay,
+)
+from acts.act_two.presentation.death_score import (
+    draw_act_two_death_score,
+    handle_act_two_death_event,
+    load_act_two_death_score,
+)
 from acts.act_two.crates import break_crate
 from acts.act_two.consumables import (
     FIRE_BOMB,
@@ -343,6 +351,9 @@ def _complete_class_selection(game_state):
 
     prepare_act_one_revisit_floors(game_state)
 
+    game_state.run_stats.completed_floors.add(
+        game_state.floor_index
+    )
     game_state.floor_index += 1
 
     next_floor = game_state.visited_floors.get(
@@ -436,6 +447,11 @@ def _advance_floor_transition(game_state, current_time):
                 ),
             )
             game_state.visited_floors[target_index] = target_floor
+
+        if target_index > game_state.floor_index:
+            game_state.run_stats.completed_floors.add(
+                game_state.floor_index
+            )
 
         game_state.floor_index = target_index
         game_state.floor = target_floor
@@ -561,6 +577,9 @@ def main():
     act_two_hud_layout = load_act_two_hud_layout()
     act_two_trade_layout = load_act_two_trade_layout()
     bloody_altar_layout = load_bloody_altar_layout()
+    death_score_layout, death_score_assets = (
+        load_act_two_death_score(act_two_sprites)
+    )
     act_three_fonts = load_act_three_fonts()
     menu_fonts = {
         1: act_two_fonts,
@@ -747,6 +766,45 @@ def main():
                 if not act_two_held_movement_keys:
                     act_two_held_direction = (0, 0)
                 continue
+            death_menu_requested = False
+
+            if (
+                not menu_open
+                and current_act == 2
+                and game_state.player.health <= 0
+                and event.type not in (
+                    pygame.QUIT,
+                    pygame.VIDEORESIZE,
+                )
+            ):
+                event_position = getattr(
+                    event,
+                    "pos",
+                    pygame.mouse.get_pos(),
+                )
+
+                death_action = handle_act_two_death_event(
+                    event,
+                    game_state,
+                    death_score_layout,
+                    window_to_game_position(
+                        screen,
+                        event_position,
+                    ),
+                    pygame.time.get_ticks(),
+                )
+
+                if death_action != "menu":
+                    continue
+
+                act_two_held_movement_keys.clear()
+                act_two_held_direction = (0, 0)
+                act_two_auto_move_target = None
+                act_two_auto_move_floor_index = None
+                act_two_dragged_consumable_slot = None
+
+                menu_open = True
+                death_menu_requested = True
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.VIDEORESIZE and not fullscreen:
@@ -764,19 +822,25 @@ def main():
                     "pos",
                     pygame.mouse.get_pos(),
                 )
-                menu_action = handle_menu_event(
-                    event,
-                    menu_state,
-                    window_to_game_position(screen, event_position),
-                    game_started,
-                    fullscreen,
-                    menu_progress.highest_act_reached,
-                    menu_layout=active_menu_layouts[
-                        "confirm"
-                        if menu_state.page == "confirm_abandon"
-                        else menu_state.page
-                    ],
-                )
+                if death_menu_requested:
+                    menu_action = "abandon_run"
+                else:
+                    menu_action = handle_menu_event(
+                        event,
+                        menu_state,
+                        window_to_game_position(
+                            screen,
+                            event_position,
+                        ),
+                        game_started,
+                        fullscreen,
+                        menu_progress.highest_act_reached,
+                        menu_layout=active_menu_layouts[
+                            "confirm"
+                            if menu_state.page == "confirm_abandon"
+                            else menu_state.page
+                        ],
+                    )
 
                 if menu_action == "resume":
                     if (
@@ -1969,6 +2033,7 @@ def main():
                                 game_state.act_one_upgrades_remaining -= 1
                             else:
                                 game_state.player.gold_count -= 1
+                                game_state.run_stats.gold_spent += 1
                             game_state.upgrade_message = (
                                 f"{attribute.title()} increased."
                             )
@@ -2699,6 +2764,9 @@ def main():
                             FIRST_ACT_FINAL_FLOOR,
                             pygame.time.get_ticks(),
                         )
+                if player_acted:
+                    game_state.run_stats.turns_taken += 1
+
                 if player_acted and current_act == 2:
                     action_started_at = pygame.time.get_ticks()
 
@@ -3124,6 +3192,25 @@ def main():
                     else menu_state.page
                 ],
                 menu_layouts=menu_layouts,
+            )
+            present_game(screen, game_surface)
+            clock.tick(FPS)
+            continue
+
+        if (
+                current_act == 2
+                and game_state.player.health <= 0
+                and game_state.player.act_two.death_score_open
+        ):
+            draw_act_two_death_score(
+                game_surface,
+                game_state,
+                death_score_layout,
+                death_score_assets,
+                window_to_game_position(
+                    screen,
+                    pygame.mouse.get_pos(),
+                ),
             )
             present_game(screen, game_surface)
             clock.tick(FPS)
@@ -4461,9 +4548,19 @@ def main():
                 game_state.player.subclass,
                 game_state.player.player_class,
             )
+
+        if current_act == 2:
+            draw_act_two_death_dialogue_overlay(
+                game_surface,
+                game_state,
+                act_two_fonts,
+                current_time,
+                act_two_camera,
+            )
+
         if (
-            game_state.floor_transition_started_at >= 0
-            and game_state.floor_transition_target_index is not None
+                game_state.floor_transition_started_at >= 0
+                and game_state.floor_transition_target_index is not None
         ):
             target_floor_config = FLOOR_CONFIGS[
                 game_state.floor_transition_target_index

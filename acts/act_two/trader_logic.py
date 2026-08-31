@@ -118,6 +118,7 @@ def buy_trader_item(game_state, slot_name):
         return False
 
     player.gold_count -= item.price
+    game_state.run_stats.gold_spent += item.price
 
     add_log_message(
         game_state.combat_log,

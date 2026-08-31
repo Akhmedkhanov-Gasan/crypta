@@ -80,6 +80,7 @@ def try_use_potion(
     else:
         player.potion_count -= 1
     healed_health = player.health - previous_health
+    game_state.run_stats.consumables_used += 1
     game_state.emit(
         GameEvent(
             type=GameEventType.HEAL,
@@ -117,6 +118,9 @@ def open_chest(
             category="warning",
         )
         return True
+
+    if not chest["is_open"]:
+        game_state.run_stats.chests_opened += 1
 
     chest["is_open"] = True
     chest.open_animation_started_at = effect_started_at
@@ -308,6 +312,7 @@ def _collect_items(
 
     if dropped_gold_count > 0:
         player.gold_count += dropped_gold_count
+        game_state.run_stats.gold_earned += dropped_gold_count
         floor.dropped_gold[:] = [
             position
             for position in floor.dropped_gold
@@ -449,6 +454,7 @@ def _collect_items(
                 else 1
             )
             player.gold_count += gold_amount
+            game_state.run_stats.gold_earned += gold_amount
             pickup_kind = (
                 "gold_pile"
                 if gold_amount == 3

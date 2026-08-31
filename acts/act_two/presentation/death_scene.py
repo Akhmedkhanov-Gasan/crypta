@@ -1,24 +1,24 @@
 import pygame
 
+from presentation.camera import camera_render_rectangle
 from presentation.hud import wrap_text
+from presentation.layout import (
+    ACT_TWO_VIEW_HEIGHT,
+    ACT_TWO_VIEW_WIDTH,
+    ACT_TWO_VIEW_X,
+    ACT_TWO_VIEW_Y,
+)
 from settings import TILE_SIZE
 
 
 ACT_TWO_OLD_MAN_APPEAR_MS = 2500
 ACT_TWO_OLD_MAN_KNEEL_MS = 3700
 ACT_TWO_OLD_MAN_DIALOGUE_MS = 4800
-ACT_TWO_DEFEAT_MESSAGE_MS = 6900
-ACT_TWO_DEFEAT_FADE_MS = 520
 
 _OLD_MAN_LINES = {
     "warrior": "Strength is loud. What waits below is patient.",
     "rogue": "You can hide from beasts. Not from the road below.",
     "mage": "You touch the dark, child. You do not yet see it.",
-}
-_DEFEAT_TITLES = {
-    "warrior": "THE BLADE FALLS",
-    "rogue": "THE SHADOW BREAKS",
-    "mage": "THE SPARK FADES",
 }
 
 
@@ -27,10 +27,150 @@ def _smoothstep(progress):
     return progress * progress * (3 - 2 * progress)
 
 
-def _draw_old_man(
+def draw_act_two_death_dialogue_overlay(
     screen,
     game_state,
     fonts,
+    current_time,
+    camera,
+):
+    player = game_state.player
+
+    if (
+            player.health > 0
+            or player.death_animation_started_at < 0
+            or player.player_class not in _OLD_MAN_LINES
+            or player.act_two.death_score_open
+    ):
+        return
+
+    elapsed = max(
+        0,
+        current_time - player.death_animation_started_at,
+    )
+
+    if player.act_two.death_dialogue_skipped:
+        elapsed = max(
+            elapsed,
+            ACT_TWO_OLD_MAN_DIALOGUE_MS + 420,
+        )
+
+    if elapsed < ACT_TWO_OLD_MAN_DIALOGUE_MS:
+        return
+
+    view_rectangle = camera_render_rectangle(
+        pygame.Rect(
+            ACT_TWO_VIEW_X,
+            ACT_TWO_VIEW_Y,
+            ACT_TWO_VIEW_WIDTH,
+            ACT_TWO_VIEW_HEIGHT,
+        ),
+        camera.zoom,
+    )
+
+    dialogue_progress = _smoothstep(
+        (elapsed - ACT_TWO_OLD_MAN_DIALOGUE_MS) / 420
+    )
+
+    dialogue_font = fonts["heading"]
+    dialogue_text = _OLD_MAN_LINES[player.player_class]
+
+    horizontal_padding = 32
+    vertical_padding = 22
+    maximum_text_width = view_rectangle.width - 220
+
+    lines = wrap_text(
+        dialogue_font,
+        dialogue_text,
+        maximum_text_width,
+    )
+
+    line_height = dialogue_font.get_linesize()
+    rendered_lines = [
+        dialogue_font.render(
+            line,
+            True,
+            (232, 225, 207),
+        )
+        for line in lines
+    ]
+
+    text_width = max(
+        line_surface.get_width()
+        for line_surface in rendered_lines
+    )
+    text_height = line_height * len(rendered_lines)
+
+    panel_width = text_width + horizontal_padding * 2
+    panel_height = text_height + vertical_padding * 2
+
+    panel = pygame.Surface(
+        (panel_width, panel_height),
+        pygame.SRCALPHA,
+    )
+    panel.fill((5, 7, 10, 232))
+
+    pygame.draw.rect(
+        panel,
+        (112, 101, 82, 230),
+        panel.get_rect(),
+        width=2,
+        border_radius=5,
+    )
+    pygame.draw.rect(
+        panel,
+        (32, 29, 25, 230),
+        panel.get_rect().inflate(-8, -8),
+        width=1,
+        border_radius=3,
+    )
+
+    panel_rectangle = panel.get_rect(
+        midbottom=(
+            view_rectangle.centerx,
+            view_rectangle.bottom - 160,
+        )
+    )
+
+    text_y = vertical_padding
+
+    for line, line_surface in zip(lines, rendered_lines):
+        shadow = dialogue_font.render(
+            line,
+            True,
+            (0, 0, 0),
+        )
+
+        line_rectangle = line_surface.get_rect(
+            centerx=panel_width // 2,
+            y=text_y,
+        )
+
+        panel.blit(
+            shadow,
+            line_rectangle.move(2, 3),
+        )
+        panel.blit(
+            line_surface,
+            line_rectangle,
+        )
+
+        text_y += line_height
+
+    panel.set_alpha(
+        round(255 * dialogue_progress)
+    )
+
+    previous_clip = screen.get_clip()
+    screen.set_clip(view_rectangle)
+    screen.blit(panel, panel_rectangle)
+    screen.set_clip(previous_clip)
+    screen.set_clip(previous_clip)
+
+
+def _draw_old_man(
+    screen,
+    game_state,
     sprites,
     elapsed,
     view_rectangle,
@@ -94,28 +234,6 @@ def _draw_old_man(
         )
     screen.blit(sprite, position)
 
-    if elapsed < ACT_TWO_OLD_MAN_DIALOGUE_MS:
-        return
-    dialogue_progress = _smoothstep(
-        (elapsed - ACT_TWO_OLD_MAN_DIALOGUE_MS) / 420
-    )
-    line_y = view_rectangle.bottom - 46
-    for line in wrap_text(
-        fonts["text"],
-        _OLD_MAN_LINES[game_state.player.player_class],
-        view_rectangle.width - 100,
-    ):
-        line_surface = fonts["text"].render(line, True, (218, 211, 197))
-        line_surface.set_alpha(round(255 * dialogue_progress))
-        rectangle = line_surface.get_rect(
-            center=(view_rectangle.centerx, line_y)
-        )
-        shadow = fonts["text"].render(line, True, (4, 5, 7))
-        shadow.set_alpha(round(255 * dialogue_progress))
-        screen.blit(shadow, rectangle.move(2, 2))
-        screen.blit(line_surface, rectangle)
-        line_y += 23
-
 
 def draw_act_two_death_scene(
     screen,
@@ -124,7 +242,6 @@ def draw_act_two_death_scene(
     sprites,
     current_time,
     view_rectangle,
-    class_color,
     camera=None,
 ):
     player = game_state.player
@@ -147,39 +264,9 @@ def draw_act_two_death_scene(
     _draw_old_man(
         screen,
         game_state,
-        fonts,
         sprites,
         elapsed,
         view_rectangle,
         camera,
     )
     screen.set_clip(previous_clip)
-
-    message_progress = _smoothstep(
-        (elapsed - ACT_TWO_DEFEAT_MESSAGE_MS) / ACT_TWO_DEFEAT_FADE_MS
-    )
-    if message_progress <= 0:
-        return
-    alpha = round(255 * message_progress)
-    center_x = view_rectangle.centerx
-    title_text = _DEFEAT_TITLES[player.player_class]
-    title = fonts["title"].render(title_text, True, class_color)
-    title.set_alpha(alpha)
-    title_rectangle = title.get_rect(
-        center=(center_x, view_rectangle.y + 76)
-    )
-    title_shadow = fonts["title"].render(title_text, True, (8, 5, 7))
-    title_shadow.set_alpha(alpha)
-    screen.blit(title_shadow, title_rectangle.move(2, 3))
-    screen.blit(title, title_rectangle)
-
-    restart = fonts["controls"].render(
-        "PRESS R TO RESTART",
-        True,
-        (170, 174, 176),
-    )
-    restart.set_alpha(alpha)
-    screen.blit(
-        restart,
-        restart.get_rect(center=(center_x, view_rectangle.y + 116)),
-    )

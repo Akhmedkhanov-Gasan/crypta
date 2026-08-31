@@ -24,7 +24,7 @@ from acts.act_three.state import (
     ActThreeSessionState,
     ArcherBarrageShotState,
 )
-from game.events import GameEvent
+from game.events import GameEvent, GameEventType
 
 
 class EnemyBehaviorState(Enum):
@@ -404,12 +404,28 @@ class PlayerState:
             return
         object.__setattr__(self, name, value)
 
+
+@dataclass
+class RunStatistics:
+    turns_taken: int = 0
+    gold_earned: int = 0
+    gold_spent: int = 0
+    chests_opened: int = 0
+    consumables_used: int = 0
+    completed_floors: set[int] = field(default_factory=set)
+    kills_by_type: dict[str, int] = field(default_factory=dict)
+    death_cause: str | None = None
+
+
 @dataclass
 class GameState:
     floor_index: int
     floor: FloorState
     player: PlayerState
     combat_log: list[str]
+    run_stats: RunStatistics = field(
+        default_factory=RunStatistics,
+    )
     visited_floors: dict[int, FloorState] = field(default_factory=dict)
     act_two_quests: ActTwoQuestState = field(
         default_factory=ActTwoQuestState,
@@ -464,6 +480,27 @@ class GameState:
 
     def emit(self, event: GameEvent) -> None:
         self.events.append(event)
+
+        if (
+            self.player.health > 0
+            or self.run_stats.death_cause is not None
+        ):
+            return
+
+        if (
+            event.type is GameEventType.HIT
+            and event.target == "hero"
+            and (event.amount or 0) > 0
+        ):
+            self.run_stats.death_cause = event.actor
+
+        elif (
+            event.type is GameEventType.DEATH
+            and event.actor == "hero"
+        ):
+            self.run_stats.death_cause = str(
+                event.data.get("cause") or "unknown"
+            )
 
     def clear_events(self) -> None:
         self.events.clear()

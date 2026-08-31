@@ -1526,6 +1526,5 @@ def draw_act_two_player_feedback_overlay(
         sprites,
         current_time,
         view_rectangle,
-        _CLASS_COLORS[player.player_class],
         camera,
     )
