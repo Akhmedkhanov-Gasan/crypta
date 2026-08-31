@@ -131,6 +131,7 @@ def collect_crate_loot(
         store_act_two_consumable(game_state.player, POTION)
     elif loot_kind == "gold":
         game_state.player.gold_count += 1
+        game_state.run_stats.gold_earned += 1
     return loot_kind
 
 

@@ -594,6 +594,10 @@ def resolve_enemy_defeat(
         return
 
     enemy.defeat_rewards_claimed = True
+
+    kills = game_state.run_stats.kills_by_type
+    kills[enemy.type] = kills.get(enemy.type, 0) + 1
+
     if enemy.is_summoned:
         return
     player = game_state.player
