@@ -18,6 +18,7 @@ from acts.act_two.bloody_altar import (
     BLOOD_HUNGER_LIFESTEAL_RATIO,
 )
 from acts.player_stats import attribute_stat_changes_for_rank
+from bosses.oracle import ORACLE_LEGACY_COMBAT_ENABLED
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from game.progression import (
@@ -658,20 +659,15 @@ def resolve_enemy_defeat(
 
     if enemy.type == "oracle":
         floor.projectiles.clear()
-
-        if (
-            player.player_class in ("warrior", "rogue")
-            and player.subclass is None
-        ):
-            game_state.act_three_transition_open = True
-            game_state.act_three_transition_started_at = 0
-            game_state.act_three_visual_started_at = 0
-            game_state.player_attack_targets = []
-            add_log_message(
-                game_state.combat_log,
-                "The second veil begins to fall.",
-                category="quest",
-            )
+        floor.oracle_combat = None
+        enemy.oracle_cast_amount = 0.0
+        enemy.oracle_head_angle = 0.0
+        game_state.player_attack_targets = []
+        add_log_message(
+            game_state.combat_log,
+            "The Oracle falls. A passage is revealed.",
+            category="quest",
+        )
     if (
         player.player_class is not None
         and player.subclass not in (None, "assassin")

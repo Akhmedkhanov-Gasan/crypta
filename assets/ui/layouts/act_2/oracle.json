@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "screen": "oracle",
+  "act": 2,
+  "frame": {
+    "name": "Oracle_Act2",
+    "width": 1280,
+    "height": 720
+  },
+  "boss_hp": {
+    "rect": {
+      "x": 465,
+      "y": 5,
+      "width": 350,
+      "height": 95
+    },
+    "hp_bar": {
+      "rect": {
+        "x": 488,
+        "y": 56,
+        "width": 303,
+        "height": 14
+      },
+      "asset": "assets/sprites/ui/act_2/oracle/boss_hp_fill.png",
+      "fill_direction": "left_to_right"
+    },
+    "frame": {
+      "rect": {
+        "x": 465,
+        "y": 5,
+        "width": 350,
+        "height": 95
+      },
+      "asset": "assets/sprites/ui/act_2/oracle/boss_hp_frame.png"
+    }
+  },
+  "oracle_introduce": {
+    "rect": {
+      "x": 378,
+      "y": 415,
+      "width": 524,
+      "height": 175
+    },
+    "asset": "assets/sprites/ui/act_2/oracle/oracle_introduce.png",
+    "default_visible": false,
+    "fade_in_ms": 600,
+    "fade_out_ms": 600
+  }
+}

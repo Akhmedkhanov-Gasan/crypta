@@ -2,6 +2,10 @@ import math
 
 import pygame
 
+from acts.act_two.presentation.bosses.oracle_statue import (
+    draw_oracle_statue,
+)
+
 from acts.act_two.presentation.enemy_effects import (
     draw_act_two_dodge_feedback,
     draw_act_two_enemy_death,
@@ -110,64 +114,7 @@ def _draw_oracle(
     sprites,
     current_time,
 ):
-    body_size = TILE_SIZE * 3
-    body_left = MAP_OFFSET_X + (enemy["column"] - 1) * TILE_SIZE
-    body_top = MAP_OFFSET_Y + (enemy["row"] - 1) * TILE_SIZE
-    sprite_name = (
-        "oracle_awake"
-        if enemy["oracle_awakened"]
-        else "oracle_idle"
-    )
-    screen.blit(sprites[sprite_name], (body_left, body_top))
-
-    if enemy["is_active"]:
-        pygame.draw.rect(
-            screen,
-            DANGER_BORDER_COLOR,
-            (
-                body_left + 2,
-                body_top + 2,
-                body_size - 4,
-                body_size - 4,
-            ),
-            width=2,
-            border_radius=5,
-        )
-
-    health_ratio = enemy["health"] / enemy["max_health"]
-    bar_x = body_left + 8
-    bar_y = body_top + body_size - 7
-    bar_width = body_size - 16
-    pygame.draw.rect(
-        screen,
-        HEALTH_BAR_BACKGROUND,
-        (bar_x, bar_y, bar_width, 5),
-    )
-    pygame.draw.rect(
-        screen,
-        HEALTH_BAR_COLOR,
-        (bar_x, bar_y, int(bar_width * health_ratio), 5),
-    )
-
-    if attack_telegraph_is_visible(
-        enemy,
-        current_time,
-    ):
-        warning_x = body_left + body_size // 2
-        warning_top = body_top + 8
-        pygame.draw.line(
-            screen,
-            ATTACK_WARNING_COLOR,
-            (warning_x, warning_top),
-            (warning_x, warning_top + 12),
-            4,
-        )
-        pygame.draw.circle(
-            screen,
-            ATTACK_WARNING_COLOR,
-            (warning_x, warning_top + 19),
-            3,
-        )
+    draw_oracle_statue(screen, enemy, sprites)
 
 
 def _enemy_sprite_name(enemy, current_time):

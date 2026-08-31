@@ -40,36 +40,58 @@ def draw_status(
         config["act"] == act_number
         for config in FLOOR_CONFIGS
     )
+
     displayed_map_left = (
         (GAME_WIDTH - MAP_WIDTH) // 2
         if act_number in (1, 2)
         else MAP_OFFSET_X
     )
+
+    oracle_panel_visible = (
+        act_number == 2
+        and any(
+            enemy["type"] == "oracle"
+            and enemy["health"] > 0
+            and enemy["is_active"]
+            for enemy in enemies
+        )
+    )
+
     if act_number in (1, 2):
-        status = (
-            f"ACT {'I' if act_number == 1 else 'II'}"
-            f"    FLOOR {act_floor}/{act_floor_count}"
-        )
-        status_surface = font.render(status, True, TEXT_COLOR)
-        screen.blit(
-            status_surface,
-            status_surface.get_rect(midtop=(GAME_WIDTH // 2, 8)),
-        )
+        if not oracle_panel_visible:
+            status = (
+                f"ACT {'I' if act_number == 1 else 'II'}"
+                f"    FLOOR {act_floor}/{act_floor_count}"
+            )
+            status_surface = font.render(
+                status,
+                True,
+                TEXT_COLOR,
+            )
+            screen.blit(
+                status_surface,
+                status_surface.get_rect(
+                    midtop=(GAME_WIDTH // 2, 8),
+                ),
+            )
     else:
         status = (
-            f"Act {act_number} - Floor {act_floor}/{act_floor_count}"
+            f"Act {act_number} - Floor "
+            f"{act_floor}/{act_floor_count}"
         )
         screen.blit(
             font.render(status, True, TEXT_COLOR),
             (MAP_OFFSET_X, 8),
         )
 
+    # Оракул рисуется отдельно в bosses/oracle_ui.py.
+    # Здесь остаётся только панель Стража.
     living_boss = next(
         (
             enemy
             for enemy in enemies
             if (
-                enemy["type"] in ("warden", "oracle")
+                enemy["type"] == "warden"
                 and enemy["health"] > 0
                 and enemy["is_active"]
             )
@@ -85,180 +107,112 @@ def draw_status(
             else 1
         )
 
-        if living_boss["type"] == "oracle":
-            boss_state = (
-                "AWAKENED"
-                if living_boss["oracle_awakened"]
-                else "DORMANT"
-            )
-            boss_label = (
-                f"ORACLE - {boss_state}  |  PHASE {phase}"
-            )
-            label_surface = font.render(
-                boss_label,
+        boss_status = (
+            f"{living_boss['name'].upper()}  |  "
+            f"{living_boss['health']}/"
+            f"{living_boss['max_health']} HP  |  "
+            f"PHASE {phase}"
+        )
+        boss_color = (
+            (205, 74, 105)
+            if phase == 2
+            else living_boss["color"]
+        )
+        boss_surface = font.render(
+            boss_status,
+            True,
+            boss_color,
+        )
+        screen.blit(
+            boss_surface,
+            boss_surface.get_rect(
+                center=(
+                    displayed_map_left + MAP_WIDTH // 2,
+                    57,
+                ),
+            ),
+        )
+
+        boss_bar_width = 500
+        boss_bar_height = 14
+        boss_bar_left = (
+            displayed_map_left
+            + (MAP_WIDTH - boss_bar_width) // 2
+        )
+        boss_bar_top = 77
+        health_ratio = (
+            living_boss["health"] / living_boss["max_health"]
+        )
+
+        pygame.draw.rect(
+            screen,
+            (18, 14, 21),
+            (
+                boss_bar_left,
+                boss_bar_top,
+                boss_bar_width,
+                boss_bar_height,
+            ),
+            border_radius=3,
+        )
+        pygame.draw.rect(
+            screen,
+            boss_color,
+            (
+                boss_bar_left + 2,
+                boss_bar_top + 2,
+                round((boss_bar_width - 4) * health_ratio),
+                boss_bar_height - 4,
+            ),
+            border_radius=2,
+        )
+        pygame.draw.rect(
+            screen,
+            (94, 83, 99),
+            (
+                boss_bar_left,
+                boss_bar_top,
+                boss_bar_width,
+                boss_bar_height,
+            ),
+            width=1,
+            border_radius=3,
+        )
+        pygame.draw.line(
+            screen,
+            (28, 22, 31),
+            (
+                boss_bar_left + boss_bar_width // 2,
+                boss_bar_top + 1,
+            ),
+            (
+                boss_bar_left + boss_bar_width // 2,
+                boss_bar_top + boss_bar_height - 2,
+            ),
+            2,
+        )
+
+        prepared_mode = living_boss.get("prepared_attack_mode")
+        if living_boss["attack_targets"] and prepared_mode:
+            mode_colors = {
+                "cross": (230, 79, 86),
+                "sweep": (235, 135, 57),
+                "runes": (190, 95, 214),
+            }
+            warning_surface = font.render(
+                f"PREPARING {prepared_mode.upper()}",
                 True,
-                living_boss["color"],
+                mode_colors.get(prepared_mode, boss_color),
             )
             screen.blit(
-                label_surface,
-                label_surface.get_rect(
+                warning_surface,
+                warning_surface.get_rect(
                     center=(
                         displayed_map_left + MAP_WIDTH // 2,
-                        55,
-                    )
-                ),
-            )
-            boss_bar_width = min(640, MAP_WIDTH - 120)
-            boss_bar_height = 22
-            boss_bar_left = (
-                displayed_map_left
-                + (MAP_WIDTH - boss_bar_width) // 2
-            )
-            boss_bar_top = 75
-            boss_health_ratio = (
-                living_boss["health"]
-                / living_boss["max_health"]
-            )
-            pygame.draw.rect(
-                screen,
-                (24, 20, 27),
-                (
-                    boss_bar_left,
-                    boss_bar_top,
-                    boss_bar_width,
-                    boss_bar_height,
-                ),
-            )
-            pygame.draw.rect(
-                screen,
-                (
-                    (65, 175, 225)
-                    if living_boss["oracle_awakened"]
-                    else (72, 108, 138)
-                ),
-                (
-                    boss_bar_left + 3,
-                    boss_bar_top + 3,
-                    int(
-                        (boss_bar_width - 6)
-                        * boss_health_ratio
+                        104,
                     ),
-                    boss_bar_height - 6,
                 ),
             )
-            pygame.draw.rect(
-                screen,
-                (130, 142, 158),
-                (
-                    boss_bar_left,
-                    boss_bar_top,
-                    boss_bar_width,
-                    boss_bar_height,
-                ),
-                width=2,
-            )
-            health_surface = font.render(
-                (
-                    f"{living_boss['health']} / "
-                    f"{living_boss['max_health']}"
-                ),
-                True,
-                (235, 238, 242),
-            )
-            screen.blit(
-                health_surface,
-                health_surface.get_rect(
-                    center=(
-                        boss_bar_left + boss_bar_width // 2,
-                        boss_bar_top + boss_bar_height // 2,
-                    )
-                ),
-            )
-        else:
-            boss_status = (
-                f"{living_boss['name'].upper()}  |  "
-                f"{living_boss['health']}/"
-                f"{living_boss['max_health']} HP  |  "
-                f"PHASE {phase}"
-            )
-            boss_color = (
-                (205, 74, 105)
-                if phase == 2
-                else living_boss["color"]
-            )
-            boss_surface = font.render(
-                boss_status,
-                True,
-                boss_color,
-            )
-            screen.blit(
-                boss_surface,
-                boss_surface.get_rect(
-                    center=(displayed_map_left + MAP_WIDTH // 2, 57)
-                ),
-            )
-            boss_bar_width = 500
-            boss_bar_height = 14
-            boss_bar_left = (
-                displayed_map_left + (MAP_WIDTH - boss_bar_width) // 2
-            )
-            boss_bar_top = 77
-            health_ratio = (
-                living_boss["health"] / living_boss["max_health"]
-            )
-            pygame.draw.rect(
-                screen,
-                (18, 14, 21),
-                (boss_bar_left, boss_bar_top, boss_bar_width, boss_bar_height),
-                border_radius=3,
-            )
-            pygame.draw.rect(
-                screen,
-                boss_color,
-                (
-                    boss_bar_left + 2,
-                    boss_bar_top + 2,
-                    round((boss_bar_width - 4) * health_ratio),
-                    boss_bar_height - 4,
-                ),
-                border_radius=2,
-            )
-            pygame.draw.rect(
-                screen,
-                (94, 83, 99),
-                (boss_bar_left, boss_bar_top, boss_bar_width, boss_bar_height),
-                width=1,
-                border_radius=3,
-            )
-            pygame.draw.line(
-                screen,
-                (28, 22, 31),
-                (boss_bar_left + boss_bar_width // 2, boss_bar_top + 1),
-                (
-                    boss_bar_left + boss_bar_width // 2,
-                    boss_bar_top + boss_bar_height - 2,
-                ),
-                2,
-            )
-
-            prepared_mode = living_boss.get("prepared_attack_mode")
-            if living_boss["attack_targets"] and prepared_mode:
-                mode_colors = {
-                    "cross": (230, 79, 86),
-                    "sweep": (235, 135, 57),
-                    "runes": (190, 95, 214),
-                }
-                warning_surface = font.render(
-                    f"PREPARING {prepared_mode.upper()}",
-                    True,
-                    mode_colors.get(prepared_mode, boss_color),
-                )
-                screen.blit(
-                    warning_surface,
-                    warning_surface.get_rect(
-                        center=(displayed_map_left + MAP_WIDTH // 2, 104)
-                    ),
-                )
 
     message = None
     message_color = TEXT_COLOR
@@ -271,14 +225,21 @@ def draw_status(
         message_color = PLAYER_COLOR
 
     if message:
-        message_surface = font.render(message, True, message_color)
-        message_center_y = 552 if act_number == 2 else GAME_HEIGHT - 38
+        message_surface = font.render(
+            message,
+            True,
+            message_color,
+        )
+        message_center_y = (
+            552 if act_number == 2 else GAME_HEIGHT - 38
+        )
         message_rectangle = message_surface.get_rect(
             center=(
                 displayed_map_left + MAP_WIDTH // 2,
                 message_center_y,
-            )
+            ),
         )
+
         if act_number == 2:
             message_backing = message_rectangle.inflate(28, 14)
             backing_surface = pygame.Surface(
@@ -299,6 +260,7 @@ def draw_status(
                 border_radius=5,
             )
             screen.blit(backing_surface, message_backing)
+
         screen.blit(message_surface, message_rectangle)
 
 

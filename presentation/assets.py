@@ -404,14 +404,20 @@ def load_act_two_sprites():
         "priest_ghost_death": (
             "enemies/priest_ghost/death/death_00.png"
         ),
-        "oracle_idle": "bosses/oracle/idle/idle_00.png",
-        "oracle_awake": "bosses/oracle/awake/awake_00.png",
-        "oracle_projectile": "bosses/oracle/projectiles/projectile.png",
+        "oracle_base": "bosses/oracle/idle/oracle_base.png",
+        "oracle_head": "bosses/oracle/idle/oracle_head.png",
+        "oracle_eye_idle": "bosses/oracle/idle/oracle_eye_idle.png",
+        "oracle_eye_cast": "bosses/oracle/idle/oracle_eye_cast.png",
+        "oracle_eye_shockwave": (
+            "bosses/oracle/idle/oracle_eye_shockwave.png"
+        ),
+        "oracle_projectile": (
+            "bosses/oracle/projectiles/projectiles_00.png"
+        ),
         "oracle_projectile_homing": (
-            "bosses/oracle/projectiles/projectile_homing.png"
+            "bosses/oracle/projectiles/projectiles_01.png"
         ),
         "pillar": "bosses/oracle/arena/pillar.png",
-        "charged_pillar": "bosses/oracle/arena/charged_pillar.png",
         "floor": "environment/tiles/floor.png",
         "floor_layout_b": (
             "environment/tiles/floor_variants/floor_layout_b.png"
@@ -605,22 +611,32 @@ def load_act_two_sprites():
     }
 
     sprites = {}
-    oversized_sprite_names = {"oracle_idle", "oracle_awake"}
+    oversized_sprite_names = {
+        "oracle_base",
+        "oracle_head",
+        "oracle_eye_idle",
+        "oracle_eye_cast",
+        "oracle_eye_shockwave",
+    }
+
     for name, relative_path in sprite_paths.items():
         source_path = asset_directory / relative_path
         source = pygame.image.load(str(source_path)).convert_alpha()
+
         if name in oversized_sprite_names:
             sprites[name] = pygame.transform.scale(
                 source,
                 (TILE_SIZE * 3, TILE_SIZE * 3),
             )
             continue
+
         if name == "binding_chains":
             sprites[name] = pygame.transform.scale(
                 source,
                 (TILE_SIZE, TILE_SIZE),
             )
             continue
+
         if name in (
                 "act_one_dead_boss",
                 "guild_seal",
@@ -634,6 +650,7 @@ def load_act_two_sprites():
                 (TILE_SIZE, TILE_SIZE),
             )
             continue
+
         if source.get_size() != (TILE_SIZE, TILE_SIZE):
             raise ValueError(
                 "Act Two gameplay asset must be "
@@ -641,7 +658,17 @@ def load_act_two_sprites():
                 f"{source.get_width()}x{source.get_height()}: "
                 f"{source_path}"
             )
+
         sprites[name] = source
+
+    for eye_state in ("idle", "cast", "shockwave"):
+        head_group = sprites[f"oracle_eye_{eye_state}"].copy()
+        head_group.blit(
+            sprites["oracle_head"],
+            (0, 0),
+        )
+        sprites[f"oracle_head_{eye_state}"] = head_group
+
     sprites["treasury_gate_vertical"] = pygame.transform.rotate(
         sprites["treasury_gate_horizontal"],
         90,

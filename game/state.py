@@ -135,6 +135,9 @@ class EnemyState(AttributeMapping):
     last_oracle_action: str | None = None
     last_straight_pattern: str | None = None
     oracle_awakened: bool = False
+    oracle_eye_progress: float = 0.0
+    oracle_head_angle: float = 0.0
+    oracle_cast_amount: float = 0.0
     phase_transition_pending: bool = False
     prepared_attack_mode: str | None = None
     prepared_attack_target: str = "hero"
@@ -279,6 +282,11 @@ class FloorState(AttributeMapping):
     boss_emitters: list[tuple[int, int]]
     seal_boss_door_during_fight: bool
     boss_fight_started: bool
+    has_oracle_gate: bool = False
+    oracle_gate_opened: bool = False
+    oracle_gate_opening_started_at: int = -1
+    oracle_intro: Any | None = None
+    oracle_combat: Any | None = None
     passages: list[PassageState] = field(default_factory=list)
     act_one_revisit: ActOneRevisitState | None = None
     upgrade_altar: tuple[int, int] | None = None
@@ -439,6 +447,7 @@ class GameState:
     class_transition_started_at: int = 0
     class_selection_choice: str | None = None
     class_selection_choice_started_at: int = 0
+    oracle_debug_mode: bool = False
     act_two_stats_open: bool = False
     act_two_journal_open: bool = False
     act_two_journal_scroll: float = 1.0

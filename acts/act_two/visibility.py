@@ -37,6 +37,38 @@ def _line_of_sight(
 
 
 def update_act_two_visibility(floor):
+    if floor.has_oracle_gate and floor.boss_door is not None:
+        door_column, door_row = floor.boss_door
+
+
+        visible_cells = {
+            (column, row)
+            for row in range(door_row - 2, door_row + 5)
+            for column in range(door_column - 4, door_column + 5)
+            if (
+                    floor.oracle_gate_opened
+                    or row >= door_row
+                    or floor.map[row][column] == "#"
+            )
+        }
+
+
+        if floor.oracle_gate_opened and floor.boss_room is not None:
+            room = floor.boss_room
+            visible_cells.update(
+                (column, row)
+                for row in range(room["y"], door_row - 1)
+                for column in range(
+                    room["x"],
+                    room["x"] + room["width"],
+                )
+            )
+
+        floor.visible_cells = visible_cells
+        floor.explored_cells.update(visible_cells)
+        _update_remembered_objects(floor)
+        return visible_cells
+
     origin = (floor.player_column, floor.player_row)
     radius_squared = VISION_RADIUS_TILES * VISION_RADIUS_TILES
     visible_cells = set()

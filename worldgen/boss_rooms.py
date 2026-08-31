@@ -136,10 +136,10 @@ def create_oracle_arena(dungeon_map, boss_room):
     columns = [
         (
             center_column + column_offset,
-            center_row + row_offset,
+            center_row + row_offset - 1,
         )
-        for row_offset in (-3, 3)
-        for column_offset in (-6, -2, 2, 6)
+        for column_offset in (-5, 5)
+        for row_offset in (-3, 0, 3)
     ]
 
     for column, row in columns:
@@ -149,61 +149,78 @@ def create_oracle_arena(dungeon_map, boss_room):
 
 
 def generate_oracle_floor(config, floor_index):
+    room_width = config["boss_room_width"]
+    room_height = config["boss_room_height"]
+    map_columns = max(MAP_COLUMNS, room_width + 4)
+    map_rows = room_height + 8
+
     dungeon_map = [
-        ["#" for _ in range(MAP_COLUMNS)]
-        for _ in range(MAP_ROWS)
+        ["#" for _ in range(map_columns)]
+        for _ in range(map_rows)
     ]
+
     boss_room = {
-        "x": 5,
-        "y": 1,
-        "width": config["boss_room_width"],
-        "height": config["boss_room_height"],
+        "x": (map_columns - room_width) // 2,
+        "y": 2,
+        "width": room_width,
+        "height": room_height,
     }
-    carve_room(dungeon_map, boss_room)
     boss_column, boss_row = room_center(boss_room)
-    boss_door = (boss_room["x"], boss_row)
-    seal_room_except_door(
-        dungeon_map,
-        boss_room,
-        boss_door,
-    )
+    boss_row -= 3
 
-    for row in range(boss_row - 2, boss_row + 3):
-        for column in range(1, boss_room["x"]):
-            dungeon_map[row][column] = "."
+    door_row = boss_room["y"] + boss_room["height"] - 1
+    boss_door = (boss_column, door_row)
 
-    # Two permanent braziers frame the approach while leaving the central
-    # doorway lane open. The B tile is rendered as a floor prop and blocks
-    # movement just like the arena's stone columns.
-    brazier_column = boss_door[0] - 1
-    for brazier_row in (boss_row - 1, boss_row + 1):
-        dungeon_map[brazier_row][brazier_column] = "B"
+    approach_room = {
+        "x": boss_column - 4,
+        "y": door_row,
+        "width": 9,
+        "height": 5,
+    }
+
+    for room in (boss_room, approach_room):
+        for row in range(
+            room["y"] + 1,
+            room["y"] + room["height"] - 1,
+        ):
+            for column in range(
+                room["x"] + 1,
+                room["x"] + room["width"] - 1,
+            ):
+                dungeon_map[row][column] = "."
+
+    for row in range(door_row - 2, door_row + 1):
+        for column in range(
+            boss_room["x"],
+            boss_room["x"] + boss_room["width"],
+        ):
+            dungeon_map[row][column] = (
+                "." if column == boss_column else "#"
+            )
+
+    for column in (boss_column - 2, boss_column + 2):
+        dungeon_map[door_row + 1][column] = "B"
 
     boss_columns = create_oracle_arena(
         dungeon_map,
         boss_room,
     )
-    boss_emitters = [
-        position
-        for position in boss_columns
-        if abs(position[0] - boss_column) == 6
-    ]
+    boss_emitters = list(boss_columns)
 
-    approach_room = {
-        "x": 1,
-        "y": boss_row - 2,
-        "width": boss_room["x"] - 1,
-        "height": 5,
-    }
+    return_wall_row = (
+        approach_room["y"] + approach_room["height"] - 1
+    )
+    player_start = (boss_column, return_wall_row - 1)
 
     passages = [
-        create_north_wall_passage(
-            dungeon_map,
-            approach_room,
-            "entrance",
-            floor_index - 1,
-            "exit",
-        ),
+        {
+            "passage_id": "entrance",
+            "wall_position": (boss_column, return_wall_row),
+            "trigger_position": player_start,
+            "target_floor_index": floor_index - 1,
+            "target_passage_id": "exit",
+            "requires_clear": False,
+        },
         create_north_wall_passage(
             dungeon_map,
             boss_room,
@@ -219,7 +236,7 @@ def generate_oracle_floor(config, floor_index):
 
     return {
         "map": ["".join(row) for row in dungeon_map],
-        "player_start": (2, boss_row),
+        "player_start": player_start,
         "enemies": [
             {
                 "position": (boss_column, boss_row),
@@ -235,6 +252,7 @@ def generate_oracle_floor(config, floor_index):
         "boss_room": boss_room,
         "boss_columns": boss_columns,
         "boss_emitters": boss_emitters,
+        "has_oracle_gate": True,
         "seal_boss_door_during_fight": True,
         "torches": [],
         "visual_seed": random.randrange(1, 2**31),

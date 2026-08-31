@@ -1,3 +1,4 @@
+from acts.act_two.oracle_gate import oracle_gate_allows_entry
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from systems.mimic import awaken_mimic
@@ -683,6 +684,16 @@ def try_move_player(
     )
 
     if activated_passage is not None:
+        if (
+            floor.has_oracle_gate
+            and activated_passage.passage_id == "exit"
+            and any(
+                enemy.type == "oracle"
+                for enemy in living_enemies
+            )
+        ):
+            return False
+
         passage_is_locked = (
             activated_passage.requires_clear
             and game_state.player.player_class is None
@@ -766,6 +777,15 @@ def try_move_player(
     ):
         return False
 
+    if (
+        target_is_boss_door
+        and not oracle_gate_allows_entry(
+            game_state,
+            transition_started_at,
+        )
+    ):
+        return False
+
     previous_position = (
         floor.player_column,
         floor.player_row,
@@ -788,6 +808,13 @@ def try_move_player(
         new_row,
         floor.boss_room,
     )
+
+    if floor.has_oracle_gate and floor.boss_door is not None:
+        target_is_inside_boss_room = (
+            target_is_inside_boss_room
+            and new_row < floor.boss_door[1] - 2
+        )
+
     entered_boss_room = (
         (
             (
