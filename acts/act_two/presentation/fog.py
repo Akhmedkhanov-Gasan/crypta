@@ -48,6 +48,23 @@ def draw_act_two_fog_of_war(screen, act_number, floor):
     fog = pygame.Surface((map_width, map_height), pygame.SRCALPHA)
     fog.fill((*BACKGROUND_COLOR, FOG_UNEXPLORED_ALPHA))
 
+    if floor.has_oracle_gate:
+        fog.fill((0, 0, 0, 255))
+
+        for column, row in floor.visible_cells:
+            pygame.draw.rect(
+                fog,
+                (0, 0, 0, 0),
+                (
+                    column * TILE_SIZE,
+                    row * TILE_SIZE,
+                    TILE_SIZE,
+                    TILE_SIZE,
+                ),
+            )
+        screen.blit(fog, (MAP_OFFSET_X, MAP_OFFSET_Y))
+        return
+
     for column, row in floor.explored_cells:
         pygame.draw.rect(
             fog,

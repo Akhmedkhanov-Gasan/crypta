@@ -4,7 +4,6 @@ from acts.act_two.presentation.abilities import (
     draw_act_two_power_cleave_effect,
 )
 from acts.act_two.presentation.bosses import (
-    draw_oracle_emitters,
     draw_oracle_projectiles,
 )
 from acts.act_two.presentation.combat import (
@@ -103,7 +102,6 @@ __all__ = [
     "draw_act_two_wait_indicator",
     "draw_breakable_crate",
     "draw_dropped_consumables",
-    "draw_oracle_emitters",
     "draw_oracle_projectiles",
     "update_act_two_camera",
     "draw_act_two_sidebar",

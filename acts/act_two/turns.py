@@ -1,4 +1,7 @@
 from game.events import GameEventType
+from acts.act_two.presentation.bosses.oracle_combat import (
+    advance_oracle_fire,
+)
 from game.state import GameState
 from acts.act_two.hazards import (
     get_act_two_enemy_hazard_costs,
@@ -9,7 +12,13 @@ def resolve_enemy_turn(
     *args,
     **kwargs,
 ):
+    scene = game_state.floor.oracle_intro
+    if scene is not None and not scene.finished:
+        return
+
     from systems.enemy_turn import resolve_enemy_turn as shared_turn
+
+    advance_oracle_fire(game_state)
 
     return shared_turn(
         game_state,

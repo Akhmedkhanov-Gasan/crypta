@@ -11,7 +11,10 @@ from acts.act_three.abilities.summoner import (
     damage_summoner_familiar,
     resolve_summoner_familiar_turn,
 )
-from bosses.oracle import update_oracle_projectiles
+from bosses.oracle import (
+    ORACLE_LEGACY_COMBAT_ENABLED,
+    update_oracle_projectiles,
+)
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from game.state import (
@@ -78,6 +81,10 @@ def _advance_enemy_bleed(game_state: GameState, enemy) -> bool:
 
     if (
         enemy.type in ("warden", "oracle")
+        and (
+            enemy.type != "oracle"
+            or ORACLE_LEGACY_COMBAT_ENABLED
+        )
         and enemy.health > 0
         and enemy.health <= enemy.max_health // 2
         and not enemy.second_phase_announced

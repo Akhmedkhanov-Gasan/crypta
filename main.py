@@ -1,5 +1,36 @@
 import pygame
 
+from acts.act_two.oracle_gate import update_oracle_gate
+from acts.act_two.presentation.bosses.oracle_audio import (
+    update_oracle_fire_audio,
+)
+from acts.act_two.presentation.bosses.oracle_combat import (
+    finish_oracle_animation_before_action,
+    update_oracle_combat,
+)
+from acts.act_two.presentation.bosses.oracle_combat_fx import (
+    draw_oracle_attack_fx,
+    draw_oracle_blackfire,
+)
+from acts.act_two.presentation.bosses.oracle_intro import (
+    draw_oracle_intro,
+    handle_oracle_intro_event,
+    oracle_intro_active,
+    update_oracle_intro,
+)
+from acts.act_two.presentation.bosses.oracle_room import (
+    draw_oracle_braziers,
+    draw_oracle_gate,
+)
+from acts.act_two.presentation.bosses.oracle_arena import (
+    draw_oracle_lighting,
+    draw_oracle_pillars,
+)
+from acts.act_two.presentation.bosses.oracle_ui import (
+    draw_oracle_ui,
+    load_oracle_ui,
+)
+
 from acts.act_one.camera import (
     ActOneCamera,
     draw_act_one_camera_view,
@@ -204,7 +235,6 @@ from rendering import (
     draw_fire_bomb,
     draw_key,
     draw_map_frame,
-    draw_oracle_emitters,
     draw_oracle_projectiles,
     draw_player,
     draw_player_attack_markers,
@@ -343,18 +373,30 @@ def _complete_class_selection(game_state):
     chosen_class = game_state.class_selection_choice
     if chosen_class is None:
         return
+
     game_state.player.level = ACT_TWO_STARTING_LEVEL
-    # ---TEST---
     game_state.player.experience = 8
     game_state.player.attribute_points = 1
-    # ---TEST---
 
     prepare_act_one_revisit_floors(game_state)
 
-    game_state.run_stats.completed_floors.add(
-        game_state.floor_index
-    )
-    game_state.floor_index += 1
+    if game_state.oracle_debug_mode:
+        game_state.player.level += 10
+        game_state.player.attribute_points += 10
+        game_state.player.experience = 0
+        game_state.floor_index = next(
+            index
+            for index, config in enumerate(FLOOR_CONFIGS)
+            if (
+                config["act"] == 2
+                and config["act_floor"] == 4
+            )
+        )
+    else:
+        game_state.run_stats.completed_floors.add(
+            game_state.floor_index
+        )
+        game_state.floor_index += 1
 
     next_floor = game_state.visited_floors.get(
         game_state.floor_index
@@ -406,7 +448,12 @@ def _complete_class_selection(game_state):
     )
     add_log_message(
         game_state.combat_log,
-        "Act II begins. The world gains shape.",
+        (
+            "Debug: Act II, floor IV. "
+            "+10 levels and +10 attribute points."
+            if game_state.oracle_debug_mode
+            else "Act II begins. The world gains shape."
+        ),
         category="progress",
     )
 
@@ -575,6 +622,7 @@ def main():
     act_two_fonts = load_act_two_fonts()
     act_two_sprites = load_act_two_sprites()
     act_two_hud_layout = load_act_two_hud_layout()
+    oracle_ui_layout, oracle_ui_assets = load_oracle_ui()
     act_two_trade_layout = load_act_two_trade_layout()
     bloody_altar_layout = load_bloody_altar_layout()
     death_score_layout, death_score_assets = (
@@ -652,6 +700,14 @@ def main():
                 pygame.time.get_ticks(),
             )
         continuous_move_time = pygame.time.get_ticks()
+
+        if oracle_intro_active(game_state.floor):
+            act_two_held_movement_keys.clear()
+            act_two_held_direction = (0, 0)
+            act_two_auto_move_target = None
+            act_two_auto_move_floor_index = None
+            act_two_dragged_consumable_slot = None
+
         continuous_movement_available = (
                 current_act == 2
                 and game_started
@@ -754,6 +810,25 @@ def main():
         ]
 
         for event in pygame.event.get():
+            if oracle_intro_active(game_state.floor):
+                handle_oracle_intro_event(
+                    game_state.floor,
+                    event,
+                    game_surface,
+                )
+
+                act_two_held_movement_keys.clear()
+                act_two_held_direction = (0, 0)
+                act_two_auto_move_target = None
+                act_two_auto_move_floor_index = None
+                act_two_dragged_consumable_slot = None
+
+                if event.type not in (
+                    pygame.QUIT,
+                    pygame.VIDEORESIZE,
+                ):
+                    continue
+
             if event.type == pygame.WINDOWFOCUSLOST:
                 act_two_held_movement_keys.clear()
                 act_two_held_direction = (0, 0)
@@ -1784,29 +1859,37 @@ def main():
                     )
                     continue
 
-                if handle_act_three_key_event(
-                    event,
-                    game_state,
-                ):
-                    continue
                 if event.key == pygame.K_F3:
                     if (
-                        act_three_music_attempted
-                        and pygame.mixer.get_init() is not None
+                            act_three_music_attempted
+                            and pygame.mixer.get_init() is not None
                     ):
                         pygame.mixer.music.stop()
+
                     act_three_music_attempted = False
                     progress_tracking_enabled = False
+                    act_two_auto_move_target = None
+                    act_two_auto_move_floor_index = None
+
                     game_state = create_game_state(
-                        floor_index=FIRST_ACT_THREE_FLOOR,
+                        floor_index=FIRST_ACT_FINAL_FLOOR,
                         opening_message=(
-                            "Debug: choose an Act III class."
-                        )
+                            "Debug: choose an Act II class "
+                            "to test the Oracle arena."
+                        ),
                     )
-                    game_state.act_three_test_mode = True
-                    game_state.act_three_debug_class_selection_open = (
-                        True
+                    game_state.oracle_debug_mode = True
+                    game_state.class_selection_open = True
+                    game_state.class_transition_started_at = (
+                            pygame.time.get_ticks()
+                            - CLASS_SELECTION_READY_MS
                     )
+                    continue
+
+                if handle_act_three_key_event(
+                        event,
+                        game_state,
+                ):
                     continue
 
                 if game_state.act_three_debug_class_selection_open:
@@ -2067,6 +2150,34 @@ def main():
                         )
 
                     continue
+
+                if current_act == 2 and (
+                    event.key in _ACT_TWO_MOVEMENT_KEYS
+                    or event.key in _ACT_TWO_CONSUMABLE_KEYS
+                    or event.key in (
+                        pygame.K_UNKNOWN,
+                        pygame.K_SPACE,
+                        pygame.K_e,
+                    )
+                ):
+                    oracle_interrupted_player = (
+                        finish_oracle_animation_before_action(
+                            game_state,
+                            pygame.time.get_ticks(),
+                            act_two_sounds,
+                        )
+                    )
+
+                    if oracle_interrupted_player:
+                        act_two_auto_move_target = None
+                        act_two_auto_move_floor_index = None
+
+                    if game_state.player.health <= 0:
+                        act_two_held_movement_keys.clear()
+                        act_two_held_direction = (0, 0)
+                        act_two_auto_move_target = None
+                        act_two_auto_move_floor_index = None
+                        continue
 
                 game_state.clear_events()
                 fire_bomb_target = getattr(
@@ -3071,6 +3182,18 @@ def main():
         current_time = pygame.time.get_ticks()
         _advance_floor_transition(game_state, current_time)
 
+        update_oracle_fire_audio(
+            game_state,
+            act_two_sounds,
+            enabled=(
+                running
+                and game_started
+                and not menu_open
+                and not game_state.class_selection_open
+                and game_state.floor_transition_started_at < 0
+            ),
+        )
+
         if game_state.class_selection_open:
             awakening_elapsed = (
                 current_time - game_state.class_transition_started_at
@@ -3386,6 +3509,10 @@ def main():
         if (
             current_act == 2
             and not game_state.class_selection_open
+            and not (
+                game_state.floor.has_oracle_gate
+                and game_state.floor.oracle_intro is not None
+            )
             and (
                 not act_two_music_attempted
                 or pygame.mixer.get_init() is None
@@ -3407,6 +3534,23 @@ def main():
                     f"Act II music unavailable: {audio_error}", category="system",
                 )
         if current_act == 2:
+            update_oracle_intro(
+                game_state,
+                act_two_camera,
+                current_time,
+            )
+
+            oracle_interrupted_player = update_oracle_combat(
+                game_state,
+                current_time,
+                act_two_sounds,
+            )
+
+            if oracle_interrupted_player:
+                act_two_auto_move_target = None
+                act_two_auto_move_floor_index = None
+
+            update_oracle_gate(game_state.floor, current_time)
             update_act_two_visibility(game_state.floor)
         if (
             progress_tracking_enabled
@@ -3455,14 +3599,16 @@ def main():
                 current_time,
             )
         if current_act == 2:
-            update_act_two_camera(
-                act_two_camera,
-                game_state.floor["map"],
-                game_state.floor["player_column"],
-                game_state.floor["player_row"],
-                game_state.floor_index,
-                current_time,
-            )
+            if not oracle_intro_active(game_state.floor):
+                update_act_two_camera(
+                    act_two_camera,
+                    game_state.floor["map"],
+                    game_state.floor["player_column"],
+                    game_state.floor["player_row"],
+                    game_state.floor_index,
+                    current_time,
+                )
+
             world_size = act_two_world_surface_size(
                 game_state.floor["map"]
             )
@@ -3542,9 +3688,17 @@ def main():
             if act_two_map_cache_key != map_cache_key:
                 act_two_map_surface = pygame.Surface(world_size)
                 act_two_map_surface.fill(BACKGROUND_COLOR)
+
+                visual_map = game_state.floor["map"]
+                if game_state.floor.has_oracle_gate:
+                    visual_map = [
+                        row.replace("C", ".")
+                        for row in visual_map
+                    ]
+
                 draw_dungeon(
                     act_two_map_surface,
-                    game_state.floor["map"],
+                    visual_map,
                     current_act,
                     act_two_sprites,
                     current_act_floor,
@@ -3581,13 +3735,25 @@ def main():
             current_time,
         )
         if current_act == 2:
-            draw_act_two_atmosphere(
+            if not game_state.floor.has_oracle_gate:
+                draw_act_two_atmosphere(
+                    world_target,
+                    game_state.floor["player_column"],
+                    game_state.floor["player_row"],
+                    game_state.floor["map"],
+                    current_act_floor,
+                    game_state.floor.visual_seed,
+                    current_time,
+                )
+
+            draw_oracle_braziers(
                 world_target,
-                game_state.floor["player_column"],
-                game_state.floor["player_row"],
-                game_state.floor["map"],
-                current_act_floor,
-                game_state.floor.visual_seed,
+                game_state.floor,
+                current_time,
+            )
+            draw_oracle_pillars(
+                world_target,
+                game_state.floor,
                 current_time,
             )
             draw_act_two_spike_traps(
@@ -3645,35 +3811,6 @@ def main():
             draw_map_frame(
                 world_target,
                 current_act,
-            )
-        living_oracle = next(
-            (
-                enemy
-                for enemy in game_state.floor["enemies"]
-                if (
-                    enemy["type"] == "oracle"
-                    and enemy["health"] > 0
-                )
-            ),
-            None,
-        )
-        if current_act == 2:
-            draw_oracle_emitters(
-                world_target,
-                [
-                    position
-                    for position in game_state.floor["boss_emitters"]
-                    if position_is_visible(
-                        game_state.floor,
-                        position[0],
-                        position[1],
-                    )
-                ],
-                (
-                    living_oracle is not None
-                    and living_oracle["oracle_awakened"]
-                ),
-                act_two_sprites,
             )
         act_two_ability_effect_duration = (
             620
@@ -3776,7 +3913,10 @@ def main():
             current_time,
             active_status_font,
         )
-        if game_state.floor["boss_door"] is not None:
+        if (
+            game_state.floor["boss_door"] is not None
+            and not game_state.floor.has_oracle_gate
+        ):
             living_boss_group = any(
                 enemy["health"] > 0 and enemy["boss_group"]
                 for enemy in game_state.floor["enemies"]
@@ -3805,40 +3945,33 @@ def main():
                 enemy["health"] > 0
                 for enemy in game_state.floor["enemies"]
             )
+            oracle_is_alive = any(
+                enemy["type"] == "oracle"
+                and enemy["health"] > 0
+                for enemy in game_state.floor["enemies"]
+            )
 
             for passage in game_state.floor.passages:
                 if current_act == 2 and not passage.discovered:
                     continue
 
+                if (
+                        game_state.floor.has_oracle_gate
+                        and passage.passage_id == "exit"
+                        and oracle_is_alive
+                ):
+                    continue
+
                 passage_is_open = (
-                    not passage.requires_clear
-                    or game_state.player.player_class is not None
-                    or not living_enemies_remain
+                        not passage.requires_clear
+                        or game_state.player.player_class is not None
+                        or not living_enemies_remain
                 )
-                for passage in game_state.floor.passages:
-                    if current_act == 2 and not passage.discovered:
-                        continue
+                passage_is_return = (
+                        current_act == 2
+                        and passage.passage_id == "entrance"
+                )
 
-                    passage_is_open = (
-                            not passage.requires_clear
-                            or game_state.player.player_class is not None
-                            or not living_enemies_remain
-                    )
-
-                    passage_is_return = (
-                            current_act == 2
-                            and passage.passage_id == "entrance"
-                    )
-
-                    draw_passage(
-                        world_target,
-                        passage.wall_position[0],
-                        passage.wall_position[1],
-                        passage_is_open,
-                        current_act,
-                        act_two_sprites,
-                        is_return=passage_is_return,
-                    )
                 draw_passage(
                     world_target,
                     passage.wall_position[0],
@@ -3846,6 +3979,7 @@ def main():
                     passage_is_open,
                     current_act,
                     act_two_sprites,
+                    is_return=passage_is_return,
                 )
         for potion in game_state.floor["potions"]:
             if (
@@ -4059,6 +4193,13 @@ def main():
                 current_act,
                 act_two_sprites,
             )
+        if current_act == 2:
+            draw_oracle_blackfire(
+                world_target,
+                game_state.floor,
+                current_time,
+            )
+
         draw_player(
             world_target,
             game_state.floor["player_column"],
@@ -4269,10 +4410,25 @@ def main():
                 game_state,
                 fire_bomb_target,
             )
+            draw_oracle_lighting(
+                world_target,
+                game_state.floor,
+                current_time,
+            )
+            draw_oracle_attack_fx(
+                world_target,
+                game_state.floor,
+                current_time,
+            )
             draw_act_two_fog_of_war(
                 world_target,
                 current_act,
                 game_state.floor,
+            )
+            draw_oracle_gate(
+                world_target,
+                game_state.floor,
+                current_time,
             )
             draw_act_two_camera_view(
                 game_surface,
@@ -4285,6 +4441,12 @@ def main():
                 act_one_world_surface,
                 act_one_camera,
             )
+        oracle_world_frame = (
+            game_surface.copy()
+            if oracle_intro_active(game_state.floor)
+            else None
+        )
+
         draw_status(
             game_surface,
             active_status_font,
@@ -4294,6 +4456,12 @@ def main():
             game_state.game_won,
         )
         if current_act == 2:
+            draw_oracle_ui(
+                game_surface,
+                game_state.floor,
+                oracle_ui_layout,
+                oracle_ui_assets,
+            )
             draw_act_two_player_feedback_overlay(
                 game_surface,
                 game_state,
@@ -4556,6 +4724,13 @@ def main():
                 act_two_fonts,
                 current_time,
                 act_two_camera,
+            )
+            draw_oracle_intro(
+                game_surface,
+                oracle_world_frame,
+                game_state.floor,
+                oracle_ui_layout,
+                oracle_ui_assets,
             )
 
         if (

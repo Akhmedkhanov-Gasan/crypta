@@ -313,6 +313,4 @@ def draw_dungeon(
 
             if tile == "C":
                 screen.blit(sprites["pillar"], rectangle)
-            elif tile == "B":
-                screen.blit(sprites["decor_floor_boss_brazier"], rectangle)
             pygame.draw.rect(screen, _GRID_COLOR, rectangle, 1)

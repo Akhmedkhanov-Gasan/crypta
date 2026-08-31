@@ -19,16 +19,3 @@ def draw_oracle_projectiles(screen, projectiles, sprites):
             sprites[sprite_name],
             (projectile_left, projectile_top),
         )
-
-
-def draw_oracle_emitters(screen, emitters, is_active, sprites):
-    if not is_active:
-        return
-
-    for column, row in emitters:
-        left = MAP_OFFSET_X + column * TILE_SIZE
-        top = MAP_OFFSET_Y + row * TILE_SIZE
-        screen.blit(
-            sprites["charged_pillar"],
-            (left, top),
-        )

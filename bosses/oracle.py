@@ -14,6 +14,9 @@ from logic import (
     get_oracle_ray,
 )
 
+ORACLE_LEGACY_COMBAT_ENABLED = False
+
+
 def choose_oracle_action(oracle):
     if oracle["oracle_awakened"]:
         actions = ("straight", "terrain", "homing")
@@ -254,6 +257,10 @@ def hit_player_with_projectile(
 def update_oracle_projectiles(
     game_state: GameState,
 ) -> None:
+    if not ORACLE_LEGACY_COMBAT_ENABLED:
+        game_state.floor.projectiles.clear()
+        return
+
     floor_state = game_state.floor
     player_position = (
         floor_state["player_column"],
@@ -605,6 +612,9 @@ def resolve_oracle_hit_reaction(
     floor_state,
     combat_log,
 ):
+    if not ORACLE_LEGACY_COMBAT_ENABLED:
+        return
+
     if oracle["health"] <= 0:
         return
 
