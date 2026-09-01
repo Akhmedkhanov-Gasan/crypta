@@ -183,19 +183,15 @@ def get_directional_line(
 
 
 def get_enemy_occupied_positions(enemy):
-    half_width = enemy.get("footprint_width", 1) // 2
-    half_height = enemy.get("footprint_height", 1) // 2
+    width = max(1, enemy.get("footprint_width", 1))
+    height = max(1, enemy.get("footprint_height", 1))
+    left = enemy["column"] - (width - 1) // 2
+    top = enemy["row"] - (height - 1) // 2
 
     return {
         (column, row)
-        for row in range(
-            enemy["row"] - half_height,
-            enemy["row"] + half_height + 1,
-        )
-        for column in range(
-            enemy["column"] - half_width,
-            enemy["column"] + half_width + 1,
-        )
+        for row in range(top, top + height)
+        for column in range(left, left + width)
     }
 
 

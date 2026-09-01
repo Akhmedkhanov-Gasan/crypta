@@ -18,6 +18,18 @@ CARDINAL_DIRECTIONS = {
 }
 
 
+def _living_oracle_pillar_at(
+    floor,
+    position,
+):
+    return any(
+        enemy.type == "oracle_pillar"
+        and enemy.health > 0
+        and (enemy.column, enemy.row) == position
+        for enemy in floor.enemies
+    )
+
+
 def ability_charge_required(player) -> int:
     if player.player_class is not None and player.subclass is None:
         if has_bloody_pact(player, OPEN_WOUND):
@@ -121,10 +133,24 @@ def get_mage_arcane_burst_cells(
         (target[0], target[1] + 1),
         (target[0] - 1, target[1]),
     )
+
     return [
         position
         for position in candidates
-        if can_move_to(floor.map, position[0], position[1])
+        if (
+            can_move_to(
+                floor.map,
+                position[0],
+                position[1],
+            )
+            or (
+                position == target
+                and _living_oracle_pillar_at(
+                    floor,
+                    position,
+                )
+            )
+        )
     ]
 
 
@@ -134,10 +160,23 @@ def is_valid_mage_arcane_burst_target(
 ) -> bool:
     if target is None:
         return False
+
     floor = game_state.floor
+    target_is_pillar = _living_oracle_pillar_at(
+        floor,
+        target,
+    )
+
     return (
         target in floor.visible_cells
-        and can_move_to(floor.map, target[0], target[1])
+        and (
+            can_move_to(
+                floor.map,
+                target[0],
+                target[1],
+            )
+            or target_is_pillar
+        )
         and distance_between(
             floor.player_column,
             floor.player_row,

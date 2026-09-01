@@ -134,6 +134,17 @@ class EnemyState(AttributeMapping):
     projectile_cooldown_duration: int = 0
     last_oracle_action: str | None = None
     last_straight_pattern: str | None = None
+    oracle_phase: int = 1
+    oracle_base_column: int | None = None
+    oracle_base_row: int | None = None
+    oracle_phase_elapsed: int = 0
+    oracle_phase_detached: bool = False
+    oracle_render_column: float | None = None
+    oracle_render_row: float | None = None
+    oracle_phase_two_eye: str = "idle"
+    oracle_phase_two_opening_attack_pending: bool = False
+    oracle_death_started_at: int = -1
+    oracle_death_elapsed: int = 0
     oracle_awakened: bool = False
     oracle_eye_progress: float = 0.0
     oracle_head_angle: float = 0.0
@@ -287,6 +298,9 @@ class FloorState(AttributeMapping):
     oracle_gate_opening_started_at: int = -1
     oracle_intro: Any | None = None
     oracle_combat: Any | None = None
+    oracle_phase_transition: Any | None = None
+    oracle_phase_two: Any | None = None
+    oracle_death: Any | None = None
     passages: list[PassageState] = field(default_factory=list)
     act_one_revisit: ActOneRevisitState | None = None
     upgrade_altar: tuple[int, int] | None = None

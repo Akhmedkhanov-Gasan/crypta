@@ -1,5 +1,10 @@
 import pygame
 
+from acts.act_two.presentation.bosses.oracle_death import (
+    draw_oracle_death_fx,
+    draw_oracle_death_overlay,
+    update_oracle_death,
+)
 from acts.act_two.oracle_gate import update_oracle_gate
 from acts.act_two.presentation.bosses.oracle_audio import (
     update_oracle_fire_audio,
@@ -14,9 +19,18 @@ from acts.act_two.presentation.bosses.oracle_combat_fx import (
 )
 from acts.act_two.presentation.bosses.oracle_intro import (
     draw_oracle_intro,
-    handle_oracle_intro_event,
-    oracle_intro_active,
     update_oracle_intro,
+)
+from acts.act_two.presentation.bosses.oracle_phase_transition import (
+    draw_oracle_phase_transition,
+    handle_oracle_cutscene_event,
+    oracle_cutscene_active,
+    oracle_phase_transition_active,
+    update_oracle_phase_transition,
+)
+from acts.act_two.presentation.bosses.oracle_phase_two import (
+    draw_oracle_phase_two_fx,
+    update_oracle_phase_two,
 )
 from acts.act_two.presentation.bosses.oracle_room import (
     draw_oracle_braziers,
@@ -701,7 +715,7 @@ def main():
             )
         continuous_move_time = pygame.time.get_ticks()
 
-        if oracle_intro_active(game_state.floor):
+        if oracle_cutscene_active(game_state.floor):
             act_two_held_movement_keys.clear()
             act_two_held_direction = (0, 0)
             act_two_auto_move_target = None
@@ -810,11 +824,22 @@ def main():
         ]
 
         for event in pygame.event.get():
-            if oracle_intro_active(game_state.floor):
-                handle_oracle_intro_event(
+            death_menu_requested = False
+
+            if oracle_cutscene_active(game_state.floor):
+                event_position = getattr(
+                    event,
+                    "pos",
+                    pygame.mouse.get_pos(),
+                )
+                oracle_action = handle_oracle_cutscene_event(
                     game_state.floor,
                     event,
                     game_surface,
+                    window_to_game_position(
+                        screen,
+                        event_position,
+                    ),
                 )
 
                 act_two_held_movement_keys.clear()
@@ -823,7 +848,10 @@ def main():
                 act_two_auto_move_floor_index = None
                 act_two_dragged_consumable_slot = None
 
-                if event.type not in (
+                if oracle_action == "menu":
+                    menu_open = True
+                    death_menu_requested = True
+                elif event.type not in (
                     pygame.QUIT,
                     pygame.VIDEORESIZE,
                 ):
@@ -841,7 +869,6 @@ def main():
                 if not act_two_held_movement_keys:
                     act_two_held_direction = (0, 0)
                 continue
-            death_menu_requested = False
 
             if (
                 not menu_open
@@ -3539,12 +3566,34 @@ def main():
                 act_two_camera,
                 current_time,
             )
-
-            oracle_interrupted_player = update_oracle_combat(
+            update_oracle_phase_transition(
+                game_state,
+                act_two_camera,
+                current_time,
+                act_two_sounds,
+                menu_state.music_volume,
+            )
+            update_oracle_phase_two(
                 game_state,
                 current_time,
                 act_two_sounds,
             )
+            update_oracle_death(
+                game_state,
+                act_two_camera,
+                current_time,
+                act_two_sounds,
+                menu_state.music_volume,
+            )
+
+            if oracle_phase_transition_active(game_state.floor):
+                oracle_interrupted_player = False
+            else:
+                oracle_interrupted_player = update_oracle_combat(
+                    game_state,
+                    current_time,
+                    act_two_sounds,
+                )
 
             if oracle_interrupted_player:
                 act_two_auto_move_target = None
@@ -3599,7 +3648,7 @@ def main():
                 current_time,
             )
         if current_act == 2:
-            if not oracle_intro_active(game_state.floor):
+            if not oracle_cutscene_active(game_state.floor):
                 update_act_two_camera(
                     act_two_camera,
                     game_state.floor["map"],
@@ -3835,35 +3884,10 @@ def main():
             <= act_two_ability_effect_elapsed
             < act_two_ability_effect_duration
         )
-        act_two_targets_belong_to_directional_ability = (
-            current_act == 2
-            and game_state.player.act_two.ability_effect_started_at > 0
-            and game_state.player.act_two.ability_effect_started_at
-            == game_state.player.attack_animation_started_at
-        )
-        act_two_ability_visual_owns_targets = (
-            current_act == 2
-            and game_state.player.player_class in ("warrior", "mage")
-            and (
-                game_state.player.directional_ability_aiming
-                or act_two_targets_belong_to_directional_ability
-            )
-        )
         draw_player_attack_markers(
             world_target,
             (
                 []
-                if act_two_ability_visual_owns_targets
-                else
-                [
-                    position
-                    for position in game_state.player_attack_targets
-                    if position_is_visible(
-                        game_state.floor,
-                        position[0],
-                        position[1],
-                    )
-                ]
                 if current_act == 2
                 else game_state.player_attack_targets
             ),
@@ -4264,6 +4288,12 @@ def main():
                 game_state.player.act_two.wait_effect_started_at,
             )
         for enemy in game_state.floor["enemies"]:
+            if (
+                current_act == 2
+                and enemy.type == "oracle_pillar"
+            ):
+                continue
+
             if current_act == 2 and enemy.health <= 0:
                 continue
 
@@ -4420,6 +4450,16 @@ def main():
                 game_state.floor,
                 current_time,
             )
+            draw_oracle_phase_two_fx(
+                world_target,
+                game_state.floor,
+                current_time,
+            )
+            draw_oracle_death_fx(
+                world_target,
+                game_state.floor,
+                current_time,
+            )
             draw_act_two_fog_of_war(
                 world_target,
                 current_act,
@@ -4443,7 +4483,7 @@ def main():
             )
         oracle_world_frame = (
             game_surface.copy()
-            if oracle_intro_active(game_state.floor)
+            if oracle_cutscene_active(game_state.floor)
             else None
         )
 
@@ -4731,6 +4771,20 @@ def main():
                 game_state.floor,
                 oracle_ui_layout,
                 oracle_ui_assets,
+            )
+            draw_oracle_phase_transition(
+                game_surface,
+                oracle_world_frame,
+                game_state.floor,
+            )
+            draw_oracle_death_overlay(
+                game_surface,
+                oracle_world_frame,
+                game_state.floor,
+                window_to_game_position(
+                    screen,
+                    pygame.mouse.get_pos(),
+                ),
             )
 
         if (

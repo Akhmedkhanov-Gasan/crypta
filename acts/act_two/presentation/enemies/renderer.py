@@ -114,7 +114,12 @@ def _draw_oracle(
     sprites,
     current_time,
 ):
-    draw_oracle_statue(screen, enemy, sprites)
+    draw_oracle_statue(
+        screen,
+        enemy,
+        sprites,
+        current_time,
+    )
 
 
 def _enemy_sprite_name(enemy, current_time):

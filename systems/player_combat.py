@@ -207,6 +207,17 @@ def attack_enemy(
     attacker_name: str = "hero",
 ) -> bool:
     player = game_state.player
+    from acts.act_two.presentation.bosses.oracle_phase_two import (
+        reject_oracle_phase_two_head_hit,
+    )
+
+    if reject_oracle_phase_two_head_hit(
+        game_state,
+        enemy,
+        attacker_name,
+        attacker_position,
+    ):
+        return False
     if (
             enemy.type == "sentinel"
             and enemy.shield_blocks_remaining > 0
@@ -354,6 +365,19 @@ def attack_enemy(
             enemy_health_before_hit
             - enemy.health
     )
+    if (
+        enemy.type == "oracle_pillar"
+        and damage_dealt > 0
+    ):
+        from acts.act_two.presentation.bosses.oracle_phase_two import (
+            resolve_oracle_pillar_hit,
+        )
+
+        resolve_oracle_pillar_hit(
+            game_state,
+            enemy,
+            damage_dealt,
+        )
 
     if (
             attacker_name == "hero"
@@ -596,6 +620,9 @@ def resolve_enemy_defeat(
 
     enemy.defeat_rewards_claimed = True
 
+    if enemy.type == "oracle_pillar":
+        return
+
     kills = game_state.run_stats.kills_by_type
     kills[enemy.type] = kills.get(enemy.type, 0) + 1
 
@@ -772,6 +799,30 @@ def perform_basic_attack(
         1,
         blocking_positions,
     )
+
+    adjacent_position = (
+        floor.player_column + column_change,
+        floor.player_row + row_change,
+    )
+    adjacent_pillar = next(
+        (
+            enemy
+            for enemy in floor.enemies
+            if (
+                enemy.type == "oracle_pillar"
+                and enemy.health > 0
+                and adjacent_position
+                in get_enemy_occupied_positions(enemy)
+            )
+        ),
+        None,
+    )
+
+    if adjacent_pillar is not None:
+        game_state.player_attack_targets = [
+            adjacent_position,
+        ]
+
     living_enemies = [
         enemy
         for enemy in floor.enemies
@@ -817,7 +868,10 @@ def perform_basic_attack(
             ),
         )
 
-        if hit_enemy.type == "oracle":
+        if (
+            hit_enemy.type == "oracle"
+            and hit_enemy.oracle_phase != 2
+        ):
             oracle_hit_reaction(
                 hit_enemy,
                 floor,

@@ -126,7 +126,9 @@ def start_oracle_intro(game_state, current_time):
         music_volume = pygame.mixer.music.get_volume()
 
         pygame.mixer.music.load(str(music_path))
-        pygame.mixer.music.set_volume(music_volume)
+        pygame.mixer.music.set_volume(
+            min(1.0, music_volume * 0.7)
+        )
         pygame.mixer.music.play(-1, fade_ms=2500)
 
     except (pygame.error, OSError) as error:
