@@ -168,7 +168,7 @@ ENEMY_TYPES = {
     },
     "oracle": {
         "display_name": "Oracle",
-        "max_health": 50,
+        "max_health": 400,
         "aggro_radius": 99,
         "wander_chance": 0.0,
         "move_every": 1,

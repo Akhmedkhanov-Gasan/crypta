@@ -322,30 +322,106 @@ def _draw_attack_warning(
     )
 
 
-def _draw_binding_effect(screen, enemy, sprites, current_time):
+def _draw_binding_effect(
+    screen,
+    enemy,
+    sprites,
+    current_time,
+):
     if enemy.binding_turns <= 0:
         return
-    half_width = enemy.footprint_width // 2
-    half_height = enemy.footprint_height // 2
+
+    pulse = (current_time // 90) % 6
+    alpha = 205 + min(
+        pulse,
+        5 - pulse,
+    ) * 10
+
+    if enemy.type == "oracle":
+        chains = sprites[
+            "oracle_binding_chains"
+        ].copy()
+        chains.set_alpha(alpha)
+
+        if enemy.oracle_phase == 2:
+            column = (
+                enemy.oracle_render_column
+                if enemy.oracle_render_column is not None
+                else enemy.column
+            )
+            row = (
+                enemy.oracle_render_row
+                if enemy.oracle_render_row is not None
+                else enemy.row
+            )
+            center = (
+                MAP_OFFSET_X
+                + (column + 1.0) * TILE_SIZE,
+                MAP_OFFSET_Y
+                + (row + 1.0) * TILE_SIZE,
+            )
+        else:
+            center = (
+                MAP_OFFSET_X
+                + (enemy.column + 0.5) * TILE_SIZE,
+                MAP_OFFSET_Y
+                + (enemy.row + 0.5) * TILE_SIZE,
+            )
+
+        screen.blit(
+            chains,
+            chains.get_rect(
+                center=(
+                    round(center[0]),
+                    round(center[1]),
+                ),
+            ),
+        )
+        return
+
+    half_width = (
+        enemy.footprint_width // 2
+    )
+    half_height = (
+        enemy.footprint_height // 2
+    )
     left = (
         MAP_OFFSET_X
-        + (enemy.column - half_width) * TILE_SIZE
+        + (
+            enemy.column
+            - half_width
+        )
+        * TILE_SIZE
         + 3
     )
     top = (
         MAP_OFFSET_Y
-        + (enemy.row - half_height) * TILE_SIZE
+        + (
+            enemy.row
+            - half_height
+        )
+        * TILE_SIZE
         + 3
     )
-    width = enemy.footprint_width * TILE_SIZE - 6
-    height = enemy.footprint_height * TILE_SIZE - 6
+    width = (
+        enemy.footprint_width
+        * TILE_SIZE
+        - 6
+    )
+    height = (
+        enemy.footprint_height
+        * TILE_SIZE
+        - 6
+    )
     chains = pygame.transform.scale(
         sprites["binding_chains"],
         (width, height),
     )
-    pulse = (current_time // 90) % 6
-    chains.set_alpha(205 + min(pulse, 5 - pulse) * 10)
-    screen.blit(chains, (left, top))
+    chains.set_alpha(alpha)
+    screen.blit(
+        chains,
+        (left, top),
+    )
 
 
 def _draw_rune_status_effects(screen, enemy, current_time):

@@ -22,6 +22,9 @@ from logic import (
     get_enemy_occupied_positions,
 )
 from systems.player_combat import damage_player, resolve_enemy_defeat
+from acts.act_two.presentation.bosses.oracle_balance import (
+    ORACLE_BINDING_TURNS,
+)
 
 
 POTION = "potion"
@@ -464,15 +467,37 @@ def use_scroll(
         if enemy is None:
             return False
         if scroll_kind == SCROLL_OF_BINDING:
-            enemy.binding_turns = BINDING_SCROLL_TURNS
+            phase_two = game_state.floor.oracle_phase_two
+
+            if (
+                phase_two is not None
+                and enemy.type in (
+                    "oracle",
+                    "oracle_pillar",
+                )
+            ):
+                enemy = phase_two.caster
+
+            binding_turns = (
+                ORACLE_BINDING_TURNS
+                if enemy.type == "oracle"
+                else BINDING_SCROLL_TURNS
+            )
+
+            enemy.binding_turns = binding_turns
             enemy.attack_targets = []
             enemy.prepared_attack_mode = None
             enemy.attack_windup_turns_remaining = 0
-            if enemy.behavior_state is EnemyBehaviorState.PREPARING_ATTACK:
+
+            if (
+                enemy.behavior_state
+                is EnemyBehaviorState.PREPARING_ATTACK
+            ):
                 enemy.behavior_state = EnemyBehaviorState.CHASING
+
             message = (
                 f"{enemy.name} is bound for "
-                f"{BINDING_SCROLL_TURNS} turns."
+                f"{binding_turns} turns."
             )
         else:
             player.act_two.scroll_effect_started_at = effect_started_at
@@ -555,6 +580,17 @@ def _damage_enemy_with_fire(game_state, enemy, position) -> None:
         f"Fire burns {enemy.name} for {damage}.",
         category="environment",
     )
+    if enemy.type == "oracle_pillar":
+        from acts.act_two.presentation.bosses.oracle_phase_two import (
+            resolve_oracle_pillar_hit,
+        )
+
+        resolve_oracle_pillar_hit(
+            game_state,
+            enemy,
+            damage,
+        )
+        return
 
     if (
         enemy.type in ("warden", "oracle")
@@ -660,6 +696,11 @@ def apply_fire_zone_tick(game_state: GameState, zone: FireZoneState) -> None:
             break_crate(game_state, crate, cause="fire_bomb")
     for enemy in game_state.floor.enemies:
         if enemy.health <= 0:
+            continue
+        if (
+            enemy.type == "oracle"
+            and enemy.oracle_phase == 2
+        ):
             continue
         occupied_positions = get_enemy_occupied_positions(enemy)
         burning_positions = zone_cells.intersection(occupied_positions)

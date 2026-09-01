@@ -313,7 +313,7 @@ def _draw_final(
 
     _draw_centered_text(
         screen,
-        "THANK YOU FOR PLAYING DEMO",
+        "THANK YOU FOR PLAYING",
         238,
         34,
         BONE,

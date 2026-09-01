@@ -41,3 +41,5 @@ PHASE_TWO_ATTACK_SEQUENCE = (
     "single",
     "double",
 )
+
+ORACLE_BINDING_TURNS = 4
