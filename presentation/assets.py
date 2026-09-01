@@ -540,6 +540,9 @@ def load_act_two_sprites():
             "items/consumables/scroll_of_impulse.png"
         ),
         "binding_chains": "items/consumables/effects/chains.png",
+        "oracle_binding_chains": (
+            "items/consumables/effects/chains_oracle.png"
+        ),
         "fire_0": "environment/effects/fire/fire_00.png",
         "fire_1": "environment/effects/fire/fire_01.png",
         "fire_2": "environment/effects/fire/fire_02.png",
@@ -634,6 +637,13 @@ def load_act_two_sprites():
             sprites[name] = pygame.transform.scale(
                 source,
                 (TILE_SIZE, TILE_SIZE),
+            )
+            continue
+
+        if name == "oracle_binding_chains":
+            sprites[name] = pygame.transform.scale(
+                source,
+                (96, 96),
             )
             continue
 
