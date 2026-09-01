@@ -89,12 +89,23 @@ def draw_oracle_ui(
 
         screen.blit(assets["empty_fill"], fill_rect)
 
-        health_ratio = max(
-            0.0,
-            min(
-                1.0,
-                oracle["health"] / max(1, oracle["max_health"]),
-            ),
+        phase_two = floor.oracle_phase_two
+        defeated_pending = (
+            phase_two is not None
+            and phase_two.defeated_pending
+        )
+
+        health_ratio = (
+            0.0
+            if defeated_pending
+            else max(
+                0.0,
+                min(
+                    1.0,
+                    oracle["health"]
+                    / max(1, oracle["max_health"]),
+                ),
+            )
         )
         visible_width = round(fill_rect.width * health_ratio)
 

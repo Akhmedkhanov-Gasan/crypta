@@ -4,6 +4,10 @@ from pathlib import Path
 
 import pygame
 
+from acts.act_two.presentation.bosses.oracle_audio import (
+    play_oracle_laugh_from_events,
+    play_oracle_pain_from_events,
+)
 from acts.act_two.settings import FIRE_BOMB_FLIGHT_MS
 from game.events import GameEvent, GameEventType
 
@@ -691,6 +695,16 @@ class ActTwoSoundBank:
         floor=None,
     ) -> None:
         events = tuple(events)
+
+        play_oracle_pain_from_events(
+            events,
+            self,
+        )
+        play_oracle_laugh_from_events(
+            events,
+            self,
+        )
+
         hero_died = any(
             event.type is GameEventType.DEATH and event.actor == "hero"
             for event in events

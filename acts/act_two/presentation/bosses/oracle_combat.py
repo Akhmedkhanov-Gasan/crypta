@@ -1,29 +1,38 @@
 import math
 import random
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import pygame
 
 from acts.act_two.presentation.bosses.oracle_audio import (
     play_oracle_attack_sound,
-    stop_oracle_fire_audio,
+)
+from acts.act_two.presentation.bosses.oracle_balance import (
+    ATTACK_REACTION_MS,
+    CLOSE_RANGE_GRACE_TURNS,
+    IMPACT_MS,
+    LINE_CAST_CHANCE,
+    LINE_DAMAGE,
+    LINE_FLIGHT_MS,
+    POST_ATTACK_RECOVERY_TURNS,
+    RADIAL_CAST_CHANCE,
+    RADIAL_COOLDOWN_TURNS,
+    RADIAL_DAMAGE,
+    RADIAL_FIRE_CELLS,
+    RADIAL_FLIGHT_MS,
+    SPHERE_DAMAGE,
+    SPHERE_FLIGHT_MS,
+    WARNING_LOCK_MS,
+)
+from acts.act_two.presentation.bosses.oracle_ground_fire import (
+    OracleGroundFireState,
+    add_oracle_ground_fire,
+    advance_oracle_ground_fire,
 )
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from logic import can_player_move_between, get_enemy_occupied_positions
 
-
-SPHERE_DAMAGE = 2
-LINE_DAMAGE = 2
-BLAST_DAMAGE = 3
-BLACKFIRE_TURNS = 2
-
-REACTION_MS = 260
-SPHERE_FLIGHT_MS = 420
-LINE_FLIGHT_MS = 560
-BLAST_WINDUP_MS = 220
-IMPACT_MS = 320
-WARNING_LOCK_MS = 300
 
 
 @dataclass
@@ -40,9 +49,14 @@ class OracleCombatState:
     lock_until: int = 0
     impact_fx_at: int = -1
     impact_kind: str = "sphere"
-    fire_turns_remaining: int = 0
     prepare_sound_pending: bool = False
     shot_sound_played: bool = False
+    close_range_turns: int = 0
+    radial_cooldown: int = 0
+    impact_cells: tuple = ()
+    ground_fire: OracleGroundFireState = field(
+        default_factory=OracleGroundFireState
+    )
 
 def finish_oracle_animation_before_action(
     game_state,
@@ -63,7 +77,7 @@ def finish_oracle_animation_before_action(
 
     interrupted = False
 
-    if state.phase in ("flight", "blast"):
+    if state.phase == "flight":
         state.impact_at = current_time
         interrupted = update_oracle_combat(
             game_state,
@@ -168,6 +182,58 @@ def _has_escape(game_state, cells):
     return False
 
 
+def _radial_cells(floor, caster):
+    occupied = get_enemy_occupied_positions(caster)
+    minimum_column = min(column for column, _row in occupied)
+    maximum_column = max(column for column, _row in occupied)
+    minimum_row = min(row for _column, row in occupied)
+    maximum_row = max(row for _column, row in occupied)
+
+    cells = []
+
+    for row in range(minimum_row - 1, maximum_row + 2):
+        for column in range(
+            minimum_column - 1,
+            maximum_column + 2,
+        ):
+            position = (column, row)
+
+            if position in occupied:
+                continue
+
+            if not (
+                0 <= row < len(floor.map)
+                and 0 <= column < len(floor.map[row])
+            ):
+                continue
+
+            if (
+                floor.map[row][column] in ("#", "S", "C", "B")
+                or position in floor.barriers
+            ):
+                continue
+
+            cells.append(position)
+
+    return tuple(cells)
+
+
+def _player_is_near_oracle(game_state, caster):
+    position = (
+        game_state.floor.player_column,
+        game_state.floor.player_row,
+    )
+    return position in _radial_cells(game_state.floor, caster)
+
+
+def _radial_fire_cells(cells):
+    if not cells:
+        return ()
+
+    count = min(RADIAL_FIRE_CELLS, len(cells))
+    return tuple(random.sample(list(cells), count))
+
+
 def _line_paths(game_state, caster, target, primary):
     dx = target[0] - caster.column
     dy = target[1] - caster.row
@@ -235,22 +301,7 @@ def advance_oracle_fire(game_state):
         floor.oracle_combat = None
         return
 
-    now = pygame.time.get_ticks()
-
-    if state.phase == "embers":
-        state.fire_turns_remaining = max(
-            0,
-            state.fire_turns_remaining - 1,
-        )
-
-        if state.fire_turns_remaining > 0:
-            return
-
-        state.phase = "blast"
-        state.started_at = now + REACTION_MS
-        state.impact_at = state.started_at + BLAST_WINDUP_MS
-        state.lock_until = state.impact_at + IMPACT_MS
-        return
+    advance_oracle_ground_fire(game_state, state)
 
     caster = state.caster
     interrupted = (
@@ -264,6 +315,8 @@ def advance_oracle_fire(game_state):
         state.phase = "recovery"
         state.rest = 0
         state.cells = ()
+        state.paths = ()
+        state.prepare_sound_pending = False
         caster.oracle_cast_amount = 0.0
         caster.oracle_head_angle = 0.0
 
@@ -286,13 +339,54 @@ def take_oracle_combat_turn(game_state, caster):
     ):
         return
 
+    if caster.oracle_phase == 2:
+        from acts.act_two.presentation.bosses.oracle_phase_two import (
+            take_oracle_phase_two_turn,
+        )
+
+        take_oracle_phase_two_turn(
+            game_state,
+            caster,
+        )
+        return
+
+    if caster.oracle_phase != 1:
+        return
+
     if floor.oracle_combat is None:
         floor.oracle_combat = OracleCombatState(caster=caster)
 
     state = floor.oracle_combat
     now = pygame.time.get_ticks()
+    player_is_near = _player_is_near_oracle(
+        game_state,
+        caster,
+    )
 
-    if state.phase in ("flight", "impact", "embers", "blast"):
+    if player_is_near:
+        state.close_range_turns += 1
+    else:
+        state.close_range_turns = 0
+
+    state.radial_cooldown = max(
+        0,
+        state.radial_cooldown - 1,
+    )
+
+    if (
+        player_is_near
+        and state.close_range_turns <= CLOSE_RANGE_GRACE_TURNS
+    ):
+        if state.phase == "warning":
+            state.phase = "idle"
+            state.cells = ()
+            state.paths = ()
+            state.prepare_sound_pending = False
+            caster.oracle_cast_amount = 0.0
+            caster.oracle_head_angle = 0.0
+        return
+
+    if state.phase in ("flight", "impact"):
         return
 
     if state.phase == "recovery" and state.rest > 0:
@@ -301,16 +395,43 @@ def take_oracle_combat_turn(game_state, caster):
 
     if state.phase == "warning":
         state.phase = "flight"
-        state.started_at = now + REACTION_MS
-        duration = (
-            SPHERE_FLIGHT_MS
-            if state.kind == "sphere"
-            else LINE_FLIGHT_MS
-        )
-        state.impact_at = state.started_at + duration
+        state.started_at = now + ATTACK_REACTION_MS
+        state.impact_at = state.started_at + {
+            "sphere": SPHERE_FLIGHT_MS,
+            "line": LINE_FLIGHT_MS,
+            "radial": RADIAL_FLIGHT_MS,
+        }[state.kind]
         state.lock_until = state.impact_at + IMPACT_MS
         state.shots += 1
         return
+
+    if (
+        player_is_near
+        and state.radial_cooldown <= 0
+        and random.random() < RADIAL_CAST_CHANCE
+    ):
+        cells = _radial_cells(floor, caster)
+
+        if cells and _has_escape(game_state, cells):
+            state.kind = "radial"
+            state.cells = cells
+            state.paths = ()
+            state.phase = "warning"
+            state.started_at = now
+            state.impact_fx_at = -1
+            state.lock_until = now + WARNING_LOCK_MS
+            state.prepare_sound_pending = True
+            state.shot_sound_played = False
+
+            add_log_message(
+                game_state.combat_log,
+                (
+                    "Oracle's eye swells with violent fire. "
+                    "Retreat from the statue."
+                ),
+                category="warning",
+            )
+            return
 
     target = (floor.player_column, floor.player_row)
     ray = _ray_cells(floor, caster, target)
@@ -320,7 +441,11 @@ def take_oracle_combat_turn(game_state, caster):
         caster.oracle_cast_amount = 0.0
         return
 
-    kind = "line" if state.shots % 3 == 2 else "sphere"
+    kind = (
+        "line"
+        if random.random() < LINE_CAST_CHANCE
+        else "sphere"
+    )
 
     if kind == "line":
         paths = _line_paths(
@@ -384,11 +509,7 @@ def _strike(game_state, state, damage, kind):
     if position not in state.cells:
         add_log_message(
             game_state.combat_log,
-            (
-                "The blackfire erupts on empty stone."
-                if kind == "blast"
-                else "Oracle's black fire misses."
-            ),
+            "Oracle's black fire misses.",
             category="defense",
         )
         return
@@ -401,7 +522,10 @@ def _strike(game_state, state, damage, kind):
                 target="hero",
                 origin=(caster.column, caster.row),
                 destination=position,
-                data={"enemy_type": "oracle", "mode": kind},
+                data={
+                    "enemy_type": "oracle",
+                    "mode": kind,
+                },
             ),
         )
         add_log_message(
@@ -428,7 +552,10 @@ def _strike(game_state, state, damage, kind):
             origin=(caster.column, caster.row),
             destination=position,
             amount=dealt,
-            data={"enemy_type": "oracle", "mode": kind},
+            data={
+                "enemy_type": "oracle",
+                "mode": kind,
+            },
         ),
     )
     add_log_message(
@@ -460,6 +587,14 @@ def update_oracle_combat(game_state, current_time, sounds):
     if state is None:
         return False
 
+    if state.ground_fire.sound_pending:
+        play_oracle_attack_sound(
+            sounds,
+            "line",
+            "blast",
+        )
+        state.ground_fire.sound_pending = False
+
     caster = state.caster
 
     if caster.health <= 0:
@@ -482,6 +617,7 @@ def update_oracle_combat(game_state, current_time, sounds):
 
         if (
             state.phase == "flight"
+            and state.kind != "radial"
             and not state.shot_sound_played
             and (
                 current_time >= state.started_at
@@ -519,11 +655,11 @@ def update_oracle_combat(game_state, current_time, sounds):
     if state.phase == "impact":
         if current_time >= state.lock_until:
             state.phase = "recovery"
-            state.rest = 1
+            state.rest = POST_ATTACK_RECOVERY_TURNS
         return False
 
     if (
-        state.phase not in ("flight", "blast")
+        state.phase != "flight"
         or current_time < state.impact_at
     ):
         return False
@@ -532,22 +668,19 @@ def update_oracle_combat(game_state, current_time, sounds):
         present_act_two_turn_events,
     )
 
-    kind = "blast" if state.phase == "blast" else state.kind
+    kind = state.kind
 
-    if kind == "blast":
-        stop_oracle_fire_audio()
-
-        if game_state.player.health > 0:
-            play_oracle_attack_sound(
-                sounds,
-                "line",
-                "blast",
-            )
+    if kind == "radial" and game_state.player.health > 0:
+        play_oracle_attack_sound(
+            sounds,
+            "radial",
+            "blast",
+        )
 
     damage = {
         "sphere": SPHERE_DAMAGE,
         "line": LINE_DAMAGE,
-        "blast": BLAST_DAMAGE,
+        "radial": RADIAL_DAMAGE,
     }[kind]
 
     saved_events = game_state.events
@@ -569,21 +702,41 @@ def update_oracle_combat(game_state, current_time, sounds):
         game_state.events = saved_events
 
     state.impact_kind = kind
+    state.impact_cells = state.cells
     state.impact_fx_at = current_time
     state.lock_until = current_time + IMPACT_MS
 
-    if kind == "line" and game_state.player.health > 0:
-        state.phase = "embers"
-        state.fire_turns_remaining = BLACKFIRE_TURNS
+    if kind == "radial" and game_state.player.health > 0:
+        state.radial_cooldown = RADIAL_COOLDOWN_TURNS
+        add_oracle_ground_fire(
+            state.ground_fire,
+            _radial_fire_cells(state.cells),
+        )
+
         add_log_message(
             game_state.combat_log,
             (
-                "The blackfire will erupt after "
-                f"{BLACKFIRE_TURNS} actions."
+                "Scattered blackfire remains after "
+                "Oracle's eruption."
             ),
             category="warning",
         )
-    else:
-        state.phase = "impact"
+    elif kind in ("sphere", "line") and game_state.player.health > 0:
+        add_oracle_ground_fire(
+            state.ground_fire,
+            state.cells,
+        )
+
+        add_log_message(
+            game_state.combat_log,
+            (
+                "Blackfire burns at the point of impact."
+                if kind == "sphere"
+                else "Blackfire remains across the arena."
+            ),
+            category="warning",
+        )
+
+    state.phase = "impact"
 
     return interrupted

@@ -13,6 +13,13 @@ from acts.act_two.presentation.bosses.oracle_intro import (
     oracle_player_position,
 )
 
+from acts.act_two.presentation.bosses.oracle_balance import (
+    PHASE_TWO_PILLAR_BREAK_MS,
+)
+from acts.act_two.presentation.bosses.oracle_phase_two import (
+    oracle_phase_two_pillar_at,
+    oracle_phase_two_pillar_flash,
+)
 from presentation.layout import (
     MAP_OFFSET_X,
     MAP_OFFSET_Y,
@@ -43,7 +50,20 @@ def _load_arena_sprites():
     )
     sprites = {}
 
-    for name in ("pillar", "fire_01", "fire_02", "fire_03"):
+    names = (
+        "pillar",
+        "pillar_cracked",
+        "pillar_broken",
+        "fire_01",
+        "fire_02",
+        "fire_03",
+        "blackfire_01",
+        "blackfire_02",
+        "blackfire_03",
+        "blackfire_04",
+    )
+
+    for name in names:
         source = pygame.image.load(
             str(root / f"{name}.png")
         ).convert_alpha()
@@ -55,55 +75,271 @@ def _load_arena_sprites():
     return sprites
 
 
+
+def _pillar_hit_state(pillar, current_time):
+    started_at = pillar.hit_animation_started_at
+
+    if started_at < 0:
+        return 0, 0.0
+
+    age = current_time - started_at
+
+    if age < 0 or age >= 360:
+        return 0, 0.0
+
+    progress = age / 360
+    strength = 1.0 - progress
+    shake = round(
+        math.sin(age / 12) * 4 * strength
+    )
+
+    return shake, strength
+
+
+def _draw_pillar_hit_effect(
+    screen,
+    position,
+    pillar,
+    current_time,
+):
+    shake, strength = _pillar_hit_state(
+        pillar,
+        current_time,
+    )
+
+    if strength <= 0:
+        return
+
+    effect = pygame.Surface(
+        (TILE_SIZE * 2, TILE_SIZE * 2),
+        pygame.SRCALPHA,
+    )
+    center = (TILE_SIZE, TILE_SIZE)
+    radius = round(
+        TILE_SIZE * (0.25 + (1.0 - strength) * 0.65)
+    )
+    alpha = round(190 * strength)
+
+    pygame.draw.circle(
+        effect,
+        (151, 38, 45, alpha),
+        center,
+        radius,
+        3,
+    )
+    pygame.draw.line(
+        effect,
+        (
+            235,
+            198,
+            181,
+            round(230 * strength),
+        ),
+        (
+            center[0] - 15,
+            center[1] - 22,
+        ),
+        (
+            center[0] + 12,
+            center[1] + 16,
+        ),
+        4,
+    )
+    pygame.draw.line(
+        effect,
+        (
+            125,
+            24,
+            34,
+            round(210 * strength),
+        ),
+        (
+            center[0] - 7,
+            center[1] - 13,
+        ),
+        (
+            center[0] + 18,
+            center[1] + 7,
+        ),
+        3,
+    )
+
+    flash = pygame.Surface(
+        (TILE_SIZE, TILE_SIZE),
+        pygame.SRCALPHA,
+    )
+    flash.fill(
+        (
+            125,
+            25,
+            32,
+            round(80 * strength),
+        )
+    )
+
+    screen.blit(
+        flash,
+        (
+            position[0] + shake,
+            position[1],
+        ),
+        special_flags=pygame.BLEND_RGBA_ADD,
+    )
+    screen.blit(
+        effect,
+        (
+            position[0] - TILE_SIZE // 2 + shake,
+            position[1] - TILE_SIZE // 2,
+        ),
+    )
+
+
 def draw_oracle_pillars(screen, floor, current_time):
     if not floor.has_oracle_gate:
         return
 
     sprites = _load_arena_sprites()
+    phase_two = floor.oracle_phase_two
+    global_flash = oracle_phase_two_pillar_flash(
+        floor,
+        current_time,
+    )
 
     for column, row in floor.boss_columns:
-        if (column, row) not in floor.visible_cells:
+        position_key = (column, row)
+
+        if position_key not in floor.visible_cells:
             continue
 
         position = (
             MAP_OFFSET_X + column * TILE_SIZE,
             MAP_OFFSET_Y + row * TILE_SIZE,
         )
-        screen.blit(sprites["pillar"], position)
+        pillar = oracle_phase_two_pillar_at(
+            floor,
+            position_key,
+        )
+        shake = 0
 
-        level, flash = oracle_pillar_light(floor, column, row)
-        if level <= 0:
-            continue
-
-        phase = column * 71 + row * 43
-        frame = ((current_time + phase) // FIRE_FRAME_MS) % 3 + 1
-
-        fire = sprites[f"fire_{frame:02d}"].copy()
-        fire.set_alpha(round(255 * level))
-        screen.blit(fire, position)
-
-        if flash > 0:
-            effect = pygame.Surface(
-                (TILE_SIZE * 2, TILE_SIZE * 2),
-                pygame.SRCALPHA,
+        if pillar is not None:
+            shake, _strength = _pillar_hit_state(
+                pillar,
+                current_time,
             )
-            center = (TILE_SIZE, TILE_SIZE)
 
-            for radius, alpha in ((18, 12), (12, 22), (6, 35)):
-                pygame.draw.circle(
-                    effect,
-                    (154, 97, 52, round(alpha * flash)),
-                    center,
-                    radius,
+        render_position = (
+            position[0] + shake,
+            position[1],
+        )
+
+        if phase_two is None or pillar is None:
+            screen.blit(
+                sprites["pillar"],
+                render_position,
+            )
+
+            level, flash = oracle_pillar_light(
+                floor,
+                column,
+                row,
+            )
+
+            if level <= 0:
+                continue
+
+            phase = column * 71 + row * 43
+            frame = (
+                (current_time + phase)
+                // FIRE_FRAME_MS
+            ) % 3 + 1
+
+            fire = sprites[f"fire_{frame:02d}"].copy()
+            fire.set_alpha(round(255 * level))
+            screen.blit(
+                fire,
+                render_position,
+            )
+        else:
+            if pillar.health > 0:
+                pillar_sprite = sprites["pillar"]
+            else:
+                broken_at = (
+                    phase_two.pillar_break_started_at.get(
+                        position_key,
+                        -1,
+                    )
+                )
+                age = (
+                    current_time - broken_at
+                    if broken_at >= 0
+                    else PHASE_TWO_PILLAR_BREAK_MS
+                )
+                pillar_sprite = (
+                    sprites["pillar_cracked"]
+                    if age < PHASE_TWO_PILLAR_BREAK_MS
+                    else sprites["pillar_broken"]
                 )
 
             screen.blit(
+                pillar_sprite,
+                render_position,
+            )
+
+            _draw_pillar_hit_effect(
+                screen,
+                position,
+                pillar,
+                current_time,
+            )
+
+            if pillar.health <= 0:
+                continue
+
+            phase = column * 71 + row * 43
+            frame = (
+                (current_time + phase)
+                // FIRE_FRAME_MS
+            ) % 4 + 1
+
+            screen.blit(
+                sprites[f"blackfire_{frame:02d}"],
+                render_position,
+            )
+            flash = global_flash
+
+        if flash <= 0:
+            continue
+
+        effect = pygame.Surface(
+            (TILE_SIZE * 2, TILE_SIZE * 2),
+            pygame.SRCALPHA,
+        )
+        center = (TILE_SIZE, TILE_SIZE)
+
+        for radius, alpha in (
+            (22, 16),
+            (15, 30),
+            (8, 48),
+        ):
+            pygame.draw.circle(
                 effect,
                 (
-                    position[0] - TILE_SIZE // 2,
-                    position[1] - round(TILE_SIZE * 0.72),
+                    132,
+                    31,
+                    42,
+                    round(alpha * flash),
                 ),
+                center,
+                radius,
             )
+
+        screen.blit(
+            effect,
+            (
+                position[0] - TILE_SIZE // 2,
+                position[1] - round(TILE_SIZE * 0.72),
+            ),
+        )
 
 
 @lru_cache(maxsize=96)
@@ -171,10 +407,35 @@ def draw_oracle_lighting(screen, floor, current_time):
     ]
 
     for column, row in floor.boss_columns:
-        if (column, row) not in floor.visible_cells:
+        position = (column, row)
+
+        if position not in floor.visible_cells:
             continue
 
-        level, flash = oracle_pillar_light(floor, column, row)
+        phase_two_pillar = oracle_phase_two_pillar_at(
+            floor,
+            position,
+        )
+
+        if (
+            phase_two_pillar is not None
+            and phase_two_pillar.health <= 0
+        ):
+            continue
+
+        if phase_two_pillar is not None:
+            level = 1.0
+            flash = oracle_phase_two_pillar_flash(
+                floor,
+                current_time,
+            )
+        else:
+            level, flash = oracle_pillar_light(
+                floor,
+                column,
+                row,
+            )
+
         if level <= 0:
             continue
 
