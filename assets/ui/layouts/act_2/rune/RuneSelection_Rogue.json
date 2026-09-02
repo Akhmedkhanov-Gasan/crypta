@@ -18,8 +18,8 @@
       "rect": {
         "x": 318,
         "y": 221,
-        "width": 160,
-        "height": 241
+        "width": 167,
+        "height": 294
       },
       "icon": {
         "x": 336,
@@ -60,15 +60,15 @@
       "description": {
         "rect": {
           "x": 325,
-          "y": 425,
+          "y": 426,
           "width": 153,
-          "height": 54
+          "height": 84
         },
-        "text": "Killing from stealth refreshes\nstealth, allowing one more\nstealth attack.",
+        "text": "Killing from stealth\nrefreshes stealth,\nallowing one more\nstealth attack.",
         "font": {
-          "family": "Alagard",
-          "style": "Medium",
-          "size": 10
+          "family": "Euxoi",
+          "style": "Regular",
+          "size": 16
         },
         "line_height": {
           "unit": "AUTO"
@@ -81,31 +81,31 @@
         "vertical_align": "CENTER",
         "text_case": "ORIGINAL",
         "color": {
-          "r": 174,
-          "g": 154,
-          "b": 143,
+          "r": 167,
+          "g": 167,
+          "b": 167,
           "a": 255
         }
       },
       "card": {
-        "x": 325,
+        "x": 321,
         "y": 402,
-        "width": 153,
-        "height": 83
+        "width": 160,
+        "height": 110
       },
       "hitbox": {
-        "x": 325,
+        "x": 321,
         "y": 402,
-        "width": 153,
-        "height": 83
+        "width": 160,
+        "height": 110
       }
     },
     "rune_of_cruelty": {
       "rect": {
         "x": 554,
         "y": 221,
-        "width": 160,
-        "height": 241
+        "width": 173,
+        "height": 290
       },
       "icon": {
         "x": 576,
@@ -148,13 +148,13 @@
           "x": 564,
           "y": 424,
           "width": 153,
-          "height": 54
+          "height": 87
         },
-        "text": "An attack from invisibility\ninflicts 2 bleed damage for \n3 turns.",
+        "text": "An attack from \ninvisibility causes\nbleeding for 30% of the\nhit's damage for 3 turns.",
         "font": {
-          "family": "Alagard",
-          "style": "Medium",
-          "size": 10
+          "family": "Euxoi",
+          "style": "Regular",
+          "size": 16
         },
         "line_height": {
           "unit": "AUTO"
@@ -167,31 +167,31 @@
         "vertical_align": "CENTER",
         "text_case": "ORIGINAL",
         "color": {
-          "r": 174,
-          "g": 154,
-          "b": 143,
+          "r": 167,
+          "g": 167,
+          "b": 167,
           "a": 255
         }
       },
       "card": {
-        "x": 564,
+        "x": 560,
         "y": 401,
-        "width": 153,
-        "height": 83
+        "width": 160,
+        "height": 110
       },
       "hitbox": {
-        "x": 564,
+        "x": 560,
         "y": 401,
-        "width": 153,
-        "height": 83
+        "width": 160,
+        "height": 110
       }
     },
     "rune_of_the_veil": {
       "rect": {
         "x": 802,
         "y": 221,
-        "width": 160,
-        "height": 241
+        "width": 159,
+        "height": 288
       },
       "icon": {
         "x": 820,
@@ -234,13 +234,13 @@
           "x": 805,
           "y": 425,
           "width": 153,
-          "height": 54
+          "height": 81
         },
-        "text": "Invisibility lasts four times\nlonger, but no longer\nguarantees \na critical strike.",
+        "text": "Critical hits grant 2 \nturns of invisibility.\nStealth attacks use your\nnormal critical chance.",
         "font": {
-          "family": "Alagard",
-          "style": "Medium",
-          "size": 10
+          "family": "Euxoi",
+          "style": "Regular",
+          "size": 16
         },
         "line_height": {
           "unit": "AUTO"
@@ -253,23 +253,23 @@
         "vertical_align": "CENTER",
         "text_case": "ORIGINAL",
         "color": {
-          "r": 174,
-          "g": 154,
-          "b": 143,
+          "r": 167,
+          "g": 167,
+          "b": 167,
           "a": 255
         }
       },
       "card": {
-        "x": 805,
+        "x": 801,
         "y": 402,
-        "width": 153,
-        "height": 83
+        "width": 160,
+        "height": 110
       },
       "hitbox": {
-        "x": 805,
+        "x": 801,
         "y": 402,
-        "width": 153,
-        "height": 83
+        "width": 160,
+        "height": 110
       }
     }
   },

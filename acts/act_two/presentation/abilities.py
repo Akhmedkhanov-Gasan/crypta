@@ -3,13 +3,17 @@ import math
 import pygame
 
 from acts.act_two.abilities import (
-    get_mage_arcane_burst_cells,
     get_mage_arcane_cells,
     get_warrior_aftershock_cells,
     get_warrior_cleave_cells,
     is_valid_mage_arcane_burst_target,
 )
-from logic import get_enemy_occupied_positions
+from logic import (
+    get_enemy_occupied_positions,
+    get_mage_arcane_burst_cells,
+    get_mage_resonance_cells,
+    get_mage_resonance_target,
+)
 from presentation.layout import MAP_OFFSET_X, MAP_OFFSET_Y
 from settings import TILE_SIZE
 
@@ -186,6 +190,65 @@ def draw_act_two_ability_preview(
     mage_target: tuple[int, int] | None = None,
 ) -> None:
     player = game_state.player
+
+    if (
+        player.player_class == "mage"
+        and player.selected_rune_id == "rune_of_resonance"
+    ):
+        if (
+            mage_target is None
+            or player.act_two.fire_bomb_aiming
+            or player.act_two.scroll_aiming_kind is not None
+        ):
+            return
+
+        cells = get_mage_resonance_cells(game_state)
+        target_enemy = get_mage_resonance_target(game_state, mage_target)
+        overlay = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
+
+        for column, row in cells:
+            rectangle = pygame.Rect(
+                MAP_OFFSET_X + column * TILE_SIZE,
+                MAP_OFFSET_Y + row * TILE_SIZE,
+                TILE_SIZE,
+                TILE_SIZE,
+            )
+            pygame.draw.rect(
+                overlay,
+                (65, 135, 230, 42),
+                rectangle.inflate(-3, -3),
+                width=1,
+            )
+
+        if target_enemy is not None:
+            target_center = _cell_center(*mage_target)
+            player_center = _cell_center(
+                game_state.floor.player_column,
+                game_state.floor.player_row,
+            )
+            pygame.draw.line(
+                overlay,
+                (140, 215, 255, 170),
+                player_center,
+                target_center,
+                2,
+            )
+            rectangle = pygame.Rect(
+                MAP_OFFSET_X + mage_target[0] * TILE_SIZE,
+                MAP_OFFSET_Y + mage_target[1] * TILE_SIZE,
+                TILE_SIZE,
+                TILE_SIZE,
+            )
+            pygame.draw.rect(
+                overlay,
+                (190, 240, 255, 235),
+                rectangle.inflate(-3, -3),
+                width=2,
+            )
+
+        screen.blit(overlay, (0, 0))
+        return
+
     direction = player.act_two.selected_ability_direction
     if (
         player.player_class not in ("warrior", "mage")
@@ -213,7 +276,7 @@ def draw_act_two_ability_preview(
             direction[0],
             direction[1],
         )
-        if player.act_two.selected_rune_id == "rune_of_aftershock"
+        if player.selected_rune_id == "rune_of_aftershock"
         else []
     )
     pulse = 0.5 + 0.5 * math.sin(current_time / 115)
@@ -305,13 +368,10 @@ def _draw_mage_target_preview(
     if not is_valid_mage_arcane_burst_target(game_state, target):
         return
 
-    cells = (
-        [target]
-        if (
-            game_state.player.act_two.selected_rune_id
-            == "rune_of_concentration"
-        )
-        else get_mage_arcane_burst_cells(game_state.floor, target)
+    cells = get_mage_arcane_burst_cells(
+        game_state.floor,
+        target,
+        game_state.player.selected_rune_id,
     )
     pulse = 0.5 + 0.5 * math.sin(current_time / 105)
     overlay = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
@@ -459,7 +519,7 @@ def draw_act_two_power_cleave_effect(
     )
 
     if (
-        player.act_two.selected_rune_id == "rune_of_aftershock"
+        player.selected_rune_id == "rune_of_aftershock"
         and elapsed >= _AFTERSHOCK_START_MS
     ):
         aftershock_elapsed = elapsed - _AFTERSHOCK_START_MS
@@ -673,8 +733,15 @@ def draw_act_two_arcane_burst_effect(
         arm_length = round(TILE_SIZE * (0.35 + impact_progress * 0.95))
         impact_directions = (
             ()
-            if effect_kind == "concentration_release"
-            else ((0, -1), (1, 0), (0, 1), (-1, 0))
+            if effect_kind in ("concentration_release", "resonance")
+            else tuple(
+                (
+                    position[0] - target[0],
+                    position[1] - target[1],
+                )
+                for position in player.act_two.ability_effect_cells
+                if position != target
+            )
         )
         for direction in impact_directions:
             endpoint = (
@@ -726,7 +793,11 @@ def draw_act_two_arcane_burst_effect(
             width=3,
         )
 
-        hit_positions = set(player.act_two.ability_effect_hit_positions)
+        hit_positions = set(
+            player.act_two.ability_effect_cells
+            if effect_kind == "fracture"
+            else player.act_two.ability_effect_hit_positions
+        )
         for position in hit_positions:
             if position not in player.act_two.ability_effect_cells:
                 continue

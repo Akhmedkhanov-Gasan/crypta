@@ -1,4 +1,4 @@
-from acts.act_two.rune_catalog import RUNES_BY_ID, runes_for_class
+from game.rune_catalog import RUNES_BY_ID, runes_for_class
 from acts.act_two.state import RunePuzzlePhase
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
@@ -92,7 +92,7 @@ def interact_with_rune_pedestal(game_state: GameState) -> bool:
 
     if room.phase is RunePuzzlePhase.CLAIMED:
         selected_rune = RUNES_BY_ID.get(
-            game_state.player.act_two.selected_rune_id
+            game_state.player.selected_rune_id
         )
         add_log_message(
             game_state.combat_log,
@@ -146,13 +146,25 @@ def select_rune(game_state: GameState, rune_id: str) -> bool:
         room is None
         or room.phase is not RunePuzzlePhase.REWARD_AVAILABLE
         or not game_state.rune_selection_open
-        or game_state.player.act_two.selected_rune_id is not None
+        or game_state.player.selected_rune_id is not None
         or rune is None
         or rune.player_class != game_state.player.player_class
     ):
         return False
 
-    game_state.player.act_two.selected_rune_id = rune.id
+    game_state.player.selected_rune_id = rune.id
+
+    if rune.id in ("rune_of_resonance", "rune_of_impact"):
+        game_state.player.ability_kill_charge = 0
+        game_state.player.directional_ability_aiming = False
+        game_state.player.act_two.selected_ability_direction = None
+        game_state.player_attack_targets = []
+
+    if rune.id == "rune_of_the_veil":
+        game_state.player.ability_kill_charge = 0
+        game_state.player.invisibility_turns = 0
+        game_state.player.veil_triggered_this_turn = False
+
     game_state.rune_selection_open = False
     game_state.rune_selection_pending_id = None
     room.phase = RunePuzzlePhase.CLAIMED

@@ -388,13 +388,31 @@ def _ability_entries(player, accent_color):
                 None,
             ),
         )
+    selected_rune = RUNES_BY_ID.get(player.selected_rune_id)
+    veil_passive = player.selected_rune_id == "rune_of_the_veil"
+
     return (
         (
-            "assassin_invisibility",
-            "Invisibility",
-            _ratio(player.ability_kill_charge, CLASS_ABILITY_KILLS),
+            (
+                f"{selected_rune.id}_icon"
+                if selected_rune is not None
+                else "assassin_invisibility"
+            ),
+            (
+                selected_rune.name
+                if selected_rune is not None
+                else "Invisibility"
+            ),
+            (
+                0.0
+                if veil_passive
+                else _ratio(
+                    player.ability_kill_charge,
+                    CLASS_ABILITY_KILLS,
+                )
+            ),
             accent_color,
-            None,
+            "PASSIVE" if veil_passive else None,
         ),
         (
             "assassin_teleport",
@@ -508,10 +526,36 @@ def _draw_ability_tooltip(
     key_number,
 ):
     asset_name, name, ratio, color, explicit_status = entry
-    tooltip = pygame.Rect(card.x, ACT_THREE_BOTTOM_BAR_Y - 74, 292, 66)
-    if tooltip.right > ACT_THREE_BOTTOM_BAR_WIDTH - 8:
-        tooltip.right = ACT_THREE_BOTTOM_BAR_WIDTH - 8
-    tooltip_surface = pygame.Surface(tooltip.size, pygame.SRCALPHA)
+    rune = RUNES_BY_ID.get(asset_name.removesuffix("_icon"))
+
+    description = (
+        rune.description
+        if rune is not None
+        else _ABILITY_DESCRIPTIONS.get(
+            asset_name,
+            "Subclass ability.",
+        )
+    )
+
+    width = 320
+    text_font = fonts["sidebar_log"]
+    lines = wrap_text(text_font, description, width - 20)
+    line_height = text_font.get_linesize()
+    height = 58 + line_height * len(lines)
+
+    tooltip = pygame.Rect(
+        card.x,
+        ACT_THREE_BOTTOM_BAR_Y - height - 8,
+        width,
+        height,
+    )
+    tooltip.right = min(tooltip.right, screen.get_width() - 8)
+    tooltip.left = max(8, tooltip.left)
+
+    tooltip_surface = pygame.Surface(
+        tooltip.size,
+        pygame.SRCALPHA,
+    )
     tooltip_surface.fill((8, 11, 14, 244))
     pygame.draw.rect(
         tooltip_surface,
@@ -520,25 +564,41 @@ def _draw_ability_tooltip(
         width=1,
     )
     screen.blit(tooltip_surface, tooltip)
-    _draw_label(screen, fonts["sidebar_text"], name, color, (tooltip.x + 10, tooltip.y + 6))
-    status = _ability_status(ratio, explicit_status)
-    status_surface = fonts["sidebar_log"].render(
-        f"KEY {key_number}  ·  {status}",
-        True,
-        _MUTED_TEXT,
-    )
-    screen.blit(
-        status_surface,
-        status_surface.get_rect(topright=(tooltip.right - 10, tooltip.y + 8)),
-    )
-    description = _ABILITY_DESCRIPTIONS.get(asset_name, "Subclass ability.")
+
     _draw_label(
         screen,
-        fonts["sidebar_log"],
-        description,
-        _BRIGHT_TEXT,
-        (tooltip.x + 10, tooltip.y + 36),
+        fonts["sidebar_text"],
+        name,
+        color,
+        (tooltip.x + 10, tooltip.y + 6),
     )
+
+    status = _ability_status(ratio, explicit_status)
+    status_text = (
+        status
+        if explicit_status == "PASSIVE"
+        else f"KEY {key_number}  ·  {status}"
+    )
+
+    _draw_label(
+        screen,
+        text_font,
+        status_text,
+        _MUTED_TEXT,
+        (tooltip.x + 10, tooltip.y + 28),
+    )
+
+    for line_index, line in enumerate(lines):
+        _draw_label(
+            screen,
+            text_font,
+            line,
+            _BRIGHT_TEXT,
+            (
+                tooltip.x + 10,
+                tooltip.y + 48 + line_index * line_height,
+            ),
+        )
 
 
 def _draw_abilities(screen, player, fonts, assets, accent_color, mouse_position):
@@ -564,18 +624,60 @@ def _draw_abilities(screen, player, fonts, assets, accent_color, mouse_position)
                 icon,
                 icon.get_rect(center=(card.centerx, card.y + 25)),
             )
-        key_badge = pygame.Rect(card.right - 24, card.y + 5, 18, 18)
-        pygame.draw.rect(screen, _SLOT_FILL, key_badge)
-        pygame.draw.rect(screen, _SECTION_BORDER, key_badge, width=1)
-        key_surface = fonts["sidebar_log"].render(str(index + 1), True, _BRIGHT_TEXT)
-        screen.blit(key_surface, key_surface.get_rect(center=key_badge.center))
-        progress = pygame.Rect(card.x + 5, card.bottom - 8, card.width - 10, 4)
-        pygame.draw.rect(screen, (34, 40, 43), progress)
-        if ratio > 0:
+        if asset_name != "rune_of_the_veil_icon":
+            key_badge = pygame.Rect(
+                card.right - 24,
+                card.y + 5,
+                18,
+                18,
+            )
+            pygame.draw.rect(screen, _SLOT_FILL, key_badge)
             pygame.draw.rect(
                 screen,
-                color,
-                (progress.x, progress.y, round(progress.width * ratio), progress.height),
+                _SECTION_BORDER,
+                key_badge,
+                width=1,
+            )
+            key_surface = fonts["sidebar_log"].render(
+                str(index + 1),
+                True,
+                _BRIGHT_TEXT,
+            )
+            screen.blit(
+                key_surface,
+                key_surface.get_rect(center=key_badge.center),
+            )
+
+            progress = pygame.Rect(
+                card.x + 5,
+                card.bottom - 8,
+                card.width - 10,
+                4,
+            )
+            pygame.draw.rect(screen, (34, 40, 43), progress)
+
+            if ratio > 0:
+                pygame.draw.rect(
+                    screen,
+                    color,
+                    (
+                        progress.x,
+                        progress.y,
+                        round(progress.width * ratio),
+                        progress.height,
+                    ),
+                )
+        else:
+            passive_label = fonts["sidebar_log"].render(
+                "PASSIVE",
+                True,
+                _MUTED_TEXT,
+            )
+            screen.blit(
+                passive_label,
+                passive_label.get_rect(
+                    midbottom=(card.centerx, card.bottom - 3),
+                ),
             )
         if is_hovered:
             hovered = (card, entry, index + 1)

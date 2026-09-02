@@ -31,7 +31,7 @@ def bloody_pact_is_available(player, pact_id: str) -> bool:
     if pact_id not in _BLOODY_PACT_IDS:
         return False
     if pact_id == BROKEN_SEAL:
-        return player.act_two.selected_rune_id is not None
+        return player.selected_rune_id is not None
     return True
 
 
@@ -94,7 +94,8 @@ def confirm_bloody_pact(game_state: GameState) -> bool:
 
     player = game_state.player
     if pact.id == BROKEN_SEAL:
-        player.act_two.selected_rune_id = None
+        player.selected_rune_id = None
+        player.veil_triggered_this_turn = False
         player.ability_kill_charge = min(2, player.ability_kill_charge)
     elif pact.id == GLASS_HEART:
         health_penalty = max(

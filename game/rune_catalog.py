@@ -19,8 +19,8 @@ RUNE_DEFINITIONS = (
         icon_filename="rune_of_impact.png",
         original_filename="rune_of_impact_original.png",
         description=(
-            "Enemies knocked into a wall or another enemy are stunned "
-            "for 2 turns."
+            "Passive: 25% chance to block attacks. "
+            "Replaces Power Cleave."
         ),
     ),
     RuneDefinition(
@@ -61,8 +61,8 @@ RUNE_DEFINITIONS = (
         icon_filename="rune_of_cruelty.png",
         original_filename="rune_of_cruelty_original.png",
         description=(
-            "An attack from invisibility inflicts 2 bleed damage for "
-            "3 turns."
+            "An attack from invisibility also causes bleeding for "
+            "30% of the hit's damage per turn for 3 turns."
         ),
     ),
     RuneDefinition(
@@ -72,8 +72,9 @@ RUNE_DEFINITIONS = (
         icon_filename="rune_of the_veil.png",
         original_filename="rune_of the_veil_original.png",
         description=(
-            "Invisibility lasts four times longer, but no longer guarantees "
-            "a critical strike."
+            "Passive: critical hits grant 2 turns of invisibility. "
+            "Stealth attacks use your normal critical chance. "
+            "Replaces the active invisibility ability."
         ),
     ),
     RuneDefinition(
@@ -83,8 +84,8 @@ RUNE_DEFINITIONS = (
         icon_filename="rune_of_fracture.png",
         original_filename="rune_of_fracture_original.png",
         description=(
-            "The central target takes 25% more damage for every "
-            "adjacent enemy."
+            "Arcane Burst strikes a 3x3 area for basic attack damage."
+            "Additional enemy adds 25% damage."
         ),
     ),
     RuneDefinition(
@@ -94,7 +95,8 @@ RUNE_DEFINITIONS = (
         icon_filename="rune_of_resonance.png",
         original_filename="rune_of_resonance_original.png",
         description=(
-            "Each enemy struck by Arcane Burst restores 1 ability charge."
+            "Attack in four directions, up to 2 cells. "
+            "Arcane Burst is disabled."
         ),
     ),
     RuneDefinition(

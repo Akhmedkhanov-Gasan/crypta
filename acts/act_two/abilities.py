@@ -122,38 +122,6 @@ def get_mage_arcane_cells(
     )
 
 
-def get_mage_arcane_burst_cells(
-    floor,
-    target: tuple[int, int],
-) -> list[tuple[int, int]]:
-    candidates = (
-        target,
-        (target[0], target[1] - 1),
-        (target[0] + 1, target[1]),
-        (target[0], target[1] + 1),
-        (target[0] - 1, target[1]),
-    )
-
-    return [
-        position
-        for position in candidates
-        if (
-            can_move_to(
-                floor.map,
-                position[0],
-                position[1],
-            )
-            or (
-                position == target
-                and _living_oracle_pillar_at(
-                    floor,
-                    position,
-                )
-            )
-        )
-    ]
-
-
 def is_valid_mage_arcane_burst_target(
     game_state,
     target: tuple[int, int] | None,

@@ -47,7 +47,11 @@ from systems.enemy_ai import (
     resolve_goblin_summon,
     sentinel_counter_knockback_destination,
 )
-from systems.player_combat import damage_player, resolve_enemy_defeat
+from systems.player_combat import (
+    damage_player,
+    resolve_enemy_defeat,
+    try_block_enemy_attack,
+)
 
 
 def _advance_enemy_bleed(game_state: GameState, enemy) -> bool:
@@ -281,6 +285,12 @@ def resolve_enemy_turn(
                 )
             continue
         if game_state.player.invisibility_turns > 0:
+            if (
+                game_state.player.selected_rune_id == "rune_of_the_veil"
+                and enemy.type in ("warden", "oracle")
+            ):
+                continue
+
             enemy["is_aggro"] = False
             enemy.behavior_state = EnemyBehaviorState.IDLE
             enemy["attack_targets"] = []
@@ -440,6 +450,15 @@ def resolve_enemy_turn(
                         ),
                         category="defense",
                     )
+                elif (
+                            not is_lethal_oracle_shockwave
+                            and try_block_enemy_attack(
+                        game_state,
+                        enemy.name,
+                        (enemy.column, enemy.row),
+                    )
+                    ):
+                    pass
                 else:
                     damage = (
                         game_state.player.health
@@ -915,6 +934,7 @@ def resolve_enemy_turn(
     if (
         game_state.player.invisibility_turns > 0
         and not rogue_ability_activated
+        and not game_state.player.veil_triggered_this_turn
     ):
         game_state.player.invisibility_turns -= 1
 
@@ -924,3 +944,5 @@ def resolve_enemy_turn(
                 "The rogue becomes visible.",
                 category="ability",
             )
+
+    game_state.player.veil_triggered_this_turn = False

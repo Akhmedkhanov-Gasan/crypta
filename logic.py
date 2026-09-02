@@ -2,6 +2,113 @@ import heapq
 import random
 from collections import deque
 
+from settings import MAGE_RESONANCE_RANGE
+
+
+def get_mage_arcane_burst_cells(
+    floor,
+    target: tuple[int, int],
+    rune_id: str | None = None,
+) -> list[tuple[int, int]]:
+    if rune_id == "rune_of_concentration":
+        return [target]
+
+    fracture_active = rune_id == "rune_of_fracture"
+    candidates = (
+        [
+            (target[0] + dx, target[1] + dy)
+            for dy in (-1, 0, 1)
+            for dx in (-1, 0, 1)
+        ]
+        if fracture_active
+        else [
+            target,
+            (target[0], target[1] - 1),
+            (target[0] + 1, target[1]),
+            (target[0], target[1] + 1),
+            (target[0] - 1, target[1]),
+        ]
+    )
+
+    enemy_cells = {
+        position
+        for enemy in floor.enemies
+        if enemy.health > 0
+        for position in get_enemy_occupied_positions(enemy)
+    }
+    target_is_pillar = any(
+        enemy.type == "oracle_pillar"
+        and enemy.health > 0
+        and (enemy.column, enemy.row) == target
+        for enemy in floor.enemies
+    )
+
+    return [
+        position
+        for position in candidates
+        if (
+            can_move_to(floor.map, *position)
+            or (fracture_active and position in enemy_cells)
+            or (position == target and target_is_pillar)
+        )
+    ]
+
+
+def get_mage_resonance_cells(game_state) -> set[tuple[int, int]]:
+    player = game_state.player
+    if (
+        player.player_class != "mage"
+        or player.selected_rune_id != "rune_of_resonance"
+    ):
+        return set()
+
+    floor = game_state.floor
+    origin = (floor.player_column, floor.player_row)
+    enemy_cells = {
+        position
+        for enemy in floor.enemies
+        if enemy.health > 0
+        for position in get_enemy_occupied_positions(enemy)
+    }
+
+    return {
+        position
+        for position in floor.visible_cells
+        if (
+            0 < distance_between(*origin, *position) <= MAGE_RESONANCE_RANGE
+            and (
+                position[0] == origin[0]
+                or position[1] == origin[1]
+            )
+            and (
+                can_move_to(floor.map, *position)
+                or position in enemy_cells
+            )
+            and has_line_of_sight(
+                floor.map,
+                *origin,
+                *position,
+                barriers=floor.barriers,
+            )
+        )
+    }
+
+
+def get_mage_resonance_target(game_state, target):
+    if target is None or target not in get_mage_resonance_cells(game_state):
+        return None
+
+    return next(
+        (
+            enemy
+            for enemy in game_state.floor.enemies
+            if enemy.health > 0
+            and target in get_enemy_occupied_positions(enemy)
+        ),
+        None,
+    )
+
+
 def roll_player_damage(damage_minimum, damage_maximum):
     return random.randint(damage_minimum, damage_maximum)
 
@@ -208,6 +315,7 @@ def has_line_of_sight(
     start_row,
     target_column,
     target_row,
+    barriers=(),
 ):
     current_column = start_column
     current_row = start_row
@@ -237,6 +345,24 @@ def has_line_of_sight(
             current_column != previous_column
             and current_row != previous_row
         )
+
+        previous_position = (previous_column, previous_row)
+        current_position = (current_column, current_row)
+        crossed_edges = (
+            (
+                (previous_position, (current_column, previous_row)),
+                ((current_column, previous_row), current_position),
+                (previous_position, (previous_column, current_row)),
+                ((previous_column, current_row), current_position),
+            )
+            if moved_diagonally
+            else ((previous_position, current_position),)
+        )
+        if any(
+            tuple(sorted(edge)) in barriers
+            for edge in crossed_edges
+        ):
+            return False
 
         if moved_diagonally:
             horizontal_side_is_wall = not can_move_to(

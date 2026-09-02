@@ -386,6 +386,9 @@ class PlayerState:
     )
     ability_kill_charge: int = 0
     invisibility_turns: int = 0
+    selected_rune_id: str | None = None
+    impact_block_started_at: int = -1
+    veil_triggered_this_turn: bool = False
     directional_ability_aiming: bool = False
     potion_effect_started_at: int = 0
     act_one_attack_target: tuple[int, int] | None = None

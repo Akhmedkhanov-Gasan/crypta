@@ -3,7 +3,7 @@ import xml.etree.ElementTree as ET
 
 import json
 
-from acts.act_two.rune_catalog import RUNE_DEFINITIONS
+from game.rune_catalog import RUNE_DEFINITIONS
 from levels import FLOOR_CONFIGS
 from presentation.layout import (
     ACT_THREE_TILE_SIZE,
@@ -2207,5 +2207,14 @@ def load_act_three_gameplay_assets():
             (tile_size, tile_size),
         )
     )
+
+    rune_directory = (
+        ASSET_ROOT / "ui" / "act_2" / "rune" / "runes"
+    )
+
+    for rune in RUNE_DEFINITIONS:
+        assets[f"{rune.id}_icon"] = pygame.image.load(
+            str(rune_directory / rune.icon_filename)
+        ).convert_alpha()
 
     return assets
