@@ -1,0 +1,1169 @@
+{
+  "schema_version": 1,
+  "screen": "awakening",
+  "act": 2,
+  "coordinate_space": "frame",
+  "frame": {
+    "name": "Awakening_Act2",
+    "width": 1280,
+    "height": 720
+  },
+  "art": {
+    "corridor_background": {
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      },
+      "asset_key": "awakening_corridor",
+      "opacity": 1
+    },
+    "old_man_states": {
+      "rect": {
+        "x": 530,
+        "y": 183,
+        "width": 221,
+        "height": 280
+      },
+      "far": {
+        "rect": {
+          "x": 585,
+          "y": 257,
+          "width": 111,
+          "height": 206
+        },
+        "asset_key": "awakening_old_man_far",
+        "opacity": 1
+      },
+      "near": {
+        "rect": {
+          "x": 397,
+          "y": 72,
+          "width": 487,
+          "height": 487
+        },
+        "asset_key": "awakening_old_man_near",
+        "opacity": 1
+      }
+    }
+  },
+  "screen_title": {
+    "rect": {
+      "x": 536,
+      "y": 23,
+      "width": 209,
+      "height": 44
+    },
+    "text": {
+      "rect": {
+        "x": 536,
+        "y": 23,
+        "width": 209,
+        "height": 44
+      },
+      "text": "Who are you?",
+      "font": {
+        "family": "Venice Classic",
+        "style": "Medium",
+        "size": 40
+      },
+      "line_height": {
+        "unit": "AUTO"
+      },
+      "letter_spacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "horizontal_align": "LEFT",
+      "vertical_align": "TOP",
+      "text_case": "ORIGINAL",
+      "color": {
+        "r": 152,
+        "g": 51,
+        "b": 51,
+        "a": 255
+      },
+      "auto_resize": "WIDTH_AND_HEIGHT"
+    }
+  },
+  "class_choices": {
+    "rect": {
+      "x": 184,
+      "y": 234,
+      "width": 912,
+      "height": 486
+    },
+    "order": [
+      "mage",
+      "warrior",
+      "rogue"
+    ],
+    "options": {
+      "mage": {
+        "class_id": "mage",
+        "rect": {
+          "x": 184,
+          "y": 253,
+          "width": 300,
+          "height": 450
+        },
+        "hitbox": {
+          "x": 184,
+          "y": 253,
+          "width": 300,
+          "height": 450
+        },
+        "portrait": {
+          "rect": {
+            "x": 234,
+            "y": 253,
+            "width": 200,
+            "height": 200
+          },
+          "asset_key": "mage_portrait",
+          "opacity": 1
+        },
+        "info_panel": {
+          "rect": {
+            "x": 184,
+            "y": 453,
+            "width": 300,
+            "height": 250
+          },
+          "background": {
+            "rect": {
+              "x": 184,
+              "y": 453,
+              "width": 300,
+              "height": 250
+            },
+            "fill": {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 107
+            },
+            "stroke": {
+              "r": 179,
+              "g": 179,
+              "b": 179,
+              "a": 107
+            },
+            "stroke_weight": 2,
+            "corner_radius": 22,
+            "blur_radius": 0,
+            "stroke_align": "INSIDE"
+          },
+          "class_name": {
+            "rect": {
+              "x": 293,
+              "y": 469,
+              "width": 82,
+              "height": 25
+            },
+            "text": "MAGE",
+            "font": {
+              "family": "JMH Cthulhumbus Arcade",
+              "style": "Regular",
+              "size": 24
+            },
+            "line_height": {
+              "unit": "AUTO"
+            },
+            "letter_spacing": {
+              "unit": "PERCENT",
+              "value": 0
+            },
+            "horizontal_align": "CENTER",
+            "vertical_align": "CENTER",
+            "text_case": "ORIGINAL",
+            "color": {
+              "r": 51,
+              "g": 92,
+              "b": 152,
+              "a": 255
+            },
+            "auto_resize": "WIDTH_AND_HEIGHT"
+          },
+          "class_description": {
+            "rect": {
+              "x": 189,
+              "y": 507,
+              "width": 290,
+              "height": 48
+            },
+            "text": "A fragile spellcaster who sacrifices\nphysical strength for \ndevastating ranged magic.",
+            "font": {
+              "family": "Alagard",
+              "style": "Medium",
+              "size": 16
+            },
+            "line_height": {
+              "unit": "AUTO"
+            },
+            "letter_spacing": {
+              "unit": "PERCENT",
+              "value": 0
+            },
+            "horizontal_align": "CENTER",
+            "vertical_align": "CENTER",
+            "text_case": "ORIGINAL",
+            "color": {
+              "r": 167,
+              "g": 167,
+              "b": 167,
+              "a": 255
+            },
+            "auto_resize": "NONE"
+          },
+          "attributes": {
+            "rect": {
+              "x": 204,
+              "y": 556,
+              "width": 260,
+              "height": 50
+            },
+            "title": {
+              "rect": {
+                "x": 259,
+                "y": 559,
+                "width": 150,
+                "height": 26
+              },
+              "text": "ATTRIBUTE SHIFT",
+              "font": {
+                "family": "Venice Classic",
+                "style": "Medium",
+                "size": 20
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 167,
+                "g": 114,
+                "b": 30,
+                "a": 255
+              },
+              "auto_resize": "NONE"
+            },
+            "values": {
+              "rect": {
+                "x": 191,
+                "y": 587,
+                "width": 287,
+                "height": 17
+              },
+              "layout": {
+                "mode": "HORIZONTAL",
+                "gap": 12,
+                "primary_align": "CENTER",
+                "counter_align": "CENTER",
+                "padding": {
+                  "left": 0,
+                  "right": 0,
+                  "top": 0,
+                  "bottom": 0
+                }
+              },
+              "items": [
+                {
+                  "id": "stat_change_1",
+                  "rect": {
+                    "x": 214,
+                    "y": 587,
+                    "width": 75,
+                    "height": 17
+                  },
+                  "text": "STR 2→0 (-2)",
+                  "font": {
+                    "family": "Euxoi",
+                    "style": "Regular",
+                    "size": 16
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "CENTER",
+                  "vertical_align": "CENTER",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 152,
+                    "g": 51,
+                    "b": 51,
+                    "a": 255
+                  },
+                  "auto_resize": "WIDTH_AND_HEIGHT"
+                },
+                {
+                  "id": "stat_change_2",
+                  "rect": {
+                    "x": 301,
+                    "y": 587,
+                    "width": 73,
+                    "height": 17
+                  },
+                  "text": "INT 0→6 (+6)",
+                  "font": {
+                    "family": "Euxoi",
+                    "style": "Regular",
+                    "size": 16
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "CENTER",
+                  "vertical_align": "CENTER",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 57,
+                    "g": 114,
+                    "b": 42,
+                    "a": 255
+                  },
+                  "auto_resize": "WIDTH_AND_HEIGHT"
+                },
+                {
+                  "id": "stat_change_3",
+                  "rect": {
+                    "x": 386,
+                    "y": 587,
+                    "width": 69,
+                    "height": 17
+                  },
+                  "text": "VIT 2→3 (+1)",
+                  "font": {
+                    "family": "Euxoi",
+                    "style": "Regular",
+                    "size": 16
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "CENTER",
+                  "vertical_align": "CENTER",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 57,
+                    "g": 114,
+                    "b": 42,
+                    "a": 255
+                  },
+                  "auto_resize": "WIDTH_AND_HEIGHT"
+                }
+              ]
+            }
+          },
+          "ability": {
+            "rect": {
+              "x": 221,
+              "y": 604,
+              "width": 231,
+              "height": 91
+            },
+            "header": {
+              "rect": {
+                "x": 221,
+                "y": 606,
+                "width": 231,
+                "height": 30
+              },
+              "layout": {
+                "mode": "HORIZONTAL",
+                "gap": 6,
+                "primary_align": "CENTER",
+                "counter_align": "CENTER",
+                "padding": {
+                  "left": 0,
+                  "right": 0,
+                  "top": 0,
+                  "bottom": 0
+                }
+              },
+              "icon": {
+                "rect": {
+                  "x": 254,
+                  "y": 606,
+                  "width": 30,
+                  "height": 30
+                },
+                "asset_key": "mage_ability_icon",
+                "opacity": 1
+              },
+              "name": {
+                "rect": {
+                  "x": 290,
+                  "y": 610,
+                  "width": 130,
+                  "height": 22
+                },
+                "text": "ARCANE BURST",
+                "font": {
+                  "family": "Venice Classic",
+                  "style": "Medium",
+                  "size": 20
+                },
+                "line_height": {
+                  "unit": "AUTO"
+                },
+                "letter_spacing": {
+                  "unit": "PERCENT",
+                  "value": 0
+                },
+                "horizontal_align": "CENTER",
+                "vertical_align": "CENTER",
+                "text_case": "ORIGINAL",
+                "color": {
+                  "r": 51,
+                  "g": 92,
+                  "b": 152,
+                  "a": 255
+                },
+                "auto_resize": "WIDTH_AND_HEIGHT"
+              }
+            },
+            "description": {
+              "rect": {
+                "x": 221,
+                "y": 643,
+                "width": 233,
+                "height": 48
+              },
+              "text": "Unleash magic in a straight line, striking every enemy up to 5 tiles away.",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 16
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 167,
+                "g": 167,
+                "b": 167,
+                "a": 255
+              },
+              "auto_resize": "NONE"
+            }
+          }
+        }
+      },
+      "warrior": {
+        "class_id": "warrior",
+        "rect": {
+          "x": 490,
+          "y": 253,
+          "width": 300,
+          "height": 450
+        },
+        "hitbox": {
+          "x": 490,
+          "y": 253,
+          "width": 300,
+          "height": 450
+        },
+        "portrait": {
+          "rect": {
+            "x": 540,
+            "y": 253,
+            "width": 200,
+            "height": 200
+          },
+          "asset_key": "warrior_portrait",
+          "opacity": 1
+        },
+        "info_panel": {
+          "rect": {
+            "x": 490,
+            "y": 453,
+            "width": 300,
+            "height": 250
+          },
+          "background": {
+            "rect": {
+              "x": 490,
+              "y": 453,
+              "width": 300,
+              "height": 250
+            },
+            "fill": {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 107
+            },
+            "stroke": {
+              "r": 179,
+              "g": 179,
+              "b": 179,
+              "a": 107
+            },
+            "stroke_weight": 2,
+            "corner_radius": 22,
+            "blur_radius": 0,
+            "stroke_align": "INSIDE"
+          },
+          "class_name": {
+            "rect": {
+              "x": 574,
+              "y": 469,
+              "width": 132,
+              "height": 25
+            },
+            "text": "WARRIOR",
+            "font": {
+              "family": "JMH Cthulhumbus Arcade",
+              "style": "Regular",
+              "size": 24
+            },
+            "line_height": {
+              "unit": "AUTO"
+            },
+            "letter_spacing": {
+              "unit": "PERCENT",
+              "value": 0
+            },
+            "horizontal_align": "CENTER",
+            "vertical_align": "CENTER",
+            "text_case": "ORIGINAL",
+            "color": {
+              "r": 152,
+              "g": 51,
+              "b": 51,
+              "a": 255
+            },
+            "auto_resize": "WIDTH_AND_HEIGHT"
+          },
+          "class_description": {
+            "rect": {
+              "x": 495,
+              "y": 507,
+              "width": 290,
+              "height": 48
+            },
+            "text": "A relentless front-line \nfighter built to endure \nand dominate close combat.",
+            "font": {
+              "family": "Alagard",
+              "style": "Medium",
+              "size": 16
+            },
+            "line_height": {
+              "unit": "AUTO"
+            },
+            "letter_spacing": {
+              "unit": "PERCENT",
+              "value": 0
+            },
+            "horizontal_align": "CENTER",
+            "vertical_align": "CENTER",
+            "text_case": "ORIGINAL",
+            "color": {
+              "r": 167,
+              "g": 167,
+              "b": 167,
+              "a": 255
+            },
+            "auto_resize": "NONE"
+          },
+          "attributes": {
+            "rect": {
+              "x": 510,
+              "y": 556,
+              "width": 260,
+              "height": 50
+            },
+            "title": {
+              "rect": {
+                "x": 565,
+                "y": 559,
+                "width": 150,
+                "height": 26
+              },
+              "text": "ATTRIBUTE SHIFT",
+              "font": {
+                "family": "Venice Classic",
+                "style": "Medium",
+                "size": 20
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 167,
+                "g": 114,
+                "b": 30,
+                "a": 255
+              },
+              "auto_resize": "NONE"
+            },
+            "values": {
+              "rect": {
+                "x": 497,
+                "y": 587,
+                "width": 287,
+                "height": 17
+              },
+              "layout": {
+                "mode": "HORIZONTAL",
+                "gap": 12,
+                "primary_align": "CENTER",
+                "counter_align": "CENTER",
+                "padding": {
+                  "left": 0,
+                  "right": 0,
+                  "top": 0,
+                  "bottom": 0
+                }
+              },
+              "items": [
+                {
+                  "id": "stat_change_1",
+                  "rect": {
+                    "x": 551,
+                    "y": 587,
+                    "width": 86,
+                    "height": 17
+                  },
+                  "text": "STR 2 → 4 (+2)",
+                  "font": {
+                    "family": "Euxoi",
+                    "style": "Regular",
+                    "size": 16
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "CENTER",
+                  "vertical_align": "CENTER",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 57,
+                    "g": 114,
+                    "b": 42,
+                    "a": 255
+                  },
+                  "auto_resize": "WIDTH_AND_HEIGHT"
+                },
+                {
+                  "id": "stat_change_2",
+                  "rect": {
+                    "x": 649,
+                    "y": 587,
+                    "width": 82,
+                    "height": 17
+                  },
+                  "text": "VIT 2 → 5 (+3)",
+                  "font": {
+                    "family": "Euxoi",
+                    "style": "Regular",
+                    "size": 16
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "CENTER",
+                  "vertical_align": "CENTER",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 57,
+                    "g": 114,
+                    "b": 42,
+                    "a": 255
+                  },
+                  "auto_resize": "WIDTH_AND_HEIGHT"
+                }
+              ]
+            }
+          },
+          "ability": {
+            "rect": {
+              "x": 527,
+              "y": 604,
+              "width": 231,
+              "height": 91
+            },
+            "header": {
+              "rect": {
+                "x": 527,
+                "y": 606,
+                "width": 231,
+                "height": 30
+              },
+              "layout": {
+                "mode": "HORIZONTAL",
+                "gap": 6,
+                "primary_align": "CENTER",
+                "counter_align": "CENTER",
+                "padding": {
+                  "left": 0,
+                  "right": 0,
+                  "top": 0,
+                  "bottom": 0
+                }
+              },
+              "icon": {
+                "rect": {
+                  "x": 562,
+                  "y": 606,
+                  "width": 30,
+                  "height": 30
+                },
+                "asset_key": "warrior_ability_icon",
+                "opacity": 1
+              },
+              "name": {
+                "rect": {
+                  "x": 598,
+                  "y": 610,
+                  "width": 126,
+                  "height": 22
+                },
+                "text": "POWER CLEAVE",
+                "font": {
+                  "family": "Venice Classic",
+                  "style": "Medium",
+                  "size": 20
+                },
+                "line_height": {
+                  "unit": "AUTO"
+                },
+                "letter_spacing": {
+                  "unit": "PERCENT",
+                  "value": 0
+                },
+                "horizontal_align": "CENTER",
+                "vertical_align": "CENTER",
+                "text_case": "ORIGINAL",
+                "color": {
+                  "r": 152,
+                  "g": 51,
+                  "b": 51,
+                  "a": 255
+                },
+                "auto_resize": "WIDTH_AND_HEIGHT"
+              }
+            },
+            "description": {
+              "rect": {
+                "x": 527,
+                "y": 643,
+                "width": 233,
+                "height": 48
+              },
+              "text": "Sweep three tiles ahead, striking every enemy caught in the attack.",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 16
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 167,
+                "g": 167,
+                "b": 167,
+                "a": 255
+              },
+              "auto_resize": "NONE"
+            }
+          }
+        }
+      },
+      "rogue": {
+        "class_id": "rogue",
+        "rect": {
+          "x": 796,
+          "y": 252,
+          "width": 300,
+          "height": 450
+        },
+        "hitbox": {
+          "x": 796,
+          "y": 252,
+          "width": 300,
+          "height": 450
+        },
+        "portrait": {
+          "rect": {
+            "x": 846,
+            "y": 252,
+            "width": 200,
+            "height": 200
+          },
+          "asset_key": "rogue_portrait",
+          "opacity": 1
+        },
+        "info_panel": {
+          "rect": {
+            "x": 796,
+            "y": 452,
+            "width": 300,
+            "height": 250
+          },
+          "background": {
+            "rect": {
+              "x": 796,
+              "y": 452,
+              "width": 300,
+              "height": 250
+            },
+            "fill": {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 107
+            },
+            "stroke": {
+              "r": 179,
+              "g": 179,
+              "b": 179,
+              "a": 107
+            },
+            "stroke_weight": 2,
+            "corner_radius": 22,
+            "blur_radius": 0,
+            "stroke_align": "INSIDE"
+          },
+          "class_name": {
+            "rect": {
+              "x": 897,
+              "y": 468,
+              "width": 98,
+              "height": 25
+            },
+            "text": "ROGUE",
+            "font": {
+              "family": "JMH Cthulhumbus Arcade",
+              "style": "Regular",
+              "size": 24
+            },
+            "line_height": {
+              "unit": "AUTO"
+            },
+            "letter_spacing": {
+              "unit": "PERCENT",
+              "value": 0
+            },
+            "horizontal_align": "CENTER",
+            "vertical_align": "CENTER",
+            "text_case": "ORIGINAL",
+            "color": {
+              "r": 123,
+              "g": 30,
+              "b": 152,
+              "a": 255
+            },
+            "auto_resize": "WIDTH_AND_HEIGHT"
+          },
+          "class_description": {
+            "rect": {
+              "x": 801,
+              "y": 506,
+              "width": 290,
+              "height": 48
+            },
+            "text": "A swift and elusive hunter who\nsurvives through positioning and\nsudden strikes.",
+            "font": {
+              "family": "Alagard",
+              "style": "Medium",
+              "size": 16
+            },
+            "line_height": {
+              "unit": "AUTO"
+            },
+            "letter_spacing": {
+              "unit": "PERCENT",
+              "value": 0
+            },
+            "horizontal_align": "CENTER",
+            "vertical_align": "CENTER",
+            "text_case": "ORIGINAL",
+            "color": {
+              "r": 167,
+              "g": 167,
+              "b": 167,
+              "a": 255
+            },
+            "auto_resize": "NONE"
+          },
+          "attributes": {
+            "rect": {
+              "x": 816,
+              "y": 555,
+              "width": 260,
+              "height": 50
+            },
+            "title": {
+              "rect": {
+                "x": 871,
+                "y": 558,
+                "width": 150,
+                "height": 26
+              },
+              "text": "ATTRIBUTE SHIFT",
+              "font": {
+                "family": "Venice Classic",
+                "style": "Medium",
+                "size": 20
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 167,
+                "g": 114,
+                "b": 30,
+                "a": 255
+              },
+              "auto_resize": "NONE"
+            },
+            "values": {
+              "rect": {
+                "x": 803,
+                "y": 586,
+                "width": 287,
+                "height": 17
+              },
+              "layout": {
+                "mode": "HORIZONTAL",
+                "gap": 12,
+                "primary_align": "CENTER",
+                "counter_align": "CENTER",
+                "padding": {
+                  "left": 0,
+                  "right": 0,
+                  "top": 0,
+                  "bottom": 0
+                }
+              },
+              "items": [
+                {
+                  "id": "stat_change_1",
+                  "rect": {
+                    "x": 858,
+                    "y": 586,
+                    "width": 82,
+                    "height": 17
+                  },
+                  "text": "STR 2 → 3 (+1)",
+                  "font": {
+                    "family": "Euxoi",
+                    "style": "Regular",
+                    "size": 16
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "CENTER",
+                  "vertical_align": "CENTER",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 57,
+                    "g": 114,
+                    "b": 42,
+                    "a": 255
+                  },
+                  "auto_resize": "WIDTH_AND_HEIGHT"
+                },
+                {
+                  "id": "stat_change_2",
+                  "rect": {
+                    "x": 952,
+                    "y": 586,
+                    "width": 83,
+                    "height": 17
+                  },
+                  "text": "DEX 1 → 5 (+4)",
+                  "font": {
+                    "family": "Euxoi",
+                    "style": "Regular",
+                    "size": 16
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "CENTER",
+                  "vertical_align": "CENTER",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 57,
+                    "g": 114,
+                    "b": 42,
+                    "a": 255
+                  },
+                  "auto_resize": "WIDTH_AND_HEIGHT"
+                }
+              ]
+            }
+          },
+          "ability": {
+            "rect": {
+              "x": 833,
+              "y": 603,
+              "width": 231,
+              "height": 91
+            },
+            "header": {
+              "rect": {
+                "x": 833,
+                "y": 605,
+                "width": 231,
+                "height": 30
+              },
+              "layout": {
+                "mode": "HORIZONTAL",
+                "gap": 6,
+                "primary_align": "CENTER",
+                "counter_align": "CENTER",
+                "padding": {
+                  "left": 0,
+                  "right": 0,
+                  "top": 0,
+                  "bottom": 0
+                }
+              },
+              "icon": {
+                "rect": {
+                  "x": 874,
+                  "y": 605,
+                  "width": 30,
+                  "height": 30
+                },
+                "asset_key": "rogue_ability_icon",
+                "opacity": 1
+              },
+              "name": {
+                "rect": {
+                  "x": 910,
+                  "y": 609,
+                  "width": 114,
+                  "height": 22
+                },
+                "text": "INVISIBILITY",
+                "font": {
+                  "family": "Venice Classic",
+                  "style": "Medium",
+                  "size": 20
+                },
+                "line_height": {
+                  "unit": "AUTO"
+                },
+                "letter_spacing": {
+                  "unit": "PERCENT",
+                  "value": 0
+                },
+                "horizontal_align": "CENTER",
+                "vertical_align": "CENTER",
+                "text_case": "ORIGINAL",
+                "color": {
+                  "r": 123,
+                  "g": 30,
+                  "b": 152,
+                  "a": 255
+                },
+                "auto_resize": "WIDTH_AND_HEIGHT"
+              }
+            },
+            "description": {
+              "rect": {
+                "x": 833,
+                "y": 642,
+                "width": 233,
+                "height": 48
+              },
+              "text": "Sweep three tiles ahead, striking every enemy caught in the attack.",
+              "font": {
+                "family": "Alagard",
+                "style": "Medium",
+                "size": 16
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 167,
+                "g": 167,
+                "b": 167,
+                "a": 255
+              },
+              "auto_resize": "NONE"
+            }
+          }
+        }
+      }
+    }
+  }
+}

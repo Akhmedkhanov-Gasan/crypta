@@ -2,24 +2,19 @@ import math
 
 import pygame
 
-from acts.act_one.settings import (
-    PLAYER_STARTING_ATTRIBUTE_RANKS,
-    PLAYER_STARTING_STATS,
-)
 from acts.act_three.settings import SUBCLASS_BASE_STATS
-from acts.act_two.settings import (
-    CLASS_BASE_ATTRIBUTE_RANKS,
-    CLASS_BASE_STATS,
-)
+from acts.act_two.settings import CLASS_BASE_STATS
 from acts.player_stats import (
     describe_player_stat_changes,
     player_stat_changes_for_attribute_upgrade,
     player_stat_changes_between,
 )
-from presentation.hud import (
-    get_class_selection_rectangles,
-    wrap_text,
+from acts.act_two.presentation.awakening  import (
+    OLD_MAN_RESPONSES,
+    draw_awakening_choices,
+    draw_awakening_old_man,
 )
+from presentation.hud import wrap_text
 from presentation.layout import (
     ACT_THREE_AWAKENING_END_MS,
     ACT_THREE_CAMERA_END_MS,
@@ -833,337 +828,6 @@ def draw_upgrade_screen(
     )
 
 
-def _draw_legacy_class_selection_screen(
-    screen,
-    intro_title_font,
-    intro_text_font,
-    class_title_font,
-    class_text_font,
-    sprites,
-    elapsed_ms,
-    mouse_position,
-):
-    screen.fill((3, 2, 4))
-
-    if elapsed_ms < AWAKENING_FADE_END_MS:
-        if elapsed_ms >= AWAKENING_OPEN_START_MS:
-            screen.blit(sprites["awakening"], (0, 0))
-            opening_progress = max(
-                0,
-                min(
-                    1,
-                    (
-                        elapsed_ms - AWAKENING_OPEN_START_MS
-                    )
-                    / (
-                        AWAKENING_OPEN_END_MS
-                        - AWAKENING_OPEN_START_MS
-                    ),
-                ),
-            )
-            opening_progress = (
-                opening_progress
-                * opening_progress
-                * (3 - 2 * opening_progress)
-            )
-            aperture_height = max(
-                2,
-                int(
-                    GAME_HEIGHT
-                    * 1.8
-                    * opening_progress
-                ),
-            )
-            eyelids = pygame.Surface(
-                (GAME_WIDTH, GAME_HEIGHT),
-                pygame.SRCALPHA,
-            )
-            eyelids.fill((2, 1, 3, 255))
-            pygame.draw.ellipse(
-                eyelids,
-                (0, 0, 0, 0),
-                (
-                    -GAME_WIDTH // 4,
-                    GAME_HEIGHT // 2
-                    - aperture_height // 2,
-                    GAME_WIDTH * 3 // 2,
-                    aperture_height,
-                ),
-            )
-            screen.blit(eyelids, (0, 0))
-
-            if elapsed_ms > AWAKENING_HOLD_END_MS:
-                fade_progress = min(
-                    1,
-                    (
-                        elapsed_ms - AWAKENING_HOLD_END_MS
-                    )
-                    / (
-                        AWAKENING_FADE_END_MS
-                        - AWAKENING_HOLD_END_MS
-                    ),
-                )
-                fade_overlay = pygame.Surface(
-                    (GAME_WIDTH, GAME_HEIGHT),
-                    pygame.SRCALPHA,
-                )
-                fade_overlay.fill(
-                    (3, 2, 4, int(255 * fade_progress))
-                )
-                screen.blit(fade_overlay, (0, 0))
-
-        return
-
-    narrative = [
-        (
-            3250,
-            intro_title_font,
-            "THE FIRST VEIL FALLS",
-            PLAYER_ATTACK_BORDER_COLOR,
-            62,
-        ),
-        (
-            3850,
-            intro_text_font,
-            "Something changes within you.",
-            TEXT_COLOR,
-            120,
-        ),
-        (
-            4450,
-            intro_text_font,
-            "The world around you begins to transform.",
-            TEXT_COLOR,
-            158,
-        ),
-        (
-            5050,
-            intro_text_font,
-            "You begin to understand your place within it.",
-            TEXT_COLOR,
-            196,
-        ),
-        (
-            5650,
-            intro_text_font,
-            "Choose your fate.",
-            PLAYER_ATTACK_BORDER_COLOR,
-            236,
-        ),
-    ]
-
-    for start_time, font, text, color, center_y in narrative:
-        text_alpha = max(
-            0,
-            min(255, int((elapsed_ms - start_time) * 255 / 450)),
-        )
-
-        if text_alpha <= 0:
-            continue
-
-        line_surface = font.render(text, True, color)
-        line_surface.set_alpha(text_alpha)
-        screen.blit(
-            line_surface,
-            line_surface.get_rect(
-                center=(GAME_WIDTH // 2, center_y)
-            ),
-        )
-
-    if elapsed_ms < CLASS_SELECTION_READY_MS:
-        return
-
-    class_data = {
-        "warrior": {
-            "number": "1",
-            "title": "WARRIOR",
-            "color": (205, 75, 68),
-            "bonuses": describe_player_stat_changes(
-                player_stat_changes_between(
-                    PLAYER_STARTING_STATS,
-                    CLASS_BASE_STATS["warrior"],
-                )
-            ),
-            "ability": "POWER CLEAVE",
-            "description": (
-                "After 4 hits, press E and choose a direction twice. "
-                "Cleave three cells, knock enemies back, and deal "
-                "extra damage when they hit a wall."
-            ),
-        },
-        "rogue": {
-            "number": "2",
-            "title": "ROGUE",
-            "color": (145, 78, 190),
-            "bonuses": describe_player_stat_changes(
-                player_stat_changes_between(
-                    PLAYER_STARTING_STATS,
-                    CLASS_BASE_STATS["rogue"],
-                )
-            ),
-            "ability": "INVISIBILITY",
-            "description": (
-                "After 4 hits, press E to vanish for 5 turns. "
-                "Your first attack from invisibility is a sure critical."
-            ),
-        },
-        "mage": {
-            "number": "3",
-            "title": "MAGE",
-            "color": (75, 115, 205),
-            "bonuses": (
-                describe_player_stat_changes(
-                    player_stat_changes_between(
-                        PLAYER_STARTING_STATS,
-                        CLASS_BASE_STATS["mage"],
-                    )
-                )
-                or ("No passive stat changes",)
-            ),
-            "ability": "ARCANE BURST",
-            "description": (
-                "After 4 hits, press E and choose a cell within 4 tiles. "
-                "The center takes full damage; the four arms take half "
-                "damage and hurl enemies outward. Basic attacks scale "
-                "with Intelligence instead of Strength."
-            ),
-        },
-    }
-    cards_surface = pygame.Surface(
-        (GAME_WIDTH, GAME_HEIGHT),
-        pygame.SRCALPHA,
-    )
-    rectangles = get_class_selection_rectangles()
-
-    for class_name, card_rectangle in rectangles.items():
-        data = class_data[class_name]
-        is_hovered = (
-            mouse_position is not None
-            and card_rectangle.collidepoint(mouse_position)
-        )
-        border_color = (
-            data["color"]
-            if is_hovered
-            else (82, 75, 86)
-        )
-        background_color = (
-            (34, 28, 38)
-            if is_hovered
-            else (20, 17, 23)
-        )
-        pygame.draw.rect(
-            cards_surface,
-            background_color,
-            card_rectangle,
-            border_radius=10,
-        )
-        pygame.draw.rect(
-            cards_surface,
-            border_color,
-            card_rectangle,
-            width=3,
-            border_radius=10,
-        )
-
-        portrait = pygame.transform.scale(
-            sprites[f"{class_name}_portrait"],
-            (96, 96),
-        )
-        portrait_rectangle = portrait.get_rect(
-            center=(card_rectangle.centerx, card_rectangle.y + 58)
-        )
-        cards_surface.blit(portrait, portrait_rectangle)
-
-        heading = class_title_font.render(
-            f"[{data['number']}] {data['title']}",
-            True,
-            data["color"],
-        )
-        cards_surface.blit(
-            heading,
-            heading.get_rect(
-                center=(card_rectangle.centerx, card_rectangle.y + 120)
-            ),
-        )
-
-        text_y = card_rectangle.y + 151
-
-        for bonus in data["bonuses"]:
-            bonus_surface = class_text_font.render(
-                bonus,
-                True,
-                TEXT_COLOR,
-            )
-            cards_surface.blit(
-                bonus_surface,
-                bonus_surface.get_rect(
-                    center=(card_rectangle.centerx, text_y)
-                ),
-            )
-            text_y += 23
-
-        ability_surface = class_title_font.render(
-            data["ability"],
-            True,
-            data["color"],
-        )
-        cards_surface.blit(
-            ability_surface,
-            ability_surface.get_rect(
-                center=(card_rectangle.centerx, text_y + 13)
-            ),
-        )
-        text_y += 43
-
-        description_lines = wrap_text(
-            class_text_font,
-            data["description"],
-            card_rectangle.width - 34,
-        )
-
-        for description_line in description_lines:
-            description_surface = class_text_font.render(
-                description_line,
-                True,
-                TEXT_COLOR,
-            )
-            cards_surface.blit(
-                description_surface,
-                (
-                    card_rectangle.x + 17,
-                    text_y,
-                ),
-            )
-            text_y += 21
-
-        if is_hovered:
-            select_surface = class_text_font.render(
-                "CLICK TO CHOOSE",
-                True,
-                data["color"],
-            )
-            cards_surface.blit(
-                select_surface,
-                select_surface.get_rect(
-                    center=(
-                        card_rectangle.centerx,
-                        card_rectangle.bottom - 18,
-                    )
-                ),
-            )
-
-    card_alpha = min(
-        255,
-        int(
-            (elapsed_ms - CLASS_SELECTION_READY_MS)
-            * 255
-            / 450
-        ),
-    )
-    cards_surface.set_alpha(card_alpha)
-    screen.blit(cards_surface, (0, 0))
-
-
 def _awakening_eye_openness(elapsed_ms):
     if elapsed_ms < AWAKENING_OPEN_START_MS:
         return 0.0
@@ -1201,14 +865,14 @@ def _awakening_eye_openness(elapsed_ms):
             AWAKENING_RECOVERY_BLINK_START_MS,
             recovery_midpoint,
         )
-        return 1.0 - 0.72 * blink_progress
+        return 1.0 - blink_progress
     if elapsed_ms < AWAKENING_RECOVERY_BLINK_END_MS:
         blink_progress = _smooth_progress(
             elapsed_ms,
             recovery_midpoint,
             AWAKENING_RECOVERY_BLINK_END_MS,
         )
-        return 0.28 + 0.72 * blink_progress
+        return blink_progress
     return 1.0
 
 
@@ -1262,58 +926,30 @@ def _draw_awakening_background(screen, image, elapsed_ms, detailed):
         ),
     )
 
-
-def _draw_awakening_old_man(
-    screen,
-    sprite,
-    elapsed_ms,
-    choice_elapsed_ms,
-):
-    if elapsed_ms < AWAKENING_OLD_MAN_APPROACH_START_MS:
-        return
-    approach = _smooth_progress(
-        elapsed_ms,
-        AWAKENING_OLD_MAN_APPROACH_START_MS,
-        AWAKENING_OLD_MAN_APPROACH_END_MS,
-    )
-    height = round(125 + (590 - 125) * approach)
-    bottom_y = round(405 + (692 - 405) * approach)
-    alpha = round(95 + 160 * approach)
-
-    if choice_elapsed_ms is not None:
-        retreat = _smooth_progress(choice_elapsed_ms, 250, 1750)
-        height = round(height + (125 - height) * retreat)
-        bottom_y = round(bottom_y + (405 - bottom_y) * retreat)
-        alpha = round(alpha * (1 - 0.48 * retreat))
-
-    width = max(1, round(sprite.get_width() * height / sprite.get_height()))
-    old_man = pygame.transform.scale(sprite, (width, height))
-    old_man.fill(
-        (132, 128, 140, 255),
-        special_flags=pygame.BLEND_RGBA_MULT,
-    )
-    old_man.set_alpha(max(0, min(255, alpha)))
-    screen.blit(
-        old_man,
-        old_man.get_rect(midbottom=(GAME_WIDTH // 2, bottom_y)),
-    )
-
-
 def _draw_awakening_dialogue(
     screen,
     intro_title_font,
     intro_text_font,
     elapsed_ms,
 ):
+    start = AWAKENING_DIALOGUE_START_MS
     dialogue = (
         (
-            AWAKENING_DIALOGUE_START_MS,
-            9100,
+            start,
+            start + 2600,
             "You have learned how to survive.",
         ),
-        (9400, 11900, "But survival is not an answer."),
-        (12200, 13800, "Tell me..."),
-        (14100, CLASS_SELECTION_READY_MS, "Who are you?"),
+        (
+            start + 2900,
+            start + 5400,
+            "But survival is not an answer.",
+        ),
+        (start + 5700, start + 7300, "Tell me..."),
+        (
+            start + 7600,
+            CLASS_SELECTION_READY_MS,
+            "Who are you?",
+        ),
     )
     for start_ms, end_ms, line in dialogue:
         if not start_ms <= elapsed_ms < end_ms:
@@ -1344,242 +980,6 @@ def _draw_awakening_dialogue(
         return
 
 
-def _class_selection_data():
-    return {
-        "warrior": {
-            "number": "1",
-            "title": "WARRIOR",
-            "color": (205, 75, 68),
-            "ability": "POWER CLEAVE",
-            "response": "Then stand, and let the Crypta break against you.",
-        },
-        "rogue": {
-            "number": "2",
-            "title": "ROGUE",
-            "color": (145, 78, 190),
-            "ability": "INVISIBILITY",
-            "response": "Then walk where even the Crypta cannot see.",
-        },
-        "mage": {
-            "number": "3",
-            "title": "MAGE",
-            "color": (75, 115, 205),
-            "ability": "ARCANE BURST",
-            "response": "Then look deeper. But beware what looks back.",
-        },
-    }
-
-
-def _class_attribute_changes(class_name):
-    labels = {
-        "strength": "STR",
-        "dexterity": "DEX",
-        "intelligence": "INT",
-        "vitality": "VIT",
-    }
-    target_ranks = CLASS_BASE_ATTRIBUTE_RANKS[class_name]
-    changes = []
-    for attribute, label in labels.items():
-        previous_rank = PLAYER_STARTING_ATTRIBUTE_RANKS.get(attribute, 0)
-        next_rank = target_ranks.get(attribute, 0)
-        difference = next_rank - previous_rank
-        if difference:
-            changes.append(
-                (
-                    label,
-                    previous_rank,
-                    next_rank,
-                    difference,
-                )
-            )
-    return tuple(changes)
-
-
-def _draw_class_reflections(
-    screen,
-    class_title_font,
-    class_text_font,
-    sprites,
-    elapsed_ms,
-    mouse_position,
-    selected_class,
-    choice_elapsed_ms,
-):
-    data_by_class = _class_selection_data()
-    rectangles = get_class_selection_rectangles()
-    entrance = _smooth_progress(
-        elapsed_ms,
-        CLASS_SELECTION_READY_MS,
-        CLASS_SELECTION_READY_MS + 520,
-    )
-    hovered_class = None
-    if selected_class is None and mouse_position is not None:
-        hovered_class = next(
-            (
-                name
-                for name, rectangle in rectangles.items()
-                if rectangle.collidepoint(mouse_position)
-            ),
-            None,
-        )
-
-    choice_progress = (
-        0.0
-        if choice_elapsed_ms is None
-        else _smooth_progress(choice_elapsed_ms, 0, 1450)
-    )
-    layer = pygame.Surface((GAME_WIDTH, GAME_HEIGHT), pygame.SRCALPHA)
-
-    for class_name, rectangle in rectangles.items():
-        data = data_by_class[class_name]
-        hovered = class_name == hovered_class
-        selected = class_name == selected_class
-        alpha = entrance
-        if selected_class is not None:
-            alpha *= (
-                1.0 - choice_progress
-                if not selected
-                else 1.0 - 0.8 * choice_progress
-            )
-        if alpha <= 0:
-            continue
-        panel_color = (6, 5, 9, round((105 if hovered else 72) * alpha))
-        pygame.draw.rect(layer, panel_color, rectangle, border_radius=8)
-        border = data["color"] if hovered or selected else (87, 82, 94)
-        pygame.draw.rect(
-            layer,
-            (*border, round((235 if hovered or selected else 125) * alpha)),
-            rectangle,
-            width=2,
-            border_radius=8,
-        )
-
-        portrait_size = 158 if not hovered else 174
-        portrait = pygame.transform.scale(
-            sprites[f"{class_name}_portrait"],
-            (portrait_size, portrait_size),
-        )
-        portrait.fill(
-            (116, 116, 126),
-            special_flags=pygame.BLEND_RGB_MULT,
-        )
-        portrait.set_alpha(round((210 if hovered else 145) * alpha))
-        portrait_rectangle = portrait.get_rect(
-            center=(rectangle.centerx, rectangle.y + 88)
-        )
-        if hovered:
-            glow = portrait.copy()
-            glow.set_alpha(round(48 * alpha))
-            layer.blit(glow, portrait_rectangle.move(-4, 0))
-            layer.blit(glow, portrait_rectangle.move(4, 0))
-        layer.blit(portrait, portrait_rectangle)
-
-        heading = class_title_font.render(
-            f"[{data['number']}] {data['title']}",
-            True,
-            data["color"],
-        )
-        heading.set_alpha(round(255 * alpha))
-        layer.blit(
-            heading,
-            heading.get_rect(center=(rectangle.centerx, rectangle.y + 178)),
-        )
-        attribute_changes = _class_attribute_changes(class_name)
-        if not attribute_changes:
-            attribute_changes = (("NO ATTRIBUTE CHANGES", 0, 0, 0),)
-        for index, (
-            label,
-            previous_rank,
-            next_rank,
-            difference,
-        ) in enumerate(attribute_changes):
-            if difference > 0:
-                change_color = (139, 174, 139)
-                change_text = f"+{difference}"
-            elif difference < 0:
-                change_color = (184, 112, 105)
-                change_text = str(difference)
-            else:
-                change_color = (143, 137, 145)
-                change_text = ""
-            bonus_text = (
-                label
-                if not change_text
-                else (
-                    f"{label}  {previous_rank} -> {next_rank}  "
-                    f"({change_text})"
-                )
-            )
-            bonus_surface = class_text_font.render(
-                bonus_text,
-                True,
-                change_color,
-            )
-            bonus_surface.set_alpha(round(205 * alpha))
-            layer.blit(
-                bonus_surface,
-                bonus_surface.get_rect(
-                    center=(
-                        rectangle.centerx,
-                        rectangle.y + 207 + index * 20,
-                    )
-                ),
-            )
-        ability = class_title_font.render(
-            data["ability"],
-            True,
-            data["color"],
-        )
-        ability.set_alpha(round(235 * alpha))
-        layer.blit(
-            ability,
-            ability.get_rect(center=(rectangle.centerx, rectangle.bottom - 37)),
-        )
-        if hovered:
-            prompt = class_text_font.render("CLICK TO ANSWER", True, TEXT_COLOR)
-            prompt.set_alpha(round(235 * alpha))
-            layer.blit(
-                prompt,
-                prompt.get_rect(center=(rectangle.centerx, rectangle.bottom - 14)),
-            )
-
-    screen.blit(layer, (0, 0))
-
-    if selected_class is not None:
-        source_rectangle = rectangles[selected_class]
-        merge_progress = _smooth_progress(choice_elapsed_ms, 180, 1550)
-        portrait_size = round(174 + 150 * merge_progress)
-        merged_portrait = pygame.transform.scale(
-            sprites[f"{selected_class}_portrait"],
-            (portrait_size, portrait_size),
-        )
-        merged_portrait.fill(
-            (82, 82, 90),
-            special_flags=pygame.BLEND_RGB_MULT,
-        )
-        merge_alpha = 1.0 - _smooth_progress(
-            choice_elapsed_ms,
-            1250,
-            1950,
-        )
-        merged_portrait.set_alpha(round(230 * merge_alpha))
-        center_x = round(
-            source_rectangle.centerx
-            + (GAME_WIDTH // 2 - source_rectangle.centerx)
-            * merge_progress
-        )
-        center_y = round(
-            source_rectangle.centery
-            + (590 - source_rectangle.centery) * merge_progress
-        )
-        screen.blit(
-            merged_portrait,
-            merged_portrait.get_rect(center=(center_x, center_y)),
-        )
-
-    return hovered_class, data_by_class
-
-
 def draw_class_selection_screen(
     screen,
     intro_title_font,
@@ -1591,33 +991,24 @@ def draw_class_selection_screen(
     mouse_position,
     selected_class=None,
     choice_elapsed_ms=None,
+    *,
+    attribute_ranks,
 ):
-    required_assets = {
-        "awakening_act_one",
-        "awakening_act_two",
-        "awakening_old_man",
-    }
-    if not required_assets.issubset(sprites):
-        return _draw_legacy_class_selection_screen(
-            screen,
-            intro_title_font,
-            intro_text_font,
-            class_title_font,
-            class_text_font,
-            sprites,
-            elapsed_ms,
-            mouse_position,
-        )
-
     screen.fill((1, 1, 3))
+
     detailed = elapsed_ms >= AWAKENING_SECOND_OPEN_START_MS
     background = sprites[
         "awakening_act_two" if detailed else "awakening_act_one"
     ]
-    _draw_awakening_background(screen, background, elapsed_ms, detailed)
-    _draw_awakening_old_man(
+    _draw_awakening_background(
         screen,
-        sprites["awakening_old_man"],
+        background,
+        elapsed_ms,
+        detailed,
+    )
+    draw_awakening_old_man(
+        screen,
+        sprites,
         elapsed_ms,
         choice_elapsed_ms,
     )
@@ -1630,47 +1021,58 @@ def draw_class_selection_screen(
             elapsed_ms,
         )
     else:
-        hovered_class, data_by_class = _draw_class_reflections(
+        hovered_class = draw_awakening_choices(
             screen,
-            class_title_font,
-            class_text_font,
             sprites,
             elapsed_ms,
             mouse_position,
             selected_class,
             choice_elapsed_ms,
+            attribute_ranks,
         )
-        if selected_class is None:
-            question = intro_title_font.render(
-                "WHO ARE YOU?",
+
+        if selected_class is None and hovered_class is not None:
+            response = intro_text_font.render(
+                OLD_MAN_RESPONSES[hovered_class],
                 True,
-                (151, 125, 76),
+                (184, 176, 160),
+            )
+            response.set_alpha(
+                round(
+                    255 * _smooth_progress(
+                        elapsed_ms,
+                        CLASS_SELECTION_READY_MS,
+                        CLASS_SELECTION_READY_MS + 520,
+                    )
+                )
             )
             screen.blit(
-                question,
-                question.get_rect(center=(GAME_WIDTH // 2, 70)),
+                response,
+                response.get_rect(
+                    center=(GAME_WIDTH // 2, 112)
+                ),
             )
-            if hovered_class is not None:
-                response = intro_text_font.render(
-                    data_by_class[hovered_class]["response"],
-                    True,
-                    TEXT_COLOR,
-                )
-                screen.blit(
-                    response,
-                    response.get_rect(center=(GAME_WIDTH // 2, 120)),
-                )
-        else:
-            answer_alpha = _smooth_progress(choice_elapsed_ms, 200, 620)
+
+        elif selected_class is not None:
             answer = intro_title_font.render(
-                "WE SHALL SEE.",
+                "We shall see.",
                 True,
-                (151, 125, 76),
+                (184, 176, 160),
             )
-            answer.set_alpha(round(255 * answer_alpha))
+            answer.set_alpha(
+                round(
+                    255 * _smooth_progress(
+                        choice_elapsed_ms,
+                        350,
+                        850,
+                    )
+                )
+            )
             screen.blit(
                 answer,
-                answer.get_rect(center=(GAME_WIDTH // 2, 112)),
+                answer.get_rect(
+                    center=(GAME_WIDTH // 2, 112)
+                ),
             )
 
     _draw_awakening_eyelids(

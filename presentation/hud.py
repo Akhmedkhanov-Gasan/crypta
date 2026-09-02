@@ -12,7 +12,7 @@ from settings import (
     PLAYER_COLOR,
     TEXT_COLOR,
 )
-
+from acts.act_two.presentation.awakening import get_awakening_hitboxes
 
 _ACT_ONE_HUD_FRAME_RECT = pygame.Rect(25, 23, 466, 121)
 _ACT_ONE_HEALTH_RECT = pygame.Rect(84, 65, 389, 34)
@@ -350,24 +350,7 @@ def wrap_text(font, text, maximum_width):
 
 
 def get_class_selection_rectangles():
-    card_width = 300
-    card_height = 300
-    gap = 30
-    total_width = card_width * 3 + gap * 2
-    start_x = (GAME_WIDTH - total_width) // 2
-    card_y = 365
-
-    return {
-        class_name: pygame.Rect(
-            start_x + index * (card_width + gap),
-            card_y,
-            card_width,
-            card_height,
-        )
-        for index, class_name in enumerate(
-            ("warrior", "rogue", "mage")
-        )
-    }
+    return get_awakening_hitboxes()
 
 
 def draw_sidebar(

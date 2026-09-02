@@ -8,6 +8,20 @@ from presentation.layout import FONT_ROOT
 
 
 _FONT_PATHS = {
+    ("venice classic", "regular"):
+        FONT_ROOT / "venice_classic" / "VeniceClassic.ttf",
+    ("venice classic", "medium"):
+        FONT_ROOT / "venice_classic" / "VeniceClassic.ttf",
+    ("jmh cthulhumbus arcade", "regular"):
+        FONT_ROOT / "jmh-cthulhumbus-arcade.cthulhumbusarcade-regular.otf",
+    ("jmh cthulhumbus arcade", "medium"):
+        FONT_ROOT / "jmh-cthulhumbus-arcade.cthulhumbusarcade-regular.otf",
+    ("euxoi", "regular"):
+        FONT_ROOT / "euxoi.ttf",
+    ("euxoi", "medium"):
+        FONT_ROOT / "euxoi.ttf",
+
+
     ("alagard", "regular"): FONT_ROOT / "alagard" / "alagard.ttf",
     ("alagard", "medium"): FONT_ROOT / "alagard" / "alagard.ttf",
 

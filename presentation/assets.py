@@ -790,50 +790,6 @@ def load_act_two_sprites():
             (10, 12, 16),
             special_flags=pygame.BLEND_RGB_ADD,
         )
-    awakening_source = pygame.image.load(
-        str(ui_directory / "awakening.png")
-    ).convert()
-    source_width, source_height = awakening_source.get_size()
-    target_ratio = GAME_WIDTH / GAME_HEIGHT
-    source_ratio = source_width / source_height
-
-    if source_ratio > target_ratio:
-        crop_width = int(source_height * target_ratio)
-        crop_rectangle = pygame.Rect(
-            (source_width - crop_width) // 2,
-            0,
-            crop_width,
-            source_height,
-        )
-    else:
-        crop_height = int(source_width / target_ratio)
-        crop_rectangle = pygame.Rect(
-            0,
-            (source_height - crop_height) // 2,
-            source_width,
-            crop_height,
-        )
-
-    awakening_small = pygame.transform.smoothscale(
-        awakening_source.subsurface(crop_rectangle),
-        (320, 180),
-    )
-
-    if hasattr(pygame.transform, "grayscale"):
-        awakening_gray = pygame.transform.grayscale(
-            awakening_small
-        )
-        awakening_gray.set_alpha(75)
-        awakening_small.blit(awakening_gray, (0, 0))
-
-    awakening_small.fill(
-        (145, 140, 160),
-        special_flags=pygame.BLEND_RGB_MULT,
-    )
-    sprites["awakening"] = pygame.transform.scale(
-        awakening_small,
-        (GAME_WIDTH, GAME_HEIGHT),
-    )
 
     transition_directory = ui_directory / "awakening_v2"
 
@@ -871,20 +827,17 @@ def load_act_two_sprites():
     sprites["awakening_act_two"] = load_transition_background(
         "act_two_corridor_source.png"
     )
-    old_man = pygame.image.load(
-        str(transition_directory / "old_man_silhouette.png")
+    sprites["awakening_old_man_far"] = pygame.image.load(
+        str(transition_directory / "old_man_far.png")
     ).convert_alpha()
-    old_man_bounds = old_man.get_bounding_rect(min_alpha=8)
-    sprites["awakening_old_man"] = old_man.subsurface(
-        old_man_bounds
-    ).copy()
+
+    sprites["awakening_old_man_near"] = pygame.image.load(
+        str(transition_directory / "old_man.png")
+    ).convert_alpha()
 
     for class_name in ("warrior", "rogue", "mage"):
         sprites[f"{class_name}_portrait"] = pygame.image.load(
-            str(
-                ui_directory
-                / f"{class_name}_portrait.png"
-            )
+            str(transition_directory / f"{class_name}_portrait.png")
         ).convert_alpha()
 
     ability_directory = ui_directory / "abilities"
@@ -896,6 +849,14 @@ def load_act_two_sprites():
         sprites[asset_name] = pygame.image.load(
             str(ability_directory / file_name)
         ).convert_alpha()
+
+    for class_name, source_key in (
+            ("warrior", "warrior_power_cleave_icon"),
+            ("rogue", "rogue_invisibility_icon"),
+            ("mage", "mage_arcane_burst_icon"),
+    ):
+        sprites[f"{class_name}_ability_icon"] = sprites[source_key]
+
     rune_ui_directory = ui_directory / "rune"
     rune_directory = rune_ui_directory / "runes"
 
