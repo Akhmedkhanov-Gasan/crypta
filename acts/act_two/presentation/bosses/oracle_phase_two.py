@@ -636,7 +636,7 @@ def _teleport(game_state, state, current_time):
 
 
 def _damage_player(game_state, state, damage, mode, dodgeable):
-    from systems.player_combat import damage_player
+    from systems.player_combat import damage_player, try_block_enemy_attack
 
     player = game_state.player
     floor = game_state.floor
@@ -667,6 +667,13 @@ def _damage_player(game_state, state, damage, mode, dodgeable):
             "The hero evades Oracle's assault.",
             category="defense",
         )
+        return
+
+    if dodgeable and try_block_enemy_attack(
+        game_state,
+        state.caster.name,
+        (state.caster.column, state.caster.row),
+    ):
         return
 
     dealt = damage_player(

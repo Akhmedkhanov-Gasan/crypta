@@ -1,6 +1,6 @@
 import pygame
 
-from acts.act_two.rune_catalog import RUNES_BY_ID
+from game.rune_catalog import RUNES_BY_ID
 from acts.act_two.bloody_altar_catalog import BLOODY_PACTS_BY_ID
 from settings import MAX_ATTRIBUTE_RANK
 
@@ -1015,9 +1015,28 @@ def draw_act_two_sidebar(
             ability_layout["icon"],
         )
 
-    charge_layouts = tuple(
-        ability_layout["charges"][charge_name]
-        for charge_name in sorted(ability_layout["charges"])
+    rune_passive = (
+        (
+            player_class == "rogue"
+            and selected_rune_id == "rune_of_the_veil"
+        )
+        or (
+            player_class == "mage"
+            and selected_rune_id == "rune_of_resonance"
+        )
+        or (
+            player_class == "warrior"
+            and selected_rune_id == "rune_of_impact"
+        )
+    )
+
+    charge_layouts = (
+        ()
+        if rune_passive
+        else tuple(
+            ability_layout["charges"][charge_name]
+            for charge_name in sorted(ability_layout["charges"])
+        )
     )
 
     displayed_charge = round(

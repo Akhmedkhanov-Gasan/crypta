@@ -5,10 +5,14 @@ from math import ceil
 from acts.act_two.settings import (
     ENEMY_GOLD_DROP_CHANCE,
     MAGE_BASIC_ATTACK_SPELL_POWER_SCALING,
-    ROGUE_CRUELTY_BLEED_DAMAGE,
+    STONEFLESH_PHYSICAL_DAMAGE_MULTIPLIER,
+)
+from settings import (
+    WARRIOR_IMPACT_BLOCK_CHANCE,
+    ROGUE_CRUELTY_BLEED_RATIO,
     ROGUE_CRUELTY_BLEED_TURNS,
     ROGUE_SHADE_INVISIBILITY_TURNS,
-    STONEFLESH_PHYSICAL_DAMAGE_MULTIPLIER,
+    ROGUE_VEIL_INVISIBILITY_TURNS,
 )
 from acts.act_two.abilities import ability_charge_required
 from acts.act_two.bloody_altar import (
@@ -34,6 +38,7 @@ from game.state import (
 from logic import (
     get_directional_line,
     get_enemy_occupied_positions,
+    get_mage_resonance_target,
     roll_player_damage,
 )
 from settings import (
@@ -71,6 +76,46 @@ OracleHitReaction = Callable[
     [EnemyState, FloorState, list[str]],
     None,
 ]
+
+
+def try_block_enemy_attack(
+    game_state: GameState,
+    attacker_name: str,
+    attacker_position: tuple[int, int] | None = None,
+) -> bool:
+    player = game_state.player
+    if (
+        player.health <= 0
+        or player.player_class != "warrior"
+        or player.selected_rune_id != "rune_of_impact"
+    ):
+        return False
+
+    if random.random() >= WARRIOR_IMPACT_BLOCK_CHANCE:
+        return False
+
+    game_state.emit(
+        GameEvent(
+            type=GameEventType.ABILITY,
+            actor="hero",
+            target="hero",
+            origin=attacker_position,
+            destination=(
+                game_state.floor.player_column,
+                game_state.floor.player_row,
+            ),
+            data={
+                "ability": "impact_block",
+                "source": "rune_of_impact",
+            },
+        )
+    )
+    add_log_message(
+        game_state.combat_log,
+        f"Rune of Impact blocks {attacker_name}'s attack.",
+        category="defense",
+    )
+    return True
 
 
 def damage_player(
@@ -207,6 +252,23 @@ def attack_enemy(
     attacker_name: str = "hero",
 ) -> bool:
     player = game_state.player
+    veil_passive = (
+        player.player_class == "rogue"
+        and player.selected_rune_id == "rune_of_the_veil"
+    )
+
+    if (
+        attacker_name == "hero"
+        and veil_passive
+        and player.invisibility_turns > 0
+    ):
+        player.invisibility_turns = 0
+        add_log_message(
+            game_state.combat_log,
+            "The rogue emerges to attack.",
+            category="ability",
+        )
+
     from acts.act_two.presentation.bosses.oracle_phase_two import (
         reject_oracle_phase_two_head_hit,
     )
@@ -448,6 +510,11 @@ def attack_enemy(
         grant_ability_charge
         and player.player_class is not None
         and player.subclass is None
+        and not veil_passive
+        and player.selected_rune_id not in (
+            "rune_of_resonance",
+            "rune_of_impact",
+        )
     ):
         player.ability_kill_charge = min(
             ability_charge_required(player),
@@ -458,10 +525,12 @@ def attack_enemy(
         and player.subclass == "assassin"
         and not player.ultimate_animation_active
     ):
-        player.ability_kill_charge = min(
-            CLASS_ABILITY_KILLS,
-            player.ability_kill_charge + 1,
-        )
+        if not veil_passive:
+            player.ability_kill_charge = min(
+                CLASS_ABILITY_KILLS,
+                player.ability_kill_charge + 1,
+            )
+
         player.teleport_charge = min(
             ASSASSIN_TELEPORT_CHARGES,
             player.teleport_charge + 1,
@@ -575,7 +644,41 @@ def attack_enemy(
         )
 
     if (
-        enemy.type in ("warden", "oracle")
+            attacker_name == "hero"
+            and veil_passive
+            and critical_hit
+            and damage_dealt > 0
+    ):
+        player.invisibility_turns = ROGUE_VEIL_INVISIBILITY_TURNS
+        player.veil_triggered_this_turn = True
+        player.ability_kill_charge = 0
+
+        game_state.emit(
+            GameEvent(
+                type=GameEventType.ABILITY,
+                actor="hero",
+                destination=(
+                    game_state.floor.player_column,
+                    game_state.floor.player_row,
+                ),
+                data={
+                    "ability": "invisibility",
+                    "source": "rune_of_the_veil",
+                },
+            )
+        )
+
+        add_log_message(
+            game_state.combat_log,
+            (
+                "Rune of the Veil grants "
+                f"{ROGUE_VEIL_INVISIBILITY_TURNS} turns of invisibility."
+            ),
+            category="rune",
+        )
+
+    if (
+            enemy.type in ("warden", "oracle")
         and enemy.health > 0
         and enemy.health <= enemy.max_health // 2
         and not enemy.second_phase_announced
@@ -698,6 +801,11 @@ def resolve_enemy_defeat(
     if (
         player.player_class is not None
         and player.subclass not in (None, "assassin")
+        and player.selected_rune_id not in (
+            "rune_of_the_veil",
+            "rune_of_resonance",
+            "rune_of_impact",
+        )
     ):
         player.ability_kill_charge = min(
             CLASS_ABILITY_KILLS,
@@ -758,6 +866,72 @@ def basic_attack_damage_range(player) -> tuple[int, int]:
     return minimum, maximum
 
 
+def perform_mage_resonance_attack(
+    game_state: GameState,
+    target: tuple[int, int],
+    oracle_hit_reaction: OracleHitReaction,
+) -> bool:
+    enemy = get_mage_resonance_target(game_state, target)
+    if enemy is None:
+        return False
+
+    player = game_state.player
+    floor = game_state.floor
+    origin = (floor.player_column, floor.player_row)
+
+    player.ability_kill_charge = 0
+    player.directional_ability_aiming = False
+    game_state.player_attack_targets = [target]
+
+    dx = target[0] - origin[0]
+    dy = target[1] - origin[1]
+    player.act_two_facing_direction = (
+        (1 if dx > 0 else -1, 0)
+        if abs(dx) > abs(dy)
+        else (0, 1 if dy > 0 else -1)
+    )
+
+    player.act_two.ability_effect_target = target
+    player.act_two.ability_effect_cells = (target,)
+    player.act_two.ability_effect_hit_positions = (target,)
+    player.act_two.ability_effect_kind = "resonance"
+
+    game_state.emit(
+        GameEvent(
+            type=GameEventType.ATTACK,
+            actor="hero",
+            origin=origin,
+            positions=(target,),
+            data={
+                "kind": "basic",
+                "source": "rune_of_resonance",
+            },
+        )
+    )
+
+    damage_minimum, damage_maximum = basic_attack_damage_range(player)
+    defeated = attack_enemy(
+        game_state,
+        enemy,
+        damage_minimum,
+        damage_maximum,
+        player.crit_chance,
+        attacker_position=origin,
+    )
+
+    if enemy.type == "oracle" and enemy.oracle_phase != 2:
+        oracle_hit_reaction(
+            enemy,
+            floor,
+            game_state.combat_log,
+        )
+
+    if defeated:
+        resolve_enemy_defeat(game_state, enemy)
+
+    return True
+
+
 def perform_basic_attack(
     game_state: GameState,
     column_change: int,
@@ -770,7 +944,7 @@ def perform_basic_attack(
         player.player_class == "rogue"
         and player.invisibility_turns > 0
     )
-    selected_rune_id = player.act_two.selected_rune_id
+    selected_rune_id = player.selected_rune_id
 
     if attack_was_from_invisibility:
         player.invisibility_turns = 0
@@ -858,10 +1032,13 @@ def perform_basic_attack(
             player.crit_chance,
             damage_bonus=0,
             force_critical=(
-                    attack_was_from_invisibility
-                    and selected_rune_id != "rune_of_the_veil"
+                attack_was_from_invisibility
+                and selected_rune_id != "rune_of_the_veil"
             ),
-            grant_ability_charge=not attack_was_from_invisibility,
+            grant_ability_charge=(
+                not attack_was_from_invisibility
+                or selected_rune_id == "rune_of_the_veil"
+            ),
             attacker_position=(
                 floor.player_column,
                 floor.player_row,
@@ -900,11 +1077,19 @@ def perform_basic_attack(
             and selected_rune_id == "rune_of_cruelty"
             and hit_enemy.health < health_before_attack
         ):
+            damage_dealt = health_before_attack - hit_enemy.health
             hit_enemy.bleed_turns = ROGUE_CRUELTY_BLEED_TURNS
-            hit_enemy.bleed_damage = ROGUE_CRUELTY_BLEED_DAMAGE
+            hit_enemy.bleed_damage = max(
+                1,
+                ceil(damage_dealt * ROGUE_CRUELTY_BLEED_RATIO),
+            )
             add_log_message(
                 game_state.combat_log,
-                f"Rune of Cruelty makes {hit_enemy.name} bleed.",
+                (
+                    f"Rune of Cruelty makes {hit_enemy.name} bleed for "
+                    f"{hit_enemy.bleed_damage} damage per turn "
+                    f"for {hit_enemy.bleed_turns} turns."
+                ),
                 category="rune",
             )
 
@@ -926,6 +1111,7 @@ __all__ = [
     "is_valid_warlock_attack_target",
     "perform_archer_attack",
     "perform_basic_attack",
+    "perform_mage_resonance_attack",
     "perform_summoner_attack",
     "perform_warlock_attack",
     "resolve_enemy_defeat",

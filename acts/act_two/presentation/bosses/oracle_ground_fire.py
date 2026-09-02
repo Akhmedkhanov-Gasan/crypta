@@ -49,7 +49,7 @@ def _damage_player_with_ground_fire(
     damage,
     mode,
 ):
-    from systems.player_combat import damage_player
+    from systems.player_combat import damage_player, try_block_enemy_attack
 
     floor = game_state.floor
     player = game_state.player
@@ -57,6 +57,13 @@ def _damage_player_with_ground_fire(
     position = (floor.player_column, floor.player_row)
 
     if player.health <= 0:
+        return
+
+    if mode == "blast" and try_block_enemy_attack(
+        game_state,
+        caster.name,
+        (caster.column, caster.row),
+    ):
         return
 
     dealt = damage_player(

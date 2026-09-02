@@ -134,6 +134,14 @@ def record_enemy_death_feedback(game_state, started_at):
 
 
 def record_player_hit_feedback(game_state, started_at):
+    if any(
+        event.type is GameEventType.ABILITY
+        and event.actor == "hero"
+        and event.data.get("ability") == "impact_block"
+        for event in game_state.events
+    ):
+        game_state.player.impact_block_started_at = started_at
+
     hit_events = [
         event
         for event in game_state.events

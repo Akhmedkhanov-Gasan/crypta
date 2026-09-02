@@ -1474,15 +1474,17 @@ def _draw_act_three_world(
             current_time,
         )
 
-    _draw_player_hit_feedback(
+    from presentation.world import draw_impact_block_effect
+
+    draw_impact_block_effect(
         view_surface,
-        player_sprite,
-        player_position,
         game_state.player,
-        floor.player_column,
-        floor.player_row,
+        (
+            player_position[0] + ACT_THREE_TILE_SIZE // 2,
+            player_position[1] + ACT_THREE_TILE_SIZE // 2,
+        ),
         current_time,
-        fonts["sidebar_numbers"],
+        ACT_THREE_TILE_SIZE,
     )
 
     if (

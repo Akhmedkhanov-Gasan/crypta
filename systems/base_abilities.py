@@ -5,7 +5,6 @@ from math import ceil
 from acts.act_two.abilities import (
     ability_charge_required,
     clear_act_two_ability_selection,
-    get_mage_arcane_burst_cells,
     get_warrior_cleave_cells,
     is_valid_mage_arcane_burst_target,
 )
@@ -23,14 +22,9 @@ from acts.act_two.settings import (
     MAGE_ARCANE_BURST_BASE_DAMAGE_BONUS,
     MAGE_ARCANE_BURST_EDGE_DAMAGE_MULTIPLIER,
     MAGE_ARCANE_BURST_SPELL_POWER_SCALING,
-    MAGE_CONCENTRATION_DAMAGE_MULTIPLIER,
-    MAGE_FRACTURE_DAMAGE_PER_NEIGHBOR,
-    ROGUE_VEIL_DURATION_MULTIPLIER,
-    WARRIOR_AFTERSHOCK_DAMAGE_MULTIPLIER,
     WARRIOR_CLEAVE_COLLISION_DAMAGE,
     WARRIOR_CLEAVE_DAMAGE_BONUS,
     WARRIOR_CLEAVE_DAMAGE_PER_RANK,
-    WARRIOR_IMPACT_STUN_TURNS,
 )
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
@@ -40,13 +34,23 @@ from game.state import (
     FloorState,
     GameState,
 )
-from logic import can_move_between, get_enemy_occupied_positions
+from logic import (
+    can_move_between,
+    can_player_move_between,
+    get_enemy_occupied_positions,
+    get_mage_arcane_burst_cells,
+    roll_player_damage,
+)
 from settings import (
     ASSASSIN_INVISIBILITY_TURNS,
+    MAGE_CONCENTRATION_DAMAGE_MULTIPLIER,
+    MAGE_FRACTURE_EXTRA_CELL_DAMAGE,
     ROGUE_INVISIBILITY_TURNS,
+    WARRIOR_AFTERSHOCK_DAMAGE_MULTIPLIER,
 )
 from systems.player_combat import (
     attack_enemy,
+    basic_attack_damage_range,
     resolve_enemy_defeat,
 )
 
@@ -70,6 +74,46 @@ def request_class_ability(
     if player.player_class is None:
         return AbilityRequestResult.IGNORED
 
+    if (
+        player.player_class == "rogue"
+        and player.selected_rune_id == "rune_of_the_veil"
+    ):
+        player.ability_kill_charge = 0
+        add_log_message(
+            game_state.combat_log,
+            "Rune of the Veil is passive. Critical hits grant invisibility.",
+            category="rune",
+        )
+        return AbilityRequestResult.NOT_READY
+
+    if (
+        player.player_class == "mage"
+        and player.selected_rune_id == "rune_of_resonance"
+    ):
+        player.ability_kill_charge = 0
+        player.directional_ability_aiming = False
+        clear_act_two_ability_selection(game_state)
+        add_log_message(
+            game_state.combat_log,
+            "Resonance: click an enemy up to 2 cells horizontally or vertically.",
+            category="rune",
+        )
+        return AbilityRequestResult.NOT_READY
+
+    if (
+        player.player_class == "warrior"
+        and player.selected_rune_id == "rune_of_impact"
+    ):
+        player.ability_kill_charge = 0
+        player.directional_ability_aiming = False
+        clear_act_two_ability_selection(game_state)
+        add_log_message(
+            game_state.combat_log,
+            "Rune of Impact is passive: 25% chance to block attacks.",
+            category="rune",
+        )
+        return AbilityRequestResult.NOT_READY
+
     required_charge = ability_charge_required(player)
     if player.ability_kill_charge < required_charge:
         add_log_message(
@@ -92,11 +136,6 @@ def request_class_ability(
             if player.subclass == "assassin"
             else ROGUE_INVISIBILITY_TURNS
         )
-        if (
-            player.subclass is None
-            and player.act_two.selected_rune_id == "rune_of_the_veil"
-        ):
-            invisibility_turns *= ROGUE_VEIL_DURATION_MULTIPLIER
         player.invisibility_turns = invisibility_turns
 
         for enemy in game_state.floor.enemies:
@@ -259,7 +298,11 @@ def cast_directional_ability(
     player = game_state.player
     floor = game_state.floor
 
-    if player.player_class != "warrior":
+    if (
+        player.player_class != "warrior"
+        or player.selected_rune_id == "rune_of_impact"
+    ):
+        player.directional_ability_aiming = False
         return False
     if not pay_open_wound_ability_cost(game_state):
         player.directional_ability_aiming = False
@@ -279,7 +322,7 @@ def cast_directional_ability(
             * WARRIOR_CLEAVE_DAMAGE_PER_RANK
     )
     ability_name = "power cleave"
-    selected_rune_id = player.act_two.selected_rune_id
+    selected_rune_id = player.selected_rune_id
     game_state.player_attack_targets = get_warrior_cleave_cells(
         floor,
         column_change,
@@ -397,25 +440,6 @@ def cast_directional_ability(
                 category="environment",
             )
 
-        if (
-            knockback_collision
-            and not enemy_was_defeated
-            and selected_rune_id == "rune_of_impact"
-        ):
-            ability_target.stun_turns = max(
-                ability_target.stun_turns,
-                WARRIOR_IMPACT_STUN_TURNS,
-            )
-            ability_target.skip_next_movement = False
-            ability_target.attack_targets = []
-            ability_target.prepared_attack_mode = None
-            ability_target.attack_windup_turns_remaining = 0
-            add_log_message(
-                game_state.combat_log,
-                f"Rune of Impact stuns {ability_target.name} for 2 turns.",
-                category="rune",
-            )
-
         if knockback_destination is not None and not enemy_was_defeated:
             _apply_forced_knockback(
                 game_state,
@@ -521,7 +545,7 @@ def _mage_burst_knockback_destination(
         enemy.column - center[0],
         enemy.row - center[1],
     )
-    if direction not in ((0, -1), (1, 0), (0, 1), (-1, 0)):
+    if direction == (0, 0) or max(abs(value) for value in direction) != 1:
         return None
 
     floor = game_state.floor
@@ -530,7 +554,7 @@ def _mage_burst_knockback_destination(
         origin[0] + direction[0],
         origin[1] + direction[1],
     )
-    if not can_move_between(
+    if not can_player_move_between(
         floor.map,
         *origin,
         *destination,
@@ -565,6 +589,14 @@ def _mage_burst_knockback_destination(
         and game_state.player.summoner_familiar_position is not None
     ):
         occupied.add(game_state.player.summoner_familiar_position)
+    if direction[0] != 0 and direction[1] != 0:
+        side_positions = {
+            (destination[0], origin[1]),
+            (origin[0], destination[1]),
+        }
+        if side_positions & occupied:
+            return None
+
     return None if destination in occupied else destination
 
 
@@ -577,50 +609,55 @@ def cast_mage_arcane_burst(
     floor = game_state.floor
     if (
         player.player_class != "mage"
+        or player.selected_rune_id == "rune_of_resonance"
         or not player.directional_ability_aiming
         or not is_valid_mage_arcane_burst_target(game_state, target)
     ):
         return False
+
     if not pay_open_wound_ability_cost(game_state):
         player.directional_ability_aiming = False
         return False
 
     concentration_active = (
-        player.act_two.selected_rune_id == "rune_of_concentration"
+        player.selected_rune_id == "rune_of_concentration"
     )
+    fracture_active = player.selected_rune_id == "rune_of_fracture"
+
     player.directional_ability_aiming = False
     player.ability_kill_charge = 0
     player.act_two.selected_ability_direction = None
-    player.act_two.ability_effect_target = None
-    cells = (
-        [target]
-        if concentration_active
-        else get_mage_arcane_burst_cells(floor, target)
+
+    cells = get_mage_arcane_burst_cells(
+        floor,
+        target,
+        player.selected_rune_id,
     )
+    cell_set = set(cells)
     game_state.player_attack_targets = cells
+
     player.act_two.ability_effect_target = target
     player.act_two.ability_effect_cells = tuple(cells)
     player.act_two.ability_effect_kind = (
         "concentration_release"
         if concentration_active
-        else "arcane_burst"
+        else "fracture" if fracture_active else "arcane_burst"
     )
 
-    targets = [
-        enemy
-        for enemy in floor.enemies
-        if enemy.health > 0
-        and any(
-            position in get_enemy_occupied_positions(enemy)
-            for position in cells
-        )
-    ]
+    targets = []
+    for enemy in floor.enemies:
+        if enemy.health <= 0:
+            continue
+        hit_cells = get_enemy_occupied_positions(enemy) & cell_set
+        if hit_cells:
+            targets.append((enemy, hit_cells))
+
     player.act_two.ability_effect_hit_positions = tuple(
         position
-        for enemy in targets
-        for position in get_enemy_occupied_positions(enemy)
-        if position in cells
+        for enemy, hit_cells in targets
+        for position in sorted(hit_cells)
     )
+
     game_state.emit(
         GameEvent(
             type=GameEventType.ATTACK,
@@ -630,6 +667,7 @@ def cast_mage_arcane_burst(
             data={"kind": "ability", "ability": "arcane burst"},
         )
     )
+
     if not targets:
         add_log_message(
             game_state.combat_log,
@@ -641,76 +679,37 @@ def cast_mage_arcane_burst(
         MAGE_ARCANE_BURST_BASE_DAMAGE_BONUS
         + player.spell_power * MAGE_ARCANE_BURST_SPELL_POWER_SCALING
     )
-    for enemy in targets:
-        occupied = get_enemy_occupied_positions(enemy)
-        center_hit = target in occupied
-        if center_hit:
-            if concentration_active:
-                damage_minimum = ceil(
-                    player.damage_min
-                    * MAGE_CONCENTRATION_DAMAGE_MULTIPLIER
-                )
-                damage_maximum = ceil(
-                    player.damage_max
-                    * MAGE_CONCENTRATION_DAMAGE_MULTIPLIER
-                )
-                damage_bonus = ceil(
-                    full_damage_bonus
-                    * MAGE_CONCENTRATION_DAMAGE_MULTIPLIER
-                )
-                neighboring_enemy_count = 0
-                fracture_multiplier = 1.0
-            else:
-                neighboring_enemy_count = sum(
-                    1
-                    for other_enemy in targets
-                    if (
-                        other_enemy is not enemy
-                        and any(
-                            position
-                            in (
-                                (target[0], target[1] - 1),
-                                (target[0] + 1, target[1]),
-                                (target[0], target[1] + 1),
-                                (target[0] - 1, target[1]),
-                            )
-                            for position in get_enemy_occupied_positions(
-                                other_enemy
-                            )
-                        )
-                    )
-                )
-                fracture_multiplier = (
-                    1.0
-                    + neighboring_enemy_count
-                    * MAGE_FRACTURE_DAMAGE_PER_NEIGHBOR
-                    if player.act_two.selected_rune_id == "rune_of_fracture"
-                    else 1.0
-                )
-                damage_minimum = ceil(
-                    player.damage_min * fracture_multiplier
-                )
-                damage_maximum = ceil(
-                    player.damage_max * fracture_multiplier
-                )
-                damage_bonus = ceil(
-                    full_damage_bonus * fracture_multiplier
-                )
-            if (
-                player.act_two.selected_rune_id == "rune_of_fracture"
-                and neighboring_enemy_count > 0
-            ):
-                bonus_percent = round(
-                    neighboring_enemy_count
-                    * MAGE_FRACTURE_DAMAGE_PER_NEIGHBOR
-                    * 100
-                )
-                add_log_message(
-                    game_state.combat_log,
-                    f"Rune of Fracture amplifies the center by "
-                    f"{bonus_percent}%.",
-                    category="rune",
-                )
+    basic_minimum, basic_maximum = basic_attack_damage_range(player)
+
+    for enemy, hit_cells in targets:
+        center_hit = target in hit_cells
+
+        if fracture_active:
+            multiplier = (
+                1.0
+                + (len(hit_cells) - 1) * MAGE_FRACTURE_EXTRA_CELL_DAMAGE
+            )
+            damage = ceil(
+                roll_player_damage(basic_minimum, basic_maximum)
+                * multiplier
+            )
+            damage_minimum = damage
+            damage_maximum = damage
+            damage_bonus = 0
+        elif concentration_active:
+            damage_minimum = ceil(
+                player.damage_min * MAGE_CONCENTRATION_DAMAGE_MULTIPLIER
+            )
+            damage_maximum = ceil(
+                player.damage_max * MAGE_CONCENTRATION_DAMAGE_MULTIPLIER
+            )
+            damage_bonus = ceil(
+                full_damage_bonus * MAGE_CONCENTRATION_DAMAGE_MULTIPLIER
+            )
+        elif center_hit:
+            damage_minimum = player.damage_min
+            damage_maximum = player.damage_max
+            damage_bonus = ceil(full_damage_bonus)
         else:
             damage_minimum = max(
                 1,
@@ -741,6 +740,7 @@ def cast_mage_arcane_burst(
             grant_ability_charge=False,
             attacker_position=(floor.player_column, floor.player_row),
         )
+
         if enemy.type == "oracle":
             oracle_hit_reaction(enemy, floor, game_state.combat_log)
 
@@ -766,18 +766,5 @@ def cast_mage_arcane_burst(
         if defeated:
             resolve_enemy_defeat(game_state, enemy)
 
-    if (
-        player.act_two.selected_rune_id == "rune_of_resonance"
-        and targets
-    ):
-        player.ability_kill_charge = min(
-            ability_charge_required(player),
-            len(targets),
-        )
-        add_log_message(
-            game_state.combat_log,
-            f"Rune of Resonance restores {len(targets)} charge.",
-            category="rune",
-        )
-
     return True
+

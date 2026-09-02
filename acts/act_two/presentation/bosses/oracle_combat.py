@@ -308,7 +308,10 @@ def advance_oracle_fire(game_state):
         caster.stun_turns > 0
         or caster.binding_turns > 0
         or caster.skip_next_movement
-        or game_state.player.invisibility_turns > 0
+        or (
+            game_state.player.invisibility_turns > 0
+            and game_state.player.selected_rune_id != "rune_of_the_veil"
+        )
     )
 
     if state.phase == "warning" and interrupted:
@@ -496,7 +499,7 @@ def take_oracle_combat_turn(game_state, caster):
 
 
 def _strike(game_state, state, damage, kind):
-    from systems.player_combat import damage_player
+    from systems.player_combat import damage_player, try_block_enemy_attack
 
     floor = game_state.floor
     player = game_state.player
@@ -533,6 +536,13 @@ def _strike(game_state, state, damage, kind):
             "The hero evades Oracle's black fire.",
             category="defense",
         )
+        return
+
+    if try_block_enemy_attack(
+        game_state,
+        caster.name,
+        (caster.column, caster.row),
+    ):
         return
 
     dealt = damage_player(

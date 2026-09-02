@@ -57,7 +57,6 @@ from acts.act_one.settings import (
 )
 from acts.act_two.settings import (
     CLASS_BASE_ATTRIBUTE_RANKS,
-    CLASS_BASE_STATS,
     CLASS_STARTING_STATS,
     ACT_TWO_STARTING_LEVEL,
 )
@@ -130,7 +129,7 @@ from acts.act_two.runes import (
     select_rune,
     strike_wall_rune,
 )
-from acts.act_two.rune_catalog import runes_for_class
+from game.rune_catalog import runes_for_class
 from acts.act_two.treasury import (
     activate_treasury_trial,
     treasury_chest_is_at,
@@ -200,7 +199,10 @@ from acts.player_stats import (
     apply_player_stat_transition,
 )
 from levels import FLOOR_CONFIGS
-from logic import get_enemy_occupied_positions
+from logic import (
+    get_enemy_occupied_positions,
+    get_mage_resonance_target,
+)
 from rendering import (
     CLASS_SELECTION_READY_MS,
     FLOOR_TRANSITION_CLOSE_END_MS,
@@ -338,6 +340,7 @@ from systems.player_combat import (
     basic_attack_damage_range,
     perform_archer_attack,
     perform_basic_attack,
+    perform_mage_resonance_attack,
     perform_summoner_attack,
     perform_warlock_attack,
     remove_enemy_corpses_at_position,
@@ -363,6 +366,9 @@ from acts.act_two.trader_logic import (
     buy_trader_item,
     interact_with_trader,
 )
+from presentation.layout import MAP_OFFSET_X, MAP_OFFSET_Y
+from presentation.world import draw_impact_block_effect
+from settings import TILE_SIZE
 
 FIRST_ACT_FINAL_FLOOR = 2
 FIRST_ACT_THREE_FLOOR = next(
@@ -729,9 +735,19 @@ def main():
     act_two_auto_move_floor_index = None
     act_two_next_auto_move_at = 0
     act_two_dragged_consumable_slot = None
+    act_two_resonance_cursor_active = False
 
     while running:
         current_act = game_state.floor.presentation_act
+        if act_two_resonance_cursor_active and (
+            current_act != 2
+            or menu_open
+            or game_state.player.health <= 0
+            or game_state.floor_transition_started_at >= 0
+        ):
+            set_warlock_staff_cursor(False)
+            act_two_resonance_cursor_active = False
+
         if current_act == 2 and game_state.upgrade_screen_open:
             _finish_upgrade_descent(
                 game_state,
@@ -1805,6 +1821,39 @@ def main():
                         )
                     continue
                 if (
+                    game_state.player.player_class == "mage"
+                    and game_state.player.selected_rune_id
+                    == "rune_of_resonance"
+                    and target_cell is not None
+                    and target_cell in game_state.floor.visible_cells
+                    and any(
+                        enemy.health > 0
+                        and target_cell in get_enemy_occupied_positions(enemy)
+                        for enemy in game_state.floor.enemies
+                    )
+                ):
+                    act_two_auto_move_target = None
+                    act_two_auto_move_floor_index = None
+                    act_two_held_movement_keys.clear()
+                    act_two_held_direction = (0, 0)
+
+                    if get_mage_resonance_target(game_state, target_cell) is not None:
+                        pygame.event.post(
+                            pygame.event.Event(
+                                pygame.KEYDOWN,
+                                key=pygame.K_UNKNOWN,
+                                resonance_target=target_cell,
+                            )
+                        )
+                    else:
+                        add_log_message(
+                            game_state.combat_log,
+                            "Target must be within 2 cells, horizontally or vertically.",
+                            category="warning",
+                        )
+                    continue
+
+                if (
                     target_cell is not None
                     and target_cell in game_state.floor.visible_cells
                 ):
@@ -2254,6 +2303,11 @@ def main():
                 mage_ability_target = getattr(
                     event,
                     "mage_ability_target",
+                    None,
+                )
+                resonance_target = getattr(
+                    event,
+                    "resonance_target",
                     None,
                 )
                 dropped_consumable_slot = getattr(
@@ -2751,6 +2805,20 @@ def main():
                         category="ability",
                     )
                     player_acted = True
+                elif resonance_target is not None:
+                    player_acted = perform_mage_resonance_attack(
+                        game_state,
+                        resonance_target,
+                        resolve_oracle_hit_reaction,
+                    )
+                    if player_acted:
+                        attack_started_at = pygame.time.get_ticks()
+                        game_state.player.attack_animation_started_at = (
+                            attack_started_at
+                        )
+                        game_state.player.act_two.ability_effect_started_at = (
+                            attack_started_at
+                        )
                 elif mage_ability_target is not None:
                     player_acted = cast_mage_arcane_burst(
                         game_state,
@@ -2854,7 +2922,20 @@ def main():
                         game_state.player.act_two_blocked_movement_direction = (
                             attempted_direction
                         )
-                    if target_enemy:
+                    if (
+                        target_enemy
+                        and game_state.player.player_class == "mage"
+                        and game_state.player.selected_rune_id
+                        == "rune_of_resonance"
+                    ):
+                        act_two_held_movement_keys.clear()
+                        act_two_held_direction = (0, 0)
+                        add_log_message(
+                            game_state.combat_log,
+                            "Rune of Resonance attacks by clicking an enemy.",
+                            category="rune",
+                        )
+                    elif target_enemy:
                         if game_state.player.subclass == "warlock":
                             perform_warlock_attack(
                                 game_state,
@@ -3898,7 +3979,7 @@ def main():
             if game_state.player.player_class == "mage"
             else (
                 760
-                if game_state.player.act_two.selected_rune_id
+                if game_state.player.selected_rune_id
                 == "rune_of_aftershock"
                 else 460
             )
@@ -3937,6 +4018,29 @@ def main():
                 if mage_preview_mouse_position is not None
                 else None
             )
+            resonance_cursor_active = (
+                game_state.player.health > 0
+                and not game_state.class_selection_open
+                and not game_state.upgrade_screen_open
+                and not game_state.trade_screen_open
+                and not game_state.rune_selection_open
+                and not game_state.bloody_altar_open
+                and not game_state.act_two_stats_open
+                and not game_state.act_two_journal_open
+                and game_state.floor_transition_started_at < 0
+                and not oracle_cutscene_active(game_state.floor)
+                and act_two_dragged_consumable_slot is None
+                and not game_state.player.act_two.fire_bomb_aiming
+                and game_state.player.act_two.scroll_aiming_kind is None
+                and get_mage_resonance_target(
+                    game_state,
+                    mage_preview_target,
+                ) is not None
+            )
+            if resonance_cursor_active != act_two_resonance_cursor_active:
+                set_warlock_staff_cursor(resonance_cursor_active)
+                act_two_resonance_cursor_active = resonance_cursor_active
+
             draw_act_two_ability_preview(
                 world_target,
                 game_state,
@@ -4312,6 +4416,20 @@ def main():
             ),
         )
         if current_act == 2 and game_state.player.health > 0:
+            draw_impact_block_effect(
+                world_target,
+                game_state.player,
+                (
+                    MAP_OFFSET_X
+                    + game_state.floor.player_column * TILE_SIZE
+                    + TILE_SIZE // 2,
+                    MAP_OFFSET_Y
+                    + game_state.floor.player_row * TILE_SIZE
+                    + TILE_SIZE // 2,
+                ),
+                current_time,
+                TILE_SIZE,
+            )
             draw_act_two_wait_indicator(
                 world_target,
                 game_state.floor.player_column,
@@ -4578,7 +4696,7 @@ def main():
                 get_act_two_consumable_slots(game_state.player),
                 game_state.player.gold_count,
                 game_state.player.player_class,
-                game_state.player.act_two.selected_rune_id,
+                game_state.player.selected_rune_id,
                 game_state.player.level,
                 game_state.player.experience,
                 game_state.player.ability_kill_charge,
