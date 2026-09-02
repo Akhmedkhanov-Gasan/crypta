@@ -24,7 +24,7 @@ from presentation.layout import (
     CLASS_SELECTION_READY_MS,
     PROJECT_ROOT,
 )
-from settings import GAME_HEIGHT, GAME_WIDTH
+from settings import GAME_HEIGHT, GAME_WIDTH, MAX_ATTRIBUTE_RANK
 
 
 OLD_MAN_RESPONSES = {
@@ -109,6 +109,20 @@ def class_attribute_changes(class_name, current_ranks=None):
         PLAYER_STARTING_ATTRIBUTE_RANKS,
         CLASS_BASE_ATTRIBUTE_RANKS[class_name],
     )
+
+    if class_name == "mage":
+        invested = max(
+            0,
+            current_ranks.get("strength", 0)
+            - PLAYER_STARTING_ATTRIBUTE_RANKS["strength"],
+        )
+        preview_player.attribute_ranks["strength"] = (
+            CLASS_BASE_ATTRIBUTE_RANKS["mage"]["strength"]
+        )
+        preview_player.attribute_ranks["intelligence"] = min(
+            MAX_ATTRIBUTE_RANK,
+            preview_player.attribute_ranks["intelligence"] + invested,
+        )
 
     changes = []
     for attribute, label in ATTRIBUTE_LABELS.items():

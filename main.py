@@ -111,6 +111,7 @@ from acts.act_two.progression import (
     get_act_two_upgrade_order,
     queue_act_two_attribute_upgrade,
     upgrade_act_two_attribute,
+    transfer_mage_strength_upgrades,
 )
 from acts.act_two.visibility import (
     position_is_visible,
@@ -317,6 +318,7 @@ from presentation.menu import (
     draw_menu,
     handle_menu_event,
 )
+from presentation.startup import StartupScreen
 from settings import (
     BACKGROUND_COLOR,
     ASSASSIN_ULTIMATE_OUTRO_MS,
@@ -629,54 +631,75 @@ def main():
     game_surface = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
     pygame.display.set_caption("Crypta")
     clock = pygame.time.Clock()
-    act_one_fonts = load_act_one_fonts()
-    act_one_gameplay_assets = load_act_one_gameplay_assets()
+    startup = StartupScreen(screen)
+    startup.show_logo()
+
+    act_one_fonts = startup.load(load_act_one_fonts)
+    act_one_gameplay_assets = startup.load(load_act_one_gameplay_assets)
     title_font = act_one_fonts["title"]
     font = act_one_fonts["status"]
     log_font = act_one_fonts["text"]
-    act_two_fonts = load_act_two_fonts()
-    act_two_sprites = load_act_two_sprites()
-    act_two_hud_layout = load_act_two_hud_layout()
-    oracle_ui_layout, oracle_ui_assets = load_oracle_ui()
-    act_two_trade_layout = load_act_two_trade_layout()
-    bloody_altar_layout = load_bloody_altar_layout()
-    death_score_layout, death_score_assets = (
-        load_act_two_death_score(act_two_sprites)
+
+    act_two_fonts = startup.load(load_act_two_fonts)
+    act_two_sprites = startup.load(load_act_two_sprites)
+    act_two_hud_layout = startup.load(load_act_two_hud_layout)
+    oracle_ui_layout, oracle_ui_assets = startup.load(load_oracle_ui)
+    act_two_trade_layout = startup.load(load_act_two_trade_layout)
+    bloody_altar_layout = startup.load(load_bloody_altar_layout)
+    death_score_layout, death_score_assets = startup.load(
+        load_act_two_death_score,
+        act_two_sprites,
     )
-    act_three_fonts = load_act_three_fonts()
+
+    act_three_fonts = startup.load(load_act_three_fonts)
     menu_fonts = {
         1: act_two_fonts,
         2: act_two_fonts,
         3: act_two_fonts,
     }
-    act_three_gameplay_assets = (
-        load_act_three_gameplay_assets()
+    act_three_gameplay_assets = startup.load(
+        load_act_three_gameplay_assets,
     )
-    act_three_transition_assets = (
-        load_act_three_transition_assets()
+    act_three_transition_assets = startup.load(
+        load_act_three_transition_assets,
     )
-    menu_assets = load_menu_assets()
+
+    menu_assets = startup.load(load_menu_assets)
     menu_layouts = {
-        1: load_menu_layouts(1),
-        2: load_menu_layouts(2),
-        3: load_menu_layouts(3),
+        1: startup.load(load_menu_layouts, 1),
+        2: startup.load(load_menu_layouts, 2),
+        3: startup.load(load_menu_layouts, 3),
     }
-    act_one_sounds = ActOneSoundBank.load(ACT_ONE_SOUNDS_PATH)
-    act_two_transition_sounds = ActTwoTransitionSoundBank.load(
-        ACT_TWO_SOUNDS_PATH
+
+    act_one_sounds = startup.load(
+        ActOneSoundBank.load,
+        ACT_ONE_SOUNDS_PATH,
     )
-    act_two_sounds = ActTwoSoundBank.load(ACT_TWO_SOUNDS_PATH)
+    act_two_transition_sounds = startup.load(
+        ActTwoTransitionSoundBank.load,
+        ACT_TWO_SOUNDS_PATH,
+    )
+    act_two_sounds = startup.load(
+        ActTwoSoundBank.load,
+        ACT_TWO_SOUNDS_PATH,
+    )
     if pygame.mixer.get_init() is not None:
         pygame.mixer.set_reserved(2)
 
-    game_state = create_game_state()
+    game_state = startup.load(create_game_state)
     act_one_camera = ActOneCamera()
     act_two_camera = ActTwoCamera()
     act_one_world_surface = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
     act_two_world_surface = None
     act_two_map_surface = None
     act_two_map_cache_key = None
-    menu_progress = load_progress()
+    menu_progress = startup.load(load_progress)
+
+    startup.finish()
+    screen = startup.window
+    windowed_size = screen.get_size()
+    del startup
+    clock.tick()
     progress_tracking_enabled = True
     menu_state = MenuState(menu_theme=menu_progress.menu_theme)
     act_one_sounds.set_master_volume(menu_state.effects_volume)
@@ -2055,6 +2078,10 @@ def main():
                         game_state.player,
                         PLAYER_STARTING_ATTRIBUTE_RANKS,
                         CLASS_BASE_ATTRIBUTE_RANKS[chosen_class],
+                    )
+                    transfer_mage_strength_upgrades(
+                        game_state.player,
+                        game_state.class_selection_preview_ranks,
                     )
                     game_state.class_selection_choice = chosen_class
                     game_state.class_selection_choice_started_at = (

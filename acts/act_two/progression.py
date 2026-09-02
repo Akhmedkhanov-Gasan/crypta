@@ -1,8 +1,13 @@
 from acts.act_two.settings import (
     WARRIOR_CLEAVE_MAX_RANK,
     WARRIOR_RHYTHM_MAX_RANK,
+    CLASS_BASE_ATTRIBUTE_RANKS,
 )
-from acts.player_stats import player_stat_changes_for_attribute_upgrade
+from acts.player_stats import (
+    attribute_stat_changes_for_rank,
+    player_stat_changes_for_attribute_upgrade,
+)
+from acts.act_one.settings import PLAYER_STARTING_ATTRIBUTE_RANKS
 from game.progression import (
     apply_attribute_upgrade,
     upgrade_attribute,
@@ -186,3 +191,41 @@ def confirm_queued_act_two_attribute_upgrades(
 
     summary = ", ".join(applied_upgrades)
     return True, f"Attributes confirmed: {summary}."
+
+
+def transfer_mage_strength_upgrades(player, previous_ranks):
+    if player.player_class != "mage":
+        return
+
+    starting_strength = PLAYER_STARTING_ATTRIBUTE_RANKS["strength"]
+    invested = max(
+        0,
+        previous_ranks.get("strength", starting_strength)
+        - starting_strength,
+    )
+    if invested == 0:
+        return
+
+    before = attribute_stat_changes_for_rank(
+        "strength", starting_strength + invested,
+    )
+    baseline = attribute_stat_changes_for_rank(
+        "strength", starting_strength,
+    )
+
+    player.attribute_ranks["strength"] = (
+        CLASS_BASE_ATTRIBUTE_RANKS["mage"]["strength"]
+    )
+    player.damage_min -= before.damage_min - baseline.damage_min
+    player.damage_max -= before.damage_max - baseline.damage_max
+
+    transferred = min(
+        invested,
+        max(0, MAX_ATTRIBUTE_RANK - player.attribute_ranks["intelligence"]),
+    )
+    player.attribute_ranks["intelligence"] += transferred
+    player.spell_power += attribute_stat_changes_for_rank(
+        "intelligence", transferred,
+    ).spell_power
+
+    player.attribute_points += invested - transferred
