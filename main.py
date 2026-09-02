@@ -451,6 +451,7 @@ def _complete_class_selection(game_state):
     game_state.class_selection_open = False
     game_state.class_transition_started_at = 0
     game_state.class_selection_choice = None
+    game_state.class_selection_preview_ranks.clear()
     game_state.class_selection_choice_started_at = 0
     game_state.player_attack_targets = []
     cancel_fire_bomb_aiming(game_state)
@@ -2039,6 +2040,10 @@ def main():
 
                     if chosen_class is None:
                         continue
+
+                    game_state.class_selection_preview_ranks = dict(
+                        game_state.player.attribute_ranks
+                    )
 
                     game_state.player.player_class = chosen_class
                     apply_player_stat_transition(
@@ -4708,6 +4713,11 @@ def main():
                         current_time
                         - game_state.class_selection_choice_started_at
                     )
+                ),
+                attribute_ranks=(
+                    game_state.class_selection_preview_ranks
+                    if game_state.class_selection_choice is not None
+                    else game_state.player.attribute_ranks
                 ),
             )
         if game_state.act_three_debug_class_selection_open:

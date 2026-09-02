@@ -461,6 +461,9 @@ class GameState:
     class_transition_started_at: int = 0
     class_selection_choice: str | None = None
     class_selection_choice_started_at: int = 0
+    class_selection_preview_ranks: dict[str, int] = field(
+        default_factory=dict,
+    )
     oracle_debug_mode: bool = False
     act_two_stats_open: bool = False
     act_two_journal_open: bool = False
