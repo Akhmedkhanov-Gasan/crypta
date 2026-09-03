@@ -51,34 +51,12 @@ def initialize_act_two_consumable_belt(player) -> None:
     if player.act_two.consumable_belt_initialized:
         return
 
-    potion_slots = min(player.potion_count, CONSUMABLE_BELT_SIZE)
-    key_slots = min(
-        player.key_count,
-        CONSUMABLE_BELT_SIZE - potion_slots,
-    )
-    player.potion_count = potion_slots
-    player.key_count = key_slots
-    items = [POTION] * potion_slots + [KEY] * key_slots
-    player.act_two.consumable_slots = items + [
+    player.potion_count = 0
+    player.key_count = 0
+    player.act_two.consumable_slots = [
         None
-    ] * (CONSUMABLE_BELT_SIZE - len(items))
+    ] * CONSUMABLE_BELT_SIZE
     player.act_two.consumable_belt_initialized = True
-
-
-def grant_act_two_test_scrolls(player) -> None:
-    existing_items = [
-        item
-        for item in player.act_two.consumable_slots
-        if item not in SCROLLS and item is not None
-    ][: CONSUMABLE_BELT_SIZE - len(SCROLLS)]
-    if not existing_items:
-        existing_items.append(FIRE_BOMB)
-    items = [*existing_items, *SCROLLS]
-    player.act_two.consumable_slots = items + [
-        None
-    ] * (CONSUMABLE_BELT_SIZE - len(items))
-    player.potion_count = existing_items.count(POTION)
-    player.key_count = existing_items.count(KEY)
 
 
 def get_act_two_consumable_slots(player) -> tuple[str | None, ...]:
@@ -800,7 +778,6 @@ __all__ = [
     "consume_act_two_key",
     "fire_bomb_zone_cells",
     "get_act_two_consumable_slots",
-    "grant_act_two_test_scrolls",
     "initialize_act_two_consumable_belt",
     "is_valid_fire_bomb_target",
     "enemy_at_scroll_target",

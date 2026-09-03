@@ -196,7 +196,11 @@ class ActTwoPlayerState:
     death_dialogue_skipped: bool = False
     death_input_unlock_at: int = 0
 
+    rune_selection_from_console: bool = False
+    bloody_altar_from_console: bool = False
+    trade_from_console: bool = False
     bloody_pact_id: str | None = None
+    bloody_pact_health_penalty: int = 0
     consumable_slots: list[str | None] = field(
         default_factory=lambda: [None] * CONSUMABLE_BELT_SIZE
     )

@@ -36,9 +36,6 @@ FLOOR_CONFIGS = [
         "secret_room_chance": 0.75,
         "treasury_room": False,
         "rune_room": True,
-        "trader": True,
-        "bloody_altar_near_trader": True,
-        "debug_guild_seal_near_trader": True,
         "spike_trap_count": 5,
         "breakable_crate_count": 7,
         "enemy_counts": {

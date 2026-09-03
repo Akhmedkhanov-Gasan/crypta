@@ -40,8 +40,3 @@ SUBCLASS_BASE_STATS = {
     ),
 }
 
-
-# Standalone values used only by the Act Three debug jump.
-DEBUG_PLAYER_DAMAGE_MIN = 5
-DEBUG_PLAYER_DAMAGE_MAX = 6
-DEBUG_PLAYER_POTION_COUNT = 2

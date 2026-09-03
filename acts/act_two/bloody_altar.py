@@ -30,8 +30,16 @@ def has_bloody_pact(player, pact_id: str) -> bool:
 def bloody_pact_is_available(player, pact_id: str) -> bool:
     if pact_id not in _BLOODY_PACT_IDS:
         return False
+
     if pact_id == BROKEN_SEAL:
-        return player.selected_rune_id is not None
+        return (
+            player.selected_rune_id is not None
+            or (
+                player.act_two.bloody_altar_from_console
+                and player.act_two.bloody_pact_id == BROKEN_SEAL
+            )
+        )
+
     return True
 
 
@@ -80,28 +88,61 @@ def select_bloody_pact(game_state: GameState, pact_id: str) -> bool:
 
 
 def confirm_bloody_pact(game_state: GameState) -> bool:
+    player = game_state.player
     altar = game_state.floor.bloody_altar
     pact_id = game_state.bloody_altar_pending_id
     pact = BLOODY_PACTS_BY_ID.get(pact_id)
+    from_console = player.act_two.bloody_altar_from_console
+    previous_pact_id = player.act_two.bloody_pact_id
+
     if (
-        altar is None
-        or altar.claimed
+        not game_state.bloody_altar_open
         or pact is None
-        or game_state.player.act_two.bloody_pact_id is not None
-        or not bloody_pact_is_available(game_state.player, pact.id)
+        or not bloody_pact_is_available(player, pact.id)
     ):
         return False
 
-    player = game_state.player
+    if from_console:
+        if game_state.floor.presentation_act != 2:
+            return False
+
+        if previous_pact_id == pact.id:
+            cancel_bloody_altar(game_state)
+            return True
+    elif (
+        altar is None
+        or altar.claimed
+        or previous_pact_id is not None
+    ):
+        return False
+
+    if previous_pact_id == GLASS_HEART:
+        player.max_health += (
+            player.act_two.bloody_pact_health_penalty
+        )
+
+    player.act_two.bloody_pact_health_penalty = 0
+    player.act_two.blood_hunger_healing_progress = 0.0
+
+    if from_console and previous_pact_id is not None:
+        player.ability_kill_charge = 0
+        player.directional_ability_aiming = False
+        player.act_two.selected_ability_direction = None
+        game_state.player_attack_targets = []
+
     if pact.id == BROKEN_SEAL:
         player.selected_rune_id = None
         player.veil_triggered_this_turn = False
-        player.ability_kill_charge = min(2, player.ability_kill_charge)
+        player.ability_kill_charge = min(
+            2,
+            player.ability_kill_charge,
+        )
     elif pact.id == GLASS_HEART:
+        previous_max_health = player.max_health
         health_penalty = max(
             1,
             ceil(
-                player.max_health
+                previous_max_health
                 * GLASS_HEART_HEALTH_PENALTY_RATIO
             ),
         )
@@ -113,16 +154,34 @@ def confirm_bloody_pact(game_state: GameState) -> bool:
             ),
         )
 
+        player.act_two.bloody_pact_health_penalty = (
+            previous_max_health - player.max_health
+        )
+
     player.act_two.bloody_pact_id = pact.id
-    altar.claimed = True
-    game_state.bloody_altar_open = False
-    game_state.bloody_altar_pending_id = None
+
+    if from_console:
+        actor = "console"
+        origin = (
+            game_state.floor.player_column,
+            game_state.floor.player_row,
+        )
+    else:
+        actor = "bloody altar"
+        origin = (altar.column, altar.row)
+        altar.claimed = True
+
+    cancel_bloody_altar(game_state)
+
     game_state.emit(
         GameEvent(
             type=GameEventType.ENVIRONMENT,
-            actor="bloody altar",
-            origin=(altar.column, altar.row),
-            data={"kind": "bloody_pact", "pact_id": pact.id},
+            actor=actor,
+            origin=origin,
+            data={
+                "kind": "bloody_pact",
+                "pact_id": pact.id,
+            },
         )
     )
     add_log_message(
@@ -136,6 +195,7 @@ def confirm_bloody_pact(game_state: GameState) -> bool:
 def cancel_bloody_altar(game_state: GameState) -> None:
     game_state.bloody_altar_open = False
     game_state.bloody_altar_pending_id = None
+    game_state.player.act_two.bloody_altar_from_console = False
 
 
 def adjusted_consumable_healing(player, amount: int) -> int:
