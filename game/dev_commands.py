@@ -7,7 +7,7 @@ from acts.act_two.dev_commands import (
 CONSOLE_HELP = (
     "help     - list commands",
     "clear    - clear console output",
-    "level    - add 1 level and 1 attribute point",
+    "level [X] - add X levels and attribute points (default: 1)",
     "gold     - add 10 gold",
     "gold X   - add X gold",
     *ACT_TWO_CONSOLE_HELP,
@@ -26,15 +26,26 @@ def execute_console_command(game_state, command, close_console):
     player = game_state.player
 
     if name == "level":
-        if len(parts) != 1:
-            return "Usage: level"
+        if len(parts) > 2:
+            return "Usage: level or level X"
 
-        player.level += 1
-        player.attribute_points += 1
+        amount = 1
+
+        if len(parts) == 2:
+            try:
+                amount = int(parts[1])
+            except ValueError:
+                return "Level amount must be a positive integer."
+
+        if amount <= 0:
+            return "Level amount must be a positive integer."
+
+        player.level += amount
+        player.attribute_points += amount
 
         return (
-            f"Level: {player.level} (+1). "
-            f"Attribute points: {player.attribute_points} (+1)."
+            f"Level: {player.level} (+{amount}). "
+            f"Attribute points: {player.attribute_points} (+{amount})."
         )
 
     if name == "gold":

@@ -351,6 +351,8 @@ def _start_transition(
     )
 
     oracle.phase_transition_pending = False
+    oracle.second_phase_announced = True
+    oracle.binding_turns = 0
     oracle.oracle_phase = 0
     oracle.oracle_base_column = oracle.column
     oracle.oracle_base_row = oracle.row

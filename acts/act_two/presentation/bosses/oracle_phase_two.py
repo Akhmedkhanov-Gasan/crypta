@@ -211,55 +211,46 @@ def reject_oracle_phase_two_head_hit(
     return True
 
 
-def resolve_oracle_pillar_hit(
-    game_state,
-    pillar,
-    damage_dealt,
-):
-    floor = game_state.floor
-    state = floor.oracle_phase_two
+def _sync_oracle_pillars(game_state, current_time):
+    state = game_state.floor.oracle_phase_two
 
-    if (
-        state is None
-        or pillar.type != "oracle_pillar"
-        or damage_dealt <= 0
-    ):
+    if state is None or state.defeated_pending:
         return
 
-    position = (pillar.column, pillar.row)
-    now = pygame.time.get_ticks()
     oracle = state.caster
-
-    state.pillar_flash_started_at = now
     oracle.health = max(
         1,
-        oracle.health - damage_dealt,
+        sum(
+            max(0, pillar.health)
+            for pillar in state.pillars
+        ),
     )
 
-    if pillar.health > 0:
-        return
+    living_count = 0
+    newly_broken = False
 
-    if position in state.broken_pillars:
-        return
+    for pillar in state.pillars:
+        if pillar.health > 0:
+            living_count += 1
+            continue
 
-    state.broken_pillars.add(position)
-    state.pillar_break_started_at[position] = now
+        position = (pillar.column, pillar.row)
 
-    living_pillars = [
-        current
-        for current in state.pillars
-        if current.health > 0
-    ]
+        if position in state.broken_pillars:
+            continue
 
-    if living_pillars:
-        add_log_message(
-            game_state.combat_log,
-            (
-                f"{pillar.name} collapses. "
-                f"{len(living_pillars)} anchors remain."
-            ),
-            category="warning",
-        )
+        state.broken_pillars.add(position)
+        state.pillar_break_started_at[position] = current_time
+        state.pillar_flash_started_at = current_time
+        newly_broken = True
+
+    if living_count > 0:
+        if newly_broken:
+            add_log_message(
+                game_state.combat_log,
+                f"{living_count} anchors remain.",
+                category="warning",
+            )
         return
 
     oracle.health = 1
@@ -289,6 +280,26 @@ def resolve_oracle_pillar_hit(
         "The final pillar breaks. Oracle's power collapses.",
         category="warning",
     )
+
+
+def resolve_oracle_pillar_hit(
+    game_state,
+    pillar,
+    damage_dealt,
+):
+    state = game_state.floor.oracle_phase_two
+
+    if (
+        state is None
+        or state.defeated_pending
+        or pillar.type != "oracle_pillar"
+        or damage_dealt <= 0
+    ):
+        return
+
+    current_time = pygame.time.get_ticks()
+    state.pillar_flash_started_at = current_time
+    _sync_oracle_pillars(game_state, current_time)
 
 
 def _living_pillars(state):
@@ -1017,6 +1028,11 @@ def update_oracle_phase_two(
     state = game_state.floor.oracle_phase_two
 
     if state is None:
+        return
+
+    _sync_oracle_pillars(game_state, current_time)
+
+    if state.defeated_pending:
         return
 
     caster = state.caster

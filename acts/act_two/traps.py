@@ -1,5 +1,8 @@
 from acts.act_two.settings import SPIKE_TRAP_DAMAGE
 from acts.act_two.state import SpikeTrapPhase
+from acts.act_two.presentation.bosses.oracle_health import (
+    limit_oracle_phase_one_damage,
+)
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from game.state import EnemyBehaviorState, GameState
@@ -84,6 +87,10 @@ def _damage_enemies_on_trap(
             continue
 
         damage = min(SPIKE_TRAP_DAMAGE, enemy.health)
+        damage = limit_oracle_phase_one_damage(
+            enemy,
+            damage,
+        )
         enemy.health -= damage
 
         game_state.emit(

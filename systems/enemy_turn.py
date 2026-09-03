@@ -15,6 +15,9 @@ from bosses.oracle import (
     ORACLE_LEGACY_COMBAT_ENABLED,
     update_oracle_projectiles,
 )
+from acts.act_two.presentation.bosses.oracle_health import (
+    limit_oracle_phase_one_damage,
+)
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from game.state import (
@@ -59,6 +62,10 @@ def _advance_enemy_bleed(game_state: GameState, enemy) -> bool:
         return False
 
     damage = min(enemy.health, enemy.bleed_damage)
+    damage = limit_oracle_phase_one_damage(
+        enemy,
+        damage,
+    )
     enemy.health -= damage
     enemy.bleed_turns -= 1
     game_state.emit(

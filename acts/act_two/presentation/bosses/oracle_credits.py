@@ -52,7 +52,8 @@ SCROLL_LINES = (
     ("ART DIRECTION", 25, BONE, 76),
     ("AKHMEDKHANOV GASAN", 31, GOLD, 126),
     ("SPECIAL THANKS", 27, RED, 58),
-    ("To nobody, you all suck...", 28, BONE, 100),
+    ("To my wife, who always believed in me", 28, BONE, 42),
+    ("and supported me through everything.", 28, BONE, 100),
 )
 
 

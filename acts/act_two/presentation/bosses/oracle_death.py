@@ -37,7 +37,8 @@ DEATH_SOUND_VOLUME = 0.90
 DIALOGUE = (
     "Go then, child...",
     "But know this, your journey will not end well.",
-    "You cannot change your fate. No man can.",
+    "You cannot change your fate.",
+    "No man can.",
 )
 
 DIALOGUE_END_MS = (

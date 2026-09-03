@@ -23,6 +23,9 @@ from acts.act_two.bloody_altar import (
 )
 from acts.player_stats import attribute_stat_changes_for_rank
 from bosses.oracle import ORACLE_LEGACY_COMBAT_ENABLED
+from acts.act_two.presentation.bosses.oracle_health import (
+    limit_oracle_phase_one_damage,
+)
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from game.progression import (
@@ -417,6 +420,10 @@ def attack_enemy(
             player,
             damage,
         )
+    damage = limit_oracle_phase_one_damage(
+        enemy,
+        damage,
+    )
     enemy_health_before_hit = enemy.health
     enemy.health = max(
         0,

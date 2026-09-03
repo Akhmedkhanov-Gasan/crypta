@@ -13,6 +13,9 @@ from acts.act_two.bloody_altar import (
     healing_consumables_are_blocked,
 )
 from acts.act_two.state import DroppedConsumableState, FireZoneState
+from acts.act_two.presentation.bosses.oracle_health import (
+    limit_oracle_phase_one_damage,
+)
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from game.state import EnemyBehaviorState, GameState
@@ -322,6 +325,10 @@ def _consume_scroll(player, slot_index: int) -> None:
 
 def _damage_enemy_with_arcane_impulse(game_state, enemy) -> None:
     damage = min(ARCANE_IMPULSE_SCROLL_DAMAGE, enemy.health)
+    damage = limit_oracle_phase_one_damage(
+        enemy,
+        damage,
+    )
     enemy.health -= damage
     origin = (
         game_state.floor.player_column,
@@ -539,6 +546,10 @@ def is_valid_fire_bomb_target(
 
 def _damage_enemy_with_fire(game_state, enemy, position) -> None:
     damage = min(FIRE_BOMB_DAMAGE, enemy.health)
+    damage = limit_oracle_phase_one_damage(
+        enemy,
+        damage,
+    )
     if damage <= 0:
         return
     enemy.health -= damage
