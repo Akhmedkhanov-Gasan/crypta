@@ -40,19 +40,19 @@ Crypta is actively in development. Act III and its systems are experimental; the
 
 ## The Descent
 
-### Act I — First Steps
+### Act I - First Steps
 
 The dungeon introduces movement, turn order, enemy attacks, and supplies through an integrated tutorial.
 
 Further below, the Crypt Warden awaits.
 
-### Act II — Choose Your Class
+### Act II - Choose Your Class
 
 Become a Warrior, Rogue, or Mage. Your choice changes your abilities and approach to combat.
 
 Larger floors introduce runes, trading, consumables, traps, and the Bloody Altar. The Oracle stands at the end of this chapter.
 
-### Act III — In Development
+### Act III - In Development
 
 The next chapter is being developed around modular Tiled rooms and six character specializations.
 
