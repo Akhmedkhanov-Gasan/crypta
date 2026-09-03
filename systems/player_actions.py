@@ -1,4 +1,5 @@
 from acts.act_two.oracle_gate import oracle_gate_allows_entry
+from acts.act_one.settings import ACT_ONE_BELT_SIZE
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from systems.mimic import awaken_mimic
@@ -32,7 +33,7 @@ from game.state import (
     RoomState,
 )
 from acts.act_two.treasury import collect_treasury_reward
-from levels import FLOOR_CONFIGS
+from levels import ACT_ONE_FLOOR_UPGRADE_REWARD, FLOOR_CONFIGS
 from logic import can_player_move_between
 from settings import POTION_HEALING
 
@@ -371,9 +372,13 @@ def _collect_items(
         None,
     )
 
-    if found_potion and not (
+    potion_belt_is_full = (
+        act_number == 1 and player.potion_count >= ACT_ONE_BELT_SIZE
+    ) or (
         act_number == 2 and act_two_belt_is_full(player)
-    ):
+    )
+
+    if found_potion and not potion_belt_is_full:
         if act_number == 2:
             store_act_two_consumable(player, POTION)
         else:
@@ -643,7 +648,7 @@ def _resolve_floor_exit(
 
     if current_floor_config["act"] == 1:
         game_state.act_one_upgrades_remaining = (
-            current_floor_config["act_floor"]
+            ACT_ONE_FLOOR_UPGRADE_REWARD
         )
 
     game_state.upgrade_screen_open = True

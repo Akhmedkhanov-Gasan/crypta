@@ -12,6 +12,7 @@ from settings import (
     PLAYER_COLOR,
     TEXT_COLOR,
 )
+from acts.act_one.presentation.warden_floor import draw_warden_status
 from acts.act_two.presentation.awakening import get_awakening_hitboxes
 
 _ACT_ONE_HUD_FRAME_RECT = pygame.Rect(25, 23, 466, 121)
@@ -99,7 +100,14 @@ def draw_status(
         None,
     )
 
-    if living_boss:
+    if living_boss and act_number == 1:
+        draw_warden_status(
+            screen,
+            living_boss,
+            font,
+            pygame.time.get_ticks(),
+        )
+    elif living_boss:
         phase = (
             2
             if living_boss["health"]
@@ -217,10 +225,7 @@ def draw_status(
     message = None
     message_color = TEXT_COLOR
 
-    if player_health <= 0 and act_number != 2:
-        message = "Defeat - press R to restart"
-        message_color = ENEMY_COLOR
-    elif game_won:
+    if game_won:
         message = "Victory - press R to restart"
         message_color = PLAYER_COLOR
 

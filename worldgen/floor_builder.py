@@ -1,6 +1,7 @@
 import random
 
 from acts.act_one.generation import generate_warden_floor
+from acts.act_one.tutorial import generate_tutorial_floor
 from worldgen.passages import (
     can_create_north_wall_passage,
     create_north_wall_passage,
@@ -742,6 +743,9 @@ def generate_floor(
         else FLOOR_CONFIGS[floor_index]
     )
 
+    if config["act"] == 1 and config.get("tutorial", False):
+        return generate_tutorial_floor(config, floor_index)
+
     if config.get("room_template_directory"):
         return generate_tmx_room_floor(
             config["map_path"],
@@ -756,7 +760,11 @@ def generate_floor(
     boss_room_layout = config.get("boss_room_layout")
 
     if boss_room_layout == "warden_arena":
-        return generate_warden_floor(config, floor_index)
+        return generate_warden_floor(
+            config,
+            floor_index,
+            crate_placer=_place_breakable_crates,
+        )
 
     if boss_room_layout == "oracle_arena":
         return generate_oracle_floor(config, floor_index)

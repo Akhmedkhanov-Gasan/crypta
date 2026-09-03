@@ -52,8 +52,9 @@ _BOTTOM_GLASS = tuple(
 
 
 class StartupScreen:
-    def __init__(self, window):
+    def __init__(self, window, fullscreen=False):
         self.window = window
+        self.fullscreen = fullscreen
         self.surface = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
         self.clock = pygame.time.Clock()
         self.elapsed_ms = 0
@@ -102,7 +103,10 @@ class StartupScreen:
                 pygame.quit()
                 raise SystemExit
 
-            if event.type == pygame.VIDEORESIZE:
+            if (
+                event.type == pygame.VIDEORESIZE
+                and not self.fullscreen
+            ):
                 self.window = pygame.display.set_mode(
                     (max(320, event.w), max(180, event.h)),
                     pygame.RESIZABLE,

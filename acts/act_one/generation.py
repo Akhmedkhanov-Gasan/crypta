@@ -1,7 +1,7 @@
 from settings import MAP_COLUMNS, MAP_ROWS
 from worldgen.passages import create_north_wall_passage
 
-def generate_warden_floor(config, floor_index):
+def generate_warden_floor(config, floor_index, crate_placer=None):
     dungeon_map = [
         ["#" for _ in range(MAP_COLUMNS)]
         for _ in range(MAP_ROWS)
@@ -39,7 +39,7 @@ def generate_warden_floor(config, floor_index):
     guard_positions = (
         ("goblin", (9, 5)),
         ("brute", (11, 7)),
-        ("goblin", (9, 9)),
+        ("archer", (12, 9)),
     )
     boss_positions = (
         ("warden", (19, 7)),
@@ -77,12 +77,53 @@ def generate_warden_floor(config, floor_index):
         )
     ]
 
+    breakable_crates = []
+
+    if crate_placer is not None:
+        candidate_positions = [
+            (column, row)
+            for row, map_row in enumerate(dungeon_map)
+            for column, tile in enumerate(map_row)
+            if (
+                tile == "."
+                and (
+                    1 <= column <= 5 and 5 <= row <= 9
+                    or 7 <= column <= 13 and 3 <= row <= 11
+                )
+            )
+        ]
+
+        protected_positions = {
+            (2, 7),
+            boss_door,
+            *(
+                (column, row)
+                for column in range(1, 6)
+                for row in range(8, 10)
+            ),
+            *(passage["trigger_position"] for passage in passages),
+            *(passage["wall_position"] for passage in passages),
+        }
+        occupied_positions = {
+            *protected_positions,
+            *(enemy["position"] for enemy in enemies),
+        }
+
+        breakable_crates = crate_placer(
+            dungeon_map,
+            candidate_positions,
+            config.get("breakable_crate_count", 0),
+            occupied_positions,
+            protected_positions,
+        )
+
     return {
         "map": ["".join(row) for row in dungeon_map],
         "player_start": (2, 7),
         "enemies": enemies,
         "chests": [],
-        "potions": [(4, 8), (12, 10)],
+        "potions": [],
+        "breakable_crates": breakable_crates,
         "passages": passages,
         "stairs": (19, 7),
         "boss_door": boss_door,

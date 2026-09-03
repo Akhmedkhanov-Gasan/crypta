@@ -436,6 +436,7 @@ class RunStatistics:
     gold_earned: int = 0
     gold_spent: int = 0
     chests_opened: int = 0
+    crates_broken: int = 0
     consumables_used: int = 0
     completed_floors: set[int] = field(default_factory=set)
     kills_by_type: dict[str, int] = field(default_factory=dict)
@@ -457,6 +458,7 @@ class GameState:
     )
     act_two_trader_floor_index: int | None = None
     act_one_revisit_prepared: bool = False
+    act_one_death_scene: Any | None = None
     game_won: bool = False
     upgrade_screen_open: bool = False
     act_one_upgrades_remaining: int = 0

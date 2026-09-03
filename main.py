@@ -52,6 +52,17 @@ from acts.act_one.camera import (
     draw_act_one_camera_view,
     update_act_one_camera,
 )
+from acts.act_one.presentation.tutorial_presentation import (
+    draw_tutorial_floor_labels,
+)
+from acts.act_one.crates import break_act_one_crate
+from acts.act_one.presentation.crate_presentation import draw_act_one_crate
+from acts.act_one.presentation.warden_floor import draw_warden_braziers
+from acts.act_one.presentation.death_scene import (
+    begin_act_one_death,
+    draw_act_one_death_overlay,
+    handle_act_one_death_event,
+)
 from acts.act_one.settings import (
     FLOOR_INTRO_SUBTITLES,
     PLAYER_STARTING_ATTRIBUTE_RANKS,
@@ -370,7 +381,11 @@ from presentation.layout import MAP_OFFSET_X, MAP_OFFSET_Y
 from presentation.world import draw_impact_block_effect
 from settings import TILE_SIZE
 
-FIRST_ACT_FINAL_FLOOR = 2
+FIRST_ACT_FINAL_FLOOR = max(
+    index
+    for index, config in enumerate(FLOOR_CONFIGS)
+    if config["act"] == 1
+)
 FIRST_ACT_THREE_FLOOR = next(
     index
     for index, floor_config in enumerate(FLOOR_CONFIGS)
@@ -567,6 +582,7 @@ def _roman_floor_number(number):
         1: "I",
         2: "II",
         3: "III",
+        4: "IV",
     }.get(number, str(number))
 
 
@@ -729,8 +745,50 @@ def main():
     act_two_next_auto_move_at = 0
     act_two_dragged_consumable_slot = None
     act_two_resonance_cursor_active = False
+    loading_completed = False
+
+    def show_loading(loader=None, *args, **kwargs):
+        nonlocal screen, windowed_size, loading_completed
+        nonlocal act_two_held_direction, act_two_next_held_move_at
+        nonlocal act_two_auto_move_target, act_two_auto_move_floor_index
+        nonlocal act_two_next_auto_move_at, act_two_dragged_consumable_slot
+
+        act_two_held_movement_keys.clear()
+        act_two_held_direction = (0, 0)
+        act_two_next_held_move_at = 0
+        act_two_auto_move_target = None
+        act_two_auto_move_floor_index = None
+        act_two_next_auto_move_at = 0
+        act_two_dragged_consumable_slot = None
+
+        cursor_visible = pygame.mouse.get_visible()
+        pygame.mouse.set_visible(False)
+
+        try:
+            loading = StartupScreen(
+                screen,
+                fullscreen=fullscreen,
+            )
+            result = None
+
+            if loader is not None:
+                result = loading.load(loader, *args, **kwargs)
+
+            loading.finish()
+            screen = loading.window
+
+            if not fullscreen:
+                windowed_size = screen.get_size()
+
+            clock.tick()
+            loading_completed = True
+            return result
+        finally:
+            if pygame.display.get_init():
+                pygame.mouse.set_visible(cursor_visible)
 
     while running:
+        loading_completed = False
         current_act = game_state.floor.presentation_act
         console_available = (
             game_started
@@ -875,6 +933,11 @@ def main():
         ]
 
         for event in pygame.event.get():
+            if loading_completed:
+                if event.type == pygame.QUIT:
+                    running = False
+                continue
+
             death_menu_requested = False
 
             console_toggle_pressed = (
@@ -885,7 +948,9 @@ def main():
                 )
             )
 
-            if console_toggle_pressed:
+            if console_toggle_pressed and (
+                console_available or dev_console.is_open
+            ):
                 if dev_console.is_open:
                     dev_console.close()
                 elif console_available:
@@ -950,12 +1015,50 @@ def main():
 
             if (
                 not menu_open
-                and current_act == 2
+                and current_act == 1
                 and game_state.player.health <= 0
                 and event.type not in (
                     pygame.QUIT,
                     pygame.VIDEORESIZE,
                 )
+            ):
+                event_position = getattr(
+                    event,
+                    "pos",
+                    pygame.mouse.get_pos(),
+                )
+
+                death_action = handle_act_one_death_event(
+                    event,
+                    game_state,
+                    window_to_game_position(
+                        screen,
+                        event_position,
+                    ),
+                    pygame.time.get_ticks(),
+                    game_surface.get_size(),
+                )
+
+                if death_action != "menu":
+                    continue
+
+                act_two_held_movement_keys.clear()
+                act_two_held_direction = (0, 0)
+                act_two_auto_move_target = None
+                act_two_auto_move_floor_index = None
+                act_two_dragged_consumable_slot = None
+
+                menu_open = True
+                death_menu_requested = True
+
+            if (
+                    not menu_open
+                    and current_act == 2
+                    and game_state.player.health <= 0
+                    and event.type not in (
+                    pygame.QUIT,
+                    pygame.VIDEORESIZE,
+            )
             ):
                 event_position = getattr(
                     event,
@@ -1031,8 +1134,13 @@ def main():
                         and pygame.mixer.get_init() is not None
                     ):
                         pygame.mixer.music.stop()
+
                     act_one_menu_music_playing = False
                     act_two_menu_music_playing = False
+
+                    if not game_started:
+                        show_loading()
+
                     menu_open = False
                     game_started = True
                 elif menu_action == "abandon_run":
@@ -1061,7 +1169,12 @@ def main():
                     act_two_eyes_open_played = False
                     act_two_music_attempted = False
                     act_three_music_attempted = False
-                    game_state = create_game_state()
+
+                    if death_menu_requested:
+                        game_state = show_loading(create_game_state)
+                    else:
+                        game_state = create_game_state()
+
                     progress_tracking_enabled = True
                     game_started = False
                     menu_state.page = "main"
@@ -2100,7 +2213,8 @@ def main():
                         game_state.player.subclass is None
                         and subclass is not None
                     ):
-                        choose_subclass(
+                        show_loading(
+                            choose_subclass,
                             game_state,
                             subclass,
                         )
@@ -2114,7 +2228,7 @@ def main():
                         ):
                             pygame.mixer.music.stop()
                         act_three_music_attempted = False
-                        game_state = create_game_state()
+                        game_state = show_loading(create_game_state)
                         progress_tracking_enabled = True
                     continue
 
@@ -2155,6 +2269,9 @@ def main():
                         game_state.player.attribute_ranks
                     )
 
+                    health_before_class_selection = (
+                        game_state.player.health
+                    )
                     game_state.player.player_class = chosen_class
                     apply_player_stat_transition(
                         game_state.player,
@@ -2169,6 +2286,10 @@ def main():
                     transfer_mage_strength_upgrades(
                         game_state.player,
                         game_state.class_selection_preview_ranks,
+                    )
+                    game_state.player.health = min(
+                        health_before_class_selection,
+                        game_state.player.max_health,
                     )
                     game_state.class_selection_choice = chosen_class
                     game_state.class_selection_choice_started_at = (
@@ -3027,10 +3148,17 @@ def main():
                             pygame.time.get_ticks(),
                         )
                     elif target_breakable_crate:
-                        player_acted = break_crate(
-                            game_state,
-                            target_breakable_crate,
-                        )
+                        if current_act == 1:
+                            player_acted = break_act_one_crate(
+                                game_state,
+                                target_breakable_crate,
+                            )
+                        else:
+                            player_acted = break_crate(
+                                game_state,
+                                target_breakable_crate,
+                            )
+
                         if player_acted:
                             game_state.player.attack_animation_started_at = (
                                 pygame.time.get_ticks()
@@ -3347,6 +3475,9 @@ def main():
                             game_state.player.player_class,
                             game_state.floor,
                         )
+        if loading_completed:
+            continue
+
         if (
             game_state.upgrade_screen_open
             and game_state.player.attribute_points <= 0
@@ -3358,6 +3489,10 @@ def main():
             )
 
         current_time = pygame.time.get_ticks()
+
+        if game_started and not menu_open:
+            begin_act_one_death(game_state, current_time)
+
         _advance_floor_transition(game_state, current_time)
 
         update_oracle_fire_audio(
@@ -3602,7 +3737,11 @@ def main():
             - game_state.class_selection_choice_started_at
             >= CLASS_SELECTION_CHOICE_END_MS
         ):
-            _complete_class_selection(game_state)
+            show_loading(
+                _complete_class_selection,
+                game_state,
+            )
+            continue
 
         current_act = game_state.floor.presentation_act
         current_act_floor = FLOOR_CONFIGS[game_state.floor_index][
@@ -3934,6 +4073,16 @@ def main():
             game_state.floor.visual_seed,
             current_time,
         )
+        if current_act == 1:
+            draw_tutorial_floor_labels(
+                world_target,
+                game_state,
+            )
+            draw_warden_braziers(
+                world_target,
+                game_state.floor,
+                current_time,
+            )
         if current_act == 2:
             if not game_state.floor.has_oracle_gate:
                 draw_act_two_atmosphere(
@@ -4178,6 +4327,12 @@ def main():
                     current_act,
                     act_two_sprites,
                     is_return=passage_is_return,
+                )
+        if current_act == 1:
+            for crate in game_state.floor.breakable_crates:
+                draw_act_one_crate(
+                    world_target,
+                    crate,
                 )
         for potion in game_state.floor["potions"]:
             if (
@@ -4827,8 +4982,9 @@ def main():
             if current_act == 1:
                 draw_act_one_upgrade_screen(
                     game_surface,
-                    act_one_gameplay_assets["act_one_upgrade"],
+                    active_upgrade_title_font,
                     active_upgrade_text_font,
+                    game_state.player,
                     game_state.act_one_upgrades_remaining,
                     game_state.upgrade_message,
                     upgrade_mouse_position,
@@ -5019,6 +5175,18 @@ def main():
                 ),
             )
         dev_console.draw(game_surface)
+
+        if current_act == 1 and game_state.player.health <= 0:
+            draw_act_one_death_overlay(
+                game_surface,
+                game_state,
+                current_time,
+                window_to_game_position(
+                    screen,
+                    pygame.mouse.get_pos(),
+                ),
+            )
+
         present_game(screen, game_surface)
         clock.tick(FPS)
 

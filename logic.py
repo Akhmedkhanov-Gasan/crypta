@@ -1222,6 +1222,15 @@ def move_enemy_away(
                 enemy_row + row_change * step_count,
             )
 
+            movement_bounds = enemy.get("movement_bounds")
+            if movement_bounds is not None:
+                left, top, right, bottom = movement_bounds
+                if not (
+                    left <= position[0] <= right
+                    and top <= position[1] <= bottom
+                ):
+                    break
+
             if (
                 position == (player_column, player_row)
                 or position in occupied_positions

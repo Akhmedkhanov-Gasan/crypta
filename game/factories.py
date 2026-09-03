@@ -57,7 +57,10 @@ def create_floor_state(
             "boss_group",
             False,
         )
-        enemy_config = ENEMY_TYPES[enemy_type]
+        enemy_config = enemy_data.get(
+            "config",
+            ENEMY_TYPES[enemy_type],
+        )
         enemy_type_counts[enemy_type] = (
             enemy_type_counts.get(enemy_type, 0) + 1
         )
@@ -148,6 +151,7 @@ def create_floor_state(
             column=crate_data["position"][0],
             row=crate_data["position"][1],
             variant=crate_data["variant"],
+            loot_kind=crate_data.get("loot_kind"),
         )
         for crate_data in floor.get("breakable_crates", [])
     ]

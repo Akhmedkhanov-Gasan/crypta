@@ -427,7 +427,14 @@ def _prepare_second_revisit_floor(source_floor_index):
 
 
 def _prepare_boss_revisit_floor():
-    floor_index = 2
+    floor_index = next(
+        index
+        for index, config in enumerate(FLOOR_CONFIGS)
+        if (
+            config["act"] == 1
+            and config.get("boss_room_layout") == "warden_arena"
+        )
+    )
     floor = generate_warden_floor(
         FLOOR_CONFIGS[floor_index],
         floor_index,
@@ -444,7 +451,7 @@ def _prepare_boss_revisit_floor():
         floor["map"],
         safe_arrival_room,
         "entrance",
-        1,
+        floor_index - 1,
         "exit",
     )
 
@@ -453,7 +460,7 @@ def _prepare_boss_revisit_floor():
         for passage in floor["passages"]
         if passage["passage_id"] == "exit"
     )
-    exit_passage["target_floor_index"] = 3
+    exit_passage["target_floor_index"] = floor_index + 1
     exit_passage["target_passage_id"] = "entrance"
     exit_passage["requires_clear"] = False
 
@@ -490,14 +497,27 @@ def generate_act_one_revisit_floors():
         _procedural_act_two_source_indices()
     )
 
+    first_floor = _prepare_first_revisit_floor(
+        first_source_index
+    )
+    second_floor = _prepare_second_revisit_floor(
+        second_source_index
+    )
+    third_floor = _prepare_second_revisit_floor(
+        second_source_index
+    )
+
+    for passage in third_floor["passages"]:
+        if passage["passage_id"] == "entrance":
+            passage["target_floor_index"] = 1
+        elif passage["passage_id"] == "exit":
+            passage["target_floor_index"] = 3
+
     return {
-        0: _prepare_first_revisit_floor(
-            first_source_index
-        ),
-        1: _prepare_second_revisit_floor(
-            second_source_index
-        ),
-        2: _prepare_boss_revisit_floor(),
+        0: first_floor,
+        1: second_floor,
+        2: third_floor,
+        3: _prepare_boss_revisit_floor(),
     }
 
 
