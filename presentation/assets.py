@@ -33,27 +33,7 @@ def load_act_one_fonts():
 
 
 def load_act_one_gameplay_assets():
-    ui_directory = ASSET_ROOT / "ui" / "act_1"
-
-    return {
-        "act_one_hud_frame": _load_scaled_image(
-            ui_directory / "hud_frame_act1.png",
-            (466, 121),
-        ),
-        "act_one_health_fill": _load_scaled_image(
-            ui_directory / "hp_bar_act1.png",
-            (389, 34),
-        ),
-        "act_one_bottom_bar": _load_scaled_image(
-            ui_directory / "skill+belt_bar_act1.png",
-            (736, 245),
-        ),
-        "act_one_upgrade": _load_scaled_image(
-            ui_directory / "upgrade.png",
-            (1080, 608),
-        ),
-        "act_one_potion": _create_act_one_health_potion(),
-    }
+    return {}
 
 
 def _create_act_one_health_potion():

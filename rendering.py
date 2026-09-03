@@ -19,9 +19,13 @@ from acts.act_three.presentation import (
     get_act_three_sidebar_tab_rectangles,
 )
 from presentation.hud import (
-    draw_sidebar,
     draw_status,
     get_class_selection_rectangles,
+)
+from acts.act_one.interface import (
+    draw_sidebar,
+    draw_act_one_upgrade_screen,
+    get_act_one_upgrade_card_rectangles,
 )
 from acts.act_two.presentation import (
     draw_act_two_ability_preview,
@@ -69,13 +73,11 @@ from presentation.screens import (
     FLOOR_TRANSITION_END_MS,
     draw_act_three_debug_class_selection,
     draw_act_three_awakening,
-    draw_act_one_upgrade_screen,
     draw_class_selection_screen,
     draw_floor_transition,
     draw_subclass_selection_screen,
     draw_upgrade_screen,
     get_upgrade_card_rectangles,
-    get_act_one_upgrade_card_rectangles,
     get_act_three_debug_class_rectangles,
     get_subclass_selection_rectangles,
 )

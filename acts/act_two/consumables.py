@@ -54,12 +54,17 @@ def initialize_act_two_consumable_belt(player) -> None:
     if player.act_two.consumable_belt_initialized:
         return
 
+    saved_potions = player.potion_count
+
     player.potion_count = 0
     player.key_count = 0
     player.act_two.consumable_slots = [
         None
     ] * CONSUMABLE_BELT_SIZE
     player.act_two.consumable_belt_initialized = True
+
+    for _ in range(saved_potions):
+        store_act_two_consumable(player, POTION)
 
 
 def get_act_two_consumable_slots(player) -> tuple[str | None, ...]:

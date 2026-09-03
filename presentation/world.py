@@ -2,6 +2,14 @@ import math
 
 import pygame
 
+from acts.act_one.item_visuals import (
+    POTION_PICKUP_COLORS,
+    draw_potion_icon,
+)
+from acts.act_one.presentation.warden_floor import draw_archer_attack_markers
+from acts.act_one.presentation.death_scene import (
+    draw_act_one_player_death,
+)
 from acts.act_two.presentation import draw_act_two_player_actor
 from acts.act_two.presentation.enemies import (
     draw_act_two_attack_markers,
@@ -802,7 +810,7 @@ def draw_act_one_pickup_effect(
         pygame.SRCALPHA,
     )
     colors = {
-        "potion": ((72, 207, 128), (139, 240, 172)),
+        "potion": POTION_PICKUP_COLORS,
         "gold": (ACT_ONE_GOLD, ACT_ONE_GOLD_LIGHT),
         "key": ((174, 130, 48), (239, 197, 91)),
     }
@@ -836,23 +844,10 @@ def draw_act_one_pickup_effect(
     symbol_alpha = round(235 * symbol_visibility)
     symbol_y = effect_center - round(progress * 17)
     if kind == "potion":
-        pygame.draw.rect(
+        draw_potion_icon(
             effect_surface,
-            (*base_color, symbol_alpha),
-            (effect_center - 4, symbol_y - 4, 8, 10),
-            border_radius=3,
-        )
-        pygame.draw.rect(
-            effect_surface,
-            (*bright_color, symbol_alpha),
-            (effect_center - 2, symbol_y - 8, 4, 4),
-        )
-        pygame.draw.line(
-            effect_surface,
-            (*bright_color, symbol_alpha),
-            (effect_center, symbol_y - 2),
-            (effect_center, symbol_y + 4),
-            2,
+            (effect_center, symbol_y),
+            alpha=symbol_alpha,
         )
     elif kind == "gold":
         pygame.draw.circle(
@@ -1962,6 +1957,19 @@ def draw_attack_markers(
         if not attack_targets:
             continue
 
+        if (
+            act_number == 1
+            and enemy["type"] == "archer"
+            and attack_mode == "ranged"
+        ):
+            if not foreground:
+                draw_archer_attack_markers(
+                    screen,
+                    enemy,
+                    current_time,
+                )
+            continue
+
         target_rows = {row for _, row in attack_targets}
         sweep_is_horizontal = len(target_rows) == 1
         for column, row in attack_targets:
@@ -2085,24 +2093,6 @@ def _draw_act_one_warden_phase_transition(
             width=2,
         )
     screen.blit(aura, (center_x - aura_center, center_y - aura_center))
-
-    if font is not None:
-        title_alpha = round(255 * min(1, progress * 5) * min(1, (1 - progress) * 4))
-        title = font.render(
-            "THE WARDEN UNBOUND",
-            True,
-            (226, 151, 220),
-        )
-        title.set_alpha(title_alpha)
-        screen.blit(
-            title,
-            title.get_rect(
-                center=(
-                    MAP_OFFSET_X + MAP_WIDTH // 2,
-                    MAP_OFFSET_Y + 55,
-                )
-            ),
-        )
 
 
 def _draw_act_one_warden_reposition_telegraph(
@@ -2356,6 +2346,16 @@ def draw_player(
     act_two_stoneflesh_effect_started_at=-1,
     act_two_dodge_effect_started_at=-1,
 ):
+    if act_number == 1 and health <= 0:
+        draw_act_one_player_death(
+            screen,
+            MAP_OFFSET_X + column * TILE_SIZE + TILE_SIZE // 2,
+            MAP_OFFSET_Y + row * TILE_SIZE + TILE_SIZE // 2,
+            current_time,
+            death_animation_started_at,
+        )
+        return
+
     if act_number == 2 and player_class is not None:
         draw_act_two_player_actor(
             screen,

@@ -1,29 +1,45 @@
+ACT_ONE_FLOOR_UPGRADE_REWARD = 1
+ACT_ONE_CRATE_POTION_CHANCE = 0.60
+
+
 FLOOR_CONFIGS = [
     {
         "act": 1,
         "act_floor": 1,
+        "tutorial": True,
         "room_count": 4,
-        "enemy_types": ["goblin", "goblin"],
+        "enemy_types": ["goblin", "brute"],
         "chest_count": 0,
-        "potion_count": 2,
+        "potion_count": 0,
     },
     {
         "act": 1,
         "act_floor": 2,
-        "room_count": 6,
-        "enemy_types": ["goblin", "goblin", "brute"],
+        "room_count": 4,
+        "enemy_types": ["goblin", "goblin"],
         "chest_count": 0,
-        "potion_count": 2,
+        "potion_count": 0,
+        "breakable_crate_count": 3,
     },
     {
         "act": 1,
         "act_floor": 3,
+        "room_count": 6,
+        "enemy_types": ["goblin", "goblin", "brute"],
+        "chest_count": 0,
+        "potion_count": 0,
+        "breakable_crate_count": 3,
+    },
+    {
+        "act": 1,
+        "act_floor": 4,
         "room_count": 0,
         "boss_room_layout": "warden_arena",
-        "enemy_types": ["goblin", "brute", "goblin"],
+        "enemy_types": ["goblin", "brute", "archer"],
         "boss_enemy_types": ["warden", "archer", "archer"],
         "chest_count": 0,
-        "potion_count": 2,
+        "potion_count": 0,
+        "breakable_crate_count": 3,
     },
     {
         "act": 2,
