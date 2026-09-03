@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 import pygame
+import resource_store as resources
 
 from acts.act_two.bloody_altar import (
     BLOODY_PACT_ORDER,
@@ -29,7 +30,7 @@ def load_bloody_altar_layout():
         / "act_2"
         / "bloody_altar.json"
     )
-    with path.open(encoding="utf-8") as file:
+    with resources.open_text(path, encoding="utf-8") as file:
         return json.load(file)
 
 

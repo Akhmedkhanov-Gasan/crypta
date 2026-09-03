@@ -2,6 +2,7 @@ import math
 from functools import lru_cache
 
 import pygame
+import resource_store as resources
 
 from acts.act_two.presentation.bosses.oracle_combat_fx import (
     oracle_attack_lights,
@@ -64,7 +65,7 @@ def _load_arena_sprites():
     )
 
     for name in names:
-        source = pygame.image.load(
+        source = resources.load_image(
             str(root / f"{name}.png")
         ).convert_alpha()
         sprites[name] = pygame.transform.scale(

@@ -1,5 +1,5 @@
 import pygame
-
+import resource_store as resources
 from presentation.dev_console import DevConsole
 
 from acts.act_two.presentation.bosses.oracle_death import (
@@ -300,6 +300,7 @@ from rendering import (
     get_rune_selection_confirm_rectangle,
 )
 from presentation.layout import (
+    ASSET_ROOT,
     ACT_THREE_AWAKENING_END_MS,
     AWAKENING_HOLD_END_MS,
     AWAKENING_SECOND_OPEN_START_MS,
@@ -637,15 +638,19 @@ def main():
     enable_high_dpi()
     pygame.init()
 
+    icon_path = ASSET_ROOT / "ui" / "icon" / "crypta.png"
+    pygame.display.set_icon(resources.load_image(str(icon_path)))
+
     windowed_size = get_initial_window_size()
+    fullscreen = True
     screen = pygame.display.set_mode(
-        windowed_size,
-        pygame.RESIZABLE,
+        (0, 0),
+        pygame.FULLSCREEN,
     )
     game_surface = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
     pygame.display.set_caption("Crypta")
     clock = pygame.time.Clock()
-    startup = StartupScreen(screen)
+    startup = StartupScreen(screen, fullscreen=fullscreen)
     startup.show_logo()
 
     act_one_fonts = startup.load(load_act_one_fonts)
@@ -712,7 +717,8 @@ def main():
 
     startup.finish()
     screen = startup.window
-    windowed_size = screen.get_size()
+    if not fullscreen:
+        windowed_size = screen.get_size()
     del startup
     clock.tick()
     progress_tracking_enabled = True
@@ -735,7 +741,6 @@ def main():
     act_two_eyes_open_played = False
     act_two_music_attempted = False
     act_three_music_attempted = False
-    fullscreen = False
     running = True
     act_two_held_movement_keys = set()
     act_two_held_direction = (0, 0)
@@ -3524,7 +3529,7 @@ def main():
                     try:
                         if pygame.mixer.get_init() is None:
                             pygame.mixer.init()
-                        pygame.mixer.music.load(
+                        resources.load_music(
                             str(ACT_TWO_MUSIC_PATH)
                         )
                         pygame.mixer.music.set_volume(
@@ -3567,7 +3572,7 @@ def main():
                 try:
                     if pygame.mixer.get_init() is None:
                         pygame.mixer.init()
-                    pygame.mixer.music.load(
+                    resources.load_music(
                         str(ACT_ONE_MENU_MUSIC_PATH)
                     )
                     pygame.mixer.music.set_volume(
@@ -3588,7 +3593,7 @@ def main():
                 try:
                     if pygame.mixer.get_init() is None:
                         pygame.mixer.init()
-                    pygame.mixer.music.load(
+                    resources.load_music(
                         str(ACT_TWO_MENU_MUSIC_PATH)
                     )
                     pygame.mixer.music.set_volume(
@@ -3692,7 +3697,7 @@ def main():
                 if pygame.mixer.get_init() is None:
                     pygame.mixer.init()
 
-                pygame.mixer.music.load(
+                resources.load_music(
                     str(ACT_THREE_MUSIC_PATH)
                 )
                 pygame.mixer.music.set_volume(0.65)
@@ -3766,7 +3771,7 @@ def main():
             try:
                 if pygame.mixer.get_init() is None:
                     pygame.mixer.init()
-                warden_music = pygame.mixer.Sound(
+                warden_music = resources.load_sound(
                     str(ACT_ONE_WARDEN_MUSIC_PATH)
                 )
                 pygame.mixer.music.fadeout(700)
@@ -3800,7 +3805,7 @@ def main():
             try:
                 if pygame.mixer.get_init() is None:
                     pygame.mixer.init()
-                pygame.mixer.music.load(str(ACT_ONE_MUSIC_PATH))
+                resources.load_music(str(ACT_ONE_MUSIC_PATH))
                 pygame.mixer.music.set_volume(menu_state.music_volume)
                 pygame.mixer.music.play(-1, fade_ms=1400)
             except pygame.error as audio_error:
@@ -3840,7 +3845,7 @@ def main():
             try:
                 if pygame.mixer.get_init() is None:
                     pygame.mixer.init()
-                pygame.mixer.music.load(str(ACT_TWO_MUSIC_PATH))
+                resources.load_music(str(ACT_TWO_MUSIC_PATH))
                 pygame.mixer.music.set_volume(
                     menu_state.music_volume
                 )

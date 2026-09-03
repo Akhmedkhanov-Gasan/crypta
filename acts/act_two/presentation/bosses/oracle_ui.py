@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 import pygame
+import resource_store as resources
 
 from presentation.figma_ui import figma_rect
 
@@ -15,7 +16,7 @@ def load_oracle_ui():
         / "assets/ui/layouts/act_2/oracle.json"
     )
 
-    with layout_path.open(encoding="utf-8") as file:
+    with resources.open_text(layout_path, encoding="utf-8") as file:
         layout = json.load(file)
 
     if (
@@ -40,7 +41,7 @@ def load_oracle_ui():
         rectangle = figma_rect(element["rect"])
         path = _PROJECT_ROOT / element["asset"]
 
-        source = pygame.image.load(str(path)).convert_alpha()
+        source = resources.load_image(str(path)).convert_alpha()
         assets[name] = pygame.transform.scale(
             source,
             rectangle.size,

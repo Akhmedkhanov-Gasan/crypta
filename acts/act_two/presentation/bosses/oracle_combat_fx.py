@@ -2,6 +2,7 @@ import math
 from functools import lru_cache
 
 import pygame
+import resource_store as resources
 
 from acts.act_two.presentation.bosses.oracle_balance import (
     IMPACT_MS,
@@ -23,7 +24,7 @@ def _load_effects():
     result = {"sphere": [], "fire": []}
 
     for index in range(3):
-        source = pygame.image.load(
+        source = resources.load_image(
             str(
                 root
                 / "projectiles"
@@ -35,7 +36,7 @@ def _load_effects():
         )
 
     for index in range(5):
-        source = pygame.image.load(
+        source = resources.load_image(
             str(
                 root
                 / "blackfire"

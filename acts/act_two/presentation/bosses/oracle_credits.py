@@ -1,6 +1,7 @@
 from functools import lru_cache
 
 import pygame
+import resource_store as resources
 
 from game.combat_log import add_log_message
 from presentation.layout import (
@@ -86,7 +87,7 @@ def _card_alpha(
 
 @lru_cache(maxsize=16)
 def _font(size):
-    return pygame.font.Font(
+    return resources.load_font(
         str(FONT_ROOT / "Almendra-Bold.ttf"),
         size,
     )
@@ -192,7 +193,7 @@ def start_oracle_credits(
         if pygame.mixer.get_init() is None:
             pygame.mixer.init()
 
-        pygame.mixer.music.load(
+        resources.load_music(
             str(path)
         )
         pygame.mixer.music.set_volume(

@@ -1,10 +1,10 @@
-"""Load hand-authored Tiled maps into the Act III floor contract."""
-
 from __future__ import annotations
 
 import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
+
+import resource_store as resources
 
 from enemies import ENEMY_TYPES
 
@@ -154,7 +154,9 @@ def _barrier_edges(rectangles, width, height, tile_size):
 
 def load_tmx_floor(path):
     path = Path(path)
-    root = ET.parse(path).getroot()
+    if not path.is_absolute():
+        path = Path(__file__).resolve().parents[2] / path
+    root = resources.load_xml(path).getroot()
     width = int(root.get("width", 0))
     height = int(root.get("height", 0))
     tile_size = int(root.get("tilewidth", 32))

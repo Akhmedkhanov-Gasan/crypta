@@ -1,4 +1,5 @@
 import pygame
+import resource_store as resources
 import xml.etree.ElementTree as ET
 
 import json
@@ -21,14 +22,14 @@ def load_act_one_fonts():
     pixel_bold_path = FONT_ROOT / "PixelOperator-Bold.ttf"
 
     return {
-        "title": pygame.font.Font(str(bold_path), 42),
-        "heading": pygame.font.Font(str(bold_path), 27),
-        "status": pygame.font.Font(str(bold_path), 21),
-        "text": pygame.font.Font(str(regular_path), 19),
-        "controls": pygame.font.Font(str(bold_path), 17),
-        "interface": pygame.font.Font(str(regular_path), 19),
-        "hud": pygame.font.Font(str(pixel_bold_path), 19),
-        "hud_small": pygame.font.Font(str(pixel_path), 16),
+        "title": resources.load_font(str(bold_path), 42),
+        "heading": resources.load_font(str(bold_path), 27),
+        "status": resources.load_font(str(bold_path), 21),
+        "text": resources.load_font(str(regular_path), 19),
+        "controls": resources.load_font(str(bold_path), 17),
+        "interface": resources.load_font(str(regular_path), 19),
+        "hud": resources.load_font(str(pixel_bold_path), 19),
+        "hud_small": resources.load_font(str(pixel_path), 16),
     }
 
 
@@ -68,31 +69,31 @@ def load_menu_assets():
     act_three_directory = menu_directory / "act_3"
 
     return {
-        "act_two_background": pygame.image.load(
+        "act_two_background": resources.load_image(
             str(act_two_directory / "act_2_background.png")
         ).convert(),
 
-        "act_three_background": pygame.image.load(
+        "act_three_background": resources.load_image(
             str(act_three_directory / "act_3_background.png")
         ).convert(),
 
-        "act_one_menu_frame": pygame.image.load(
+        "act_one_menu_frame": resources.load_image(
             str(act_one_directory / "menu_frame.png")
         ).convert_alpha(),
 
-        "act_two_menu_frame": pygame.image.load(
+        "act_two_menu_frame": resources.load_image(
             str(act_two_directory / "menu_frame.png")
         ).convert_alpha(),
 
-        "act_two_menu_title": pygame.image.load(
+        "act_two_menu_title": resources.load_image(
             str(act_two_directory / "title.png")
         ).convert_alpha(),
 
-        "act_three_menu_frame": pygame.image.load(
+        "act_three_menu_frame": resources.load_image(
             str(act_three_directory / "menu_frame.png")
         ).convert_alpha(),
 
-        "act_three_menu_title": pygame.image.load(
+        "act_three_menu_title": resources.load_image(
             str(act_three_directory / "menu_title.png")
         ).convert_alpha(),
     }
@@ -112,7 +113,7 @@ def load_menu_layouts(act):
     for page in ("main", "settings", "confirm"):
         layout_path = layout_directory / f"{page}.json"
 
-        with layout_path.open(encoding="utf-8") as file:
+        with resources.open_text(layout_path, encoding="utf-8") as file:
             layout = json.load(file)
 
         if layout.get("schema_version") != 2:
@@ -138,19 +139,19 @@ def load_act_two_fonts():
     alagard_path = FONT_ROOT / "alagard" / "alagard.ttf"
 
     return {
-        "title": pygame.font.Font(str(alagard_path), 42),
-        "heading": pygame.font.Font(str(alagard_path), 20),
-        "status": pygame.font.Font(str(alagard_path), 22),
-        "text": pygame.font.Font(str(regular_path), 17),
-        "log": pygame.font.Font(str(regular_path), 15),
-        "ability_text": pygame.font.Font(str(medium_path), 16),
-        "controls": pygame.font.Font(str(medium_path), 17),
-        "sidebar_heading": pygame.font.Font(str(semibold_path), 16),
-        "sidebar_text": pygame.font.Font(str(regular_path), 16),
-        "sidebar_controls": pygame.font.Font(str(medium_path), 15),
-        "trade_name": pygame.font.Font(str(semibold_path), 16),
-        "trade_description": pygame.font.Font(str(regular_path), 15),
-        "trade_price": pygame.font.Font(str(bold_path), 16),
+        "title": resources.load_font(str(alagard_path), 42),
+        "heading": resources.load_font(str(alagard_path), 20),
+        "status": resources.load_font(str(alagard_path), 22),
+        "text": resources.load_font(str(regular_path), 17),
+        "log": resources.load_font(str(regular_path), 15),
+        "ability_text": resources.load_font(str(medium_path), 16),
+        "controls": resources.load_font(str(medium_path), 17),
+        "sidebar_heading": resources.load_font(str(semibold_path), 16),
+        "sidebar_text": resources.load_font(str(regular_path), 16),
+        "sidebar_controls": resources.load_font(str(medium_path), 15),
+        "trade_name": resources.load_font(str(semibold_path), 16),
+        "trade_description": resources.load_font(str(regular_path), 15),
+        "trade_price": resources.load_font(str(bold_path), 16),
     }
 
 def load_act_two_hud_layout():
@@ -163,7 +164,7 @@ def load_act_two_hud_layout():
         / "HUD_Act2.json"
     )
 
-    with layout_path.open(encoding="utf-8") as file:
+    with resources.open_text(layout_path, encoding="utf-8") as file:
         layout = json.load(file)
 
     if layout.get("screen") != "hud":
@@ -189,7 +190,7 @@ def load_act_two_trade_layout():
         / "trade.json"
     )
 
-    with layout_path.open(encoding="utf-8") as file:
+    with resources.open_text(layout_path, encoding="utf-8") as file:
         return json.load(file)
 
 
@@ -200,42 +201,42 @@ def load_act_three_fonts():
     interface_path = FONT_ROOT / "AtkinsonHyperlegible-Regular.ttf"
     interface_bold_path = FONT_ROOT / "AtkinsonHyperlegible-Bold.ttf"
 
-    hud_value_font = pygame.font.Font(str(hud_path), 17)
+    hud_value_font = resources.load_font(str(hud_path), 17)
     hud_value_font.set_bold(True)
     hud_value_font.set_italic(True)
 
     return {
-        "title": pygame.font.Font(str(display_path), 46),
-        "heading": pygame.font.Font(str(display_path), 28),
-        "narrative": pygame.font.Font(str(display_path), 27),
-        "text": pygame.font.Font(str(interface_path), 20),
-        "sidebar_display": pygame.font.Font(
+        "title": resources.load_font(str(display_path), 46),
+        "heading": resources.load_font(str(display_path), 28),
+        "narrative": resources.load_font(str(display_path), 27),
+        "text": resources.load_font(str(interface_path), 20),
+        "sidebar_display": resources.load_font(
             str(display_path),
             23,
         ),
-        "sidebar_heading": pygame.font.Font(
+        "sidebar_heading": resources.load_font(
             str(interface_bold_path),
             22,
         ),
-        "sidebar_text": pygame.font.Font(
+        "sidebar_text": resources.load_font(
             str(interface_path),
             19,
         ),
-        "sidebar_log": pygame.font.Font(
+        "sidebar_log": resources.load_font(
             str(interface_path),
             16,
         ),
-        "sidebar_hud": pygame.font.Font(
+        "sidebar_hud": resources.load_font(
             str(interface_path),
             13,
         ),
         "hud_value": hud_value_font,
-        "hud_level": pygame.font.Font(str(hud_bold_path), 18),
-        "sidebar_class": pygame.font.Font(
+        "hud_level": resources.load_font(str(hud_bold_path), 18),
+        "sidebar_class": resources.load_font(
             str(display_path),
             19,
         ),
-        "sidebar_numbers": pygame.font.Font(
+        "sidebar_numbers": resources.load_font(
             str(interface_bold_path),
             18,
         ),
@@ -604,7 +605,7 @@ def load_act_two_sprites():
 
     for name, relative_path in sprite_paths.items():
         source_path = asset_directory / relative_path
-        source = pygame.image.load(str(source_path)).convert_alpha()
+        source = resources.load_image(str(source_path)).convert_alpha()
 
         if name in oversized_sprite_names:
             sprites[name] = pygame.transform.scale(
@@ -668,36 +669,36 @@ def load_act_two_sprites():
 
     sprites.update(
         {
-            "trader_potion": pygame.image.load(
+            "trader_potion": resources.load_image(
                 str(trade_item_directory / "potion_original.png")
             ).convert_alpha(),
 
-            "trader_fire_bomb": pygame.image.load(
+            "trader_fire_bomb": resources.load_image(
                 str(trade_item_directory / "fire_bomb_original.png")
             ).convert_alpha(),
 
-            "trader_scroll_of_binding": pygame.image.load(
+            "trader_scroll_of_binding": resources.load_image(
                 str(
                     trade_item_directory
                     / "scroll_of_binding_original.png"
                 )
             ).convert_alpha(),
 
-            "trader_scroll_of_arcane_impulse": pygame.image.load(
+            "trader_scroll_of_arcane_impulse": resources.load_image(
                 str(
                     trade_item_directory
                     / "scroll_of_impulse_original.png"
                 )
             ).convert_alpha(),
 
-            "trader_healing_scroll": pygame.image.load(
+            "trader_healing_scroll": resources.load_image(
                 str(
                     trade_item_directory
                     / "healing_scroll_original.png"
                 )
             ).convert_alpha(),
 
-            "trader_scroll_of_stoneflesh": pygame.image.load(
+            "trader_scroll_of_stoneflesh": resources.load_image(
                 str(
                     trade_item_directory
                     / "scroll_of_stoneflesh_original.png"
@@ -774,7 +775,7 @@ def load_act_two_sprites():
     transition_directory = ui_directory / "awakening_v2"
 
     def load_transition_background(filename):
-        source = pygame.image.load(
+        source = resources.load_image(
             str(transition_directory / filename)
         ).convert()
         source_width, source_height = source.get_size()
@@ -807,16 +808,16 @@ def load_act_two_sprites():
     sprites["awakening_act_two"] = load_transition_background(
         "act_two_corridor_source.png"
     )
-    sprites["awakening_old_man_far"] = pygame.image.load(
+    sprites["awakening_old_man_far"] = resources.load_image(
         str(transition_directory / "old_man_far.png")
     ).convert_alpha()
 
-    sprites["awakening_old_man_near"] = pygame.image.load(
+    sprites["awakening_old_man_near"] = resources.load_image(
         str(transition_directory / "old_man.png")
     ).convert_alpha()
 
     for class_name in ("warrior", "rogue", "mage"):
-        sprites[f"{class_name}_portrait"] = pygame.image.load(
+        sprites[f"{class_name}_portrait"] = resources.load_image(
             str(transition_directory / f"{class_name}_portrait.png")
         ).convert_alpha()
 
@@ -826,7 +827,7 @@ def load_act_two_sprites():
         ("rogue_invisibility_icon", "invisibility.png"),
         ("mage_arcane_burst_icon", "blast.png"),
     ):
-        sprites[asset_name] = pygame.image.load(
+        sprites[asset_name] = resources.load_image(
             str(ability_directory / file_name)
         ).convert_alpha()
 
@@ -840,30 +841,30 @@ def load_act_two_sprites():
     rune_ui_directory = ui_directory / "rune"
     rune_directory = rune_ui_directory / "runes"
 
-    sprites["rune_selection_background"] = pygame.image.load(
+    sprites["rune_selection_background"] = resources.load_image(
         str(rune_ui_directory / "background.png")
     ).convert_alpha()
 
-    sprites["rune_selection_confirm_button"] = pygame.image.load(
+    sprites["rune_selection_confirm_button"] = resources.load_image(
         str(rune_ui_directory / "button.png")
     ).convert_alpha()
 
     for rune in RUNE_DEFINITIONS:
-        sprites[f"{rune.id}_icon"] = pygame.image.load(
+        sprites[f"{rune.id}_icon"] = resources.load_image(
             str(rune_directory / rune.icon_filename)
         ).convert_alpha()
 
-        sprites[f"{rune.id}_selection"] = pygame.image.load(
+        sprites[f"{rune.id}_selection"] = resources.load_image(
             str(
                 rune_directory
                 / f"{rune.id}_selection.png"
             )
         ).convert_alpha()
     bloody_altar_directory = ui_directory / "bloody_altar"
-    sprites["bloody_altar_window"] = pygame.image.load(
+    sprites["bloody_altar_window"] = resources.load_image(
         str(bloody_altar_directory / "window.png")
     ).convert_alpha()
-    sprites["bloody_altar_confirm_button"] = pygame.image.load(
+    sprites["bloody_altar_confirm_button"] = resources.load_image(
         str(bloody_altar_directory / "confirm_button.png")
     ).convert_alpha()
     for pact_id in (
@@ -872,7 +873,7 @@ def load_act_two_sprites():
         "glass_heart",
         "blood_hunger",
     ):
-        sprites[f"bloody_pact_{pact_id}"] = pygame.image.load(
+        sprites[f"bloody_pact_{pact_id}"] = resources.load_image(
             str(
                 bloody_altar_directory
                 / "icons"
@@ -883,7 +884,7 @@ def load_act_two_sprites():
     act_two_hud_directory = ui_directory / "ui_v.0.2"
     sprites.update(
         {
-            "act_two_trade_background": pygame.image.load(
+            "act_two_trade_background": resources.load_image(
                 str(act_two_hud_directory / "trade_background.png")
             ).convert_alpha(),
             "act_two_hud_frame": _load_scaled_image(
@@ -927,18 +928,18 @@ def load_act_two_sprites():
                 act_two_hud_directory / "abilities.png",
                 (264, 198),
             ),
-            "act_two_combat_log_frame": pygame.image.load(
+            "act_two_combat_log_frame": resources.load_image(
                 str(
                     act_two_hud_directory
                     / "combat_log_frame.png"
                 )
             ).convert_alpha(),
 
-            "act_two_journal_panel": pygame.image.load(
+            "act_two_journal_panel": resources.load_image(
                 str(act_two_hud_directory / "frame.png")
             ).convert_alpha(),
 
-            "act_two_journal_thumb": pygame.image.load(
+            "act_two_journal_thumb": resources.load_image(
                 str(act_two_hud_directory / "thumb.png")
             ).convert_alpha(),
         }
@@ -1027,7 +1028,7 @@ def load_act_three_transition_assets():
         / "idle"
         / "idle_00_original.png"
     )
-    background_source = pygame.image.load(
+    background_source = resources.load_image(
         str(ui_directory / "awakening_background_v2.png")
     ).convert()
     background_width = round(GAME_WIDTH * 1.12)
@@ -1039,37 +1040,37 @@ def load_act_three_transition_assets():
             background_width,
         ),
         "berserker_portrait": pygame.transform.smoothscale(
-            pygame.image.load(
+            resources.load_image(
                 str(berserker_path)
             ).convert_alpha(),
             (230, 230),
         ),
         "paladin_portrait": pygame.transform.smoothscale(
-            pygame.image.load(
+            resources.load_image(
                 str(paladin_path)
             ).convert_alpha(),
             (230, 230),
         ),
         "assassin_portrait": pygame.transform.smoothscale(
-            pygame.image.load(
+            resources.load_image(
                 str(assassin_path)
             ).convert_alpha(),
             (230, 230),
         ),
         "archer_portrait": pygame.transform.smoothscale(
-            pygame.image.load(
+            resources.load_image(
                 str(archer_path)
             ).convert_alpha(),
             (230, 230),
         ),
         "warlock_portrait": pygame.transform.smoothscale(
-            pygame.image.load(
+            resources.load_image(
                 str(warlock_path)
             ).convert_alpha(),
             (230, 230),
         ),
         "summoner_portrait": pygame.transform.smoothscale(
-            pygame.image.load(
+            resources.load_image(
                 str(summoner_path)
             ).convert_alpha(),
             (230, 230),
@@ -1079,7 +1080,7 @@ def load_act_three_transition_assets():
     for player_class in ("warrior", "rogue", "mage"):
         for pose in ("open", "clenched"):
             hands = _scale_to_width(
-                pygame.image.load(
+                resources.load_image(
                     str(
                         ui_directory
                         / f"{player_class}_hands_{pose}.png"
@@ -1097,7 +1098,7 @@ def load_act_three_transition_assets():
 
 
 def _load_scaled_image(path, size, use_alpha=True):
-    source = pygame.image.load(str(path))
+    source = resources.load_image(str(path))
     source = (
         source.convert_alpha()
         if use_alpha
@@ -1107,12 +1108,12 @@ def _load_scaled_image(path, size, use_alpha=True):
 
 
 def _load_pixel_scaled_image(path, size):
-    source = pygame.image.load(str(path)).convert_alpha()
+    source = resources.load_image(str(path)).convert_alpha()
     return pygame.transform.scale(source, size)
 
 
 def _load_cropped_ui_image(path, size):
-    source = pygame.image.load(str(path)).convert_alpha()
+    source = resources.load_image(str(path)).convert_alpha()
     content_rectangle = source.get_bounding_rect(min_alpha=1)
     cropped_source = source.subsurface(
         content_rectangle
@@ -1121,7 +1122,7 @@ def _load_cropped_ui_image(path, size):
 
 
 def _load_pixel_cropped_ui_image(path, size):
-    source = pygame.image.load(str(path)).convert_alpha()
+    source = resources.load_image(str(path)).convert_alpha()
     content_rectangle = source.get_bounding_rect(min_alpha=1)
     cropped_source = source.subsurface(content_rectangle).copy()
     return pygame.transform.scale(cropped_source, size)
@@ -1584,20 +1585,20 @@ def load_act_three_gameplay_assets():
             (34, 34),
         ),
     }
-    map_root = ET.parse(map_path).getroot()
+    map_root = resources.load_xml(map_path).getroot()
     tileset_reference = map_root.find("tileset")
     if tileset_reference is None or not tileset_reference.get("source"):
         raise ValueError(f"TMX map has no external tileset: {map_path}")
     tileset_path = map_path.parent / tileset_reference.get("source")
     tmx_tiles = {}
-    if tileset_path.exists():
-        tileset_root = ET.parse(tileset_path).getroot()
+    if resources.is_file(tileset_path):
+        tileset_root = resources.load_xml(tileset_path).getroot()
         for tile in tileset_root.findall("tile"):
             image = tile.find("image")
             if image is None or not image.get("source"):
                 continue
             image_path = tileset_path.parent / image.get("source")
-            if not image_path.exists():
+            if not resources.is_file(image_path):
                 raise FileNotFoundError(
                     f"Missing TMX tile image: {image_path}"
                 )
@@ -2193,7 +2194,7 @@ def load_act_three_gameplay_assets():
     )
 
     for rune in RUNE_DEFINITIONS:
-        assets[f"{rune.id}_icon"] = pygame.image.load(
+        assets[f"{rune.id}_icon"] = resources.load_image(
             str(rune_directory / rune.icon_filename)
         ).convert_alpha()
 

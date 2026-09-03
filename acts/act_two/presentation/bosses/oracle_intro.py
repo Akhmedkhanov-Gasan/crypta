@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 
 import pygame
+import resource_store as resources
 
 from acts.act_two.presentation.movement import (
     MAGE_MOVE_DURATION_MS,
@@ -125,7 +126,7 @@ def start_oracle_intro(game_state, current_time):
 
         music_volume = pygame.mixer.music.get_volume()
 
-        pygame.mixer.music.load(str(music_path))
+        resources.load_music(str(music_path))
         pygame.mixer.music.set_volume(
             min(1.0, music_volume * 0.7)
         )
@@ -402,7 +403,7 @@ def handle_oracle_intro_event(floor, event, frame):
 
 @lru_cache(maxsize=1)
 def _dialogue_font():
-    return pygame.font.Font(
+    return resources.load_font(
         str(FONT_ROOT / "Almendra-Bold.ttf"),
         24,
     )

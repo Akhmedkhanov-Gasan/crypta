@@ -1,6 +1,7 @@
 from functools import lru_cache
 
 import pygame
+import resource_store as resources
 
 from acts.act_one.tutorial import (
     TUTORIAL_FLOOR_LABELS,
@@ -17,7 +18,7 @@ TUTORIAL_ANTIALIAS = False
 
 @lru_cache(maxsize=16)
 def _render_floor_label(lines):
-    font = pygame.font.Font(
+    font = resources.load_font(
         str(TUTORIAL_FONT_PATH),
         TUTORIAL_FONT_SIZE,
     )

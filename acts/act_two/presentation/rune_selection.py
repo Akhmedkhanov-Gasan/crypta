@@ -3,6 +3,7 @@ from functools import lru_cache
 from pathlib import Path
 
 import pygame
+import resource_store as resources
 
 from presentation.figma_ui import draw_figma_text, figma_rect
 from settings import GAME_HEIGHT, GAME_WIDTH
@@ -33,7 +34,7 @@ def load_rune_selection_layouts():
     for player_class, filename in _LAYOUT_FILENAMES.items():
         path = layout_directory / filename
 
-        with path.open(encoding="utf-8") as file:
+        with resources.open_text(path, encoding="utf-8") as file:
             layout = json.load(file)
 
         if layout.get("player_class") != player_class:

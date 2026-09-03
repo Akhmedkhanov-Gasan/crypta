@@ -1,6 +1,7 @@
 from functools import lru_cache
 
 import pygame
+import resource_store as resources
 
 from acts.act_two.presentation.bosses.oracle_intro import (
     oracle_gate_sprite,
@@ -31,7 +32,7 @@ def _load_oracle_room_sprites():
         "gate_half_open",
         "gate_open",
     ):
-        source = pygame.image.load(
+        source = resources.load_image(
             str(root / "gate" / f"{name}.png")
         ).convert_alpha()
         sprites[name] = pygame.transform.scale(
@@ -45,7 +46,7 @@ def _load_oracle_room_sprites():
         "brazier_fire_01",
         "brazier_fire_02",
     ):
-        source = pygame.image.load(
+        source = resources.load_image(
             str(root / "brazier" / f"{name}.png")
         ).convert_alpha()
         sprites[name] = pygame.transform.scale(

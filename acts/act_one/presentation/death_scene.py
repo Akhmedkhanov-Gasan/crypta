@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 
 import pygame
+import resource_store as resources
 
 from enemies import ENEMY_TYPES
 from levels import FLOOR_CONFIGS
@@ -33,13 +34,13 @@ class ActOneDeathScene:
 @lru_cache(maxsize=1)
 def _fonts():
     return {
-        "title": pygame.font.Font(
+        "title": resources.load_font(
             str(FONT_ROOT / "PixelOperator-Bold.ttf"), 48
         ),
-        "heading": pygame.font.Font(
+        "heading": resources.load_font(
             str(FONT_ROOT / "PixelOperator-Bold.ttf"), 28
         ),
-        "text": pygame.font.Font(
+        "text": resources.load_font(
             str(FONT_ROOT / "PixelOperator.ttf"), 24
         ),
     }

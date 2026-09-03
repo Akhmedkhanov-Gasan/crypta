@@ -3,6 +3,7 @@ from collections.abc import Iterable
 from pathlib import Path
 
 import pygame
+import resource_store as resources
 
 from acts.act_two.presentation.bosses.oracle_audio import (
     play_oracle_laugh_from_events,
@@ -315,7 +316,7 @@ class ActTwoTransitionSoundBank:
         sounds = {}
         for sound_key, filename in ACT_TWO_TRANSITION_SOUND_FILES.items():
             try:
-                sounds[sound_key] = pygame.mixer.Sound(
+                sounds[sound_key] = resources.load_sound(
                     str(sounds_path / filename)
                 )
             except (FileNotFoundError, pygame.error):
@@ -359,7 +360,7 @@ class ActTwoSoundBank:
             for filename in filenames:
                 try:
                     variants.append(
-                        pygame.mixer.Sound(str(warrior_path / filename))
+                        resources.load_sound(str(warrior_path / filename))
                     )
                 except (FileNotFoundError, pygame.error):
                     continue
@@ -372,7 +373,7 @@ class ActTwoSoundBank:
             for filename in filenames:
                 try:
                     variants.append(
-                        pygame.mixer.Sound(str(rogue_path / filename))
+                        resources.load_sound(str(rogue_path / filename))
                     )
                 except (FileNotFoundError, pygame.error):
                     continue
@@ -385,7 +386,7 @@ class ActTwoSoundBank:
             for filename in filenames:
                 try:
                     variants.append(
-                        pygame.mixer.Sound(str(mage_path / filename))
+                        resources.load_sound(str(mage_path / filename))
                     )
                 except (FileNotFoundError, pygame.error):
                     continue
@@ -398,7 +399,7 @@ class ActTwoSoundBank:
             for filename in filenames:
                 try:
                     variants.append(
-                        pygame.mixer.Sound(str(enemy_path / filename))
+                        resources.load_sound(str(enemy_path / filename))
                     )
                 except (FileNotFoundError, pygame.error):
                     continue
@@ -411,7 +412,7 @@ class ActTwoSoundBank:
             for filename in filenames:
                 try:
                     variants.append(
-                        pygame.mixer.Sound(str(player_path / filename))
+                        resources.load_sound(str(player_path / filename))
                     )
                 except (FileNotFoundError, pygame.error):
                     continue
@@ -424,7 +425,7 @@ class ActTwoSoundBank:
             for filename in filenames:
                 try:
                     variants.append(
-                        pygame.mixer.Sound(str(level_up_path / filename))
+                        resources.load_sound(str(level_up_path / filename))
                     )
                 except (FileNotFoundError, pygame.error):
                     continue
@@ -436,7 +437,7 @@ class ActTwoSoundBank:
         for filename in ACT_TWO_FOOTSTEP_FILES:
             try:
                 footsteps.append(
-                    pygame.mixer.Sound(str(footstep_path / filename))
+                    resources.load_sound(str(footstep_path / filename))
                 )
             except (FileNotFoundError, pygame.error):
                 continue
@@ -449,7 +450,7 @@ class ActTwoSoundBank:
             for filename in filenames:
                 try:
                     variants.append(
-                        pygame.mixer.Sound(str(environment_path / filename))
+                        resources.load_sound(str(environment_path / filename))
                     )
                 except (FileNotFoundError, pygame.error):
                     continue
@@ -466,7 +467,7 @@ class ActTwoSoundBank:
             for filename in filenames:
                 try:
                     variants.append(
-                        pygame.mixer.Sound(
+                        resources.load_sound(
                             str(
                                 trader_path
                                 / filename
@@ -489,7 +490,7 @@ class ActTwoSoundBank:
             for filename in filenames:
                 try:
                     variants.append(
-                        pygame.mixer.Sound(str(fire_bomb_path / filename))
+                        resources.load_sound(str(fire_bomb_path / filename))
                     )
                 except (FileNotFoundError, pygame.error):
                     continue
@@ -1225,7 +1226,7 @@ class ActOneSoundBank:
             variants = []
             for filename in filenames:
                 try:
-                    sound = pygame.mixer.Sound(str(sounds_path / filename))
+                    sound = resources.load_sound(str(sounds_path / filename))
                 except (FileNotFoundError, pygame.error):
                     continue
                 variants.append(sound)

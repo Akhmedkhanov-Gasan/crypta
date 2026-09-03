@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 import pygame
+import resource_store as resources
 
 from acts.act_two.presentation.death_scene import (
     ACT_TWO_OLD_MAN_DIALOGUE_MS,
@@ -36,7 +37,7 @@ def load_act_two_death_score(sprites):
         / "assets/ui/layouts/act_2/death_score.json"
     )
 
-    with layout_path.open(encoding="utf-8") as file:
+    with resources.open_text(layout_path, encoding="utf-8") as file:
         layout = json.load(file)
 
     if (
@@ -53,7 +54,7 @@ def load_act_two_death_score(sprites):
         _PROJECT_ROOT
         / "assets/sprites/ui/act_2/ui_v.0.2/background.png"
     )
-    background = pygame.image.load(
+    background = resources.load_image(
         str(background_path)
     ).convert_alpha()
 

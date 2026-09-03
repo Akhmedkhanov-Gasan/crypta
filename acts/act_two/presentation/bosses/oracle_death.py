@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 
 import pygame
+import resource_store as resources
 
 
 from acts.act_two.presentation.bosses.oracle_credits import (
@@ -88,7 +89,7 @@ def _load_death_sounds():
 
         try:
             variants.append(
-                pygame.mixer.Sound(str(path))
+                resources.load_sound(str(path))
             )
         except (OSError, pygame.error):
             continue
@@ -299,7 +300,7 @@ def _load_death_frames():
     frames = []
 
     for index in range(3):
-        source = pygame.image.load(
+        source = resources.load_image(
             str(
                 root
                 / f"oracle_death_original_{index:02d}.png"
@@ -660,7 +661,7 @@ def draw_oracle_death_fx(
 
 @lru_cache(maxsize=1)
 def _dialogue_font():
-    return pygame.font.Font(
+    return resources.load_font(
         str(FONT_ROOT / "Almendra-Bold.ttf"),
         34,
     )

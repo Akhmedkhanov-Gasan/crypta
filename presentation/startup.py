@@ -1,4 +1,5 @@
 import pygame
+import resource_store as resources
 
 from presentation.display import game_viewport
 from presentation.layout import ASSET_ROOT
@@ -147,7 +148,7 @@ class StartupScreen:
 
     def show_logo(self):
         path = ASSET_ROOT / "ui" / "menu" / "nihil.png"
-        logo = pygame.image.load(str(path)).convert_alpha()
+        logo = resources.load_image(str(path)).convert_alpha()
 
         scale = min(
             GAME_WIDTH * 0.55 / logo.get_width(),

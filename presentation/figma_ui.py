@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import pygame
+import resource_store as resources
 
 from presentation.layout import FONT_ROOT
 
@@ -164,7 +165,7 @@ def _load_figma_font(text_spec: dict[str, Any]) -> pygame.font.Font:
             f"{font_spec['family']} {font_spec['style']}"
         )
 
-    font = pygame.font.Font(str(font_path), size)
+    font = resources.load_font(str(font_path), size)
     _FONT_CACHE[cache_key] = font
     return font
 

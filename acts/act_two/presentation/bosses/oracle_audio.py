@@ -2,6 +2,7 @@ import random
 from functools import lru_cache
 
 import pygame
+import resource_store as resources
 
 from game.events import GameEventType
 from presentation.layout import PROJECT_ROOT
@@ -50,7 +51,7 @@ def _load_variants(prefix):
         path = root / f"{prefix}_{index}.mp3"
 
         try:
-            variants.append(pygame.mixer.Sound(str(path)))
+            variants.append(resources.load_sound(str(path)))
         except (OSError, pygame.error):
             continue
 
@@ -179,7 +180,7 @@ def _load_pain_variants():
         path = root / f"oracle_pain_{index:02d}.mp3"
 
         try:
-            variants.append(pygame.mixer.Sound(str(path)))
+            variants.append(resources.load_sound(str(path)))
         except (OSError, pygame.error):
             continue
 
@@ -253,7 +254,7 @@ def _load_laugh_variants():
 
         try:
             variants.append(
-                pygame.mixer.Sound(str(path))
+                resources.load_sound(str(path))
             )
         except (OSError, pygame.error):
             continue

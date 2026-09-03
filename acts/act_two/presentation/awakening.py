@@ -5,6 +5,7 @@ from functools import lru_cache
 from types import SimpleNamespace
 
 import pygame
+import resource_store as resources
 
 from acts.act_one.settings import PLAYER_STARTING_ATTRIBUTE_RANKS
 from acts.act_two.settings import CLASS_BASE_ATTRIBUTE_RANKS
@@ -54,7 +55,7 @@ def load_awakening_layout():
         / "act_2"
         / "Awakening_Act2.json"
     )
-    with path.open("r", encoding="utf-8-sig") as source:
+    with resources.open_text(path, encoding="utf-8-sig") as source:
         layout = json.load(source)
 
     if (

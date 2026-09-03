@@ -2,6 +2,7 @@ import math
 from functools import lru_cache
 
 import pygame
+import resource_store as resources
 
 from acts.act_two.presentation.bosses.oracle_death import (
     draw_oracle_death_sprite,
@@ -38,7 +39,7 @@ def _load_head_states():
         ("eye", "oracle_eye_idle.png"),
         ("cast_eye", "oracle_eye_cast.png"),
     ):
-        source = pygame.image.load(
+        source = resources.load_image(
             str(root / filename)
         ).convert_alpha()
         images[name] = pygame.transform.scale(
@@ -71,7 +72,7 @@ def _load_phase_two_heads():
     )
     size = TILE_SIZE * 2
     body = pygame.transform.scale(
-        pygame.image.load(
+        resources.load_image(
             str(root / "head_alone.png")
         ).convert_alpha(),
         (size, size),
@@ -84,7 +85,7 @@ def _load_phase_two_heads():
         ("shockwave", "head_alone_eye_shockwave.png"),
     ):
         eye = pygame.transform.scale(
-            pygame.image.load(
+            resources.load_image(
                 str(root / filename)
             ).convert_alpha(),
             (size, size),

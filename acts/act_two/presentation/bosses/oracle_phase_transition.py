@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 
 import pygame
+import resource_store as resources
 
 from acts.act_two.presentation.bosses.oracle_death import (
     handle_oracle_death_event,
@@ -89,7 +90,7 @@ def _load_transition_sounds():
 
         try:
             sounds.append(
-                pygame.mixer.Sound(str(path))
+                resources.load_sound(str(path))
             )
         except (OSError, pygame.error):
             continue
@@ -162,7 +163,7 @@ def _start_phase_two_music(game_state, scene):
         if pygame.mixer.get_init() is None:
             pygame.mixer.init()
 
-        pygame.mixer.music.load(str(path))
+        resources.load_music(str(path))
         pygame.mixer.music.set_volume(
             min(
                 1.0,
@@ -670,7 +671,7 @@ def handle_oracle_cutscene_event(
 
 @lru_cache(maxsize=1)
 def _dialogue_font():
-    return pygame.font.Font(
+    return resources.load_font(
         str(FONT_ROOT / "IsWasted.ttf"),
         38,
     )

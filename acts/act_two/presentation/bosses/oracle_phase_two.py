@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 
 import pygame
+import resource_store as resources
 
 from acts.act_two.presentation.bosses.oracle_audio import (
     play_oracle_attack_sound,
@@ -1352,7 +1353,7 @@ def _load_phase_two_blackfire():
     frames = []
 
     for index in range(5):
-        source = pygame.image.load(
+        source = resources.load_image(
             str(
                 root
                 / f"blackfire_{index:02d}.png"

@@ -5,6 +5,8 @@ from __future__ import annotations
 import random
 from pathlib import Path
 
+import resource_store as resources
+
 from acts.act_three.tmx_loader import load_tmx_floor
 
 
@@ -26,9 +28,9 @@ DIRECTION_STEP = {
 def _template_paths(directory, spawn_path):
     directory = Path(directory)
     paths = {
-        *directory.glob("room_*.tmx"),
-        *directory.glob("corridor_*.tmx"),
-        *directory.glob("test_room_*.tmx"),
+        *resources.glob_resources(directory, "room_*.tmx"),
+        *resources.glob_resources(directory, "corridor_*.tmx"),
+        *resources.glob_resources(directory, "test_room_*.tmx"),
     }
     return sorted(path for path in paths if path != Path(spawn_path))
 
@@ -225,6 +227,15 @@ def _compose(placements, connections):
 
 
 def generate_tmx_room_floor(spawn_path, template_directory, piece_count=2):
+    project_root = Path(__file__).resolve().parents[2]
+    spawn_path = Path(spawn_path)
+    template_directory = Path(template_directory)
+
+    if not spawn_path.is_absolute():
+        spawn_path = project_root / spawn_path
+    if not template_directory.is_absolute():
+        template_directory = project_root / template_directory
+
     spawn = load_tmx_floor(spawn_path)
     templates = [
         load_tmx_floor(path)
