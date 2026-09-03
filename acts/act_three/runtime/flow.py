@@ -2,12 +2,7 @@ from acts.act_one.settings import (
     PLAYER_STARTING_ATTRIBUTE_RANKS,
     PLAYER_STARTING_STATS,
 )
-from acts.act_three.settings import (
-    DEBUG_PLAYER_DAMAGE_MAX,
-    DEBUG_PLAYER_DAMAGE_MIN,
-    DEBUG_PLAYER_POTION_COUNT,
-    SUBCLASS_BASE_STATS,
-)
+from acts.act_three.settings import SUBCLASS_BASE_STATS
 from acts.act_two.settings import (
     CLASS_BASE_ATTRIBUTE_RANKS,
     CLASS_BASE_STATS,
@@ -24,7 +19,6 @@ from presentation.layout import (
     ACT_THREE_AWAKENING_END_MS,
     ACT_THREE_NARRATIVE_READY_MS,
 )
-from settings import CLASS_ABILITY_KILLS
 
 
 SECOND_ACT_FINAL_FLOOR = max(
@@ -54,12 +48,6 @@ def create_oracle_debug_state(
         PLAYER_STARTING_ATTRIBUTE_RANKS,
         CLASS_BASE_ATTRIBUTE_RANKS[player_class],
     )
-
-    debug_player.health = debug_player.max_health
-    debug_player.damage_min = DEBUG_PLAYER_DAMAGE_MIN
-    debug_player.damage_max = DEBUG_PLAYER_DAMAGE_MAX
-    debug_player.potion_count = DEBUG_PLAYER_POTION_COUNT
-    debug_player.ability_kill_charge = CLASS_ABILITY_KILLS
 
     return debug_state
 

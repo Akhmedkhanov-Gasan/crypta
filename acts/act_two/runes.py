@@ -140,39 +140,62 @@ def interact_with_rune_pedestal(game_state: GameState) -> bool:
 
 
 def select_rune(game_state: GameState, rune_id: str) -> bool:
+    player = game_state.player
     room = game_state.floor.rune_room
     rune = RUNES_BY_ID.get(rune_id)
+    from_console = player.act_two.rune_selection_from_console
+
     if (
-        room is None
-        or room.phase is not RunePuzzlePhase.REWARD_AVAILABLE
-        or not game_state.rune_selection_open
-        or game_state.player.selected_rune_id is not None
+        not game_state.rune_selection_open
         or rune is None
-        or rune.player_class != game_state.player.player_class
+        or rune.player_class != player.player_class
     ):
         return False
 
-    game_state.player.selected_rune_id = rune.id
+    if from_console:
+        if game_state.floor.presentation_act != 2:
+            return False
+    elif (
+        room is None
+        or room.phase is not RunePuzzlePhase.REWARD_AVAILABLE
+        or player.selected_rune_id is not None
+    ):
+        return False
 
-    if rune.id in ("rune_of_resonance", "rune_of_impact"):
-        game_state.player.ability_kill_charge = 0
-        game_state.player.directional_ability_aiming = False
-        game_state.player.act_two.selected_ability_direction = None
+    player.selected_rune_id = rune.id
+
+    if from_console or rune.id in (
+        "rune_of_resonance",
+        "rune_of_impact",
+    ):
+        player.ability_kill_charge = 0
+        player.directional_ability_aiming = False
+        player.act_two.selected_ability_direction = None
         game_state.player_attack_targets = []
 
-    if rune.id == "rune_of_the_veil":
-        game_state.player.ability_kill_charge = 0
-        game_state.player.invisibility_turns = 0
-        game_state.player.veil_triggered_this_turn = False
+    if from_console or rune.id == "rune_of_the_veil":
+        player.ability_kill_charge = 0
+        player.invisibility_turns = 0
+        player.veil_triggered_this_turn = False
 
-    game_state.rune_selection_open = False
-    game_state.rune_selection_pending_id = None
-    room.phase = RunePuzzlePhase.CLAIMED
+    if from_console:
+        actor = "console"
+        origin = (
+            game_state.floor.player_column,
+            game_state.floor.player_row,
+        )
+    else:
+        actor = "rune pedestal"
+        origin = room.pedestal_position
+        room.phase = RunePuzzlePhase.CLAIMED
+
+    cancel_rune_selection(game_state)
+
     game_state.emit(
         GameEvent(
             type=GameEventType.ENVIRONMENT,
-            actor="rune pedestal",
-            origin=room.pedestal_position,
+            actor=actor,
+            origin=origin,
             data={
                 "kind": "rune_selected",
                 "rune_id": rune.id,
@@ -191,6 +214,7 @@ def select_rune(game_state: GameState, rune_id: str) -> bool:
 def cancel_rune_selection(game_state: GameState) -> None:
     game_state.rune_selection_open = False
     game_state.rune_selection_pending_id = None
+    game_state.player.act_two.rune_selection_from_console = False
 
 
 __all__ = [

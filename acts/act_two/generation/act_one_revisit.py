@@ -73,9 +73,7 @@ def _revisit_generation_config(
 
     config["treasury_room"] = False
     config["rune_room"] = False
-    config["trader"] = False
     config["bloody_altar"] = False
-    config["bloody_altar_near_trader"] = False
 
     return config
 

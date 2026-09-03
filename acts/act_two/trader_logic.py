@@ -13,6 +13,7 @@ from game.combat_log import add_log_message
 def interact_with_trader(
     game_state
 ):
+    game_state.player.act_two.trade_from_console = False
     quest = game_state.act_two_quests.trader_seal
 
     if quest.completed:
@@ -85,14 +86,20 @@ def interact_with_trader(
 
 def buy_trader_item(game_state, slot_name):
     quest = game_state.act_two_quests.trader_seal
+    console_trade = (
+        game_state.floor.presentation_act == 2
+        and game_state.trade_screen_open
+        and game_state.player.act_two.trade_from_console
+    )
 
-    if not quest.completed:
+    if not quest.completed and not console_trade:
         add_log_message(
             game_state.combat_log,
             "The trader cannot trade without the guild seal.",
             category="warning",
         )
         return False
+
     item_id = DEFAULT_TRADER_STOCK.get(slot_name)
 
     if item_id is None:

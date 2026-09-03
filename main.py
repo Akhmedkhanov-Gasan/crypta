@@ -1,5 +1,7 @@
 import pygame
 
+from presentation.dev_console import DevConsole
+
 from acts.act_two.presentation.bosses.oracle_death import (
     draw_oracle_death_fx,
     draw_oracle_death_overlay,
@@ -58,7 +60,6 @@ from acts.act_one.settings import (
 from acts.act_two.settings import (
     CLASS_BASE_ATTRIBUTE_RANKS,
     CLASS_STARTING_STATS,
-    ACT_TWO_STARTING_LEVEL,
 )
 from acts.act_two.abilities import (
     ability_charge_required,
@@ -95,7 +96,6 @@ from acts.act_two.consumables import (
     cancel_scroll_aiming,
     enemy_at_scroll_target,
     get_act_two_consumable_slots,
-    grant_act_two_test_scrolls,
     initialize_act_two_consumable_belt,
     is_valid_fire_bomb_target,
     request_fire_bomb_aiming,
@@ -396,16 +396,9 @@ def _complete_class_selection(game_state):
     if chosen_class is None:
         return
 
-    game_state.player.level = ACT_TWO_STARTING_LEVEL
-    game_state.player.experience = 8
-    game_state.player.attribute_points = 1
-
     prepare_act_one_revisit_floors(game_state)
 
     if game_state.oracle_debug_mode:
-        game_state.player.level += 10
-        game_state.player.attribute_points += 10
-        game_state.player.experience = 0
         game_state.floor_index = next(
             index
             for index, config in enumerate(FLOOR_CONFIGS)
@@ -427,8 +420,8 @@ def _complete_class_selection(game_state):
         next_floor = create_floor_state(
             game_state.floor_index,
             spawn_quest_trader=(
-                    game_state.floor_index
-                    == game_state.act_two_trader_floor_index
+                game_state.floor_index
+                == game_state.act_two_trader_floor_index
             ),
         )
         game_state.visited_floors[
@@ -455,7 +448,6 @@ def _complete_class_selection(game_state):
     clear_berserker_crushing_leap(game_state)
     game_state.player.key_count = 0
     initialize_act_two_consumable_belt(game_state.player)
-    grant_act_two_test_scrolls(game_state.player)
     game_state.class_selection_open = False
     game_state.class_transition_started_at = 0
     game_state.class_selection_choice = None
@@ -464,6 +456,7 @@ def _complete_class_selection(game_state):
     game_state.player_attack_targets = []
     cancel_fire_bomb_aiming(game_state)
     cancel_scroll_aiming(game_state)
+
     add_log_message(
         game_state.combat_log,
         f"The hero becomes a {chosen_class}.",
@@ -472,8 +465,7 @@ def _complete_class_selection(game_state):
     add_log_message(
         game_state.combat_log,
         (
-            "Debug: Act II, floor IV. "
-            "+10 levels and +10 attribute points."
+            "Debug: Act II, floor IV."
             if game_state.oracle_debug_mode
             else "Act II begins. The world gains shape."
         ),
@@ -693,6 +685,7 @@ def main():
         pygame.mixer.set_reserved(2)
 
     game_state = startup.load(create_game_state)
+    dev_console = DevConsole()
     act_one_camera = ActOneCamera()
     act_two_camera = ActTwoCamera()
     act_one_world_surface = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
@@ -739,6 +732,23 @@ def main():
 
     while running:
         current_act = game_state.floor.presentation_act
+        console_available = (
+            game_started
+            and not menu_open
+            and game_state.player.health > 0
+            and not game_state.game_won
+            and game_state.floor_transition_started_at < 0
+            and not game_state.class_selection_open
+            and not game_state.upgrade_screen_open
+            and not game_state.subclass_selection_open
+            and not game_state.act_three_transition_open
+            and not game_state.act_three_debug_class_selection_open
+            and not oracle_cutscene_active(game_state.floor)
+        )
+
+        if not console_available:
+            dev_console.close()
+
         if act_two_resonance_cursor_active and (
             current_act != 2
             or menu_open
@@ -766,6 +776,7 @@ def main():
                 current_act == 2
                 and game_started
                 and not menu_open
+                and not dev_console.is_open
                 and game_state.floor_transition_started_at < 0
                 and not game_state.class_selection_open
                 and not game_state.upgrade_screen_open
@@ -865,6 +876,33 @@ def main():
 
         for event in pygame.event.get():
             death_menu_requested = False
+
+            console_toggle_pressed = (
+                event.type == pygame.KEYDOWN
+                and (
+                    event.key == pygame.K_BACKQUOTE
+                    or getattr(event, "scancode", None) == 53
+                )
+            )
+
+            if console_toggle_pressed:
+                if dev_console.is_open:
+                    dev_console.close()
+                elif console_available:
+                    dev_console.open()
+                    act_two_held_movement_keys.clear()
+                    act_two_held_direction = (0, 0)
+                    act_two_next_held_move_at = 0
+                    act_two_auto_move_target = None
+                    act_two_auto_move_floor_index = None
+                    act_two_next_auto_move_at = 0
+                    act_two_dragged_consumable_slot = None
+                    game_state.act_two_journal_dragging = False
+
+                continue
+
+            if dev_console.handle_event(event, game_state):
+                continue
 
             if oracle_cutscene_active(game_state.floor):
                 event_position = getattr(
@@ -4980,11 +5018,11 @@ def main():
                     else "THE DESCENT CONTINUES"
                 ),
             )
+        dev_console.draw(game_surface)
         present_game(screen, game_surface)
         clock.tick(FPS)
 
     pygame.quit()
 
-
 if __name__ == "__main__":
-    main()
+        main()
