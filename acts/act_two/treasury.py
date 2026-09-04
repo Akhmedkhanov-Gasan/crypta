@@ -1,4 +1,5 @@
 from acts.act_two.state import TreasuryTrialPhase
+from acts.act_two.enemy_balance import act_two_enemy_config
 from enemies import ENEMY_TYPES
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
@@ -142,7 +143,7 @@ def _spawn_trial_enemy(
         column=position[0],
         row=position[1],
         name=_next_enemy_name(game_state, enemy_type),
-        config=ENEMY_TYPES[enemy_type],
+        config=act_two_enemy_config(enemy_type),
         belongs_to_boss_group=False,
     )
     enemy.treasury_trial_enemy = True

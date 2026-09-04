@@ -8,6 +8,7 @@ class ActTwoInputRuntimeState:
     held_movement_keys: set[int] = field(default_factory=set)
     held_direction: tuple[int, int] = (0, 0)
     next_held_move_at: int = 0
+    movement_input_locked_until: int = 0
     auto_move_target: tuple[int, int] | None = None
     auto_move_floor_index: int | None = None
     next_auto_move_at: int = 0
@@ -34,3 +35,4 @@ class ActTwoInputRuntimeState:
         self.reset_held_movement()
         self.reset_auto_move()
         self.cancel_consumable_drag()
+        self.movement_input_locked_until = 0

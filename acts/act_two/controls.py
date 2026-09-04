@@ -27,8 +27,7 @@ MOVEMENT_KEYS = frozenset(
         pygame.K_RIGHT,
     )
 )
-MOVE_REPEAT_DELAY_MS = 190
-MOVE_REPEAT_INTERVAL_MS = 175
+AUTO_MOVE_INTERVAL_MS = 175
 
 
 def movement_direction_for_keys(keys):

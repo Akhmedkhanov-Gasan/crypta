@@ -5,7 +5,9 @@ import pygame
 from acts.act_two.presentation.bosses.oracle_statue import (
     draw_oracle_statue,
 )
-
+from acts.act_two.combat_pacing import (
+    ENEMY_ATTACK_DURATION_MS,
+)
 from acts.act_two.presentation.enemy_effects import (
     draw_act_two_dodge_feedback,
     draw_act_two_enemy_death,
@@ -40,7 +42,6 @@ from acts.act_two.presentation.enemies.timing import (
     enemy_movement_duration,
 )
 
-ACT_TWO_ENEMY_ATTACK_FRAME_MS = 240
 _AFTERSHOCK_HIT_FEEDBACK_MS = 520
 
 _STANDARD_ENEMY_TYPES = (
@@ -138,7 +139,7 @@ def _enemy_sprite_name(enemy, current_time):
     attack_elapsed = current_time - attack_started_at
     if (
         attack_started_at > 0
-        and 0 <= attack_elapsed < ACT_TWO_ENEMY_ATTACK_FRAME_MS
+        and 0 <= attack_elapsed < ENEMY_ATTACK_DURATION_MS
     ):
         return (
             "priest_cast"

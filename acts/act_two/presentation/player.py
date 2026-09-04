@@ -14,6 +14,9 @@ from acts.act_two.presentation.movement import (
     sample_rogue_movement,
     sample_warrior_movement,
 )
+from acts.act_two.combat_pacing import (
+    PLAYER_BASIC_ATTACK_DURATION_MS,
+)
 from presentation.layout import (
     ACT_TWO_VIEW_HEIGHT,
     ACT_TWO_VIEW_WIDTH,
@@ -68,14 +71,11 @@ def draw_act_two_wait_indicator(
 
 ACT_TWO_PLAYER_HIT_FEEDBACK_MS = 650
 ACT_TWO_PLAYER_HIT_REACTION_MS = 230
-ACT_TWO_WARRIOR_ATTACK_DURATION_MS = 310
 ACT_TWO_WARRIOR_ATTACK_WINDUP_MS = 70
 ACT_TWO_WARRIOR_ATTACK_STRIKE_MS = 145
 ACT_TWO_WARRIOR_ATTACK_FOLLOW_THROUGH_MS = 235
-ACT_TWO_ROGUE_ATTACK_DURATION_MS = 310
 ACT_TWO_ROGUE_ATTACK_START_MS = 35
 ACT_TWO_ROGUE_ATTACK_END_MS = 215
-ACT_TWO_MAGE_ATTACK_DURATION_MS = 310
 ACT_TWO_MAGE_ATTACK_CAST_START_MS = 45
 ACT_TWO_MAGE_ATTACK_CAST_END_MS = 235
 ACT_TWO_PLAYER_HEAL_EFFECT_MS = 950
@@ -964,7 +964,7 @@ def draw_act_two_player_actor(
         player_class == "warrior"
         and attack_target is not None
         and attack_started_at > 0
-        and 0 <= attack_elapsed < ACT_TWO_WARRIOR_ATTACK_DURATION_MS
+        and 0 <= attack_elapsed < PLAYER_BASIC_ATTACK_DURATION_MS
     ):
         attack_direction = (
             attack_target[0] - column,
@@ -1023,7 +1023,7 @@ def draw_act_two_player_actor(
         player_class == "rogue"
         and attack_target is not None
         and attack_started_at > 0
-        and 0 <= attack_elapsed < ACT_TWO_ROGUE_ATTACK_DURATION_MS
+        and 0 <= attack_elapsed < PLAYER_BASIC_ATTACK_DURATION_MS
     ):
         attack_direction = (
             attack_target[0] - column,
@@ -1048,7 +1048,7 @@ def draw_act_two_player_actor(
                     math.pi
                     * min(
                         1.0,
-                        attack_elapsed / ACT_TWO_ROGUE_ATTACK_DURATION_MS,
+                        attack_elapsed / PLAYER_BASIC_ATTACK_DURATION_MS,
                     )
                 )
             )
@@ -1114,7 +1114,7 @@ def draw_act_two_player_actor(
         player_class == "mage"
         and attack_target is not None
         and attack_started_at > 0
-        and 0 <= attack_elapsed < ACT_TWO_MAGE_ATTACK_DURATION_MS
+        and 0 <= attack_elapsed < PLAYER_BASIC_ATTACK_DURATION_MS
     ):
         attack_direction = (
             attack_target[0] - column,
@@ -1139,7 +1139,7 @@ def draw_act_two_player_actor(
                     math.pi
                     * min(
                         1.0,
-                        attack_elapsed / ACT_TWO_MAGE_ATTACK_DURATION_MS,
+                        attack_elapsed / PLAYER_BASIC_ATTACK_DURATION_MS,
                     )
                 )
             )
