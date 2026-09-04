@@ -167,17 +167,17 @@ def _choose_archer_position(
         ):
             continue
 
-            if archer.movement_bounds is not None:
-                left, top, right, bottom = archer.movement_bounds
-                if not (
-                        left <= position[0] <= right
-                        and top <= position[1] <= bottom
-                ):
-                    continue
+        if archer.movement_bounds is not None:
+            left, top, right, bottom = archer.movement_bounds
+            if not (
+                left <= position[0] <= right
+                and top <= position[1] <= bottom
+            ):
+                continue
 
-            candidates.append(position)
+        candidates.append(position)
 
-        return min(
+    return min(
         candidates,
         key=lambda position: _archer_position_score(
             game_state,

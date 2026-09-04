@@ -21,6 +21,7 @@ from acts.act_two.oracle_gate import update_oracle_gate
 from acts.act_two.presentation.bosses.oracle_audio import (
     update_oracle_fire_audio,
 )
+from acts.act_two.combat_pacing import enemy_reaction_delay
 from acts.act_two.presentation.bosses.oracle_combat import (
     finish_oracle_animation_before_action,
     update_oracle_combat,
@@ -83,13 +84,18 @@ from acts.act_two.settings import (
     CLASS_STARTING_STATS,
 )
 from acts.act_two.controls import (
+    AUTO_MOVE_INTERVAL_MS,
     CONSUMABLE_KEY_ORDER,
     CONSUMABLE_KEYS,
     MOVEMENT_KEYS,
-    MOVE_REPEAT_DELAY_MS,
-    MOVE_REPEAT_INTERVAL_MS,
-    movement_direction_for_keys,
     visual_direction as act_two_visual_direction,
+)
+from acts.act_two.held_movement import (
+    apply_turn_movement_interruptions,
+    begin_held_movement,
+    create_held_movement_event,
+    movement_input_is_locked,
+    release_held_movement,
 )
 from acts.act_two.input_state import ActTwoInputRuntimeState
 from acts.act_two.abilities import (
@@ -538,33 +544,15 @@ def main():
         if game_state.bloody_altar_open:
             act_two_input_state.cancel_auto_move()
             act_two_input_state.cancel_consumable_drag()
-        held_direction = movement_direction_for_keys(
-            act_two_input_state.held_movement_keys
+        held_movement_event = create_held_movement_event(
+            act_two_input_state,
+            continuous_move_time,
+            continuous_movement_available,
+            act_two_combat_is_active(game_state),
         )
-        if continuous_movement_available and held_direction != (0, 0):
-            act_two_input_state.cancel_auto_move()
-            if held_direction != act_two_input_state.held_direction:
-                act_two_input_state.held_direction = held_direction
-                act_two_input_state.next_held_move_at = (
-                    continuous_move_time + MOVE_REPEAT_DELAY_MS
-                )
-            elif (
-                continuous_move_time
-                >= act_two_input_state.next_held_move_at
-            ):
-                pygame.event.post(
-                    pygame.event.Event(
-                        pygame.KEYDOWN,
-                        key=pygame.K_UNKNOWN,
-                        movement_direction=held_direction,
-                        automatic_movement=True,
-                    )
-                )
-                act_two_input_state.next_held_move_at = (
-                    continuous_move_time + MOVE_REPEAT_INTERVAL_MS
-                )
-        else:
-            act_two_input_state.held_direction = (0, 0)
+
+        if held_movement_event is not None:
+            pygame.event.post(held_movement_event)
 
         if (
             continuous_movement_available
@@ -605,7 +593,7 @@ def main():
                     )
                     act_two_input_state.next_auto_move_at = (
                         continuous_move_time
-                        + MOVE_REPEAT_INTERVAL_MS
+                        + AUTO_MOVE_INTERVAL_MS
                     )
                 else:
                     act_two_input_state.cancel_auto_move()
@@ -688,9 +676,10 @@ def main():
                 event.type == pygame.KEYUP
                 and event.key in MOVEMENT_KEYS
             ):
-                act_two_input_state.held_movement_keys.discard(event.key)
-                if not act_two_input_state.held_movement_keys:
-                    act_two_input_state.held_direction = (0, 0)
+                release_held_movement(
+                    act_two_input_state,
+                    event.key,
+                )
                 continue
 
             if (
@@ -1684,6 +1673,17 @@ def main():
                     "automatic_movement",
                     False,
                 )
+                if (
+                    current_act == 2
+                    and event.key in MOVEMENT_KEYS
+                    and not automatic_movement
+                    and movement_input_is_locked(
+                        act_two_input_state,
+                        pygame.time.get_ticks(),
+                    )
+                ):
+                    act_two_input_state.reset_held_movement()
+                    continue
                 if not automatic_movement:
                     act_two_input_state.cancel_auto_move()
                 if event.key == pygame.K_F11:
@@ -2189,14 +2189,10 @@ def main():
                     and event.key in MOVEMENT_KEYS
                     and not automatic_movement
                 ):
-                    act_two_input_state.held_movement_keys.add(event.key)
-                    movement_direction = movement_direction_for_keys(
-                        act_two_input_state.held_movement_keys
-                    )
-                    act_two_input_state.held_direction = movement_direction
-                    act_two_input_state.next_held_move_at = (
-                        pygame.time.get_ticks()
-                        + MOVE_REPEAT_DELAY_MS
+                    movement_direction = begin_held_movement(
+                        act_two_input_state,
+                        event.key,
+                        pygame.time.get_ticks(),
                     )
 
                 if movement_direction is not None:
@@ -2839,13 +2835,12 @@ def main():
                     advance_fire_zones(game_state)
                     update_treasury_trial(game_state)
 
-                    enemy_reaction_delay_ms = (
-                        200
-                        if act_two_combat_is_active(game_state)
-                        else 0
+                    enemy_reaction_delay_ms = enemy_reaction_delay(
+                        game_state,
+                        act_two_combat_is_active(game_state),
                     )
 
-                    player_was_interrupted = present_act_two_turn_events(
+                    present_act_two_turn_events(
                         game_state,
                         action_started_at,
                         enemy_reaction_delay_ms,
@@ -2857,8 +2852,10 @@ def main():
                         game_state.floor,
                     )
 
-                    if player_was_interrupted:
-                        act_two_input_state.cancel_auto_move()
+                    apply_turn_movement_interruptions(
+                        act_two_input_state,
+                        game_state,
+                    )
 
                 if player_acted and current_act != 2:
                     game_state.player.familiar_turn_started_at = (

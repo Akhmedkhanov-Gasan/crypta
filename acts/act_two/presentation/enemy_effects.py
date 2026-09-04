@@ -2,11 +2,11 @@ import math
 
 import pygame
 
+from acts.act_two.combat_pacing import ACT_TWO_HIT_FEEDBACK_MS
 from presentation.layout import MAP_OFFSET_X, MAP_OFFSET_Y
 from settings import TILE_SIZE
 
 
-ACT_TWO_HIT_FEEDBACK_MS = 650
 ACT_TWO_HIT_REACTION_MS = 230
 ACT_TWO_DEATH_IMPACT_MS = 150
 ACT_TWO_DEATH_SETTLE_MS = 430

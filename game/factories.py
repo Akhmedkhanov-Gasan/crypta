@@ -8,6 +8,7 @@ from acts.act_two.state import (
     ActOneRevisitCorpseState,
     ActOneRevisitState,
 )
+from acts.act_two.enemy_balance import act_two_enemy_config
 from acts.player_stats import ATTRIBUTE_NAMES
 from enemies import ENEMY_TYPES
 from generation import generate_floor
@@ -61,6 +62,12 @@ def create_floor_state(
             "config",
             ENEMY_TYPES[enemy_type],
         )
+
+        if FLOOR_CONFIGS[floor_index]["act"] == 2:
+            enemy_config = act_two_enemy_config(
+                enemy_type,
+                enemy_config,
+            )
         enemy_type_counts[enemy_type] = (
             enemy_type_counts.get(enemy_type, 0) + 1
         )
