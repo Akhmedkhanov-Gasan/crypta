@@ -1,0 +1,6 @@
+"""Timing constants shared by transition flow and presentation."""
+
+FLOOR_TRANSITION_CLOSE_END_MS = 420
+FLOOR_TRANSITION_HOLD_END_MS = 570
+FLOOR_TRANSITION_REVEAL_END_MS = 1080
+FLOOR_TRANSITION_END_MS = 1700
