@@ -2,6 +2,16 @@ import pygame
 import resource_store as resources
 from presentation.dev_console import DevConsole
 
+from application.transitions import (
+    advance_floor_transition,
+    complete_class_selection,
+    finish_upgrade_descent,
+)
+from application.resources import load_application_resources
+from application.bootstrap import begin_application_startup
+from application.loading import LoadingCoordinator
+from application.state import ApplicationRuntimeState
+
 from acts.act_two.presentation.bosses.oracle_death import (
     draw_oracle_death_fx,
     draw_oracle_death_overlay,
@@ -44,7 +54,6 @@ from acts.act_two.presentation.bosses.oracle_arena import (
 )
 from acts.act_two.presentation.bosses.oracle_ui import (
     draw_oracle_ui,
-    load_oracle_ui,
 )
 
 from acts.act_one.camera import (
@@ -68,10 +77,21 @@ from acts.act_one.settings import (
     PLAYER_STARTING_ATTRIBUTE_RANKS,
     PLAYER_STARTING_STATS,
 )
+from acts.act_one.controls import POTION_KEYS
 from acts.act_two.settings import (
     CLASS_BASE_ATTRIBUTE_RANKS,
     CLASS_STARTING_STATS,
 )
+from acts.act_two.controls import (
+    CONSUMABLE_KEY_ORDER,
+    CONSUMABLE_KEYS,
+    MOVEMENT_KEYS,
+    MOVE_REPEAT_DELAY_MS,
+    MOVE_REPEAT_INTERVAL_MS,
+    movement_direction_for_keys,
+    visual_direction as act_two_visual_direction,
+)
+from acts.act_two.input_state import ActTwoInputRuntimeState
 from acts.act_two.abilities import (
     ability_charge_required,
     is_valid_mage_arcane_burst_target,
@@ -85,7 +105,6 @@ from acts.act_two.presentation.bloody_altar import (
     draw_bloody_altar_object,
     draw_bloody_altar_window,
     handle_bloody_altar_event,
-    load_bloody_altar_layout,
 )
 from acts.act_two.presentation.death_scene import (
     draw_act_two_death_dialogue_overlay,
@@ -93,7 +112,6 @@ from acts.act_two.presentation.death_scene import (
 from acts.act_two.presentation.death_score import (
     draw_act_two_death_score,
     handle_act_two_death_event,
-    load_act_two_death_score,
 )
 from acts.act_two.crates import break_crate
 from acts.act_two.consumables import (
@@ -107,7 +125,6 @@ from acts.act_two.consumables import (
     cancel_scroll_aiming,
     enemy_at_scroll_target,
     get_act_two_consumable_slots,
-    initialize_act_two_consumable_belt,
     is_valid_fire_bomb_target,
     request_fire_bomb_aiming,
     request_scroll_aiming,
@@ -173,8 +190,6 @@ from acts.act_three.input import (
 from acts.act_three.runtime import (
     advance_act_three_transition,
     choose_subclass,
-    clear_archer_barrage_zone,
-    clear_berserker_crushing_leap,
     create_act_three_debug_transition,
 )
 from acts.act_three.presentation.combat_effects import (
@@ -191,7 +206,6 @@ from game.events import GameEvent, GameEventType
 from game.factories import (
     create_floor_state,
     create_game_state,
-    prepare_act_one_revisit_floors,
 )
 
 from game.progress_store import (
@@ -246,7 +260,6 @@ from rendering import (
     draw_act_two_treasury,
     draw_act_two_trader,
     draw_act_two_trade_window,
-    load_act_two_trade_layout,
     get_act_two_trade_buy_rectangles,
     get_act_two_trade_close_rectangle,
     draw_act_one_pickup_effect,
@@ -282,16 +295,6 @@ from rendering import (
     get_act_two_journal_viewport_rectangle,
     get_act_two_journal_scrollbar_rectangles,
     get_class_selection_rectangles,
-    load_act_one_fonts,
-    load_act_one_gameplay_assets,
-    load_act_three_fonts,
-    load_act_three_gameplay_assets,
-    load_act_three_transition_assets,
-    load_act_two_fonts,
-    load_act_two_sprites,
-    load_act_two_hud_layout,
-    load_menu_assets,
-    load_menu_layouts,
     draw_act_two_sidebar,
     get_act_two_attribute_plus_rectangles,
     get_act_two_attribute_minus_rectangles,
@@ -300,7 +303,6 @@ from rendering import (
     get_rune_selection_confirm_rectangle,
 )
 from presentation.layout import (
-    ASSET_ROOT,
     ACT_THREE_AWAKENING_END_MS,
     AWAKENING_HOLD_END_MS,
     AWAKENING_SECOND_OPEN_START_MS,
@@ -308,22 +310,15 @@ from presentation.layout import (
     ACT_ONE_MUSIC_PATH,
     ACT_ONE_WARDEN_MUSIC_PATH,
     ACT_TWO_MENU_MUSIC_PATH,
-    ACT_ONE_SOUNDS_PATH,
     ACT_TWO_MUSIC_PATH,
-    ACT_TWO_SOUNDS_PATH,
     ACT_THREE_MUSIC_PATH,
     CLASS_SELECTION_CHOICE_END_MS,
 )
 from presentation.audio import (
-    ActOneSoundBank,
-    ActTwoSoundBank,
-    ActTwoTransitionSoundBank,
     warden_has_been_defeated,
     warden_music_should_play,
 )
 from presentation.display import (
-    enable_high_dpi,
-    get_initial_window_size,
     present_game,
     window_to_game_position,
 )
@@ -332,7 +327,6 @@ from presentation.menu import (
     draw_menu,
     handle_menu_event,
 )
-from presentation.startup import StartupScreen
 from settings import (
     BACKGROUND_COLOR,
     ASSASSIN_ULTIMATE_OUTRO_MS,
@@ -393,189 +387,6 @@ FIRST_ACT_THREE_FLOOR = next(
     if floor_config["act"] == 3
 )
 ACT_THREE_MUSIC_ENABLED = False
-_ACT_TWO_CONSUMABLE_KEY_ORDER = (
-    pygame.K_1,
-    pygame.K_2,
-    pygame.K_3,
-    pygame.K_4,
-    pygame.K_5,
-    pygame.K_6,
-)
-_ACT_TWO_CONSUMABLE_KEYS = {
-    key: slot_index
-    for slot_index, key in enumerate(_ACT_TWO_CONSUMABLE_KEY_ORDER)
-}
-
-
-def _complete_class_selection(game_state):
-    chosen_class = game_state.class_selection_choice
-    if chosen_class is None:
-        return
-
-    prepare_act_one_revisit_floors(game_state)
-
-    if game_state.oracle_debug_mode:
-        game_state.floor_index = next(
-            index
-            for index, config in enumerate(FLOOR_CONFIGS)
-            if (
-                config["act"] == 2
-                and config["act_floor"] == 4
-            )
-        )
-    else:
-        game_state.run_stats.completed_floors.add(
-            game_state.floor_index
-        )
-        game_state.floor_index += 1
-
-    next_floor = game_state.visited_floors.get(
-        game_state.floor_index
-    )
-    if next_floor is None:
-        next_floor = create_floor_state(
-            game_state.floor_index,
-            spawn_quest_trader=(
-                game_state.floor_index
-                == game_state.act_two_trader_floor_index
-            ),
-        )
-        game_state.visited_floors[
-            game_state.floor_index
-        ] = next_floor
-
-    game_state.floor = next_floor
-
-    entrance_passage = next(
-        (
-            passage
-            for passage in next_floor.passages
-            if passage.passage_id == "entrance"
-        ),
-        None,
-    )
-    if entrance_passage is not None:
-        (
-            next_floor.player_column,
-            next_floor.player_row,
-        ) = entrance_passage.trigger_position
-
-    clear_archer_barrage_zone(game_state)
-    clear_berserker_crushing_leap(game_state)
-    game_state.player.key_count = 0
-    initialize_act_two_consumable_belt(game_state.player)
-    game_state.class_selection_open = False
-    game_state.class_transition_started_at = 0
-    game_state.class_selection_choice = None
-    game_state.class_selection_preview_ranks.clear()
-    game_state.class_selection_choice_started_at = 0
-    game_state.player_attack_targets = []
-    cancel_fire_bomb_aiming(game_state)
-    cancel_scroll_aiming(game_state)
-
-    add_log_message(
-        game_state.combat_log,
-        f"The hero becomes a {chosen_class}.",
-        category="progress",
-    )
-    add_log_message(
-        game_state.combat_log,
-        (
-            "Debug: Act II, floor IV."
-            if game_state.oracle_debug_mode
-            else "Act II begins. The world gains shape."
-        ),
-        category="progress",
-    )
-
-
-def _finish_upgrade_descent(game_state, started_at):
-    if game_state.floor_transition_started_at >= 0:
-        return
-
-    game_state.floor_transition_started_at = started_at
-    game_state.floor_transition_target_index = (
-        game_state.floor_index + 1
-    )
-    game_state.floor_transition_swapped = False
-    game_state.upgrade_screen_open = False
-    game_state.upgrade_message = ""
-    game_state.player_attack_targets = []
-
-
-def _advance_floor_transition(game_state, current_time):
-    started_at = game_state.floor_transition_started_at
-    target_index = game_state.floor_transition_target_index
-    if started_at < 0 or target_index is None:
-        return
-
-    elapsed = current_time - started_at
-    if (
-        not game_state.floor_transition_swapped
-        and elapsed >= FLOOR_TRANSITION_CLOSE_END_MS
-    ):
-        target_floor = game_state.visited_floors.get(target_index)
-
-        if target_floor is None:
-            target_floor = create_floor_state(
-                target_index,
-                spawn_quest_trader=(
-                        target_index
-                        == game_state.act_two_trader_floor_index
-                ),
-            )
-            game_state.visited_floors[target_index] = target_floor
-
-        if target_index > game_state.floor_index:
-            game_state.run_stats.completed_floors.add(
-                game_state.floor_index
-            )
-
-        game_state.floor_index = target_index
-        game_state.floor = target_floor
-
-        target_passage_id = (
-            game_state.floor_transition_target_passage_id
-        )
-        if target_passage_id is not None:
-            target_passage = next(
-                (
-                    passage
-                    for passage in target_floor.passages
-                    if passage.passage_id == target_passage_id
-                ),
-                None,
-            )
-            if target_passage is None:
-                raise RuntimeError(
-                    "Target passage not found: "
-                    f"{target_passage_id!r} on floor {target_index}"
-                )
-
-            (
-                target_floor.player_column,
-                target_floor.player_row,
-            ) = target_passage.trigger_position
-
-        game_state.floor_transition_swapped = True
-        if FLOOR_CONFIGS[target_index]["act"] != 2:
-            game_state.player.key_count = 0
-        game_state.player_attack_targets = []
-        cancel_fire_bomb_aiming(game_state)
-        cancel_scroll_aiming(game_state)
-        clear_archer_barrage_zone(game_state)
-        clear_berserker_crushing_leap(game_state)
-        add_log_message(
-            game_state.combat_log,
-            f"Hero descends to floor {target_index + 1}.",
-            category="progress",
-        )
-
-    if elapsed >= FLOOR_TRANSITION_END_MS:
-        game_state.floor_transition_started_at = -1
-        game_state.floor_transition_target_index = None
-        game_state.floor_transition_target_passage_id = None
-        game_state.floor_transition_swapped = False
 
 
 def _roman_floor_number(number):
@@ -587,121 +398,37 @@ def _roman_floor_number(number):
     }.get(number, str(number))
 
 
-_ACT_TWO_MOVEMENT_KEYS = frozenset(
-    (
-        pygame.K_w,
-        pygame.K_a,
-        pygame.K_s,
-        pygame.K_d,
-        pygame.K_UP,
-        pygame.K_LEFT,
-        pygame.K_DOWN,
-        pygame.K_RIGHT,
-    )
-)
-_ACT_ONE_POTION_KEYS = {
-    pygame.K_1: 0,
-    pygame.K_KP1: 0,
-    pygame.K_2: 1,
-    pygame.K_KP2: 1,
-    pygame.K_3: 2,
-    pygame.K_KP3: 2,
-    pygame.K_4: 3,
-    pygame.K_KP4: 3,
-    pygame.K_5: 4,
-    pygame.K_KP5: 4,
-    pygame.K_6: 5,
-    pygame.K_KP6: 5,
-}
-_ACT_TWO_MOVE_REPEAT_DELAY_MS = 190
-_ACT_TWO_MOVE_REPEAT_INTERVAL_MS = 175
-
-
-def _movement_direction_for_keys(keys):
-    left = bool(keys & {pygame.K_a, pygame.K_LEFT})
-    right = bool(keys & {pygame.K_d, pygame.K_RIGHT})
-    up = bool(keys & {pygame.K_w, pygame.K_UP})
-    down = bool(keys & {pygame.K_s, pygame.K_DOWN})
-    return int(right) - int(left), int(down) - int(up)
-
-
-def _act_two_visual_direction(direction):
-    column_change, row_change = direction
-    if row_change:
-        return 0, 1 if row_change > 0 else -1
-    if column_change:
-        return 1 if column_change > 0 else -1, 0
-    return 0, 1
-
-
 def main():
-    enable_high_dpi()
-    pygame.init()
+    bootstrap = begin_application_startup(fullscreen=True)
+    window_state = bootstrap.window
+    game_surface = bootstrap.game_surface
+    clock = bootstrap.clock
+    startup = bootstrap.startup
 
-    icon_path = ASSET_ROOT / "ui" / "icon" / "crypta.png"
-    pygame.display.set_icon(resources.load_image(str(icon_path)))
-
-    windowed_size = get_initial_window_size()
-    fullscreen = True
-    screen = pygame.display.set_mode(
-        (0, 0),
-        pygame.FULLSCREEN,
-    )
-    game_surface = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
-    pygame.display.set_caption("Crypta")
-    clock = pygame.time.Clock()
-    startup = StartupScreen(screen, fullscreen=fullscreen)
-    startup.show_logo()
-
-    act_one_fonts = startup.load(load_act_one_fonts)
-    act_one_gameplay_assets = startup.load(load_act_one_gameplay_assets)
+    loaded_resources = load_application_resources(startup)
+    act_one_fonts = loaded_resources.act_one_fonts
+    act_one_gameplay_assets = loaded_resources.act_one_gameplay_assets
     title_font = act_one_fonts["title"]
     font = act_one_fonts["status"]
     log_font = act_one_fonts["text"]
-
-    act_two_fonts = startup.load(load_act_two_fonts)
-    act_two_sprites = startup.load(load_act_two_sprites)
-    act_two_hud_layout = startup.load(load_act_two_hud_layout)
-    oracle_ui_layout, oracle_ui_assets = startup.load(load_oracle_ui)
-    act_two_trade_layout = startup.load(load_act_two_trade_layout)
-    bloody_altar_layout = startup.load(load_bloody_altar_layout)
-    death_score_layout, death_score_assets = startup.load(
-        load_act_two_death_score,
-        act_two_sprites,
-    )
-
-    act_three_fonts = startup.load(load_act_three_fonts)
-    menu_fonts = {
-        1: act_two_fonts,
-        2: act_two_fonts,
-        3: act_two_fonts,
-    }
-    act_three_gameplay_assets = startup.load(
-        load_act_three_gameplay_assets,
-    )
-    act_three_transition_assets = startup.load(
-        load_act_three_transition_assets,
-    )
-
-    menu_assets = startup.load(load_menu_assets)
-    menu_layouts = {
-        1: startup.load(load_menu_layouts, 1),
-        2: startup.load(load_menu_layouts, 2),
-        3: startup.load(load_menu_layouts, 3),
-    }
-
-    act_one_sounds = startup.load(
-        ActOneSoundBank.load,
-        ACT_ONE_SOUNDS_PATH,
-    )
-    act_two_transition_sounds = startup.load(
-        ActTwoTransitionSoundBank.load,
-        ACT_TWO_SOUNDS_PATH,
-    )
-    act_two_sounds = startup.load(
-        ActTwoSoundBank.load,
-        ACT_TWO_SOUNDS_PATH,
-    )
+    act_two_fonts = loaded_resources.act_two_fonts
+    act_two_sprites = loaded_resources.act_two_sprites
+    act_two_hud_layout = loaded_resources.act_two_hud_layout
+    oracle_ui_layout = loaded_resources.oracle_ui_layout
+    oracle_ui_assets = loaded_resources.oracle_ui_assets
+    act_two_trade_layout = loaded_resources.act_two_trade_layout
+    bloody_altar_layout = loaded_resources.bloody_altar_layout
+    death_score_layout = loaded_resources.death_score_layout
+    death_score_assets = loaded_resources.death_score_assets
+    act_three_fonts = loaded_resources.act_three_fonts
+    act_three_gameplay_assets = loaded_resources.act_three_gameplay_assets
+    act_three_transition_assets = loaded_resources.act_three_transition_assets
+    menu_assets = loaded_resources.menu_assets
+    menu_layouts = loaded_resources.menu_layouts
+    menu_fonts = loaded_resources.menu_fonts
+    act_one_sounds = loaded_resources.act_one_sounds
+    act_two_transition_sounds = loaded_resources.act_two_transition_sounds
+    act_two_sounds = loaded_resources.act_two_sounds
     if pygame.mixer.get_init() is not None:
         pygame.mixer.set_reserved(2)
 
@@ -716,21 +443,20 @@ def main():
     menu_progress = startup.load(load_progress)
 
     startup.finish()
-    screen = startup.window
-    if not fullscreen:
-        windowed_size = screen.get_size()
+    window_state.screen = startup.window
+    if not window_state.fullscreen:
+        window_state.windowed_size = window_state.screen.get_size()
     del startup
     clock.tick()
-    progress_tracking_enabled = True
     menu_state = MenuState(menu_theme=menu_progress.menu_theme)
     act_one_sounds.set_master_volume(menu_state.effects_volume)
     act_two_transition_sounds.set_master_volume(
         menu_state.effects_volume
     )
     act_two_sounds.set_master_volume(menu_state.effects_volume)
-    menu_open = True
-    game_started = False
-    menu_started_at = pygame.time.get_ticks()
+    app_runtime = ApplicationRuntimeState(
+        menu_started_at=pygame.time.get_ticks(),
+    )
     act_one_menu_music_playing = False
     act_two_menu_music_playing = False
     act_one_music_attempted = False
@@ -741,63 +467,19 @@ def main():
     act_two_eyes_open_played = False
     act_two_music_attempted = False
     act_three_music_attempted = False
-    running = True
-    act_two_held_movement_keys = set()
-    act_two_held_direction = (0, 0)
-    act_two_next_held_move_at = 0
-    act_two_auto_move_target = None
-    act_two_auto_move_floor_index = None
-    act_two_next_auto_move_at = 0
-    act_two_dragged_consumable_slot = None
-    act_two_resonance_cursor_active = False
-    loading_completed = False
+    act_two_input_state = ActTwoInputRuntimeState()
+    loading = LoadingCoordinator(
+        window_state,
+        clock,
+        act_two_input_state.reset_for_loading,
+    )
 
-    def show_loading(loader=None, *args, **kwargs):
-        nonlocal screen, windowed_size, loading_completed
-        nonlocal act_two_held_direction, act_two_next_held_move_at
-        nonlocal act_two_auto_move_target, act_two_auto_move_floor_index
-        nonlocal act_two_next_auto_move_at, act_two_dragged_consumable_slot
-
-        act_two_held_movement_keys.clear()
-        act_two_held_direction = (0, 0)
-        act_two_next_held_move_at = 0
-        act_two_auto_move_target = None
-        act_two_auto_move_floor_index = None
-        act_two_next_auto_move_at = 0
-        act_two_dragged_consumable_slot = None
-
-        cursor_visible = pygame.mouse.get_visible()
-        pygame.mouse.set_visible(False)
-
-        try:
-            loading = StartupScreen(
-                screen,
-                fullscreen=fullscreen,
-            )
-            result = None
-
-            if loader is not None:
-                result = loading.load(loader, *args, **kwargs)
-
-            loading.finish()
-            screen = loading.window
-
-            if not fullscreen:
-                windowed_size = screen.get_size()
-
-            clock.tick()
-            loading_completed = True
-            return result
-        finally:
-            if pygame.display.get_init():
-                pygame.mouse.set_visible(cursor_visible)
-
-    while running:
-        loading_completed = False
+    while app_runtime.running:
+        loading.completed = False
         current_act = game_state.floor.presentation_act
         console_available = (
-            game_started
-            and not menu_open
+            app_runtime.game_started
+            and not app_runtime.menu_open
             and game_state.player.health > 0
             and not game_state.game_won
             and game_state.floor_transition_started_at < 0
@@ -812,33 +494,31 @@ def main():
         if not console_available:
             dev_console.close()
 
-        if act_two_resonance_cursor_active and (
+        if act_two_input_state.resonance_cursor_active and (
             current_act != 2
-            or menu_open
+            or app_runtime.menu_open
             or game_state.player.health <= 0
             or game_state.floor_transition_started_at >= 0
         ):
             set_warlock_staff_cursor(False)
-            act_two_resonance_cursor_active = False
+            act_two_input_state.resonance_cursor_active = False
 
         if current_act == 2 and game_state.upgrade_screen_open:
-            _finish_upgrade_descent(
+            finish_upgrade_descent(
                 game_state,
                 pygame.time.get_ticks(),
             )
         continuous_move_time = pygame.time.get_ticks()
 
         if oracle_cutscene_active(game_state.floor):
-            act_two_held_movement_keys.clear()
-            act_two_held_direction = (0, 0)
-            act_two_auto_move_target = None
-            act_two_auto_move_floor_index = None
-            act_two_dragged_consumable_slot = None
+            act_two_input_state.reset_held_movement()
+            act_two_input_state.cancel_auto_move()
+            act_two_input_state.cancel_consumable_drag()
 
         continuous_movement_available = (
                 current_act == 2
-                and game_started
-                and not menu_open
+                and app_runtime.game_started
+                and not app_runtime.menu_open
                 and not dev_console.is_open
                 and game_state.floor_transition_started_at < 0
                 and not game_state.class_selection_open
@@ -853,25 +533,25 @@ def main():
                 and not game_state.trade_screen_open
         )
         if game_state.rune_selection_open:
-            act_two_auto_move_target = None
-            act_two_auto_move_floor_index = None
-            act_two_dragged_consumable_slot = None
+            act_two_input_state.cancel_auto_move()
+            act_two_input_state.cancel_consumable_drag()
         if game_state.bloody_altar_open:
-            act_two_auto_move_target = None
-            act_two_auto_move_floor_index = None
-            act_two_dragged_consumable_slot = None
-        held_direction = _movement_direction_for_keys(
-            act_two_held_movement_keys
+            act_two_input_state.cancel_auto_move()
+            act_two_input_state.cancel_consumable_drag()
+        held_direction = movement_direction_for_keys(
+            act_two_input_state.held_movement_keys
         )
         if continuous_movement_available and held_direction != (0, 0):
-            act_two_auto_move_target = None
-            act_two_auto_move_floor_index = None
-            if held_direction != act_two_held_direction:
-                act_two_held_direction = held_direction
-                act_two_next_held_move_at = (
-                    continuous_move_time + _ACT_TWO_MOVE_REPEAT_DELAY_MS
+            act_two_input_state.cancel_auto_move()
+            if held_direction != act_two_input_state.held_direction:
+                act_two_input_state.held_direction = held_direction
+                act_two_input_state.next_held_move_at = (
+                    continuous_move_time + MOVE_REPEAT_DELAY_MS
                 )
-            elif continuous_move_time >= act_two_next_held_move_at:
+            elif (
+                continuous_move_time
+                >= act_two_input_state.next_held_move_at
+            ):
                 pygame.event.post(
                     pygame.event.Event(
                         pygame.KEYDOWN,
@@ -880,31 +560,34 @@ def main():
                         automatic_movement=True,
                     )
                 )
-                act_two_next_held_move_at = (
-                    continuous_move_time + _ACT_TWO_MOVE_REPEAT_INTERVAL_MS
+                act_two_input_state.next_held_move_at = (
+                    continuous_move_time + MOVE_REPEAT_INTERVAL_MS
                 )
         else:
-            act_two_held_direction = (0, 0)
+            act_two_input_state.held_direction = (0, 0)
 
         if (
             continuous_movement_available
-            and not act_two_held_movement_keys
-            and act_two_auto_move_target is not None
+            and not act_two_input_state.held_movement_keys
+            and act_two_input_state.auto_move_target is not None
         ):
             if (
-                act_two_auto_move_floor_index != game_state.floor_index
+                act_two_input_state.auto_move_floor_index
+                != game_state.floor_index
                 or (
                     game_state.floor.player_column,
                     game_state.floor.player_row,
                 )
-                == act_two_auto_move_target
+                == act_two_input_state.auto_move_target
             ):
-                act_two_auto_move_target = None
-                act_two_auto_move_floor_index = None
-            elif continuous_move_time >= act_two_next_auto_move_at:
+                act_two_input_state.cancel_auto_move()
+            elif (
+                continuous_move_time
+                >= act_two_input_state.next_auto_move_at
+            ):
                 automatic_path = find_act_two_path(
                     game_state.floor,
-                    act_two_auto_move_target,
+                    act_two_input_state.auto_move_target,
                 )
                 if automatic_path:
                     next_position = automatic_path[0]
@@ -920,16 +603,15 @@ def main():
                             automatic_movement=True,
                         )
                     )
-                    act_two_next_auto_move_at = (
+                    act_two_input_state.next_auto_move_at = (
                         continuous_move_time
-                        + _ACT_TWO_MOVE_REPEAT_INTERVAL_MS
+                        + MOVE_REPEAT_INTERVAL_MS
                     )
                 else:
-                    act_two_auto_move_target = None
-                    act_two_auto_move_floor_index = None
+                    act_two_input_state.cancel_auto_move()
         menu_visual_theme = (
             FLOOR_CONFIGS[game_state.floor_index]["act"]
-            if game_started
+            if app_runtime.game_started
             else menu_state.menu_theme
         )
 
@@ -938,9 +620,9 @@ def main():
         ]
 
         for event in pygame.event.get():
-            if loading_completed:
+            if loading.completed:
                 if event.type == pygame.QUIT:
-                    running = False
+                    app_runtime.request_quit()
                 continue
 
             death_menu_requested = False
@@ -960,13 +642,9 @@ def main():
                     dev_console.close()
                 elif console_available:
                     dev_console.open()
-                    act_two_held_movement_keys.clear()
-                    act_two_held_direction = (0, 0)
-                    act_two_next_held_move_at = 0
-                    act_two_auto_move_target = None
-                    act_two_auto_move_floor_index = None
-                    act_two_next_auto_move_at = 0
-                    act_two_dragged_consumable_slot = None
+                    act_two_input_state.reset_held_movement()
+                    act_two_input_state.reset_auto_move()
+                    act_two_input_state.cancel_consumable_drag()
                     game_state.act_two_journal_dragging = False
 
                 continue
@@ -985,19 +663,17 @@ def main():
                     event,
                     game_surface,
                     window_to_game_position(
-                        screen,
+                        window_state.screen,
                         event_position,
                     ),
                 )
 
-                act_two_held_movement_keys.clear()
-                act_two_held_direction = (0, 0)
-                act_two_auto_move_target = None
-                act_two_auto_move_floor_index = None
-                act_two_dragged_consumable_slot = None
+                act_two_input_state.reset_held_movement()
+                act_two_input_state.cancel_auto_move()
+                act_two_input_state.cancel_consumable_drag()
 
                 if oracle_action == "menu":
-                    menu_open = True
+                    app_runtime.menu_open = True
                     death_menu_requested = True
                 elif event.type not in (
                     pygame.QUIT,
@@ -1006,20 +682,19 @@ def main():
                     continue
 
             if event.type == pygame.WINDOWFOCUSLOST:
-                act_two_held_movement_keys.clear()
-                act_two_held_direction = (0, 0)
+                act_two_input_state.reset_held_movement()
                 continue
             if (
                 event.type == pygame.KEYUP
-                and event.key in _ACT_TWO_MOVEMENT_KEYS
+                and event.key in MOVEMENT_KEYS
             ):
-                act_two_held_movement_keys.discard(event.key)
-                if not act_two_held_movement_keys:
-                    act_two_held_direction = (0, 0)
+                act_two_input_state.held_movement_keys.discard(event.key)
+                if not act_two_input_state.held_movement_keys:
+                    act_two_input_state.held_direction = (0, 0)
                 continue
 
             if (
-                not menu_open
+                not app_runtime.menu_open
                 and current_act == 1
                 and game_state.player.health <= 0
                 and event.type not in (
@@ -1037,7 +712,7 @@ def main():
                     event,
                     game_state,
                     window_to_game_position(
-                        screen,
+                        window_state.screen,
                         event_position,
                     ),
                     pygame.time.get_ticks(),
@@ -1047,17 +722,15 @@ def main():
                 if death_action != "menu":
                     continue
 
-                act_two_held_movement_keys.clear()
-                act_two_held_direction = (0, 0)
-                act_two_auto_move_target = None
-                act_two_auto_move_floor_index = None
-                act_two_dragged_consumable_slot = None
+                act_two_input_state.reset_held_movement()
+                act_two_input_state.cancel_auto_move()
+                act_two_input_state.cancel_consumable_drag()
 
-                menu_open = True
+                app_runtime.menu_open = True
                 death_menu_requested = True
 
             if (
-                    not menu_open
+                    not app_runtime.menu_open
                     and current_act == 2
                     and game_state.player.health <= 0
                     and event.type not in (
@@ -1076,7 +749,7 @@ def main():
                     game_state,
                     death_score_layout,
                     window_to_game_position(
-                        screen,
+                        window_state.screen,
                         event_position,
                     ),
                     pygame.time.get_ticks(),
@@ -1085,26 +758,21 @@ def main():
                 if death_action != "menu":
                     continue
 
-                act_two_held_movement_keys.clear()
-                act_two_held_direction = (0, 0)
-                act_two_auto_move_target = None
-                act_two_auto_move_floor_index = None
-                act_two_dragged_consumable_slot = None
+                act_two_input_state.reset_held_movement()
+                act_two_input_state.cancel_auto_move()
+                act_two_input_state.cancel_consumable_drag()
 
-                menu_open = True
+                app_runtime.menu_open = True
                 death_menu_requested = True
             if event.type == pygame.QUIT:
-                running = False
-            elif event.type == pygame.VIDEORESIZE and not fullscreen:
-                windowed_size = (
-                    max(GAME_WIDTH, event.w),
-                    max(GAME_HEIGHT, event.h),
+                app_runtime.request_quit()
+            elif event.type == pygame.VIDEORESIZE and not window_state.fullscreen:
+                window_state.resize_windowed(
+                    event.w,
+                    event.h,
+                    (GAME_WIDTH, GAME_HEIGHT),
                 )
-                screen = pygame.display.set_mode(
-                    windowed_size,
-                    pygame.RESIZABLE,
-                )
-            elif menu_open:
+            elif app_runtime.menu_open:
                 event_position = getattr(
                     event,
                     "pos",
@@ -1117,11 +785,11 @@ def main():
                         event,
                         menu_state,
                         window_to_game_position(
-                            screen,
+                            window_state.screen,
                             event_position,
                         ),
-                        game_started,
-                        fullscreen,
+                        app_runtime.game_started,
+                        window_state.fullscreen,
                         menu_progress.highest_act_reached,
                         menu_layout=active_menu_layouts[
                             "confirm"
@@ -1143,11 +811,10 @@ def main():
                     act_one_menu_music_playing = False
                     act_two_menu_music_playing = False
 
-                    if not game_started:
-                        show_loading()
+                    if not app_runtime.game_started:
+                        loading.run()
 
-                    menu_open = False
-                    game_started = True
+                    app_runtime.start_game()
                 elif menu_action == "abandon_run":
                     if (
                         (
@@ -1176,33 +843,22 @@ def main():
                     act_three_music_attempted = False
 
                     if death_menu_requested:
-                        game_state = show_loading(create_game_state)
+                        game_state = loading.run(create_game_state)
                     else:
                         game_state = create_game_state()
 
-                    progress_tracking_enabled = True
-                    game_started = False
+                    app_runtime.progress_tracking_enabled = True
+                    app_runtime.game_started = False
                     menu_state.page = "main"
                     menu_state.selected_index = 0
-                    menu_started_at = pygame.time.get_ticks()
+                    app_runtime.menu_started_at = pygame.time.get_ticks()
                     pygame.mouse.set_cursor(
                         pygame.SYSTEM_CURSOR_ARROW
                     )
                 elif menu_action == "quit":
-                    running = False
+                    app_runtime.request_quit()
                 elif menu_action == "toggle_fullscreen":
-                    if fullscreen:
-                        screen = pygame.display.set_mode(
-                            windowed_size,
-                            pygame.RESIZABLE,
-                        )
-                    else:
-                        windowed_size = screen.get_size()
-                        screen = pygame.display.set_mode(
-                            (0, 0),
-                            pygame.FULLSCREEN,
-                        )
-                    fullscreen = not fullscreen
+                    window_state.toggle_fullscreen()
                 elif menu_action == "act_one_volume_changed":
                     act_one_sounds.set_master_volume(
                         menu_state.effects_volume
@@ -1247,10 +903,9 @@ def main():
                     event,
                     game_state,
                     bloody_altar_layout,
-                    window_to_game_position(screen, event_position),
+                    window_to_game_position(window_state.screen, event_position),
                 )
-                act_two_held_movement_keys.clear()
-                act_two_held_direction = (0, 0)
+                act_two_input_state.reset_held_movement()
                 continue
             elif game_state.trade_screen_open:
                 if (
@@ -1258,14 +913,13 @@ def main():
                         and event.key == pygame.K_ESCAPE
                 ):
                     game_state.trade_screen_open = False
-                    act_two_held_movement_keys.clear()
-                    act_two_held_direction = (0, 0)
+                    act_two_input_state.reset_held_movement()
                 elif (
                         event.type == pygame.MOUSEBUTTONDOWN
                         and event.button == 1
                 ):
                     game_mouse_position = window_to_game_position(
-                        screen,
+                        window_state.screen,
                         event.pos,
                     )
 
@@ -1280,8 +934,7 @@ def main():
                                 game_mouse_position
                         ):
                             game_state.trade_screen_open = False
-                            act_two_held_movement_keys.clear()
-                            act_two_held_direction = (0, 0)
+                            act_two_input_state.reset_held_movement()
                         else:
                             clicked_slot = next(
                                 (
@@ -1344,7 +997,7 @@ def main():
                     and event.button == 1
                 ):
                     game_mouse_position = window_to_game_position(
-                        screen,
+                        window_state.screen,
                         event.pos,
                     )
                     if game_mouse_position is not None:
@@ -1392,7 +1045,7 @@ def main():
                     and not game_state.upgrade_screen_open
                     and (
                             game_mouse_position := window_to_game_position(
-                                screen,
+                                window_state.screen,
                                 event.pos,
                             )
                     )
@@ -1427,7 +1080,7 @@ def main():
                     and not game_state.upgrade_screen_open
                     and (
                             game_mouse_position := window_to_game_position(
-                                screen,
+                                window_state.screen,
                                 event.pos,
                             )
                     )
@@ -1462,7 +1115,7 @@ def main():
                     and not game_state.upgrade_screen_open
                     and (
                             game_mouse_position := window_to_game_position(
-                                screen,
+                                window_state.screen,
                                 event.pos,
                             )
                     )
@@ -1492,12 +1145,12 @@ def main():
                 event.type == pygame.MOUSEBUTTONUP
                 and event.button == 1
                 and current_act == 2
-                and act_two_dragged_consumable_slot is not None
+                and act_two_input_state.dragged_consumable_slot is not None
             ):
-                dragged_slot = act_two_dragged_consumable_slot
-                act_two_dragged_consumable_slot = None
+                dragged_slot = act_two_input_state.dragged_consumable_slot
+                act_two_input_state.cancel_consumable_drag()
                 game_mouse_position = window_to_game_position(
-                    screen,
+                    window_state.screen,
                     event.pos,
                 )
                 released_belt_slot = None
@@ -1519,7 +1172,7 @@ def main():
                         pygame.event.post(
                             pygame.event.Event(
                                 pygame.KEYDOWN,
-                                key=_ACT_TWO_CONSUMABLE_KEY_ORDER[
+                                key=CONSUMABLE_KEY_ORDER[
                                     dragged_slot
                                 ],
                             )
@@ -1560,7 +1213,7 @@ def main():
                 and not game_state.upgrade_screen_open
                 and (
                     game_mouse_position := window_to_game_position(
-                        screen,
+                        window_state.screen,
                         event.pos,
                     )
                 )
@@ -1609,7 +1262,7 @@ def main():
             elif handle_act_three_pointer_event(
                 event,
                 game_state,
-                screen,
+                window_state.screen,
                 window_to_game_position,
             ):
                 continue
@@ -1619,7 +1272,7 @@ def main():
                 and game_state.upgrade_screen_open
             ):
                 game_mouse_position = window_to_game_position(
-                    screen,
+                    window_state.screen,
                     event.pos,
                 )
                 if game_mouse_position is None:
@@ -1706,7 +1359,7 @@ def main():
                     continue
 
                 game_mouse_position = window_to_game_position(
-                    screen,
+                    window_state.screen,
                     event.pos,
                 )
 
@@ -1756,7 +1409,7 @@ def main():
                 and game_state.act_two_journal_open
                 and (
                     game_mouse_position := window_to_game_position(
-                        screen,
+                        window_state.screen,
                         pygame.mouse.get_pos(),
                     )
                 )
@@ -1781,7 +1434,7 @@ def main():
                 and game_state.act_two_journal_open
                 and (
                     game_mouse_position := window_to_game_position(
-                        screen,
+                        window_state.screen,
                         event.pos,
                     )
                 )
@@ -1815,7 +1468,7 @@ def main():
                 and game_state.act_two_journal_dragging
                 and (
                     game_mouse_position := window_to_game_position(
-                        screen,
+                        window_state.screen,
                         event.pos,
                     )
                 )
@@ -1874,7 +1527,7 @@ def main():
                 and game_state.act_two_journal_open
                 and (
                     game_mouse_position := window_to_game_position(
-                        screen,
+                        window_state.screen,
                         event.pos,
                     )
                 )
@@ -1895,7 +1548,7 @@ def main():
                 and game_state.player.health > 0
             ):
                 game_mouse_position = window_to_game_position(
-                    screen,
+                    window_state.screen,
                     event.pos,
                 )
                 belt_slot_clicked = False
@@ -1915,7 +1568,9 @@ def main():
                         ):
                             cancel_fire_bomb_aiming(game_state)
                             cancel_scroll_aiming(game_state)
-                            act_two_dragged_consumable_slot = slot_index
+                            act_two_input_state.dragged_consumable_slot = (
+                                slot_index
+                            )
                         belt_slot_clicked = True
                         break
                 if belt_slot_clicked:
@@ -1988,10 +1643,8 @@ def main():
                         for enemy in game_state.floor.enemies
                     )
                 ):
-                    act_two_auto_move_target = None
-                    act_two_auto_move_floor_index = None
-                    act_two_held_movement_keys.clear()
-                    act_two_held_direction = (0, 0)
+                    act_two_input_state.cancel_auto_move()
+                    act_two_input_state.reset_held_movement()
 
                     if get_mage_resonance_target(game_state, target_cell) is not None:
                         pygame.event.post(
@@ -2018,14 +1671,13 @@ def main():
                         target_cell,
                     )
                     if automatic_path:
-                        act_two_auto_move_target = target_cell
-                        act_two_auto_move_floor_index = (
+                        act_two_input_state.auto_move_target = target_cell
+                        act_two_input_state.auto_move_floor_index = (
                             game_state.floor_index
                         )
-                        act_two_next_auto_move_at = 0
+                        act_two_input_state.next_auto_move_at = 0
                     else:
-                        act_two_auto_move_target = None
-                        act_two_auto_move_floor_index = None
+                        act_two_input_state.cancel_auto_move()
             elif event.type == pygame.KEYDOWN:
                 automatic_movement = getattr(
                     event,
@@ -2033,22 +1685,9 @@ def main():
                     False,
                 )
                 if not automatic_movement:
-                    act_two_auto_move_target = None
-                    act_two_auto_move_floor_index = None
+                    act_two_input_state.cancel_auto_move()
                 if event.key == pygame.K_F11:
-                    if fullscreen:
-                        screen = pygame.display.set_mode(
-                            windowed_size,
-                            pygame.RESIZABLE,
-                        )
-                    else:
-                        windowed_size = screen.get_size()
-                        screen = pygame.display.set_mode(
-                            (0, 0),
-                            pygame.FULLSCREEN,
-                        )
-
-                    fullscreen = not fullscreen
+                    window_state.toggle_fullscreen()
                     continue
 
                 if current_act == 2 and event.key in (
@@ -2083,7 +1722,7 @@ def main():
                     ):
                         pygame.mixer.music.stop()
                     act_three_music_attempted = False
-                    progress_tracking_enabled = False
+                    app_runtime.progress_tracking_enabled = False
                     game_state = create_game_state(
                         floor_index=FIRST_ACT_FINAL_FLOOR,
                         opening_message=(
@@ -2103,7 +1742,7 @@ def main():
                     ):
                         pygame.mixer.music.stop()
                     act_three_music_attempted = False
-                    progress_tracking_enabled = False
+                    app_runtime.progress_tracking_enabled = False
                     game_state = create_game_state(
                         floor_index=FIRST_ACT_FINAL_FLOOR,
                         opening_message="Debug jump: choose an Act II class.",
@@ -2123,9 +1762,8 @@ def main():
                         pygame.mixer.music.stop()
 
                     act_three_music_attempted = False
-                    progress_tracking_enabled = False
-                    act_two_auto_move_target = None
-                    act_two_auto_move_floor_index = None
+                    app_runtime.progress_tracking_enabled = False
+                    act_two_input_state.cancel_auto_move()
 
                     game_state = create_game_state(
                         floor_index=FIRST_ACT_FINAL_FLOOR,
@@ -2218,7 +1856,7 @@ def main():
                         game_state.player.subclass is None
                         and subclass is not None
                     ):
-                        show_loading(
+                        loading.run(
                             choose_subclass,
                             game_state,
                             subclass,
@@ -2233,8 +1871,8 @@ def main():
                         ):
                             pygame.mixer.music.stop()
                         act_three_music_attempted = False
-                        game_state = show_loading(create_game_state)
-                        progress_tracking_enabled = True
+                        game_state = loading.run(create_game_state)
+                        app_runtime.progress_tracking_enabled = True
                     continue
 
                 if game_state.class_selection_open:
@@ -2401,7 +2039,7 @@ def main():
                                 current_upgrade_act == 1
                                 and game_state.act_one_upgrades_remaining <= 0
                             ):
-                                _finish_upgrade_descent(
+                                finish_upgrade_descent(
                                     game_state,
                                     pygame.time.get_ticks(),
                                 )
@@ -2416,7 +2054,7 @@ def main():
                             current_upgrade_act != 1
                             or game_state.act_one_upgrades_remaining <= 0
                     ):
-                        _finish_upgrade_descent(
+                        finish_upgrade_descent(
                             game_state,
                             pygame.time.get_ticks(),
                         )
@@ -2424,8 +2062,8 @@ def main():
                     continue
 
                 if current_act == 2 and (
-                    event.key in _ACT_TWO_MOVEMENT_KEYS
-                    or event.key in _ACT_TWO_CONSUMABLE_KEYS
+                    event.key in MOVEMENT_KEYS
+                    or event.key in CONSUMABLE_KEYS
                     or event.key in (
                         pygame.K_UNKNOWN,
                         pygame.K_SPACE,
@@ -2441,14 +2079,11 @@ def main():
                     )
 
                     if oracle_interrupted_player:
-                        act_two_auto_move_target = None
-                        act_two_auto_move_floor_index = None
+                        act_two_input_state.cancel_auto_move()
 
                     if game_state.player.health <= 0:
-                        act_two_held_movement_keys.clear()
-                        act_two_held_direction = (0, 0)
-                        act_two_auto_move_target = None
-                        act_two_auto_move_floor_index = None
+                        act_two_input_state.reset_held_movement()
+                        act_two_input_state.cancel_auto_move()
                         continue
 
                 game_state.clear_events()
@@ -2490,12 +2125,12 @@ def main():
                     0,
                 )
                 consumable_slot = (
-                    _ACT_TWO_CONSUMABLE_KEYS.get(event.key)
+                    CONSUMABLE_KEYS.get(event.key)
                     if current_act == 2
                     else None
                 )
                 act_one_potion_slot = (
-                    _ACT_ONE_POTION_KEYS.get(event.key)
+                    POTION_KEYS.get(event.key)
                     if current_act == 1
                     else None
                 )
@@ -2519,8 +2154,7 @@ def main():
                         cancel_fire_bomb_aiming(game_state)
                     continue
                 if selected_consumable == FIRE_BOMB:
-                    act_two_held_movement_keys.clear()
-                    act_two_held_direction = (0, 0)
+                    act_two_input_state.reset_held_movement()
                     request_fire_bomb_aiming(
                         game_state,
                         consumable_slot,
@@ -2539,8 +2173,7 @@ def main():
                         cancel_scroll_aiming(game_state)
                     continue
                 if selected_consumable in TARGETED_SCROLLS:
-                    act_two_held_movement_keys.clear()
-                    act_two_held_direction = (0, 0)
+                    act_two_input_state.reset_held_movement()
                     request_scroll_aiming(game_state, consumable_slot)
                     continue
 
@@ -2553,23 +2186,23 @@ def main():
                 )
                 if (
                     current_act == 2
-                    and event.key in _ACT_TWO_MOVEMENT_KEYS
+                    and event.key in MOVEMENT_KEYS
                     and not automatic_movement
                 ):
-                    act_two_held_movement_keys.add(event.key)
-                    movement_direction = _movement_direction_for_keys(
-                        act_two_held_movement_keys
+                    act_two_input_state.held_movement_keys.add(event.key)
+                    movement_direction = movement_direction_for_keys(
+                        act_two_input_state.held_movement_keys
                     )
-                    act_two_held_direction = movement_direction
-                    act_two_next_held_move_at = (
+                    act_two_input_state.held_direction = movement_direction
+                    act_two_input_state.next_held_move_at = (
                         pygame.time.get_ticks()
-                        + _ACT_TWO_MOVE_REPEAT_DELAY_MS
+                        + MOVE_REPEAT_DELAY_MS
                     )
 
                 if movement_direction is not None:
                     column_change, row_change = movement_direction
                     game_state.player.facing_direction = (
-                        _act_two_visual_direction(movement_direction)
+                        act_two_visual_direction(movement_direction)
                     )
                 elif event.key in (pygame.K_w, pygame.K_UP):
                     row_change = -1
@@ -2653,12 +2286,10 @@ def main():
                     continue
 
                 if event.key == pygame.K_ESCAPE:
-                    act_two_held_movement_keys.clear()
-                    act_two_held_direction = (0, 0)
-                    menu_open = True
+                    act_two_input_state.reset_held_movement()
+                    app_runtime.open_menu(pygame.time.get_ticks())
                     menu_state.page = "main"
                     menu_state.selected_index = 0
-                    menu_started_at = pygame.time.get_ticks()
                     continue
 
                 player_position_before_action = (
@@ -3078,7 +2709,7 @@ def main():
                         game_state.player.act_two_movement_started_at = 0
                         game_state.player.act_two_movement_origin = None
                         game_state.player.act_two_facing_direction = (
-                            _act_two_visual_direction(attempted_direction)
+                            act_two_visual_direction(attempted_direction)
                         )
                         game_state.player.act_two_blocked_movement_started_at = (
                             movement_attempt_started_at
@@ -3092,8 +2723,7 @@ def main():
                         and game_state.player.selected_rune_id
                         == "rune_of_resonance"
                     ):
-                        act_two_held_movement_keys.clear()
-                        act_two_held_direction = (0, 0)
+                        act_two_input_state.reset_held_movement()
                         add_log_message(
                             game_state.combat_log,
                             "Rune of Resonance attacks by clicking an enemy.",
@@ -3140,12 +2770,10 @@ def main():
                                 trader_sound
                             )
 
-                        act_two_held_movement_keys.clear()
-                        act_two_held_direction = (0, 0)
+                        act_two_input_state.reset_held_movement()
                     elif target_bloody_altar:
                         interact_with_bloody_altar(game_state)
-                        act_two_held_movement_keys.clear()
-                        act_two_held_direction = (0, 0)
+                        act_two_input_state.reset_held_movement()
                     elif target_chest:
                         player_acted = open_chest(
                             game_state,
@@ -3230,8 +2858,7 @@ def main():
                     )
 
                     if player_was_interrupted:
-                        act_two_auto_move_target = None
-                        act_two_auto_move_floor_index = None
+                        act_two_input_state.cancel_auto_move()
 
                 if player_acted and current_act != 2:
                     game_state.player.familiar_turn_started_at = (
@@ -3384,7 +3011,7 @@ def main():
                         )
                         if hero_move_event.destination is not None:
                             game_state.player.act_two_facing_direction = (
-                                _act_two_visual_direction(
+                                act_two_visual_direction(
                                     (
                                         hero_move_event.destination[0]
                                         - hero_move_event.origin[0],
@@ -3473,14 +3100,13 @@ def main():
                             in (GameEventType.HIT, GameEventType.DODGE)
                             for emitted_event in game_state.events
                         ):
-                            act_two_auto_move_target = None
-                            act_two_auto_move_floor_index = None
+                            act_two_input_state.cancel_auto_move()
                         act_two_sounds.play_events(
                             game_state.events,
                             game_state.player.player_class,
                             game_state.floor,
                         )
-        if loading_completed:
+        if loading.completed:
             continue
 
         if (
@@ -3488,25 +3114,25 @@ def main():
             and game_state.player.attribute_points <= 0
             and FLOOR_CONFIGS[game_state.floor_index]["act"] != 1
         ):
-            _finish_upgrade_descent(
+            finish_upgrade_descent(
                 game_state,
                 pygame.time.get_ticks(),
             )
 
         current_time = pygame.time.get_ticks()
 
-        if game_started and not menu_open:
+        if app_runtime.game_started and not app_runtime.menu_open:
             begin_act_one_death(game_state, current_time)
 
-        _advance_floor_transition(game_state, current_time)
+        advance_floor_transition(game_state, current_time)
 
         update_oracle_fire_audio(
             game_state,
             act_two_sounds,
             enabled=(
-                running
-                and game_started
-                and not menu_open
+                app_runtime.running
+                and app_runtime.game_started
+                and not app_runtime.menu_open
                 and not game_state.class_selection_open
                 and game_state.floor_transition_started_at < 0
             ),
@@ -3556,12 +3182,12 @@ def main():
                 act_two_eyes_open_played = True
                 act_two_transition_sounds.play("eyes_open")
 
-        if menu_open:
+        if app_runtime.menu_open:
             should_play_act_one_menu_music = (
-                not game_started and menu_visual_theme == 1
+                not app_runtime.game_started and menu_visual_theme == 1
             )
             should_play_act_two_menu_music = (
-                not game_started and menu_visual_theme == 2
+                not app_runtime.game_started and menu_visual_theme == 2
             )
             if (
                 should_play_act_one_menu_music
@@ -3621,9 +3247,9 @@ def main():
                 game_surface,
                 menu_fonts[menu_visual_theme],
                 menu_state,
-                current_time - menu_started_at,
-                game_started,
-                fullscreen,
+                current_time - app_runtime.menu_started_at,
+                app_runtime.game_started,
+                window_state.fullscreen,
                 menu_assets,
                 menu_visual_theme,
                 menu_progress.highest_act_reached,
@@ -3634,7 +3260,7 @@ def main():
                 ],
                 menu_layouts=menu_layouts,
             )
-            present_game(screen, game_surface)
+            present_game(window_state.screen, game_surface)
             clock.tick(FPS)
             continue
 
@@ -3649,11 +3275,11 @@ def main():
                 death_score_layout,
                 death_score_assets,
                 window_to_game_position(
-                    screen,
+                    window_state.screen,
                     pygame.mouse.get_pos(),
                 ),
             )
-            present_game(screen, game_surface)
+            present_game(window_state.screen, game_surface)
             clock.tick(FPS)
             continue
 
@@ -3742,8 +3368,8 @@ def main():
             - game_state.class_selection_choice_started_at
             >= CLASS_SELECTION_CHOICE_END_MS
         ):
-            show_loading(
-                _complete_class_selection,
+            loading.run(
+                complete_class_selection,
                 game_state,
             )
             continue
@@ -3891,13 +3517,12 @@ def main():
                 )
 
             if oracle_interrupted_player:
-                act_two_auto_move_target = None
-                act_two_auto_move_floor_index = None
+                act_two_input_state.cancel_auto_move()
 
             update_oracle_gate(game_state.floor, current_time)
             update_act_two_visibility(game_state.floor)
         if (
-            progress_tracking_enabled
+            app_runtime.progress_tracking_enabled
             and current_act > menu_progress.highest_act_reached
         ):
             menu_progress = record_act_reached(
@@ -4199,7 +3824,7 @@ def main():
         )
         if current_act == 2:
             mage_preview_mouse_position = window_to_game_position(
-                screen,
+                window_state.screen,
                 pygame.mouse.get_pos(),
             )
             mage_preview_target = (
@@ -4221,7 +3846,7 @@ def main():
                 and not game_state.act_two_journal_open
                 and game_state.floor_transition_started_at < 0
                 and not oracle_cutscene_active(game_state.floor)
-                and act_two_dragged_consumable_slot is None
+                and act_two_input_state.dragged_consumable_slot is None
                 and not game_state.player.act_two.fire_bomb_aiming
                 and game_state.player.act_two.scroll_aiming_kind is None
                 and get_mage_resonance_target(
@@ -4229,9 +3854,14 @@ def main():
                     mage_preview_target,
                 ) is not None
             )
-            if resonance_cursor_active != act_two_resonance_cursor_active:
+            if (
+                resonance_cursor_active
+                != act_two_input_state.resonance_cursor_active
+            ):
                 set_warlock_staff_cursor(resonance_cursor_active)
-                act_two_resonance_cursor_active = resonance_cursor_active
+                act_two_input_state.resonance_cursor_active = (
+                    resonance_cursor_active
+                )
 
             draw_act_two_ability_preview(
                 world_target,
@@ -4772,7 +4402,7 @@ def main():
                 current_time,
             )
             fire_bomb_mouse_position = window_to_game_position(
-                screen,
+                window_state.screen,
                 pygame.mouse.get_pos(),
             )
             fire_bomb_target = (
@@ -4904,7 +4534,7 @@ def main():
                 game_state.act_two_journal_open,
                 game_state.act_two_journal_scroll,
                 window_to_game_position(
-                    screen,
+                    window_state.screen,
                     pygame.mouse.get_pos(),
                 ),
                 act_two_sprites,
@@ -4913,7 +4543,7 @@ def main():
                 game_state.player.act_two.stoneflesh_hits,
                 game_state.player.act_two.bloody_pact_id,
                 dragged_consumable_slot=(
-                    act_two_dragged_consumable_slot
+                    act_two_input_state.dragged_consumable_slot
                 ),
             )
             if game_state.rune_selection_open:
@@ -4923,7 +4553,7 @@ def main():
                     act_two_fonts,
                     act_two_sprites,
                     window_to_game_position(
-                        screen,
+                        window_state.screen,
                         pygame.mouse.get_pos(),
                     ),
                 )
@@ -4934,7 +4564,7 @@ def main():
                     act_two_trade_layout,
                     act_two_fonts,
                     window_to_game_position(
-                        screen,
+                        window_state.screen,
                         pygame.mouse.get_pos(),
                     ),
                 )
@@ -4945,7 +4575,7 @@ def main():
                     act_two_sprites,
                     bloody_altar_layout,
                     window_to_game_position(
-                        screen,
+                        window_state.screen,
                         pygame.mouse.get_pos(),
                     ),
                 )
@@ -4957,7 +4587,7 @@ def main():
                 act_three_gameplay_assets,
                 current_time,
                 window_to_game_position(
-                    screen,
+                    window_state.screen,
                     pygame.mouse.get_pos(),
                 ),
             )
@@ -4981,7 +4611,7 @@ def main():
                 )
             )
             upgrade_mouse_position = window_to_game_position(
-                screen,
+                window_state.screen,
                 pygame.mouse.get_pos(),
             )
             if current_act == 1:
@@ -5034,7 +4664,7 @@ def main():
                 )
         if game_state.class_selection_open:
             class_mouse_position = window_to_game_position(
-                screen,
+                window_state.screen,
                 pygame.mouse.get_pos(),
             )
             draw_class_selection_screen(
@@ -5066,7 +4696,7 @@ def main():
             )
         if game_state.act_three_debug_class_selection_open:
             debug_mouse_position = window_to_game_position(
-                screen,
+                window_state.screen,
                 pygame.mouse.get_pos(),
             )
             draw_act_three_debug_class_selection(
@@ -5097,7 +4727,7 @@ def main():
             )
         elif game_state.subclass_selection_open:
             subclass_mouse_position = window_to_game_position(
-                screen,
+                window_state.screen,
                 pygame.mouse.get_pos(),
             )
             draw_subclass_selection_screen(
@@ -5136,7 +4766,7 @@ def main():
                 oracle_world_frame,
                 game_state.floor,
                 window_to_game_position(
-                    screen,
+                    window_state.screen,
                     pygame.mouse.get_pos(),
                 ),
             )
@@ -5187,12 +4817,12 @@ def main():
                 game_state,
                 current_time,
                 window_to_game_position(
-                    screen,
+                    window_state.screen,
                     pygame.mouse.get_pos(),
                 ),
             )
 
-        present_game(screen, game_surface)
+        present_game(window_state.screen, game_surface)
         clock.tick(FPS)
 
     pygame.quit()
