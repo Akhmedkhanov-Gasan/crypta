@@ -1074,7 +1074,7 @@ def draw_act_two_player_actor(
                     math.pi
                     * min(
                         1.0,
-                        attack_elapsed / ACT_TWO_ROGUE_ATTACK_DURATION_MS,
+                        attack_elapsed / PLAYER_BASIC_ATTACK_DURATION_MS,
                     )
                 )
             )
@@ -1100,7 +1100,7 @@ def draw_act_two_player_actor(
                     math.pi
                     * min(
                         1.0,
-                        attack_elapsed / ACT_TWO_ROGUE_ATTACK_DURATION_MS,
+                        attack_elapsed / PLAYER_BASIC_ATTACK_DURATION_MS,
                     )
                 )
             )

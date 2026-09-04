@@ -79,6 +79,11 @@ from acts.act_one.settings import (
     PLAYER_STARTING_STATS,
 )
 from acts.act_one.controls import POTION_KEYS
+from application.directional_input import (
+    MOVEMENT_KEYS,
+    WAIT_KEYS,
+    movement_direction_for_key,
+)
 from acts.act_two.settings import (
     CLASS_BASE_ATTRIBUTE_RANKS,
     CLASS_STARTING_STATS,
@@ -87,7 +92,6 @@ from acts.act_two.controls import (
     AUTO_MOVE_INTERVAL_MS,
     CONSUMABLE_KEY_ORDER,
     CONSUMABLE_KEYS,
-    MOVEMENT_KEYS,
     visual_direction as act_two_visual_direction,
 )
 from acts.act_two.held_movement import (
@@ -98,14 +102,14 @@ from acts.act_two.held_movement import (
     release_held_movement,
 )
 from acts.act_two.input_state import ActTwoInputRuntimeState
+from acts.act_two.player_actions import (
+    find_act_two_cell_targets,
+    resolve_act_two_cell_action,
+)
 from acts.act_two.abilities import (
     ability_charge_required,
     is_valid_mage_arcane_burst_target,
     select_directional_ability_direction,
-)
-from acts.act_two.bloody_altar import (
-    bloody_altar_is_at,
-    interact_with_bloody_altar,
 )
 from acts.act_two.presentation.bloody_altar import (
     draw_bloody_altar_object,
@@ -157,18 +161,10 @@ from acts.act_two.brute_aftershocks import (
 )
 from acts.act_two.runes import (
     cancel_rune_selection,
-    interact_with_rune_pedestal,
-    rune_pedestal_is_at,
-    rune_wall_is_at,
     select_rune,
-    strike_wall_rune,
 )
 from game.rune_catalog import runes_for_class
-from acts.act_two.treasury import (
-    activate_treasury_trial,
-    treasury_chest_is_at,
-    update_treasury_trial,
-)
+from acts.act_two.treasury import update_treasury_trial
 from acts.act_two.presentation.camera import (
     ActTwoCamera,
     act_two_screen_to_cell,
@@ -342,6 +338,9 @@ from settings import (
     GAME_HEIGHT,
     GAME_WIDTH,
 )
+from systems.grid_geometry import (
+    direction_between_adjacent_cells,
+)
 from systems.player_actions import (
     break_secret_passage,
     open_chest,
@@ -374,10 +373,7 @@ from systems.player_abilities import (
     perform_warlock_curse,
     perform_warlock_soul_exchange,
 )
-from acts.act_two.trader_logic import (
-    buy_trader_item,
-    interact_with_trader,
-)
+from acts.act_two.trader_logic import buy_trader_item
 from presentation.layout import MAP_OFFSET_X, MAP_OFFSET_Y
 from presentation.world import draw_impact_block_effect
 from settings import TILE_SIZE
@@ -1655,10 +1651,40 @@ def main():
                     target_cell is not None
                     and target_cell in game_state.floor.visible_cells
                 ):
+                    player_position = (
+                        game_state.floor.player_column,
+                        game_state.floor.player_row,
+                    )
+                    adjacent_direction = (
+                        direction_between_adjacent_cells(
+                            player_position,
+                            target_cell,
+                        )
+                    )
+
+                    if adjacent_direction is not None:
+                        act_two_input_state.cancel_auto_move()
+                        act_two_input_state.reset_held_movement()
+
+                        if not movement_input_is_locked(
+                            act_two_input_state,
+                            pygame.time.get_ticks(),
+                        ):
+                            pygame.event.post(
+                                pygame.event.Event(
+                                    pygame.KEYDOWN,
+                                    key=pygame.K_UNKNOWN,
+                                    movement_direction=adjacent_direction,
+                                )
+                            )
+
+                        continue
+
                     automatic_path = find_act_two_path(
                         game_state.floor,
                         target_cell,
                     )
+
                     if automatic_path:
                         act_two_input_state.auto_move_target = target_cell
                         act_two_input_state.auto_move_floor_index = (
@@ -2063,10 +2089,10 @@ def main():
 
                 if current_act == 2 and (
                     event.key in MOVEMENT_KEYS
+                    or event.key in WAIT_KEYS
                     or event.key in CONSUMABLE_KEYS
                     or event.key in (
                         pygame.K_UNKNOWN,
-                        pygame.K_SPACE,
                         pygame.K_e,
                     )
                 ):
@@ -2184,9 +2210,21 @@ def main():
                     "movement_direction",
                     None,
                 )
-                if (
+                act_two_direction_key = (
                     current_act == 2
                     and event.key in MOVEMENT_KEYS
+                )
+
+                if (
+                    act_two_direction_key
+                    and game_state.player.directional_ability_aiming
+                ):
+                    act_two_input_state.reset_held_movement()
+                    movement_direction = movement_direction_for_key(
+                        event.key
+                    )
+                elif (
+                    act_two_direction_key
                     and not automatic_movement
                 ):
                     movement_direction = begin_held_movement(
@@ -2200,16 +2238,28 @@ def main():
                     game_state.player.facing_direction = (
                         act_two_visual_direction(movement_direction)
                     )
-                elif event.key in (pygame.K_w, pygame.K_UP):
+                elif (
+                    not act_two_direction_key
+                    and event.key in (pygame.K_w, pygame.K_UP)
+                ):
                     row_change = -1
                     game_state.player.facing_direction = (0, -1)
-                elif event.key in (pygame.K_s, pygame.K_DOWN):
+                elif (
+                    not act_two_direction_key
+                    and event.key in (pygame.K_s, pygame.K_DOWN)
+                ):
                     row_change = 1
                     game_state.player.facing_direction = (0, 1)
-                elif event.key in (pygame.K_a, pygame.K_LEFT):
+                elif (
+                    not act_two_direction_key
+                    and event.key in (pygame.K_a, pygame.K_LEFT)
+                ):
                     column_change = -1
                     game_state.player.facing_direction = (-1, 0)
-                elif event.key in (pygame.K_d, pygame.K_RIGHT):
+                elif (
+                    not act_two_direction_key
+                    and event.key in (pygame.K_d, pygame.K_RIGHT)
+                ):
                     column_change = 1
                     game_state.player.facing_direction = (1, 0)
 
@@ -2294,101 +2344,102 @@ def main():
                 )
                 new_column = game_state.floor["player_column"] + column_change
                 new_row = game_state.floor["player_row"] + row_change
-                player_waited = event.key == pygame.K_SPACE
+                player_waited = (
+                    event.key in WAIT_KEYS
+                    if current_act == 2
+                    else event.key == pygame.K_SPACE
+                )
                 if current_act == 2 and not player_waited:
                     game_state.player.act_two.wait_effect_started_at = -1
-                living_enemies = [
-                    enemy
-                    for enemy in game_state.floor["enemies"]
-                    if enemy["health"] > 0
-                ]
-                target_enemy = next(
-                    (
+                if current_act == 2:
+                    act_two_targets = find_act_two_cell_targets(
+                        game_state,
+                        (new_column, new_row),
+                        player_tried_to_move,
+                    )
+                    target_enemy = act_two_targets.enemy
+                    target_chest = act_two_targets.chest
+                    target_breakable_crate = (
+                        act_two_targets.breakable_crate
+                    )
+                    target_treasury_chest = (
+                        act_two_targets.treasury_chest
+                    )
+                    target_rune_wall = act_two_targets.rune_wall
+                    target_rune_pedestal = (
+                        act_two_targets.rune_pedestal
+                    )
+                    target_trader = act_two_targets.trader
+                    target_bloody_altar = (
+                        act_two_targets.bloody_altar
+                    )
+                    target_secret_wall = (
+                        act_two_targets.secret_wall
+                    )
+                else:
+                    living_enemies = [
                         enemy
-                        for enemy in living_enemies
-                        if (new_column, new_row)
-                        in get_enemy_occupied_positions(enemy)
-                    ),
-                    None,
-                )
-                target_chest = next(
-                    (
-                        chest
-                        for chest in game_state.floor["chests"]
-                        if (
-                            not chest["is_open"]
-                            and (chest["column"], chest["row"])
-                            == (new_column, new_row)
+                        for enemy in game_state.floor["enemies"]
+                        if enemy["health"] > 0
+                    ]
+                    target_enemy = next(
+                        (
+                            enemy
+                            for enemy in living_enemies
+                            if (new_column, new_row)
+                               in get_enemy_occupied_positions(enemy)
+                        ),
+                        None,
+                    )
+                    target_chest = next(
+                        (
+                            chest
+                            for chest in game_state.floor["chests"]
+                            if (
+                                not chest["is_open"]
+                                and (
+                                    chest["column"],
+                                    chest["row"],
+                                )
+                                == (new_column, new_row)
                         )
-                    ),
-                    None,
-                )
-                target_breakable_crate = next(
-                    (
-                        crate
-                        for crate in game_state.floor.breakable_crates
-                        if (
-                            not crate.is_broken
-                            and (crate.column, crate.row)
-                            == (new_column, new_row)
+                        ),
+                        None,
+                    )
+                    target_breakable_crate = next(
+                        (
+                            crate
+                            for crate
+                            in game_state.floor.breakable_crates
+                            if (
+                                not crate.is_broken
+                                and (
+                                    crate.column,
+                                    crate.row,
+                                )
+                                == (new_column, new_row)
                         )
-                    ),
-                    None,
-                )
-                target_treasury_chest = (
-                    player_tried_to_move
-                    and treasury_chest_is_at(
-                        game_state,
-                        (new_column, new_row),
+                        ),
+                        None,
                     )
-                )
-                target_rune_wall = (
-                    player_tried_to_move
-                    and rune_wall_is_at(
-                        game_state,
-                        (new_column, new_row),
+                    target_treasury_chest = False
+                    target_rune_wall = False
+                    target_rune_pedestal = False
+                    target_trader = False
+                    target_bloody_altar = False
+                    target_secret_wall = (
+                            player_tried_to_move
+                            and 0
+                            <= new_row
+                            < len(game_state.floor["map"])
+                            and 0
+                            <= new_column
+                            < len(game_state.floor["map"][new_row])
+                            and game_state.floor["map"][new_row][
+                                new_column
+                            ]
+                            == "S"
                     )
-                )
-                target_rune_pedestal = (
-                    player_tried_to_move
-                    and rune_pedestal_is_at(
-                        game_state,
-                        (new_column, new_row),
-                    )
-                )
-                target_trader = (
-                        current_act == 2
-                        and player_tried_to_move
-                        and any(
-                    trader is not None
-                    and (
-                        trader.column,
-                        trader.row,
-                    )
-                    == (new_column, new_row)
-                    for trader in (
-                        game_state.floor.trader,
-                        game_state.floor.quest_trader,
-                    )
-                )
-                )
-                target_bloody_altar = (
-                    current_act == 2
-                    and player_tried_to_move
-                    and bloody_altar_is_at(
-                        game_state,
-                        (new_column, new_row),
-                    )
-                )
-                target_secret_wall = (
-                    player_tried_to_move
-                    and 0 <= new_row < len(game_state.floor["map"])
-                    and 0
-                    <= new_column
-                    < len(game_state.floor["map"][new_row])
-                    and game_state.floor["map"][new_row][new_column]
-                    == "S"
-                )
                 player_acted = False
                 game_state.player_attack_targets = []
 
@@ -2696,16 +2747,23 @@ def main():
                         )
                     player_acted = True
                 elif player_tried_to_move:
+                    movement_attempt_started_at = pygame.time.get_ticks()
+                    target_position = (
+                        new_column,
+                        new_row,
+                    )
+                    attempted_direction = (
+                        column_change,
+                        row_change,
+                    )
+
                     if current_act == 2:
-                        movement_attempt_started_at = pygame.time.get_ticks()
-                        attempted_direction = (
-                            column_change,
-                            row_change,
-                        )
                         game_state.player.act_two_movement_started_at = 0
                         game_state.player.act_two_movement_origin = None
                         game_state.player.act_two_facing_direction = (
-                            act_two_visual_direction(attempted_direction)
+                            act_two_visual_direction(
+                                attempted_direction
+                            )
                         )
                         game_state.player.act_two_blocked_movement_started_at = (
                             movement_attempt_started_at
@@ -2713,23 +2771,39 @@ def main():
                         game_state.player.act_two_blocked_movement_direction = (
                             attempted_direction
                         )
-                    if (
-                        target_enemy
-                        and game_state.player.player_class == "mage"
-                        and game_state.player.selected_rune_id
-                        == "rune_of_resonance"
-                    ):
-                        act_two_input_state.reset_held_movement()
-                        add_log_message(
-                            game_state.combat_log,
-                            "Rune of Resonance attacks by clicking an enemy.",
-                            category="rune",
+
+                        action_result = resolve_act_two_cell_action(
+                            game_state,
+                            act_two_targets,
+                            target_position,
+                            attempted_direction,
+                            movement_attempt_started_at,
+                            resolve_oracle_hit_reaction,
                         )
+
+                        if action_result.reset_held_movement:
+                            act_two_input_state.reset_held_movement()
+
+                        if action_result.trader_sound is not None:
+                            act_two_sounds.play_ui_sound(
+                                action_result.trader_sound
+                            )
+
+                        if action_result.handled:
+                            player_acted = action_result.player_acted
+                        else:
+                            player_acted = try_move_player(
+                                game_state,
+                                new_column,
+                                new_row,
+                                FIRST_ACT_FINAL_FLOOR,
+                                movement_attempt_started_at,
+                            )
                     elif target_enemy:
                         if game_state.player.subclass == "warlock":
                             perform_warlock_attack(
                                 game_state,
-                                (new_column, new_row),
+                                target_position,
                                 resolve_oracle_hit_reaction,
                             )
                         else:
@@ -2739,42 +2813,16 @@ def main():
                                 row_change,
                                 resolve_oracle_hit_reaction,
                             )
+
                         game_state.player.attack_animation_started_at = (
-                            pygame.time.get_ticks()
+                            movement_attempt_started_at
                         )
-
                         player_acted = True
-                    elif target_rune_wall:
-                        player_acted = strike_wall_rune(
-                            game_state,
-                            (new_column, new_row),
-                            pygame.time.get_ticks(),
-                        )
-                    elif target_rune_pedestal:
-                        player_acted = interact_with_rune_pedestal(
-                            game_state
-                        )
-                    elif target_treasury_chest:
-                        player_acted = activate_treasury_trial(
-                            game_state
-                        )
-                    elif target_trader:
-                        trader_sound = interact_with_trader(game_state)
-
-                        if trader_sound is not None:
-                            act_two_sounds.play_ui_sound(
-                                trader_sound
-                            )
-
-                        act_two_input_state.reset_held_movement()
-                    elif target_bloody_altar:
-                        interact_with_bloody_altar(game_state)
-                        act_two_input_state.reset_held_movement()
                     elif target_chest:
                         player_acted = open_chest(
                             game_state,
                             target_chest,
-                            pygame.time.get_ticks(),
+                            movement_attempt_started_at,
                         )
                     elif target_breakable_crate:
                         if current_act == 1:
@@ -2790,7 +2838,7 @@ def main():
 
                         if player_acted:
                             game_state.player.attack_animation_started_at = (
-                                pygame.time.get_ticks()
+                                movement_attempt_started_at
                             )
                     elif target_secret_wall:
                         player_acted = break_secret_passage(
@@ -2798,9 +2846,10 @@ def main():
                             new_column,
                             new_row,
                         )
+
                         if player_acted:
                             game_state.player.attack_animation_started_at = (
-                                pygame.time.get_ticks()
+                                movement_attempt_started_at
                             )
                     else:
                         player_acted = try_move_player(
@@ -2808,11 +2857,10 @@ def main():
                             new_column,
                             new_row,
                             FIRST_ACT_FINAL_FLOOR,
-                            pygame.time.get_ticks(),
+                            movement_attempt_started_at,
                         )
                 if player_acted:
                     game_state.run_stats.turns_taken += 1
-
                 if player_acted and current_act == 2:
                     action_started_at = pygame.time.get_ticks()
 
