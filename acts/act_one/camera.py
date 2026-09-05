@@ -5,6 +5,7 @@ import pygame
 from presentation.camera import (
     PixelCamera,
     draw_pixel_camera_view,
+    pixel_camera_screen_to_world,
     update_pixel_camera,
 )
 from presentation.layout import MAP_OFFSET_X, MAP_OFFSET_Y
@@ -76,8 +77,27 @@ def draw_act_one_camera_view(screen, world_surface, camera):
     )
 
 
+def get_act_one_cell_from_position(camera, position):
+    if position is None:
+        return None
+
+    world_position = pixel_camera_screen_to_world(
+        position,
+        camera,
+        _VIEWPORT,
+    )
+    if world_position is None:
+        return None
+
+    return (
+        int(world_position[0] // TILE_SIZE),
+        int(world_position[1] // TILE_SIZE),
+    )
+
+
 __all__ = [
     "ActOneCamera",
     "draw_act_one_camera_view",
+    "get_act_one_cell_from_position",
     "update_act_one_camera",
 ]

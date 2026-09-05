@@ -15,9 +15,6 @@ CONSUMABLE_KEYS = {
     for slot_index, key in enumerate(CONSUMABLE_KEY_ORDER)
 }
 
-AUTO_MOVE_INTERVAL_MS = 175
-
-
 def visual_direction(direction):
     column_change, row_change = direction
 

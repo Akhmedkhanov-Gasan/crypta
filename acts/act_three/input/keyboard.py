@@ -1,5 +1,6 @@
 import pygame
 
+from application.directional_input import MOVEMENT_KEYS, WAIT_KEYS
 from acts.act_three.input.cursors import (
     set_archer_barrage_zone_cursor,
     set_archer_empowered_cursor,
@@ -56,6 +57,9 @@ from settings import (
     WARLOCK_SOUL_EXCHANGE_TRAVEL_MS,
 )
 def handle_act_three_key_event(event, game_state):
+    if event.key in MOVEMENT_KEYS or event.key in WAIT_KEYS:
+        return False
+
     if game_state.upgrade_altar_menu_open:
         if event.key == pygame.K_ESCAPE:
             game_state.upgrade_altar_menu_open = False

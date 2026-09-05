@@ -1,8 +1,10 @@
 import pygame
 
+from application.auto_movement import start_auto_move
 from game.combat_log import add_log_message
 from game.progression import upgrade_attribute
 from acts.act_three.altar import (
+    open_upgrade_altar,
     player_is_next_to_upgrade_altar,
 )
 from acts.act_three.input.cursors import (
@@ -82,6 +84,8 @@ def handle_act_three_pointer_event(
     game_state,
     screen,
     window_to_game_position,
+    movement_state,
+    movement_available,
 ):
     if (
         game_state.upgrade_altar_menu_open
@@ -432,10 +436,7 @@ def handle_act_three_pointer_event(
             and altar_rectangle.collidepoint(game_mouse_position)
             and player_is_next_to_upgrade_altar(game_state)
         ):
-            game_state.upgrade_altar_menu_open = True
-            game_state.upgrade_altar_menu_tab = "attributes"
-            game_state.upgrade_altar_hovered = False
-            game_state.upgrade_altar_menu_hovered_control = None
+            open_upgrade_altar(game_state)
             return True
 
         if (
@@ -518,6 +519,18 @@ def handle_act_three_pointer_event(
                     game_mouse_position
                 ):
                     return True
+            if movement_available:
+                target_cell = get_act_three_cell_from_position(
+                    game_state,
+                    game_mouse_position,
+                )
+                start_auto_move(
+                    movement_state,
+                    game_state,
+                    target_cell,
+                )
+                return True
+
             if game_state.player.ultimate_animation_active:
                 return True
             elif game_state.player.warlock_curse_aiming:

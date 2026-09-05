@@ -54,6 +54,8 @@ def find_act_two_cell_targets(
     game_state,
     target: tuple[int, int],
     player_tried_to_move: bool,
+    *,
+    require_adjacent: bool = True,
 ) -> ActTwoCellTargets:
     if not player_tried_to_move:
         return ActTwoCellTargets()
@@ -64,7 +66,7 @@ def find_act_two_cell_targets(
         floor.player_row,
     )
 
-    if not can_reach_adjacent_cell(
+    if require_adjacent and not can_reach_adjacent_cell(
         floor.map,
         origin,
         target,
