@@ -2,6 +2,17 @@ ALTAR_WIDTH = 2
 ALTAR_HEIGHT = 2
 
 
+def open_upgrade_altar(game_state):
+    if not player_is_next_to_upgrade_altar(game_state):
+        return False
+
+    game_state.upgrade_altar_menu_open = True
+    game_state.upgrade_altar_menu_tab = "attributes"
+    game_state.upgrade_altar_hovered = False
+    game_state.upgrade_altar_menu_hovered_control = None
+    return True
+
+
 def get_upgrade_altar_cells(floor):
     if floor.upgrade_altar is None:
         return set()

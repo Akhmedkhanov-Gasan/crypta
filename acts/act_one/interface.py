@@ -23,6 +23,26 @@ MUTED = (139, 140, 148)
 GOLD = (190, 161, 105)
 RED = (175, 54, 65)
 
+_HEALTH_RECT = pygame.Rect(20, 40, 280, 84)
+_BELT_RECT = pygame.Rect(
+    GAME_WIDTH // 2 - 200,
+    GAME_HEIGHT - 96,
+    400,
+    78,
+)
+_JOURNAL_RECT = pygame.Rect(20, GAME_HEIGHT - 118, 350, 100)
+
+
+def act_one_hud_contains_position(position):
+    return position is not None and any(
+        rectangle.collidepoint(position)
+        for rectangle in (
+            _HEALTH_RECT,
+            _BELT_RECT,
+            _JOURNAL_RECT,
+        )
+    )
+
 
 def _panel(screen, rectangle, accent=BORDER, fill=BACKGROUND):
     rectangle = pygame.Rect(rectangle)
@@ -75,7 +95,7 @@ def _draw_health_panel(
     player_health,
     player_max_health,
 ):
-    rectangle = pygame.Rect(20, 40, 280, 84)
+    rectangle = _HEALTH_RECT.copy()
     ratio = max(
         0.0,
         min(1.0, player_health / max(1, player_max_health)),
@@ -219,12 +239,7 @@ def draw_sidebar(
         player_max_health,
     )
 
-    belt = pygame.Rect(
-        GAME_WIDTH // 2 - 200,
-        GAME_HEIGHT - 96,
-        400,
-        78,
-    )
+    belt = _BELT_RECT.copy()
     _panel(screen, belt)
 
     for index in range(6):
@@ -260,7 +275,7 @@ def draw_sidebar(
                 (slot.centerx + 5, slot.centery),
             )
 
-    journal = pygame.Rect(20, GAME_HEIGHT - 118, 350, 100)
+    journal = _JOURNAL_RECT.copy()
     _panel(screen, journal)
 
     label = log_font.render("RECENT EVENTS", True, MUTED)

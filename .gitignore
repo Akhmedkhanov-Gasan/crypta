@@ -12,3 +12,4 @@ tools/
 /.pytest_cache/
 /*.spec
 !/Crypta.spec
+AGENTS.md

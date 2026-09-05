@@ -29,6 +29,29 @@ OracleHitReaction = Callable[
     None,
 ]
 
+
+def navigation_attack(game_state, target, *, origin=None):
+    attacks = {
+        "archer": (
+            "archer_attack_target",
+            is_valid_archer_attack_target,
+        ),
+        "warlock": (
+            "warlock_attack_target",
+            is_valid_warlock_attack_target,
+        ),
+        "summoner": (
+            "summoner_attack_target",
+            is_valid_summoner_attack_target,
+        ),
+    }
+    attack = attacks.get(game_state.player.subclass)
+    if attack is None:
+        return None
+
+    field, validator = attack
+    return field, validator(game_state, target, origin=origin)
+
 def attack_enemy(*args, **kwargs):
     from systems.player_combat import attack_enemy as service
 
@@ -45,6 +68,8 @@ def resolve_enemy_defeat(*args, **kwargs):
 def is_valid_archer_attack_target(
     game_state: GameState,
     target_cell: tuple[int, int],
+    *,
+    origin=None,
 ) -> bool:
     player = game_state.player
     floor = game_state.floor
@@ -63,23 +88,26 @@ def is_valid_archer_attack_target(
     if target_enemy is None:
         return False
 
-    distance = abs(target_cell[0] - floor.player_column) + abs(
-        target_cell[1] - floor.player_row
+    if origin is None:
+        origin = (floor.player_column, floor.player_row)
+
+    distance = abs(target_cell[0] - origin[0]) + abs(
+        target_cell[1] - origin[1]
     )
     return (
         distance <= ARCHER_BASIC_ATTACK_RANGE
         and has_line_of_sight(
             floor.map,
-            floor.player_column,
-            floor.player_row,
-            target_cell[0],
-            target_cell[1],
+            *origin,
+            *target_cell,
         )
     )
 
 def is_valid_warlock_attack_target(
     game_state: GameState,
     target_cell: tuple[int, int],
+    *,
+    origin=None,
 ) -> bool:
     player = game_state.player
     floor = game_state.floor
@@ -98,19 +126,18 @@ def is_valid_warlock_attack_target(
     if target_enemy is None:
         return False
 
-    distance = abs(
-        target_cell[0] - floor.player_column
-    ) + abs(
-        target_cell[1] - floor.player_row
+    if origin is None:
+        origin = (floor.player_column, floor.player_row)
+
+    distance = abs(target_cell[0] - origin[0]) + abs(
+        target_cell[1] - origin[1]
     )
     return (
         distance <= WARLOCK_BASIC_ATTACK_RANGE
         and has_line_of_sight(
             floor.map,
-            floor.player_column,
-            floor.player_row,
-            target_cell[0],
-            target_cell[1],
+            *origin,
+            *target_cell,
         )
     )
 
@@ -228,6 +255,8 @@ def perform_archer_attack(
 def is_valid_summoner_attack_target(
     game_state: GameState,
     target_cell: tuple[int, int],
+    *,
+    origin=None,
 ) -> bool:
     player = game_state.player
     floor = game_state.floor
@@ -251,18 +280,19 @@ def is_valid_summoner_attack_target(
         if player.summoner_familiar_active
         else SUMMONER_ATTACK_RANGE
     )
+    if origin is None:
+        origin = (floor.player_column, floor.player_row)
+
     distance = max(
-        abs(target_cell[0] - floor.player_column),
-        abs(target_cell[1] - floor.player_row),
+        abs(target_cell[0] - origin[0]),
+        abs(target_cell[1] - origin[1]),
     )
     return (
         distance <= attack_range
         and has_line_of_sight(
             floor.map,
-            floor.player_column,
-            floor.player_row,
-            target_cell[0],
-            target_cell[1],
+            *origin,
+            *target_cell,
         )
     )
 
