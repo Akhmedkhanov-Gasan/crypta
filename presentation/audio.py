@@ -10,6 +10,11 @@ from acts.act_two.presentation.bosses.oracle_audio import (
     play_oracle_pain_from_events,
 )
 from acts.act_two.settings import FIRE_BOMB_FLIGHT_MS
+from acts.act_two.presentation.enemies.priest import (
+    PRIEST_REBIRTH_SOUND_FILES,
+    PRIEST_REBIRTH_SOUND_VOLUME,
+    priest_rebirth_sound_key,
+)
 from game.events import GameEvent, GameEventType
 
 
@@ -144,6 +149,7 @@ ACT_TWO_ENEMY_SOUND_FILES = {
     "sentinel_death": ("sentinel_death_1.mp3", "sentinel_death_2.mp3"),
     "priest_prepare": ("priest_prepare_1.mp3", "priest_prepare_2.mp3"),
     "priest_attack": ("priest_attack_1.mp3", "priest_attack_2.mp3"),
+    "priest_rebirth": PRIEST_REBIRTH_SOUND_FILES,
     "priest_heal_prepare": (
         "priest_heal_prepare_1.mp3",
         "priest_heal_prepare_2.mp3",
@@ -267,6 +273,7 @@ ACT_TWO_SOUND_VOLUMES = {
     "sentinel_death": 0.82,
     "priest_prepare": 0.64,
     "priest_attack": 0.74,
+    "priest_rebirth": PRIEST_REBIRTH_SOUND_VOLUME,
     "priest_heal_prepare": 0.64,
     "priest_heal": 0.76,
     "priest_hurt": 0.66,
@@ -1047,8 +1054,8 @@ class ActTwoSoundBank:
                 else enemy_type
             )
 
-            sound_key = None
-            priority = 0
+            sound_key = priest_rebirth_sound_key(event)
+            priority = 6 if sound_key is not None else 0
             if event.type is GameEventType.PREPARE_ATTACK:
                 candidate_key = f"{audio_enemy_type}_prepare"
                 if candidate_key in ACT_TWO_ENEMY_SOUND_FILES:

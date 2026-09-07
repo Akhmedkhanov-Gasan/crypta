@@ -11,6 +11,8 @@ from application.resources import load_application_resources
 from application.bootstrap import begin_application_startup
 from application.loading import LoadingCoordinator
 from application.state import ApplicationRuntimeState
+from acts.act_two.input.cutscene_skip import ActTwoCutsceneSkip
+from acts.act_two.presentation.cutscene_skip import draw_cutscene_skip
 
 from acts.act_two.presentation.bosses.oracle_death import (
     draw_oracle_death_fx,
@@ -151,6 +153,7 @@ from acts.act_two.consumables import (
 from acts.act_two.progression import (
     cancel_queued_act_two_attribute_upgrade,
     confirm_queued_act_two_attribute_upgrades,
+    get_act_two_attribute_preview,
     get_act_two_upgrade_order,
     queue_act_two_attribute_upgrade,
     upgrade_act_two_attribute,
@@ -482,6 +485,7 @@ def main():
     act_two_music_attempted = False
     act_three_music_attempted = False
     act_two_input_state = ActTwoInputRuntimeState()
+    cutscene_skip = ActTwoCutsceneSkip()
     loading = LoadingCoordinator(
         window_state,
         clock,
@@ -599,6 +603,16 @@ def main():
             if loading.completed:
                 if event.type == pygame.QUIT:
                     app_runtime.request_quit()
+                continue
+
+            if cutscene_skip.handle_event(
+                game_state,
+                event,
+                enabled=(
+                    app_runtime.game_started
+                    and not app_runtime.menu_open
+                ),
+            ):
                 continue
 
             death_menu_requested = False
@@ -1361,11 +1375,6 @@ def main():
                     continue
 
                 if transition_elapsed < CLASS_SELECTION_READY_MS:
-                    game_state.class_transition_started_at = (
-                        current_time
-                        - CLASS_SELECTION_READY_MS
-                        - 500
-                    )
                     continue
 
                 game_mouse_position = window_to_game_position(
@@ -1951,16 +1960,6 @@ def main():
                     )
 
                     if transition_elapsed < CLASS_SELECTION_READY_MS:
-                        if event.key in (
-                            pygame.K_SPACE,
-                            pygame.K_RETURN,
-                            pygame.K_KP_ENTER,
-                        ):
-                            game_state.class_transition_started_at = (
-                                pygame.time.get_ticks()
-                                - CLASS_SELECTION_READY_MS
-                                - 500
-                            )
                         continue
 
                     chosen_class = None
@@ -3204,6 +3203,17 @@ def main():
             begin_act_one_death(game_state, current_time)
 
         advance_floor_transition(game_state, current_time)
+
+        cutscene_skip.update(
+            game_state,
+            current_time,
+            game_surface,
+            enabled=(
+                app_runtime.game_started
+                and not app_runtime.menu_open
+                and not loading.completed
+            ),
+        )
 
         update_oracle_fire_audio(
             game_state,
@@ -4579,10 +4589,13 @@ def main():
                 act_one_gameplay_assets,
             )
         elif current_act == 2:
+            preview_player = get_act_two_attribute_preview(
+                game_state.player,
+            )
             (
                 displayed_damage_minimum,
                 displayed_damage_maximum,
-            ) = basic_attack_damage_range(game_state.player)
+            ) = basic_attack_damage_range(preview_player)
             draw_act_two_sidebar(
                 game_surface,
                 active_heading_font,
@@ -4590,14 +4603,14 @@ def main():
                 active_controls_font,
                 active_ability_font,
                 game_state.combat_log,
-                game_state.player.health,
-                game_state.player.max_health,
+                preview_player.health,
+                preview_player.max_health,
                 displayed_damage_minimum,
                 displayed_damage_maximum,
-                game_state.player.crit_chance,
-                game_state.player.critical_damage_multiplier,
-                game_state.player.dodge_chance,
-                game_state.player.spell_power,
+                preview_player.crit_chance,
+                preview_player.critical_damage_multiplier,
+                preview_player.dodge_chance,
+                preview_player.spell_power,
                 game_state.player.attribute_ranks,
                 game_state.player.act_two.pending_attribute_upgrades,
                 get_act_two_consumable_slots(game_state.player),
@@ -4888,6 +4901,11 @@ def main():
                     else "THE DESCENT CONTINUES"
                 ),
             )
+        draw_cutscene_skip(
+            game_surface,
+            cutscene_skip,
+            current_time,
+        )
         dev_console.draw(game_surface)
 
         if current_act == 1 and game_state.player.health <= 0:

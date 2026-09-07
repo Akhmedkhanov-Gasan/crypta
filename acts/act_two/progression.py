@@ -1,3 +1,5 @@
+from copy import copy
+
 from acts.act_two.settings import (
     WARRIOR_CLEAVE_MAX_RANK,
     WARRIOR_RHYTHM_MAX_RANK,
@@ -35,6 +37,22 @@ ACT_TWO_UPGRADE_ORDER = {
 
 def get_act_two_upgrade_order(player_class: str | None) -> tuple[str, ...]:
     return ACT_TWO_UPGRADE_ORDER.get(player_class, ())
+
+
+def get_act_two_attribute_preview(player):
+    pending = player.act_two.pending_attribute_upgrades
+
+    if not any(pending.values()):
+        return player
+
+    preview = copy(player)
+    preview.attribute_ranks = dict(player.attribute_ranks)
+
+    for attribute in COMMON_ACT_TWO_UPGRADES:
+        for _ in range(pending.get(attribute, 0)):
+            apply_attribute_upgrade(preview, attribute)
+
+    return preview
 
 
 def get_class_upgrade_rank(player, upgrade: str) -> int:

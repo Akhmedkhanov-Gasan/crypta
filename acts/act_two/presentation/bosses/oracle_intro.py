@@ -388,17 +388,6 @@ def handle_oracle_intro_event(floor, event, frame):
         scene.paused = True
     elif event.type == pygame.WINDOWFOCUSGAINED:
         scene.paused = False
-    elif (
-        event.type == pygame.KEYDOWN
-        and event.key == pygame.K_SPACE
-        and scene.skip_frame is None
-    ):
-        scene.skip_frame = frame.copy()
-        scene.elapsed = max(
-            scene.elapsed,
-            INTRO_END_MS - SKIP_FADE_MS,
-        )
-        scene.skip_started_elapsed = scene.elapsed
 
 
 @lru_cache(maxsize=1)

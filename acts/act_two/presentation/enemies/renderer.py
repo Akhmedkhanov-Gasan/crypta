@@ -24,6 +24,7 @@ from acts.act_two.presentation.enemies.goblin import (
 )
 from acts.act_two.presentation.enemies.priest import (
     _draw_act_two_priest_hit_feedback,
+    draw_priest_rebirth_effect,
 )
 from acts.act_two.presentation.enemies.sentinel import (
     _draw_act_two_sentinel_hit_feedback,
@@ -216,6 +217,14 @@ def _draw_standard_enemy(
         draw_goblin_summon_effects(
             screen,
             enemy,
+            position,
+            current_time,
+        )
+    elif enemy.type == "priest_ghost":
+        draw_priest_rebirth_effect(
+            screen,
+            enemy,
+            sprites,
             position,
             current_time,
         )
@@ -542,6 +551,12 @@ def draw_act_two_enemy(
     current_time=0,
     damage_font=None,
 ):
+    if (
+        enemy.health <= 0
+        and enemy.act_two_presentation.corpse_consumed
+    ):
+        return
+
     enemy_type = enemy["type"]
     if enemy_type in _STANDARD_ENEMY_TYPES and enemy["health"] <= 0:
         draw_act_two_enemy_death(

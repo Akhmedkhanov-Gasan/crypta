@@ -13,6 +13,9 @@ from acts.act_two.presentation.enemies.timing import (
     enemy_movement_duration,
 )
 from acts.act_two.state import BruteAftershockPhase
+from acts.act_two.presentation.enemies.priest import (
+    record_priest_rebirth_feedback,
+)
 
 def _record_enemy_dodge_feedback(game_state, started_at: int) -> None:
     feedback_events_by_target = {
@@ -119,6 +122,7 @@ def present_act_two_turn_events(
     )
     record_enemy_hit_feedback(game_state, started_at)
     record_enemy_death_feedback(game_state, started_at)
+    record_priest_rebirth_feedback(game_state, started_at)
     record_player_hit_feedback(
         game_state,
         world_started_at,

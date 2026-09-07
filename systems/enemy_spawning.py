@@ -2,6 +2,7 @@ import random
 
 from enemies import ENEMY_TYPES
 from game.combat_log import add_log_message
+from game.events import GameEvent, GameEventType
 from game.state import (
     EnemyBehaviorState,
     EnemyState,
@@ -70,6 +71,20 @@ def try_spawn_enemy_after_death(
     )
 
     game_state.floor.enemies.append(spawned_enemy)
+    game_state.emit(
+        GameEvent(
+            type=GameEventType.ENVIRONMENT,
+            actor=spawned_enemy.name,
+            target=defeated_enemy.name,
+            origin=(defeated_enemy.column, defeated_enemy.row),
+            destination=(spawned_enemy.column, spawned_enemy.row),
+            data={
+                "kind": "enemy_death_spawn",
+                "enemy_type": spawned_enemy.type,
+                "source_enemy_type": defeated_enemy.type,
+            },
+        )
+    )
 
     message = spawn_rule.get("message")
     if message is not None:

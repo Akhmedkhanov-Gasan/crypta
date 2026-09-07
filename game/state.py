@@ -4,6 +4,7 @@ from typing import Any, Iterator
 
 from acts.act_two.state import (
     ActOneRevisitState,
+    ActTwoEnemyPresentationState,
     ActTwoPlayerState,
     BloodyAltarState,
     BreakableCrateState,
@@ -202,6 +203,9 @@ class EnemyState(AttributeMapping):
     summon_animation_started_at: int = -1
     summon_spawn_animation_started_at: int = -1
     summon_windup_turns_remaining: int = 0
+    act_two_presentation: ActTwoEnemyPresentationState = field(
+        default_factory=ActTwoEnemyPresentationState,
+    )
 
     @classmethod
     def from_config(

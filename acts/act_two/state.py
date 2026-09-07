@@ -25,6 +25,12 @@ class RunePuzzlePhase(Enum):
 
 
 @dataclass
+class ActTwoEnemyPresentationState:
+    corpse_consumed: bool = False
+    priest_rebirth_started_at: int = -1
+
+
+@dataclass
 class ActOneRevisitCorpseState:
     enemy_type: str
     column: int
