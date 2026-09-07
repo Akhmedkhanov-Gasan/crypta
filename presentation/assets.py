@@ -1,4 +1,8 @@
 import pygame
+from acts.act_two.assets import (
+    load_item_pile_sprite,
+    load_pickup_hint_font,
+)
 import resource_store as resources
 import xml.etree.ElementTree as ET
 
@@ -152,6 +156,7 @@ def load_act_two_fonts():
         "trade_name": resources.load_font(str(semibold_path), 16),
         "trade_description": resources.load_font(str(regular_path), 15),
         "trade_price": resources.load_font(str(bold_path), 16),
+        "pickup_hint": load_pickup_hint_font(),
     }
 
 def load_act_two_hud_layout():
@@ -594,7 +599,9 @@ def load_act_two_sprites():
         "rune_spiral": "environment/runes/rune_spiral.png",
     }
 
-    sprites = {}
+    sprites = {
+        "item_pile": load_item_pile_sprite(),
+    }
     oversized_sprite_names = {
         "oracle_base",
         "oracle_head",
