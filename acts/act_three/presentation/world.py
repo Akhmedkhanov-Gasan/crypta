@@ -2,6 +2,8 @@ import math
 
 import pygame
 
+from presentation.ground_items import draw_ground_items
+
 from acts.act_three.altar import (
     player_is_next_to_upgrade_altar,
 )
@@ -566,17 +568,6 @@ def _draw_act_three_world(
             altar_highlight.set_alpha(pulse)
             view_surface.blit(altar_highlight, altar_position)
 
-    for potion in floor.potions:
-        view_surface.blit(
-            assets["potion"],
-            _view_position(
-                potion.column,
-                potion.row,
-                camera_x,
-                camera_y,
-            ),
-        )
-
     for chest in floor.chests:
         sprite_name = (
             "chest_open" if chest.is_open else "chest_closed"
@@ -589,19 +580,14 @@ def _draw_act_three_world(
         )
         view_surface.blit(assets[sprite_name], chest_position)
 
-        if chest.loot_available:
-            view_surface.blit(assets["coin"], chest_position)
-
-    for column, row in floor.dropped_keys:
-        view_surface.blit(
-            assets["key"],
-            _view_position(
-                column,
-                row,
-                camera_x,
-                camera_y,
-            ),
-        )
+    draw_ground_items(
+        view_surface,
+        game_state,
+        assets["ground_item_sprites"],
+        current_time,
+        ACT_THREE_TILE_SIZE,
+        (-camera_x, -camera_y),
+    )
 
     for column, row in floor.torches:
         view_surface.blit(

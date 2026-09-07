@@ -1,9 +1,8 @@
 from acts.act_two.oracle_gate import oracle_gate_allows_entry
-from acts.act_one.settings import ACT_ONE_BELT_SIZE
+from acts.ground_items import collect_ground_gold
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from systems.mimic import awaken_mimic
-from acts.act_two.crates import collect_crate_loot
 from acts.act_two.bloody_altar import (
     adjusted_consumable_healing,
     healing_consumables_are_blocked,
@@ -17,14 +16,9 @@ from acts.act_two.consumables import (
     SCROLL_OF_ARCANE_IMPULSE,
     SCROLL_OF_BINDING,
     SCROLL_OF_STONEFLESH,
-    act_two_belt_is_full,
     consume_act_two_potion,
     consume_act_two_key,
     get_act_two_consumable_slots,
-    store_act_two_consumable,
-)
-from acts.act_two.quests.trader_seal import (
-    collect_guild_seal,
 )
 from game.state import (
     ChestState,
@@ -32,7 +26,6 @@ from game.state import (
     GameState,
     RoomState,
 )
-from acts.act_two.treasury import collect_treasury_reward
 from levels import ACT_ONE_FLOOR_UPGRADE_REWARD, FLOOR_CONFIGS
 from logic import can_player_move_between
 from settings import POTION_HEALING
@@ -263,294 +256,6 @@ def _activate_boss_fight(game_state: GameState) -> None:
         add_log_message(
             game_state.combat_log,
             "The chamber seals behind the hero.",
-        )
-
-
-def _start_pickup_effect(
-    game_state: GameState,
-    kind: str,
-    position: tuple[int, int],
-    effect_started_at: int,
-) -> None:
-    player = game_state.player
-    game_state.emit(
-        GameEvent(
-            type=GameEventType.PICKUP,
-            actor="hero",
-            destination=position,
-            data={"kind": kind},
-        )
-    )
-    act_number = game_state.floor.presentation_act
-    if act_number == 1:
-        player.act_one_pickup_kind = kind
-        player.act_one_pickup_origin = position
-        player.act_one_pickup_started_at = effect_started_at
-    elif act_number == 2:
-        player.act_two_pickup_kind = kind
-        player.act_two_pickup_origin = position
-        player.act_two_pickup_started_at = effect_started_at
-
-
-def _collect_items(
-    game_state: GameState,
-    effect_started_at: int = 0,
-) -> None:
-    floor = game_state.floor
-    player = game_state.player
-    player_position = (
-        floor.player_column,
-        floor.player_row,
-    )
-    act_number = game_state.floor.presentation_act
-    collect_guild_seal(
-        game_state,
-        player_position,
-    )
-    collect_treasury_reward(game_state, player_position)
-    dropped_gold_count = floor.dropped_gold.count(
-        player_position
-    )
-
-    if dropped_gold_count > 0:
-        player.gold_count += dropped_gold_count
-        game_state.run_stats.gold_earned += dropped_gold_count
-        floor.dropped_gold[:] = [
-            position
-            for position in floor.dropped_gold
-            if position != player_position
-        ]
-        _start_pickup_effect(
-            game_state,
-            "gold",
-            player_position,
-            effect_started_at,
-        )
-        add_log_message(
-            game_state.combat_log,
-            (
-                "Hero picks up one gold."
-                if dropped_gold_count == 1
-                else (
-                    f"Hero picks up "
-                    f"{dropped_gold_count} gold."
-                )
-            ),
-            category="loot",
-        )
-
-    crate_loot_kind = collect_crate_loot(
-        game_state,
-        player_position,
-    )
-    if crate_loot_kind is not None:
-        pickup_kind = (
-            "potion" if crate_loot_kind == "potion" else "gold"
-        )
-        _start_pickup_effect(
-            game_state,
-            pickup_kind,
-            player_position,
-            effect_started_at,
-        )
-        add_log_message(
-            game_state.combat_log,
-            (
-                "Hero picks up a potion."
-                if crate_loot_kind == "potion"
-                else "Hero picks up one gold."
-            ),
-            category="loot",
-        )
-    found_potion = next(
-        (
-            potion
-            for potion in floor.potions
-            if (potion["column"], potion["row"])
-            == player_position
-        ),
-        None,
-    )
-
-    potion_belt_is_full = (
-        act_number == 1 and player.potion_count >= ACT_ONE_BELT_SIZE
-    ) or (
-        act_number == 2 and act_two_belt_is_full(player)
-    )
-
-    if found_potion and not potion_belt_is_full:
-        if act_number == 2:
-            store_act_two_consumable(player, POTION)
-        else:
-            player.potion_count += 1
-        floor.potions.remove(found_potion)
-        _start_pickup_effect(
-            game_state,
-            "potion",
-            player_position,
-            effect_started_at,
-        )
-        add_log_message(
-            game_state.combat_log,
-            "Hero picks up a potion.",
-            category="loot",
-        )
-    elif found_potion:
-        add_log_message(
-            game_state.combat_log,
-            "The consumable belt is full.",
-            category="warning",
-        )
-
-    chest_with_loot = next(
-        (
-            chest
-            for chest in floor.chests
-            if (
-                chest["is_open"]
-                and chest["loot_available"]
-                and (chest["column"], chest["row"])
-                == player_position
-            )
-        ),
-        None,
-    )
-
-    if (
-        chest_with_loot
-        and chest_with_loot["contains"] in (POTION, FIRE_BOMB, *SCROLLS)
-        and act_number == 2
-        and act_two_belt_is_full(player)
-    ):
-        add_log_message(
-            game_state.combat_log,
-            "The consumable belt is full.",
-            category="warning",
-        )
-    elif chest_with_loot:
-        loot_kind = chest_with_loot["contains"]
-        if loot_kind == POTION:
-            if act_number == 2:
-                store_act_two_consumable(player, POTION)
-            else:
-                player.potion_count += 1
-            pickup_kind = "potion"
-            message = "Hero picks up a potion."
-        elif loot_kind == FIRE_BOMB:
-            store_act_two_consumable(player, FIRE_BOMB)
-            pickup_kind = FIRE_BOMB
-            message = "Hero picks up a fire bomb."
-        elif loot_kind in SCROLLS:
-            store_act_two_consumable(player, loot_kind)
-            pickup_kind = loot_kind
-            scroll_name = {
-                SCROLL_OF_STONEFLESH: "Scroll of Stoneflesh",
-                SCROLL_OF_BINDING: "Scroll of Binding",
-                HEALING_SCROLL: "Healing Scroll",
-                SCROLL_OF_ARCANE_IMPULSE: "Scroll of Arcane Impulse",
-            }[loot_kind]
-            message = f"Hero picks up a {scroll_name}."
-        else:
-            gold_amount = (
-                3
-                if (
-                        act_number == 2
-                        and chest_with_loot.requires_key
-                )
-                else 1
-            )
-            player.gold_count += gold_amount
-            game_state.run_stats.gold_earned += gold_amount
-            pickup_kind = (
-                "gold_pile"
-                if gold_amount == 3
-                else "gold"
-            )
-            message = (
-                "Hero picks up three gold."
-                if gold_amount == 3
-                else "Hero picks up one gold."
-            )
-        chest_with_loot["loot_available"] = False
-        _start_pickup_effect(
-            game_state,
-            pickup_kind,
-            player_position,
-            effect_started_at,
-        )
-        add_log_message(
-            game_state.combat_log,
-            message,
-            category="loot",
-        )
-
-    dropped_consumable = next(
-        (
-            dropped
-            for dropped in floor.dropped_consumables
-            if dropped.destination == player_position
-        ),
-        None,
-    )
-    if (
-        dropped_consumable is not None
-        and act_two_belt_is_full(player)
-    ):
-        add_log_message(
-            game_state.combat_log,
-            "The consumable belt is full.",
-            category="warning",
-        )
-    elif dropped_consumable is not None:
-        store_act_two_consumable(player, dropped_consumable.kind)
-        floor.dropped_consumables.remove(dropped_consumable)
-        _start_pickup_effect(
-            game_state,
-            dropped_consumable.kind,
-            player_position,
-            effect_started_at,
-        )
-        add_log_message(
-            game_state.combat_log,
-            "Hero picks up the dropped item.",
-            category="loot",
-        )
-
-    found_key = next(
-        (
-            key_position
-            for key_position in floor.dropped_keys
-            if key_position == player_position
-        ),
-        None,
-    )
-
-    if (
-        found_key is not None
-        and act_number == 2
-        and act_two_belt_is_full(player)
-    ):
-        add_log_message(
-            game_state.combat_log,
-            "The consumable belt is full.",
-            category="warning",
-        )
-    elif found_key is not None:
-        if act_number == 2:
-            store_act_two_consumable(player, KEY)
-        else:
-            player.key_count += 1
-        floor.dropped_keys.remove(found_key)
-        _start_pickup_effect(
-            game_state,
-            "key",
-            player_position,
-            effect_started_at,
-        )
-        add_log_message(
-            game_state.combat_log,
-            "Hero picks up a key.",
-            category="loot",
         )
 
 
@@ -837,7 +542,7 @@ def try_move_player(
     if entered_boss_room:
         _activate_boss_fight(game_state)
 
-    _collect_items(game_state, transition_started_at)
+    collect_ground_gold(game_state, transition_started_at)
     reached_legacy_exit = (
         not floor.passages
         and (floor.player_column, floor.player_row)

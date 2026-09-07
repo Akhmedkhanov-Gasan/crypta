@@ -167,16 +167,6 @@ def throw_act_two_consumable(
         for crate in floor.breakable_crates
         if not crate.is_broken
     )
-    occupied_positions.update(
-        dropped.destination
-        for dropped in floor.dropped_consumables
-    )
-    occupied_positions.update(floor.dropped_keys)
-    occupied_positions.update(floor.dropped_gold)
-    occupied_positions.update(
-        (potion.column, potion.row)
-        for potion in floor.potions
-    )
     occupied_positions.add((floor.stairs_column, floor.stairs_row))
     if floor.boss_door is not None:
         occupied_positions.add(floor.boss_door)

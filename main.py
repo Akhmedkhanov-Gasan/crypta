@@ -12,6 +12,15 @@ from application.bootstrap import begin_application_startup
 from application.loading import LoadingCoordinator
 from application.state import ApplicationRuntimeState
 from acts.act_two.input.cutscene_skip import ActTwoCutsceneSkip
+from application.ground_items import (
+    GroundItemInput,
+    ground_item_input_available,
+)
+from acts.act_two.presentation.items.ground_items import (
+    draw_ground_items,
+    draw_pickup_hint,
+)
+from presentation.ground_items import draw_ground_item_window
 from acts.act_two.presentation.cutscene_skip import draw_cutscene_skip
 
 from acts.act_two.presentation.bosses.oracle_death import (
@@ -215,7 +224,6 @@ from bosses.oracle import resolve_oracle_hit_reaction
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from game.factories import (
-    create_floor_state,
     create_game_state,
 )
 
@@ -246,8 +254,6 @@ from logic import (
 )
 from rendering import (
     CLASS_SELECTION_READY_MS,
-    FLOOR_TRANSITION_CLOSE_END_MS,
-    FLOOR_TRANSITION_END_MS,
     draw_act_three_awakening,
     draw_act_one_upgrade_screen,
     draw_act_three_debug_class_selection,
@@ -287,7 +293,6 @@ from rendering import (
     draw_floor_transition,
     draw_coin,
     draw_dungeon,
-    draw_dropped_consumables,
     draw_enemy,
     draw_fire_bomb,
     draw_key,
@@ -485,6 +490,7 @@ def main():
     act_two_music_attempted = False
     act_three_music_attempted = False
     act_two_input_state = ActTwoInputRuntimeState()
+    ground_item_window = GroundItemInput()
     cutscene_skip = ActTwoCutsceneSkip()
     loading = LoadingCoordinator(
         window_state,
@@ -564,6 +570,22 @@ def main():
             and not game_state.trade_screen_open
             and not oracle_cutscene_active(game_state.floor)
         )
+        ground_item_window.update(
+            game_state,
+            act_two_input_state,
+            continuous_movement_available,
+            continuous_move_time,
+            (
+                act_one_sounds
+                if current_act == 1
+                else act_two_sounds if current_act == 2 else None
+            ),
+        )
+        continuous_movement_available = (
+            continuous_movement_available
+            and not ground_item_window.is_open
+        )
+
         if game_state.rune_selection_open:
             act_two_input_state.cancel_auto_move()
             act_two_input_state.cancel_consumable_drag()
@@ -914,6 +936,34 @@ def main():
                     )
                 continue
             elif game_state.floor_transition_started_at >= 0:
+                continue
+            elif ground_item_window.handle_event(
+                    event,
+                    game_state,
+                    act_two_input_state,
+                    (
+                        act_one_sounds
+                        if game_state.floor.presentation_act == 1
+                        else act_two_sounds
+                        if game_state.floor.presentation_act == 2
+                        else None
+                    ),
+                    window_to_game_position(
+                        window_state.screen,
+                        getattr(
+                            event,
+                            "pos",
+                            pygame.mouse.get_pos(),
+                        ),
+                    ),
+                    game_surface.get_size(),
+                    (
+                            app_runtime.game_started
+                            and not app_runtime.menu_open
+                            and not dev_console.is_open
+                    ),
+                    pygame.time.get_ticks(),
+            ):
                 continue
             elif game_state.bloody_altar_open:
                 event_position = getattr(
@@ -4059,14 +4109,7 @@ def main():
                     crate,
                 )
         for potion in game_state.floor["potions"]:
-            if (
-                current_act == 2
-                and not position_is_visible(
-                    game_state.floor,
-                    potion["column"],
-                    potion["row"],
-                )
-            ):
+            if current_act == 2:
                 continue
             draw_potion(
                 world_target,
@@ -4080,13 +4123,6 @@ def main():
                 ),
             )
         if current_act == 2:
-            draw_dropped_consumables(
-                world_target,
-                game_state.floor.dropped_consumables,
-                game_state.floor.visible_cells,
-                act_two_sprites,
-                current_time,
-            )
             for crate in game_state.floor.breakable_crates:
                 crate_is_visible = position_is_visible(
                     game_state.floor,
@@ -4114,7 +4150,10 @@ def main():
                     remembered_crate,
                     act_two_sprites,
                 )
-                if remembered_crate["loot_available"]:
+                if (
+                    remembered_crate["loot_available"]
+                    and not crate_is_visible
+                ):
                     draw_loot = (
                         draw_potion
                         if remembered_crate["loot_kind"] == "potion"
@@ -4180,7 +4219,13 @@ def main():
                 act_two_sprites,
                 current_time,
             )
-            if remembered_chest["loot_available"]:
+            if (
+                remembered_chest["loot_available"]
+                and (
+                    current_act != 2
+                    or not chest_is_visible
+                )
+            ):
                 chest_loot_kind = remembered_chest.get("contains")
                 if chest_loot_kind == "potion":
                     draw_potion(
@@ -4237,14 +4282,7 @@ def main():
                 act_two_sprites,
             )
         for dropped_gold in game_state.floor.dropped_gold:
-            if (
-                current_act == 2
-                and not position_is_visible(
-                    game_state.floor,
-                    dropped_gold[0],
-                    dropped_gold[1],
-                )
-            ):
+            if current_act == 2:
                 continue
             draw_coin(
                 world_target,
@@ -4254,14 +4292,7 @@ def main():
                 act_two_sprites,
             )
         for dropped_key in game_state.floor["dropped_keys"]:
-            if (
-                current_act == 2
-                and not position_is_visible(
-                    game_state.floor,
-                    dropped_key[0],
-                    dropped_key[1],
-                )
-            ):
+            if current_act == 2:
                 continue
             draw_key(
                 world_target,
@@ -4271,6 +4302,12 @@ def main():
                 act_two_sprites,
             )
         if current_act == 2:
+            draw_ground_items(
+                world_target,
+                game_state,
+                act_two_sprites,
+                current_time,
+            )
             draw_oracle_blackfire(
                 world_target,
                 game_state.floor,
@@ -4542,6 +4579,15 @@ def main():
                 world_target,
                 act_two_camera,
             )
+            draw_pickup_hint(
+                game_surface,
+                game_state,
+                ground_item_window,
+                act_two_camera,
+                act_two_fonts["pickup_hint"],
+                current_time,
+                ground_item_input_available(game_state),
+            )
         elif current_act == 1:
             draw_act_one_camera_view(
                 game_surface,
@@ -4683,6 +4729,17 @@ def main():
                     pygame.mouse.get_pos(),
                 ),
             )
+
+        if current_act in (2, 3) and ground_item_input_available(game_state):
+            draw_ground_item_window(
+                game_surface,
+                game_state,
+                ground_item_window,
+                act_two_sprites,
+                act_two_fonts,
+                current_time,
+            )
+
         if game_state.upgrade_screen_open:
             active_upgrade_title_font = (
                 act_three_fonts["title"]

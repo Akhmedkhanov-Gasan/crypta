@@ -149,18 +149,6 @@ def draw_act_one_revisit_corpses(
             _position(*position),
         )
 
-    guild_seal_position = (
-        revisit_state.guild_seal_position
-    )
-
-    if (
-        guild_seal_position is not None
-        and guild_seal_position in visible_cells
-    ):
-        screen.blit(
-            sprites["guild_seal"],
-            _position(*guild_seal_position),
-        )
     for corpse in revisit_state.enemy_corpses:
         position = (
             corpse.column,
