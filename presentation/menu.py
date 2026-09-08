@@ -108,8 +108,10 @@ def _draw_layout_shade(
 
 
 def _layout_entry_name(action):
-    if action == "main_menu":
-        return "quit"
+    if action == "resume":
+        return "continue"
+    if action == "descend":
+        return "resume"
 
     return action
 
@@ -117,7 +119,10 @@ def _layout_entry_name(action):
 @dataclass
 class MenuState:
     page: str = "main"
-    selected_index: int = 0
+    selected_index: int = 1
+    can_continue: bool = False
+    settings_return_page: str = "main"
+    pause_background: pygame.Surface | None = None
     music_volume: float = 0.55
     effects_volume: float = 0.65
     menu_theme: int = 1
@@ -127,16 +132,10 @@ class MenuState:
     transition_duration_ms: int = 950
 
 
-def _main_entries(game_started):
-    if game_started:
-        return (
-            ("resume", "RETURN"),
-            ("settings", "SETTINGS"),
-            ("main_menu", "MAIN MENU"),
-        )
-
+def _main_entries():
     return (
-        ("resume", "DESCEND"),
+        ("resume", "CONTINUE"),
+        ("descend", "DESCEND"),
         ("settings", "SETTINGS"),
         ("quit", "LEAVE"),
     )
@@ -153,6 +152,12 @@ def _settings_entries(menu_state, fullscreen):
 
 
 def _entries(menu_state, game_started, fullscreen):
+    if menu_state.page == "pause":
+        return (
+            ("resume", "CONTINUE"),
+            ("settings", "SETTINGS"),
+            ("quit", "RETURN TO MENU"),
+        )
     if menu_state.page == "settings":
         return _settings_entries(menu_state, fullscreen)
     if menu_state.page == "confirm_abandon":
@@ -160,7 +165,7 @@ def _entries(menu_state, game_started, fullscreen):
             ("back", "NO"),
             ("abandon_run", "YES"),
         )
-    return _main_entries(game_started)
+    return _main_entries()
 
 
 def _rectangles_for_page(
@@ -168,7 +173,12 @@ def _rectangles_for_page(
     entries,
     menu_layout,
 ):
-    if menu_state.page == "main":
+    if menu_state.page == "pause":
+        rectangles_by_action = {
+            action: menu_layout["entries"][action]["rect"]
+            for action, _ in entries
+        }
+    elif menu_state.page == "main":
         rectangles_by_action = {
             action: menu_layout["entries"][
                 _layout_entry_name(action)
@@ -279,17 +289,32 @@ def _adjust_selected_slider(menu_state, action, amount):
 
 
 def _activate_entry(menu_state, action):
+    if action == "resume":
+        return "resume" if menu_state.can_continue else None
+    if action == "descend":
+        if menu_state.can_continue:
+            menu_state.page = "confirm_abandon"
+            menu_state.selected_index = 0
+            return None
+        return "new_run"
+    if action == "abandon_run":
+        return "new_run"
     if action == "settings":
+        menu_state.settings_return_page = menu_state.page
         menu_state.page = "settings"
         menu_state.selected_index = 0
         return None
-    if action == "main_menu":
-        menu_state.page = "confirm_abandon"
-        menu_state.selected_index = 0
-        return None
     if action == "back":
-        menu_state.page = "main"
-        menu_state.selected_index = 0
+        menu_state.page = (
+            menu_state.settings_return_page
+            if menu_state.page == "settings"
+            else "main"
+        )
+        menu_state.selected_index = (
+            0
+            if menu_state.page == "pause" or menu_state.can_continue
+            else 1
+        )
         return None
     return action
 
@@ -386,14 +411,24 @@ def handle_menu_event(
 
     if event.key == pygame.K_F11:
         return "toggle_fullscreen"
-    if event.key in (pygame.K_UP, pygame.K_w):
-        menu_state.selected_index = (
-            menu_state.selected_index - 1
-        ) % len(entries)
-    elif event.key in (pygame.K_DOWN, pygame.K_s):
-        menu_state.selected_index = (
-            menu_state.selected_index + 1
-        ) % len(entries)
+    if event.key in (
+        pygame.K_UP,
+        pygame.K_w,
+        pygame.K_DOWN,
+        pygame.K_s,
+    ):
+        direction = (
+            -1
+            if event.key in (pygame.K_UP, pygame.K_w)
+            else 1
+        )
+        for _ in entries:
+            menu_state.selected_index = (
+                menu_state.selected_index + direction
+            ) % len(entries)
+            action = entries[menu_state.selected_index][0]
+            if action != "resume" or menu_state.can_continue:
+                break
     elif event.key in (pygame.K_LEFT, pygame.K_a):
         action = entries[menu_state.selected_index][0]
         if action in ("music_volume", "effects_volume"):
@@ -415,9 +450,8 @@ def handle_menu_event(
         )
     elif event.key == pygame.K_ESCAPE:
         if menu_state.page in ("settings", "confirm_abandon"):
-            menu_state.page = "main"
-            menu_state.selected_index = 0
-        elif game_started:
+            return _activate_entry(menu_state, "back")
+        if menu_state.can_continue:
             return "resume"
 
     return None
@@ -494,10 +528,21 @@ def _draw_entries(
     for index, ((action, label), rectangle) in enumerate(
         zip(entries, rectangles)
     ):
-        selected = index == selected_index
-        selected_color = _TEXT if selected else None
+        enabled = (
+            action != "resume"
+            or menu_state.can_continue
+        )
+        selected = index == selected_index and enabled
+        selected_color = (
+            _TEXT_DIM
+            if not enabled
+            else _TEXT if selected else None
+        )
 
-        if menu_state.page == "main":
+        if menu_state.page == "pause":
+            label_spec = menu_layout["entries"][action]["label"]
+            visible_label = label_spec["text"]
+        elif menu_state.page == "main":
             layout_name = _layout_entry_name(action)
             label_spec = menu_layout["entries"][
                 layout_name
@@ -617,6 +662,36 @@ def _draw_entries(
         )
 
 
+def draw_run_save_error(surface, message):
+    if not message:
+        return
+
+    rectangle = pygame.Rect(
+        20,
+        surface.get_height() - 82,
+        surface.get_width() - 40,
+        62,
+    )
+    pygame.draw.rect(
+        surface,
+        (32, 12, 14),
+        rectangle,
+        border_radius=6,
+    )
+
+    font = pygame.font.Font(None, 22)
+    text = _render_text_fitted(
+        font,
+        message,
+        (235, 180, 175),
+        rectangle.inflate(-16, -12),
+    )
+    surface.blit(
+        text,
+        text.get_rect(center=rectangle.center),
+    )
+
+
 def _smoothstep(value):
     value = max(0.0, min(1.0, value))
     return value * value * (3.0 - 2.0 * value)
@@ -643,11 +718,20 @@ def _draw_menu_theme(
     menu_layout,
     selector_selected_theme,
 ):
-    _draw_menu_background(
-        surface,
-        menu_assets,
-        theme,
+    overlay = (
+        game_started
+        and menu_state.pause_background is not None
+        and menu_state.page in ("pause", "settings")
     )
+
+    if overlay:
+        surface.blit(menu_state.pause_background, (0, 0))
+    else:
+        _draw_menu_background(
+            surface,
+            menu_assets,
+            theme,
+        )
 
     asset_theme = {
         1: "act_one",
@@ -655,7 +739,11 @@ def _draw_menu_theme(
         3: "act_three",
     }[theme]
 
-    title_shade = menu_layout["shades"]["title"]
+    title_shade = (
+        None
+        if overlay
+        else menu_layout["shades"]["title"]
+    )
 
     if title_shade is not None:
         draw_figma_rectangle(
@@ -676,6 +764,16 @@ def _draw_menu_theme(
             surface,
             content_shade,
         )
+
+    if overlay:
+        _draw_entries(
+            surface,
+            _entries(menu_state, game_started, fullscreen),
+            menu_state.selected_index,
+            menu_state,
+            menu_layout,
+        )
+        return
 
     title_spec = menu_layout["art"]["title"]
 
@@ -744,7 +842,6 @@ def _draw_menu_theme(
         draw_figma_text(
             surface,
             menu_layout["copy"]["warning"],
-            text_override="Abandon the descent?",
         )
 
         draw_figma_text(

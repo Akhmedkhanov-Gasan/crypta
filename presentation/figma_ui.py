@@ -21,6 +21,10 @@ _FONT_PATHS = {
         FONT_ROOT / "euxoi.ttf",
     ("euxoi", "medium"):
         FONT_ROOT / "euxoi.ttf",
+    ("asul", "regular"):
+        FONT_ROOT / "asul.ttf",
+    ("asul", "medium"):
+        FONT_ROOT / "asul.ttf",
 
 
     ("alagard", "regular"): FONT_ROOT / "alagard" / "alagard.ttf",

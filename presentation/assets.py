@@ -103,36 +103,82 @@ def load_menu_assets():
     }
 
 
-def load_menu_layouts(act):
-    layout_directory = (
+def load_menu_layouts():
+    layout_path = (
         PROJECT_ROOT
         / "assets"
         / "ui"
         / "layouts"
-        / f"act_{act}"
+        / "menu.json"
     )
 
+    with resources.open_text(layout_path, encoding="utf-8") as file:
+        bundle = json.load(file)
+
+    if (
+        not isinstance(bundle, dict)
+        or bundle.get("schema_version") != 1
+        or bundle.get("screen") != "menu_bundle"
+    ):
+        raise ValueError(
+            f"Menu bundle {layout_path} must use "
+            "screen: menu_bundle and schema_version: 1."
+        )
+
+    acts = bundle.get("acts")
+
+    if not isinstance(acts, dict):
+        raise ValueError(
+            f"Menu bundle {layout_path} must contain acts."
+        )
+
+    expected_screens = {
+        "main": "menu",
+        "settings": "menu_settings",
+        "confirm": "menu_confirm",
+        "pause": "menu_pause",
+    }
     layouts = {}
 
-    for page in ("main", "settings", "confirm"):
-        layout_path = layout_directory / f"{page}.json"
+    for act in (1, 2, 3):
+        pages = acts.get(str(act))
 
-        with resources.open_text(layout_path, encoding="utf-8") as file:
-            layout = json.load(file)
-
-        if layout.get("schema_version") != 2:
+        if not isinstance(pages, dict):
             raise ValueError(
-                f"Menu layout {layout_path} must use schema_version: 2."
+                f"Menu bundle {layout_path} is missing act {act}."
             )
 
-        if layout.get("act") != act:
-            raise ValueError(
-                f"Menu layout {layout_path} must use act: {act}."
-            )
+        layouts[act] = {}
 
-        layouts[page] = layout
+        for page, screen in expected_screens.items():
+            layout = pages.get(page)
+
+            if (
+                not isinstance(layout, dict)
+                or layout.get("schema_version") != 2
+                or layout.get("act") != act
+                or layout.get("screen") != screen
+            ):
+                raise ValueError(
+                    f"Invalid menu layout: act {act}, page {page}."
+                )
+
+            frame = layout.get("frame")
+
+            if (
+                not isinstance(frame, dict)
+                or frame.get("width") != 1280
+                or frame.get("height") != 720
+            ):
+                raise ValueError(
+                    f"Menu layout act {act}, page {page} "
+                    "must be 1280x720."
+                )
+
+            layouts[act][page] = layout
 
     return layouts
+
 
 def load_act_two_fonts():
     pixelify_directory = FONT_ROOT / "Pixelify_Sans"

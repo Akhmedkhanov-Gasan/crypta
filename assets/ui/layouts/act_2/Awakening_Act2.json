@@ -142,13 +142,13 @@
               "r": 0,
               "g": 0,
               "b": 0,
-              "a": 107
+              "a": 255
             },
             "stroke": {
               "r": 179,
               "g": 179,
               "b": 179,
-              "a": 107
+              "a": 255
             },
             "stroke_weight": 2,
             "corner_radius": 22,
@@ -189,14 +189,14 @@
           "class_description": {
             "rect": {
               "x": 189,
-              "y": 507,
+              "y": 498,
               "width": 290,
-              "height": 48
+              "height": 61
             },
-            "text": "A fragile spellcaster who sacrifices\nphysical strength for \ndevastating ranged magic.",
+            "text": "A fragile spellcaster who\nsacrifices physical strength for\ndevastating ranged magic.",
             "font": {
-              "family": "Alagard",
-              "style": "Medium",
+              "family": "Asul",
+              "style": "Regular",
               "size": 16
             },
             "line_height": {
@@ -226,16 +226,16 @@
             },
             "title": {
               "rect": {
-                "x": 259,
-                "y": 559,
-                "width": 150,
-                "height": 26
+                "x": 256,
+                "y": 558,
+                "width": 156,
+                "height": 27
               },
               "text": "ATTRIBUTE SHIFT",
               "font": {
-                "family": "Venice Classic",
-                "style": "Medium",
-                "size": 20
+                "family": "Asul",
+                "style": "Regular",
+                "size": 15
               },
               "line_height": {
                 "unit": "AUTO"
@@ -260,7 +260,7 @@
                 "x": 191,
                 "y": 587,
                 "width": 287,
-                "height": 17
+                "height": 15
               },
               "layout": {
                 "mode": "HORIZONTAL",
@@ -280,14 +280,14 @@
                   "rect": {
                     "x": 214,
                     "y": 587,
-                    "width": 75,
-                    "height": 17
+                    "width": 73,
+                    "height": 15
                   },
                   "text": "STR 2→0 (-2)",
                   "font": {
-                    "family": "Euxoi",
+                    "family": "Asul",
                     "style": "Regular",
-                    "size": 16
+                    "size": 12
                   },
                   "line_height": {
                     "unit": "AUTO"
@@ -310,16 +310,16 @@
                 {
                   "id": "stat_change_2",
                   "rect": {
-                    "x": 301,
+                    "x": 299,
                     "y": 587,
-                    "width": 73,
-                    "height": 17
+                    "width": 76,
+                    "height": 15
                   },
                   "text": "INT 0→6 (+6)",
                   "font": {
-                    "family": "Euxoi",
+                    "family": "Asul",
                     "style": "Regular",
-                    "size": 16
+                    "size": 12
                   },
                   "line_height": {
                     "unit": "AUTO"
@@ -342,16 +342,16 @@
                 {
                   "id": "stat_change_3",
                   "rect": {
-                    "x": 386,
+                    "x": 387,
                     "y": 587,
                     "width": 69,
-                    "height": 17
+                    "height": 15
                   },
                   "text": "VIT 2→3 (+1)",
                   "font": {
-                    "family": "Euxoi",
+                    "family": "Asul",
                     "style": "Regular",
-                    "size": 16
+                    "size": 12
                   },
                   "line_height": {
                     "unit": "AUTO"
@@ -376,14 +376,14 @@
           },
           "ability": {
             "rect": {
-              "x": 221,
+              "x": 204,
               "y": 604,
-              "width": 231,
+              "width": 260,
               "height": 91
             },
             "header": {
               "rect": {
-                "x": 221,
+                "x": 204,
                 "y": 606,
                 "width": 231,
                 "height": 30
@@ -402,7 +402,7 @@
               },
               "icon": {
                 "rect": {
-                  "x": 254,
+                  "x": 240,
                   "y": 606,
                   "width": 30,
                   "height": 30
@@ -412,16 +412,16 @@
               },
               "name": {
                 "rect": {
-                  "x": 290,
+                  "x": 276,
                   "y": 610,
-                  "width": 130,
+                  "width": 123,
                   "height": 22
                 },
                 "text": "ARCANE BURST",
                 "font": {
-                  "family": "Venice Classic",
-                  "style": "Medium",
-                  "size": 20
+                  "family": "Asul",
+                  "style": "Regular",
+                  "size": 15
                 },
                 "line_height": {
                   "unit": "AUTO"
@@ -439,20 +439,20 @@
                   "b": 152,
                   "a": 255
                 },
-                "auto_resize": "WIDTH_AND_HEIGHT"
+                "auto_resize": "NONE"
               }
             },
             "description": {
               "rect": {
-                "x": 221,
+                "x": 204,
                 "y": 643,
-                "width": 233,
-                "height": 48
+                "width": 260,
+                "height": 52
               },
-              "text": "Unleash magic in a straight line, striking every enemy up to 5 tiles away.",
+              "text": "Unleash magic in a straight \nline, striking every enemy \nup to 5 tiles away.",
               "font": {
-                "family": "Alagard",
-                "style": "Medium",
+                "family": "Asul",
+                "style": "Regular",
                 "size": 16
               },
               "line_height": {
@@ -518,13 +518,13 @@
               "r": 0,
               "g": 0,
               "b": 0,
-              "a": 107
+              "a": 255
             },
             "stroke": {
               "r": 179,
               "g": 179,
               "b": 179,
-              "a": 107
+              "a": 255
             },
             "stroke_weight": 2,
             "corner_radius": 22,
@@ -862,13 +862,13 @@
               "r": 0,
               "g": 0,
               "b": 0,
-              "a": 107
+              "a": 255
             },
             "stroke": {
               "r": 179,
               "g": 179,
               "b": 179,
-              "a": 107
+              "a": 255
             },
             "stroke_weight": 2,
             "corner_radius": 22,

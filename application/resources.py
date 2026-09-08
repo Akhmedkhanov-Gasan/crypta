@@ -83,10 +83,7 @@ def load_application_resources(startup):
     )
 
     menu_assets = startup.load(load_menu_assets)
-    menu_layouts = {
-        act_number: startup.load(load_menu_layouts, act_number)
-        for act_number in (1, 2, 3)
-    }
+    menu_layouts = startup.load(load_menu_layouts)
     menu_fonts = {
         act_number: act_two_fonts
         for act_number in (1, 2, 3)

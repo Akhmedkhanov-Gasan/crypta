@@ -5,7 +5,8 @@
     "compatibilityVersion": 1100,
     "extensionsPath": "extensions",
     "folders": [
-        "act_3"
+        "act_3",
+        "../../my/old+original/act_3/environment_v3"
     ],
     "properties": [
     ],

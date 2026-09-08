@@ -240,18 +240,56 @@
     }
   },
   "entries": {
-    "resume": {
+    "continue": {
       "rect": {
-        "x": 581,
-        "y": 321,
-        "width": 118,
+        "x": 567,
+        "y": 302,
+        "width": 145,
         "height": 25
       },
       "label": {
         "rect": {
-          "x": 581,
-          "y": 321,
-          "width": 118,
+          "x": 567,
+          "y": 302,
+          "width": 145,
+          "height": 25
+        },
+        "text": "Continue",
+        "font": {
+          "family": "Birch Leaf",
+          "style": "Regular",
+          "size": 24
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 167,
+          "g": 167,
+          "b": 167,
+          "a": 255
+        }
+      }
+    },
+    "resume": {
+      "rect": {
+        "x": 567,
+        "y": 341,
+        "width": 145,
+        "height": 25
+      },
+      "label": {
+        "rect": {
+          "x": 567,
+          "y": 341,
+          "width": 145,
           "height": 25
         },
         "text": "Descend",
@@ -280,16 +318,16 @@
     },
     "settings": {
       "rect": {
-        "x": 581,
-        "y": 360,
-        "width": 118,
+        "x": 567,
+        "y": 380,
+        "width": 145,
         "height": 25
       },
       "label": {
         "rect": {
-          "x": 581,
-          "y": 360,
-          "width": 118,
+          "x": 567,
+          "y": 380,
+          "width": 145,
           "height": 25
         },
         "text": "Settings",
@@ -318,16 +356,16 @@
     },
     "quit": {
       "rect": {
-        "x": 581,
-        "y": 399,
-        "width": 118,
+        "x": 567,
+        "y": 419,
+        "width": 145,
         "height": 25
       },
       "label": {
         "rect": {
-          "x": 581,
-          "y": 399,
-          "width": 118,
+          "x": 567,
+          "y": 419,
+          "width": 145,
           "height": 25
         },
         "text": "Leave",

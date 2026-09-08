@@ -1,10 +1,12 @@
 {
-    "activeFile": "C:/Users/ldago/Downloads/act2.tsx",
+    "activeFile": "",
     "expandedProjectPaths": [
         "act_3/environment_v1",
-        "act_3",
+        ".",
         "act_3/environment_v2",
-        "."
+        "act_3",
+        "C:/Dev/crypta/my/old+original/act_3/environment_v3",
+        "C:/Dev/crypta/my/old+original/act_3"
     ],
     "fileStates": {
         "C:/Users/ldago/Downloads/act2.tsx": {
@@ -77,10 +79,6 @@
     "map.tileWidth": 32,
     "map.width": 15,
     "openFiles": [
-        "act_3/environment_v1/room_spawn_01.tmx",
-        "act_3/environment_v1/corridor_straight_01.tmx",
-        "act_3/environment_v1/act_3_environment_v1.tsx",
-        "C:/Users/ldago/Downloads/act2.tsx"
     ],
     "project": "act3.tiled-project",
     "recentFiles": [

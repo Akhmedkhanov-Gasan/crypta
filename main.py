@@ -11,6 +11,7 @@ from application.resources import load_application_resources
 from application.bootstrap import begin_application_startup
 from application.loading import LoadingCoordinator
 from application.state import ApplicationRuntimeState
+from application.run_session import RunSession
 from acts.act_two.input.cutscene_skip import ActTwoCutsceneSkip
 from application.ground_items import (
     GroundItemInput,
@@ -346,6 +347,7 @@ from presentation.display import (
 from presentation.menu import (
     MenuState,
     draw_menu,
+    draw_run_save_error,
     handle_menu_event,
 )
 from settings import (
@@ -455,6 +457,8 @@ def main():
         pygame.mixer.set_reserved(2)
 
     game_state = startup.load(create_game_state)
+    run_session = RunSession()
+    startup.load(run_session.load)
     dev_console = DevConsole()
     act_one_camera = ActOneCamera()
     act_two_camera = ActTwoCamera()
@@ -622,6 +626,9 @@ def main():
         ]
 
         for event in pygame.event.get():
+            if app_runtime.quit_requested:
+                continue
+
             if loading.completed:
                 if event.type == pygame.QUIT:
                     app_runtime.request_quit()
@@ -638,6 +645,10 @@ def main():
                 continue
 
             death_menu_requested = False
+            menu_state.can_continue = run_session.can_continue(
+                game_state,
+                app_runtime,
+            )
 
             if (
                 event.type == pygame.MOUSEBUTTONDOWN
@@ -843,6 +854,9 @@ def main():
                     )
 
                 if menu_action == "resume":
+                    if not menu_state.can_continue:
+                        continue
+
                     if (
                         (
                             act_one_menu_music_playing
@@ -855,11 +869,25 @@ def main():
                     act_one_menu_music_playing = False
                     act_two_menu_music_playing = False
 
-                    if not app_runtime.game_started:
+                    if not app_runtime.run_in_progress:
                         loading.run()
+                        game_state = run_session.resume(app_runtime)
+                        current_act = game_state.floor.presentation_act
+                        act_one_camera = ActOneCamera()
+                        act_two_camera = ActTwoCamera()
+                        act_two_world_surface = None
+                        act_two_map_surface = None
+                        act_two_map_cache_key = None
+                        ground_item_window = GroundItemInput()
+                        act_two_input_state.reset_for_loading()
+                        menu_state.pause_background = None
+                        menu_state.transition_from_theme = None
 
                     app_runtime.start_game()
-                elif menu_action == "abandon_run":
+                elif menu_action in ("abandon_run", "new_run"):
+                    if not run_session.discard():
+                        continue
+
                     if (
                         (
                             act_one_music_attempted
@@ -886,21 +914,62 @@ def main():
                     act_two_music_attempted = False
                     act_three_music_attempted = False
 
-                    if death_menu_requested:
-                        game_state = loading.run(create_game_state)
-                    else:
-                        game_state = create_game_state()
+                    game_state = loading.run(create_game_state)
+                    current_act = game_state.floor.presentation_act
 
                     app_runtime.progress_tracking_enabled = True
                     app_runtime.game_started = False
+                    app_runtime.run_in_progress = False
                     menu_state.page = "main"
-                    menu_state.selected_index = 0
+                    menu_state.can_continue = False
+                    menu_state.selected_index = 1
                     app_runtime.menu_started_at = pygame.time.get_ticks()
+
+                    if menu_action == "new_run":
+                        app_runtime.start_game()
+                        menu_state.can_continue = True
+                        menu_state.selected_index = 0
+
                     pygame.mouse.set_cursor(
                         pygame.SYSTEM_CURSOR_ARROW
                     )
                 elif menu_action == "quit":
-                    app_runtime.request_quit()
+                    if app_runtime.game_started:
+                        if not run_session.save(
+                                game_state,
+                                app_runtime,
+                        ):
+                            continue
+
+                        if pygame.mixer.get_init() is not None:
+                            pygame.mixer.music.stop()
+                            pygame.mixer.Channel(0).stop()
+
+                        if act_one_warden_music_channel is not None:
+                            act_one_warden_music_channel.stop()
+
+                        act_one_music_attempted = False
+                        act_two_music_attempted = False
+                        act_three_music_attempted = False
+                        act_one_menu_music_playing = False
+                        act_two_menu_music_playing = False
+                        act_one_warden_music_attempted = False
+                        act_one_warden_music_channel = None
+
+                        act_two_input_state.reset_for_loading()
+                        app_runtime.return_to_main_menu(
+                            pygame.time.get_ticks()
+                        )
+                        menu_state.page = "main"
+                        menu_state.selected_index = (
+                            0 if menu_state.can_continue else 1
+                        )
+                        menu_visual_theme = menu_state.menu_theme
+                        active_menu_layouts = menu_layouts[
+                            menu_visual_theme
+                        ]
+                    else:
+                        app_runtime.request_quit()
                 elif menu_action == "toggle_fullscreen":
                     window_state.toggle_fullscreen()
                 elif menu_action == "act_one_volume_changed":
@@ -2398,8 +2467,11 @@ def main():
 
                 if event.key == pygame.K_ESCAPE:
                     act_two_input_state.reset_held_movement()
+                    act_two_input_state.cancel_auto_move()
+                    act_two_input_state.cancel_consumable_drag()
+                    menu_state.pause_background = game_surface.copy()
                     app_runtime.open_menu(pygame.time.get_ticks())
-                    menu_state.page = "main"
+                    menu_state.page = "pause"
                     menu_state.selected_index = 0
                     continue
 
@@ -3234,6 +3306,29 @@ def main():
                             game_state.player.player_class,
                             game_state.floor,
                         )
+        run_session.invalidate_finished(
+            game_state,
+            app_runtime,
+        )
+
+        if app_runtime.quit_requested:
+            if run_session.save(game_state, app_runtime):
+                app_runtime.running = False
+                break
+
+            app_runtime.quit_requested = False
+
+            if not app_runtime.menu_open:
+                menu_state.pause_background = game_surface.copy()
+
+            app_runtime.open_menu(pygame.time.get_ticks())
+            menu_state.page = (
+                "pause"
+                if app_runtime.game_started
+                else "main"
+            )
+            menu_state.selected_index = 0
+
         if loading.completed:
             continue
 
@@ -3382,6 +3477,17 @@ def main():
                     pygame.mixer.music.fadeout(500)
                 act_one_menu_music_playing = False
                 act_two_menu_music_playing = False
+            menu_state.can_continue = run_session.can_continue(
+                game_state,
+                app_runtime,
+            )
+            if (
+                menu_state.page == "main"
+                and not menu_state.can_continue
+                and menu_state.selected_index == 0
+            ):
+                menu_state.selected_index = 1
+
             draw_menu(
                 game_surface,
                 menu_fonts[menu_visual_theme],
@@ -3398,6 +3504,10 @@ def main():
                     else menu_state.page
                 ],
                 menu_layouts=menu_layouts,
+            )
+            draw_run_save_error(
+                game_surface,
+                run_session.error,
             )
             present_game(window_state.screen, game_surface)
             clock.tick(FPS)
