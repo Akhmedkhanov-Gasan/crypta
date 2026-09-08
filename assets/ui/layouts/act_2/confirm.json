@@ -242,16 +242,16 @@
   "copy": {
     "warning": {
       "rect": {
-        "x": 545,
-        "y": 310,
-        "width": 190,
-        "height": 25
+        "x": 557,
+        "y": 300,
+        "width": 166,
+        "height": 35
       },
-      "text": "Abandon The Descent?",
+      "text": "Abandon the \ncurrent descent?",
       "font": {
         "family": "Birch Leaf",
         "style": "Regular",
-        "size": 12
+        "size": 15
       },
       "line_height": {
         "unit": "AUTO"

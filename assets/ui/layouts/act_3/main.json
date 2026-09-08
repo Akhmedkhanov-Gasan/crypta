@@ -67,24 +67,7 @@
       "corner_radius": 0,
       "blur_radius": 26.3
     },
-    "content": {
-      "rect": {
-        "x": 581,
-        "y": 290,
-        "width": 118,
-        "height": 127
-      },
-      "fill": {
-        "r": 0,
-        "g": 0,
-        "b": 0,
-        "a": 156
-      },
-      "stroke": null,
-      "stroke_weight": 1,
-      "corner_radius": 0,
-      "blur_radius": 26.3
-    }
+    "content": null
   },
   "themes": {
     "1": {
@@ -257,24 +240,62 @@
     }
   },
   "entries": {
-    "resume": {
+    "continue": {
       "rect": {
-        "x": 595,
-        "y": 299,
-        "width": 90,
+        "x": 567,
+        "y": 302,
+        "width": 145,
         "height": 25
       },
       "label": {
         "rect": {
-          "x": 595,
-          "y": 299,
-          "width": 90,
+          "x": 567,
+          "y": 302,
+          "width": 145,
+          "height": 25
+        },
+        "text": "Continue",
+        "font": {
+          "family": "Birch Leaf",
+          "style": "Regular",
+          "size": 24
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 167,
+          "g": 167,
+          "b": 167,
+          "a": 255
+        }
+      }
+    },
+    "resume": {
+      "rect": {
+        "x": 567,
+        "y": 341,
+        "width": 145,
+        "height": 25
+      },
+      "label": {
+        "rect": {
+          "x": 567,
+          "y": 341,
+          "width": 145,
           "height": 25
         },
         "text": "Descend",
         "font": {
-          "family": "Alagard",
-          "style": "Medium",
+          "family": "Birch Leaf",
+          "style": "Regular",
           "size": 24
         },
         "line_height": {
@@ -297,22 +318,22 @@
     },
     "settings": {
       "rect": {
-        "x": 595,
-        "y": 341,
-        "width": 90,
+        "x": 567,
+        "y": 380,
+        "width": 145,
         "height": 25
       },
       "label": {
         "rect": {
-          "x": 595,
-          "y": 341,
-          "width": 90,
+          "x": 567,
+          "y": 380,
+          "width": 145,
           "height": 25
         },
         "text": "Settings",
         "font": {
-          "family": "Alagard",
-          "style": "Medium",
+          "family": "Birch Leaf",
+          "style": "Regular",
           "size": 24
         },
         "line_height": {
@@ -335,22 +356,22 @@
     },
     "quit": {
       "rect": {
-        "x": 609,
-        "y": 383,
-        "width": 62,
+        "x": 567,
+        "y": 419,
+        "width": 145,
         "height": 25
       },
       "label": {
         "rect": {
-          "x": 609,
-          "y": 383,
-          "width": 62,
+          "x": 567,
+          "y": 419,
+          "width": 145,
           "height": 25
         },
         "text": "Leave",
         "font": {
-          "family": "Alagard",
-          "style": "Medium",
+          "family": "Birch Leaf",
+          "style": "Regular",
           "size": 24
         },
         "line_height": {
