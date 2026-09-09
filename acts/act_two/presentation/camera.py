@@ -1,5 +1,6 @@
 import pygame
 
+from presentation.map_navigation import draw_map_trail
 from presentation.camera import (
     PixelCamera,
     camera_render_rectangle,
@@ -120,7 +121,7 @@ def _draw_camera_vignette(screen, render_rectangle):
     screen.blit(vignette, render_rectangle)
 
 
-def draw_act_two_camera_view(screen, world_surface, camera):
+def draw_act_two_camera_view(screen, world_surface, camera, floor):
     render_rectangle = draw_pixel_camera_view(
         screen,
         world_surface,
@@ -128,6 +129,14 @@ def draw_act_two_camera_view(screen, world_surface, camera):
         _VIEWPORT,
         source_origin=(MAP_OFFSET_X, MAP_OFFSET_Y),
         background=BACKGROUND_COLOR,
+    )
+    draw_map_trail(
+        screen,
+        floor,
+        (round(camera.x), round(camera.y)),
+        TILE_SIZE,
+        camera.zoom,
+        render_rectangle,
     )
     _draw_camera_vignette(screen, render_rectangle)
 

@@ -8,6 +8,7 @@ from application.transitions import (
     finish_upgrade_descent,
 )
 from application.resources import load_application_resources
+from application.map_navigation import MapNavigationController
 from application.bootstrap import begin_application_startup
 from application.loading import LoadingCoordinator
 from application.state import ApplicationRuntimeState
@@ -190,7 +191,6 @@ from acts.act_two.presentation.camera import (
     ActTwoCamera,
     act_two_screen_to_cell,
     act_two_world_surface_size,
-    change_act_two_camera_zoom,
     draw_act_two_camera_view,
     update_act_two_camera,
 )
@@ -464,6 +464,7 @@ def main():
     dev_console = DevConsole()
     act_one_camera = ActOneCamera()
     act_two_camera = ActTwoCamera()
+    map_navigation = MapNavigationController(act_two_hud_layout)
     act_one_world_surface = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
     act_two_world_surface = None
     act_two_map_surface = None
@@ -1035,6 +1036,17 @@ def main():
                     ),
                     pygame.time.get_ticks(),
             ):
+                continue
+            elif map_navigation.handle_event(
+                    event,
+                    game_state,
+                    act_two_camera,
+                    window_to_game_position(
+                        window_state.screen,
+                        getattr(event, "pos", pygame.mouse.get_pos()),
+                    ),
+                    enabled=continuous_movement_available,
+                ):
                 continue
             elif game_state.bloody_altar_open:
                 event_position = getattr(
@@ -1887,30 +1899,6 @@ def main():
                     window_state.toggle_fullscreen()
                     continue
 
-                if current_act == 2 and event.key in (
-                    pygame.K_EQUALS,
-                    pygame.K_KP_PLUS,
-                    pygame.K_MINUS,
-                    pygame.K_KP_MINUS,
-                ):
-                    zoom_direction = (
-                        1
-                        if event.key in (pygame.K_EQUALS, pygame.K_KP_PLUS)
-                        else -1
-                    )
-                    if change_act_two_camera_zoom(
-                        act_two_camera,
-                        game_state.floor.map,
-                        game_state.floor.player_column,
-                        game_state.floor.player_row,
-                        zoom_direction,
-                    ):
-                        add_log_message(
-                            game_state.combat_log,
-                            f"Camera zoom: {act_two_camera.zoom}x.",
-                            category="system",
-                        )
-                    continue
 
                 if event.key == pygame.K_F1:
                     if (
@@ -3848,6 +3836,8 @@ def main():
             else active_text_font
         )
         game_surface.fill(BACKGROUND_COLOR)
+        map_navigation.update(game_state, act_two_camera)
+
         if current_act == 1:
             update_act_one_camera(
                 act_one_camera,
@@ -4730,6 +4720,7 @@ def main():
                 game_surface,
                 world_target,
                 act_two_camera,
+                game_state.floor,
             )
             draw_pickup_hint(
                 game_surface,
@@ -4836,6 +4827,15 @@ def main():
                     act_two_input_state.dragged_consumable_slot
                 ),
             )
+            map_navigation.draw(
+                game_surface,
+                game_state,
+                window_to_game_position(
+                    window_state.screen,
+                    pygame.mouse.get_pos(),
+                ),
+                enabled=continuous_movement_available,
+            )
             if game_state.rune_selection_open:
                 draw_rune_selection(
                     game_surface,
@@ -4880,6 +4880,15 @@ def main():
                     window_state.screen,
                     pygame.mouse.get_pos(),
                 ),
+            )
+            map_navigation.draw(
+                game_surface,
+                game_state,
+                window_to_game_position(
+                    window_state.screen,
+                    pygame.mouse.get_pos(),
+                ),
+                enabled=continuous_movement_available,
             )
 
         if current_act in (2, 3) and ground_item_input_available(game_state):

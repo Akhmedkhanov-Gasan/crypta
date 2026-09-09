@@ -4,7 +4,7 @@ import math
 import pygame
 
 
-PIXEL_CAMERA_ZOOM_LEVELS = (1, 2, 3)
+PIXEL_CAMERA_ZOOM_LEVELS = (1, 2)
 
 
 @dataclass

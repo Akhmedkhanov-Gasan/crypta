@@ -10,9 +10,9 @@
   "hud": {
     "rect": {
       "x": 23,
-      "y": 14,
-      "width": 1257,
-      "height": 699
+      "y": 5,
+      "width": 1259,
+      "height": 708
     }
   },
   "journal_panel": {
@@ -660,15 +660,61 @@
   "down_bar": {
     "rect": {
       "x": 23,
-      "y": 588,
-      "width": 1239,
-      "height": 125
+      "y": 5,
+      "width": 1259,
+      "height": 708
     },
     "frame": {
       "x": 460,
       "y": 627,
       "width": 355,
       "height": 84
+    },
+    "camera": {
+      "rect": {
+        "x": 1149,
+        "y": 5,
+        "width": 133,
+        "height": 62
+      },
+      "normal": {
+        "x": 1200,
+        "y": 23,
+        "width": 30,
+        "height": 30
+      },
+      "overview": {
+        "x": 1191,
+        "y": 17,
+        "width": 49,
+        "height": 42
+      },
+      "buttons": {
+        "rect": {
+          "x": 1149,
+          "y": 17,
+          "width": 133,
+          "height": 42
+        },
+        "image": {
+          "x": 1162,
+          "y": 24,
+          "width": 107,
+          "height": 25
+        },
+        "minus_hitbox": {
+          "x": 1162,
+          "y": 24,
+          "width": 23,
+          "height": 25
+        },
+        "plus_hitbox": {
+          "x": 1244,
+          "y": 24,
+          "width": 25,
+          "height": 25
+        }
+      }
     },
     "combat_log": {
       "rect": {

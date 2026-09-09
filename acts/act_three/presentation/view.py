@@ -1,5 +1,6 @@
 import pygame
 
+from acts.act_three.presentation.camera import act_three_world_view_size
 from acts.act_three.altar import get_upgrade_altar_cells
 from presentation.layout import (
     ACT_THREE_TILE_SIZE,
@@ -164,6 +165,8 @@ def _top_void_corner_sprite_names(
 def _camera_position(floor, player_position=None):
     world_width = len(floor.map[0]) * ACT_THREE_TILE_SIZE
     world_height = len(floor.map) * ACT_THREE_TILE_SIZE
+    view_width, view_height = act_three_world_view_size(floor)
+
     player_column, player_row = (
         (floor.player_column, floor.player_row)
         if player_position is None
@@ -172,23 +175,17 @@ def _camera_position(floor, player_position=None):
     target_x = (
         player_column * ACT_THREE_TILE_SIZE
         + ACT_THREE_TILE_SIZE // 2
-        - ACT_THREE_VIEW_WIDTH // 2
+        - view_width // 2
     )
     target_y = (
         player_row * ACT_THREE_TILE_SIZE
         + ACT_THREE_TILE_SIZE // 2
-        - ACT_THREE_VIEW_HEIGHT // 2
+        - view_height // 2
     )
 
     return (
-        max(
-            0,
-            min(target_x, world_width - ACT_THREE_VIEW_WIDTH),
-        ),
-        max(
-            0,
-            min(target_y, world_height - ACT_THREE_VIEW_HEIGHT),
-        ),
+        max(0, min(target_x, world_width - view_width)),
+        max(0, min(target_y, world_height - view_height)),
     )
 
 
@@ -276,11 +273,9 @@ def _draw_fog_of_war(
 ):
     visible = floor.visible_cells
     fog = pygame.Surface(
-        (ACT_THREE_VIEW_WIDTH, ACT_THREE_VIEW_HEIGHT),
+        view_surface.get_size(),
         pygame.SRCALPHA,
     )
-    # Keep the non-playable area visibly textured when the fixed logical
-    # viewport is wider than a map. Unexplored map cells remain fully hidden.
     fog.fill((0, 0, 0, 208))
 
     for row in range(len(floor.map)):

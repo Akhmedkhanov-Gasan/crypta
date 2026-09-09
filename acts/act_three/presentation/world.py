@@ -2,6 +2,11 @@ import math
 
 import pygame
 
+from acts.act_three.presentation.camera import (
+    act_three_camera_scale,
+    act_three_world_view_size,
+)
+from presentation.map_navigation import draw_map_trail
 from presentation.ground_items import draw_ground_items
 
 from acts.act_three.altar import (
@@ -196,27 +201,26 @@ def _draw_act_three_world(
 ):
     floor = game_state.floor
     dungeon_map = floor.map
+    view_width, view_height = act_three_world_view_size(floor)
     _get_act_three_visibility(floor)
-    view_surface = pygame.Surface(
-        (ACT_THREE_VIEW_WIDTH, ACT_THREE_VIEW_HEIGHT)
-    )
+    view_surface = pygame.Surface((view_width, view_height))
     view_surface.fill((9, 10, 13))
     brick_width = 64
     brick_height = 32
-    for brick_y in range(0, ACT_THREE_VIEW_HEIGHT, brick_height):
+    for brick_y in range(0, view_height, brick_height):
         pygame.draw.line(
             view_surface,
             (18, 20, 24),
             (0, brick_y),
-            (ACT_THREE_VIEW_WIDTH, brick_y),
+            (view_width, brick_y),
         )
         row_offset = brick_width // 2 if (brick_y // brick_height) % 2 else 0
-        for brick_x in range(-row_offset, ACT_THREE_VIEW_WIDTH, brick_width):
+        for brick_x in range(-row_offset, view_width, brick_width):
             pygame.draw.line(
                 view_surface,
                 (16, 18, 22),
                 (brick_x, brick_y),
-                (brick_x, min(ACT_THREE_VIEW_HEIGHT, brick_y + brick_height)),
+                (brick_x, min(view_height, brick_y + brick_height)),
             )
     camera_x, camera_y = _camera_position(floor)
     teleport_origin = game_state.player.teleport_camera_origin
@@ -292,14 +296,14 @@ def _draw_act_three_world(
     last_column = min(
         len(dungeon_map[0]),
         math.ceil(
-            (camera_x + ACT_THREE_VIEW_WIDTH)
+            (camera_x + view_width)
             / ACT_THREE_TILE_SIZE
         ),
     )
     last_row = min(
         len(dungeon_map),
         math.ceil(
-            (camera_y + ACT_THREE_VIEW_HEIGHT)
+            (camera_y + view_height)
             / ACT_THREE_TILE_SIZE
         ),
     )
@@ -2043,7 +2047,7 @@ def _draw_act_three_world(
                 / ASSASSIN_ULTIMATE_OUTRO_MS),
         )
         ultimate_darkness = pygame.Surface(
-            (ACT_THREE_VIEW_WIDTH, ACT_THREE_VIEW_HEIGHT),
+            view_surface.get_size(),
             pygame.SRCALPHA,
         )
         darkness_alpha = round(110 * fade_in * (1 - fade_out))
@@ -2152,14 +2156,12 @@ def _draw_act_three_world(
         )
 
     darkness = pygame.Surface(
-        (ACT_THREE_VIEW_WIDTH, ACT_THREE_VIEW_HEIGHT),
+        view_surface.get_size(),
         pygame.SRCALPHA,
     )
     darkness.fill((0, 0, 8, 38))
     view_surface.blit(darkness, (0, 0))
-    torch_light = pygame.Surface(
-        (ACT_THREE_VIEW_WIDTH, ACT_THREE_VIEW_HEIGHT)
-    )
+    torch_light = pygame.Surface(view_surface.get_size())
     torch_light.fill((0, 0, 0))
     light_surface = _get_torch_light_surface()
     light_radius = light_surface.get_width() // 2
@@ -2216,7 +2218,26 @@ def _draw_act_three_world(
         current_time,
     )
 
-    screen.blit(
-        view_surface,
-        (ACT_THREE_VIEW_X, ACT_THREE_VIEW_Y),
+    viewport = pygame.Rect(
+        ACT_THREE_VIEW_X,
+        ACT_THREE_VIEW_Y,
+        ACT_THREE_VIEW_WIDTH,
+        ACT_THREE_VIEW_HEIGHT,
+    )
+
+    if view_surface.get_size() != viewport.size:
+        view_surface = pygame.transform.scale(
+            view_surface,
+            viewport.size,
+        )
+
+    screen.blit(view_surface, viewport)
+
+    draw_map_trail(
+        screen,
+        floor,
+        (camera_x, camera_y),
+        ACT_THREE_TILE_SIZE,
+        act_three_camera_scale(floor),
+        viewport,
     )
