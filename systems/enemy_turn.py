@@ -78,7 +78,7 @@ def _advance_enemy_bleed(game_state: GameState, enemy) -> bool:
             data={
                 "critical": False,
                 "blocked": False,
-                "player_class": "rogue",
+                "player_class": game_state.player.player_class,
                 "enemy_type": enemy.type,
                 "kind": "bleed",
             },

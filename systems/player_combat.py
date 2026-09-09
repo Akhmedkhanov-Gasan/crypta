@@ -20,6 +20,7 @@ from acts.act_two.bloody_altar import (
     adjusted_outgoing_damage,
     has_bloody_pact,
     BLOOD_HUNGER_LIFESTEAL_RATIO,
+    try_apply_open_wound_bleed,
 )
 from acts.player_stats import attribute_stat_changes_for_rank
 from bosses.oracle import ORACLE_LEGACY_COMBAT_ENABLED
@@ -28,6 +29,8 @@ from acts.act_two.presentation.bosses.oracle_health import (
 )
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
+from game.healing import heal_player
+from systems.bleeding import apply_bleed
 from game.progression import (
     experience_reward_for_enemy,
     grant_experience,
@@ -434,6 +437,14 @@ def attack_enemy(
             enemy_health_before_hit
             - enemy.health
     )
+
+    if attacker_name == "hero":
+        try_apply_open_wound_bleed(
+            game_state,
+            enemy,
+            damage_dealt,
+        )
+
     if (
         enemy.type == "oracle_pillar"
         and damage_dealt > 0
@@ -491,13 +502,10 @@ def attack_enemy(
         and player.paladin_holy_shield_turns > 0
         and player.health < player.max_health
     ):
-        previous_health = player.health
-        player.health = min(
-            player.max_health,
-            player.health
-            + PALADIN_HOLY_SHIELD_HEALING_PER_HIT,
+        healing = heal_player(
+            player,
+            PALADIN_HOLY_SHIELD_HEALING_PER_HIT,
         )
-        healing = player.health - previous_health
         game_state.emit(
             GameEvent(
                 type=GameEventType.HEAL,
@@ -1085,10 +1093,13 @@ def perform_basic_attack(
             and hit_enemy.health < health_before_attack
         ):
             damage_dealt = health_before_attack - hit_enemy.health
-            hit_enemy.bleed_turns = ROGUE_CRUELTY_BLEED_TURNS
-            hit_enemy.bleed_damage = max(
-                1,
-                ceil(damage_dealt * ROGUE_CRUELTY_BLEED_RATIO),
+            apply_bleed(
+                hit_enemy,
+                max(
+                    1,
+                    ceil(damage_dealt * ROGUE_CRUELTY_BLEED_RATIO),
+                ),
+                ROGUE_CRUELTY_BLEED_TURNS,
             )
             add_log_message(
                 game_state.combat_log,

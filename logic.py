@@ -75,10 +75,15 @@ def get_mage_resonance_cells(game_state) -> set[tuple[int, int]]:
         position
         for position in floor.visible_cells
         if (
-            0 < distance_between(*origin, *position) <= MAGE_RESONANCE_RANGE
+            0 < max(
+                abs(position[0] - origin[0]),
+                abs(position[1] - origin[1]),
+            ) <= MAGE_RESONANCE_RANGE
             and (
                 position[0] == origin[0]
                 or position[1] == origin[1]
+                or abs(position[0] - origin[0])
+                == abs(position[1] - origin[1])
             )
             and (
                 can_move_to(floor.map, *position)

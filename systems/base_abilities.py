@@ -10,10 +10,7 @@ from acts.act_two.abilities import (
 )
 from acts.act_two.bloody_altar import (
     BROKEN_SEAL,
-    OPEN_WOUND,
     has_bloody_pact,
-    open_wound_ability_is_affordable,
-    pay_open_wound_ability_cost,
 )
 from acts.act_two.progression import (
     get_warrior_upgrade_rank,
@@ -95,7 +92,7 @@ def request_class_ability(
         clear_act_two_ability_selection(game_state)
         add_log_message(
             game_state.combat_log,
-            "Resonance: click an enemy up to 2 cells horizontally or vertically.",
+            "Resonance: click an enemy up to 2 cells in any of 8 directions.",
             category="rune",
         )
         return AbilityRequestResult.NOT_READY
@@ -127,9 +124,6 @@ def request_class_ability(
         return AbilityRequestResult.NOT_READY
 
     if player.player_class == "rogue":
-        if not pay_open_wound_ability_cost(game_state):
-            return AbilityRequestResult.NOT_READY
-
         player.ability_kill_charge = 0
         invisibility_turns = (
             ASSASSIN_INVISIBILITY_TURNS
@@ -164,17 +158,6 @@ def request_class_ability(
             category="ability",
         )
         return AbilityRequestResult.ROGUE_ACTIVATED
-    if (
-            player.player_class in ("warrior", "mage")
-            and not player.directional_ability_aiming
-            and not open_wound_ability_is_affordable(player)
-    ):
-        add_log_message(
-            game_state.combat_log,
-            "Not enough health to invoke Open Wound.",
-            category="warning",
-        )
-        return AbilityRequestResult.NOT_READY
     if player.player_class in ("warrior", "mage"):
         player.directional_ability_aiming = (
             not player.directional_ability_aiming
@@ -302,9 +285,6 @@ def cast_directional_ability(
         player.player_class != "warrior"
         or player.selected_rune_id == "rune_of_impact"
     ):
-        player.directional_ability_aiming = False
-        return False
-    if not pay_open_wound_ability_cost(game_state):
         player.directional_ability_aiming = False
         return False
     player.directional_ability_aiming = False
@@ -613,10 +593,6 @@ def cast_mage_arcane_burst(
         or not player.directional_ability_aiming
         or not is_valid_mage_arcane_burst_target(game_state, target)
     ):
-        return False
-
-    if not pay_open_wound_ability_cost(game_state):
-        player.directional_ability_aiming = False
         return False
 
     concentration_active = (

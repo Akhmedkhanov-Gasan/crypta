@@ -8,11 +8,9 @@ from acts.act_two.input.auto_movement import (
 )
 from acts.act_two.player_actions import find_act_two_cell_targets
 from logic import (
-    distance_between,
     get_enemy_occupied_positions,
-    has_line_of_sight,
+    get_mage_resonance_target,
 )
-from settings import MAGE_RESONANCE_RANGE
 from systems.grid_geometry import can_reach_adjacent_cell
 
 
@@ -111,20 +109,7 @@ def navigation_action(game_state, origin, target, has_enemy):
         and player.player_class == "mage"
         and player.selected_rune_id == "rune_of_resonance"
     ):
-        if (
-            0 < distance_between(*origin, *target)
-            <= MAGE_RESONANCE_RANGE
-            and (
-                origin[0] == target[0]
-                or origin[1] == target[1]
-            )
-            and has_line_of_sight(
-                floor.map,
-                *origin,
-                *target,
-                barriers=floor.barriers,
-            )
-        ):
+        if get_mage_resonance_target(game_state, target) is not None:
             return {"resonance_target": target}
         return None
 

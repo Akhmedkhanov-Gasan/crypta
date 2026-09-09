@@ -18,6 +18,7 @@ from acts.act_two.presentation.bosses.oracle_health import (
 )
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
+from game.healing import heal_player
 from game.state import EnemyBehaviorState, GameState
 from logic import (
     can_move_to,
@@ -422,16 +423,13 @@ def use_scroll(
     elif scroll_kind == HEALING_SCROLL:
         if player.health >= player.max_health:
             return False
-        previous_health = player.health
-        player.health = min(
-            player.max_health,
-            player.health
-            + adjusted_consumable_healing(
+        healed = heal_player(
+            player,
+            adjusted_consumable_healing(
                 player,
                 HEALING_SCROLL_HEALING,
             ),
         )
-        healed = player.health - previous_health
         game_state.emit(
             GameEvent(
                 type=GameEventType.HEAL,

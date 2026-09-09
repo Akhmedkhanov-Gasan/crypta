@@ -13,8 +13,10 @@ BLOODY_PACTS = (
     BloodyPactDefinition(
         id="open_wound",
         name="Open Wound",
-        reward="Abilities no longer require charge.",
-        sacrifice="Each ability use costs 10% of maximum health.",
+        reward=(
+            "Hits have a 25% chance to inflict bleeding"
+        ),
+        sacrifice="All healing received is reduced by 25%.",
     ),
     BloodyPactDefinition(
         id="broken_seal",

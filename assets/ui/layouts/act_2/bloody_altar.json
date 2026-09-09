@@ -14,16 +14,16 @@
   },
   "title": {
     "rect": {
-      "x": 574,
-      "y": 214,
-      "width": 133,
+      "x": 558,
+      "y": 221,
+      "width": 165,
       "height": 26
     },
     "text": "Choose wisely",
     "font": {
       "family": "Alagard",
       "style": "Medium",
-      "size": 20
+      "size": 24
     },
     "line_height": {
       "unit": "AUTO"
@@ -101,11 +101,11 @@
       "reward": {
         "rect": {
           "x": 290,
-          "y": 466,
+          "y": 458,
           "width": 170,
-          "height": 30
+          "height": 38
         },
-        "text": "Abilities require no charge.",
+        "text": "25% chance to \nbleed on attack",
         "font": {
           "family": "Alagard",
           "style": "Medium",
@@ -135,7 +135,7 @@
           "width": 170,
           "height": 29
         },
-        "text": "Each use consumes 10%\nmaximum health.",
+        "text": "All healing received is\nreduced by 25%.",
         "font": {
           "family": "Alagard",
           "style": "Medium",

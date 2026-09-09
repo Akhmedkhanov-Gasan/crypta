@@ -1,6 +1,7 @@
 from collections.abc import Callable
 
 from game.combat_log import add_log_message
+from game.healing import heal_player
 from acts.act_three.events import GameEvent, GameEventType
 from game.state import (
     EnemyState,
@@ -55,12 +56,10 @@ def request_paladin_holy_hand(
         )
         return True
 
-    previous_health = player.health
-    player.health = min(
-        player.max_health,
-        player.health + PALADIN_HOLY_HAND_HEALING,
+    healing = heal_player(
+        player,
+        PALADIN_HOLY_HAND_HEALING,
     )
-    healing = player.health - previous_health
     player.paladin_holy_hand_charge = 0
     player.paladin_holy_hand_started_at = current_time
     game_state.emit(

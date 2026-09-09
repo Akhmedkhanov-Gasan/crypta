@@ -4,7 +4,6 @@ from acts.act_two.settings import (
 )
 from acts.act_two.bloody_altar import (
     BROKEN_SEAL,
-    OPEN_WOUND,
     has_bloody_pact,
 )
 from logic import can_move_to, distance_between, get_directional_line
@@ -32,8 +31,6 @@ def _living_oracle_pillar_at(
 
 def ability_charge_required(player) -> int:
     if player.player_class is not None and player.subclass is None:
-        if has_bloody_pact(player, OPEN_WOUND):
-            return 0
         if has_bloody_pact(player, BROKEN_SEAL):
             return 2
         return ABILITY_HITS_REQUIRED

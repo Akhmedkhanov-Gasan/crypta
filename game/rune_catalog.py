@@ -95,7 +95,7 @@ RUNE_DEFINITIONS = (
         icon_filename="rune_of_resonance.png",
         original_filename="rune_of_resonance_original.png",
         description=(
-            "Attack in four directions, up to 2 cells. "
+            "Attack in eight directions, up to 2 cells. "
             "Arcane Burst is disabled."
         ),
     ),

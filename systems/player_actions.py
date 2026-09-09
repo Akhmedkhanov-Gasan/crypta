@@ -2,6 +2,7 @@ from acts.act_two.oracle_gate import oracle_gate_allows_entry
 from acts.ground_items import collect_ground_gold
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
+from game.healing import heal_player
 from systems.mimic import awaken_mimic
 from acts.act_two.bloody_altar import (
     adjusted_consumable_healing,
@@ -65,10 +66,9 @@ def try_use_potion(
         return False
 
     previous_health = player.health
-    player.health = min(
-        player.max_health,
-        player.health
-        + adjusted_consumable_healing(player, POTION_HEALING),
+    heal_player(
+        player,
+        adjusted_consumable_healing(player, POTION_HEALING),
     )
     if act_number == 2:
         consume_act_two_potion(player, slot_index)

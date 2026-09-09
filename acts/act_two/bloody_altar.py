@@ -1,5 +1,7 @@
+import random
 from math import ceil
 
+from systems.bleeding import apply_bleed
 from acts.act_two.bloody_altar_catalog import BLOODY_PACTS_BY_ID
 from acts.player_stats import PlayerStatChanges, apply_player_stat_changes
 from game.combat_log import add_log_message
@@ -17,7 +19,10 @@ BLOODY_PACT_ORDER = (
     GLASS_HEART,
     BLOOD_HUNGER,
 )
-OPEN_WOUND_HEALTH_COST_RATIO = 0.10
+OPEN_WOUND_BLEED_CHANCE = 0.25
+OPEN_WOUND_BLEED_DAMAGE_RATIO = 0.20
+OPEN_WOUND_BLEED_TURNS = 3
+OPEN_WOUND_HEALING_MULTIPLIER = 0.75
 GLASS_HEART_DAMAGE_MULTIPLIER = 1.50
 GLASS_HEART_HEALTH_PENALTY_RATIO = 0.25
 BLOOD_HUNGER_LIFESTEAL_RATIO = 0.25
@@ -123,6 +128,7 @@ def confirm_bloody_pact(game_state: GameState) -> bool:
 
     player.act_two.bloody_pact_health_penalty = 0
     player.act_two.blood_hunger_healing_progress = 0.0
+    player.act_two.open_wound_healing_progress = 0.0
 
     if from_console and previous_pact_id is not None:
         player.ability_kill_charge = 0
@@ -204,55 +210,61 @@ def adjusted_consumable_healing(player, amount: int) -> int:
     return amount
 
 
-def open_wound_ability_health_cost(player) -> int:
-    return max(
-        1,
-        ceil(
-            player.max_health
-            * OPEN_WOUND_HEALTH_COST_RATIO
-        ),
-    )
+def adjusted_received_healing(player, amount: int) -> int:
+    amount = max(0, amount)
 
-
-def open_wound_ability_is_affordable(player) -> bool:
     if not has_bloody_pact(player, OPEN_WOUND):
-        return True
+        player.act_two.open_wound_healing_progress = 0.0
+        return amount
 
-    return (
-        player.health
-        > open_wound_ability_health_cost(player)
+    if player.health >= player.max_health:
+        player.act_two.open_wound_healing_progress = 0.0
+        return 0
+
+    progress = (
+        player.act_two.open_wound_healing_progress
+        + amount * OPEN_WOUND_HEALING_MULTIPLIER
     )
+    healing = int(progress)
+    player.act_two.open_wound_healing_progress = progress - healing
+    return healing
 
 
-def pay_open_wound_ability_cost(
+def try_apply_open_wound_bleed(
     game_state: GameState,
-) -> bool:
+    enemy,
+    damage_dealt: int,
+) -> None:
     player = game_state.player
 
-    if not has_bloody_pact(player, OPEN_WOUND):
-        return True
+    if (
+        not has_bloody_pact(player, OPEN_WOUND)
+        or enemy.health <= 0
+        or damage_dealt <= 0
+    ):
+        return
 
-    health_cost = open_wound_ability_health_cost(player)
+    if random.random() >= OPEN_WOUND_BLEED_CHANCE:
+        return
 
-    if player.health <= health_cost:
-        add_log_message(
-            game_state.combat_log,
-            "Not enough health to invoke Open Wound.",
-            category="warning",
-        )
-        return False
-
-    player.health -= health_cost
-
+    bleed_damage = max(
+        1,
+        ceil(damage_dealt * OPEN_WOUND_BLEED_DAMAGE_RATIO),
+    )
+    apply_bleed(
+        enemy,
+        bleed_damage,
+        OPEN_WOUND_BLEED_TURNS,
+    )
     add_log_message(
         game_state.combat_log,
         (
-            f"Open Wound consumes "
-            f"{health_cost} health."
+            f"Open Wound makes {enemy.name} bleed for "
+            f"{enemy.bleed_damage} damage per turn "
+            f"for {enemy.bleed_turns} turns."
         ),
-        category="altar",
+        category="debuff",
     )
-    return True
 
 
 def adjusted_outgoing_damage(
@@ -278,6 +290,8 @@ __all__ = [
     "GLASS_HEART",
     "OPEN_WOUND",
     "adjusted_consumable_healing",
+    "adjusted_received_healing",
+    "try_apply_open_wound_bleed",
     "bloody_altar_is_at",
     "bloody_pact_is_available",
     "cancel_bloody_altar",
