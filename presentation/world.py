@@ -2343,8 +2343,9 @@ def draw_player(
     act_two_blocked_movement_direction=(0, 1),
     act_two_level_up_effect_started_at=-1,
     act_two_stoneflesh_hits=0,
-    act_two_stoneflesh_effect_started_at=-1,
-    act_two_dodge_effect_started_at=-1,
+        act_two_stoneflesh_effect_started_at=-1,
+        act_two_dodge_effect_started_at=-1,
+        control_player=None,
 ):
     if act_number == 1 and health <= 0:
         draw_act_one_player_death(
@@ -2384,6 +2385,7 @@ def draw_player(
             act_two_stoneflesh_hits,
             act_two_stoneflesh_effect_started_at,
             act_two_dodge_effect_started_at,
+            control_player,
         )
         return
 

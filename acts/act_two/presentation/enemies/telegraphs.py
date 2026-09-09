@@ -465,6 +465,11 @@ def _collect_attack_entries(
     for source_order, enemy in enumerate(enemies):
         if enemy["health"] <= 0:
             continue
+        if (
+            enemy["type"] == "sentinel"
+            and enemy.get("prepared_attack_mode") == "shield_bash"
+        ):
+            continue
 
         if not attack_telegraph_is_visible(
             enemy,

@@ -48,7 +48,10 @@ from systems.enemy_ai import (
     goblin_should_join_combat,
     take_priest_turn,
     resolve_goblin_summon,
-    sentinel_counter_knockback_destination,
+)
+from systems.enemy_ai.sentinel import (
+    apply_sentinel_knockback,
+    take_sentinel_turn,
 )
 from systems.player_combat import (
     damage_player,
@@ -278,6 +281,12 @@ def resolve_enemy_turn(
 
         if _advance_enemy_bleed(game_state, enemy):
             continue
+        if (
+            enemy.type == "sentinel"
+            and enemy.sentinel.recovery_turns > 0
+        ):
+            enemy.sentinel.recovery_turns -= 1
+            continue
         if enemy.stun_turns > 0:
             enemy.stun_turns -= 1
             enemy.attack_targets = []
@@ -360,6 +369,8 @@ def resolve_enemy_turn(
 
             attack_targets = enemy["attack_targets"]
             attack_mode = enemy["prepared_attack_mode"]
+            if enemy.type == "sentinel" and attack_mode == "shield_bash":
+                enemy.sentinel.recovery_turns = 1
             enemy["attack_targets"] = []
             enemy["prepared_attack_mode"] = None
             enemy.attack_windup_turns_remaining = 0
@@ -518,13 +529,10 @@ def resolve_enemy_turn(
                         category="enemy_attack",
                     )
                     if (
-                            attack_mode == "shield_counter"
-                            and game_state.player.health > 0
+                        attack_mode == "shield_bash"
+                        and game_state.player.health > 0
                     ):
-                        _apply_sentinel_counter_knockback(
-                            game_state,
-                            enemy,
-                        )
+                        apply_sentinel_knockback(game_state, enemy)
             else:
                 add_log_message(
                     game_state.combat_log,
@@ -544,10 +552,11 @@ def resolve_enemy_turn(
                         data={"cause": enemy.name},
                     )
                 )
-                (
-                    game_state.floor["player_column"],
-                    game_state.floor["player_row"],
-                ) = player_position_before_action
+                if attack_mode != "shield_bash":
+                    (
+                        game_state.floor["player_column"],
+                        game_state.floor["player_row"],
+                    ) = player_position_before_action
                 add_log_message(
                     game_state.combat_log,
                     "The hero has fallen.",
@@ -888,7 +897,15 @@ def resolve_enemy_turn(
         ):
             continue
 
-        if enemy.type == "warden":
+        if enemy.type == "sentinel":
+            take_sentinel_turn(
+                game_state,
+                enemy,
+                occupied_positions,
+                attack_blocking_positions,
+                hazard_costs,
+            )
+        elif enemy.type == "warden":
             take_warden_turn(
                 game_state,
                 enemy,

@@ -134,6 +134,13 @@ def record_enemy_death_feedback(game_state, started_at):
 
 
 def record_player_hit_feedback(game_state, started_at):
+    from presentation.control_effects import record_forced_movement
+
+    record_forced_movement(
+        game_state.player,
+        game_state.events,
+        started_at,
+    )
     if any(
         event.type is GameEventType.ABILITY
         and event.actor == "hero"

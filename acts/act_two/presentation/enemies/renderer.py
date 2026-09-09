@@ -28,7 +28,9 @@ from acts.act_two.presentation.enemies.priest import (
 )
 from acts.act_two.presentation.enemies.sentinel import (
     _draw_act_two_sentinel_hit_feedback,
+    draw_sentinel_status,
 )
+from presentation.control_effects import draw_stun_effect
 from presentation.layout import MAP_OFFSET_X, MAP_OFFSET_Y
 from settings import (
     ATTACK_WARNING_COLOR,
@@ -159,9 +161,18 @@ def _enemy_sprite_name(enemy, current_time):
         )
 
     if enemy["type"] == "sentinel":
+        if attack_telegraph_is_visible(enemy, current_time):
+            return (
+                "sentinel_guard"
+                if enemy.prepared_attack_mode == "shield_bash"
+                else "sentinel_attack"
+            )
         return (
             "sentinel_guard"
-            if enemy["shield_blocks_remaining"] > 0
+            if (
+                enemy.shield_blocks_remaining > 0
+                and enemy.sentinel.recovery_turns == 0
+            )
             else "sentinel_idle"
         )
     if enemy["type"] == "priest":
@@ -311,6 +322,8 @@ def _draw_attack_warning(
         current_time,
     ):
         return
+    if enemy.type == "sentinel" and enemy.prepared_attack_mode == "shield_bash":
+        return
     warning_x = (
         MAP_OFFSET_X
         + enemy["column"] * TILE_SIZE
@@ -441,25 +454,7 @@ def _draw_rune_status_effects(screen, enemy, current_time):
         + (enemy.row - enemy.footprint_height // 2) * TILE_SIZE
     )
     if enemy.stun_turns > 0:
-        rotation = current_time / 190
-        for star_index in range(3):
-            angle = rotation + star_index * math.tau / 3
-            star_center = (
-                round(center_x + math.cos(angle) * 13),
-                round(top_y + 7 + math.sin(angle) * 4),
-            )
-            pygame.draw.circle(
-                screen,
-                (246, 203, 77),
-                star_center,
-                3,
-            )
-            pygame.draw.circle(
-                screen,
-                (255, 244, 176),
-                star_center,
-                1,
-            )
+        draw_stun_effect(screen, center_x, top_y, current_time)
 
     if enemy.bleed_turns > 0:
         pulse = 0.5 + 0.5 * math.sin(current_time / 125)
@@ -597,6 +592,17 @@ def draw_act_two_enemy(
     else:
         _draw_fallback_enemy(screen, enemy, current_time)
 
+    movement_offset = _movement_offset(enemy, current_time)
+    draw_sentinel_status(
+        screen,
+        enemy,
+        (
+            MAP_OFFSET_X + enemy.column * TILE_SIZE + movement_offset[0],
+            MAP_OFFSET_Y + enemy.row * TILE_SIZE + movement_offset[1],
+        ),
+        current_time,
+        TILE_SIZE,
+    )
     _draw_health_bar(
         screen,
         enemy,

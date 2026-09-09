@@ -142,6 +142,8 @@ from acts.act_two.presentation.death_score import (
     handle_act_two_death_event,
 )
 from acts.act_two.crates import break_crate
+from application.player_stun import stunned_wait_event
+from presentation.control_effects import forced_movement_is_active
 from acts.act_two.consumables import (
     FIRE_BOMB,
     HEALING_SCROLL,
@@ -2271,6 +2273,37 @@ def main():
                         act_two_input_state.cancel_auto_move()
                         continue
 
+                stunned_action = False
+                if game_state.player.stun_turns > 0:
+                    if forced_movement_is_active(
+                        game_state.player,
+                        pygame.time.get_ticks(),
+                    ):
+                        act_two_input_state.reset_held_movement()
+                        act_two_input_state.cancel_auto_move()
+                        continue
+
+                    if not (
+                        event.key in MOVEMENT_KEYS
+                        or event.key in WAIT_KEYS
+                        or event.key in CONSUMABLE_KEYS
+                        or event.key in (
+                            pygame.K_UNKNOWN,
+                            pygame.K_e,
+                            pygame.K_h,
+                            pygame.K_1,
+                        )
+                    ):
+                        continue
+
+                    event = stunned_wait_event(
+                        game_state,
+                        next(iter(WAIT_KEYS)),
+                    )
+                    stunned_action = True
+                    act_two_input_state.reset_held_movement()
+                    act_two_input_state.cancel_auto_move()
+
                 game_state.clear_events()
                 fire_bomb_target = getattr(
                     event,
@@ -2576,7 +2609,15 @@ def main():
                 player_acted = False
                 game_state.player_attack_targets = []
 
-                if (
+                if stunned_action:
+                    game_state.player.stun_turns -= 1
+                    player_acted = True
+                    add_log_message(
+                        game_state.combat_log,
+                        "The hero loses a turn recovering from the stun.",
+                        category="debuff",
+                    )
+                elif (
                     fire_bomb_target is not None
                     and fire_bomb_slot is not None
                 ):
@@ -4478,6 +4519,7 @@ def main():
                 if current_act == 2
                 else -1
             ),
+            control_player=game_state.player,
         )
         if current_act == 2 and game_state.player.health > 0:
             draw_impact_block_effect(

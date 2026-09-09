@@ -1,26 +1,31 @@
 from game.combat_log import add_log_message
-from game.state import EnemyState, GameState
+from game.events import GameEvent, GameEventType
+from game.state import EnemyBehaviorState
 from logic import (
-    can_move_between,
-    direction_toward,
+    can_player_move_between,
     get_enemy_occupied_positions,
     has_line_of_sight,
 )
 
 
-SENTINEL_COUNTER_KNOCKBACK_DISTANCE = 2
+KNOCKBACK_DISTANCE = 2
+WALL_COLLISION_DAMAGE = 1
+CRATE_COLLISION_DAMAGE = 2
 
 
 def try_raise_shield(
-    game_state: GameState,
-    enemy: EnemyState,
-    shield_is_ready: bool,
-    distance_to_player: int,
-) -> bool:
+    game_state,
+    enemy,
+    shield_is_ready,
+    distance_to_player,
+):
     floor = game_state.floor
+    state = enemy.sentinel
 
     if (
         not shield_is_ready
+        or state.shield_raised
+        or state.shield_broken
         or distance_to_player > 3
         or not has_line_of_sight(
             floor.map,
@@ -32,86 +37,218 @@ def try_raise_shield(
     ):
         return False
 
-    enemy.shield_blocks_remaining = (
-        enemy.shield_durability
-    )
+    state.shield_raised = True
+    enemy.shield_blocks_remaining = enemy.shield_durability
 
     add_log_message(
         game_state.combat_log,
-        (
-            f"{enemy.name} raises its shield "
-            f"with {enemy.shield_durability} guard."
-        ),
+        f"{enemy.name} raises its shield.",
         category="defense",
     )
     return True
 
 
-def sentinel_counter_knockback_destination(
-    game_state: GameState,
-    sentinel: EnemyState,
-) -> tuple[tuple[int, int], bool]:
-    floor = game_state.floor
-    origin = (
-        floor.player_column,
-        floor.player_row,
-    )
-    direction = direction_toward(
-        sentinel.column,
-        sentinel.row,
-        origin[0],
-        origin[1],
+def break_sentinel_shield(game_state, enemy):
+    state = enemy.sentinel
+    state.shield_broken = True
+    state.recovery_turns = 1
+    enemy.shield_blocks_remaining = 0
+    enemy.move_every = 1
+    enemy.move_counter = 0
+
+    if enemy.prepared_attack_mode == "shield_bash":
+        enemy.attack_targets = []
+        enemy.prepared_attack_mode = None
+        enemy.attack_windup_turns_remaining = 0
+        enemy.behavior_state = EnemyBehaviorState.CHASING
+
+    add_log_message(
+        game_state.combat_log,
+        f"{enemy.name}'s shield shatters. It advances more aggressively.",
+        category="defense",
     )
 
-    blocking_positions = {
+
+def take_sentinel_turn(
+    game_state,
+    enemy,
+    occupied_positions,
+    attack_blocking_positions,
+    hazard_costs,
+):
+    from systems.enemy_ai.common import (
+        move_toward_player,
+        movement_is_ready,
+        prepare_enemy_attack,
+    )
+
+    floor = game_state.floor
+
+    def prepare_attack():
+        target = (floor.player_column, floor.player_row)
+        direction = (
+            target[0] - enemy.column,
+            target[1] - enemy.row,
+        )
+
+        if (
+            max(abs(direction[0]), abs(direction[1])) != 1
+            or target in attack_blocking_positions
+            or not can_player_move_between(
+                floor.map,
+                enemy.column,
+                enemy.row,
+                target[0],
+                target[1],
+                floor.barriers,
+            )
+        ):
+            return False
+
+        use_shield = (
+            enemy.shield_blocks_remaining > 0
+            and not enemy.sentinel.shield_broken
+            and enemy.last_attack_mode != "shield_bash"
+        )
+        mode = "shield_bash" if use_shield else "melee"
+        enemy.sentinel.bash_direction = direction
+        enemy.last_attack_mode = mode
+        enemy.prepared_attack_target = "hero"
+
+        prepare_enemy_attack(game_state, enemy, [target], mode)
+        return True
+
+    if prepare_attack():
+        return
+
+    if enemy.is_immobile or not movement_is_ready(enemy):
+        return
+
+    move_toward_player(
+        game_state,
+        enemy,
+        occupied_positions,
+        hazard_costs,
+    )
+
+    if enemy.health > 0:
+        prepare_attack()
+
+
+def apply_sentinel_knockback(game_state, enemy):
+    from acts.act_two.crates import break_crate
+    from systems.player_combat import damage_player
+
+    floor = game_state.floor
+    player = game_state.player
+    origin = (floor.player_column, floor.player_row)
+    direction = enemy.sentinel.bash_direction
+
+    if direction == (0, 0):
+        return
+
+    occupied = {
         position
-        for enemy in floor.enemies
-        if enemy.health > 0
-        for position in get_enemy_occupied_positions(enemy)
+        for candidate in floor.enemies
+        if candidate.health > 0
+        for position in get_enemy_occupied_positions(candidate)
     }
-    blocking_positions.update(
+    occupied.update(
         (chest.column, chest.row)
         for chest in floor.chests
         if not chest.is_open
     )
-    blocking_positions.update(
-        (crate.column, crate.row)
-        for crate in floor.breakable_crates
-        if not crate.is_broken
-    )
 
     if (
-        game_state.player.summoner_familiar_active
-        and game_state.player.summoner_familiar_position
-        is not None
+        player.summoner_familiar_active
+        and player.summoner_familiar_position is not None
     ):
-        blocking_positions.add(
-            game_state.player.summoner_familiar_position
-        )
+        occupied.add(player.summoner_familiar_position)
 
-    current_position = origin
-    collided = False
+    crates = {
+        (crate.column, crate.row): crate
+        for crate in floor.breakable_crates
+        if not crate.is_broken
+    }
+    position = origin
+    collision_position = None
+    collision_damage = 0
 
-    for _ in range(SENTINEL_COUNTER_KNOCKBACK_DISTANCE):
+    for _ in range(KNOCKBACK_DISTANCE):
         destination = (
-            current_position[0] + direction[0],
-            current_position[1] + direction[1],
+            position[0] + direction[0],
+            position[1] + direction[1],
         )
 
         if (
-            not can_move_between(
+            not can_player_move_between(
                 floor.map,
-                current_position[0],
-                current_position[1],
+                position[0],
+                position[1],
                 destination[0],
                 destination[1],
                 floor.barriers,
             )
-            or destination in blocking_positions
+            or destination in occupied
         ):
-            collided = True
+            collision_position = destination
+            collision_damage = WALL_COLLISION_DAMAGE
             break
 
-        current_position = destination
+        crate = crates.get(destination)
+        if crate is not None:
+            break_crate(game_state, crate, cause="shield_bash")
+            position = destination
+            collision_position = destination
+            collision_damage = CRATE_COLLISION_DAMAGE
+            break
 
-    return current_position, collided
+        position = destination
+
+    floor.player_column, floor.player_row = position
+    player.stun_turns = max(player.stun_turns, 1)
+
+    game_state.emit(
+        GameEvent(
+            type=GameEventType.MOVE,
+            actor="hero",
+            origin=origin,
+            destination=position,
+            data={
+                "kind": "sentinel_shield_knockback",
+                "direction": direction,
+                "collided": collision_position is not None,
+            },
+        )
+    )
+    add_log_message(
+        game_state.combat_log,
+        f"{enemy.name} knocks the hero back and stuns them for one turn.",
+        category="enemy_attack",
+    )
+
+    if collision_damage:
+        damage = damage_player(
+            game_state,
+            collision_damage,
+            damage_kind="physical",
+        )
+        game_state.emit(
+            GameEvent(
+                type=GameEventType.HIT,
+                actor=enemy.name,
+                target="hero",
+                origin=collision_position,
+                destination=position,
+                amount=damage,
+                data={
+                    "mode": "shield_collision",
+                    "enemy_type": enemy.type,
+                },
+            )
+        )
+        add_log_message(
+            game_state.combat_log,
+            f"The collision deals {damage} additional damage.",
+            category="enemy_attack",
+        )

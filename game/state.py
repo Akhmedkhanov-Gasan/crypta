@@ -26,6 +26,7 @@ from acts.act_three.state import (
     ArcherBarrageShotState,
 )
 from game.events import GameEvent, GameEventType
+from game.control_state import ForcedMovementState, SentinelState
 
 
 class EnemyBehaviorState(Enum):
@@ -159,6 +160,7 @@ class EnemyState(AttributeMapping):
     second_phase_announced: bool = False
     boss_group: bool = False
     is_active: bool = True
+    sentinel: SentinelState = field(default_factory=SentinelState)
     shield_blocks_remaining: int = 0
     shield_durability: int = 0
     shield_cooldown: int = 0
@@ -389,6 +391,10 @@ class PlayerState:
         }
     )
     ability_kill_charge: int = 0
+    stun_turns: int = 0
+    forced_movement: ForcedMovementState = field(
+        default_factory=ForcedMovementState,
+    )
     invisibility_turns: int = 0
     selected_rune_id: str | None = None
     impact_block_started_at: int = -1

@@ -10,6 +10,107 @@ from acts.act_two.presentation.enemy_effects import (
     draw_act_two_damage_number as _draw_act_two_damage_number,
 )
 from settings import TILE_SIZE
+from acts.act_two.presentation.enemies.timing import (
+    attack_telegraph_is_visible,
+)
+
+
+def draw_sentinel_status(screen, enemy, position, current_time, tile_size):
+    if enemy.type != "sentinel" or enemy.health <= 0:
+        return
+
+    state = enemy.sentinel
+    blocks = (
+        0
+        if state.shield_broken
+        else enemy.shield_blocks_remaining
+        if state.shield_raised
+        else enemy.shield_durability
+    )
+    center_x = position[0] + tile_size / 2
+    top = round(position[1] - 9)
+    hit_started_at = enemy.hit_animation_started_at
+    indicators_visible = (
+        hit_started_at >= 0
+        and 0 <= current_time - hit_started_at < 1500
+    )
+
+    if indicators_visible:
+        for index in range(2):
+            left = round(center_x - 8 + index * 9)
+            rectangle = pygame.Rect(left, top, 7, 4)
+            filled = index < blocks
+            color = (
+                (87, 96, 102)
+                if filled and state.recovery_turns == 0
+                else (58, 64, 69)
+                if filled
+                else (28, 29, 32)
+            )
+            pygame.draw.rect(
+                screen,
+                (10, 11, 14),
+                rectangle.inflate(2, 2),
+            )
+            pygame.draw.rect(screen, color, rectangle)
+            if filled:
+                pygame.draw.line(
+                    screen,
+                    (119, 124, 126),
+                    (left + 1, top),
+                    (left + 5, top),
+                    1,
+                )
+            else:
+                pygame.draw.line(
+                    screen,
+                    (86, 57, 53),
+                    (left + 1, top + 3),
+                    (left + 5, top),
+                    1,
+                )
+
+    if (
+        enemy.prepared_attack_mode != "shield_bash"
+        or not attack_telegraph_is_visible(enemy, current_time)
+    ):
+        return
+
+    direction = pygame.Vector2(state.bash_direction)
+    if not direction.length_squared():
+        return
+    direction = direction.normalize()
+    side = pygame.Vector2(-direction.y, direction.x)
+    center = pygame.Vector2(
+        position[0] + tile_size / 2,
+        position[1] + tile_size / 2,
+    )
+    start = center + direction * tile_size * 0.18
+    end = center + direction * tile_size * 0.82
+    head = tile_size * 0.2
+    pulse = 0.5 + 0.5 * math.sin(current_time / 90)
+    color = (round(140 + pulse * 80), 230, 255)
+
+    pygame.draw.line(screen, (8, 28, 48), start, end, 8)
+    pygame.draw.line(screen, color, start, end, 4)
+    pygame.draw.polygon(
+        screen,
+        (8, 28, 48),
+        [
+            end + direction * 3,
+            end - direction * head + side * head * 0.8,
+            end - direction * head - side * head * 0.8,
+        ],
+    )
+    pygame.draw.polygon(
+        screen,
+        color,
+        [
+            end,
+            end - direction * head + side * head * 0.55,
+            end - direction * head - side * head * 0.55,
+        ],
+    )
 
 
 def _draw_act_two_sentinel_hit_feedback(
@@ -119,35 +220,7 @@ def _draw_act_two_sentinel_hit_feedback(
             (center[0] - effect_center, center[1] - effect_center),
         )
 
-    if blocked and damage_font is not None:
-        progress = elapsed / ACT_TWO_HIT_FEEDBACK_MS
-        alpha = round(255 * min(1, (1 - progress) * 2.3))
-        block_label = (
-            f"BLOCK "
-            f"{enemy.shield_blocks_remaining}/"
-            f"{enemy.shield_durability}"
-        )
-        label = damage_font.render(
-            block_label,
-            True,
-            (183, 199, 205),
-        )
-        label.set_alpha(alpha)
-        label_rectangle = label.get_rect(
-            midbottom=(
-                center[0],
-                position[1] - 6 - round(progress * 12),
-            )
-        )
-        shadow = damage_font.render(
-            block_label,
-            True,
-            (11, 13, 16),
-        )
-        shadow.set_alpha(alpha)
-        screen.blit(shadow, label_rectangle.move(1, 2))
-        screen.blit(label, label_rectangle)
-    else:
+    if not blocked:
         _draw_act_two_damage_number(
             screen,
             enemy,
