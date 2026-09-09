@@ -94,11 +94,16 @@ def _enemy_sprite(
             )}"
         ]
 
-    if (
-            enemy.type == "sentinel"
-            and enemy.shield_blocks_remaining > 0
-    ):
-        return assets["sentinel_guard"]
+    if enemy.type == "sentinel":
+        if enemy.prepared_attack_mode == "shield_bash":
+            return assets["sentinel_guard"]
+        if enemy.prepared_attack_mode == "melee":
+            return assets["enemy_sentinel_attack"]
+        if (
+            enemy.shield_blocks_remaining > 0
+            and enemy.sentinel.recovery_turns == 0
+        ):
+            return assets["sentinel_guard"]
 
     if (
         enemy.type == "priest"

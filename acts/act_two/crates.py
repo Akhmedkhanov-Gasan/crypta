@@ -40,6 +40,8 @@ def break_crate(
         crate.loot_kind = None
     else:
         crate.loot_kind = None
+    if cause == "shield_bash" and crate.loot_kind is None:
+        crate.loot_kind = "potion"
     crate.loot_available = crate.loot_kind is not None
     crate.loot_fire_turns_remaining = (
         2
@@ -48,14 +50,14 @@ def break_crate(
     )
 
     position = (crate.column, crate.row)
-    if cause == "fire_bomb":
+    if cause in ("fire_bomb", "shield_bash"):
         game_state.emit(
             GameEvent(
                 type=GameEventType.ENVIRONMENT,
-                actor="fire",
+                actor="fire" if cause == "fire_bomb" else "hero",
                 origin=position,
                 positions=(position,),
-                data={"kind": "chest_break", "cause": "fire_bomb"},
+                data={"kind": "chest_break", "cause": cause},
             )
         )
     else:
@@ -80,6 +82,8 @@ def break_crate(
         loot_message = None
     if cause == "fire_bomb":
         message = "The fire bomb destroys the crate"
+    elif cause == "shield_bash":
+        message = "The hero crashes through the crate"
     else:
         message = "Hero smashes the crate"
     if loot_message is not None:

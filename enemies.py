@@ -96,14 +96,14 @@ ENEMY_TYPES = {
         "attack_range": 1,
         "damage_by_mode": {
             "melee": ((2, 3), (75, 25)),
-            "shield_counter": ((2, 3), (75, 25)),
+            "shield_bash": ((2, 3), (75, 25)),
         },
         "color": SENTINEL_COLOR,
         "sleeping_color": SLEEPING_SENTINEL_COLOR,
         "retreat_jump_chance": 0.0,
         "dodge_chance": 0.0,
-        "shield_durability": 3,
-        "shield_cooldown": 2,
+        "shield_durability": 2,
+        "shield_cooldown": 0,
     },
     "priest": {
         "display_name": "Grave Priest",

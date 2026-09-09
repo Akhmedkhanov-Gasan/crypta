@@ -123,6 +123,8 @@ def _draw_upgrade_altar_particles(
     surface.blit(particle_surface, altar_position)
 
 from acts.act_three.presentation.actors import _enemy_sprite
+from acts.act_two.presentation.enemies.sentinel import draw_sentinel_status
+from presentation.control_effects import draw_player_control_effects
 from acts.act_three.presentation.animation import (
     _idle_frame,
     _movement_frame,
@@ -456,7 +458,13 @@ def _draw_act_three_world(
     attack_positions = [
         position
         for enemy in floor.enemies
-        if enemy.health > 0
+        if (
+            enemy.health > 0
+            and not (
+                enemy.type == "sentinel"
+                and enemy.prepared_attack_mode == "shield_bash"
+            )
+        )
         for position in enemy.attack_targets
     ]
     _draw_tile_markers(
@@ -718,6 +726,13 @@ def _draw_act_three_world(
             )
 
         if enemy.health > 0:
+            draw_sentinel_status(
+                view_surface,
+                enemy,
+                enemy_position,
+                current_time,
+                ACT_THREE_TILE_SIZE,
+            )
             _draw_health_bar(
                 view_surface,
                 enemy_position[0],
@@ -1177,6 +1192,21 @@ def _draw_act_three_world(
             ultimate_step_started_at = (
                 game_state.player.ultimate_animation_started_at
             )
+
+    player_sprite, player_position = draw_player_control_effects(
+        view_surface,
+        player_sprite,
+        player_position,
+        _view_position(
+            floor.player_column,
+            floor.player_row,
+            camera_x,
+            camera_y,
+        ),
+        game_state.player,
+        current_time,
+        ACT_THREE_TILE_SIZE,
+    )
 
     if (
         player_subclass == "assassin"

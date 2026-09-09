@@ -23,7 +23,6 @@ from acts.act_two.bloody_altar import (
     try_apply_open_wound_bleed,
 )
 from acts.player_stats import attribute_stat_changes_for_rank
-from bosses.oracle import ORACLE_LEGACY_COMBAT_ENABLED
 from acts.act_two.presentation.bosses.oracle_health import (
     limit_oracle_phase_one_damage,
 )
@@ -287,8 +286,9 @@ def attack_enemy(
     ):
         return False
     if (
-            enemy.type == "sentinel"
-            and enemy.shield_blocks_remaining > 0
+        enemy.type == "sentinel"
+        and enemy.shield_blocks_remaining > 0
+        and enemy.sentinel.recovery_turns == 0
     ):
         enemy.shield_blocks_remaining -= 1
 
@@ -322,19 +322,9 @@ def attack_enemy(
         )
 
         if enemy.shield_blocks_remaining == 0:
-            enemy.shield_cooldown = (
-                enemy.shield_cooldown_duration
-            )
-            add_log_message(
-                game_state.combat_log,
-                f"{enemy.name}'s shield guard breaks.",
-                category="defense",
-            )
-        elif attacker_name == "hero":
-            _prepare_sentinel_counter(
-                game_state,
-                enemy,
-            )
+            from systems.enemy_ai.sentinel import break_sentinel_shield
+
+            break_sentinel_shield(game_state, enemy)
 
         return False
     if (

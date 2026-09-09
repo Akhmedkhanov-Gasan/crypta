@@ -28,6 +28,7 @@ from presentation.layout import (
     MAP_WIDTH,
 )
 from settings import TILE_SIZE
+from presentation.control_effects import draw_player_control_effects
 
 
 ACT_TWO_WAIT_EFFECT_DURATION_MS = 900
@@ -736,8 +737,9 @@ def draw_act_two_player_actor(
     attack_target=None,
     level_up_effect_started_at=-1,
     stoneflesh_hits=0,
-    stoneflesh_effect_started_at=-1,
-    dodge_effect_started_at=-1,
+        stoneflesh_effect_started_at=-1,
+        dodge_effect_started_at=-1,
+        control_player=None,
 ):
     sprite = sprites[f"player_{player_class}"]
     destination_position = (
@@ -1182,6 +1184,15 @@ def draw_act_two_player_actor(
             (center[0] - effect_center[0], center[1] - effect_center[1]),
         )
 
+    sprite, position = draw_player_control_effects(
+        screen,
+        sprite,
+        position,
+        destination_position,
+        control_player,
+        current_time,
+        TILE_SIZE,
+    )
     hit_elapsed = current_time - hit_started_at
     if (
         player_class == "warrior"
