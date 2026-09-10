@@ -686,6 +686,20 @@ def update_oracle_combat(game_state, current_time, sounds):
             "radial",
             "blast",
         )
+        state.radial_cooldown = RADIAL_COOLDOWN_TURNS
+        add_oracle_ground_fire(
+            state.ground_fire,
+            _radial_fire_cells(state.cells),
+        )
+
+        add_log_message(
+            game_state.combat_log,
+            (
+                "Scattered blackfire remains after "
+                "Oracle's eruption."
+            ),
+            category="warning",
+        )
 
     damage = {
         "sphere": SPHERE_DAMAGE,
@@ -716,22 +730,10 @@ def update_oracle_combat(game_state, current_time, sounds):
     state.impact_fx_at = current_time
     state.lock_until = current_time + IMPACT_MS
 
-    if kind == "radial" and game_state.player.health > 0:
-        state.radial_cooldown = RADIAL_COOLDOWN_TURNS
-        add_oracle_ground_fire(
-            state.ground_fire,
-            _radial_fire_cells(state.cells),
-        )
-
-        add_log_message(
-            game_state.combat_log,
-            (
-                "Scattered blackfire remains after "
-                "Oracle's eruption."
-            ),
-            category="warning",
-        )
-    elif kind in ("sphere", "line") and game_state.player.health > 0:
+    if (
+        kind in ("sphere", "line")
+        and game_state.player.health > 0
+    ):
         add_oracle_ground_fire(
             state.ground_fire,
             state.cells,

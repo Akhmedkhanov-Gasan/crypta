@@ -8,6 +8,15 @@ from acts.act_two.presentation.bosses.oracle_intro import (
     SKIP_FADE_MS as INTRO_SKIP_FADE_MS,
     oracle_intro_active,
 )
+from acts.act_two.presentation.bosses.oracle_credits import (
+    BUTTON_FADE_MS,
+    BUTTON_START_MS,
+)
+from acts.act_two.presentation.bosses.oracle_death import (
+    CREDITS_START_MS,
+    SKIP_FADE_MS as DEATH_SKIP_FADE_MS,
+    oracle_death_active,
+)
 from acts.act_two.presentation.bosses.oracle_phase_transition import (
     SKIP_FADE_MS as PHASE_SKIP_FADE_MS,
     TRANSITION_END_MS,
@@ -17,6 +26,12 @@ from acts.act_two.presentation.bosses.oracle_phase_transition import (
 
 HOLD_DURATION_MS = 1500
 HINT_DURATION_MS = 3000
+
+DEATH_SKIP_END_MS = (
+    CREDITS_START_MS
+    + BUTTON_START_MS
+    + BUTTON_FADE_MS
+)
 
 
 class ActTwoCutsceneSkip:
@@ -78,6 +93,19 @@ class ActTwoCutsceneSkip:
                     scene,
                     TRANSITION_END_MS,
                     PHASE_SKIP_FADE_MS,
+                )
+
+        if oracle_death_active(floor):
+            scene = floor.oracle_death
+            if (
+                scene.skip_frame is None
+                and scene.elapsed < DEATH_SKIP_END_MS
+            ):
+                return (
+                    ("death", id(scene)),
+                    scene,
+                    DEATH_SKIP_END_MS,
+                    DEATH_SKIP_FADE_MS,
                 )
 
         return None, None, 0, 0

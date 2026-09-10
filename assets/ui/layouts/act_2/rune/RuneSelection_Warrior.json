@@ -30,7 +30,7 @@
       "name": {
         "rect": {
           "x": 328,
-          "y": 393,
+          "y": 391,
           "width": 153,
           "height": 34
         },
@@ -64,7 +64,7 @@
           "width": 153,
           "height": 54
         },
-        "text": "Passive: 25% chance to\nblock attacks.\nReplaces Power Cleave.",
+        "text": "Passive: 25% chance to\nblock attacks.",
         "font": {
           "family": "Euxoi",
           "style": "Regular",

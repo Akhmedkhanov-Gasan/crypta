@@ -34,6 +34,7 @@ DIALOGUE_START_MS = 5800
 DIALOGUE_LINE_MS = 2300
 DEATH_CROSSFADE_MS = 700
 DEATH_SOUND_VOLUME = 0.90
+SKIP_FADE_MS = 800
 
 DIALOGUE = (
     "Go then, child...",
@@ -60,6 +61,8 @@ class OracleDeathState:
     logged_lines: int = 0
     credits_music_started: bool = False
     finished: bool = False
+    skip_frame: pygame.Surface | None = None
+    skip_started_elapsed: int = -1
 
 
 def _smooth(value):
@@ -303,7 +306,7 @@ def _load_death_frames():
         source = resources.load_image(
             str(
                 root
-                / f"oracle_death_original_{index:02d}.png"
+                / f"oracle_death_{index:02d}.png"
             )
         ).convert_alpha()
 
@@ -715,6 +718,30 @@ def _dialogue_surface(text):
     return surface
 
 
+def _draw_skip_fade(screen, scene):
+    if (
+        scene.skip_frame is None
+        or scene.skip_started_elapsed < 0
+    ):
+        return
+
+    age = scene.elapsed - scene.skip_started_elapsed
+
+    if age >= SKIP_FADE_MS:
+        scene.skip_frame = None
+        scene.skip_started_elapsed = -1
+        return
+
+    progress = _smooth(
+        age / SKIP_FADE_MS
+    )
+    frame = scene.skip_frame.copy()
+    frame.set_alpha(
+        round(255 * (1.0 - progress))
+    )
+    screen.blit(frame, (0, 0))
+
+
 def draw_oracle_death_overlay(
     screen,
     world_frame,
@@ -735,6 +762,7 @@ def draw_oracle_death_overlay(
             elapsed - CREDITS_START_MS,
             mouse_position,
         )
+        _draw_skip_fade(screen, scene)
         return
     hud_visibility = (
         1.0
@@ -782,6 +810,7 @@ def draw_oracle_death_overlay(
             <= elapsed
             < DIALOGUE_END_MS
     ):
+        _draw_skip_fade(screen, scene)
         return
 
     dialogue_elapsed = (
@@ -821,3 +850,5 @@ def draw_oracle_death_overlay(
             ),
         ),
     )
+    _draw_skip_fade(screen, scene)
+

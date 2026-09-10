@@ -28,6 +28,7 @@ SCROLL_SPEED = 0.065
 
 FINAL_START_MS = 31500
 BUTTON_START_MS = 36500
+BUTTON_FADE_MS = 700
 
 END_MUSIC_VOLUME = 0.70
 
@@ -345,7 +346,7 @@ def _draw_final(
         (
             elapsed - BUTTON_START_MS
         )
-        / 700
+        / BUTTON_FADE_MS
     )
     hovered = (
         mouse_position is not None

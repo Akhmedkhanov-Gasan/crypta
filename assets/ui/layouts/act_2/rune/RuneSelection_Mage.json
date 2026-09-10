@@ -146,11 +146,11 @@
       "description": {
         "rect": {
           "x": 568,
-          "y": 441,
+          "y": 433,
           "width": 153,
-          "height": 54
+          "height": 72
         },
-        "text": "Replace basic attacks\nwith targeted magic.\nArcane Burst is disabled.",
+        "text": "Passive: Replace\nbasic attacks\nwith targeted magic.",
         "font": {
           "family": "Euxoi",
           "style": "Regular",

@@ -33,12 +33,12 @@ EYES_START_MS = PAN_END_MS + 1600
 EYES_DURATION_MS = 3800
 NAME_START_MS = EYES_START_MS + EYES_DURATION_MS + 250
 DIALOGUE_START_MS = NAME_START_MS + 3200
-DIALOGUE_LINE_MS = 4000
+DIALOGUE_LINE_MS = 4800
 
 DIALOGUE = (
-    "He has come, just as I foresaw… Just as YOU said.",
-    "But I cannot grant YOUR request.",
-    "He will not become what YOU wish him to be. I see it…",
+    "You have brought him to me again, old man.",
+    "I promised to see what he would become.",
+    "But I never promised to let him pass.",
 )
 
 RETURN_START_MS = (

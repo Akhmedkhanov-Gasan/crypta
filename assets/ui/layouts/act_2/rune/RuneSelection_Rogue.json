@@ -236,7 +236,7 @@
           "width": 153,
           "height": 81
         },
-        "text": "Critical hits grant 2 \nturns of invisibility.\nStealth attacks use your\nnormal critical chance.",
+        "text": "Passive: Critical\n hits grant 2 turns\nof invisibility.",
         "font": {
           "family": "Euxoi",
           "style": "Regular",
