@@ -46,7 +46,7 @@ TUTORIAL_FLOOR_LABELS = (
         (
             "MOVE INTO CRATES TO BREAK THEM.",
             "SUPPLIES INSIDE MAY INCLUDE POTIONS.",
-            "STAND ON LOOT AND PRESS G TO PICK IT UP.",
+            "STEP ON POTIONS TO PICK THEM UP.",
             "PRESS A POTION'S BELT NUMBER TO HEAL.",
         ),
     ),

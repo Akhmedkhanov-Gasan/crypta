@@ -4,6 +4,7 @@ from levels import ACT_ONE_CRATE_POTION_CHANCE
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from game.state import PotionState
+from systems.enemy_spawning import try_spawn_crate_goblin
 
 
 def break_act_one_crate(game_state, crate):
@@ -44,6 +45,8 @@ def break_act_one_crate(game_state, crate):
             )
         )
         message = "The crate breaks. A healing potion falls out."
+    elif try_spawn_crate_goblin(game_state, crate):
+        message = "The crate breaks. A goblin jumps out!"
     else:
         message = "The crate breaks. It is empty."
 

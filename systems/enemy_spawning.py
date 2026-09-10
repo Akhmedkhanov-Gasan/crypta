@@ -95,3 +95,27 @@ def try_spawn_enemy_after_death(
         )
 
     return spawned_enemy
+
+
+EMPTY_CRATE_GOBLIN_CHANCE = 0.05
+
+
+def try_spawn_crate_goblin(game_state, crate) -> bool:
+    if crate.loot_kind is not None:
+        return False
+
+    if random.random() >= EMPTY_CRATE_GOBLIN_CHANCE:
+        return False
+
+    goblin = EnemyState.from_config(
+        enemy_type="goblin",
+        column=crate.column,
+        row=crate.row,
+        name=_next_enemy_name(game_state, "goblin"),
+        config=ENEMY_TYPES["goblin"],
+        belongs_to_boss_group=False,
+    )
+    goblin.is_aggro = True
+    goblin.behavior_state = EnemyBehaviorState.CHASING
+    game_state.floor.enemies.append(goblin)
+    return True

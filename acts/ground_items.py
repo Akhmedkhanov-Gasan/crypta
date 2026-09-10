@@ -70,6 +70,38 @@ def collect_ground_gold(game_state, current_time):
     )
 
 
+def collect_act_one_potions(game_state, current_time):
+    if game_state.floor.presentation_act != 1:
+        return False
+
+    collected = False
+
+    while True:
+        potion = next(
+            (
+                item
+                for item in ground_items_at_player(
+                    game_state,
+                    current_time,
+                )
+                if item.kind == "potion"
+            ),
+            None,
+        )
+
+        if potion is None:
+            return collected
+
+        if not pick_up_ground_item(
+            game_state,
+            potion,
+            current_time,
+        ):
+            return collected
+
+        collected = True
+
+
 def ground_item_act_input_available(game_state):
     return (
         game_state.floor.presentation_act != 2

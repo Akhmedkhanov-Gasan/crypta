@@ -71,7 +71,7 @@ TRADER_ITEMS = {
         description=(
             "Ignites a 3x3 area for 9 ticks, dealing 1 damage per tick."
         ),
-        price=4,
+        price=6,
         sprite_name="trader_fire_bomb",
     ),
 }

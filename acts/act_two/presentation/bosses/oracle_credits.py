@@ -249,7 +249,7 @@ def handle_oracle_credits_event(
     )
 
     if keyboard_confirmed or button_clicked:
-        return "menu"
+        return "summary"
 
     return None
 
@@ -415,7 +415,7 @@ def _draw_final(
     )
 
     text = _text_surface(
-        "RETURN TO MAIN MENU",
+        "SHOW RESULTS",
         24,
         (
             GOLD

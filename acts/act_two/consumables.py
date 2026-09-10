@@ -3,7 +3,8 @@ from acts.act_two.settings import (
     ARCANE_IMPULSE_SCROLL_DAMAGE,
     BINDING_SCROLL_TURNS,
     CONSUMABLE_BELT_SIZE,
-    FIRE_BOMB_DAMAGE,
+    FIRE_BOMB_EXPLOSION_DAMAGE,
+    FIRE_BOMB_TICK_DAMAGE,
     FIRE_BOMB_TOTAL_TICKS,
     HEALING_SCROLL_HEALING,
     STONEFLESH_SCROLL_HITS,
@@ -537,8 +538,13 @@ def is_valid_fire_bomb_target(
     )
 
 
-def _damage_enemy_with_fire(game_state, enemy, position) -> None:
-    damage = min(FIRE_BOMB_DAMAGE, enemy.health)
+def _damage_enemy_with_fire(
+    game_state,
+    enemy,
+    position,
+    damage_amount,
+) -> None:
+    damage = min(damage_amount, enemy.health)
     damage = limit_oracle_phase_one_damage(
         enemy,
         damage,
@@ -614,7 +620,11 @@ def _damage_enemy_with_fire(game_state, enemy, position) -> None:
     resolve_enemy_defeat(game_state, enemy)
 
 
-def _damage_player_with_fire(game_state, zone) -> None:
+def _damage_player_with_fire(
+    game_state,
+    zone,
+    damage_amount,
+) -> None:
     floor = game_state.floor
     player = game_state.player
     player_position = (floor.player_column, floor.player_row)
@@ -622,7 +632,7 @@ def _damage_player_with_fire(game_state, zone) -> None:
         return
     damage = damage_player(
         game_state,
-        FIRE_BOMB_DAMAGE,
+        damage_amount,
         damage_kind="fire",
     )
     if damage <= 0:
@@ -666,7 +676,11 @@ def _damage_player_with_fire(game_state, zone) -> None:
         )
 
 
-def apply_fire_zone_tick(game_state: GameState, zone: FireZoneState) -> None:
+def apply_fire_zone_tick(
+    game_state: GameState,
+    zone: FireZoneState,
+    damage_amount: int,
+) -> None:
     zone_cells = set(zone.cells)
     from acts.act_two.crates import break_crate
 
@@ -691,8 +705,13 @@ def apply_fire_zone_tick(game_state: GameState, zone: FireZoneState) -> None:
                 game_state,
                 enemy,
                 next(iter(burning_positions)),
+                damage_amount,
             )
-    _damage_player_with_fire(game_state, zone)
+    _damage_player_with_fire(
+        game_state,
+        zone,
+        damage_amount,
+    )
 
 
 def throw_fire_bomb(
@@ -739,7 +758,11 @@ def throw_fire_bomb(
         "The fire bomb shatters.",
         category="environment",
     )
-    apply_fire_zone_tick(game_state, zone)
+    apply_fire_zone_tick(
+        game_state,
+        zone,
+        FIRE_BOMB_EXPLOSION_DAMAGE,
+    )
     return True
 
 
@@ -756,7 +779,11 @@ def advance_fire_zones(game_state: GameState) -> None:
         if zone.ticks_remaining <= 0:
             continue
         burning_cells.update(zone.cells)
-        apply_fire_zone_tick(game_state, zone)
+        apply_fire_zone_tick(
+            game_state,
+            zone,
+            FIRE_BOMB_TICK_DAMAGE,
+        )
         zone.ticks_remaining -= 1
         if zone.ticks_remaining > 0:
             active_zones.append(zone)

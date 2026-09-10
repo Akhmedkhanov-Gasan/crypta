@@ -190,44 +190,76 @@ def draw_act_two_death_score(
     )
 
     stats = game_state.run_stats
+    victory = game_state.game_won
 
-    cause = stats.death_cause
+    if victory:
+        title_rectangle = figma_rect(
+            layout["title"]["rect"]
+        )
+        reason_rectangle = figma_rect(
+            layout["death_reason"]["rect"]
+        )
+        victory_title = {
+            **layout["title"],
+            "rect": {
+                "x": title_rectangle.x,
+                "y": title_rectangle.y,
+                "width": (
+                    reason_rectangle.right
+                    - title_rectangle.left
+                ),
+                "height": title_rectangle.height,
+            },
+        }
 
-    if cause:
-        enemy_name, separator, enemy_number = cause.rpartition(" ")
-        if separator and enemy_number.isdecimal():
-            cause = enemy_name
-
-    special_causes = {
-        "fire": "Consumed by fire",
-        "floor spikes": "Impaled by spikes",
-        "brute aftershock": "Crushed by aftershock",
-        "projectile": "Slain by a projectile",
-        "unknown": "The hero has fallen",
-    }
-
-    if cause is None:
-        death_reason = "The hero has fallen"
+        draw_figma_text(
+            screen,
+            victory_title,
+            text_override="THE ORACLE HAS FALLEN",
+        )
     else:
-        death_reason = special_causes.get(
-            cause,
-            f"Slain by {cause}",
+        cause = stats.death_cause
+
+        if cause:
+            enemy_name, separator, enemy_number = cause.rpartition(" ")
+            if separator and enemy_number.isdecimal():
+                cause = enemy_name
+
+        special_causes = {
+            "fire": "Consumed by fire",
+            "floor spikes": "Impaled by spikes",
+            "brute aftershock": "Crushed by aftershock",
+            "projectile": "Slain by a projectile",
+            "unknown": "The hero has fallen",
+        }
+
+        if cause is None:
+            death_reason = "The hero has fallen"
+        else:
+            death_reason = special_causes.get(
+                cause,
+                f"Slain by {cause}",
+            )
+
+        reason_spec = layout["death_reason"]
+        reason_rectangle = figma_rect(
+            reason_spec["rect"]
+        )
+        death_reason = fit_text_to_width(
+            get_figma_font(reason_spec),
+            death_reason,
+            reason_rectangle.width,
         )
 
-    reason_spec = layout["death_reason"]
-    reason_rectangle = figma_rect(reason_spec["rect"])
-    death_reason = fit_text_to_width(
-        get_figma_font(reason_spec),
-        death_reason,
-        reason_rectangle.width,
-    )
-
-    draw_figma_text(screen, layout["title"])
-    draw_figma_text(
-        screen,
-        reason_spec,
-        text_override=death_reason,
-    )
+        draw_figma_text(
+            screen,
+            layout["title"],
+        )
+        draw_figma_text(
+            screen,
+            reason_spec,
+            text_override=death_reason,
+        )
 
     draw_figma_text(screen, layout["stats"]["heading"])
 

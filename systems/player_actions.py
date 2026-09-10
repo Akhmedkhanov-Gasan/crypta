@@ -1,5 +1,8 @@
 from acts.act_two.oracle_gate import oracle_gate_allows_entry
-from acts.ground_items import collect_ground_gold
+from acts.ground_items import (
+    collect_act_one_potions,
+    collect_ground_gold,
+)
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from game.healing import heal_player
@@ -410,6 +413,19 @@ def try_move_player(
             and bool(living_enemies)
         )
         if passage_is_locked:
+            if floor.presentation_act == 1:
+                message = (
+                    "The door opens after every enemy is defeated."
+                )
+                if (
+                    not game_state.combat_log
+                    or game_state.combat_log[-1] != message
+                ):
+                    add_log_message(
+                        game_state.combat_log,
+                        message,
+                        category="warning",
+                    )
             return False
 
         player_acted = _resolve_floor_exit(
@@ -543,6 +559,8 @@ def try_move_player(
         _activate_boss_fight(game_state)
 
     collect_ground_gold(game_state, transition_started_at)
+    collect_act_one_potions(game_state, transition_started_at)
+
     reached_legacy_exit = (
         not floor.passages
         and (floor.player_column, floor.player_row)

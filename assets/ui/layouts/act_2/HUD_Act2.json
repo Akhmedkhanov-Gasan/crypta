@@ -1,5 +1,5 @@
 {
-  "schema_version": 6,
+  "schema_version": 7,
   "screen": "hud",
   "act": 2,
   "frame": {
@@ -1318,7 +1318,7 @@
       "class_name": {
         "rect": {
           "x": 1062,
-          "y": 171,
+          "y": 158,
           "width": 89,
           "height": 26
         },
@@ -1343,6 +1343,74 @@
           "g": 154,
           "b": 143,
           "a": 255
+        }
+      },
+      "attribute_points": {
+        "rect": {
+          "x": 1040,
+          "y": 184,
+          "width": 140,
+          "height": 20
+        },
+        "label": {
+          "rect": {
+            "x": 1040,
+            "y": 187,
+            "width": 105,
+            "height": 14
+          },
+          "text": "Available points:",
+          "font": {
+            "family": "Alagard",
+            "style": "Medium",
+            "size": 14
+          },
+          "line_height": {
+            "unit": "AUTO"
+          },
+          "letter_spacing": {
+            "unit": "PERCENT",
+            "value": 0
+          },
+          "horizontal_align": "CENTER",
+          "vertical_align": "CENTER",
+          "text_case": "ORIGINAL",
+          "color": {
+            "r": 174,
+            "g": 154,
+            "b": 143,
+            "a": 255
+          }
+        },
+        "value": {
+          "rect": {
+            "x": 1160,
+            "y": 187,
+            "width": 7,
+            "height": 14
+          },
+          "text": "0",
+          "font": {
+            "family": "Alagard",
+            "style": "Medium",
+            "size": 14
+          },
+          "line_height": {
+            "unit": "AUTO"
+          },
+          "letter_spacing": {
+            "unit": "PERCENT",
+            "value": 0
+          },
+          "horizontal_align": "CENTER",
+          "vertical_align": "CENTER",
+          "text_case": "ORIGINAL",
+          "color": {
+            "r": 174,
+            "g": 154,
+            "b": 143,
+            "a": 255
+          }
         }
       },
       "attributes": {

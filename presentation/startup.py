@@ -1,19 +1,29 @@
+import random
+
 import pygame
 import resource_store as resources
 
 from presentation.display import game_viewport
 from presentation.layout import ASSET_ROOT
-from settings import FPS, GAME_HEIGHT, GAME_WIDTH
+from settings import (
+    FPS,
+    GAME_HEIGHT,
+    GAME_WIDTH,
+    LOADING_SCREENS_ENABLED,
+)
 
 
 LOGO_DURATION_MS = 2500
 SAND_DURATION_MS = 1600
 TURN_DURATION_MS = 300
 CYCLE_DURATION_MS = SAND_DURATION_MS + TURN_DURATION_MS
-LOADING_DURATION_MS = CYCLE_DURATION_MS * 2
+LOADING_DURATION_MIN_MS = 3200
+LOADING_DURATION_MAX_MS = 4000
 
 HOURGLASS_SCALE = 2
 HOURGLASS_MARGIN = 32
+
+_DURATION_RANDOM = random.SystemRandom()
 
 _SKULL = (
     "...######...",
@@ -53,12 +63,26 @@ _BOTTOM_GLASS = tuple(
 
 
 class StartupScreen:
-    def __init__(self, window, fullscreen=False):
+    def __init__(
+        self,
+        window,
+        fullscreen=False,
+        enabled=LOADING_SCREENS_ENABLED,
+    ):
         self.window = window
         self.fullscreen = fullscreen
+        self.enabled = enabled
+
+        if not self.enabled:
+            return
+
         self.surface = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
         self.clock = pygame.time.Clock()
         self.elapsed_ms = 0
+        self.loading_duration_ms = _DURATION_RANDOM.randint(
+            LOADING_DURATION_MIN_MS,
+            LOADING_DURATION_MAX_MS,
+        )
 
         self.window.fill((0, 0, 0))
         pygame.display.flip()
@@ -147,6 +171,9 @@ class StartupScreen:
         pygame.display.flip()
 
     def show_logo(self):
+        if not self.enabled:
+            return
+
         path = ASSET_ROOT / "ui" / "menu" / "nihil.png"
         logo = resources.load_image(str(path)).convert_alpha()
 
@@ -316,6 +343,9 @@ class StartupScreen:
         self._present(pixelated=True)
 
     def load(self, loader, *args, **kwargs):
+        if not self.enabled:
+            return loader(*args, **kwargs)
+
         self._frame()
         result = loader(*args, **kwargs)
         self.clock.tick()
@@ -323,7 +353,10 @@ class StartupScreen:
         return result
 
     def finish(self):
-        while self.elapsed_ms < LOADING_DURATION_MS:
+        if not self.enabled:
+            return
+
+        while self.elapsed_ms < self.loading_duration_ms:
             self._frame()
 
         self.surface.fill((0, 0, 0))

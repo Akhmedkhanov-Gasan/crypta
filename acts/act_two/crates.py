@@ -13,6 +13,7 @@ from acts.act_two.settings import (
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from game.state import BreakableCrateState, GameState
+from systems.enemy_spawning import try_spawn_crate_goblin
 
 
 def break_crate(
@@ -78,6 +79,8 @@ def break_crate(
         loot_message = "a gold coin falls out"
     elif crate.loot_kind == "potion":
         loot_message = "a healing potion falls out"
+    elif try_spawn_crate_goblin(game_state, crate):
+        loot_message = "a goblin jumps out"
     else:
         loot_message = None
     if cause == "fire_bomb":

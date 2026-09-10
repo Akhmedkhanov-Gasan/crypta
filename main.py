@@ -728,9 +728,16 @@ def main():
                 act_two_input_state.cancel_auto_move()
                 act_two_input_state.cancel_consumable_drag()
 
-                if oracle_action == "menu":
-                    app_runtime.menu_open = True
-                    death_menu_requested = True
+                if oracle_action == "summary":
+                    game_state.game_won = True
+                    game_state.run_stats.completed_floors.add(
+                        game_state.floor_index
+                    )
+                    game_state.player.act_two.death_score_open = True
+                    game_state.player.act_two.death_input_unlock_at = (
+                        pygame.time.get_ticks() + 250
+                    )
+                    game_state.floor.oracle_death.finished = True
                 elif event.type not in (
                     pygame.QUIT,
                     pygame.VIDEORESIZE,
@@ -790,7 +797,10 @@ def main():
             if (
                     not app_runtime.menu_open
                     and current_act == 2
-                    and game_state.player.health <= 0
+                    and (
+                        game_state.player.health <= 0
+                        or game_state.player.act_two.death_score_open
+                    )
                     and event.type not in (
                     pygame.QUIT,
                     pygame.VIDEORESIZE,
@@ -873,8 +883,10 @@ def main():
                     act_two_menu_music_playing = False
 
                     if not app_runtime.run_in_progress:
-                        loading.run()
-                        game_state = run_session.resume(app_runtime)
+                        game_state = loading.run(
+                            run_session.resume,
+                            app_runtime,
+                        )
                         current_act = game_state.floor.presentation_act
                         act_one_camera = ActOneCamera()
                         act_two_camera = ActTwoCamera()
@@ -917,7 +929,11 @@ def main():
                     act_two_music_attempted = False
                     act_three_music_attempted = False
 
-                    game_state = loading.run(create_game_state)
+                    if menu_action == "new_run":
+                        game_state = loading.run(create_game_state)
+                    else:
+                        game_state = create_game_state()
+
                     current_act = game_state.floor.presentation_act
 
                     app_runtime.progress_tracking_enabled = True
@@ -3544,7 +3560,6 @@ def main():
 
         if (
                 current_act == 2
-                and game_state.player.health <= 0
                 and game_state.player.act_two.death_score_open
         ):
             draw_act_two_death_score(

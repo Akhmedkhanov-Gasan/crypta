@@ -1275,6 +1275,21 @@ def draw_act_two_sidebar(
         class_name,
     )
 
+    attribute_points_layout = (
+        stats_panel_layout["attribute_points"]
+    )
+
+    draw_figma_text(
+        screen,
+        attribute_points_layout["label"],
+    )
+
+    _draw_dynamic_figma_text(
+        screen,
+        attribute_points_layout["value"],
+        remaining_attribute_points,
+    )
+
     attribute_names = (
         "strength",
         "dexterity",
