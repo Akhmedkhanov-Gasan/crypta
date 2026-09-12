@@ -3,7 +3,7 @@ from math import ceil
 
 from systems.bleeding import apply_bleed
 from acts.act_two.bloody_altar_catalog import BLOODY_PACTS_BY_ID
-from acts.player_stats import PlayerStatChanges, apply_player_stat_changes
+from game.attributes import PlayerStatChanges, apply_player_stat_changes
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from game.state import GameState

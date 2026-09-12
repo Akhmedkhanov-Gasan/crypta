@@ -193,7 +193,7 @@
               "width": 290,
               "height": 61
             },
-            "text": "A fragile spellcaster who\nsacrifices physical strength for\ndevastating ranged magic.",
+            "text": "A fragile spellcaster whose every attack\nscales with Will, unleashing devastating\nranged magic.",
             "font": {
               "family": "Asul",
               "style": "Regular",
@@ -278,12 +278,12 @@
                 {
                   "id": "stat_change_1",
                   "rect": {
-                    "x": 214,
+                    "x": 199,
                     "y": 587,
-                    "width": 73,
+                    "width": 80,
                     "height": 15
                   },
-                  "text": "STR 2→0 (-2)",
+                  "text": "VAL 2 - > 0 (-2)",
                   "font": {
                     "family": "Asul",
                     "style": "Regular",
@@ -310,12 +310,12 @@
                 {
                   "id": "stat_change_2",
                   "rect": {
-                    "x": 299,
+                    "x": 291,
                     "y": 587,
-                    "width": 76,
+                    "width": 86,
                     "height": 15
                   },
-                  "text": "INT 0→6 (+6)",
+                  "text": "WIL 0 - > 6 (+6)",
                   "font": {
                     "family": "Asul",
                     "style": "Regular",
@@ -342,12 +342,12 @@
                 {
                   "id": "stat_change_3",
                   "rect": {
-                    "x": 387,
+                    "x": 389,
                     "y": 587,
-                    "width": 69,
+                    "width": 81,
                     "height": 15
                   },
-                  "text": "VIT 2→3 (+1)",
+                  "text": "FOR 2 - > 3 (+1)",
                   "font": {
                     "family": "Asul",
                     "style": "Regular",
@@ -445,11 +445,11 @@
             "description": {
               "rect": {
                 "x": 204,
-                "y": 643,
+                "y": 640,
                 "width": 260,
-                "height": 52
+                "height": 57
               },
-              "text": "Unleash magic in a straight \nline, striking every enemy \nup to 5 tiles away.",
+              "text": "Detonate a cross at range and\nscatter enemies outward. Will\nincreases its damage.",
               "font": {
                 "family": "Asul",
                 "style": "Regular",
@@ -565,14 +565,14 @@
           "class_description": {
             "rect": {
               "x": 495,
-              "y": 507,
+              "y": 494,
               "width": 290,
-              "height": 48
+              "height": 61
             },
             "text": "A relentless front-line \nfighter built to endure \nand dominate close combat.",
             "font": {
-              "family": "Alagard",
-              "style": "Medium",
+              "family": "Asul",
+              "style": "Regular",
               "size": 16
             },
             "line_height": {
@@ -602,16 +602,16 @@
             },
             "title": {
               "rect": {
-                "x": 565,
-                "y": 559,
-                "width": 150,
-                "height": 26
+                "x": 562,
+                "y": 558,
+                "width": 156,
+                "height": 27
               },
               "text": "ATTRIBUTE SHIFT",
               "font": {
-                "family": "Venice Classic",
-                "style": "Medium",
-                "size": 20
+                "family": "Asul",
+                "style": "Regular",
+                "size": 15
               },
               "line_height": {
                 "unit": "AUTO"
@@ -636,7 +636,7 @@
                 "x": 497,
                 "y": 587,
                 "width": 287,
-                "height": 17
+                "height": 15
               },
               "layout": {
                 "mode": "HORIZONTAL",
@@ -654,16 +654,16 @@
                 {
                   "id": "stat_change_1",
                   "rect": {
-                    "x": 551,
+                    "x": 553,
                     "y": 587,
-                    "width": 86,
-                    "height": 17
+                    "width": 81,
+                    "height": 15
                   },
-                  "text": "STR 2 → 4 (+2)",
+                  "text": "VAL 2 - > 4 (+2)",
                   "font": {
-                    "family": "Euxoi",
+                    "family": "Asul",
                     "style": "Regular",
-                    "size": 16
+                    "size": 12
                   },
                   "line_height": {
                     "unit": "AUTO"
@@ -686,16 +686,16 @@
                 {
                   "id": "stat_change_2",
                   "rect": {
-                    "x": 649,
+                    "x": 646,
                     "y": 587,
-                    "width": 82,
-                    "height": 17
+                    "width": 83,
+                    "height": 15
                   },
-                  "text": "VIT 2 → 5 (+3)",
+                  "text": "FOR 2 - > 5 (+3)",
                   "font": {
-                    "family": "Euxoi",
+                    "family": "Asul",
                     "style": "Regular",
-                    "size": 16
+                    "size": 12
                   },
                   "line_height": {
                     "unit": "AUTO"
@@ -720,14 +720,14 @@
           },
           "ability": {
             "rect": {
-              "x": 527,
+              "x": 510,
               "y": 604,
-              "width": 231,
+              "width": 260,
               "height": 91
             },
             "header": {
               "rect": {
-                "x": 527,
+                "x": 510,
                 "y": 606,
                 "width": 231,
                 "height": 30
@@ -746,7 +746,7 @@
               },
               "icon": {
                 "rect": {
-                  "x": 562,
+                  "x": 553,
                   "y": 606,
                   "width": 30,
                   "height": 30
@@ -756,16 +756,16 @@
               },
               "name": {
                 "rect": {
-                  "x": 598,
-                  "y": 610,
-                  "width": 126,
-                  "height": 22
+                  "x": 589,
+                  "y": 612,
+                  "width": 109,
+                  "height": 18
                 },
                 "text": "POWER CLEAVE",
                 "font": {
-                  "family": "Venice Classic",
-                  "style": "Medium",
-                  "size": 20
+                  "family": "Asul",
+                  "style": "Regular",
+                  "size": 15
                 },
                 "line_height": {
                   "unit": "AUTO"
@@ -788,15 +788,15 @@
             },
             "description": {
               "rect": {
-                "x": 527,
-                "y": 643,
-                "width": 233,
-                "height": 48
+                "x": 510,
+                "y": 638,
+                "width": 260,
+                "height": 57
               },
-              "text": "Sweep three tiles ahead, striking every enemy caught in the attack.",
+              "text": "Sweep three tiles ahead and\nknock enemies back. Valor\nincreases Power Cleave damage.",
               "font": {
-                "family": "Alagard",
-                "style": "Medium",
+                "family": "Asul",
+                "style": "Regular",
                 "size": 16
               },
               "line_height": {
@@ -909,14 +909,14 @@
           "class_description": {
             "rect": {
               "x": 801,
-              "y": 506,
+              "y": 493,
               "width": 290,
-              "height": 48
+              "height": 61
             },
             "text": "A swift and elusive hunter who\nsurvives through positioning and\nsudden strikes.",
             "font": {
-              "family": "Alagard",
-              "style": "Medium",
+              "family": "Asul",
+              "style": "Regular",
               "size": 16
             },
             "line_height": {
@@ -946,16 +946,16 @@
             },
             "title": {
               "rect": {
-                "x": 871,
-                "y": 558,
-                "width": 150,
-                "height": 26
+                "x": 868,
+                "y": 557,
+                "width": 156,
+                "height": 27
               },
               "text": "ATTRIBUTE SHIFT",
               "font": {
-                "family": "Venice Classic",
-                "style": "Medium",
-                "size": 20
+                "family": "Asul",
+                "style": "Regular",
+                "size": 15
               },
               "line_height": {
                 "unit": "AUTO"
@@ -980,7 +980,7 @@
                 "x": 803,
                 "y": 586,
                 "width": 287,
-                "height": 17
+                "height": 15
               },
               "layout": {
                 "mode": "HORIZONTAL",
@@ -998,16 +998,16 @@
                 {
                   "id": "stat_change_1",
                   "rect": {
-                    "x": 858,
+                    "x": 862,
                     "y": 586,
-                    "width": 82,
-                    "height": 17
+                    "width": 79,
+                    "height": 15
                   },
-                  "text": "STR 2 → 3 (+1)",
+                  "text": "VAL 2 - > 3 (+1)",
                   "font": {
-                    "family": "Euxoi",
+                    "family": "Asul",
                     "style": "Regular",
-                    "size": 16
+                    "size": 12
                   },
                   "line_height": {
                     "unit": "AUTO"
@@ -1030,16 +1030,16 @@
                 {
                   "id": "stat_change_2",
                   "rect": {
-                    "x": 952,
+                    "x": 953,
                     "y": 586,
-                    "width": 83,
-                    "height": 17
+                    "width": 79,
+                    "height": 15
                   },
-                  "text": "DEX 1 → 5 (+4)",
+                  "text": "INS 1 - > 5 (+4)",
                   "font": {
-                    "family": "Euxoi",
+                    "family": "Asul",
                     "style": "Regular",
-                    "size": 16
+                    "size": 12
                   },
                   "line_height": {
                     "unit": "AUTO"
@@ -1064,15 +1064,15 @@
           },
           "ability": {
             "rect": {
-              "x": 833,
+              "x": 816,
               "y": 603,
-              "width": 231,
+              "width": 263,
               "height": 91
             },
             "header": {
               "rect": {
-                "x": 833,
-                "y": 605,
+                "x": 832,
+                "y": 606,
                 "width": 231,
                 "height": 30
               },
@@ -1090,8 +1090,8 @@
               },
               "icon": {
                 "rect": {
-                  "x": 874,
-                  "y": 605,
+                  "x": 886,
+                  "y": 606,
                   "width": 30,
                   "height": 30
                 },
@@ -1100,16 +1100,16 @@
               },
               "name": {
                 "rect": {
-                  "x": 910,
-                  "y": 609,
-                  "width": 114,
-                  "height": 22
+                  "x": 922,
+                  "y": 612,
+                  "width": 88,
+                  "height": 18
                 },
                 "text": "INVISIBILITY",
                 "font": {
-                  "family": "Venice Classic",
-                  "style": "Medium",
-                  "size": 20
+                  "family": "Asul",
+                  "style": "Regular",
+                  "size": 15
                 },
                 "line_height": {
                   "unit": "AUTO"
@@ -1132,15 +1132,15 @@
             },
             "description": {
               "rect": {
-                "x": 833,
-                "y": 642,
-                "width": 233,
-                "height": 48
+                "x": 816,
+                "y": 639,
+                "width": 263,
+                "height": 60
               },
-              "text": "Sweep three tiles ahead, striking every enemy caught in the attack.",
+              "text": "Vanish from sight for 5 turns.\nYour next attack deals increased\ndamage and is a guaranteed critical.",
               "font": {
-                "family": "Alagard",
-                "style": "Medium",
+                "family": "Asul",
+                "style": "Regular",
                 "size": 16
               },
               "line_height": {

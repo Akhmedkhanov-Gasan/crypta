@@ -1,9 +1,9 @@
-from acts.player_stats import (
-    ATTRIBUTE_NAMES,
+from game.attributes import (
+    ATTRIBUTE_ORDER,
+    MAX_ATTRIBUTE_RANK,
     apply_player_stat_changes,
     player_stat_changes_for_attribute_upgrade,
 )
-from settings import MAX_ATTRIBUTE_RANK
 
 
 DEFAULT_ENEMY_EXPERIENCE = 1
@@ -48,7 +48,7 @@ def grant_experience(player, amount: int) -> int:
 
 def can_upgrade_attribute(player, attribute: str) -> bool:
     return (
-        attribute in ATTRIBUTE_NAMES
+        attribute in ATTRIBUTE_ORDER
         and attribute in player.attribute_ranks
         and player.attribute_points > 0
         and player.attribute_ranks[attribute] < MAX_ATTRIBUTE_RANK
@@ -56,7 +56,7 @@ def can_upgrade_attribute(player, attribute: str) -> bool:
 
 
 def apply_attribute_upgrade(player, attribute: str) -> bool:
-    if attribute not in ATTRIBUTE_NAMES:
+    if attribute not in ATTRIBUTE_ORDER:
         return False
     current_rank = player.attribute_ranks.get(attribute)
     if current_rank is None or current_rank >= MAX_ATTRIBUTE_RANK:

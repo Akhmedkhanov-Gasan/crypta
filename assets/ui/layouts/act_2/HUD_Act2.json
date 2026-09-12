@@ -1,5 +1,5 @@
 {
-  "schema_version": 7,
+  "schema_version": 8,
   "screen": "hud",
   "act": 2,
   "frame": {
@@ -1061,122 +1061,6 @@
       }
     }
   },
-  "info": {
-    "rect": {
-      "x": 649,
-      "y": 553,
-      "width": 254,
-      "height": 97
-    },
-    "frame": {
-      "x": 649,
-      "y": 553,
-      "width": 254,
-      "height": 97
-    },
-    "icon": {
-      "x": 667,
-      "y": 573,
-      "width": 49,
-      "height": 49
-    },
-    "name_backing": {
-      "rect": {
-        "x": 760,
-        "y": 574,
-        "width": 104,
-        "height": 7
-      },
-      "fill": {
-        "r": 0,
-        "g": 0,
-        "b": 0,
-        "a": 0
-      },
-      "stroke": null,
-      "stroke_weight": 1,
-      "corner_radius": 7,
-      "blur_radius": 0
-    },
-    "name": {
-      "rect": {
-        "x": 738,
-        "y": 567,
-        "width": 147,
-        "height": 14
-      },
-      "text": "Invisibility",
-      "font": {
-        "family": "Alagard",
-        "style": "Medium",
-        "size": 14
-      },
-      "line_height": {
-        "unit": "AUTO"
-      },
-      "letter_spacing": {
-        "unit": "PERCENT",
-        "value": 0
-      },
-      "horizontal_align": "CENTER",
-      "vertical_align": "CENTER",
-      "text_case": "ORIGINAL",
-      "color": {
-        "r": 174,
-        "g": 154,
-        "b": 143,
-        "a": 255
-      }
-    },
-    "description_backing": {
-      "rect": {
-        "x": 735,
-        "y": 573,
-        "width": 137,
-        "height": 58
-      },
-      "fill": {
-        "r": 42,
-        "g": 39,
-        "b": 39,
-        "a": 0
-      },
-      "stroke": null,
-      "stroke_weight": 1,
-      "corner_radius": 11,
-      "blur_radius": 4
-    },
-    "description": {
-      "rect": {
-        "x": 740,
-        "y": 591,
-        "width": 149,
-        "height": 40
-      },
-      "text": "Vanish. Your next attack is a sure critical.",
-      "font": {
-        "family": "Alagard",
-        "style": "Medium",
-        "size": 12
-      },
-      "line_height": {
-        "unit": "AUTO"
-      },
-      "letter_spacing": {
-        "unit": "PERCENT",
-        "value": 0
-      },
-      "horizontal_align": "CENTER",
-      "vertical_align": "CENTER",
-      "text_case": "ORIGINAL",
-      "color": {
-        "r": 174,
-        "g": 154,
-        "b": 143,
-        "a": 255
-      }
-    }
-  },
   "right_bar": {
     "rect": {
       "x": 1001,
@@ -1348,14 +1232,14 @@
       "attribute_points": {
         "rect": {
           "x": 1040,
-          "y": 184,
+          "y": 188,
           "width": 140,
           "height": 20
         },
         "label": {
           "rect": {
             "x": 1040,
-            "y": 187,
+            "y": 191,
             "width": 105,
             "height": 14
           },
@@ -1385,8 +1269,8 @@
         "value": {
           "rect": {
             "x": 1160,
-            "y": 187,
-            "width": 7,
+            "y": 191,
+            "width": 16,
             "height": 14
           },
           "text": "0",
@@ -1416,26 +1300,26 @@
       "attributes": {
         "rect": {
           "x": 1031,
-          "y": 210,
-          "width": 159,
+          "y": 217,
+          "width": 153,
           "height": 78
         },
         "rows": {
-          "strength": {
+          "valor": {
             "rect": {
               "x": 1031,
-              "y": 210,
+              "y": 217,
               "width": 58,
               "height": 14
             },
             "label": {
               "rect": {
                 "x": 1040,
-                "y": 210,
+                "y": 217,
                 "width": 58,
                 "height": 14
               },
-              "text": "Strenght",
+              "text": "Valor",
               "font": {
                 "family": "Alagard",
                 "style": "Medium",
@@ -1461,7 +1345,7 @@
             "value": {
               "rect": {
                 "x": 1149,
-                "y": 210,
+                "y": 217,
                 "width": 13,
                 "height": 15
               },
@@ -1491,7 +1375,7 @@
             "minus": {
               "rect": {
                 "x": 1131,
-                "y": 212,
+                "y": 219,
                 "width": 7,
                 "height": 9
               },
@@ -1520,14 +1404,14 @@
             },
             "minus_hitbox": {
               "x": 1128,
-              "y": 212,
+              "y": 219,
               "width": 11,
               "height": 12
             },
             "plus": {
               "rect": {
                 "x": 1170,
-                "y": 210,
+                "y": 217,
                 "width": 11,
                 "height": 15
               },
@@ -1556,26 +1440,26 @@
             },
             "plus_hitbox": {
               "x": 1169,
-              "y": 212,
+              "y": 219,
               "width": 11,
               "height": 12
             }
           },
-          "dexterity": {
+          "instinct": {
             "rect": {
               "x": 1031,
-              "y": 232,
+              "y": 239,
               "width": 62,
               "height": 14
             },
             "label": {
               "rect": {
                 "x": 1040,
-                "y": 232,
+                "y": 239,
                 "width": 62,
                 "height": 14
               },
-              "text": "Dexterity",
+              "text": "Instinct",
               "font": {
                 "family": "Alagard",
                 "style": "Medium",
@@ -1601,7 +1485,7 @@
             "value": {
               "rect": {
                 "x": 1149,
-                "y": 232,
+                "y": 239,
                 "width": 13,
                 "height": 15
               },
@@ -1631,7 +1515,7 @@
             "minus": {
               "rect": {
                 "x": 1131,
-                "y": 234,
+                "y": 241,
                 "width": 7,
                 "height": 9
               },
@@ -1660,14 +1544,14 @@
             },
             "minus_hitbox": {
               "x": 1128,
-              "y": 234,
+              "y": 241,
               "width": 11,
               "height": 12
             },
             "plus": {
               "rect": {
                 "x": 1170,
-                "y": 232,
+                "y": 239,
                 "width": 11,
                 "height": 15
               },
@@ -1696,26 +1580,26 @@
             },
             "plus_hitbox": {
               "x": 1169,
-              "y": 234,
+              "y": 241,
               "width": 11,
               "height": 12
             }
           },
-          "intelligence": {
+          "will": {
             "rect": {
               "x": 1031,
-              "y": 253,
+              "y": 260,
               "width": 77,
               "height": 14
             },
             "label": {
               "rect": {
                 "x": 1040,
-                "y": 253,
+                "y": 260,
                 "width": 77,
                 "height": 14
               },
-              "text": "Intelligence",
+              "text": "Will",
               "font": {
                 "family": "Alagard",
                 "style": "Medium",
@@ -1741,7 +1625,7 @@
             "value": {
               "rect": {
                 "x": 1149,
-                "y": 253,
+                "y": 260,
                 "width": 13,
                 "height": 15
               },
@@ -1771,7 +1655,7 @@
             "minus": {
               "rect": {
                 "x": 1131,
-                "y": 255,
+                "y": 262,
                 "width": 7,
                 "height": 9
               },
@@ -1800,14 +1684,14 @@
             },
             "minus_hitbox": {
               "x": 1128,
-              "y": 255,
+              "y": 262,
               "width": 11,
               "height": 12
             },
             "plus": {
               "rect": {
                 "x": 1170,
-                "y": 253,
+                "y": 260,
                 "width": 11,
                 "height": 15
               },
@@ -1836,26 +1720,26 @@
             },
             "plus_hitbox": {
               "x": 1169,
-              "y": 255,
+              "y": 262,
               "width": 11,
               "height": 12
             }
           },
-          "vitality": {
+          "fortitude": {
             "rect": {
               "x": 1031,
-              "y": 274,
+              "y": 281,
               "width": 47,
               "height": 14
             },
             "label": {
               "rect": {
                 "x": 1040,
-                "y": 274,
-                "width": 47,
+                "y": 281,
+                "width": 68,
                 "height": 14
               },
-              "text": "Vitality",
+              "text": "Fortitude",
               "font": {
                 "family": "Alagard",
                 "style": "Medium",
@@ -1881,7 +1765,7 @@
             "value": {
               "rect": {
                 "x": 1149,
-                "y": 274,
+                "y": 281,
                 "width": 13,
                 "height": 15
               },
@@ -1911,7 +1795,7 @@
             "minus": {
               "rect": {
                 "x": 1131,
-                "y": 276,
+                "y": 283,
                 "width": 7,
                 "height": 9
               },
@@ -1940,14 +1824,14 @@
             },
             "minus_hitbox": {
               "x": 1128,
-              "y": 276,
+              "y": 283,
               "width": 11,
               "height": 12
             },
             "plus": {
               "rect": {
                 "x": 1170,
-                "y": 274,
+                "y": 281,
                 "width": 11,
                 "height": 15
               },
@@ -1976,7 +1860,7 @@
             },
             "plus_hitbox": {
               "x": 1169,
-              "y": 276,
+              "y": 283,
               "width": 11,
               "height": 12
             }
@@ -1986,19 +1870,19 @@
       "confirm": {
         "rect": {
           "x": 1061,
-          "y": 297,
+          "y": 302,
           "width": 98,
           "height": 26
         },
         "button": {
           "x": 1061,
-          "y": 297,
+          "y": 302,
           "width": 98,
           "height": 26
         },
         "hitbox": {
           "x": 1061,
-          "y": 297,
+          "y": 302,
           "width": 98,
           "height": 26
         }
@@ -2006,14 +1890,14 @@
       "combat_stats": {
         "rect": {
           "x": 1032,
-          "y": 359,
+          "y": 369,
           "width": 152,
           "height": 141
         },
         "heading": {
           "rect": {
             "x": 1067,
-            "y": 361,
+            "y": 371,
             "width": 83,
             "height": 14
           },
@@ -2044,14 +1928,14 @@
           "damage": {
             "rect": {
               "x": 1041,
-              "y": 389,
+              "y": 399,
               "width": 140,
               "height": 14
             },
             "label": {
               "rect": {
                 "x": 1041,
-                "y": 389,
+                "y": 399,
                 "width": 49,
                 "height": 14
               },
@@ -2081,7 +1965,7 @@
             "value": {
               "rect": {
                 "x": 1130,
-                "y": 389,
+                "y": 399,
                 "width": 43,
                 "height": 14
               },
@@ -2109,21 +1993,21 @@
               }
             }
           },
-          "critical": {
+          "critical_chance": {
             "rect": {
               "x": 1041,
-              "y": 410,
+              "y": 420,
               "width": 140,
               "height": 13
             },
             "label": {
               "rect": {
                 "x": 1041,
-                "y": 410,
-                "width": 44,
+                "y": 420,
+                "width": 81,
                 "height": 13
               },
-              "text": "Critical",
+              "text": "Crit chance",
               "font": {
                 "family": "Alagard",
                 "style": "Medium",
@@ -2149,7 +2033,7 @@
             "value": {
               "rect": {
                 "x": 1122,
-                "y": 410,
+                "y": 420,
                 "width": 58,
                 "height": 13
               },
@@ -2177,21 +2061,21 @@
               }
             }
           },
-          "critical_power": {
+          "critical_damage": {
             "rect": {
               "x": 1041,
-              "y": 430,
+              "y": 440,
               "width": 140,
               "height": 13
             },
             "label": {
               "rect": {
                 "x": 1041,
-                "y": 430,
+                "y": 440,
                 "width": 86,
                 "height": 13
               },
-              "text": "Critical power",
+              "text": "Crit damage",
               "font": {
                 "family": "Alagard",
                 "style": "Medium",
@@ -2217,7 +2101,7 @@
             "value": {
               "rect": {
                 "x": 1131,
-                "y": 430,
+                "y": 440,
                 "width": 40,
                 "height": 13
               },
@@ -2245,21 +2129,21 @@
               }
             }
           },
-          "dodge": {
+          "dodge_chance": {
             "rect": {
               "x": 1041,
-              "y": 450,
+              "y": 460,
               "width": 140,
               "height": 13
             },
             "label": {
               "rect": {
                 "x": 1041,
-                "y": 450,
-                "width": 36,
+                "y": 460,
+                "width": 91,
                 "height": 13
               },
-              "text": "Dodge",
+              "text": "Dodge chance",
               "font": {
                 "family": "Alagard",
                 "style": "Medium",
@@ -2285,79 +2169,11 @@
             "value": {
               "rect": {
                 "x": 1132,
-                "y": 450,
+                "y": 460,
                 "width": 39,
                 "height": 13
               },
               "text": "0%",
-              "font": {
-                "family": "Alagard",
-                "style": "Medium",
-                "size": 15
-              },
-              "line_height": {
-                "unit": "AUTO"
-              },
-              "letter_spacing": {
-                "unit": "PERCENT",
-                "value": 0
-              },
-              "horizontal_align": "CENTER",
-              "vertical_align": "TOP",
-              "text_case": "ORIGINAL",
-              "color": {
-                "r": 174,
-                "g": 154,
-                "b": 143,
-                "a": 255
-              }
-            }
-          },
-          "magical_power": {
-            "rect": {
-              "x": 1041,
-              "y": 470,
-              "width": 140,
-              "height": 14
-            },
-            "label": {
-              "rect": {
-                "x": 1041,
-                "y": 470,
-                "width": 93,
-                "height": 14
-              },
-              "text": "Magical power",
-              "font": {
-                "family": "Alagard",
-                "style": "Medium",
-                "size": 14
-              },
-              "line_height": {
-                "unit": "AUTO"
-              },
-              "letter_spacing": {
-                "unit": "PERCENT",
-                "value": 0
-              },
-              "horizontal_align": "LEFT",
-              "vertical_align": "TOP",
-              "text_case": "ORIGINAL",
-              "color": {
-                "r": 174,
-                "g": 154,
-                "b": 143,
-                "a": 255
-              }
-            },
-            "value": {
-              "rect": {
-                "x": 1135,
-                "y": 470,
-                "width": 30,
-                "height": 13
-              },
-              "text": "0",
               "font": {
                 "family": "Alagard",
                 "style": "Medium",

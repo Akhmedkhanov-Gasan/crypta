@@ -9,7 +9,7 @@ from typing import Any
 from game.progress_store import get_progress_path
 
 
-RUN_SAVE_VERSION = 1
+RUN_SAVE_VERSION = 3
 
 
 class RunSaveStatus(Enum):

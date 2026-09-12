@@ -8,6 +8,11 @@ from acts.act_two.abilities import (
     get_warrior_cleave_cells,
     is_valid_mage_arcane_burst_target,
 )
+from acts.act_two.ability_scaling import (
+    mage_arcane_burst_damage_bonus,
+    rogue_invisibility_duration,
+    warrior_cleave_damage_bonus,
+)
 from acts.act_two.bloody_altar import (
     BROKEN_SEAL,
     has_bloody_pact,
@@ -16,12 +21,8 @@ from acts.act_two.progression import (
     get_warrior_upgrade_rank,
 )
 from acts.act_two.settings import (
-    MAGE_ARCANE_BURST_BASE_DAMAGE_BONUS,
     MAGE_ARCANE_BURST_EDGE_DAMAGE_MULTIPLIER,
-    MAGE_ARCANE_BURST_SPELL_POWER_SCALING,
     WARRIOR_CLEAVE_COLLISION_DAMAGE,
-    WARRIOR_CLEAVE_DAMAGE_BONUS,
-    WARRIOR_CLEAVE_DAMAGE_PER_RANK,
 )
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
@@ -125,12 +126,14 @@ def request_class_ability(
 
     if player.player_class == "rogue":
         player.ability_kill_charge = 0
-        invisibility_turns = (
+        base_invisibility_turns = (
             ASSASSIN_INVISIBILITY_TURNS
             if player.subclass == "assassin"
             else ROGUE_INVISIBILITY_TURNS
         )
-        player.invisibility_turns = invisibility_turns
+        player.invisibility_turns = rogue_invisibility_duration(
+            base_invisibility_turns,
+        )
 
         for enemy in game_state.floor.enemies:
             enemy.is_aggro = False
@@ -288,18 +291,12 @@ def cast_directional_ability(
         player.directional_ability_aiming = False
         return False
     player.directional_ability_aiming = False
-    cleave_rank = get_warrior_upgrade_rank(
-        player,
-        "warrior_cleave",
-    )
     rhythm_rank = get_warrior_upgrade_rank(
         player,
         "warrior_rhythm",
     )
-    damage_bonus = (
-            WARRIOR_CLEAVE_DAMAGE_BONUS
-            + cleave_rank
-            * WARRIOR_CLEAVE_DAMAGE_PER_RANK
+    damage_bonus = warrior_cleave_damage_bonus(
+        player.attribute_ranks.get("valor", 0),
     )
     ability_name = "power cleave"
     selected_rune_id = player.selected_rune_id
@@ -651,9 +648,8 @@ def cast_mage_arcane_burst(
             category="ability",
         )
 
-    full_damage_bonus = (
-        MAGE_ARCANE_BURST_BASE_DAMAGE_BONUS
-        + player.spell_power * MAGE_ARCANE_BURST_SPELL_POWER_SCALING
+    full_damage_bonus = mage_arcane_burst_damage_bonus(
+        player.attribute_ranks.get("will", 0)
     )
     basic_minimum, basic_maximum = basic_attack_damage_range(player)
 
@@ -674,30 +670,30 @@ def cast_mage_arcane_burst(
             damage_bonus = 0
         elif concentration_active:
             damage_minimum = ceil(
-                player.damage_min * MAGE_CONCENTRATION_DAMAGE_MULTIPLIER
+                basic_minimum * MAGE_CONCENTRATION_DAMAGE_MULTIPLIER
             )
             damage_maximum = ceil(
-                player.damage_max * MAGE_CONCENTRATION_DAMAGE_MULTIPLIER
+                basic_maximum * MAGE_CONCENTRATION_DAMAGE_MULTIPLIER
             )
             damage_bonus = ceil(
                 full_damage_bonus * MAGE_CONCENTRATION_DAMAGE_MULTIPLIER
             )
         elif center_hit:
-            damage_minimum = player.damage_min
-            damage_maximum = player.damage_max
-            damage_bonus = ceil(full_damage_bonus)
+            damage_minimum = basic_minimum
+            damage_maximum = basic_maximum
+            damage_bonus = full_damage_bonus
         else:
             damage_minimum = max(
                 1,
                 ceil(
-                    player.damage_min
+                    basic_minimum
                     * MAGE_ARCANE_BURST_EDGE_DAMAGE_MULTIPLIER
                 ),
             )
             damage_maximum = max(
                 damage_minimum,
                 ceil(
-                    player.damage_max
+                    basic_maximum
                     * MAGE_ARCANE_BURST_EDGE_DAMAGE_MULTIPLIER
                 ),
             )

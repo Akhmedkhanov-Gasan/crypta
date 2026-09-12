@@ -977,10 +977,6 @@ def load_act_two_sprites():
                 act_two_hud_directory / "gold.png",
                 (76, 76),
             ),
-            "act_two_abilities_panel": _load_scaled_image(
-                act_two_hud_directory / "abilities.png",
-                (264, 198),
-            ),
             "act_two_combat_log_frame": resources.load_image(
                 str(
                     act_two_hud_directory

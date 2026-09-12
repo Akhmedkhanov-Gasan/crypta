@@ -3,10 +3,17 @@ import pygame
 from acts.act_two.progression import (
     get_act_two_upgrade_order,
 )
-from acts.player_stats import player_stat_changes_for_attribute_upgrade
+from game.attributes import (
+    player_stat_changes_for_attribute_upgrade,
+)
+from game.attributes import (
+    MAX_ATTRIBUTE_RANK,
+    MAX_CRITICAL_DAMAGE_MULTIPLIER,
+    MAX_CRIT_CHANCE,
+    MAX_DODGE_CHANCE,
+    get_attribute_definition,
+)
 from presentation.layout import GAME_HEIGHT, GAME_WIDTH
-from presentation.screens import _draw_upgrade_icon
-from settings import MAX_ATTRIBUTE_RANK
 
 
 _PANEL_POSITION = (170, 66)
@@ -47,61 +54,121 @@ def _fit_text(font, text, maximum_width):
 
 
 def _draw_card_icon(screen, sprites, kind, center, color):
+    from presentation.screens import _draw_upgrade_icon
+
     _draw_upgrade_icon(screen, kind, center, color)
 
 
 def _attribute_card(player, attribute):
     rank = player.attribute_ranks[attribute]
-    change = player_stat_changes_for_attribute_upgrade(attribute, rank)
+    change = player_stat_changes_for_attribute_upgrade(
+        attribute,
+        rank,
+    )
+    definition = get_attribute_definition(
+        attribute
+    )
     capped = rank >= MAX_ATTRIBUTE_RANK
+    values = []
 
-    if attribute == "strength":
-        description = "Attack damage"
-        if player.player_class == "warrior":
-            description = "Attack + Cleave"
-        return (
-            "STRENGTH",
-            description,
+    if change.damage_min or change.damage_max:
+        values.append(
             (
-                f"{player.damage_min}-{player.damage_max} > "
+                f"DMG {player.damage_min}-{player.damage_max}"
+                f" > "
                 f"{player.damage_min + change.damage_min}-"
                 f"{player.damage_max + change.damage_max}"
-            ),
-            capped,
+            )
         )
-    if attribute == "dexterity":
-        description = "Crit / dodge / crit damage"
-        if player.player_class == "rogue":
-            description = "Crit / dodge / ambush"
-        return (
-            "DEXTERITY",
-            description,
+
+    if change.max_health:
+        values.append(
             (
-                f"{round(player.crit_chance * 100)}/"
-                f"{round(player.dodge_chance * 100)}% > "
-                f"{round((player.crit_chance + change.crit_chance) * 100)}/"
-                f"{round((player.dodge_chance + change.dodge_chance) * 100)}% | "
-                f"x{player.critical_damage_multiplier:.1f} > "
-                f"x{player.critical_damage_multiplier + change.critical_damage_multiplier:.1f}"
-            ),
-            capped,
+                f"HP {player.max_health}"
+                f" > "
+                f"{player.max_health + change.max_health}"
+            )
         )
-    if attribute == "intelligence":
-        description = "Spell power"
-        if player.player_class == "mage":
-            description = "Spell power + Burst"
-        elif player.player_class == "rogue":
-            description = "Spell power + future skills"
-        return (
-            "INTELLIGENCE",
-            description,
-            f"{player.spell_power} > {player.spell_power + change.spell_power}",
-            capped,
+
+    if change.crit_chance:
+        next_crit = min(
+            MAX_CRIT_CHANCE,
+            player.crit_chance + change.crit_chance,
         )
+        values.append(
+            (
+                f"CRIT {round(player.crit_chance * 100)}%"
+                f" > {round(next_crit * 100)}%"
+            )
+        )
+
+    if change.dodge_chance:
+        next_dodge = min(
+            MAX_DODGE_CHANCE,
+            player.dodge_chance + change.dodge_chance,
+        )
+        values.append(
+            (
+                f"DODGE {round(player.dodge_chance * 100)}%"
+                f" > {round(next_dodge * 100)}%"
+            )
+        )
+
+    if change.critical_damage_multiplier:
+        next_critical_damage = min(
+            MAX_CRITICAL_DAMAGE_MULTIPLIER,
+            player.critical_damage_multiplier
+            + change.critical_damage_multiplier,
+        )
+        values.append(
+            (
+                "CRIT DMG "
+                f"x{player.critical_damage_multiplier:.2f}"
+                f" > x{next_critical_damage:.2f}"
+            )
+        )
+
+    descriptions = {
+        "valor": (
+            "Damage / critical damage / health"
+        ),
+        "instinct": (
+            "Critical chance / dodge"
+        ),
+        "will": (
+            "Critical chance / critical damage"
+        ),
+        "fortitude": (
+            "Health / dodge"
+        ),
+    }
+
+    if (
+        player.player_class == "warrior"
+        and attribute == "valor"
+    ):
+        descriptions[attribute] = (
+            "Damage / critical damage / Power Cleave"
+        )
+    elif (
+        player.player_class == "rogue"
+        and attribute == "instinct"
+    ):
+        descriptions[attribute] = (
+            "Critical chance / dodge / ambush"
+        )
+    elif (
+        player.player_class == "mage"
+        and attribute == "will"
+    ):
+        descriptions[attribute] = (
+            "Magical attacks / critical potential"
+        )
+
     return (
-        "VITALITY",
-        "Maximum health",
-        f"{player.max_health} > {player.max_health + change.max_health} HP",
+        definition.title.upper(),
+        descriptions[attribute],
+        " | ".join(values),
         capped,
     )
 
@@ -178,15 +245,13 @@ def _draw_upgrade_card(
 
 
 def _summary_text(player):
-    summary = (
+    return (
         f"HP {player.health}/{player.max_health}     "
         f"DAMAGE {player.damage_min}-{player.damage_max}     "
         f"CRIT {round(player.crit_chance * 100)}% x"
         f"{player.critical_damage_multiplier:.1f}     "
         f"DODGE {round(player.dodge_chance * 100)}%"
     )
-    summary += f"     SPELL {player.spell_power}"
-    return summary
 
 
 def draw_act_two_upgrade_screen(

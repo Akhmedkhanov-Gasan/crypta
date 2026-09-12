@@ -9,7 +9,7 @@ from acts.act_two.state import (
     ActOneRevisitState,
 )
 from acts.act_two.enemy_balance import act_two_enemy_config
-from acts.player_stats import ATTRIBUTE_NAMES
+from game.attributes import ATTRIBUTE_ORDER
 from enemies import ENEMY_TYPES
 from generation import generate_floor
 from levels import FLOOR_CONFIGS
@@ -347,10 +347,9 @@ def create_player_state() -> PlayerState:
         critical_damage_multiplier=(
             PLAYER_STARTING_STATS.critical_damage_multiplier
         ),
-        spell_power=PLAYER_STARTING_STATS.spell_power,
         attribute_ranks={
             attribute: PLAYER_STARTING_ATTRIBUTE_RANKS.get(attribute, 0)
-            for attribute in ATTRIBUTE_NAMES
+            for attribute in ATTRIBUTE_ORDER
         },
     )
 

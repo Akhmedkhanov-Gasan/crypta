@@ -9,7 +9,7 @@ import resource_store as resources
 
 from acts.act_one.settings import PLAYER_STARTING_ATTRIBUTE_RANKS
 from acts.act_two.settings import CLASS_BASE_ATTRIBUTE_RANKS
-from acts.player_stats import apply_attribute_rank_transition
+from game.attributes import apply_attribute_rank_transition
 from presentation.figma_ui import (
     draw_figma_rectangle,
     draw_figma_text,
@@ -35,10 +35,10 @@ OLD_MAN_RESPONSES = {
 }
 
 ATTRIBUTE_LABELS = {
-    "strength": "STR",
-    "dexterity": "DEX",
-    "intelligence": "INT",
-    "vitality": "VIT",
+    "valor": "VAL",
+    "instinct": "INS",
+    "will": "WIL",
+    "fortitude": "FOR",
 }
 
 ATTRIBUTE_GAIN_COLOR = (57, 114, 42)
@@ -114,15 +114,15 @@ def class_attribute_changes(class_name, current_ranks=None):
     if class_name == "mage":
         invested = max(
             0,
-            current_ranks.get("strength", 0)
-            - PLAYER_STARTING_ATTRIBUTE_RANKS["strength"],
+            current_ranks.get("valor", 0)
+            - PLAYER_STARTING_ATTRIBUTE_RANKS["valor"],
         )
-        preview_player.attribute_ranks["strength"] = (
-            CLASS_BASE_ATTRIBUTE_RANKS["mage"]["strength"]
+        preview_player.attribute_ranks["valor"] = (
+            CLASS_BASE_ATTRIBUTE_RANKS["mage"]["valor"]
         )
-        preview_player.attribute_ranks["intelligence"] = min(
+        preview_player.attribute_ranks["will"] = min(
             MAX_ATTRIBUTE_RANK,
-            preview_player.attribute_ranks["intelligence"] + invested,
+            preview_player.attribute_ranks["will"] + invested,
         )
 
     changes = []
@@ -261,7 +261,7 @@ def _draw_attributes(screen, attributes, class_name, current_ranks):
         return
 
     labels = [
-        f"{label} {before}→{after} ({difference:+d})"
+        f"{label} {before} -> {after} ({difference:+d})"
         for label, before, after, difference in changes
     ]
     gap = max(0, round(values.get("layout", {}).get("gap", 12)))

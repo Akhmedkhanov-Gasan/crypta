@@ -5,8 +5,11 @@ from acts.act_two.settings import (
     WARRIOR_RHYTHM_MAX_RANK,
     CLASS_BASE_ATTRIBUTE_RANKS,
 )
-from acts.player_stats import (
+from game.attributes import (
+    apply_player_stat_changes,
     attribute_stat_changes_for_rank,
+    get_attribute_definition,
+    player_stat_changes_between,
     player_stat_changes_for_attribute_upgrade,
 )
 from acts.act_one.settings import PLAYER_STARTING_ATTRIBUTE_RANKS
@@ -23,10 +26,10 @@ ACT_TWO_CLASS_UPGRADE_MAX_RANKS = {
 }
 
 COMMON_ACT_TWO_UPGRADES = (
-    "strength",
-    "dexterity",
-    "intelligence",
-    "vitality",
+    "valor",
+    "instinct",
+    "will",
+    "fortitude",
 )
 
 ACT_TWO_UPGRADE_ORDER = {
@@ -86,45 +89,61 @@ def upgrade_act_two_attribute(player, attribute: str) -> str:
     if attribute not in get_act_two_upgrade_order(player.player_class):
         return "This attribute is unavailable to the class."
 
+    definition = get_attribute_definition(
+        attribute
+    )
+
     if not can_upgrade_act_two(player, attribute):
-        return f"{attribute.title()} is capped."
+        return f"{definition.title} is capped."
 
     if player.attribute_points <= 0:
         return "No attribute points available."
-
-    change = player_stat_changes_for_attribute_upgrade(
-        attribute,
-        player.attribute_ranks[attribute],
-    )
 
     if not upgrade_attribute(player, attribute):
         return "Attribute upgrade failed."
 
     details = {
-        "strength": "physical damage increased",
-        "dexterity": "critical power and dodge increased",
-        "intelligence": "spell power increased",
-        "vitality": f"maximum HP increased by {change.max_health}",
+        "valor": (
+            "physical damage, critical damage, "
+            "and resilience increased"
+        ),
+        "instinct": (
+            "critical chance and dodge increased"
+        ),
+        "will": (
+            "critical chance and critical damage increased"
+        ),
+        "fortitude": (
+            "maximum HP and dodge increased"
+        ),
     }
     profile_effects = {
         (
             "warrior",
-            "strength",
-        ): "physical damage and Power Cleave increased",
+            "valor",
+        ): (
+            "physical damage, critical damage, "
+            "and Power Cleave increased"
+        ),
         (
             "rogue",
-            "dexterity",
-        ): "critical power, dodge, and ambush increased",
+            "instinct",
+        ): (
+            "critical chance, dodge, "
+            "and ambush increased"
+        ),
         (
             "mage",
-            "intelligence",
-        ): "spell power and Arcane Burst increased",
+            "will",
+        ): (
+            "magical attacks and critical potential increased"
+        ),
     }
     detail = profile_effects.get(
         (player.player_class, attribute),
         details[attribute],
     )
-    return f"{attribute.title()}: {detail}."
+    return f"{definition.title}: {detail}."
 
 
 def queue_act_two_attribute_upgrade(
@@ -199,7 +218,10 @@ def confirm_queued_act_two_attribute_upgrades(
 
         if amount > 0:
             applied_upgrades.append(
-                f"{attribute.title()} +{amount}"
+                (
+                    f"{get_attribute_definition(attribute).title} "
+                    f"+{amount}"
+                )
             )
 
     player.attribute_points -= selected_points
@@ -211,39 +233,85 @@ def confirm_queued_act_two_attribute_upgrades(
     return True, f"Attributes confirmed: {summary}."
 
 
-def transfer_mage_strength_upgrades(player, previous_ranks):
+def transfer_mage_valor_investment(
+    player,
+    previous_ranks,
+):
     if player.player_class != "mage":
         return
 
-    starting_strength = PLAYER_STARTING_ATTRIBUTE_RANKS["strength"]
+    starting_valor = (
+        PLAYER_STARTING_ATTRIBUTE_RANKS["valor"]
+    )
     invested = max(
         0,
-        previous_ranks.get("strength", starting_strength)
-        - starting_strength,
+        previous_ranks.get(
+            "valor",
+            starting_valor,
+        )
+        - starting_valor,
     )
+
     if invested == 0:
         return
 
-    before = attribute_stat_changes_for_rank(
-        "strength", starting_strength + invested,
+    previous_valor_stats = (
+        attribute_stat_changes_for_rank(
+            "valor",
+            starting_valor + invested,
+        )
     )
-    baseline = attribute_stat_changes_for_rank(
-        "strength", starting_strength,
+    starting_valor_stats = (
+        attribute_stat_changes_for_rank(
+            "valor",
+            starting_valor,
+        )
     )
 
-    player.attribute_ranks["strength"] = (
-        CLASS_BASE_ATTRIBUTE_RANKS["mage"]["strength"]
+    player.attribute_ranks["valor"] = (
+        CLASS_BASE_ATTRIBUTE_RANKS[
+            "mage"
+        ]["valor"]
     )
-    player.damage_min -= before.damage_min - baseline.damage_min
-    player.damage_max -= before.damage_max - baseline.damage_max
 
+    apply_player_stat_changes(
+        player,
+        player_stat_changes_between(
+            previous_valor_stats,
+            starting_valor_stats,
+        ),
+    )
+
+    current_will = player.attribute_ranks["will"]
     transferred = min(
         invested,
-        max(0, MAX_ATTRIBUTE_RANK - player.attribute_ranks["intelligence"]),
+        max(
+            0,
+            MAX_ATTRIBUTE_RANK - current_will,
+        ),
     )
-    player.attribute_ranks["intelligence"] += transferred
-    player.spell_power += attribute_stat_changes_for_rank(
-        "intelligence", transferred,
-    ).spell_power
+    upgraded_will = current_will + transferred
 
+    previous_will_stats = (
+        attribute_stat_changes_for_rank(
+            "will",
+            current_will,
+        )
+    )
+    upgraded_will_stats = (
+        attribute_stat_changes_for_rank(
+            "will",
+            upgraded_will,
+        )
+    )
+
+    apply_player_stat_changes(
+        player,
+        player_stat_changes_between(
+            previous_will_stats,
+            upgraded_will_stats,
+        ),
+    )
+
+    player.attribute_ranks["will"] = upgraded_will
     player.attribute_points += invested - transferred

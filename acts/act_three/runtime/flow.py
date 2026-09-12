@@ -10,7 +10,7 @@ from acts.act_two.settings import (
 )
 from game.combat_log import add_log_message
 from game.factories import create_floor_state, create_game_state
-from acts.player_stats import (
+from game.attributes import (
     apply_attribute_rank_transition,
     apply_player_stat_transition,
 )

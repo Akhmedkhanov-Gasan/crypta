@@ -4,7 +4,7 @@ import pygame
 
 from acts.act_three.settings import SUBCLASS_BASE_STATS
 from acts.act_two.settings import CLASS_BASE_STATS
-from acts.player_stats import (
+from game.attributes import (
     describe_player_stat_changes,
     player_stat_changes_for_attribute_upgrade,
     player_stat_changes_between,
@@ -188,27 +188,27 @@ def draw_floor_transition(
         )
 
 
-def get_upgrade_card_rectangles(show_intelligence=False):
-    if show_intelligence:
+def get_upgrade_card_rectangles(show_will=False):
+    if show_will:
         return {
-            "strength": pygame.Rect(210, 240, 410, 132),
-            "dexterity": pygame.Rect(660, 240, 410, 132),
-            "intelligence": pygame.Rect(210, 394, 410, 132),
-            "vitality": pygame.Rect(660, 394, 410, 132),
+            "valor": pygame.Rect(210, 240, 410, 132),
+            "instinct": pygame.Rect(660, 240, 410, 132),
+            "will": pygame.Rect(210, 394, 410, 132),
+            "fortitude": pygame.Rect(660, 394, 410, 132),
         }
     return {
-        "strength": pygame.Rect(190, 240, 280, 250),
-        "dexterity": pygame.Rect(500, 240, 280, 250),
-        "vitality": pygame.Rect(810, 240, 280, 250),
+        "valor": pygame.Rect(190, 240, 280, 250),
+        "instinct": pygame.Rect(500, 240, 280, 250),
+        "fortitude": pygame.Rect(810, 240, 280, 250),
     }
 
 
 def get_act_one_upgrade_card_rectangles():
     """Clickable regions matching the flattened Act One Figma export."""
     return {
-        "strength": pygame.Rect(210, 304, 275, 233),
-        "dexterity": pygame.Rect(503, 304, 275, 233),
-        "vitality": pygame.Rect(798, 304, 275, 233),
+        "valor": pygame.Rect(210, 304, 275, 233),
+        "instinct": pygame.Rect(503, 304, 275, 233),
+        "fortitude": pygame.Rect(798, 304, 275, 233),
     }
 
 
@@ -297,7 +297,7 @@ def _draw_upgrade_icon(screen, kind, center, color):
     pygame.draw.circle(icon_surface, (11, 12, 16, 220), (22, 22), 21)
     pygame.draw.circle(icon_surface, color, (22, 22), 20, width=2)
 
-    if kind == "strength":
+    if kind == "valor":
         # Raised-fist silhouette based on the reference. Drawing at 4x keeps
         # the separated fingers and thumb readable after downscaling.
         scale = 4
@@ -396,7 +396,7 @@ def _draw_upgrade_icon(screen, kind, center, color):
             pygame.transform.smoothscale(glyph, (38, 38)),
             (3, 3),
         )
-    elif kind == "dexterity":
+    elif kind == "instinct":
         # Running figure with three speed trails, based on the reference.
         scale = 4
         glyph = pygame.Surface((44 * scale, 44 * scale), pygame.SRCALPHA)
@@ -445,7 +445,7 @@ def _draw_upgrade_icon(screen, kind, center, color):
             pygame.transform.smoothscale(glyph, (38, 38)),
             (3, 3),
         )
-    elif kind == "intelligence":
+    elif kind == "will":
         # Centered brain with a consistent gap from the circular frame.
         for brain_center, radius in (
             ((15, 17), 5), ((20, 14), 5), ((25, 14), 5),
@@ -615,11 +615,10 @@ def draw_upgrade_screen(
     player_crit_chance,
     player_dodge_chance,
     player_critical_damage_multiplier,
-    player_spell_power,
     attribute_ranks,
     message,
     mouse_position=None,
-    show_intelligence=False,
+    show_will=False,
 ):
     dark_overlay = pygame.Surface(
         (GAME_WIDTH, GAME_HEIGHT),
@@ -632,7 +631,7 @@ def draw_upgrade_screen(
         170,
         66,
         940,
-        588 if show_intelligence else 520,
+        588 if show_will else 520,
     )
     pygame.draw.rect(
         screen,
@@ -709,63 +708,67 @@ def draw_upgrade_screen(
     )
 
     no_gold = gold_count <= 0
-    strength_change = player_stat_changes_for_attribute_upgrade(
-        "strength",
-        attribute_ranks["strength"],
-    )
-    dexterity_change = player_stat_changes_for_attribute_upgrade(
-        "dexterity",
-        attribute_ranks["dexterity"],
-    )
-    vitality_change = player_stat_changes_for_attribute_upgrade(
-        "vitality",
-        attribute_ranks["vitality"],
-    )
-    cards = [
+    card_definitions = [
         (
-            "strength", "1", "STRENGTH",
-            f"Rank {attribute_ranks['strength']} | Physical attack damage",
-            f"{player_damage_min}-{player_damage_max}  >  "
-            f"{player_damage_min + strength_change.damage_min}-"
-            f"{player_damage_max + strength_change.damage_max}",
+            "valor",
+            "1",
+            "VALOR",
+            "Damage, critical damage and health",
             (184, 82, 64),
         ),
         (
-            "dexterity", "2", "DEXTERITY",
-            f"Rank {attribute_ranks['dexterity']} | Crit damage "
-            f"x{player_critical_damage_multiplier:.1f} > "
-            f"x{player_critical_damage_multiplier + dexterity_change.critical_damage_multiplier:.1f}",
-            f"C/D {round(player_crit_chance * 100)}/"
-            f"{round(player_dodge_chance * 100)}% > "
-            f"{round((player_crit_chance + dexterity_change.crit_chance) * 100)}/"
-            f"{round((player_dodge_chance + dexterity_change.dodge_chance) * 100)}%",
+            "instinct",
+            "2",
+            "INSTINCT",
+            "Critical chance and dodge",
             (190, 151, 69),
         ),
     ]
-    if show_intelligence:
-        intelligence_change = player_stat_changes_for_attribute_upgrade(
-            "intelligence",
-            attribute_ranks["intelligence"],
-        )
-        cards.append(
+    if show_will:
+        card_definitions.append(
             (
-                "intelligence", "3", "INTELLIGENCE",
-                f"Rank {attribute_ranks['intelligence']} | Magical attack power",
-                f"{player_spell_power}  >  "
-                f"{player_spell_power + intelligence_change.spell_power} SPELL POWER",
+                "will",
+                "3",
+                "WILL",
+                "Critical chance and critical damage",
                 (92, 128, 185),
             )
         )
-    cards.append(
+    card_definitions.append(
         (
-            "vitality", "4" if show_intelligence else "3", "VITALITY",
-            f"Rank {attribute_ranks['vitality']} | Maximum health",
-            f"{player_max_health}  >  "
-            f"{player_max_health + vitality_change.max_health} HP",
+            "fortitude",
+            "4" if show_will else "3",
+            "FORTITUDE",
+            "Health and resilience",
             (139, 74, 89),
         )
     )
-    card_rectangles = get_upgrade_card_rectangles(show_intelligence)
+    cards = []
+    for (
+        attribute,
+        key_label,
+        title,
+        summary,
+        accent_color,
+    ) in card_definitions:
+        change = player_stat_changes_for_attribute_upgrade(
+            attribute,
+            attribute_ranks[attribute],
+        )
+        change_text = " / ".join(
+            describe_player_stat_changes(change)
+        ).upper()
+        cards.append(
+            (
+                attribute,
+                key_label,
+                title,
+                f"Rank {attribute_ranks[attribute]} | {summary}",
+                change_text,
+                accent_color,
+            )
+        )
+    card_rectangles = get_upgrade_card_rectangles(show_will)
     for (
         kind,
         key_label,
@@ -806,7 +809,7 @@ def draw_upgrade_screen(
         message_rectangle = message_surface.get_rect(
             center=(
                 GAME_WIDTH // 2,
-                565 if show_intelligence else 516,
+                565 if show_will else 516,
             )
         )
         screen.blit(message_surface, message_rectangle)
@@ -822,7 +825,7 @@ def draw_upgrade_screen(
         footer_surface.get_rect(
             center=(
                 GAME_WIDTH // 2,
-                620 if show_intelligence else 554,
+                620 if show_will else 554,
             )
         ),
     )

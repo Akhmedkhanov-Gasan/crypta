@@ -372,7 +372,6 @@ class PlayerState:
     crit_chance: float = 0.0
     dodge_chance: float = 0.0
     critical_damage_multiplier: float = 2.0
-    spell_power: int = 0
     player_class: str | None = None
     subclass: str | None = None
     potion_count: int = 0
@@ -384,10 +383,10 @@ class PlayerState:
     attribute_points: int = 0
     attribute_ranks: dict[str, int] = field(
         default_factory=lambda: {
-            "strength": 0,
-            "dexterity": 0,
-            "intelligence": 0,
-            "vitality": 0,
+            "valor": 0,
+            "instinct": 0,
+            "will": 0,
+            "fortitude": 0,
         }
     )
     ability_kill_charge: int = 0
@@ -423,6 +422,7 @@ class PlayerState:
     act_three: ActThreePlayerState = field(
         default_factory=ActThreePlayerState,
     )
+
 
     def __getattr__(self, name: str) -> Any:
         if name in ACT_THREE_PLAYER_FIELD_NAMES:
