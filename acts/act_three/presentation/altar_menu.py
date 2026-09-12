@@ -1,6 +1,6 @@
 import pygame
 
-from acts.player_stats import player_stat_changes_for_attribute_upgrade
+from game.attributes import player_stat_changes_for_attribute_upgrade
 from game.progression import (
     can_upgrade_attribute,
     experience_required_for_level,
@@ -16,10 +16,10 @@ _TAB_RECTS = {
     for index, name in enumerate(_TAB_NAMES)
 }
 _CARD_RECTS = {
-    "strength": pygame.Rect(210, 244, 410, 205),
-    "dexterity": pygame.Rect(650, 244, 410, 205),
-    "intelligence": pygame.Rect(210, 446, 410, 205),
-    "vitality": pygame.Rect(650, 446, 410, 205),
+    "valor": pygame.Rect(210, 244, 410, 205),
+    "instinct": pygame.Rect(650, 244, 410, 205),
+    "will": pygame.Rect(210, 446, 410, 205),
+    "fortitude": pygame.Rect(650, 446, 410, 205),
 }
 _BUTTON_RECTS = {
     name: pygame.Rect(rectangle.x + 40, rectangle.y + 154, 330, 42)
@@ -95,31 +95,40 @@ def _attribute_card_data(player):
         for name in _CARD_RECTS
     }
     return {
-        "strength": (
-            "STRENGTH",
+        "valor": (
+            "VALOR",
             f"DAMAGE  {player.damage_min}-{player.damage_max}",
             (
-                f"NEXT  +{changes['strength'].damage_min} MIN / "
-                f"+{changes['strength'].damage_max} MAX"
+                f"NEXT  +{changes['valor'].damage_min} MIN / "
+                f"+{changes['valor'].damage_max} MAX"
             ),
         ),
-        "dexterity": (
-            "DEXTERITY",
+        "instinct": (
+            "INSTINCT",
             (
                 f"CRIT {round(player.crit_chance * 100)}%  /  "
                 f"DODGE {round(player.dodge_chance * 100)}%"
             ),
-            "+CRIT / DODGE / CRITICAL DAMAGE",
+            "+CRIT / DODGE",
         ),
-        "intelligence": (
-            "INTELLIGENCE",
-            f"SPELL POWER  {player.spell_power}",
-            f"+{changes['intelligence'].spell_power} SPELL POWER",
+        "will": (
+            "WILL",
+            (
+                f"CRIT  {round(player.crit_chance * 100)}%  /  "
+                f"CRIT DMG  x{player.critical_damage_multiplier:.2f}"
+            ),
+            (
+                f"NEXT  +{round(changes['will'].crit_chance * 100)}% CRIT  /  "
+                f"+{changes['will'].critical_damage_multiplier:.2f} CRIT DMG"
+            ),
         ),
-        "vitality": (
-            "VITALITY",
+        "fortitude": (
+            "FORTITUDE",
             f"HP  {player.health} / {player.max_health}",
-            f"+{changes['vitality'].max_health} MAX HP",
+            (
+                f"+{changes['fortitude'].max_health} "
+                "MAX HP"
+            ),
         ),
     }
 
@@ -141,10 +150,10 @@ def _draw_attribute_cards(screen, game_state, fonts, assets):
             )
 
         placeholder_icon = {
-            "strength": "power",
-            "dexterity": "precision",
-            "intelligence": "evasion",
-            "vitality": "vitality",
+            "valor": "power",
+            "instinct": "precision",
+            "will": "evasion",
+            "fortitude": "vitality",
         }[name]
         screen.blit(
             assets[f"altar_menu_{placeholder_icon}"],

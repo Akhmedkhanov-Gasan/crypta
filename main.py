@@ -7,6 +7,10 @@ from application.transitions import (
     complete_class_selection,
     finish_upgrade_descent,
 )
+from application.upgrade_input import (
+    handle_upgrade_key_input,
+    handle_upgrade_pointer_input,
+)
 from application.resources import load_application_resources
 from application.map_navigation import MapNavigationController
 from application.bootstrap import begin_application_startup
@@ -69,6 +73,9 @@ from acts.act_two.presentation.bosses.oracle_arena import (
 from acts.act_two.presentation.bosses.oracle_ui import (
     draw_oracle_ui,
 )
+from acts.act_two.class_selection import (
+    apply_act_two_class_selection,
+)
 
 from acts.act_one.camera import (
     ActOneCamera,
@@ -90,18 +97,12 @@ from acts.act_one.presentation.death_scene import (
 )
 from acts.act_one.settings import (
     FLOOR_INTRO_SUBTITLES,
-    PLAYER_STARTING_ATTRIBUTE_RANKS,
-    PLAYER_STARTING_STATS,
 )
 from acts.act_one.controls import POTION_KEYS
 from application.directional_input import (
     MOVEMENT_KEYS,
     WAIT_KEYS,
     movement_direction_for_key,
-)
-from acts.act_two.settings import (
-    CLASS_BASE_ATTRIBUTE_RANKS,
-    CLASS_STARTING_STATS,
 )
 from acts.act_two.controls import (
     CONSUMABLE_KEY_ORDER,
@@ -167,10 +168,7 @@ from acts.act_two.progression import (
     cancel_queued_act_two_attribute_upgrade,
     confirm_queued_act_two_attribute_upgrades,
     get_act_two_attribute_preview,
-    get_act_two_upgrade_order,
     queue_act_two_attribute_upgrade,
-    upgrade_act_two_attribute,
-    transfer_mage_strength_upgrades,
 )
 from acts.act_two.visibility import (
     position_is_visible,
@@ -245,11 +243,6 @@ from acts.act_two.presentation.items import (
     draw_act_one_revisit_corpses,
     draw_coin_pile,
 )
-from game.progression import apply_attribute_upgrade
-from acts.player_stats import (
-    apply_attribute_rank_transition,
-    apply_player_stat_transition,
-)
 from levels import FLOOR_CONFIGS
 from logic import (
     get_enemy_occupied_positions,
@@ -310,9 +303,6 @@ from rendering import (
     draw_status,
     draw_subclass_selection_screen,
     draw_upgrade_screen,
-    get_upgrade_card_rectangles,
-    get_act_one_upgrade_card_rectangles,
-    get_act_two_upgrade_card_rectangles,
     get_act_two_belt_slot_rectangles,
     get_act_two_sidebar_button_rectangles,
     get_act_two_journal_close_rectangle,
@@ -1448,67 +1438,14 @@ def main():
                     window_state.screen,
                     event.pos,
                 )
-                if game_mouse_position is None:
-                    continue
 
-                act_two_upgrade_screen = (
-                    FLOOR_CONFIGS[game_state.floor_index]["act"] == 2
-                    and game_state.player.player_class in (
-                        "warrior",
-                        "rogue",
-                        "mage",
+                if game_mouse_position is not None:
+                    handle_upgrade_pointer_input(
+                        game_state,
+                        game_mouse_position,
+                        pygame.time.get_ticks(),
                     )
-                    and game_state.player.subclass is None
-                )
-                show_generic_intelligence = (
-                    FLOOR_CONFIGS[game_state.floor_index]["act"] >= 3
-                )
-                generic_upgrade_keys = {
-                    "strength": pygame.K_1,
-                    "dexterity": pygame.K_2,
-                    "vitality": (
-                        pygame.K_4
-                        if show_generic_intelligence
-                        else pygame.K_3
-                    ),
-                }
-                if show_generic_intelligence:
-                    generic_upgrade_keys["intelligence"] = pygame.K_3
-                upgrade_keys = (
-                    {
-                        upgrade: getattr(pygame, f"K_{index + 1}")
-                        for index, upgrade in enumerate(
-                            get_act_two_upgrade_order(
-                                game_state.player.player_class
-                            )
-                        )
-                    }
-                    if act_two_upgrade_screen
-                    else generic_upgrade_keys
-                )
-                if current_act == 1:
-                    card_rectangles = (
-                        get_act_one_upgrade_card_rectangles()
-                    )
-                elif act_two_upgrade_screen:
-                    card_rectangles = get_act_two_upgrade_card_rectangles(
-                        game_state.player.player_class
-                    )
-                else:
-                    card_rectangles = get_upgrade_card_rectangles(
-                        show_generic_intelligence
-                    )
-                for upgrade_name, rectangle in (
-                    card_rectangles.items()
-                ):
-                    if rectangle.collidepoint(game_mouse_position):
-                        pygame.event.post(
-                            pygame.event.Event(
-                                pygame.KEYDOWN,
-                                key=upgrade_keys[upgrade_name],
-                            )
-                        )
-                        break
+
                 continue
             elif (
                 event.type == pygame.MOUSEBUTTONDOWN
@@ -2000,16 +1937,9 @@ def main():
 
                     if player_class is not None:
                         if game_state.act_three_test_mode:
-                            game_state.player.player_class = player_class
-                            apply_player_stat_transition(
+                            apply_act_two_class_selection(
                                 game_state.player,
-                                PLAYER_STARTING_STATS,
-                                CLASS_STARTING_STATS[player_class],
-                            )
-                            apply_attribute_rank_transition(
-                                game_state.player,
-                                PLAYER_STARTING_ATTRIBUTE_RANKS,
-                                CLASS_BASE_ATTRIBUTE_RANKS[player_class],
+                                player_class,
                             )
                             game_state.act_three_debug_class_selection_open = False
                             game_state.subclass_selection_open = True
@@ -2099,31 +2029,11 @@ def main():
                     if chosen_class is None:
                         continue
 
-                    game_state.class_selection_preview_ranks = dict(
-                        game_state.player.attribute_ranks
-                    )
-
-                    health_before_class_selection = (
-                        game_state.player.health
-                    )
-                    game_state.player.player_class = chosen_class
-                    apply_player_stat_transition(
-                        game_state.player,
-                        PLAYER_STARTING_STATS,
-                        CLASS_STARTING_STATS[chosen_class],
-                    )
-                    apply_attribute_rank_transition(
-                        game_state.player,
-                        PLAYER_STARTING_ATTRIBUTE_RANKS,
-                        CLASS_BASE_ATTRIBUTE_RANKS[chosen_class],
-                    )
-                    transfer_mage_strength_upgrades(
-                        game_state.player,
-                        game_state.class_selection_preview_ranks,
-                    )
-                    game_state.player.health = min(
-                        health_before_class_selection,
-                        game_state.player.max_health,
+                    game_state.class_selection_preview_ranks = (
+                        apply_act_two_class_selection(
+                            game_state.player,
+                            chosen_class,
+                        )
                     )
                     game_state.class_selection_choice = chosen_class
                     game_state.class_selection_choice_started_at = (
@@ -2131,125 +2041,11 @@ def main():
                     )
                     act_two_transition_sounds.play("class_select")
                     continue
-
-                if game_state.upgrade_screen_open:
-                    current_upgrade_act = FLOOR_CONFIGS[
-                        game_state.floor_index
-                    ]["act"]
-                    act_two_upgrade_screen = (
-                        current_upgrade_act == 2
-                        and game_state.player.player_class in (
-                            "warrior",
-                            "rogue",
-                            "mage",
-                        )
-                        and game_state.player.subclass is None
-                    )
-                    if act_two_upgrade_screen and event.key in (
-                        pygame.K_1,
-                        pygame.K_KP1,
-                        pygame.K_2,
-                        pygame.K_KP2,
-                        pygame.K_3,
-                        pygame.K_KP3,
-                        pygame.K_4,
-                        pygame.K_KP4,
-                    ):
-                        upgrade_index = {
-                            pygame.K_1: 0,
-                            pygame.K_KP1: 0,
-                            pygame.K_2: 1,
-                            pygame.K_KP2: 1,
-                            pygame.K_3: 2,
-                            pygame.K_KP3: 2,
-                            pygame.K_4: 3,
-                            pygame.K_KP4: 3,
-                        }[event.key]
-                        upgrade = get_act_two_upgrade_order(
-                            game_state.player.player_class
-                        )[upgrade_index]
-                        game_state.upgrade_message = upgrade_act_two_attribute(
-                            game_state.player,
-                            upgrade,
-                        )
-                        add_log_message(
-                            game_state.combat_log,
-                            game_state.upgrade_message,
-                            category="progress",
-                        )
-                        continue
-                    attribute_keys = {
-                        pygame.K_1: "strength",
-                        pygame.K_KP1: "strength",
-                        pygame.K_2: "dexterity",
-                        pygame.K_KP2: "dexterity",
-                        pygame.K_3: "vitality",
-                        pygame.K_KP3: "vitality",
-                    }
-                    if FLOOR_CONFIGS[game_state.floor_index]["act"] >= 3:
-                        attribute_keys.update(
-                            {
-                                pygame.K_3: "intelligence",
-                                pygame.K_KP3: "intelligence",
-                                pygame.K_4: "vitality",
-                                pygame.K_KP4: "vitality",
-                            }
-                        )
-                    if event.key in attribute_keys:
-                        attribute = attribute_keys[event.key]
-                        if (
-                            current_upgrade_act == 1
-                            and game_state.act_one_upgrades_remaining <= 0
-                        ):
-                            game_state.upgrade_message = (
-                                "All blessings chosen. Press Enter."
-                            )
-                        elif (
-                            current_upgrade_act != 1
-                            and game_state.player.gold_count <= 0
-                        ):
-                            game_state.upgrade_message = "Not enough gold."
-                        elif apply_attribute_upgrade(
-                            game_state.player,
-                            attribute,
-                        ):
-                            if current_upgrade_act == 1:
-                                game_state.act_one_upgrades_remaining -= 1
-                            else:
-                                game_state.player.gold_count -= 1
-                                game_state.run_stats.gold_spent += 1
-                            game_state.upgrade_message = (
-                                f"{attribute.title()} increased."
-                            )
-                            add_log_message(
-                                game_state.combat_log,
-                                game_state.upgrade_message,
-                                category="progress",
-                            )
-                            if (
-                                current_upgrade_act == 1
-                                and game_state.act_one_upgrades_remaining <= 0
-                            ):
-                                finish_upgrade_descent(
-                                    game_state,
-                                    pygame.time.get_ticks(),
-                                )
-                        else:
-                            game_state.upgrade_message = (
-                                f"{attribute.title()} is capped."
-                            )
-                    elif event.key in (
-                        pygame.K_RETURN,
-                        pygame.K_KP_ENTER,
-                    ) and (
-                            current_upgrade_act != 1
-                            or game_state.act_one_upgrades_remaining <= 0
-                    ):
-                        finish_upgrade_descent(
-                            game_state,
-                            pygame.time.get_ticks(),
-                        )
-
+                if handle_upgrade_key_input(
+                    game_state,
+                    event.key,
+                    pygame.time.get_ticks(),
+                ):
                     continue
 
                 if current_act == 2 and (
@@ -4814,7 +4610,6 @@ def main():
                 preview_player.crit_chance,
                 preview_player.critical_damage_multiplier,
                 preview_player.dodge_chance,
-                preview_player.spell_power,
                 game_state.player.attribute_ranks,
                 game_state.player.act_two.pending_attribute_upgrades,
                 get_act_two_consumable_slots(game_state.player),
@@ -4981,11 +4776,10 @@ def main():
                     game_state.player.crit_chance,
                     game_state.player.dodge_chance,
                     game_state.player.critical_damage_multiplier,
-                    game_state.player.spell_power,
                     game_state.player.attribute_ranks,
                     game_state.upgrade_message,
                     upgrade_mouse_position,
-                    show_intelligence=(current_act >= 2),
+                    show_will=(current_act >= 2),
                 )
         if game_state.class_selection_open:
             class_mouse_position = window_to_game_position(

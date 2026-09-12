@@ -793,15 +793,14 @@ def _draw_stats_popup(screen, player, fonts, accent_color):
     ranks = player.attribute_ranks
     values = (
         ("Level", str(player.level)),
-        ("Strength", str(ranks.get("strength", 0))),
-        ("Dexterity", str(ranks.get("dexterity", 0))),
-        ("Intelligence", str(ranks.get("intelligence", 0))),
-        ("Vitality", str(ranks.get("vitality", 0))),
+        ("Valor", str(ranks.get("valor", 0))),
+        ("Instinct", str(ranks.get("instinct", 0))),
+        ("Will", str(ranks.get("will", 0))),
+        ("Fortitude", str(ranks.get("fortitude", 0))),
         ("Damage", _damage_value(player)),
         ("Critical chance", f"{round(player.crit_chance * 100)}%"),
         ("Critical damage", f"{round(player.critical_damage_multiplier * 100)}%"),
         ("Dodge chance", f"{round(player.dodge_chance * 100)}%"),
-        ("Spell power", str(player.spell_power)),
         ("Gold", str(player.gold_count)),
         ("Keys", str(player.key_count)),
     )

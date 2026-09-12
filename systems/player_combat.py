@@ -2,9 +2,12 @@ import random
 from collections.abc import Callable
 from math import ceil
 
+from acts.act_two.ability_scaling import (
+    mage_basic_attack_damage_bonus,
+    rogue_ambush_damage_bonus,
+)
 from acts.act_two.settings import (
     ENEMY_GOLD_DROP_CHANCE,
-    MAGE_BASIC_ATTACK_SPELL_POWER_SCALING,
     STONEFLESH_PHYSICAL_DAMAGE_MULTIPLIER,
 )
 from settings import (
@@ -22,7 +25,7 @@ from acts.act_two.bloody_altar import (
     BLOOD_HUNGER_LIFESTEAL_RATIO,
     try_apply_open_wound_bleed,
 )
-from acts.player_stats import attribute_stat_changes_for_rank
+from game.attributes import attribute_stat_changes_for_rank
 from acts.act_two.presentation.bosses.oracle_health import (
     limit_oracle_phase_one_damage,
 )
@@ -847,26 +850,25 @@ def basic_attack_damage_range(player) -> tuple[int, int]:
     if player.player_class != "mage":
         return player.damage_min, player.damage_max
 
-    strength_contribution = attribute_stat_changes_for_rank(
-        "strength",
-        player.attribute_ranks.get("strength", 0),
+    valor_contribution = attribute_stat_changes_for_rank(
+        "valor",
+        player.attribute_ranks.get("valor", 0),
     )
-    spell_damage_bonus = ceil(
-        player.spell_power
-        * MAGE_BASIC_ATTACK_SPELL_POWER_SCALING
+    ability_damage_bonus = mage_basic_attack_damage_bonus(
+        player.attribute_ranks.get("will", 0)
     )
 
     minimum = max(
         1,
         player.damage_min
-        - strength_contribution.damage_min
-        + spell_damage_bonus,
+        - valor_contribution.damage_min
+        + ability_damage_bonus,
     )
     maximum = max(
         minimum,
         player.damage_max
-        - strength_contribution.damage_max
-        + spell_damage_bonus,
+        - valor_contribution.damage_max
+        + ability_damage_bonus,
     )
     return minimum, maximum
 
@@ -1026,6 +1028,16 @@ def perform_basic_attack(
     )
 
     damage_minimum, damage_maximum = basic_attack_damage_range(player)
+    ambush_damage_bonus = (
+        rogue_ambush_damage_bonus(
+            player.attribute_ranks.get("instinct", 0)
+        )
+        if (
+            attack_was_from_invisibility
+            and selected_rune_id != "rune_of_the_veil"
+        )
+        else 0
+    )
 
     for hit_enemy in enemies_hit:
         health_before_attack = hit_enemy.health
@@ -1035,7 +1047,7 @@ def perform_basic_attack(
             damage_minimum,
             damage_maximum,
             player.crit_chance,
-            damage_bonus=0,
+            damage_bonus=ambush_damage_bonus,
             force_critical=(
                 attack_was_from_invisibility
                 and selected_rune_id != "rune_of_the_veil"

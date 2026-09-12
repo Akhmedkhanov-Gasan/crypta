@@ -244,9 +244,9 @@ class ActTwoPlayerState:
     )
     pending_attribute_upgrades: dict[str, int] = field(
         default_factory=lambda: {
-            "strength": 0,
-            "dexterity": 0,
-            "intelligence": 0,
-            "vitality": 0,
+            "valor": 0,
+            "instinct": 0,
+            "will": 0,
+            "fortitude": 0,
         }
     )

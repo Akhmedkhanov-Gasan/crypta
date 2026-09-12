@@ -1,6 +1,10 @@
 import pygame
 
 from game.rune_catalog import RUNES_BY_ID
+from game.attributes import (
+    get_attribute_definition,
+    ATTRIBUTE_ORDER,
+)
 from acts.act_two.bloody_altar_catalog import BLOODY_PACTS_BY_ID
 from settings import MAX_ATTRIBUTE_RANK
 
@@ -21,6 +25,20 @@ from presentation.figma_ui import (
     figma_rect,
     get_figma_font,
 )
+from acts.act_two.presentation.stats_tooltips import (
+    attribute_tooltip_content,
+    combat_stat_tooltip_content,
+    draw_attribute_row_highlight,
+    draw_combat_stat_row_highlight,
+    hovered_row_at,
+)
+from presentation.tooltips import draw_tooltip
+from acts.act_two.presentation.hud_tooltips import (
+    ability_tooltip_content,
+    consumable_tooltip_content,
+    status_tooltip_content,
+)
+
 
 _ACT_TWO_CONSUMABLE_SPRITES = {
     "potion": "potion_belt",
@@ -37,51 +55,12 @@ _ACT_TWO_ABILITY_ASSETS = {
     "rogue": "rogue_invisibility_icon",
     "mage": "mage_arcane_burst_icon",
 }
-_ACT_TWO_ABILITY_DESCRIPTIONS = {
-    "warrior": "Cleave three tiles and knock enemies back.",
-    "rogue": "Vanish. Your next attack is a sure critical.",
-    "mage": "Burst a cross at range and scatter enemies outward.",
-}
-_ACT_TWO_ABILITY_NAMES = {
-    "warrior": "POWER CLEAVE",
-    "rogue": "INVISIBILITY",
-    "mage": "ARCANE BURST",
-}
-_ACT_TWO_CONSUMABLE_DESCRIPTIONS = {
-    "potion": "Restores 4 health.",
-    "fire_bomb": "Ignites a 3x3 area and burns everything inside.",
-    "key": "Opens one locked chest.",
-    "scroll_of_stoneflesh": (
-        "Reduces the next 6 physical hits by 60%."
-    ),
-    "scroll_of_binding": "Binds one visible enemy for 5 turns.",
-    "healing_scroll": "Restores 8 health.",
-    "scroll_of_arcane_impulse": (
-        "Deals 5 magic damage to one visible enemy."
-    ),
-    "guild_seal": (
-        "The trader's lost guild seal. "
-        "It cannot be used or discarded."
-    ),
-}
-_ACT_TWO_CONSUMABLE_NAMES = {
-    "potion": "POTION",
-    "fire_bomb": "FIRE BOMB",
-    "key": "KEY",
-    "scroll_of_stoneflesh": "STONEFLESH",
-    "scroll_of_binding": "BINDING",
-    "healing_scroll": "HEALING",
-    "scroll_of_arcane_impulse": "IMPULSE",
-    "guild_seal": "GUILD SEAL",
-}
 _ACT_TWO_HEALING_CONSUMABLES = frozenset(
     (
         "potion",
         "healing_scroll",
     )
 )
-
-
 def _blit_layout_image(
     screen,
     image,
@@ -153,43 +132,6 @@ def _draw_dynamic_figma_text(
         }
 
     draw_figma_text(screen, runtime_spec)
-def _offset_layout(
-    value,
-    offset_x,
-    offset_y,
-):
-    if isinstance(value, dict):
-        shifted = {
-            key: _offset_layout(
-                child,
-                offset_x,
-                offset_y,
-            )
-            for key, child in value.items()
-        }
-
-        if (
-            "x" in value
-            and "y" in value
-            and "width" in value
-            and "height" in value
-        ):
-            shifted["x"] = value["x"] + offset_x
-            shifted["y"] = value["y"] + offset_y
-
-        return shifted
-
-    if isinstance(value, list):
-        return [
-            _offset_layout(
-                child,
-                offset_x,
-                offset_y,
-            )
-            for child in value
-        ]
-
-    return value
 
 
 def _draw_wrapped_figma_text(
@@ -548,60 +490,6 @@ def _draw_act_two_journal_contents(
     )
 
 
-def _draw_act_two_hover_panel(
-    screen,
-    sprites,
-    info_layout,
-    icon_asset_name,
-    name,
-    description,
-):
-    _blit_layout_image(
-        screen,
-        sprites["act_two_abilities_panel"],
-        info_layout["frame"],
-    )
-
-    draw_figma_rectangle(
-        screen,
-        info_layout["description_backing"],
-    )
-
-    draw_figma_rectangle(
-        screen,
-        info_layout["name_backing"],
-    )
-
-    if icon_asset_name in sprites:
-        _blit_layout_image(
-            screen,
-            sprites[icon_asset_name],
-            info_layout["icon"],
-        )
-
-    name_spec = info_layout["name"]
-    name_font = get_figma_font(name_spec)
-    name_rectangle = figma_rect(name_spec["rect"])
-
-    visible_name = fit_text_to_width(
-        name_font,
-        name,
-        name_rectangle.width,
-    )
-
-    _draw_dynamic_figma_text(
-        screen,
-        name_spec,
-        visible_name,
-    )
-
-    _draw_wrapped_figma_text(
-        screen,
-        info_layout["description"],
-        description,
-    )
-
-
 def draw_act_two_sidebar(
     screen,
     title_font,
@@ -616,7 +504,6 @@ def draw_act_two_sidebar(
     player_crit_chance,
     player_critical_damage_multiplier,
     player_dodge_chance,
-    player_spell_power,
     attribute_ranks,
     pending_attribute_upgrades,
     consumable_slots,
@@ -699,6 +586,7 @@ def draw_act_two_sidebar(
 
     selected_rune = RUNES_BY_ID.get(selected_rune_id)
     bloody_pact = BLOODY_PACTS_BY_ID.get(bloody_pact_id)
+    hovered_tooltip = None
 
     active_status_effects = []
 
@@ -794,7 +682,6 @@ def draw_act_two_sidebar(
         ).collidepoint(mouse_position)
         ):
             hovered_status_effect = (
-                sprite_name,
                 effect_name,
                 effect_description,
             )
@@ -921,66 +808,16 @@ def draw_act_two_sidebar(
         hovered_item = consumable_slots[
             hovered_consumable_slot
         ]
-
-        hovered_description = _ACT_TWO_CONSUMABLE_DESCRIPTIONS.get(
+        healing_blocked = (
+            healing_consumables_blocked
+            and hovered_item in _ACT_TWO_HEALING_CONSUMABLES
+        )
+        hovered_tooltip = consumable_tooltip_content(
             hovered_item,
-            "Consumable item.",
+            healing_blocked,
         )
 
-        if (
-                healing_consumables_blocked
-                and hovered_item in _ACT_TWO_HEALING_CONSUMABLES
-        ):
-            hovered_description = (
-                "Blood Hunger prevents the use of this healing item."
-            )
-
-        sprite_name = _ACT_TWO_CONSUMABLE_SPRITES.get(
-            hovered_item
-        )
-
-        slot_rectangle = (
-            get_act_two_belt_slot_rectangles(
-                hud_layout
-            )[hovered_consumable_slot]
-        )
-
-        base_info_layout = hud_layout["info"]
-        base_info_rectangle = figma_rect(
-            base_info_layout["rect"]
-        )
-
-        target_left = (
-                slot_rectangle.centerx
-                - base_info_rectangle.width // 2
-        )
-
-        target_left = max(
-            0,
-            min(
-                screen.get_width()
-                - base_info_rectangle.width,
-                target_left,
-            ),
-        )
-
-        info_layout = _offset_layout(
-            base_info_layout,
-            target_left - base_info_rectangle.left,
-            0,
-        )
-
-        _draw_act_two_hover_panel(
-            screen,
-            sprites,
-            info_layout,
-            sprite_name,
-            _ACT_TWO_CONSUMABLE_NAMES.get(
-                hovered_item,
-                "ITEM",
-            ),
-            hovered_description,
-        )
+    base_ability_asset_name = _ACT_TWO_ABILITY_ASSETS.get(player_class)
 
     base_ability_asset_name = _ACT_TWO_ABILITY_ASSETS.get(player_class)
 
@@ -988,21 +825,6 @@ def draw_act_two_sidebar(
         f"{selected_rune.id}_icon"
         if selected_rune is not None
         else base_ability_asset_name
-    )
-
-    displayed_ability_name = (
-        selected_rune.name
-        if selected_rune is not None
-        else _ACT_TWO_ABILITY_NAMES.get(player_class, "ABILITY")
-    )
-
-    displayed_ability_description = (
-        selected_rune.description
-        if selected_rune is not None
-        else _ACT_TWO_ABILITY_DESCRIPTIONS.get(
-            player_class,
-            "Choose a class to unlock its ability.",
-        )
     )
 
     ability_layout = down_bar_layout["ability"]
@@ -1144,57 +966,18 @@ def draw_act_two_sidebar(
     )
 
     if ability_hovered:
-        _draw_act_two_hover_panel(
-            screen,
-            sprites,
-            hud_layout["info"],
-            displayed_ability_asset_name,
-            displayed_ability_name,
-            displayed_ability_description,
+        hovered_tooltip = ability_tooltip_content(
+            player_class,
+            selected_rune,
         )
 
     if hovered_status_effect is not None:
         (
-            status_sprite_name,
             status_name,
             status_description,
         ) = hovered_status_effect
 
-        base_info_layout = hud_layout["info"]
-        base_info_rectangle = figma_rect(
-            base_info_layout["rect"]
-        )
-        status_rectangle = figma_rect(
-            status_layout["rect"]
-        )
-
-        target_left = max(
-            0,
-            min(
-                screen.get_width() - base_info_rectangle.width,
-                status_rectangle.left,
-            ),
-        )
-
-        target_top = max(
-            0,
-            min(
-                screen.get_height() - base_info_rectangle.height,
-                status_rectangle.bottom + 8,
-            ),
-        )
-
-        status_info_layout = _offset_layout(
-            base_info_layout,
-            target_left - base_info_rectangle.left,
-            target_top - base_info_rectangle.top,
-        )
-
-        _draw_act_two_hover_panel(
-            screen,
-            sprites,
-            status_info_layout,
-            status_sprite_name,
+        hovered_tooltip = status_tooltip_content(
             status_name,
             status_description,
         )
@@ -1263,6 +1046,12 @@ def draw_act_two_sidebar(
 
 
     if not stats_open:
+        if hovered_tooltip is not None:
+            draw_tooltip(
+                screen,
+                hovered_tooltip,
+                mouse_position,
+            )
         return
 
     class_name = (
@@ -1290,12 +1079,7 @@ def draw_act_two_sidebar(
         remaining_attribute_points,
     )
 
-    attribute_names = (
-        "strength",
-        "dexterity",
-        "intelligence",
-        "vitality",
-    )
+    attribute_names = ATTRIBUTE_ORDER
 
     attribute_rows = (
         stats_panel_layout["attributes"]["rows"]
@@ -1309,13 +1093,27 @@ def draw_act_two_sidebar(
         for attribute in attribute_names
     }
 
+    hovered_attribute = hovered_row_at(
+        attribute_rows,
+        mouse_position,
+    )
+
     for attribute in attribute_names:
         row_layout = attribute_rows[attribute]
+
+        if attribute == hovered_attribute:
+            draw_attribute_row_highlight(
+                screen,
+                row_layout,
+                attribute,
+            )
 
         _draw_dynamic_figma_text(
             screen,
             row_layout["label"],
-            attribute.title(),
+            get_attribute_definition(
+                attribute
+            ).title,
         )
 
         is_pending = (
@@ -1406,6 +1204,11 @@ def draw_act_two_sidebar(
 
     combat_stats_layout = stats_panel_layout["combat_stats"]
 
+    hovered_combat_stat = hovered_row_at(
+        combat_stats_layout["rows"],
+        mouse_position,
+    )
+
     combat_heading_spec = combat_stats_layout["heading"]
 
     _draw_dynamic_figma_text(
@@ -1418,21 +1221,27 @@ def draw_act_two_sidebar(
         "damage": (
             f"{player_damage_min}-{player_damage_max}"
         ),
-        "critical": (
+        "critical_chance": (
             f"{round(player_crit_chance * 100)}%"
         ),
-        "critical_power": (
+        "critical_damage": (
             f"x{player_critical_damage_multiplier:.1f}"
         ),
-        "dodge": (
+        "dodge_chance": (
             f"{round(player_dodge_chance * 100)}%"
         ),
-        "magical_power": str(player_spell_power),
     }
 
     for row_name, value in combat_values.items():
         row_layout = combat_stats_layout["rows"][row_name]
         label_spec = row_layout["label"]
+
+        if row_name == hovered_combat_stat:
+            draw_combat_stat_row_highlight(
+                screen,
+                row_layout,
+                row_name,
+            )
 
         _draw_dynamic_figma_text(
             screen,
@@ -1490,6 +1299,27 @@ def draw_act_two_sidebar(
                 hovered_button,
                 confirm_rectangle,
             )
+
+    if hovered_combat_stat is not None:
+        hovered_tooltip = combat_stat_tooltip_content(
+            hovered_combat_stat,
+            combat_values[hovered_combat_stat],
+            player_class,
+        )
+
+    if hovered_attribute is not None:
+        hovered_tooltip = attribute_tooltip_content(
+            hovered_attribute,
+            attribute_values[hovered_attribute],
+            player_class,
+        )
+
+    if hovered_tooltip is not None:
+        draw_tooltip(
+            screen,
+            hovered_tooltip,
+            mouse_position,
+        )
 
 def get_act_two_sidebar_button_rectangles(hud_layout):
     buttons = hud_layout["right_bar"]["tabs"]["buttons"]

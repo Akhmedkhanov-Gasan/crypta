@@ -1,7 +1,12 @@
 import pygame
 
 from acts.act_one.item_visuals import draw_potion_icon as _draw_potion
-from acts.player_stats import player_stat_changes_for_attribute_upgrade
+from acts.act_one.upgrades import (
+    get_act_one_attribute_summary,
+    get_act_one_attribute_title,
+    get_act_one_upgrade_preview_lines,
+)
+from game.attributes import MAX_ATTRIBUTE_RANK
 from presentation.hud import fit_text_to_width, get_event_color
 from presentation.screens import (
     _draw_upgrade_icon,
@@ -10,9 +15,6 @@ from presentation.screens import (
 from settings import (
     GAME_HEIGHT,
     GAME_WIDTH,
-    MAX_ATTRIBUTE_RANK,
-    MAX_CRIT_CHANCE,
-    MAX_DODGE_CHANCE,
 )
 
 
@@ -360,13 +362,13 @@ def draw_act_one_upgrade_screen(
     )
 
     accents = {
-        "strength": (181, 92, 79),
-        "dexterity": (188, 158, 94),
-        "vitality": (155, 102, 134),
+        "valor": (181, 92, 79),
+        "instinct": (188, 158, 94),
+        "fortitude": (155, 102, 134),
     }
 
     rectangles = get_act_one_upgrade_card_rectangles()
-
+    hovered_attribute = None
     for index, (attribute, rectangle) in enumerate(rectangles.items(), 1):
         rank = player.attribute_ranks[attribute]
         capped = rank >= MAX_ATTRIBUTE_RANK
@@ -377,6 +379,9 @@ def draw_act_one_upgrade_screen(
             and rectangle.collidepoint(mouse_position)
         )
         accent = accents[attribute] if enabled else (79, 80, 89)
+
+        if hovered:
+            hovered_attribute = attribute
 
         _panel(
             screen,
@@ -403,7 +408,9 @@ def draw_act_one_upgrade_screen(
         _text(
             screen,
             text_font,
-            attribute.upper(),
+            get_act_one_attribute_title(
+                attribute
+            ).upper(),
             (rectangle.centerx, rectangle.top + 86),
             TEXT if enabled else MUTED,
         )
@@ -415,38 +422,12 @@ def draw_act_one_upgrade_screen(
             MUTED,
         )
 
-        change = player_stat_changes_for_attribute_upgrade(attribute, rank)
-
         if capped:
             lines = ("MAXIMUM RANK",)
-        elif attribute == "strength":
-            lines = (
-                "ATTACK DAMAGE",
-                (
-                    f"{player.damage_min}-{player.damage_max}  ->  "
-                    f"{player.damage_min + change.damage_min}-"
-                    f"{player.damage_max + change.damage_max}"
-                ),
-            )
-        elif attribute == "dexterity":
-            next_crit = min(MAX_CRIT_CHANCE, player.crit_chance + change.crit_chance)
-            next_dodge = min(MAX_DODGE_CHANCE, player.dodge_chance + change.dodge_chance)
-            next_multiplier = (
-                player.critical_damage_multiplier
-                + change.critical_damage_multiplier
-            )
-            lines = (
-                f"CRIT {player.crit_chance:.0%}  ->  {next_crit:.0%}",
-                f"DODGE {player.dodge_chance:.0%}  ->  {next_dodge:.0%}",
-                (
-                    f"CRIT DAMAGE x{player.critical_damage_multiplier:.2f}"
-                    f"  ->  x{next_multiplier:.2f}"
-                ),
-            )
         else:
-            lines = (
-                "MAXIMUM HEALTH",
-                f"{player.max_health}  ->  {player.max_health + change.max_health} HP",
+            lines = get_act_one_upgrade_preview_lines(
+                player,
+                attribute,
             )
 
         for line_index, line in enumerate(lines):
@@ -462,11 +443,23 @@ def draw_act_one_upgrade_screen(
                 rectangle.width - 28,
             )
 
-    if message:
+    context_message = message
+
+    if (
+        not context_message
+        and hovered_attribute is not None
+    ):
+        context_message = (
+            get_act_one_attribute_summary(
+                hovered_attribute
+            )
+        )
+
+    if context_message:
         _text(
             screen,
             text_font,
-            message,
+            context_message,
             (GAME_WIDTH // 2, 526),
             GOLD,
             850,

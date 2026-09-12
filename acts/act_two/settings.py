@@ -1,4 +1,4 @@
-from acts.player_stats import (
+from game.attributes import (
     PlayerBaseStats,
     player_stats_with_attributes,
 )
@@ -28,14 +28,16 @@ ARCANE_IMPULSE_SCROLL_DAMAGE = 5
 FIRE_FRAME_MS = 145
 WARRIOR_CLEAVE_DAMAGE_BONUS = 2
 WARRIOR_CLEAVE_COLLISION_DAMAGE = 2
-WARRIOR_CLEAVE_DAMAGE_PER_RANK = 1
+WARRIOR_CLEAVE_VALOR_SCALING = 0.5
 WARRIOR_CLEAVE_MAX_RANK = 5
 WARRIOR_RHYTHM_MAX_RANK = 2
-MAGE_BASIC_ATTACK_SPELL_POWER_SCALING = 0.5
 
+ROGUE_AMBUSH_INSTINCT_DIVISOR = 3
+
+MAGE_BASIC_ATTACK_WILL_SCALING = 0.5
 MAGE_ARCANE_BURST_RANGE = 4
 MAGE_ARCANE_BURST_BASE_DAMAGE_BONUS = 2
-MAGE_ARCANE_BURST_SPELL_POWER_SCALING = 1.0
+MAGE_ARCANE_BURST_WILL_SCALING = 0.5
 MAGE_ARCANE_BURST_EDGE_DAMAGE_MULTIPLIER = 0.5
 VISION_RADIUS_TILES = 4.6
 FOG_UNEXPLORED_ALPHA = 255
@@ -103,34 +105,34 @@ WALL_OVERLAY_MIN_SPACING_TILES = 3
 
 CLASS_BASE_ATTRIBUTE_RANKS = {
     "warrior": {
-        "strength": 4,
-        "dexterity": 1,
-        "intelligence": 0,
-        "vitality": 5,
+        "valor": 4,
+        "instinct": 1,
+        "will": 0,
+        "fortitude": 5,
     },
     "rogue": {
-        "strength": 3,
-        "dexterity": 5,
-        "intelligence": 0,
-        "vitality": 2,
+        "valor": 3,
+        "instinct": 5,
+        "will": 0,
+        "fortitude": 2,
     },
     "mage": {
-        "strength": 0,
-        "dexterity": 1,
-        "intelligence": 6,
-        "vitality": 3,
+        "valor": 0,
+        "instinct": 1,
+        "will": 6,
+        "fortitude": 3,
     },
 }
 
 
 CLASS_BASE_STATS = {
     "warrior": PlayerBaseStats(
-        max_health=8,
+        max_health=6,
         damage_min=2,
         damage_max=3,
     ),
     "rogue": PlayerBaseStats(
-        max_health=8,
+        max_health=7,
         damage_min=1,
         damage_max=2,
     ),

@@ -1,4 +1,4 @@
-from acts.player_stats import PlayerBaseStats
+from game.attributes import PlayerBaseStats
 
 
 # Base stats for every Act Three subclass, excluding run upgrades.
