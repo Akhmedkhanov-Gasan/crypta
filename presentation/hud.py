@@ -14,6 +14,9 @@ from settings import (
 )
 from acts.act_one.presentation.warden_floor import draw_warden_status
 from acts.act_two.presentation.awakening import get_awakening_hitboxes
+from presentation.floor_progress import (
+    draw_floor_indicator,
+)
 
 _ACT_ONE_HUD_FRAME_RECT = pygame.Rect(25, 23, 466, 121)
 _ACT_ONE_HEALTH_RECT = pygame.Rect(84, 65, 389, 34)
@@ -36,11 +39,6 @@ def draw_status(
 ):
     floor_config = FLOOR_CONFIGS[floor_index]
     act_number = floor_config["act"]
-    act_floor = floor_config["act_floor"]
-    act_floor_count = sum(
-        config["act"] == act_number
-        for config in FLOOR_CONFIGS
-    )
 
     displayed_map_left = (
         (GAME_WIDTH - MAP_WIDTH) // 2
@@ -58,31 +56,16 @@ def draw_status(
         )
     )
 
-    if act_number in (1, 2):
-        if not oracle_panel_visible:
-            status = (
-                f"ACT {'I' if act_number == 1 else 'II'}"
-                f"    FLOOR {act_floor}/{act_floor_count}"
-            )
-            status_surface = font.render(
-                status,
-                True,
-                TEXT_COLOR,
-            )
-            screen.blit(
-                status_surface,
-                status_surface.get_rect(
-                    midtop=(GAME_WIDTH // 2, 8),
-                ),
-            )
-    else:
-        status = (
-            f"Act {act_number} - Floor "
-            f"{act_floor}/{act_floor_count}"
-        )
-        screen.blit(
-            font.render(status, True, TEXT_COLOR),
-            (MAP_OFFSET_X, 8),
+    if (
+        act_number in (1, 2)
+        and not oracle_panel_visible
+    ):
+        draw_floor_indicator(
+            screen,
+            font,
+            floor_index,
+            GAME_WIDTH // 2,
+            top=4,
         )
 
     # Оракул рисуется отдельно в bosses/oracle_ui.py.

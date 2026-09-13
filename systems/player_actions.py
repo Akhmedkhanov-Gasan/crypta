@@ -312,10 +312,14 @@ def _resolve_floor_exit(
             current_floor_config["act"] == 1
             and game_state.player.player_class is not None
     )
-
+    moving_backward = (
+        target_floor_index is not None
+        and target_floor_index < game_state.floor_index
+    )
     if (
-            current_floor_config["act"] == 2
-            or revisiting_act_one
+        current_floor_config["act"] == 2
+        or revisiting_act_one
+        or moving_backward
     ):
         game_state.floor_transition_started_at = (
             transition_started_at

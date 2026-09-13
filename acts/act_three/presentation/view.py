@@ -1,6 +1,20 @@
+from functools import lru_cache
+import math
+
 import pygame
 
-from acts.act_three.presentation.camera import act_three_world_view_size
+from acts.act_three.presentation.camera import (
+    act_three_camera_position,
+    act_three_centered_camera_position,
+    act_three_world_view_size,
+)
+from acts.act_three.settings import (
+    ACT_THREE_CURRENT_REVEAL_ALPHA,
+    ACT_THREE_EXPLORED_FOG_ALPHA,
+    ACT_THREE_FOG_INNER_RADIUS_TILES,
+    ACT_THREE_FOG_OUTER_RADIUS_TILES,
+    ACT_THREE_VISION_RADIUS_TILES,
+)
 from acts.act_three.altar import get_upgrade_altar_cells
 from presentation.layout import (
     ACT_THREE_TILE_SIZE,
@@ -163,30 +177,13 @@ def _top_void_corner_sprite_names(
 
 
 def _camera_position(floor, player_position=None):
-    world_width = len(floor.map[0]) * ACT_THREE_TILE_SIZE
-    world_height = len(floor.map) * ACT_THREE_TILE_SIZE
-    view_width, view_height = act_three_world_view_size(floor)
+    if player_position is not None:
+        return act_three_centered_camera_position(
+            floor,
+            player_position,
+        )
 
-    player_column, player_row = (
-        (floor.player_column, floor.player_row)
-        if player_position is None
-        else player_position
-    )
-    target_x = (
-        player_column * ACT_THREE_TILE_SIZE
-        + ACT_THREE_TILE_SIZE // 2
-        - view_width // 2
-    )
-    target_y = (
-        player_row * ACT_THREE_TILE_SIZE
-        + ACT_THREE_TILE_SIZE // 2
-        - view_height // 2
-    )
-
-    return (
-        max(0, min(target_x, world_width - view_width)),
-        max(0, min(target_y, world_height - view_height)),
-    )
+    return act_three_camera_position()
 
 
 def _view_position(column, row, camera_x, camera_y):
@@ -238,7 +235,9 @@ def _line_of_sight(
 def _get_act_three_visibility(floor):
     """Calculate current sight and remember cells seen earlier."""
     origin = (floor.player_column, floor.player_row)
+    floor.act_three_exploration_origins.add(origin)
     visible = set()
+    radius_squared = ACT_THREE_VISION_RADIUS_TILES ** 2
     map_height = len(floor.map)
     map_width = len(floor.map[0])
     altar_cells = get_upgrade_altar_cells(floor)
@@ -248,6 +247,15 @@ def _get_act_three_visibility(floor):
 
     for row in range(map_height):
         for column in range(map_width):
+            delta_x = column - origin[0]
+            delta_y = row - origin[1]
+
+            if (
+                    delta_x * delta_x + delta_y * delta_y
+                    > radius_squared
+            ):
+                continue
+
             if _line_of_sight(
                 floor.map,
                 origin,
@@ -265,42 +273,205 @@ def _get_act_three_visibility(floor):
     return visible
 
 
+def _fog_shape_points(
+    center,
+    radius,
+    distortion,
+):
+    points = []
+
+    for point_index in range(96):
+        angle = math.tau * point_index / 96
+        variation = (
+            math.sin(angle * 3 + 0.7) * 0.48
+            + math.sin(angle * 7 + 1.9) * 0.31
+            + math.sin(angle * 13 + 0.2) * 0.21
+        )
+        current_radius = max(
+            1,
+            radius + variation * distortion,
+        )
+
+        points.append(
+            (
+                round(
+                    center[0]
+                    + math.cos(angle) * current_radius
+                ),
+                round(
+                    center[1]
+                    + math.sin(angle) * current_radius
+                ),
+            )
+        )
+
+    return points
+
+
+@lru_cache(maxsize=8)
+def _fog_reveal_surface(inner_radius, outer_radius):
+    distortion = max(
+        6,
+        round(ACT_THREE_TILE_SIZE * 0.18),
+    )
+    padding = outer_radius + distortion + 2
+    size = padding * 2
+    center = (padding, padding)
+
+    reveal = pygame.Surface(
+        (size, size),
+        pygame.SRCALPHA,
+    )
+
+    radius_span = max(
+        1,
+        outer_radius - inner_radius,
+    )
+
+    for radius in range(
+        outer_radius,
+        inner_radius,
+        -3,
+    ):
+        progress = (
+            outer_radius - radius
+        ) / radius_span
+        progress = progress * progress * (3 - 2 * progress)
+        alpha = round(
+            ACT_THREE_CURRENT_REVEAL_ALPHA
+            * progress
+        )
+
+        pygame.draw.polygon(
+            reveal,
+            (0, 0, 0, alpha),
+            _fog_shape_points(
+                center,
+                radius,
+                distortion,
+            ),
+        )
+
+    pygame.draw.polygon(
+        reveal,
+        (
+            0,
+            0,
+            0,
+            ACT_THREE_CURRENT_REVEAL_ALPHA,
+        ),
+        _fog_shape_points(
+            center,
+            inner_radius,
+            distortion,
+        ),
+    )
+
+    return reveal
+
+
+@lru_cache(maxsize=8)
+def _explored_fog_surface(
+    inner_radius,
+    outer_radius,
+    explored_alpha,
+):
+    size = outer_radius * 2 + 2
+    center = (outer_radius + 1, outer_radius + 1)
+    reveal = pygame.Surface((size, size), pygame.SRCALPHA)
+    reveal.fill((0, 0, 0, 255))
+
+    radius_span = max(1, outer_radius - inner_radius)
+
+    for radius in range(outer_radius, inner_radius, -1):
+        progress = (outer_radius - radius) / radius_span
+        progress = progress * progress * (3 - 2 * progress)
+        alpha = round(
+            255 - (255 - explored_alpha) * progress
+        )
+
+        pygame.draw.circle(
+            reveal,
+            (0, 0, 0, alpha),
+            center,
+            radius,
+        )
+
+    pygame.draw.circle(
+        reveal,
+        (0, 0, 0, explored_alpha),
+        center,
+        inner_radius,
+    )
+
+    return reveal
+
+
 def _draw_fog_of_war(
     view_surface,
     floor,
     camera_x,
     camera_y,
+    player_position,
 ):
-    visible = floor.visible_cells
     fog = pygame.Surface(
         view_surface.get_size(),
         pygame.SRCALPHA,
     )
-    fog.fill((0, 0, 0, 208))
+    fog.fill((0, 0, 0, 255))
 
-    for row in range(len(floor.map)):
-        for column in range(len(floor.map[0])):
-            position = (column, row)
-            if position in visible:
-                pygame.draw.rect(
-                    fog,
-                    (0, 0, 0, 0),
-                    (*_view_position(column, row, camera_x, camera_y),
-                     ACT_THREE_TILE_SIZE, ACT_THREE_TILE_SIZE),
-                )
-            elif position in floor.explored_cells:
-                pygame.draw.rect(
-                    fog,
-                    (0, 0, 0, 178),
-                    (*_view_position(column, row, camera_x, camera_y),
-                     ACT_THREE_TILE_SIZE, ACT_THREE_TILE_SIZE),
-                )
-            else:
-                pygame.draw.rect(
-                    fog,
-                    (0, 0, 0, 255),
-                    (*_view_position(column, row, camera_x, camera_y),
-                     ACT_THREE_TILE_SIZE, ACT_THREE_TILE_SIZE),
-                )
+    inner_radius = round(
+        ACT_THREE_TILE_SIZE
+        * ACT_THREE_FOG_INNER_RADIUS_TILES
+    )
+    outer_radius = round(
+        ACT_THREE_TILE_SIZE
+        * ACT_THREE_FOG_OUTER_RADIUS_TILES
+    )
+
+    explored_reveal = _explored_fog_surface(
+        inner_radius,
+        outer_radius,
+        ACT_THREE_EXPLORED_FOG_ALPHA,
+    )
+
+    for column, row in floor.act_three_exploration_origins:
+        center_x = (
+            column * ACT_THREE_TILE_SIZE
+            - camera_x
+            + ACT_THREE_TILE_SIZE // 2
+        )
+        center_y = (
+            row * ACT_THREE_TILE_SIZE
+            - camera_y
+            + ACT_THREE_TILE_SIZE // 2
+        )
+
+        fog.blit(
+            explored_reveal,
+            (
+                center_x - explored_reveal.get_width() // 2,
+                center_y - explored_reveal.get_height() // 2,
+            ),
+            special_flags=pygame.BLEND_RGBA_MIN,
+        )
+
+    current_reveal = _fog_reveal_surface(
+        inner_radius,
+        outer_radius,
+    )
+    player_center = (
+        round(player_position[0] + ACT_THREE_TILE_SIZE / 2),
+        round(player_position[1] + ACT_THREE_TILE_SIZE / 2),
+    )
+
+    fog.blit(
+        current_reveal,
+        (
+            player_center[0] - current_reveal.get_width() // 2,
+            player_center[1] - current_reveal.get_height() // 2,
+        ),
+        special_flags=pygame.BLEND_RGBA_SUB,
+    )
 
     view_surface.blit(fog, (0, 0))

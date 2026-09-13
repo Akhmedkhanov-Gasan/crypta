@@ -98,11 +98,13 @@ def _compose(placements, connections):
     height = max_row - min_row
 
     dungeon_map = [["#" for _ in range(width)] for _ in range(height)]
-    layer_names = {
-        name
-        for template, _ in placements
-        for name in template["tile_layers"]
-    }
+    layer_names = tuple(
+        dict.fromkeys(
+            name
+            for template, _ in placements
+            for name in template["tile_layers"]
+        )
+    )
     layers = {
         name: [[0 for _ in range(width)] for _ in range(height)]
         for name in layer_names
@@ -184,6 +186,12 @@ def _compose(placements, connections):
     ]
 
     spawn_template, spawn_offset = placements[0]
+
+    if spawn_template["player_start"] is None:
+        raise ValueError(
+            "The first TMX template must contain a Spawn entity"
+        )
+
     player_start = _translated(
         spawn_template["player_start"],
         (
@@ -296,3 +304,196 @@ def generate_tmx_room_floor(spawn_path, template_directory, piece_count=2):
         )
 
     return _compose(placements, connections)
+
+
+def _structural_connectors(template):
+    structural_names = {
+        "exit_north",
+        "exit_south",
+        "exit_east",
+        "exit_west",
+    }
+    return [
+        connector
+        for connector in template["connectors"]
+        if connector.get("name") in structural_names
+    ]
+
+
+def generate_tmx_sequence_floor(template_paths):
+    project_root = Path(__file__).resolve().parents[2]
+    resolved_paths = []
+
+    for template_path in template_paths:
+        resolved_path = Path(template_path)
+        if not resolved_path.is_absolute():
+            resolved_path = project_root / resolved_path
+        resolved_paths.append(resolved_path)
+
+    templates = [
+        load_tmx_floor(path)
+        for path in resolved_paths
+    ]
+
+    if not templates:
+        raise ValueError("TMX room sequence cannot be empty")
+
+    placements = [(templates[0], (0, 0))]
+    connections = []
+    first_connectors = _structural_connectors(templates[0])
+
+    if not first_connectors and len(templates) > 1:
+        raise ValueError(
+            f"No structural connector in {resolved_paths[0].name}"
+        )
+
+    open_connector = (
+        random.choice(first_connectors)
+        if first_connectors
+        else None
+    )
+
+    for sequence_index, template in enumerate(
+        templates[1:],
+        start=1,
+    ):
+        expected_direction = OPPOSITE_DIRECTION.get(
+            open_connector.get("direction", "")
+        )
+        options = []
+
+        for connector in _structural_connectors(template):
+            if (
+                connector.get("direction") != expected_direction
+                or connector.get("width", 1)
+                != open_connector.get("width", 1)
+            ):
+                continue
+
+            offset = _placement_offset(
+                open_connector,
+                connector,
+            )
+            candidate_bounds = _bounds(template, offset)
+
+            if any(
+                _bounds_overlap(
+                    candidate_bounds,
+                    _bounds(placed_template, placed_offset),
+                )
+                for placed_template, placed_offset in placements
+            ):
+                continue
+
+            options.append((connector, offset))
+
+        if not options:
+            raise ValueError(
+                "Cannot connect "
+                f"{resolved_paths[sequence_index - 1].name} "
+                f"to {resolved_paths[sequence_index].name}"
+            )
+
+        used_connector, offset = random.choice(options)
+        used_world_position = _translated(
+            used_connector["position"],
+            offset,
+        )
+
+        connections.append(
+            (
+                open_connector["position"],
+                used_world_position,
+            )
+        )
+        placements.append((template, offset))
+
+        if sequence_index >= len(templates) - 1:
+            continue
+
+        outgoing_connectors = [
+            {
+                **connector,
+                "position": _translated(
+                    connector["position"],
+                    offset,
+                ),
+            }
+            for connector in _structural_connectors(template)
+            if connector is not used_connector
+        ]
+
+        if not outgoing_connectors:
+            raise ValueError(
+                f"No outgoing connector in "
+                f"{resolved_paths[sequence_index].name}"
+            )
+
+        open_connector = random.choice(outgoing_connectors)
+
+    return _compose(placements, connections)
+
+
+def _passage_positions(connector):
+    name = connector.get("name", "")
+    direction = connector.get("direction", "")
+
+    if name in ("exit_up", "exit_next_floor"):
+        direction = "north"
+
+    step = DIRECTION_STEP.get(direction)
+    if step is None:
+        return None
+
+    wall_position = connector["position"]
+    trigger_position = (
+        wall_position[0] - step[0],
+        wall_position[1] - step[1],
+    )
+    return wall_position, trigger_position
+
+
+def attach_act_three_passages(
+    floor,
+    floor_index,
+    floor_count,
+):
+    passages = []
+
+    for connector in floor.get("connectors", []):
+        name = connector.get("name", "")
+
+        if name in ("exit_up", "exit_next_floor"):
+            target_floor_index = (
+                floor_index + 1
+                if floor_index + 1 < floor_count
+                else None
+            )
+        elif name == "exit_back":
+            target_floor_index = (
+                floor_index - 1
+                if floor_index > 0
+                else None
+            )
+        else:
+            continue
+
+        positions = _passage_positions(connector)
+        if positions is None:
+            continue
+
+        wall_position, trigger_position = positions
+
+        passages.append(
+            {
+                "passage_id": name,
+                "wall_position": wall_position,
+                "trigger_position": trigger_position,
+                "target_floor_index": target_floor_index,
+                "target_passage_id": None,
+                "requires_clear": False,
+            }
+        )
+
+    floor["passages"] = passages
+    return floor

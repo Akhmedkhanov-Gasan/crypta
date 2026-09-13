@@ -32,7 +32,9 @@ from acts.act_three.presentation.sidebar import (
 )
 
 from acts.act_three.presentation.world import _draw_act_three_world
-from levels import FLOOR_CONFIGS
+from presentation.floor_progress import (
+    draw_floor_indicator,
+)
 from presentation.hud import wrap_text
 from presentation.layout import (
     ACT_THREE_TILE_SIZE,
@@ -523,8 +525,7 @@ def draw_act_three_gameplay(
     current_time,
     mouse_position=None,
 ):
-    screen.fill((5, 5, 8))
-    floor_label = "ACT III"
+    screen.fill((0, 0, 0))
     _draw_act_three_world(
         screen,
         game_state,
@@ -532,23 +533,14 @@ def draw_act_three_gameplay(
         assets,
         current_time,
     )
-    floor_label_surface = fonts["heading"].render(
-        floor_label,
-        True,
-        (226, 211, 177),
+    draw_floor_indicator(
+        screen,
+        fonts["text"],
+        game_state.floor_index,
+        ACT_THREE_VIEW_X
+        + ACT_THREE_VIEW_WIDTH // 2,
+        top=2,
     )
-    floor_label_rect = floor_label_surface.get_rect(
-        midtop=(ACT_THREE_VIEW_X + ACT_THREE_VIEW_WIDTH // 2, 10)
-    )
-    shadow = fonts["heading"].render(floor_label, True, (20, 13, 19))
-    screen.blit(shadow, floor_label_rect.move(2, 2))
-    screen.blit(floor_label_surface, floor_label_rect)
-    ornament_y = floor_label_rect.centery + 1
-    for direction in (-1, 1):
-        inner_x = floor_label_rect.centerx + direction * (floor_label_rect.width // 2 + 14)
-        outer_x = inner_x + direction * 76
-        pygame.draw.line(screen, (100, 76, 52), (inner_x, ornament_y), (outer_x, ornament_y))
-        pygame.draw.circle(screen, (155, 112, 67), (outer_x, ornament_y), 2)
     _draw_act_three_sidebar(
         screen,
         game_state,

@@ -5,9 +5,25 @@ import pygame
 from acts.act_three.presentation.camera import (
     act_three_camera_scale,
     act_three_world_view_size,
+    update_act_three_camera,
 )
 from presentation.map_navigation import draw_map_trail
 from presentation.ground_items import draw_ground_items
+from acts.act_three.presentation.tile_layers import (
+    draw_fading_foreground_layers,
+    draw_tile_layer_shadows,
+    draw_tile_layers,
+    layer_names_by_prefix,
+)
+from acts.act_three.presentation.environment_grading import (
+    draw_environment_grading,
+)
+from acts.act_three.presentation.atmosphere import (
+    draw_lit_atmosphere,
+)
+from acts.act_three.presentation.color_grading import (
+    draw_act_three_color_grading,
+)
 
 from acts.act_three.altar import (
     player_is_next_to_upgrade_altar,
@@ -174,7 +190,9 @@ from acts.act_three.presentation.combat_effects import (
     _draw_warlock_orb,
 )
 from acts.act_three.presentation.lighting import (
-    _get_torch_light_surface,
+    draw_act_three_lighting,
+    draw_actor_shadow,
+    draw_torch_flame,
 )
 from acts.act_three.presentation.primitives import (
     _draw_archer_barrage_zone_cells,
@@ -202,26 +220,10 @@ def _draw_act_three_world(
     floor = game_state.floor
     dungeon_map = floor.map
     view_width, view_height = act_three_world_view_size(floor)
+    update_act_three_camera(floor, current_time)
     _get_act_three_visibility(floor)
     view_surface = pygame.Surface((view_width, view_height))
-    view_surface.fill((9, 10, 13))
-    brick_width = 64
-    brick_height = 32
-    for brick_y in range(0, view_height, brick_height):
-        pygame.draw.line(
-            view_surface,
-            (18, 20, 24),
-            (0, brick_y),
-            (view_width, brick_y),
-        )
-        row_offset = brick_width // 2 if (brick_y // brick_height) % 2 else 0
-        for brick_x in range(-row_offset, view_width, brick_width):
-            pygame.draw.line(
-                view_surface,
-                (16, 18, 22),
-                (brick_x, brick_y),
-                (brick_x, min(view_height, brick_y + brick_height)),
-            )
+    view_surface.fill((0, 0, 0))
     camera_x, camera_y = _camera_position(floor)
     teleport_origin = game_state.player.teleport_camera_origin
     transition_started_at = (
@@ -307,18 +309,78 @@ def _draw_act_three_world(
             / ACT_THREE_TILE_SIZE
         ),
     )
+    tile_assets = assets
+    floor_tiles = assets.get(
+        "tmx_tiles_by_floor",
+        {},
+    ).get(game_state.floor_index)
 
-    if floor.tile_layers and assets.get("tmx_tiles"):
-        for layer_name in ("Ground", "Walls", "Decor"):
-            layer = floor.tile_layers.get(layer_name, [])
-            for row in range(first_row, min(last_row, len(layer))):
-                for column in range(first_column, min(last_column, len(layer[row]))):
-                    tile = assets["tmx_tiles"].get(layer[row][column])
-                    if tile is not None:
-                        view_surface.blit(
-                            tile,
-                            _view_position(column, row, camera_x, camera_y),
-                        )
+    if floor_tiles is not None:
+        tile_assets = {
+            **assets,
+            "tmx_tiles": floor_tiles,
+        }
+    if floor.tile_layers and tile_assets.get("tmx_tiles"):
+        draw_tile_layers(
+            view_surface,
+            floor,
+            tile_assets,
+            layer_names_by_prefix(
+                floor,
+                "Ground",
+                "GroundDetails",
+                "WallsBack",
+                "DecorBack",
+            ),
+            first_column,
+            first_row,
+            last_column,
+            last_row,
+            camera_x,
+            camera_y,
+        )
+        draw_environment_grading(
+            view_surface,
+            floor,
+            camera_x,
+            camera_y,
+            first_column,
+            first_row,
+            last_column,
+            last_row,
+        )
+        draw_tile_layer_shadows(
+            view_surface,
+            floor,
+            tile_assets,
+            layer_names_by_prefix(
+                floor,
+                "DecorMiddle",
+                "Gate",
+            ),
+            first_column,
+            first_row,
+            last_column,
+            last_row,
+            camera_x,
+            camera_y,
+        )
+
+        draw_tile_layers(
+            view_surface,
+            floor,
+            tile_assets,
+            layer_names_by_prefix(
+                floor,
+                "DecorMiddle",
+            ),
+            first_column,
+            first_row,
+            last_column,
+            last_row,
+            camera_x,
+            camera_y,
+        )
     else:
         for row in range(first_row, last_row):
             for column in range(first_column, last_column):
@@ -537,15 +599,16 @@ def _draw_act_three_world(
                 link_seed ^ 0x9E3779B9
             )
 
-    view_surface.blit(
-        assets["stairs"],
-        _view_position(
-            floor.stairs_column,
-            floor.stairs_row,
-            camera_x,
-            camera_y,
-        ),
-    )
+    if not floor.tile_layers:
+        view_surface.blit(
+            assets["stairs"],
+            _view_position(
+                floor.stairs_column,
+                floor.stairs_row,
+                camera_x,
+                camera_y,
+            ),
+        )
 
     if floor.upgrade_altar is not None:
         altar_position = _view_position(
@@ -600,17 +663,6 @@ def _draw_act_three_world(
         ACT_THREE_TILE_SIZE,
         (-camera_x, -camera_y),
     )
-
-    for column, row in floor.torches:
-        view_surface.blit(
-            assets["torch_base"],
-            _view_position(
-                column,
-                row,
-                camera_x,
-                camera_y,
-            ),
-        )
 
     for enemy in living_enemies:
         aura_seed = healing_aura_seeds.get(id(enemy))
@@ -676,12 +728,28 @@ def _draw_act_three_world(
                     * exchange_eased_progress
                 ),
             )
+
         enemy_sprite = _enemy_sprite(
             assets,
             enemy,
             current_time,
             floor.visual_seed,
         )
+        if enemy.health > 0:
+            draw_actor_shadow(
+                view_surface,
+                enemy_sprite,
+                enemy_position,
+                ACT_THREE_TILE_SIZE,
+                floor.torches,
+                camera_x,
+                camera_y,
+                (
+                    "enemy",
+                    enemy.type,
+                    enemy_sprite.get_size(),
+                ),
+            )
         if enemy.health > 0 and enemy.curse_turns > 0:
             _draw_warlock_curse_aura(
                 view_surface,
@@ -1210,6 +1278,33 @@ def _draw_act_three_world(
         game_state.player,
         current_time,
         ACT_THREE_TILE_SIZE,
+    )
+
+    if player_death_elapsed is None:
+        draw_actor_shadow(
+            view_surface,
+            player_sprite,
+            player_position,
+            ACT_THREE_TILE_SIZE,
+            floor.torches,
+            camera_x,
+            camera_y,
+            (
+                "player",
+                player_subclass,
+                player_sprite.get_size(),
+            ),
+        )
+
+    _draw_player_hit_feedback(
+        view_surface,
+        player_sprite,
+        player_position,
+        game_state.player,
+        floor.player_column,
+        floor.player_row,
+        current_time,
+        fonts["sidebar_numbers"],
     )
 
     if (
@@ -2154,50 +2249,28 @@ def _draw_act_three_world(
             assets,
             current_time,
         )
-
-    darkness = pygame.Surface(
-        view_surface.get_size(),
-        pygame.SRCALPHA,
-    )
-    darkness.fill((0, 0, 8, 38))
-    view_surface.blit(darkness, (0, 0))
-    torch_light = pygame.Surface(view_surface.get_size())
-    torch_light.fill((0, 0, 0))
-    light_surface = _get_torch_light_surface()
-    light_radius = light_surface.get_width() // 2
-
-    for column, row in floor.torches:
-        torch_x, torch_y = _view_position(
-            column,
-            row,
+    if floor.tile_layers and tile_assets.get("tmx_tiles"):
+        draw_fading_foreground_layers(
+            view_surface,
+            floor,
+            tile_assets,
+            layer_names_by_prefix(
+                floor,
+                "WallsFront",
+                "DecorFront",
+                "Gate",
+            ),
+            first_column,
+            first_row,
+            last_column,
+            last_row,
             camera_x,
             camera_y,
+            player_position,
         )
-        torch_light.blit(
-            light_surface,
-            (
-                torch_x
-                + ACT_THREE_TILE_SIZE // 2
-                - light_radius,
-                torch_y
-                + ACT_THREE_TILE_SIZE // 2
-                - light_radius,
-            ),
-            special_flags=pygame.BLEND_RGB_ADD,
-        )
-
-    view_surface.blit(
-        torch_light,
-        (0, 0),
-        special_flags=pygame.BLEND_RGB_ADD,
-    )
-
-    for torch_index, (column, row) in enumerate(floor.torches):
-        flame_frame = (
-            current_time // 145 + torch_index
-        ) % 3
+    for column, row in floor.torches:
         view_surface.blit(
-            assets[f"torch_flame_{flame_frame}"],
+            assets["torch_base"],
             _view_position(
                 column,
                 row,
@@ -2205,12 +2278,49 @@ def _draw_act_three_world(
                 camera_y,
             ),
         )
-
+    draw_act_three_lighting(
+        view_surface,
+        floor.torches,
+        floor.barriers,
+        camera_x,
+        camera_y,
+        current_time,
+        ACT_THREE_TILE_SIZE,
+    )
+    draw_lit_atmosphere(
+        view_surface,
+        floor.torches,
+        camera_x,
+        camera_y,
+        current_time,
+        ACT_THREE_TILE_SIZE,
+    )
+    for torch_index, (column, row) in enumerate(floor.torches):
+        draw_torch_flame(
+            view_surface,
+            assets,
+            _view_position(
+                column,
+                row,
+                camera_x,
+                camera_y,
+            ),
+            current_time,
+            torch_index,
+        )
     _draw_fog_of_war(
         view_surface,
         floor,
         camera_x,
         camera_y,
+        player_position,
+    )
+    draw_act_three_color_grading(
+        view_surface,
+        floor.torches,
+        camera_x,
+        camera_y,
+        ACT_THREE_TILE_SIZE,
     )
     _draw_player_hit_vignette(
         view_surface,

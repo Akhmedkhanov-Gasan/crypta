@@ -27,7 +27,11 @@ from worldgen.geometry import (
     room_center,
 )
 from acts.act_three.tmx_loader import load_tmx_floor
-from acts.act_three.room_generation import generate_tmx_room_floor
+from acts.act_three.room_generation import (
+    attach_act_three_passages,
+    generate_tmx_room_floor,
+    generate_tmx_sequence_floor,
+)
 
 
 TREASURY_ROOM_WIDTH = 7
@@ -745,7 +749,15 @@ def generate_floor(
 
     if config["act"] == 1 and config.get("tutorial", False):
         return generate_tutorial_floor(config, floor_index)
-
+    if config.get("tmx_room_sequence"):
+        floor = generate_tmx_sequence_floor(
+            config["tmx_room_sequence"]
+        )
+        return attach_act_three_passages(
+            floor,
+            floor_index,
+            len(FLOOR_CONFIGS),
+        )
     if config.get("room_template_directory"):
         return generate_tmx_room_floor(
             config["map_path"],
@@ -754,7 +766,16 @@ def generate_floor(
         )
 
     if config.get("map_path"):
-        return load_tmx_floor(config["map_path"])
+        floor = load_tmx_floor(config["map_path"])
+
+        if config["act"] == 3:
+            return attach_act_three_passages(
+                floor,
+                floor_index,
+                len(FLOOR_CONFIGS),
+            )
+
+        return floor
 
     boss_enemy_types = config.get("boss_enemy_types", [])
     boss_room_layout = config.get("boss_room_layout")

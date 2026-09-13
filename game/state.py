@@ -351,6 +351,10 @@ class FloorState(AttributeMapping):
     visible_cells: set[tuple[int, int]] = field(
         default_factory=set
     )
+    act_three_exploration_origins: set[
+        tuple[int, int]
+    ] = field(default_factory=set)
+
     act_two_remembered_chests: dict[
         tuple[int, int], dict[str, Any]
     ] = field(default_factory=dict)
