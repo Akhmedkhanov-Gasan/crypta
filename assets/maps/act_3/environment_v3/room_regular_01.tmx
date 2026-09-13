@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="8" height="8" tilewidth="64" tileheight="64" infinite="0" nextlayerid="16" nextobjectid="15">
+ <tileset firstgid="1" source="act3.tsx"/>
+ <tileset firstgid="137" source="act3_floor_64.tsx"/>
+ <tileset firstgid="145" source="items.tsx"/>
+ <layer id="1" name="Ground" width="8" height="8">
+  <data encoding="csv">
+0,0,144,0,0,0,0,0,
+0,0,140,0,0,0,0,0,
+0,144,144,140,137,137,142,0,
+0,140,138,139,141,139,141,0,
+0,141,141,139,141,143,137,0,
+0,138,143,138,140,144,137,0,
+0,143,142,141,139,142,141,0,
+0,0,0,0,0,144,0,0
+</data>
+ </layer>
+ <layer id="9" name="GroundDetails_01" width="8" height="8">
+  <data encoding="csv">
+0,0,171,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,227,0,0,241,246,0,0,
+0,0,243,0,0,0,0,0,
+0,0,0,0,227,0,236,0,
+0,0,238,0,0,0,245,0,
+0,244,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <layer id="10" name="GroundDetails_02" width="8" height="8">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,218,0,0,0,182,172,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,216,0,0,0,0,181,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <layer id="3" name="WallsBack_02" width="8" height="8">
+  <data encoding="csv">
+0,79,0,78,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <layer id="2" name="WallsBack_01" width="8" height="8">
+  <data encoding="csv">
+79,57,20,35,23,35,58,78,
+79,65,45,26,31,30,66,78,
+79,0,0,0,0,0,0,78,
+79,0,0,0,0,0,0,78,
+79,0,0,0,0,0,0,78,
+79,0,0,0,0,0,0,78,
+79,0,0,0,0,0,0,78,
+79,0,0,0,0,0,0,78
+</data>
+ </layer>
+ <layer id="4" name="WallsFront_01" width="8" height="8">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,57,2,23,2,37,58,0,
+0,99,28,31,27,45,100,0
+</data>
+ </layer>
+ <layer id="5" name="DecorBack_01" width="8" height="8">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,
+0,0,0,229,0,229,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <layer id="6" name="DecorBack_02" width="8" height="8">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,
+0,234,0,232,0,231,233,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <layer id="7" name="DecorFront_01" width="8" height="8">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,210,0,222,0,0,0
+</data>
+ </layer>
+ <layer id="8" name="DecorFront_02" width="8" height="8">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,234,233,0,232,0,231,0
+</data>
+ </layer>
+ <objectgroup id="11" name="Entities">
+  <object id="1" name="torches_v1" x="230" y="98.6667">
+   <point/>
+  </object>
+  <object id="2" name="torches_v1" x="291.333" y="482.667">
+   <point/>
+  </object>
+ </objectgroup>
+ <objectgroup id="12" name="Connectors" visible="0">
+  <object id="3" name="exit_north" x="159.999" y="27.333">
+   <point/>
+  </object>
+  <object id="4" name="exit_south" x="354" y="497.333">
+   <point/>
+  </object>
+ </objectgroup>
+ <objectgroup id="13" name="Barriers" visible="0">
+  <object id="5" x="47.3333" y="0" width="14" height="508"/>
+  <object id="6" x="454.667" y="-2" width="9.33333" height="504.667"/>
+ </objectgroup>
+ <objectgroup id="14" name="Blocked" visible="0">
+  <object id="8" x="212.667" y="70.6667" width="282" height="44"/>
+  <object id="9" x="220.667" y="12" width="276.667" height="14.6667"/>
+  <object id="10" x="8" y="19.3333" width="87.3333" height="21.3333"/>
+  <object id="11" x="24" y="73.3333" width="85.3333" height="33.3333"/>
+  <object id="12" x="18.6667" y="460" width="290" height="33.3333"/>
+  <object id="13" x="403.333" y="463.333" width="92" height="29.3333"/>
+ </objectgroup>
+</map>

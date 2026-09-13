@@ -220,6 +220,11 @@ from acts.act_three.presentation.combat_effects import (
     record_player_death_feedback,
     record_player_hit_feedback,
 )
+from presentation.floor_progress import (
+    roman_number,
+    tower_floor_number,
+)
+
 from acts.turns import resolve_enemy_turn
 from bosses.oracle import resolve_oracle_hit_reaction
 from game.combat_log import add_log_message
@@ -403,15 +408,6 @@ FIRST_ACT_THREE_FLOOR = next(
     if floor_config["act"] == 3
 )
 ACT_THREE_MUSIC_ENABLED = False
-
-
-def _roman_floor_number(number):
-    return {
-        1: "I",
-        2: "II",
-        3: "III",
-        4: "IV",
-    }.get(number, str(number))
 
 
 def main():
@@ -1917,7 +1913,24 @@ def main():
                             - CLASS_SELECTION_READY_MS
                     )
                     continue
+                if event.key == pygame.K_F4:
+                    if (
+                            act_three_music_attempted
+                            and pygame.mixer.get_init() is not None
+                    ):
+                        pygame.mixer.music.stop()
 
+                    act_three_music_attempted = False
+                    app_runtime.progress_tracking_enabled = False
+                    act_two_input_state.cancel_auto_move()
+
+                    game_state = create_game_state(
+                        floor_index=FIRST_ACT_THREE_FLOOR,
+                        opening_message="Debug: Act III environment v3.",
+                    )
+                    game_state.act_three_test_mode = True
+                    game_state.act_three_debug_class_selection_open = True
+                    continue
                 if handle_act_three_key_event(
                         event,
                         game_state,
@@ -4921,7 +4934,11 @@ def main():
                     current_time
                     - game_state.floor_transition_started_at
                 ),
-                _roman_floor_number(target_act_floor),
+                roman_number(
+                    tower_floor_number(
+                        game_state.floor_transition_target_index
+                    )
+                ),
                 (
                     FLOOR_INTRO_SUBTITLES.get(target_act_floor, "")
                     if target_act == 1

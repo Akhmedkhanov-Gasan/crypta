@@ -223,7 +223,16 @@ def load_tmx_floor(path):
                         ),
                     }
                 )
+    thin_barrier_rectangles = []
 
+    for rectangle in barrier_rectangles:
+        rectangle_width = rectangle[2]
+        rectangle_height = rectangle[3]
+
+        if min(rectangle_width, rectangle_height) <= tile_size / 4:
+            thin_barrier_rectangles.append(rectangle)
+        else:
+            blocked_rectangles.append(rectangle)
     blocked_layer = layers.get("Blocked", [])
     dungeon_map = [
         [
@@ -249,7 +258,7 @@ def load_tmx_floor(path):
         for row in range(height)
     ]
     barriers = _barrier_edges(
-        barrier_rectangles,
+        thin_barrier_rectangles,
         width,
         height,
         tile_size,
@@ -274,9 +283,12 @@ def load_tmx_floor(path):
     player_markers = (
         by_name.get("player_spawn")
         or by_name.get("spawn")
-        or [((1, 1), {})]
     )
-    player_start = player_markers[0][0]
+    player_start = (
+        player_markers[0][0]
+        if player_markers
+        else None
+    )
     fallback_stairs = next(
         (
             (column, row)
@@ -291,7 +303,14 @@ def load_tmx_floor(path):
         {"position": position, "contains": props.get("contains", "gold")}
         for position, props in by_name.get("chest", [])
     ]
-    torches = [position for position, _ in by_name.get("torch", [])]
+    torch_markers = (
+            by_name.get("torch", [])
+            + by_name.get("torches_v1", [])
+    )
+    torches = [
+        position
+        for position, _ in torch_markers
+    ]
     enemies = []
     for name, markers in by_name.items():
         if name != "enemy" and name not in ENEMY_TYPES:
