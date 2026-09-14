@@ -4,6 +4,9 @@ from acts.act_two.assets import (
     load_item_pile_sprite,
     load_pickup_hint_font,
 )
+from acts.act_three.presentation.player_assets import (
+    load_assassin_animation_assets,
+)
 import resource_store as resources
 import xml.etree.ElementTree as ET
 
@@ -1694,7 +1697,6 @@ def load_act_three_gameplay_assets():
     for subclass in (
         "berserker",
         "paladin",
-        "assassin",
         "archer",
         "warlock",
         "summoner",
@@ -1714,7 +1716,12 @@ def load_act_three_gameplay_assets():
                     (tile_size, tile_size),
                 )
             )
-
+    load_assassin_animation_assets(
+        assets,
+        act_directory,
+        tile_size,
+        _load_pixel_scaled_image,
+    )
     summoner_no_familiar_idle_directory = (
         act_directory
         / "player"
@@ -1758,17 +1765,6 @@ def load_act_three_gameplay_assets():
             (tile_size, tile_size),
         )
     )
-
-    walk_directory = (
-        act_directory / "player" / "assassin" / "walk"
-    )
-    for frame_index in range(2):
-        assets[f"player_assassin_walk_{frame_index}"] = (
-            _load_pixel_scaled_image(
-                walk_directory / f"walk_{frame_index:02d}.png",
-                (tile_size, tile_size),
-            )
-        )
 
     archer_walk_directory = (
         act_directory / "player" / "archer" / "walk"

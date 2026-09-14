@@ -3,6 +3,35 @@ from functools import lru_cache
 import pygame
 
 from presentation.layout import ACT_THREE_TILE_SIZE
+_TILED_FLIP_HORIZONTAL = 0x80000000
+_TILED_FLIP_VERTICAL = 0x40000000
+_TILED_FLIP_MASK = (
+    _TILED_FLIP_HORIZONTAL
+    | _TILED_FLIP_VERTICAL
+)
+_TILE_VARIANTS = {}
+
+
+def _tile_for_gid(tiles, gid):
+    flip_flags = gid & _TILED_FLIP_MASK
+    base_gid = gid & ~_TILED_FLIP_MASK
+    tile = tiles.get(base_gid)
+
+    if tile is None or not flip_flags:
+        return tile
+
+    key = (id(tile), flip_flags)
+    variant = _TILE_VARIANTS.get(key)
+
+    if variant is None:
+        variant = pygame.transform.flip(
+            tile,
+            bool(flip_flags & _TILED_FLIP_HORIZONTAL),
+            bool(flip_flags & _TILED_FLIP_VERTICAL),
+        )
+        _TILE_VARIANTS[key] = variant
+
+    return variant
 
 
 def _layer_number(layer_name):
@@ -58,7 +87,10 @@ def draw_tile_layers(
                 first_column,
                 min(last_column, len(row_data)),
             ):
-                tile = tiles.get(row_data[column])
+                tile = _tile_for_gid(
+                    tiles,
+                    row_data[column],
+                )
                 if tile is None:
                     continue
 
@@ -122,7 +154,10 @@ def draw_tile_layer_shadows(
                     first_column,
                     min(last_column, len(row_data)),
                 ):
-                    tile = tiles.get(row_data[column])
+                    tile = _tile_for_gid(
+                        tiles,
+                        row_data[column],
+                    )
 
                     if tile is None:
                         continue

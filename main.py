@@ -3068,6 +3068,13 @@ def main():
                                     )
                                 )
                             )
+                    elif current_act >= 3 and hero_move_event is not None:
+                        game_state.player.movement_origin = (
+                            hero_move_event.origin
+                        )
+                        game_state.player.movement_animation_started_at = (
+                            enemy_movement_started_at
+                        )
                     for enemy in game_state.floor["enemies"]:
                         if enemy.name in moved_enemy_names:
                             enemy.movement_animation_started_at = (

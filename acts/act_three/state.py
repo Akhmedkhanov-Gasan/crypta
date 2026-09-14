@@ -112,6 +112,7 @@ class ActThreePlayerState:
     ultimate_animation_started_at: int = 0
     ultimate_animation_active: bool = False
     movement_animation_started_at: int = 0
+    movement_origin: tuple[int, int] | None = None
     attack_animation_started_at: int = 0
     hit_animation_started_at: int = -1
     hit_damage: int = 0

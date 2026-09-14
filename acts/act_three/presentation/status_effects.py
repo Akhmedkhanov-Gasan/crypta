@@ -188,6 +188,72 @@ def _draw_warlock_curse_aura(
     )
 
 
+def _draw_assassin_idle_smoke(
+    surface,
+    left,
+    top,
+    current_time,
+    identity_seed,
+):
+    margin = 8
+    effect_size = ACT_THREE_TILE_SIZE + margin * 2
+    effect_surface = pygame.Surface(
+        (effect_size, effect_size),
+        pygame.SRCALPHA,
+    )
+    center_x = effect_size // 2
+    base_y = margin + ACT_THREE_TILE_SIZE - 8
+
+    for smoke_index in range(4):
+        phase = (
+            current_time / 1850
+            + smoke_index / 4
+            + (identity_seed % 83) / 83
+        ) % 1
+        visibility = math.sin(math.pi * phase)
+        direction = -1 if smoke_index % 2 == 0 else 1
+        drift = math.sin(
+            phase * math.tau + smoke_index * 1.7
+        )
+        smoke_x = round(
+            center_x
+            + direction * (7 + smoke_index * 3)
+            + drift * 4
+        )
+        smoke_y = round(
+            base_y - phase * (10 + smoke_index % 3 * 3)
+        )
+        smoke_width = 5 + smoke_index % 2 * 3
+        smoke_height = 2 + round(phase * 2)
+        smoke_alpha = round(42 * visibility)
+
+        pygame.draw.ellipse(
+            effect_surface,
+            (32, 34, 39, smoke_alpha),
+            (
+                smoke_x - smoke_width // 2,
+                smoke_y - smoke_height // 2,
+                smoke_width,
+                smoke_height,
+            ),
+        )
+        pygame.draw.ellipse(
+            effect_surface,
+            (69, 70, 74, smoke_alpha // 2),
+            (
+                smoke_x - 1,
+                smoke_y,
+                max(2, smoke_width - 3),
+                max(1, smoke_height - 1),
+            ),
+        )
+
+    surface.blit(
+        effect_surface,
+        (left - margin, top - margin),
+    )
+
+
 def _draw_rogue_idle_particles(
     surface,
     left,

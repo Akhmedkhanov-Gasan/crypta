@@ -148,8 +148,15 @@ from acts.act_two.presentation.enemies.sentinel import draw_sentinel_status
 from presentation.control_effects import draw_player_control_effects
 from acts.act_three.presentation.animation import (
     _idle_frame,
-    _movement_frame,
     _stable_text_seed,
+)
+from acts.act_three.presentation.player_motion import (
+    ASSASSIN_WALK_FRAME_COUNT,
+    assassin_idle_frame,
+    assassin_walk_direction,
+    interpolate_player_position,
+    movement_frame_for_progress,
+    player_movement_progress,
 )
 from acts.act_three.presentation.class_effects import (
     _draw_summoner_bond_pentagram,
@@ -208,6 +215,7 @@ from acts.act_three.presentation.status_effects import (
     _draw_paladin_holy_shield_aura,
     _draw_rogue_idle_particles,
     _draw_warlock_curse_aura,
+    _draw_assassin_idle_smoke,
 )
 
 def _draw_act_three_world(
@@ -356,6 +364,7 @@ def _draw_act_three_world(
             layer_names_by_prefix(
                 floor,
                 "DecorMiddle",
+                "Objects",
                 "Gate",
             ),
             first_column,
@@ -373,6 +382,7 @@ def _draw_act_three_world(
             layer_names_by_prefix(
                 floor,
                 "DecorMiddle",
+                "Objects",
             ),
             first_column,
             first_row,
@@ -826,9 +836,9 @@ def _draw_act_three_world(
     ):
         player_subclass = "berserker"
 
-    movement_elapsed = (
-        current_time
-        - game_state.player.movement_animation_started_at
+    movement_progress = player_movement_progress(
+        current_time,
+        game_state.player.movement_animation_started_at,
     )
     attack_elapsed = (
         current_time
@@ -1000,15 +1010,26 @@ def _draw_act_three_world(
             "warlock",
             "summoner",
         )
-        and 0 <= movement_elapsed < (
-            _MOVE_FRAME_COUNT * _MOVE_FRAME_DURATION_MS
-        )
+        and movement_progress is not None
     ):
-        movement_frame = _movement_frame(
-            current_time,
-            game_state.player.movement_animation_started_at,
+        movement_frame_count = (
+            ASSASSIN_WALK_FRAME_COUNT
+            if player_subclass == "assassin"
+            else _MOVE_FRAME_COUNT
         )
-        if (
+        movement_frame = movement_frame_for_progress(
+            movement_progress,
+            movement_frame_count,
+        )
+
+        if player_subclass == "assassin":
+            walk_direction = assassin_walk_direction(
+                game_state.player.facing_direction
+            )
+            player_sprite = assets[
+                f"player_assassin_walk_{walk_direction}_{movement_frame}"
+            ]
+        elif (
             player_subclass == "warlock"
             and game_state.player.warlock_demon_form_active
         ):
@@ -1027,16 +1048,32 @@ def _draw_act_three_world(
                 f"player_{player_subclass}_walk_{movement_frame}"
             ]
     else:
-        player_frame = _idle_frame(
-            current_time,
-            (
-                floor.visual_seed
-                ^ _stable_text_seed(
+        if player_subclass == "assassin":
+            player_frame = assassin_idle_frame(current_time)
+        else:
+            player_frame = _idle_frame(
+                current_time,
+                (
+                        floor.visual_seed
+                        ^ _stable_text_seed(
                     f"player:{player_subclass}"
                 )
-            ),
-        )
-        if (
+                ),
+            )
+        if player_subclass == "assassin":
+            idle_direction = assassin_walk_direction(
+                game_state.player.facing_direction
+            )
+
+            if idle_direction == "down":
+                player_sprite = assets[
+                    f"player_assassin_idle_{player_frame}"
+                ]
+            else:
+                player_sprite = assets[
+                    f"player_assassin_idle_{idle_direction}_{player_frame}"
+                ]
+        elif (
             player_subclass == "warlock"
             and game_state.player.warlock_demon_form_active
         ):
@@ -1060,6 +1097,21 @@ def _draw_act_three_world(
         camera_x,
         camera_y,
     )
+    if (
+        movement_progress is not None
+        and game_state.player.movement_origin is not None
+    ):
+        movement_origin_position = _view_position(
+            game_state.player.movement_origin[0],
+            game_state.player.movement_origin[1],
+            camera_x,
+            camera_y,
+        )
+        player_position = interpolate_player_position(
+            movement_origin_position,
+            player_position,
+            movement_progress,
+        )
     if (
         player_subclass in (
             "berserker",
@@ -2191,7 +2243,21 @@ def _draw_act_three_world(
             )
             view_surface.blit(slash_sprite, slash_position)
 
-    if player_subclass in ("archer", "assassin"):
+    if (
+        player_subclass == "assassin"
+        and player_death_elapsed is None
+    ):
+        _draw_assassin_idle_smoke(
+            view_surface,
+            player_position[0],
+            player_position[1],
+            current_time,
+            (
+                floor.visual_seed
+                ^ _stable_text_seed("player:assassin:smoke")
+            ),
+        )
+    elif player_subclass == "archer":
         _draw_rogue_idle_particles(
             view_surface,
             player_position[0],
@@ -2199,9 +2265,7 @@ def _draw_act_three_world(
             current_time,
             (
                 floor.visual_seed
-                ^ _stable_text_seed(
-                    f"player:{player_subclass}:motes"
-                )
+                ^ _stable_text_seed("player:archer:motes")
             ),
             player_subclass,
         )
