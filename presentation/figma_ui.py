@@ -25,6 +25,10 @@ _FONT_PATHS = {
         FONT_ROOT / "asul.ttf",
     ("asul", "medium"):
         FONT_ROOT / "asul.ttf",
+    ("bucheri", "regular"):
+        FONT_ROOT / "bucheri.ttf",
+    ("bucheri", "medium"):
+        FONT_ROOT / "bucheri.ttf",
 
 
     ("alagard", "regular"): FONT_ROOT / "alagard" / "alagard.ttf",

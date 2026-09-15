@@ -48,7 +48,11 @@ def _player_focus(floor):
     )
 
 
-def update_act_three_camera(floor, current_time):
+def update_act_three_camera(
+    floor,
+    current_time,
+    player_position=None,
+):
     view_width, view_height = act_three_world_view_size(floor)
     viewport = pygame.Rect(
         0,
@@ -56,12 +60,19 @@ def update_act_three_camera(floor, current_time):
         view_width,
         view_height,
     )
+    focus = _player_focus(floor)
+
+    if player_position is not None:
+        focus = (
+            player_position[0] + ACT_THREE_TILE_SIZE / 2,
+            player_position[1] + ACT_THREE_TILE_SIZE / 2,
+        )
 
     update_pixel_camera(
         _CAMERA,
         _world_size(floor),
         viewport,
-        _player_focus(floor),
+        focus,
         id(floor),
         current_time,
         _DEAD_ZONE,

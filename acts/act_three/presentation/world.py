@@ -154,6 +154,7 @@ from acts.act_three.presentation.player_motion import (
     ASSASSIN_WALK_FRAME_COUNT,
     assassin_idle_frame,
     assassin_walk_direction,
+    assassin_walk_frame,
     interpolate_player_position,
     movement_frame_for_progress,
     player_movement_progress,
@@ -228,7 +229,31 @@ def _draw_act_three_world(
     floor = game_state.floor
     dungeon_map = floor.map
     view_width, view_height = act_three_world_view_size(floor)
-    update_act_three_camera(floor, current_time)
+    movement_progress = player_movement_progress(
+        current_time,
+        game_state.player.movement_animation_started_at,
+    )
+    camera_player_position = (
+        floor.player_column * ACT_THREE_TILE_SIZE,
+        floor.player_row * ACT_THREE_TILE_SIZE,
+    )
+    movement_origin = game_state.player.movement_origin
+
+    if movement_progress is not None and movement_origin is not None:
+        camera_player_position = interpolate_player_position(
+            (
+                movement_origin[0] * ACT_THREE_TILE_SIZE,
+                movement_origin[1] * ACT_THREE_TILE_SIZE,
+            ),
+            camera_player_position,
+            movement_progress,
+        )
+
+    update_act_three_camera(
+        floor,
+        current_time,
+        player_position=camera_player_position,
+    )
     _get_act_three_visibility(floor)
     view_surface = pygame.Surface((view_width, view_height))
     view_surface.fill((0, 0, 0))
@@ -836,10 +861,6 @@ def _draw_act_three_world(
     ):
         player_subclass = "berserker"
 
-    movement_progress = player_movement_progress(
-        current_time,
-        game_state.player.movement_animation_started_at,
-    )
     attack_elapsed = (
         current_time
         - game_state.player.attack_animation_started_at
@@ -1017,10 +1038,13 @@ def _draw_act_three_world(
             if player_subclass == "assassin"
             else _MOVE_FRAME_COUNT
         )
-        movement_frame = movement_frame_for_progress(
-            movement_progress,
-            movement_frame_count,
-        )
+        if player_subclass == "assassin":
+            movement_frame = assassin_walk_frame(current_time)
+        else:
+            movement_frame = movement_frame_for_progress(
+                movement_progress,
+                movement_frame_count,
+            )
 
         if player_subclass == "assassin":
             walk_direction = assassin_walk_direction(
@@ -2330,6 +2354,7 @@ def _draw_act_three_world(
             last_row,
             camera_x,
             camera_y,
+            player_sprite,
             player_position,
         )
     for column, row in floor.torches:

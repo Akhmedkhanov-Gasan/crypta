@@ -208,6 +208,54 @@ def _foreground_fade_mask(tile_size):
     return mask
 
 
+def _foreground_overlaps_player(
+    foreground,
+    player_sprite,
+    player_position,
+):
+    player_rectangle = player_sprite.get_rect(
+        topleft=(
+            round(player_position[0]),
+            round(player_position[1]),
+        )
+    )
+    overlap_rectangle = player_rectangle.clip(
+        foreground.get_rect()
+    )
+
+    if (
+        overlap_rectangle.width <= 0
+        or overlap_rectangle.height <= 0
+    ):
+        return False
+
+    sprite_rectangle = pygame.Rect(
+        overlap_rectangle.x - player_rectangle.x,
+        overlap_rectangle.y - player_rectangle.y,
+        overlap_rectangle.width,
+        overlap_rectangle.height,
+    )
+    foreground_crop = foreground.subsurface(
+        overlap_rectangle
+    )
+    player_crop = player_sprite.subsurface(
+        sprite_rectangle
+    )
+    foreground_mask = pygame.mask.from_surface(
+        foreground_crop,
+        16,
+    )
+    player_mask = pygame.mask.from_surface(
+        player_crop,
+        1,
+    )
+
+    return (
+        foreground_mask.overlap(player_mask, (0, 0))
+        is not None
+    )
+
+
 def draw_fading_foreground_layers(
     surface,
     floor,
@@ -219,6 +267,7 @@ def draw_fading_foreground_layers(
     last_row,
     camera_x,
     camera_y,
+    player_sprite,
     player_position,
 ):
     foreground = pygame.Surface(
@@ -238,6 +287,14 @@ def draw_fading_foreground_layers(
         camera_x,
         camera_y,
     )
+
+    if not _foreground_overlaps_player(
+        foreground,
+        player_sprite,
+        player_position,
+    ):
+        surface.blit(foreground, (0, 0))
+        return
 
     mask = _foreground_fade_mask(ACT_THREE_TILE_SIZE)
     player_center = (
