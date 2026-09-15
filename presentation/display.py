@@ -1,16 +1,11 @@
-import math
 import sys
 
 import pygame
 
-from settings import BACKGROUND_COLOR, GAME_HEIGHT, GAME_WIDTH
-
-
-_AMBIENT_BACKGROUND_CACHE = {}
+from settings import GAME_HEIGHT, GAME_WIDTH
 
 
 def enable_high_dpi():
-    """Prevent Windows from bitmap-scaling the completed game window."""
     if sys.platform != "win32":
         return
 
@@ -28,7 +23,6 @@ def enable_high_dpi():
 
 
 def get_initial_window_size():
-    """Prefer the native canvas so the first frame is never resampled."""
     display_info = pygame.display.Info()
     if (
         display_info.current_w >= GAME_WIDTH
@@ -47,7 +41,6 @@ def get_initial_window_size():
 
 
 def game_viewport(window_size):
-    """Fit the game canvas inside the window without changing its proportions."""
     window_width, window_height = window_size
 
     scale = min(
@@ -69,38 +62,9 @@ def game_viewport(window_size):
     )
 
 
-def _ambient_background(size):
-    cached = _AMBIENT_BACKGROUND_CACHE.get(size)
-    if cached is not None:
-        return cached
-
-    width, height = size
-    background = pygame.Surface(size)
-    background.fill(BACKGROUND_COLOR)
-    brick_width = 72
-    brick_height = 48
-    for row, y in enumerate(range(0, height, brick_height)):
-        pygame.draw.line(background, (14, 18, 20), (0, y), (width, y))
-        offset = -(brick_width // 2) if row % 2 else 0
-        for x in range(offset, width, brick_width):
-            pygame.draw.line(
-                background,
-                (11, 15, 17),
-                (x, y),
-                (x, min(height, y + brick_height)),
-            )
-
-    veil = pygame.Surface(size, pygame.SRCALPHA)
-    veil.fill((0, 0, 0, 118))
-    background.blit(veil, (0, 0))
-    _AMBIENT_BACKGROUND_CACHE.clear()
-    _AMBIENT_BACKGROUND_CACHE[size] = background
-    return background
-
-
 def present_game(window, game_surface):
     viewport, scale = game_viewport(window.get_size())
-    window.blit(_ambient_background(window.get_size()), (0, 0))
+    window.fill((0, 0, 0))
 
     if viewport.size == game_surface.get_size():
         presented_surface = game_surface

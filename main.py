@@ -1416,19 +1416,22 @@ def main():
                         )
                     )
                     continue
-                elif handle_act_three_pointer_event(
-                        event,
-                        game_state,
-                        window_state.screen,
-                        window_to_game_position,
-                        act_two_input_state,
-                        continuous_movement_available,
-                    ):
-                    continue
             elif (
-                event.type == pygame.MOUSEBUTTONDOWN
-                and event.button == 1
-                and game_state.upgrade_screen_open
+                    current_act == 3
+                    and handle_act_three_pointer_event(
+                event,
+                game_state,
+                window_state.screen,
+                window_to_game_position,
+                act_two_input_state,
+                continuous_movement_available,
+            )
+            ):
+                continue
+            elif (
+                    event.type == pygame.MOUSEBUTTONDOWN
+                    and event.button == 1
+                    and game_state.upgrade_screen_open
             ):
                 game_mouse_position = window_to_game_position(
                     window_state.screen,

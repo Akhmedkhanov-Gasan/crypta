@@ -1,4 +1,7 @@
 import pygame
+from acts.act_three.presentation.hud import (
+    load_act_three_hud_assets,
+)
 from acts.act_three.presentation.tmx_tiles import load_tmx_tiles
 from acts.act_two.assets import (
     load_item_pile_sprite,
@@ -1200,25 +1203,8 @@ def load_act_three_gameplay_assets():
     )
     new_environment_directory = map_path.parent
     ui_directory = ASSET_ROOT / "ui" / "act_3"
-    hud_directory = ui_directory / "ui_v.0.2"
     tile_size = ACT_THREE_TILE_SIZE
     assets = {
-        "character_hud_frame": _load_scaled_image(
-            hud_directory / "hud_frame.png",
-            (423, 160),
-        ),
-        "character_hud_hp": _load_scaled_image(
-            hud_directory / "character_hud_hp.png",
-            (261, 19),
-        ),
-        "character_hud_xp": _load_scaled_image(
-            hud_directory / "character_hud_xp.png",
-            (256, 19),
-        ),
-        "character_portrait_placeholder": _load_scaled_image(
-            hud_directory / "character_portrait_placeholder.png",
-            (96, 87),
-        ),
         "floor_base": _load_scaled_image(
             environment_directory / "floor" / "floor_base.png",
             (tile_size, tile_size),
@@ -1648,6 +1634,7 @@ def load_act_three_gameplay_assets():
             (34, 34),
         ),
     }
+    assets.update(load_act_three_hud_assets())
     assets["tmx_tiles_by_floor"] = {}
 
     for floor_index, config in act_three_configs:
