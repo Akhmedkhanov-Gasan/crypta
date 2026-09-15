@@ -1,0 +1,2684 @@
+{
+  "schema_version": 2,
+  "screen": "hud",
+  "act": 3,
+  "coordinate_space": "frame",
+  "frame": {
+    "name": "HUD_act3",
+    "width": 1280,
+    "height": 720
+  },
+  "hud": {
+    "rect": {
+      "x": 4,
+      "y": 8,
+      "width": 1276,
+      "height": 715
+    }
+  },
+  "journal_panel": {
+    "rect": {
+      "x": 4,
+      "y": 207,
+      "width": 346,
+      "height": 384
+    },
+    "frame": {
+      "x": 24,
+      "y": 205,
+      "width": 311,
+      "height": 383
+    },
+    "close_hitbox": {
+      "x": 295,
+      "y": 227,
+      "width": 23,
+      "height": 25
+    },
+    "viewport": {
+      "x": 59,
+      "y": 240,
+      "width": 226,
+      "height": 259
+    },
+    "row_template": {
+      "rect": {
+        "x": 59,
+        "y": 240,
+        "width": 227,
+        "height": 39
+      },
+      "text": {
+        "rect": {
+          "x": 59,
+          "y": 240,
+          "width": 231,
+          "height": 33
+        },
+        "text": "Action 1 ~ Fuckup_1_test_test, long_ass_text",
+        "font": {
+          "family": "Ubuntu Mono",
+          "style": "Medium",
+          "size": 13
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "LEFT",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 0,
+          "g": 168,
+          "b": 6,
+          "a": 255
+        }
+      },
+      "separator": {
+        "rect": {
+          "x": 59,
+          "y": 275,
+          "width": 226,
+          "height": 3
+        },
+        "fill": {
+          "r": 74,
+          "g": 70,
+          "b": 71,
+          "a": 92
+        },
+        "stroke": null,
+        "stroke_weight": 1,
+        "corner_radius": 10,
+        "blur_radius": 0
+      }
+    },
+    "scrollbar": {
+      "rect": {
+        "x": 296,
+        "y": 239,
+        "width": 12,
+        "height": 75
+      },
+      "track": {
+        "x": 297,
+        "y": 239,
+        "width": 10,
+        "height": 316
+      },
+      "thumb": {
+        "x": 297,
+        "y": 239,
+        "width": 10,
+        "height": 75
+      }
+    }
+  },
+  "down_bar": {
+    "rect": {
+      "x": 26,
+      "y": 11,
+      "width": 1240,
+      "height": 712
+    },
+    "consumable_belt_frame": {
+      "x": 437,
+      "y": 614,
+      "width": 470,
+      "height": 109
+    },
+    "consumable_belt": {
+      "rect": {
+        "x": 474,
+        "y": 640,
+        "width": 258,
+        "height": 43
+      },
+      "slots": {
+        "slot_01": {
+          "rect": {
+            "x": 478,
+            "y": 646,
+            "width": 31,
+            "height": 31
+          },
+          "icon": {
+            "x": 480,
+            "y": 649,
+            "width": 26,
+            "height": 26
+          },
+          "hitbox": {
+            "x": 478,
+            "y": 646,
+            "width": 31,
+            "height": 31
+          }
+        },
+        "slot_02": {
+          "rect": {
+            "x": 518,
+            "y": 646,
+            "width": 31,
+            "height": 31
+          },
+          "icon": {
+            "x": 520,
+            "y": 649,
+            "width": 26,
+            "height": 26
+          },
+          "hitbox": {
+            "x": 518,
+            "y": 646,
+            "width": 31,
+            "height": 31
+          }
+        },
+        "slot_03": {
+          "rect": {
+            "x": 561,
+            "y": 646,
+            "width": 31,
+            "height": 31
+          },
+          "icon": {
+            "x": 563,
+            "y": 649,
+            "width": 26,
+            "height": 26
+          },
+          "hitbox": {
+            "x": 561,
+            "y": 646,
+            "width": 31,
+            "height": 31
+          }
+        },
+        "slot_04": {
+          "rect": {
+            "x": 603,
+            "y": 646,
+            "width": 31,
+            "height": 31
+          },
+          "icon": {
+            "x": 605,
+            "y": 649,
+            "width": 26,
+            "height": 26
+          },
+          "hitbox": {
+            "x": 603,
+            "y": 646,
+            "width": 31,
+            "height": 31
+          }
+        },
+        "slot_05": {
+          "rect": {
+            "x": 645,
+            "y": 646,
+            "width": 31,
+            "height": 31
+          },
+          "icon": {
+            "x": 647,
+            "y": 649,
+            "width": 26,
+            "height": 26
+          },
+          "hitbox": {
+            "x": 645,
+            "y": 646,
+            "width": 31,
+            "height": 31
+          }
+        },
+        "slot_06": {
+          "rect": {
+            "x": 688,
+            "y": 646,
+            "width": 31,
+            "height": 31
+          },
+          "icon": {
+            "x": 690,
+            "y": 649,
+            "width": 26,
+            "height": 26
+          },
+          "hitbox": {
+            "x": 688,
+            "y": 646,
+            "width": 31,
+            "height": 31
+          }
+        }
+      }
+    },
+    "abilities": {
+      "rect": {
+        "x": 751,
+        "y": 640,
+        "width": 119,
+        "height": 40
+      },
+      "slots": {
+        "ability_01": {
+          "rect": {
+            "x": 751,
+            "y": 644,
+            "width": 35,
+            "height": 35
+          },
+          "icon": {
+            "x": 753,
+            "y": 643,
+            "width": 34,
+            "height": 34
+          },
+          "hitbox": {
+            "x": 752,
+            "y": 642,
+            "width": 37,
+            "height": 35
+          },
+          "charges": {
+            "charge_01": {
+              "rect": {
+                "x": 758,
+                "y": 674,
+                "width": 5,
+                "height": 3
+              },
+              "fill": {
+                "r": 161,
+                "g": 28,
+                "b": 28,
+                "a": 255
+              },
+              "stroke": null,
+              "stroke_weight": 1,
+              "corner_radius": 0,
+              "blur_radius": 0
+            },
+            "charge_02": {
+              "rect": {
+                "x": 765,
+                "y": 674,
+                "width": 4,
+                "height": 3
+              },
+              "fill": {
+                "r": 77,
+                "g": 73,
+                "b": 73,
+                "a": 255
+              },
+              "stroke": null,
+              "stroke_weight": 1,
+              "corner_radius": 0,
+              "blur_radius": 0
+            },
+            "charge_03": {
+              "rect": {
+                "x": 771,
+                "y": 674,
+                "width": 5,
+                "height": 3
+              },
+              "fill": {
+                "r": 77,
+                "g": 73,
+                "b": 73,
+                "a": 255
+              },
+              "stroke": null,
+              "stroke_weight": 1,
+              "corner_radius": 0,
+              "blur_radius": 0
+            },
+            "charge_04": {
+              "rect": {
+                "x": 778,
+                "y": 674,
+                "width": 4,
+                "height": 3
+              },
+              "fill": {
+                "r": 77,
+                "g": 73,
+                "b": 73,
+                "a": 255
+              },
+              "stroke": null,
+              "stroke_weight": 1,
+              "corner_radius": 0,
+              "blur_radius": 0
+            }
+          }
+        },
+        "ability_02": {
+          "rect": {
+            "x": 791,
+            "y": 644,
+            "width": 35,
+            "height": 35
+          },
+          "icon": {
+            "x": 792,
+            "y": 641,
+            "width": 37,
+            "height": 37
+          },
+          "hitbox": {
+            "x": 792,
+            "y": 642,
+            "width": 37,
+            "height": 35
+          },
+          "charges": {
+            "charge_01": {
+              "rect": {
+                "x": 798,
+                "y": 674,
+                "width": 5,
+                "height": 3
+              },
+              "fill": {
+                "r": 161,
+                "g": 28,
+                "b": 28,
+                "a": 255
+              },
+              "stroke": null,
+              "stroke_weight": 1,
+              "corner_radius": 0,
+              "blur_radius": 0
+            },
+            "charge_02": {
+              "rect": {
+                "x": 805,
+                "y": 674,
+                "width": 4,
+                "height": 3
+              },
+              "fill": {
+                "r": 77,
+                "g": 73,
+                "b": 73,
+                "a": 255
+              },
+              "stroke": null,
+              "stroke_weight": 1,
+              "corner_radius": 0,
+              "blur_radius": 0
+            },
+            "charge_03": {
+              "rect": {
+                "x": 811,
+                "y": 674,
+                "width": 5,
+                "height": 3
+              },
+              "fill": {
+                "r": 77,
+                "g": 73,
+                "b": 73,
+                "a": 255
+              },
+              "stroke": null,
+              "stroke_weight": 1,
+              "corner_radius": 0,
+              "blur_radius": 0
+            },
+            "charge_04": {
+              "rect": {
+                "x": 818,
+                "y": 674,
+                "width": 4,
+                "height": 3
+              },
+              "fill": {
+                "r": 77,
+                "g": 73,
+                "b": 73,
+                "a": 255
+              },
+              "stroke": null,
+              "stroke_weight": 1,
+              "corner_radius": 0,
+              "blur_radius": 0
+            }
+          }
+        },
+        "ability_03": {
+          "rect": {
+            "x": 833,
+            "y": 644,
+            "width": 35,
+            "height": 35
+          },
+          "icon": {
+            "x": 834,
+            "y": 641,
+            "width": 37,
+            "height": 37
+          },
+          "hitbox": {
+            "x": 834,
+            "y": 642,
+            "width": 37,
+            "height": 35
+          },
+          "charges": {
+            "charge_01": {
+              "rect": {
+                "x": 840,
+                "y": 674,
+                "width": 5,
+                "height": 3
+              },
+              "fill": {
+                "r": 161,
+                "g": 28,
+                "b": 28,
+                "a": 255
+              },
+              "stroke": null,
+              "stroke_weight": 1,
+              "corner_radius": 0,
+              "blur_radius": 0
+            },
+            "charge_02": {
+              "rect": {
+                "x": 847,
+                "y": 674,
+                "width": 4,
+                "height": 3
+              },
+              "fill": {
+                "r": 77,
+                "g": 73,
+                "b": 73,
+                "a": 255
+              },
+              "stroke": null,
+              "stroke_weight": 1,
+              "corner_radius": 0,
+              "blur_radius": 0
+            },
+            "charge_03": {
+              "rect": {
+                "x": 853,
+                "y": 674,
+                "width": 5,
+                "height": 3
+              },
+              "fill": {
+                "r": 77,
+                "g": 73,
+                "b": 73,
+                "a": 255
+              },
+              "stroke": null,
+              "stroke_weight": 1,
+              "corner_radius": 0,
+              "blur_radius": 0
+            },
+            "charge_04": {
+              "rect": {
+                "x": 860,
+                "y": 674,
+                "width": 4,
+                "height": 3
+              },
+              "fill": {
+                "r": 77,
+                "g": 73,
+                "b": 73,
+                "a": 255
+              },
+              "stroke": null,
+              "stroke_weight": 1,
+              "corner_radius": 0,
+              "blur_radius": 0
+            }
+          }
+        }
+      }
+    },
+    "combat_log": {
+      "rect": {
+        "x": 26,
+        "y": 586,
+        "width": 398,
+        "height": 126
+      },
+      "frame": {
+        "x": 26,
+        "y": 586,
+        "width": 398,
+        "height": 126
+      },
+      "viewport": {
+        "x": 48,
+        "y": 616,
+        "width": 355,
+        "height": 77
+      },
+      "row_template": {
+        "rect": {
+          "x": 48,
+          "y": 616,
+          "width": 355,
+          "height": 24
+        },
+        "text": {
+          "rect": {
+            "x": 49,
+            "y": 616,
+            "width": 354,
+            "height": 26
+          },
+          "text": "Action 2 ~ Fuckup_1_test_test",
+          "font": {
+            "family": "Ubuntu Mono",
+            "style": "Medium",
+            "size": 15
+          },
+          "line_height": {
+            "unit": "AUTO"
+          },
+          "letter_spacing": {
+            "unit": "PERCENT",
+            "value": 0
+          },
+          "horizontal_align": "LEFT",
+          "vertical_align": "CENTER",
+          "text_case": "ORIGINAL",
+          "color": {
+            "r": 0,
+            "g": 168,
+            "b": 6,
+            "a": 255
+          }
+        },
+        "separator": {
+          "rect": {
+            "x": 48,
+            "y": 639,
+            "width": 355,
+            "height": 3
+          },
+          "fill": {
+            "r": 74,
+            "g": 70,
+            "b": 71,
+            "a": 92
+          },
+          "stroke": null,
+          "stroke_weight": 1,
+          "corner_radius": 10,
+          "blur_radius": 0
+        }
+      }
+    },
+    "gold": {
+      "rect": {
+        "x": 1196,
+        "y": 639,
+        "width": 70,
+        "height": 70
+      },
+      "icon": {
+        "x": 1196,
+        "y": 639,
+        "width": 70,
+        "height": 70
+      },
+      "value": {
+        "rect": {
+          "x": 1216,
+          "y": 678,
+          "width": 29,
+          "height": 16
+        },
+        "text": "10",
+        "font": {
+          "family": "Asul",
+          "style": "Regular",
+          "size": 14
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 167,
+          "g": 167,
+          "b": 167,
+          "a": 255
+        }
+      }
+    },
+    "camera": {
+      "rect": {
+        "x": 1136,
+        "y": 11,
+        "width": 121,
+        "height": 125
+      },
+      "frame": {
+        "x": 1132,
+        "y": 10,
+        "width": 128,
+        "height": 128
+      },
+      "minus_hitbox": {
+        "x": 1221,
+        "y": 27,
+        "width": 9,
+        "height": 9
+      },
+      "plus_hitbox": {
+        "x": 1235,
+        "y": 27,
+        "width": 9,
+        "height": 9
+      }
+    }
+  },
+  "right_bar": {
+    "rect": {
+      "x": 834,
+      "y": 124,
+      "width": 446,
+      "height": 471
+    },
+    "tabs": {
+      "rect": {
+        "x": 1210,
+        "y": 248,
+        "width": 71,
+        "height": 175
+      },
+      "frame": {
+        "x": 1212,
+        "y": 217,
+        "width": 66,
+        "height": 233
+      },
+      "level_up_indicator": {
+        "x": 1214,
+        "y": 262,
+        "width": 61,
+        "height": 61
+      },
+      "buttons": {
+        "stats": {
+          "rect": {
+            "x": 1227,
+            "y": 274,
+            "width": 36,
+            "height": 38
+          },
+          "highlight": {
+            "rect": {
+              "x": 1229,
+              "y": 275,
+              "width": 34,
+              "height": 35
+            },
+            "fill": {
+              "r": 145,
+              "g": 26,
+              "b": 26,
+              "a": 41
+            },
+            "stroke": null,
+            "stroke_weight": 1,
+            "corner_radius": 10,
+            "blur_radius": 0
+          },
+          "hitbox": {
+            "x": 1226,
+            "y": 274,
+            "width": 40,
+            "height": 38
+          }
+        },
+        "journal": {
+          "rect": {
+            "x": 1227,
+            "y": 325,
+            "width": 36,
+            "height": 36
+          },
+          "highlight": {
+            "rect": {
+              "x": 1229,
+              "y": 325,
+              "width": 34,
+              "height": 35
+            },
+            "fill": {
+              "r": 145,
+              "g": 26,
+              "b": 26,
+              "a": 41
+            },
+            "stroke": null,
+            "stroke_weight": 1,
+            "corner_radius": 10,
+            "blur_radius": 0
+          },
+          "hitbox": {
+            "x": 1227,
+            "y": 325,
+            "width": 36,
+            "height": 37
+          }
+        },
+        "settings": {
+          "rect": {
+            "x": 1229,
+            "y": 374,
+            "width": 36,
+            "height": 37
+          },
+          "highlight": {
+            "rect": {
+              "x": 1229,
+              "y": 374,
+              "width": 34,
+              "height": 34
+            },
+            "fill": {
+              "r": 145,
+              "g": 26,
+              "b": 26,
+              "a": 41
+            },
+            "stroke": null,
+            "stroke_weight": 1,
+            "corner_radius": 10,
+            "blur_radius": 0
+          },
+          "hitbox": {
+            "x": 1229,
+            "y": 373,
+            "width": 36,
+            "height": 37
+          }
+        }
+      }
+    },
+    "character_panel": {
+      "rect": {
+        "x": 834,
+        "y": 124,
+        "width": 377,
+        "height": 471
+      },
+      "frame": {
+        "x": 834,
+        "y": 124,
+        "width": 377,
+        "height": 471
+      },
+      "close_hitbox": {
+        "x": 1177,
+        "y": 163,
+        "width": 17,
+        "height": 16
+      },
+      "class_name": {
+        "rect": {
+          "x": 978,
+          "y": 155,
+          "width": 89,
+          "height": 26
+        },
+        "text": "Assasin",
+        "font": {
+          "family": "Asul",
+          "style": "Regular",
+          "size": 20
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 174,
+          "g": 154,
+          "b": 143,
+          "a": 255
+        }
+      },
+      "attribute_points": {
+        "rect": {
+          "x": 880,
+          "y": 201,
+          "width": 129,
+          "height": 20
+        },
+        "label": {
+          "rect": {
+            "x": 882,
+            "y": 204,
+            "width": 87,
+            "height": 14
+          },
+          "text": "Available points",
+          "font": {
+            "family": "Asul",
+            "style": "Regular",
+            "size": 12
+          },
+          "line_height": {
+            "unit": "AUTO"
+          },
+          "letter_spacing": {
+            "unit": "PERCENT",
+            "value": 0
+          },
+          "horizontal_align": "CENTER",
+          "vertical_align": "CENTER",
+          "text_case": "ORIGINAL",
+          "color": {
+            "r": 174,
+            "g": 154,
+            "b": 143,
+            "a": 255
+          }
+        },
+        "value": {
+          "rect": {
+            "x": 982,
+            "y": 204,
+            "width": 16,
+            "height": 14
+          },
+          "text": "0",
+          "font": {
+            "family": "Asul",
+            "style": "Regular",
+            "size": 12
+          },
+          "line_height": {
+            "unit": "AUTO"
+          },
+          "letter_spacing": {
+            "unit": "PERCENT",
+            "value": 0
+          },
+          "horizontal_align": "CENTER",
+          "vertical_align": "CENTER",
+          "text_case": "ORIGINAL",
+          "color": {
+            "r": 174,
+            "g": 154,
+            "b": 143,
+            "a": 255
+          }
+        }
+      },
+      "attributes": {
+        "rect": {
+          "x": 869,
+          "y": 213,
+          "width": 150,
+          "height": 122
+        },
+        "rows": {
+          "fortitude": {
+            "rect": {
+              "x": 876,
+              "y": 280,
+              "width": 146,
+              "height": 15
+            },
+            "label": {
+              "rect": {
+                "x": 880,
+                "y": 280,
+                "width": 60,
+                "height": 15
+              },
+              "text": "Fortitude",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 14
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "value": {
+              "rect": {
+                "x": 980,
+                "y": 280,
+                "width": 13,
+                "height": 15
+              },
+              "text": "10",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 12
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "minus": {
+              "rect": {
+                "x": 961,
+                "y": 283,
+                "width": 10,
+                "height": 9
+              },
+              "text": "-",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 20
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "minus_hitbox": {
+              "x": 961,
+              "y": 282,
+              "width": 11,
+              "height": 12
+            },
+            "plus": {
+              "rect": {
+                "x": 1002,
+                "y": 284,
+                "width": 9,
+                "height": 8
+              },
+              "text": "+",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 15
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "plus_hitbox": {
+              "x": 1001,
+              "y": 282,
+              "width": 11,
+              "height": 12
+            }
+          },
+          "instinct": {
+            "rect": {
+              "x": 876,
+              "y": 242,
+              "width": 147,
+              "height": 15
+            },
+            "label": {
+              "rect": {
+                "x": 880,
+                "y": 242,
+                "width": 60,
+                "height": 15
+              },
+              "text": "Instinct",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 14
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "value": {
+              "rect": {
+                "x": 980,
+                "y": 242,
+                "width": 13,
+                "height": 15
+              },
+              "text": "10",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 12
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "minus": {
+              "rect": {
+                "x": 961,
+                "y": 245,
+                "width": 10,
+                "height": 9
+              },
+              "text": "-",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 20
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "minus_hitbox": {
+              "x": 961,
+              "y": 244,
+              "width": 11,
+              "height": 12
+            },
+            "plus": {
+              "rect": {
+                "x": 1002,
+                "y": 246,
+                "width": 9,
+                "height": 8
+              },
+              "text": "+",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 15
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "plus_hitbox": {
+              "x": 1001,
+              "y": 244,
+              "width": 11,
+              "height": 12
+            }
+          },
+          "new_0": {
+            "rect": {
+              "x": 876,
+              "y": 297,
+              "width": 146,
+              "height": 15
+            },
+            "label": {
+              "rect": {
+                "x": 880,
+                "y": 297,
+                "width": 60,
+                "height": 15
+              },
+              "text": "test",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 14
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "value": {
+              "rect": {
+                "x": 980,
+                "y": 297,
+                "width": 13,
+                "height": 15
+              },
+              "text": "10",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 12
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "minus": {
+              "rect": {
+                "x": 961,
+                "y": 300,
+                "width": 10,
+                "height": 9
+              },
+              "text": "-",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 20
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "minus_hitbox": {
+              "x": 961,
+              "y": 299,
+              "width": 11,
+              "height": 12
+            },
+            "plus": {
+              "rect": {
+                "x": 1002,
+                "y": 301,
+                "width": 9,
+                "height": 8
+              },
+              "text": "+",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 15
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "plus_hitbox": {
+              "x": 1001,
+              "y": 299,
+              "width": 11,
+              "height": 12
+            }
+          },
+          "new_1": {
+            "rect": {
+              "x": 876,
+              "y": 316,
+              "width": 146,
+              "height": 15
+            },
+            "label": {
+              "rect": {
+                "x": 880,
+                "y": 316,
+                "width": 60,
+                "height": 15
+              },
+              "text": "test",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 14
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "value": {
+              "rect": {
+                "x": 980,
+                "y": 316,
+                "width": 13,
+                "height": 15
+              },
+              "text": "10",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 12
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "minus": {
+              "rect": {
+                "x": 961,
+                "y": 319,
+                "width": 10,
+                "height": 9
+              },
+              "text": "-",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 20
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "minus_hitbox": {
+              "x": 961,
+              "y": 318,
+              "width": 11,
+              "height": 12
+            },
+            "plus": {
+              "rect": {
+                "x": 1002,
+                "y": 320,
+                "width": 9,
+                "height": 8
+              },
+              "text": "+",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 15
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "plus_hitbox": {
+              "x": 1001,
+              "y": 318,
+              "width": 11,
+              "height": 12
+            }
+          },
+          "valor": {
+            "rect": {
+              "x": 876,
+              "y": 224,
+              "width": 139,
+              "height": 15
+            },
+            "label": {
+              "rect": {
+                "x": 880,
+                "y": 224,
+                "width": 60,
+                "height": 15
+              },
+              "text": "Valor",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 14
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "value": {
+              "rect": {
+                "x": 980,
+                "y": 224,
+                "width": 13,
+                "height": 15
+              },
+              "text": "10",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 12
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "minus": {
+              "rect": {
+                "x": 961,
+                "y": 227,
+                "width": 10,
+                "height": 9
+              },
+              "text": "-",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 20
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "minus_hitbox": {
+              "x": 961,
+              "y": 226,
+              "width": 11,
+              "height": 12
+            },
+            "plus": {
+              "rect": {
+                "x": 1002,
+                "y": 228,
+                "width": 9,
+                "height": 8
+              },
+              "text": "+",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 15
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "plus_hitbox": {
+              "x": 1001,
+              "y": 226,
+              "width": 11,
+              "height": 12
+            }
+          },
+          "will": {
+            "rect": {
+              "x": 876,
+              "y": 261,
+              "width": 146,
+              "height": 15
+            },
+            "label": {
+              "rect": {
+                "x": 880,
+                "y": 261,
+                "width": 60,
+                "height": 15
+              },
+              "text": "Will",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 14
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "value": {
+              "rect": {
+                "x": 980,
+                "y": 261,
+                "width": 13,
+                "height": 15
+              },
+              "text": "10",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 12
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "minus": {
+              "rect": {
+                "x": 961,
+                "y": 264,
+                "width": 10,
+                "height": 9
+              },
+              "text": "-",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 20
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "minus_hitbox": {
+              "x": 961,
+              "y": 263,
+              "width": 11,
+              "height": 12
+            },
+            "plus": {
+              "rect": {
+                "x": 1002,
+                "y": 265,
+                "width": 9,
+                "height": 8
+              },
+              "text": "+",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 15
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "plus_hitbox": {
+              "x": 1001,
+              "y": 263,
+              "width": 11,
+              "height": 12
+            }
+          }
+        }
+      },
+      "confirm": {
+        "rect": {
+          "x": 921,
+          "y": 332,
+          "width": 50,
+          "height": 16
+        },
+        "button": {
+          "x": 922,
+          "y": 333,
+          "width": 48,
+          "height": 14
+        },
+        "hitbox": {
+          "x": 922,
+          "y": 333,
+          "width": 48,
+          "height": 14
+        }
+      },
+      "combat_stats": {
+        "rect": {
+          "x": 867,
+          "y": 369,
+          "width": 147,
+          "height": 152
+        },
+        "rows": {
+          "damage": {
+            "rect": {
+              "x": 875,
+              "y": 371,
+              "width": 140,
+              "height": 14
+            },
+            "label": {
+              "rect": {
+                "x": 875,
+                "y": 371,
+                "width": 75,
+                "height": 14
+              },
+              "text": "Damage",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 14
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "value": {
+              "rect": {
+                "x": 964,
+                "y": 371,
+                "width": 43,
+                "height": 14
+              },
+              "text": "2-3",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 13
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            }
+          },
+          "critical_chance": {
+            "rect": {
+              "x": 875,
+              "y": 394,
+              "width": 140,
+              "height": 13
+            },
+            "label": {
+              "rect": {
+                "x": 875,
+                "y": 394,
+                "width": 81,
+                "height": 13
+              },
+              "text": "Crit chance",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 13
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "value": {
+              "rect": {
+                "x": 956,
+                "y": 394,
+                "width": 58,
+                "height": 13
+              },
+              "text": "0%",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 13
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            }
+          },
+          "critical_damage": {
+            "rect": {
+              "x": 875,
+              "y": 417,
+              "width": 140,
+              "height": 13
+            },
+            "label": {
+              "rect": {
+                "x": 875,
+                "y": 417,
+                "width": 86,
+                "height": 13
+              },
+              "text": "Crit damage",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 13
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "value": {
+              "rect": {
+                "x": 965,
+                "y": 417,
+                "width": 40,
+                "height": 13
+              },
+              "text": "x2.0",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 13
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            }
+          },
+          "dodge_chance": {
+            "rect": {
+              "x": 875,
+              "y": 440,
+              "width": 140,
+              "height": 13
+            },
+            "label": {
+              "rect": {
+                "x": 875,
+                "y": 440,
+                "width": 91,
+                "height": 13
+              },
+              "text": "Dodge chance",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 13
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "LEFT",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            },
+            "value": {
+              "rect": {
+                "x": 966,
+                "y": 440,
+                "width": 39,
+                "height": 13
+              },
+              "text": "0%",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 13
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 174,
+                "g": 154,
+                "b": 143,
+                "a": 255
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "top_bar": {
+    "rect": {
+      "x": 4,
+      "y": 8,
+      "width": 392,
+      "height": 192
+    },
+    "frame": {
+      "x": 4,
+      "y": 8,
+      "width": 392,
+      "height": 131
+    },
+    "portrait_back": {
+      "x": 30,
+      "y": 28,
+      "width": 82,
+      "height": 70
+    },
+    "portrait": {
+      "rect": {
+        "x": 37,
+        "y": 33,
+        "width": 62,
+        "height": 62
+      },
+      "asset_role": "subclass_portrait"
+    },
+    "hp_fill": {
+      "x": 147,
+      "y": 48,
+      "width": 213,
+      "height": 14
+    },
+    "xp_fill": {
+      "x": 147,
+      "y": 89,
+      "width": 213,
+      "height": 14
+    },
+    "level": {
+      "rect": {
+        "x": 80,
+        "y": 101,
+        "width": 22,
+        "height": 15
+      },
+      "text": "10",
+      "font": {
+        "family": "Asul",
+        "style": "Regular",
+        "size": 20
+      },
+      "line_height": {
+        "unit": "AUTO"
+      },
+      "letter_spacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "horizontal_align": "CENTER",
+      "vertical_align": "CENTER",
+      "text_case": "ORIGINAL",
+      "color": {
+        "r": 167,
+        "g": 167,
+        "b": 167,
+        "a": 255
+      }
+    },
+    "hp_text": {
+      "rect": {
+        "x": 217,
+        "y": 50,
+        "width": 68,
+        "height": 10
+      },
+      "text": "10/10",
+      "font": {
+        "family": "Asul",
+        "style": "Regular",
+        "size": 14
+      },
+      "line_height": {
+        "unit": "AUTO"
+      },
+      "letter_spacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "horizontal_align": "CENTER",
+      "vertical_align": "CENTER",
+      "text_case": "ORIGINAL",
+      "color": {
+        "r": 167,
+        "g": 167,
+        "b": 167,
+        "a": 255
+      }
+    },
+    "xp_text": {
+      "rect": {
+        "x": 228,
+        "y": 90,
+        "width": 46,
+        "height": 12
+      },
+      "text": "10/10",
+      "font": {
+        "family": "Asul",
+        "style": "Regular",
+        "size": 14
+      },
+      "line_height": {
+        "unit": "AUTO"
+      },
+      "letter_spacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "horizontal_align": "CENTER",
+      "vertical_align": "CENTER",
+      "text_case": "ORIGINAL",
+      "color": {
+        "r": 167,
+        "g": 167,
+        "b": 167,
+        "a": 255
+      }
+    },
+    "status_effects": {
+      "rect": {
+        "x": 6,
+        "y": 141,
+        "width": 293,
+        "height": 59
+      },
+      "slots": {
+        "slot_01": {
+          "rect": {
+            "x": 6,
+            "y": 141,
+            "width": 45,
+            "height": 55
+          },
+          "frame": {
+            "rect": {
+              "x": 10,
+              "y": 144,
+              "width": 37,
+              "height": 39
+            },
+            "fill": null,
+            "stroke": {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 255
+            },
+            "stroke_weight": 3,
+            "corner_radius": 11,
+            "blur_radius": 0
+          },
+          "icon": {
+            "x": 12,
+            "y": 148,
+            "width": 32,
+            "height": 32
+          },
+          "value": {
+            "rect": {
+              "x": 21,
+              "y": 186,
+              "width": 14,
+              "height": 10
+            },
+            "text": "0",
+            "font": {
+              "family": "Alagard",
+              "style": "Medium",
+              "size": 12
+            },
+            "line_height": {
+              "unit": "AUTO"
+            },
+            "letter_spacing": {
+              "unit": "PERCENT",
+              "value": 0
+            },
+            "horizontal_align": "CENTER",
+            "vertical_align": "CENTER",
+            "text_case": "ORIGINAL",
+            "color": {
+              "r": 174,
+              "g": 154,
+              "b": 143,
+              "a": 255
+            }
+          },
+          "hitbox": {
+            "x": 10,
+            "y": 144,
+            "width": 37,
+            "height": 39
+          }
+        },
+        "slot_02": {
+          "rect": {
+            "x": 51,
+            "y": 141,
+            "width": 45,
+            "height": 55
+          },
+          "frame": {
+            "rect": {
+              "x": 55,
+              "y": 144,
+              "width": 37,
+              "height": 39
+            },
+            "fill": null,
+            "stroke": {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 255
+            },
+            "stroke_weight": 3,
+            "corner_radius": 11,
+            "blur_radius": 0
+          },
+          "icon": {
+            "x": 57,
+            "y": 148,
+            "width": 32,
+            "height": 32
+          },
+          "value": {
+            "rect": {
+              "x": 66,
+              "y": 186,
+              "width": 14,
+              "height": 10
+            },
+            "text": "0",
+            "font": {
+              "family": "Alagard",
+              "style": "Medium",
+              "size": 12
+            },
+            "line_height": {
+              "unit": "AUTO"
+            },
+            "letter_spacing": {
+              "unit": "PERCENT",
+              "value": 0
+            },
+            "horizontal_align": "CENTER",
+            "vertical_align": "CENTER",
+            "text_case": "ORIGINAL",
+            "color": {
+              "r": 174,
+              "g": 154,
+              "b": 143,
+              "a": 255
+            }
+          },
+          "hitbox": {
+            "x": 55,
+            "y": 144,
+            "width": 37,
+            "height": 39
+          }
+        },
+        "slot_03": {
+          "rect": {
+            "x": 96,
+            "y": 141,
+            "width": 45,
+            "height": 55
+          },
+          "frame": {
+            "rect": {
+              "x": 100,
+              "y": 144,
+              "width": 37,
+              "height": 39
+            },
+            "fill": null,
+            "stroke": {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 255
+            },
+            "stroke_weight": 3,
+            "corner_radius": 11,
+            "blur_radius": 0
+          },
+          "icon": {
+            "x": 102,
+            "y": 148,
+            "width": 32,
+            "height": 32
+          },
+          "value": {
+            "rect": {
+              "x": 111,
+              "y": 186,
+              "width": 14,
+              "height": 10
+            },
+            "text": "0",
+            "font": {
+              "family": "Alagard",
+              "style": "Medium",
+              "size": 12
+            },
+            "line_height": {
+              "unit": "AUTO"
+            },
+            "letter_spacing": {
+              "unit": "PERCENT",
+              "value": 0
+            },
+            "horizontal_align": "CENTER",
+            "vertical_align": "CENTER",
+            "text_case": "ORIGINAL",
+            "color": {
+              "r": 174,
+              "g": 154,
+              "b": 143,
+              "a": 255
+            }
+          },
+          "hitbox": {
+            "x": 100,
+            "y": 144,
+            "width": 37,
+            "height": 39
+          }
+        },
+        "slot_04": {
+          "rect": {
+            "x": 141,
+            "y": 141,
+            "width": 45,
+            "height": 55
+          },
+          "frame": {
+            "rect": {
+              "x": 145,
+              "y": 144,
+              "width": 37,
+              "height": 39
+            },
+            "fill": null,
+            "stroke": {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 255
+            },
+            "stroke_weight": 3,
+            "corner_radius": 11,
+            "blur_radius": 0
+          },
+          "icon": {
+            "x": 147,
+            "y": 148,
+            "width": 32,
+            "height": 32
+          },
+          "value": {
+            "rect": {
+              "x": 156,
+              "y": 186,
+              "width": 14,
+              "height": 10
+            },
+            "text": "0",
+            "font": {
+              "family": "Alagard",
+              "style": "Medium",
+              "size": 12
+            },
+            "line_height": {
+              "unit": "AUTO"
+            },
+            "letter_spacing": {
+              "unit": "PERCENT",
+              "value": 0
+            },
+            "horizontal_align": "CENTER",
+            "vertical_align": "CENTER",
+            "text_case": "ORIGINAL",
+            "color": {
+              "r": 174,
+              "g": 154,
+              "b": 143,
+              "a": 255
+            }
+          },
+          "hitbox": {
+            "x": 145,
+            "y": 144,
+            "width": 37,
+            "height": 39
+          }
+        },
+        "slot_05": {
+          "rect": {
+            "x": 186,
+            "y": 141,
+            "width": 45,
+            "height": 55
+          },
+          "frame": {
+            "rect": {
+              "x": 190,
+              "y": 144,
+              "width": 37,
+              "height": 39
+            },
+            "fill": null,
+            "stroke": {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 255
+            },
+            "stroke_weight": 3,
+            "corner_radius": 11,
+            "blur_radius": 0
+          },
+          "icon": {
+            "x": 192,
+            "y": 148,
+            "width": 32,
+            "height": 32
+          },
+          "value": {
+            "rect": {
+              "x": 201,
+              "y": 186,
+              "width": 14,
+              "height": 10
+            },
+            "text": "0",
+            "font": {
+              "family": "Alagard",
+              "style": "Medium",
+              "size": 12
+            },
+            "line_height": {
+              "unit": "AUTO"
+            },
+            "letter_spacing": {
+              "unit": "PERCENT",
+              "value": 0
+            },
+            "horizontal_align": "CENTER",
+            "vertical_align": "CENTER",
+            "text_case": "ORIGINAL",
+            "color": {
+              "r": 174,
+              "g": 154,
+              "b": 143,
+              "a": 255
+            }
+          },
+          "hitbox": {
+            "x": 190,
+            "y": 144,
+            "width": 37,
+            "height": 39
+          }
+        },
+        "slot_06": {
+          "rect": {
+            "x": 231,
+            "y": 141,
+            "width": 45,
+            "height": 55
+          },
+          "frame": {
+            "rect": {
+              "x": 235,
+              "y": 144,
+              "width": 37,
+              "height": 39
+            },
+            "fill": null,
+            "stroke": {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 255
+            },
+            "stroke_weight": 3,
+            "corner_radius": 11,
+            "blur_radius": 0
+          },
+          "icon": {
+            "x": 237,
+            "y": 148,
+            "width": 32,
+            "height": 32
+          },
+          "value": {
+            "rect": {
+              "x": 246,
+              "y": 186,
+              "width": 14,
+              "height": 10
+            },
+            "text": "0",
+            "font": {
+              "family": "Alagard",
+              "style": "Medium",
+              "size": 12
+            },
+            "line_height": {
+              "unit": "AUTO"
+            },
+            "letter_spacing": {
+              "unit": "PERCENT",
+              "value": 0
+            },
+            "horizontal_align": "CENTER",
+            "vertical_align": "CENTER",
+            "text_case": "ORIGINAL",
+            "color": {
+              "r": 174,
+              "g": 154,
+              "b": 143,
+              "a": 255
+            }
+          },
+          "hitbox": {
+            "x": 235,
+            "y": 144,
+            "width": 37,
+            "height": 39
+          }
+        }
+      }
+    },
+    "candles": {
+      "rect": {
+        "x": 15,
+        "y": 26,
+        "width": 20,
+        "height": 43
+      },
+      "small": {
+        "rect": {
+          "x": 21,
+          "y": 43,
+          "width": 15,
+          "height": 25
+        },
+        "frames": [
+          "flame_00.png",
+          "flame_01.png",
+          "flame_02.png",
+          "flame_03.png"
+        ]
+      },
+      "large": {
+        "rect": {
+          "x": 19,
+          "y": 32,
+          "width": 7,
+          "height": 14
+        },
+        "frames": [
+          "flame_00.png",
+          "flame_01.png",
+          "flame_02.png",
+          "flame_03.png"
+        ]
+      }
+    }
+  }
+}

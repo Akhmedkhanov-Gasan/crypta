@@ -502,22 +502,22 @@ def handle_act_three_pointer_event(
                             key=pygame.K_ESCAPE,
                         )
                     )
-                elif tab_name in ("inventory", "stats"):
+                elif tab_name in ("stats", "journal"):
                     game_state.sidebar_tab = (
                         "closed"
                         if game_state.sidebar_tab == tab_name
                         else tab_name
                     )
                 return True
-            if game_state.sidebar_tab in ("inventory", "stats"):
-                if get_act_three_panel_close_rectangle().collidepoint(
-                    game_mouse_position
-                ):
+            if game_state.sidebar_tab in ("stats", "journal"):
+                if get_act_three_panel_close_rectangle(
+                    game_state.sidebar_tab
+                ).collidepoint(game_mouse_position):
                     game_state.sidebar_tab = "closed"
                     return True
-                if get_act_three_popup_rectangle().collidepoint(
-                    game_mouse_position
-                ):
+                if get_act_three_popup_rectangle(
+                    game_state.sidebar_tab
+                ).collidepoint(game_mouse_position):
                     return True
             if movement_available:
                 target_cell = get_act_three_cell_from_position(

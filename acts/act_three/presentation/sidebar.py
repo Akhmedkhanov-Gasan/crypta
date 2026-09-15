@@ -14,6 +14,14 @@ from presentation.layout import (
     ACT_THREE_SIDEBAR_X,
     ACT_THREE_VIEW_HEIGHT,
 )
+from acts.act_three.presentation.hud.geometry import (
+    get_act_three_bottom_hud_rectangles as _get_bottom_hud_rectangles,
+    get_act_three_log_arrow_rectangles as _get_log_arrow_rectangles,
+    get_act_three_log_panel_rect as _get_log_panel_rect,
+    get_act_three_panel_close_rectangle as _get_panel_close_rectangle,
+    get_act_three_popup_rectangle as _get_popup_rectangle,
+    get_act_three_sidebar_tab_rectangles as _get_sidebar_tab_rectangles,
+)
 from settings import (
     ARCHER_BARRAGE_ZONE_CHARGES,
     ARCHER_EMPOWERED_SHOT_CHARGES,
@@ -97,47 +105,31 @@ _RAIL_BUTTON_NAMES = ("inventory", "stats", "abilities", "log", "settings")
 
 
 def get_act_three_sidebar_tab_rectangles():
-    total_height = (
-        len(_RAIL_BUTTON_NAMES) * _RAIL_BUTTON_SIZE
-        + (len(_RAIL_BUTTON_NAMES) - 1) * _RAIL_BUTTON_GAP
-    )
-    top = (ACT_THREE_VIEW_HEIGHT - total_height) // 2
-    left = ACT_THREE_SIDEBAR_X + (
-        ACT_THREE_SIDEBAR_WIDTH - _RAIL_BUTTON_SIZE
-    ) // 2
-    return {
-        name: pygame.Rect(
-            left,
-            top + index * (_RAIL_BUTTON_SIZE + _RAIL_BUTTON_GAP),
-            _RAIL_BUTTON_SIZE,
-            _RAIL_BUTTON_SIZE,
-        )
-        for index, name in enumerate(_RAIL_BUTTON_NAMES)
-    }
+    return _get_sidebar_tab_rectangles()
 
 
-def get_act_three_panel_close_rectangle():
-    return pygame.Rect(ACT_THREE_SIDEBAR_X - 35, 68, 22, 22)
+def get_act_three_panel_close_rectangle(
+    panel_name="stats",
+):
+    return _get_panel_close_rectangle(panel_name)
 
 
-def get_act_three_popup_rectangle():
-    return pygame.Rect(ACT_THREE_SIDEBAR_X - 342, 58, 330, 420)
+def get_act_three_popup_rectangle(
+    panel_name="stats",
+):
+    return _get_popup_rectangle(panel_name)
 
 
 def get_act_three_bottom_hud_rectangles():
-    return (
-        pygame.Rect(304, ACT_THREE_BOTTOM_BAR_Y + 4, 388, 80),
-        pygame.Rect(704, ACT_THREE_BOTTOM_BAR_Y + 4, 318, 80),
-    )
+    return _get_bottom_hud_rectangles()
 
 
 def get_act_three_log_panel_rect():
-    return pygame.Rect(0, 0, 0, 0)
+    return _get_log_panel_rect()
 
 
 def get_act_three_log_arrow_rectangles():
-    """The compact event area deliberately has no scrolling controls."""
-    return {}
+    return _get_log_arrow_rectangles()
 
 
 def _draw_panel_background(screen):
@@ -910,27 +902,18 @@ def _draw_act_three_sidebar(
     game_state,
     fonts,
     assets,
+    current_time,
     mouse_position=None,
 ):
-    player = game_state.player
-    _, accent_color = _SUBCLASS_PRESENTATION.get(
-        player.subclass,
-        ("UNBOUND", (139, 151, 151)),
+    from acts.act_three.presentation.hud import (
+        draw_act_three_hud,
     )
-    _draw_header(screen, player, fonts, assets)
-    _draw_events(screen, game_state, fonts, accent_color)
-    _draw_abilities(
+
+    draw_act_three_hud(
         screen,
-        player,
+        game_state,
         fonts,
         assets,
-        accent_color,
+        current_time,
         mouse_position,
     )
-    _draw_belt(screen, player, fonts, assets, accent_color)
-    active_tab = getattr(game_state, "sidebar_tab", "closed")
-    if active_tab == "inventory":
-        _draw_inventory_popup(screen, player, fonts, assets, accent_color)
-    elif active_tab == "stats":
-        _draw_stats_popup(screen, player, fonts, accent_color)
-    _draw_button_rail(screen, active_tab, fonts, accent_color, mouse_position)

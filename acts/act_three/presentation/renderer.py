@@ -546,6 +546,7 @@ def draw_act_three_gameplay(
         game_state,
         fonts,
         assets,
+        current_time,
         mouse_position,
     )
     if game_state.upgrade_altar_menu_open:
