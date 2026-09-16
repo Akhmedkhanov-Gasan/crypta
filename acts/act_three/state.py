@@ -10,6 +10,19 @@ class ArcherBarrageShotState:
 
 @dataclass
 class ActThreePlayerState:
+    mastery_rank: int = 0
+    weapon_rank: int = 0
+    armor_rank: int = 0
+    unlocked_ability_slots: set[str] = field(
+        default_factory=lambda: {"e"}
+    )
+    ability_slot_charges: dict[str, float] = field(
+        default_factory=lambda: {
+            "q": 0.0,
+            "e": 0.0,
+            "f": 0.0,
+        }
+    )
     archer_empowered_shot_charge: int = 0
     archer_leap_charge: int = 0
     archer_barrage_zone_charge: int = 0

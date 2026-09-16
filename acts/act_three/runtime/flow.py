@@ -8,6 +8,9 @@ from acts.act_two.settings import (
     CLASS_BASE_STATS,
     CLASS_STARTING_STATS,
 )
+from acts.act_three.abilities import (
+    initialize_act_three_progression,
+)
 from game.combat_log import add_log_message
 from game.factories import create_floor_state, create_game_state
 from game.attributes import (
@@ -96,6 +99,9 @@ def create_act_three_debug_transition(
 
 def choose_subclass(game_state, subclass):
     game_state.player.subclass = subclass
+    initialize_act_three_progression(
+        game_state.player,
+    )
     apply_player_stat_transition(
         game_state.player,
         CLASS_BASE_STATS[game_state.player.player_class],

@@ -32,6 +32,15 @@ _ART_PATHS = {
     "hud_character_panel_frame": (
         _UI_DIRECTORY / "character_panel_frame.png"
     ),
+    "hud_character_panel_button": (
+            _UI_DIRECTORY / "button.png"
+    ),
+    "hud_ability_chains": (
+            _UI_DIRECTORY / "chains.png"
+    ),
+    "hud_rank_level": (
+            _UI_DIRECTORY / "level.png"
+    ),
 }
 
 _ART_RECTS = {
@@ -60,6 +69,26 @@ _ART_RECTS = {
         "right_bar",
         "character_panel",
         "frame",
+    ),
+    "hud_character_panel_button": (
+        "right_bar",
+        "character_panel",
+        "confirm",
+        "button",
+    ),
+    "hud_ability_chains": (
+        "down_bar",
+        "abilities",
+        "slots",
+        "ability_q",
+        "chains",
+    ),
+    "hud_rank_level": (
+        "right_bar",
+        "character_panel",
+        "mastery",
+        "levels",
+        "level_01",
     ),
 }
 

@@ -2,6 +2,19 @@ import math
 
 import pygame
 
+from acts.act_three.presentation.hud.content import (
+    ABILITY_SLOT_ORDER,
+)
+from acts.act_three.abilities import (
+    get_ability_definition,
+    get_ability_slot_charge,
+    get_passive_definition,
+    is_ability_slot_unlocked,
+)
+from acts.act_two.abilities import (
+    ability_charge_required,
+)
+from game.rune_catalog import RUNES_BY_ID
 from acts.act_three.presentation.hud.layout import (
     get_layout_rect,
 )
@@ -174,20 +187,6 @@ def _draw_candles(
         current_time,
         3,
         27,
-    )
-
-
-def _draw_centered_text(
-    screen,
-    font,
-    text,
-    rectangle,
-    color=_TEXT_COLOR,
-):
-    surface = font.render(str(text), True, color)
-    screen.blit(
-        surface,
-        surface.get_rect(center=rectangle.center),
     )
 
 
@@ -374,37 +373,22 @@ def _draw_top_bar(
     xp_text = layout["top_bar"]["xp_text"]
     level_text = layout["top_bar"]["level"]
 
-    _draw_centered_text(
+    _draw_dynamic_figma_text(
         screen,
-        get_layout_font(hp_text),
+        hp_text,
         f"{player.health}/{player.max_health}",
-        get_layout_rect(
-            layout,
-            "top_bar",
-            "hp_text",
-        ),
     )
 
-    _draw_centered_text(
+    _draw_dynamic_figma_text(
         screen,
-        get_layout_font(xp_text),
+        xp_text,
         f"{player.experience}/{experience_required}",
-        get_layout_rect(
-            layout,
-            "top_bar",
-            "xp_text",
-        ),
     )
 
-    _draw_centered_text(
+    _draw_dynamic_figma_text(
         screen,
-        get_layout_font(level_text),
+        level_text,
         player.level,
-        get_layout_rect(
-            layout,
-            "top_bar",
-            "level",
-        ),
     )
 
 
@@ -545,6 +529,117 @@ def _draw_consumables(
             )
 
 
+def _draw_ability_charge_mask(
+    screen,
+    charge_level,
+    ratio,
+):
+    remaining_ratio = 1.0 - max(
+        0.0,
+        min(1.0, ratio),
+    )
+
+    if remaining_ratio <= 0.0:
+        return
+
+    source_rectangle = charge_level["rect"]
+    visible_height = round(
+        source_rectangle["height"]
+        * remaining_ratio
+    )
+
+    if visible_height <= 0:
+        return
+
+    runtime_charge_level = {
+        **charge_level,
+        "rect": {
+            **source_rectangle,
+            "height": visible_height,
+        },
+    }
+
+    draw_figma_rectangle(
+        screen,
+        runtime_charge_level,
+    )
+
+
+def _get_ability_icon_asset(
+    player,
+    ability,
+):
+    if not ability.inherited:
+        return ability.icon_asset
+
+    selected_rune = RUNES_BY_ID.get(
+        player.selected_rune_id
+    )
+
+    if selected_rune is None:
+        return ability.icon_asset
+
+    return f"act_three_{selected_rune.id}"
+
+
+def _get_ability_charge_ratio(
+    player,
+    slot,
+    ability,
+):
+    if slot == "e":
+        if player.selected_rune_id == "rune_of_the_veil":
+            return 1.0
+
+        return _ratio(
+            player.ability_kill_charge,
+            ability_charge_required(player),
+        )
+
+    return _ratio(
+        get_ability_slot_charge(
+            player,
+            slot,
+        ),
+        ability.charge_required,
+    )
+
+
+def _draw_locked_ability(
+    screen,
+    assets,
+    slot,
+):
+    _draw_ability_charge_mask(
+        screen,
+        slot["charge_level"],
+        0.0,
+    )
+
+    chains_layout = slot.get("chains")
+    chains_image = assets.get(
+        "hud_ability_chains"
+    )
+
+    if (
+        chains_layout is None
+        or chains_image is None
+    ):
+        return
+
+    chains_rectangle = figma_rect(
+        chains_layout
+    )
+
+    screen.blit(
+        pygame.transform.smoothscale(
+            chains_image,
+            chains_rectangle.size,
+        ),
+        chains_rectangle,
+    )
+
+
 def _draw_abilities(
     screen,
     player,
@@ -553,7 +648,6 @@ def _draw_abilities(
 ):
     from acts.act_three.presentation.sidebar import (
         _SUBCLASS_PRESENTATION,
-        _ability_entries,
     )
 
     _, accent_color = _SUBCLASS_PRESENTATION.get(
@@ -561,62 +655,73 @@ def _draw_abilities(
         ("UNBOUND", _ACTIVE_CHARGE_COLOR),
     )
 
-    entries = _ability_entries(
-        player,
-        accent_color,
-    )
     slots = layout["down_bar"]["abilities"]["slots"]
 
-    for index, slot_name in enumerate(sorted(slots)):
-        if index >= len(entries):
-            break
-
-        asset_name, _, ratio, _, _ = entries[index]
-        icon_rect = get_layout_rect(
-            layout,
-            "down_bar",
-            "abilities",
-            "slots",
-            slot_name,
-            "icon",
+    for slot_name in ABILITY_SLOT_ORDER:
+        slot_key = slot_name.removeprefix(
+            "ability_"
         )
-        icon = assets.get(asset_name)
+        slot = slots.get(slot_name)
+
+        if slot is None:
+            continue
+
+        ability = get_ability_definition(
+            player.subclass,
+            slot_key,
+        )
+
+        if ability is None:
+            continue
+
+        icon_rectangle = figma_rect(
+            slot["icon"]
+        )
+        icon_asset = _get_ability_icon_asset(
+            player,
+            ability,
+        )
+        icon = assets.get(icon_asset)
 
         if icon is not None:
             screen.blit(
                 pygame.transform.smoothscale(
                     icon,
-                    icon_rect.size,
+                    icon_rectangle.size,
                 ),
-                icon_rect,
+                icon_rectangle,
             )
 
-        charges = slots[slot_name]["charges"]
-        filled_charges = round(
-            ratio * len(charges)
+        if not is_ability_slot_unlocked(
+            player,
+            slot_key,
+        ):
+            _draw_locked_ability(
+                screen,
+                assets,
+                slot,
+            )
+            continue
+
+        charge_ratio = _get_ability_charge_ratio(
+            player,
+            slot_key,
+            ability,
         )
 
-        for charge_index, charge_name in enumerate(
-            sorted(charges)
-        ):
-            rectangle = get_layout_rect(
-                layout,
-                "down_bar",
-                "abilities",
-                "slots",
-                slot_name,
-                "charges",
-                charge_name,
-            )
+        _draw_ability_charge_mask(
+            screen,
+            slot["charge_level"],
+            charge_ratio,
+        )
 
+        if charge_ratio >= 1.0:
             pygame.draw.rect(
                 screen,
-                (
-                    _ACTIVE_CHARGE_COLOR
-                    if charge_index < filled_charges
-                    else _INACTIVE_CHARGE_COLOR
-                ),
-                rectangle,
+                accent_color,
+                icon_rectangle.inflate(2, 2),
+                width=1,
+                border_radius=6,
             )
 
 
@@ -641,16 +746,10 @@ def _draw_gold(
 
     value_text = layout["down_bar"]["gold"]["value"]
 
-    _draw_centered_text(
+    _draw_dynamic_figma_text(
         screen,
-        get_layout_font(value_text),
+        value_text,
         player.gold_count,
-        get_layout_rect(
-            layout,
-            "down_bar",
-            "gold",
-            "value",
-        ),
     )
 
 
@@ -702,6 +801,43 @@ def _draw_tabs(
         )
 
 
+def _draw_rank_track(
+    screen,
+    assets,
+    track,
+    current_rank,
+):
+    current_rank = max(
+        0,
+        min(5, int(current_rank)),
+    )
+    level_image = assets.get(
+        "hud_rank_level"
+    )
+
+    if level_image is None:
+        return
+
+    for level_index, level_name in enumerate(
+        sorted(track["levels"]),
+        start=1,
+    ):
+        if level_index > current_rank:
+            continue
+
+        rectangle = figma_rect(
+            track["levels"][level_name]
+        )
+
+        screen.blit(
+            pygame.transform.smoothscale(
+                level_image,
+                rectangle.size,
+            ),
+            rectangle,
+        )
+
+
 def _draw_character_panel(
     screen,
     game_state,
@@ -727,88 +863,119 @@ def _draw_character_panel(
             "frame",
         ),
     )
-
-    class_name_text = panel["class_name"]
-    attribute_points = panel["attribute_points"]
-    attribute_points_label = attribute_points["label"]
-    attribute_points_text = attribute_points["value"]
-
-    _draw_left_text(
+    _blit_asset(
         screen,
-        get_layout_font(attribute_points_label),
-        attribute_points_label["text"],
+        assets,
+        "hud_character_panel_button",
         get_layout_rect(
             layout,
             "right_bar",
             "character_panel",
-            "attribute_points",
-            "label",
+            "confirm",
+            "button",
         ),
     )
 
-    _draw_centered_text(
+    class_name_text = panel["class_name"]
+    attribute_points = panel["attribute_points"]
+
+    _draw_dynamic_figma_text(
         screen,
-        get_layout_font(class_name_text),
+        class_name_text,
         _SUBCLASS_NAMES.get(
             player.subclass,
             "UNBOUND",
         ),
-        get_layout_rect(
-            layout,
-            "right_bar",
-            "character_panel",
-            "class_name",
-        ),
     )
 
-    _draw_centered_text(
+    draw_figma_text(
         screen,
-        get_layout_font(attribute_points_text),
+        attribute_points["label"],
+    )
+
+    _draw_dynamic_figma_text(
+        screen,
+        attribute_points["value"],
         player.attribute_points,
-        get_layout_rect(
-            layout,
-            "right_bar",
-            "character_panel",
-            "attribute_points",
-            "value",
-        ),
     )
 
     ranks = player.attribute_ranks
 
     for name, row in panel["attributes"]["rows"].items():
-        _draw_left_text(
+        draw_figma_text(
             screen,
-            get_layout_font(row["label"]),
-            row["label"]["text"],
-            get_layout_rect(
-                layout,
-                "right_bar",
-                "character_panel",
-                "attributes",
-                "rows",
-                name,
-                "label",
-            ),
+            row["label"],
         )
 
-        _draw_centered_text(
+        _draw_dynamic_figma_text(
             screen,
-            get_layout_font(row["value"]),
+            row["value"],
             ranks.get(name, 0),
-            get_layout_rect(
-                layout,
-                "right_bar",
-                "character_panel",
-                "attributes",
-                "rows",
-                name,
-                "value",
-            ),
         )
+
+    equipment = panel["equipment"]
+
+    draw_figma_text(
+        screen,
+        equipment["heading"]["label"],
+    )
+
+    for track_name in ("weapon", "armor"):
+        track_label = equipment[
+            track_name
+        ].get("label")
+
+        if track_label is not None:
+            draw_figma_text(
+                screen,
+                track_label,
+            )
+
+    mastery_rank = getattr(
+        player,
+        "mastery_rank",
+        0,
+    )
+    weapon_rank = getattr(
+        player,
+        "weapon_rank",
+        0,
+    )
+    armor_rank = getattr(
+        player,
+        "armor_rank",
+        0,
+    )
+
+    _draw_rank_track(
+        screen,
+        assets,
+        panel["mastery"],
+        mastery_rank,
+    )
+    _draw_rank_track(
+        screen,
+        assets,
+        equipment["weapon"],
+        weapon_rank,
+    )
+    _draw_rank_track(
+        screen,
+        assets,
+        equipment["armor"],
+        armor_rank,
+    )
+
+    armor_value = getattr(
+        player,
+        "armor",
+        0,
+    )
+    charge_rate = 100 + mastery_rank * 10
 
     combat_values = {
         "damage": _damage_value(player),
+        "armor": armor_value,
         "critical_chance": (
             f"{round(player.crit_chance * 100)}%"
         ),
@@ -818,38 +985,57 @@ def _draw_character_panel(
         "dodge_chance": (
             f"{round(player.dodge_chance * 100)}%"
         ),
+        "charge_rate": f"{charge_rate}%",
     }
 
     for name, row in panel["combat_stats"]["rows"].items():
-        _draw_left_text(
+        draw_figma_text(
             screen,
-            get_layout_font(row["label"]),
-            row["label"]["text"],
-            get_layout_rect(
-                layout,
-                "right_bar",
-                "character_panel",
-                "combat_stats",
-                "rows",
-                name,
-                "label",
-            ),
+            row["label"],
         )
 
-        _draw_centered_text(
+        _draw_dynamic_figma_text(
             screen,
-            get_layout_font(row["value"]),
-            combat_values[name],
-            get_layout_rect(
-                layout,
-                "right_bar",
-                "character_panel",
-                "combat_stats",
-                "rows",
-                name,
-                "value",
-            ),
+            row["value"],
+            combat_values.get(name, 0),
         )
+
+    passive_layout = panel["subclass_passive"]
+    passive_definition = get_passive_definition(
+        player.subclass
+    )
+
+    if passive_definition is None:
+        return
+
+    passive_icon = assets.get(
+        passive_definition.icon_asset
+    )
+    passive_icon_rectangle = figma_rect(
+        passive_layout["icon"]
+    )
+
+    if passive_icon is not None:
+        screen.blit(
+            pygame.transform.smoothscale(
+                passive_icon,
+                passive_icon_rectangle.size,
+            ),
+            passive_icon_rectangle,
+        )
+
+    _draw_dynamic_figma_text(
+        screen,
+        passive_layout["name"],
+        passive_definition.name,
+    )
+
+    _draw_dynamic_figma_text(
+        screen,
+        passive_layout["value"],
+        passive_definition.description,
+    )
+
 
 def _draw_journal_panel(
     screen,

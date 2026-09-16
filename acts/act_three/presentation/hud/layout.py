@@ -26,7 +26,7 @@ def get_act_three_hud_layout():
         layout = json.load(file)
 
     if (
-        layout.get("schema_version") != 2
+        layout.get("schema_version") != 3
         or layout.get("screen") != "hud"
         or layout.get("act") != 3
         or layout.get("coordinate_space") != "frame"

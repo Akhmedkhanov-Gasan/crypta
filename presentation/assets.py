@@ -10,6 +10,9 @@ from acts.act_two.assets import (
 from acts.act_three.presentation.player_assets import (
     load_assassin_animation_assets,
 )
+from acts.act_three.presentation.ability_assets import (
+    load_act_three_ability_assets,
+)
 import resource_store as resources
 import xml.etree.ElementTree as ET
 
@@ -1185,6 +1188,7 @@ def _load_pixel_cropped_ui_image(path, size):
 
 
 def load_act_three_gameplay_assets():
+
     act_directory = ASSET_ROOT / "act_3"
     act_three_configs = [
         (floor_index, config)
@@ -1635,6 +1639,9 @@ def load_act_three_gameplay_assets():
         ),
     }
     assets.update(load_act_three_hud_assets())
+    assets.update(
+        load_act_three_ability_assets()
+    )
     assets["tmx_tiles_by_floor"] = {}
 
     for floor_index, config in act_three_configs:
