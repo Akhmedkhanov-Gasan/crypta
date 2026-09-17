@@ -26,11 +26,8 @@ from worldgen.geometry import (
     position_is_in_room,
     room_center,
 )
-from acts.act_three.tmx_loader import load_tmx_floor
-from acts.act_three.room_generation import (
-    attach_act_three_passages,
-    generate_tmx_room_floor,
-    generate_tmx_sequence_floor,
+from acts.act_three.floor_generation import (
+    build_act_three_floor,
 )
 
 
@@ -747,34 +744,15 @@ def generate_floor(
         else FLOOR_CONFIGS[floor_index]
     )
 
-    if config["act"] == 1 and config.get("tutorial", False):
-        return generate_tutorial_floor(config, floor_index)
-    if config.get("tmx_room_sequence"):
-        floor = generate_tmx_sequence_floor(
-            config["tmx_room_sequence"]
-        )
-        return attach_act_three_passages(
-            floor,
+    if config["act"] == 3:
+        return build_act_three_floor(
+            config,
             floor_index,
             len(FLOOR_CONFIGS),
         )
-    if config.get("room_template_directory"):
-        return generate_tmx_room_floor(
-            config["map_path"],
-            config["room_template_directory"],
-            config.get("generated_piece_count", 2),
-        )
 
-    if config.get("map_path"):
-        floor = load_tmx_floor(config["map_path"])
-
-        if config["act"] == 3:
-            return attach_act_three_passages(
-                floor,
-                floor_index,
-                len(FLOOR_CONFIGS),
-            )
-
+    if config["act"] == 1 and config.get("tutorial", False):
+        return generate_tutorial_floor(config, floor_index)
         return floor
 
     boss_enemy_types = config.get("boss_enemy_types", [])

@@ -2,7 +2,7 @@ import resource_store as resources
 from presentation.layout import ASSET_ROOT
 
 
-_UI_ROOT = ASSET_ROOT / "act_3" / "ui"
+_UI_ROOT = ASSET_ROOT / "ui" / "act_3" / "skills"
 
 
 ACT_THREE_ABILITY_ICON_PATHS = {

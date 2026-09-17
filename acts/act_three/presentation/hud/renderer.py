@@ -5,21 +5,42 @@ import pygame
 from acts.act_three.presentation.hud.content import (
     ABILITY_SLOT_ORDER,
 )
+from acts.act_three.presentation.hud.ability_tooltips import (
+    ability_tooltip_content,
+    draw_ability_slot_highlight,
+    hovered_ability_slot,
+)
 from acts.act_three.abilities import (
     get_ability_definition,
     get_ability_slot_charge,
+    get_mastery_charge_rate,
     get_passive_definition,
     is_ability_slot_unlocked,
 )
 from acts.act_two.abilities import (
     ability_charge_required,
 )
+from acts.act_two.bloody_altar import (
+    healing_consumables_are_blocked,
+)
+from acts.act_two.consumables import (
+    get_act_two_consumable_slots,
+)
+from acts.act_two.presentation.hud_tooltips import (
+    consumable_tooltip_content,
+)
 from game.rune_catalog import RUNES_BY_ID
 from acts.act_three.presentation.hud.layout import (
     get_layout_rect,
 )
+from acts.act_three.presentation.hud.tooltips import (
+    character_panel_tooltip_content,
+    draw_character_panel_highlight,
+    get_character_panel_hover,
+)
 from game.progression import experience_required_for_level
 from presentation.hud import get_event_color, wrap_text
+from presentation.tooltips import draw_tooltip
 from presentation.figma_ui import (
     draw_figma_rectangle,
     draw_figma_text,
@@ -35,6 +56,10 @@ _INACTIVE_CHARGE_COLOR = (77, 73, 73)
 _FLAME_SEQUENCE = (0, 1, 2, 1, 3, 2)
 _FLAME_FRAME_MS = 220
 _CANDLE_GLOW_CACHE = {}
+_HEALING_CONSUMABLES = frozenset({
+    "potion",
+    "healing_scroll",
+})
 
 _SUBCLASS_NAMES = {
     "assassin": "ASSASSIN",
@@ -463,6 +488,7 @@ def _draw_consumables(
     fonts,
     assets,
     layout,
+    mouse_position,
 ):
     _blit_asset(
         screen,
@@ -475,21 +501,28 @@ def _draw_consumables(
         ),
     )
 
-    slots = layout["down_bar"]["consumable_belt"]["slots"]
-    potion_count = min(
-        len(slots),
-        player.potion_count,
-    )
+    slots = layout[
+        "down_bar"
+    ]["consumable_belt"]["slots"]
 
-    for index, slot_name in enumerate(sorted(slots)):
+    stored_items = get_act_two_consumable_slots(
+        player
+    )
+    belt_sprites = assets.get(
+        "act_three_consumable_belt_sprites",
+        {},
+    )
+    healing_blocked = (
+        healing_consumables_are_blocked(player)
+    )
+    hovered_item = None
+
+    for index, slot_name in enumerate(
+        sorted(slots)
+    ):
         slot = slots[slot_name]
-        hitbox = get_layout_rect(
-            layout,
-            "down_bar",
-            "consumable_belt",
-            "slots",
-            slot_name,
-            "hitbox",
+        hitbox = figma_rect(
+            slot["hitbox"]
         )
 
         key_surface = fonts["sidebar_hud"].render(
@@ -505,28 +538,79 @@ def _draw_consumables(
             ),
         )
 
-        if index >= potion_count:
-            continue
-
-        icon_rect = get_layout_rect(
-            layout,
-            "down_bar",
-            "consumable_belt",
-            "slots",
-            slot_name,
-            "icon",
+        item = (
+            stored_items[index]
+            if index < len(stored_items)
+            else None
         )
 
-        icon = assets.get("sidebar_potion")
+        if item is None:
+            continue
 
-        if icon is not None:
-            screen.blit(
-                pygame.transform.smoothscale(
-                    icon,
-                    icon_rect.size,
-                ),
-                icon_rect,
+        is_hovered = (
+            mouse_position is not None
+            and hitbox.collidepoint(
+                mouse_position
             )
+        )
+
+        if is_hovered:
+            hovered_item = item
+
+            pygame.draw.rect(
+                screen,
+                (181, 145, 81),
+                hitbox,
+                width=1,
+                border_radius=4,
+            )
+
+        icon = belt_sprites.get(item)
+
+        if icon is None:
+            continue
+
+        icon_rectangle = figma_rect(
+            slot["icon"]
+        )
+        displayed_icon = pygame.transform.smoothscale(
+            icon,
+            icon_rectangle.size,
+        )
+
+        screen.blit(
+            displayed_icon,
+            icon_rectangle,
+        )
+
+        if (
+            healing_blocked
+            and item in _HEALING_CONSUMABLES
+        ):
+            disabled_overlay = pygame.Surface(
+                icon_rectangle.size,
+                pygame.SRCALPHA,
+            )
+            disabled_overlay.fill(
+                (10, 7, 12, 175)
+            )
+
+            screen.blit(
+                disabled_overlay,
+                icon_rectangle,
+            )
+
+    if hovered_item is None:
+        return None
+
+    return consumable_tooltip_content(
+        hovered_item,
+        (
+            healing_blocked
+            and hovered_item
+            in _HEALING_CONSUMABLES
+        ),
+    )
 
 
 def _draw_ability_charge_mask(
@@ -645,6 +729,7 @@ def _draw_abilities(
     player,
     assets,
     layout,
+    mouse_position,
 ):
     from acts.act_three.presentation.sidebar import (
         _SUBCLASS_PRESENTATION,
@@ -656,6 +741,10 @@ def _draw_abilities(
     )
 
     slots = layout["down_bar"]["abilities"]["slots"]
+    hovered_slot = hovered_ability_slot(
+        slots,
+        mouse_position,
+    )
 
     for slot_name in ABILITY_SLOT_ORDER:
         slot_key = slot_name.removeprefix(
@@ -673,6 +762,18 @@ def _draw_abilities(
 
         if ability is None:
             continue
+
+        unlocked = is_ability_slot_unlocked(
+            player,
+            slot_key,
+        )
+
+        if slot_key == hovered_slot:
+            draw_ability_slot_highlight(
+                screen,
+                slot,
+                locked=not unlocked,
+            )
 
         icon_rectangle = figma_rect(
             slot["icon"]
@@ -692,10 +793,7 @@ def _draw_abilities(
                 icon_rectangle,
             )
 
-        if not is_ability_slot_unlocked(
-            player,
-            slot_key,
-        ):
+        if not unlocked:
             _draw_locked_ability(
                 screen,
                 assets,
@@ -723,6 +821,10 @@ def _draw_abilities(
                 width=1,
                 border_radius=6,
             )
+    return ability_tooltip_content(
+        player,
+        hovered_slot,
+    )
 
 
 def _draw_gold(
@@ -844,6 +946,7 @@ def _draw_character_panel(
     fonts,
     assets,
     layout,
+    mouse_position,
 ):
     from acts.act_three.presentation.sidebar import (
         _damage_value,
@@ -851,7 +954,10 @@ def _draw_character_panel(
 
     player = game_state.player
     panel = layout["right_bar"]["character_panel"]
-
+    hovered_item = get_character_panel_hover(
+        panel,
+        mouse_position,
+    )
     _blit_asset(
         screen,
         assets,
@@ -875,7 +981,11 @@ def _draw_character_panel(
             "button",
         ),
     )
-
+    draw_character_panel_highlight(
+        screen,
+        panel,
+        hovered_item,
+    )
     class_name_text = panel["class_name"]
     attribute_points = panel["attribute_points"]
 
@@ -971,7 +1081,9 @@ def _draw_character_panel(
         "armor",
         0,
     )
-    charge_rate = 100 + mastery_rank * 10
+    charge_rate = round(
+        get_mastery_charge_rate(player) * 100
+    )
 
     combat_values = {
         "damage": _damage_value(player),
@@ -1005,36 +1117,47 @@ def _draw_character_panel(
         player.subclass
     )
 
-    if passive_definition is None:
-        return
-
-    passive_icon = assets.get(
-        passive_definition.icon_asset
-    )
-    passive_icon_rectangle = figma_rect(
-        passive_layout["icon"]
-    )
-
-    if passive_icon is not None:
-        screen.blit(
-            pygame.transform.smoothscale(
-                passive_icon,
-                passive_icon_rectangle.size,
-            ),
-            passive_icon_rectangle,
+    if passive_definition is not None:
+        passive_icon = assets.get(
+            passive_definition.icon_asset
+        )
+        passive_icon_rectangle = figma_rect(
+            passive_layout["icon"]
         )
 
-    _draw_dynamic_figma_text(
-        screen,
-        passive_layout["name"],
-        passive_definition.name,
+        if passive_icon is not None:
+            screen.blit(
+                pygame.transform.smoothscale(
+                    passive_icon,
+                    passive_icon_rectangle.size,
+                ),
+                passive_icon_rectangle,
+            )
+
+        _draw_dynamic_figma_text(
+            screen,
+            passive_layout["name"],
+            passive_definition.name,
+        )
+
+        _draw_dynamic_figma_text(
+            screen,
+            passive_layout["value"],
+            passive_definition.description,
+        )
+
+    tooltip_content = character_panel_tooltip_content(
+        hovered_item,
+        player,
+        combat_values,
     )
 
-    _draw_dynamic_figma_text(
-        screen,
-        passive_layout["value"],
-        passive_definition.description,
-    )
+    if tooltip_content is not None:
+        draw_tooltip(
+            screen,
+            tooltip_content,
+            mouse_position,
+        )
 
 
 def _draw_journal_panel(
@@ -1290,19 +1413,25 @@ def draw_act_three_hud(
         assets,
         layout,
     )
-    _draw_consumables(
+    hud_tooltip = _draw_consumables(
         screen,
         player,
         fonts,
         assets,
         layout,
+        mouse_position,
     )
-    _draw_abilities(
+
+    ability_tooltip = _draw_abilities(
         screen,
         player,
         assets,
         layout,
+        mouse_position,
     )
+
+    if ability_tooltip is not None:
+        hud_tooltip = ability_tooltip
     _draw_gold(
         screen,
         player,
@@ -1352,6 +1481,7 @@ def draw_act_three_hud(
             fonts,
             assets,
             layout,
+            mouse_position,
         )
     elif active_tab == "journal":
         _draw_journal_panel(
@@ -1360,4 +1490,10 @@ def draw_act_three_hud(
             fonts,
             assets,
             layout,
+        )
+    if hud_tooltip is not None:
+        draw_tooltip(
+            screen,
+            hud_tooltip,
+            mouse_position,
         )

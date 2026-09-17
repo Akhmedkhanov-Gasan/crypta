@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -35,6 +36,56 @@ def _position(obj, tile_size):
         int(float(obj.get("y", 0)) // tile_size),
     )
 
+
+def _properties(obj):
+    return {
+        prop.get("name", ""): prop.get("value", "")
+        for prop in obj.findall("./properties/property")
+    }
+
+
+def _optional_int(properties, name):
+    value = properties.get(name)
+
+    if value in (None, ""):
+        return None
+
+    return int(value)
+
+
+def _encounter_zone(obj, tile_size):
+    x = float(obj.get("x", 0))
+    y = float(obj.get("y", 0))
+    width = float(obj.get("width", 0))
+    height = float(obj.get("height", 0))
+
+    if width <= 0 or height <= 0:
+        return None
+
+    properties = _properties(obj)
+
+    return {
+        "left": math.floor(x / tile_size),
+        "top": math.floor(y / tile_size),
+        "right": math.ceil((x + width) / tile_size),
+        "bottom": math.ceil((y + height) / tile_size),
+        "min_enemies": _optional_int(
+            properties,
+            "min_enemies",
+        ),
+        "max_enemies": _optional_int(
+            properties,
+            "max_enemies",
+        ),
+        "enemy_types": tuple(
+            enemy_type.strip()
+            for enemy_type in properties.get(
+                "enemy_types",
+                "",
+            ).split(",")
+            if enemy_type.strip()
+        ),
+    }
 
 def _connector_direction(
     name,
@@ -168,6 +219,7 @@ def load_tmx_floor(path):
     barrier_rectangles = []
     entities = []
     connectors = []
+    encounter_zones = []
     for group in root.findall("objectgroup"):
         group_name = group.get("name", "").lower()
         for obj in group.findall("object"):
@@ -189,19 +241,21 @@ def load_tmx_floor(path):
                         float(obj.get("height", 0)),
                     )
                 )
-            elif group_name == "entities":
-                properties = {
-                    prop.get("name", ""): prop.get("value", "")
-                    for prop in obj.findall("./properties/property")
-                }
+            elif group_name == "encounterzones":
+                zone = _encounter_zone(obj, tile_size)
+
+                if zone is not None:
+                    encounter_zones.append(zone)
+            elif group_name in ("entities", "enemies"):
                 entities.append(
-                    (_entity_name(obj), _position(obj, tile_size), properties)
+                    (
+                        _entity_name(obj),
+                        _position(obj, tile_size),
+                        _properties(obj),
+                    )
                 )
             elif group_name == "connectors":
-                properties = {
-                    prop.get("name", ""): prop.get("value", "")
-                    for prop in obj.findall("./properties/property")
-                }
+                properties = _properties(obj)
                 position = _position(obj, tile_size)
                 direction = _connector_direction(
                     obj.get("name", ""),
@@ -312,18 +366,31 @@ def load_tmx_floor(path):
         for position, _ in torch_markers
     ]
     enemies = []
+
     for name, markers in by_name.items():
-        if name != "enemy" and name not in ENEMY_TYPES:
+        if name in ENEMY_TYPES:
+            enemy_type = name
+        elif name == "enemy":
+            enemy_type = None
+        else:
             continue
-        for position, props in markers:
+
+        for position, properties in markers:
+            marker_enemy_type = (
+                    enemy_type
+                    or properties.get("enemy_type")
+                    or properties.get("name")
+            )
+
+            if marker_enemy_type not in ENEMY_TYPES:
+                raise ValueError(
+                    f"Unknown enemy type: {marker_enemy_type!r}"
+                )
+
             enemies.append(
                 {
                     "position": position,
-                    "type": (
-                        props.get("enemy_type", "goblin")
-                        if name == "enemy"
-                        else name
-                    ),
+                    "type": marker_enemy_type,
                     "boss_group": False,
                 }
             )
@@ -339,6 +406,7 @@ def load_tmx_floor(path):
         "tile_layers": layers,
         "barriers": barriers,
         "connectors": connectors,
+        "encounter_zones": encounter_zones,
         "width": width,
         "height": height,
         "tile_size": tile_size,

@@ -44,3 +44,31 @@ SUBCLASS_BASE_STATS = {
     ),
 }
 
+ACT_THREE_ENCOUNTER_SETTINGS = {
+    1: {
+        "enabled": False,
+        "enemy_weights": {
+            "archer": 4,
+            "brute": 3,
+            "sentinel": 2,
+            "priest": 1,
+        },
+        "min_enemies": 0,
+        "max_enemies": 0,
+        "minimum_spacing": 2,
+        "minimum_player_distance": 4,
+    },
+    2: {
+        "enabled": True,
+        "enemy_weights": {
+            "archer": 4,
+            "brute": 3,
+            "sentinel": 2,
+            "priest": 1,
+        },
+        "min_enemies": 1,
+        "max_enemies": 3,
+        "minimum_spacing": 2,
+        "minimum_player_distance": 5,
+    },
+}

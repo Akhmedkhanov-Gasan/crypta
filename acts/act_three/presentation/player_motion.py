@@ -3,7 +3,13 @@ ASSASSIN_IDLE_FRAME_COUNT = 8
 ASSASSIN_WALK_FRAME_COUNT = 8
 ASSASSIN_IDLE_FRAME_DURATION_MS = 270
 ASSASSIN_WALK_FRAME_DURATION_MS = 40
-
+ASSASSIN_ATTACK_FRAME_COUNT = 8
+ASSASSIN_HURT_FRAME_COUNTS = {
+    "down": 8,
+    "left": 8,
+    "right": 9,
+    "up": 8,
+}
 
 def player_movement_progress(
     current_time,
@@ -76,3 +82,42 @@ def assassin_walk_direction(facing_direction):
         return "up"
 
     return "down"
+
+
+def assassin_attack_direction(facing_direction):
+    return assassin_walk_direction(facing_direction)
+
+
+def assassin_attack_frame(
+    elapsed,
+    duration,
+):
+    progress = max(
+        0.0,
+        min(1.0, elapsed / duration),
+    )
+
+    return movement_frame_for_progress(
+        progress,
+        ASSASSIN_ATTACK_FRAME_COUNT,
+    )
+
+
+def assassin_hurt_direction(facing_direction):
+    return assassin_walk_direction(facing_direction)
+
+
+def assassin_hurt_frame(
+    elapsed,
+    duration,
+    direction,
+):
+    progress = max(
+        0.0,
+        min(1.0, elapsed / duration),
+    )
+
+    return movement_frame_for_progress(
+        progress,
+        ASSASSIN_HURT_FRAME_COUNTS[direction],
+    )

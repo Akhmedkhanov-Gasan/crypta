@@ -39,6 +39,8 @@ _PLAYER_DEATH_FALL_END_MS = 4100
 _PLAYER_DEATH_MESSAGE_START_MS = 5400
 _PLAYER_DEATH_MESSAGE_FADE_MS = 650
 _PLAYER_DEATH_IMPACT_SHAKE_MS = 380
+_ASSASSIN_DEATH_FRAME_COUNT = 8
+_ASSASSIN_DEATH_FRAME_DURATION_MS = 120
 
 
 def record_enemy_hit_feedback(game_state, started_at):
@@ -250,6 +252,26 @@ def _player_death_frame(player, current_time):
     if elapsed < _PLAYER_DEATH_COLLAPSE_END_MS:
         return 0
     return 1
+
+
+def _assassin_death_frame(player, current_time):
+    elapsed = _player_death_elapsed(player, current_time)
+
+    if (
+        elapsed is None
+        or elapsed < _PLAYER_DEATH_HURT_HOLD_MS
+    ):
+        return None
+
+    animation_elapsed = (
+        elapsed - _PLAYER_DEATH_HURT_HOLD_MS
+    )
+
+    return min(
+        _ASSASSIN_DEATH_FRAME_COUNT - 1,
+        animation_elapsed
+        // _ASSASSIN_DEATH_FRAME_DURATION_MS,
+    )
 
 
 def _player_death_sprite_offset(player, current_time):

@@ -13,6 +13,9 @@ from acts.act_three.presentation.player_assets import (
 from acts.act_three.presentation.ability_assets import (
     load_act_three_ability_assets,
 )
+from acts.act_three.presentation.consumable_assets import (
+    load_act_three_consumable_assets,
+)
 import resource_store as resources
 import xml.etree.ElementTree as ET
 
@@ -1399,166 +1402,6 @@ def load_act_three_gameplay_assets():
             ui_directory / "altar_menu" / "rank_empty.png",
             (14, 14),
         ),
-        "assassin_invisibility": _load_scaled_image(
-            act_directory
-            / "player"
-            / "assassin"
-            / "assassin_invisibility"
-            / "assassin_invisibility.png",
-            (46, 52),
-        ),
-        "assassin_teleport": _load_scaled_image(
-            act_directory
-            / "player"
-            / "assassin"
-            / "assassin_teleport"
-            / "assassin_teleport.png",
-            (46, 52),
-        ),
-        "assassin_killing_spree": _load_scaled_image(
-            act_directory
-            / "player"
-            / "assassin"
-            / "assassin_killing_spree"
-            / "assassin_killing_spree.png",
-            (46, 52),
-        ),
-        "archer_empowered_shot": _load_scaled_image(
-            act_directory
-            / "player"
-            / "archer"
-            / "archer_empowered_shot"
-            / "archer_empowered_shot.png",
-            (46, 52),
-        ),
-        "archer_leap": _load_scaled_image(
-            act_directory
-            / "player"
-            / "archer"
-            / "archer_leap"
-            / "archer_leap.png",
-            (46, 52),
-        ),
-        "archer_barrage_zone": _load_scaled_image(
-            act_directory
-            / "player"
-            / "archer"
-            / "archer_barrage_zone"
-            / "archer_barrage_zone.png",
-            (46, 52),
-        ),
-        "berserker_rage": _load_scaled_image(
-            act_directory
-            / "player"
-            / "berserker"
-            / "berserker_rage"
-            / "berserker_rage.png",
-            (46, 52),
-        ),
-        "berserker_crushing_leap": _load_scaled_image(
-            act_directory
-            / "player"
-            / "berserker"
-            / "berserker_crushing_leap"
-            / "berserker_crushing_leap.png",
-            (46, 52),
-        ),
-        "berserker_last_rage": _load_scaled_image(
-            act_directory
-            / "player"
-            / "berserker"
-            / "berserker_last_rage"
-            / "berserker_last_rage.png",
-            (46, 52),
-        ),
-        "paladin_holy_hand": _load_scaled_image(
-            act_directory
-            / "player"
-            / "paladin"
-            / "paladin_holy_hand"
-            / "paladin_holy_hand.png",
-            (46, 52),
-        ),
-        "paladin_shield_charge": _load_scaled_image(
-            act_directory
-            / "player"
-            / "paladin"
-            / "paladin_shield_charge"
-            / "paladin_shield_charge.png",
-            (46, 52),
-        ),
-        "paladin_holy_shield": _load_scaled_image(
-            act_directory
-            / "player"
-            / "paladin"
-            / "paladin_holy_shield"
-            / "paladin_holy_shield.png",
-            (46, 52),
-        ),
-        "warlock_curse": _load_scaled_image(
-            act_directory
-            / "player"
-            / "warlock"
-            / "warlock_curse"
-            / "warlock_curse.png",
-            (46, 52),
-        ),
-        "warlock_soul_exchange": _load_scaled_image(
-            act_directory
-            / "player"
-            / "warlock"
-            / "warlock_soul_exchange"
-            / "warlock_soul_exchange.png",
-            (46, 52),
-        ),
-        "warlock_demon_form": _load_scaled_image(
-            act_directory
-            / "player"
-            / "warlock"
-            / "warlock_demon_form"
-            / "warlock_demon_form.png",
-            (46, 52),
-        ),
-        "warlock_demon_edge_left": _load_scaled_image(
-            act_directory
-            / "player"
-            / "warlock"
-            / "warlock_demon_form"
-            / "demon_form_edge_left_original.png",
-            (273, 512),
-        ),
-        "warlock_demon_edge_right": _load_scaled_image(
-            act_directory
-            / "player"
-            / "warlock"
-            / "warlock_demon_form"
-            / "demon_form_edge_right_original.png",
-            (273, 512),
-        ),
-        "summoner_familiar": _load_scaled_image(
-            act_directory
-            / "player"
-            / "summoner"
-            / "summoner_familiar"
-            / "summoner_familiar_original.png",
-            (46, 52),
-        ),
-        "summoner_bond": _load_scaled_image(
-            act_directory
-            / "player"
-            / "summoner"
-            / "summoner_bond"
-            / "summoner_bond_original.png",
-            (46, 52),
-        ),
-        "summoner_true_form": _load_scaled_image(
-            act_directory
-            / "player"
-            / "summoner"
-            / "summoner_true_form"
-            / "summoner_true_form_original.png",
-            (46, 52),
-        ),
         "summoner_familiar_idle_0": _load_pixel_scaled_image(
             act_directory
             / "player"
@@ -1641,6 +1484,9 @@ def load_act_three_gameplay_assets():
     assets.update(load_act_three_hud_assets())
     assets.update(
         load_act_three_ability_assets()
+    )
+    assets.update(
+        load_act_three_consumable_assets()
     )
     assets["tmx_tiles_by_floor"] = {}
 
@@ -1842,29 +1688,6 @@ def load_act_three_gameplay_assets():
             )
         )
 
-    assets["player_assassin_hurt"] = (
-        _load_pixel_scaled_image(
-            act_directory
-            / "player"
-            / "assassin"
-            / "hurt"
-            / "hurt_00.png",
-            (tile_size, tile_size),
-        )
-    )
-
-    assassin_death_directory = (
-        act_directory / "player" / "assassin" / "death"
-    )
-    for frame_index in range(2):
-        assets[f"player_assassin_death_{frame_index}"] = (
-            _load_pixel_scaled_image(
-                assassin_death_directory
-                / f"death_{frame_index:02d}.png",
-                (tile_size, tile_size),
-            )
-        )
-
     assets["player_archer_hurt"] = (
         _load_pixel_scaled_image(
             act_directory
@@ -2007,15 +1830,6 @@ def load_act_three_gameplay_assets():
             / f"walk_{frame_index:02d}.png",
             (tile_size, tile_size),
         )
-
-    assets["player_assassin_attack"] = _load_pixel_scaled_image(
-        act_directory
-        / "player"
-        / "assassin"
-        / "attack"
-        / "attack_00.png",
-        (tile_size, tile_size),
-    )
     ultimate_directory = (
         act_directory / "player" / "assassin" / "ultimate"
     )

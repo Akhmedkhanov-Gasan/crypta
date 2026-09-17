@@ -82,6 +82,19 @@ def _shift_entities(items, offset):
     return shifted
 
 
+def _shift_encounter_zones(zones, offset):
+    return [
+        {
+            **zone,
+            "left": zone["left"] + offset[0],
+            "right": zone["right"] + offset[0],
+            "top": zone["top"] + offset[1],
+            "bottom": zone["bottom"] + offset[1],
+        }
+        for zone in zones
+    ]
+
+
 def _compose(placements, connections):
     min_column = min(offset[0] for _, offset in placements)
     min_row = min(offset[1] for _, offset in placements)
@@ -112,6 +125,7 @@ def _compose(placements, connections):
     barriers = set()
     torches = []
     enemies = []
+    encounter_zones = []
     chests = []
     potions = []
     upgrade_altar = None
@@ -141,6 +155,12 @@ def _compose(placements, connections):
             for position in template["torches"]
         )
         enemies.extend(_shift_entities(template["enemies"], offset))
+        encounter_zones.extend(
+            _shift_encounter_zones(
+                template.get("encounter_zones", []),
+                offset,
+            )
+        )
         chests.extend(_shift_entities(template["chests"], offset))
         potions.extend(
             _translated(position, offset)
@@ -213,6 +233,7 @@ def _compose(placements, connections):
         "map": ["".join(row) for row in dungeon_map],
         "player_start": player_start,
         "enemies": enemies,
+        "encounter_zones": encounter_zones,
         "chests": chests,
         "potions": potions,
         "torches": torches,

@@ -152,12 +152,17 @@ from acts.act_three.presentation.animation import (
 )
 from acts.act_three.presentation.player_motion import (
     ASSASSIN_WALK_FRAME_COUNT,
+    assassin_attack_direction,
+    assassin_attack_frame,
     assassin_idle_frame,
     assassin_walk_direction,
     assassin_walk_frame,
+    assassin_hurt_frame,
+    assassin_hurt_direction,
     interpolate_player_position,
     movement_frame_for_progress,
     player_movement_progress,
+
 )
 from acts.act_three.presentation.class_effects import (
     _draw_summoner_bond_pentagram,
@@ -175,6 +180,8 @@ from acts.act_three.presentation.combat_effects import (
     _draw_attack_impact_flash,
     _draw_assassin_death_echoes,
     _draw_assassin_death_impact,
+    _PLAYER_HIT_SPRITE_DURATION_MS,
+    _assassin_death_frame,
     _draw_berserker_death_echoes,
     _draw_berserker_death_impact,
     _draw_paladin_death_echoes,
@@ -939,10 +946,16 @@ def _draw_act_three_world(
         )
         and player_death_elapsed is not None
     ):
-        player_death_frame = _player_death_frame(
-            game_state.player,
-            current_time,
-        )
+        if player_subclass == "assassin":
+            player_death_frame = _assassin_death_frame(
+                game_state.player,
+                current_time,
+            )
+        else:
+            player_death_frame = _player_death_frame(
+                game_state.player,
+                current_time,
+            )
         if player_death_frame is None:
             if player_subclass == "summoner":
                 player_sprite = assets[
@@ -962,7 +975,21 @@ def _draw_act_three_world(
         elif player_subclass == "paladin":
             player_sprite = assets["player_paladin_hurt"]
         elif player_subclass == "assassin":
-            player_sprite = assets["player_assassin_hurt"]
+            hurt_elapsed = (
+                    current_time
+                    - game_state.player.hit_animation_started_at
+            )
+            hurt_direction = assassin_hurt_direction(
+                game_state.player.facing_direction
+            )
+            hurt_frame = assassin_hurt_frame(
+                hurt_elapsed,
+                _PLAYER_HIT_SPRITE_DURATION_MS,
+                hurt_direction,
+            )
+            player_sprite = assets[
+                f"player_assassin_hurt_{hurt_direction}_{hurt_frame}"
+            ]
         elif player_subclass == "archer":
             player_sprite = assets["player_archer_hurt"]
         elif player_subclass == "warlock":
@@ -1006,7 +1033,18 @@ def _draw_act_three_world(
         )
         and 0 <= attack_elapsed < _ATTACK_FRAME_DURATION_MS
     ):
-        if (
+        if player_subclass == "assassin":
+            attack_direction = assassin_attack_direction(
+                game_state.player.facing_direction
+            )
+            attack_frame = assassin_attack_frame(
+                attack_elapsed,
+                _ATTACK_FRAME_DURATION_MS,
+            )
+            player_sprite = assets[
+                f"player_assassin_attack_{attack_direction}_{attack_frame}"
+            ]
+        elif (
             player_subclass == "warlock"
             and game_state.player.warlock_demon_form_active
         ):

@@ -1,3 +1,7 @@
+from acts.act_three.presentation.player_motion import (
+    ASSASSIN_HURT_FRAME_COUNTS,
+)
+
 def load_assassin_animation_assets(
     assets,
     act_directory,
@@ -9,12 +13,22 @@ def load_assassin_animation_assets(
     )
     idle_directory = assassin_directory / "idle"
     walk_directory = assassin_directory / "walk"
+    attack_directory = assassin_directory / "attack"
+    hurt_directory = assassin_directory / "hurt"
+    death_directory = assassin_directory / "death"
+
     idle_directions = (
         "left",
         "right",
         "up",
     )
     walk_directions = (
+        "down",
+        "left",
+        "right",
+        "up",
+    )
+    attack_directions = (
         "down",
         "left",
         "right",
@@ -50,3 +64,43 @@ def load_assassin_animation_assets(
                 / f"walk_{direction}_{source_index:02d}.png",
                 (tile_size, tile_size),
             )
+
+        for direction in attack_directions:
+            assets[
+                f"player_assassin_attack_{direction}_{frame_index}"
+            ] = image_loader(
+                attack_directory
+                / f"attack_{direction}"
+                / f"attack_{direction}_{source_index:02d}.png",
+                (tile_size, tile_size),
+            )
+
+        assets[
+            f"player_assassin_death_{frame_index}"
+        ] = image_loader(
+            death_directory
+            / f"death_{source_index:02d}.png",
+            (tile_size, tile_size),
+        )
+
+    for direction, frame_count in (
+        ASSASSIN_HURT_FRAME_COUNTS.items()
+    ):
+        for frame_index in range(frame_count):
+            source_index = frame_index + 1
+            assets[
+                f"player_assassin_hurt_{direction}_{frame_index}"
+            ] = image_loader(
+                hurt_directory
+                / f"hurt_{direction}"
+                / f"hurt_{direction}_{source_index:02d}.png",
+                (tile_size, tile_size),
+            )
+
+    assets["player_assassin_hurt"] = assets[
+        "player_assassin_hurt_down_0"
+    ]
+
+    assets["player_assassin_attack"] = assets[
+        "player_assassin_attack_right_0"
+    ]

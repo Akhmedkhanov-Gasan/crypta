@@ -298,19 +298,21 @@ def _draw_warlock_demon_overlay(
         (ACT_THREE_VIEW_WIDTH, ACT_THREE_VIEW_HEIGHT),
         pygame.SRCALPHA,
     )
-    pulse = 0.5 + 0.5 * math.sin(current_time / 520)
-    overlay.fill((8, 2, 18, round(38 + pulse * 14)))
-    left_edge = assets["warlock_demon_edge_left"].copy()
-    right_edge = assets["warlock_demon_edge_right"].copy()
-    edge_alpha = round(218 + pulse * 25)
-    left_edge.set_alpha(edge_alpha)
-    right_edge.set_alpha(edge_alpha)
-    overlay.blit(left_edge, (0, 0))
-    overlay.blit(
-        right_edge,
-        (ACT_THREE_VIEW_WIDTH - right_edge.get_width(), 0),
+    pulse = 0.5 + 0.5 * math.sin(
+        current_time / 520
     )
-    surface.blit(overlay, (0, 0))
+    overlay.fill(
+        (
+            8,
+            2,
+            18,
+            round(38 + pulse * 14),
+        )
+    )
+    surface.blit(
+        overlay,
+        (0, 0),
+    )
 
 
 def _draw_summoner_idle_lights(
