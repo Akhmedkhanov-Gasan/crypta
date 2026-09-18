@@ -2,10 +2,11 @@ import pygame
 
 from acts.act_three.abilities import (
     get_ability_definition,
-    get_ability_slot_charge,
     is_ability_slot_unlocked,
 )
-from acts.act_two.abilities import ability_charge_required
+from acts.act_three.abilities.charges import (
+    get_act_three_ability_charge_state,
+)
 from acts.act_two.presentation.hud_tooltips import (
     ability_tooltip_content as inherited_ability_tooltip_content,
 )
@@ -93,20 +94,9 @@ def _ability_charge(
     slot,
     ability,
 ):
-    if slot == "e":
-        return (
-            float(player.ability_kill_charge),
-            float(ability_charge_required(player)),
-        )
-
-    return (
-        float(
-            get_ability_slot_charge(
-                player,
-                slot,
-            )
-        ),
-        float(ability.charge_required),
+    return get_act_three_ability_charge_state(
+        player,
+        slot,
     )
 
 

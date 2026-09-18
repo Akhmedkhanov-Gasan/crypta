@@ -40,7 +40,6 @@ from logic import (
     roll_player_damage,
 )
 from settings import (
-    ASSASSIN_INVISIBILITY_TURNS,
     MAGE_CONCENTRATION_DAMAGE_MULTIPLIER,
     MAGE_FRACTURE_EXTRA_CELL_DAMAGE,
     ROGUE_INVISIBILITY_TURNS,
@@ -126,13 +125,8 @@ def request_class_ability(
 
     if player.player_class == "rogue":
         player.ability_kill_charge = 0
-        base_invisibility_turns = (
-            ASSASSIN_INVISIBILITY_TURNS
-            if player.subclass == "assassin"
-            else ROGUE_INVISIBILITY_TURNS
-        )
         player.invisibility_turns = rogue_invisibility_duration(
-            base_invisibility_turns,
+            ROGUE_INVISIBILITY_TURNS,
         )
 
         for enemy in game_state.floor.enemies:

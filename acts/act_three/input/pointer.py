@@ -7,6 +7,9 @@ from acts.act_three.altar import (
     open_upgrade_altar,
     player_is_next_to_upgrade_altar,
 )
+from acts.act_three.settings import (
+    ASSASSIN_SHADOW_STEP_DURATION_MS,
+)
 from acts.act_three.input.cursors import (
     set_archer_attack_cursor,
     set_archer_barrage_zone_cursor,
@@ -72,7 +75,7 @@ from presentation.screens import (
     get_act_three_debug_class_rectangles,
     get_subclass_selection_rectangles,
 )
-from settings import (
+from acts.act_three.settings import (
     ARCHER_LEAP_DURATION_MS,
     BERSERKER_CRUSHING_LEAP_IMPACT_MS,
     BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
@@ -87,6 +90,15 @@ def handle_act_three_pointer_event(
     movement_state,
     movement_available,
 ):
+    if (
+        game_state.player.teleport_camera_origin is not None
+        and game_state.player.teleport_transition_started_at > 0
+        and pygame.time.get_ticks()
+        - game_state.player.teleport_transition_started_at
+        < ASSASSIN_SHADOW_STEP_DURATION_MS
+    ):
+        return True
+
     if (
         game_state.upgrade_altar_menu_open
         and event.type
@@ -256,6 +268,7 @@ def handle_act_three_pointer_event(
         and not game_state.act_three_transition_open
         and not game_state.subclass_selection_open
         and game_state.player.subclass in (
+            "assassin",
             "archer",
             "berserker",
             "paladin",
@@ -264,8 +277,7 @@ def handle_act_three_pointer_event(
         )
     ):
         if (
-            game_state.player.teleport_aiming
-            or game_state.player.ultimate_aiming
+            game_state.player.ultimate_aiming
             or game_state.player.ultimate_animation_active
         ):
             return True
@@ -281,7 +293,21 @@ def handle_act_three_pointer_event(
             if game_mouse_position is not None
             else None
         )
-        if game_state.player.warlock_curse_aiming:
+        if game_state.player.teleport_aiming:
+            preview_is_valid = (
+                target_cell is not None
+                and is_valid_assassin_teleport_target(
+                    game_state,
+                    *target_cell,
+                )
+            )
+            game_state.player.teleport_preview_target = (
+                target_cell
+                if preview_is_valid
+                else None
+            )
+            set_assassin_target_cursor("teleport")
+        elif game_state.player.warlock_curse_aiming:
             set_warlock_staff_cursor(
                 target_cell is not None
                 and is_valid_warlock_curse_target(
@@ -580,11 +606,15 @@ def handle_act_three_pointer_event(
                     game_state,
                     game_mouse_position,
                 )
-                if target_cell is not None and is_valid_assassin_teleport_target(
-                    game_state,
-                    *target_cell,
+                if (
+                    target_cell is not None
+                    and is_valid_assassin_teleport_target(
+                        game_state,
+                        *target_cell,
+                    )
                 ):
                     game_state.player.teleport_target = target_cell
+                    game_state.player.teleport_preview_target = None
                     pygame.event.post(
                         pygame.event.Event(
                             pygame.KEYDOWN,

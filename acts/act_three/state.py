@@ -116,14 +116,20 @@ class ActThreePlayerState:
     teleport_charge: int = 0
     teleport_aiming: bool = False
     teleport_target: tuple[int, int] | None = None
+    teleport_preview_target: tuple[int, int] | None = None
     teleport_camera_origin: tuple[int, int] | None = None
     teleport_transition_started_at: int = 0
     ultimate_charge: int = 0
     ultimate_aiming: bool = False
     ultimate_targets: list[str] = field(default_factory=list)
     ultimate_visual_variants: list[int] = field(default_factory=list)
+    ultimate_origin: tuple[int, int] | None = None
     ultimate_animation_started_at: int = 0
     ultimate_animation_active: bool = False
+    ultimate_impact_positions: list[
+        tuple[int, int]
+    ] = field(default_factory=list)
+    ultimate_impact_started_at: int = 0
     movement_animation_started_at: int = 0
     movement_origin: tuple[int, int] | None = None
     attack_animation_started_at: int = 0

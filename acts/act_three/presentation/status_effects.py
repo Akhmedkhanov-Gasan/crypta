@@ -4,7 +4,9 @@ import pygame
 
 
 from presentation.layout import ACT_THREE_TILE_SIZE
-from settings import PALADIN_HOLY_HAND_EFFECT_MS
+from acts.act_three.settings import (
+    PALADIN_HOLY_HAND_EFFECT_MS,
+)
 
 
 _TORCH_LIGHT_SURFACE = None
@@ -337,41 +339,100 @@ def _draw_assassin_invisibility_effect(
     current_time,
     identity_seed,
 ):
-    margin = 7
+    margin = 12
     effect_size = ACT_THREE_TILE_SIZE + margin * 2
     effect_surface = pygame.Surface(
         (effect_size, effect_size),
         pygame.SRCALPHA,
     )
     center_x = margin + ACT_THREE_TILE_SIZE // 2
-    center_y = margin + ACT_THREE_TILE_SIZE // 2 - 5
+    ground_y = margin + ACT_THREE_TILE_SIZE - 10
+    seed_phase = (identity_seed % 173) / 173
 
-    for spark_index in range(5):
-        phase = (
-            current_time / 1050
-            + spark_index * math.tau / 5
-            + (identity_seed % 127) / 127
+    ground_pulse = (
+        math.sin(current_time * 0.004) + 1
+    ) / 2
+    pygame.draw.ellipse(
+        effect_surface,
+        (
+            47,
+            43,
+            58,
+            round(32 + ground_pulse * 18),
+        ),
+        (
+            center_x - 27,
+            ground_y - 7,
+            54,
+            15,
+        ),
+    )
+
+    for mist_index in range(8):
+        cycle = (
+            current_time / 2100
+            + mist_index / 8
+            + seed_phase
+        ) % 1
+        visibility = math.sin(math.pi * cycle)
+        sway = math.sin(
+            current_time * 0.0025
+            + mist_index * 1.73
         )
-        spark_x = center_x + round(math.cos(phase) * 27)
-        spark_y = center_y + round(math.sin(phase) * 22)
-        pulse = (math.sin(phase * 1.7) + 1) / 2
-        spark_alpha = round(115 + pulse * 80)
-        pygame.draw.circle(
-            effect_surface,
-            (35, 92, 164, spark_alpha // 3),
-            (spark_x, spark_y),
-            3,
+        drift = math.cos(
+            current_time * 0.0018
+            + mist_index * 2.11
         )
-        pygame.draw.circle(
+        mist_x = round(
+            center_x
+            + sway * (12 + mist_index % 3 * 4)
+        )
+        mist_y = round(
+            ground_y
+            - cycle * 34
+            + drift * 3
+        )
+        mist_width = 15 + mist_index % 3 * 5
+        mist_height = 6 + mist_index % 2 * 3
+        mist_alpha = round(54 * visibility)
+
+        pygame.draw.ellipse(
             effect_surface,
-            (105, 195, 255, spark_alpha),
-            (spark_x, spark_y),
-            1,
+            (32, 29, 39, mist_alpha // 2),
+            (
+                mist_x - mist_width // 2 - 4,
+                mist_y - mist_height // 2 - 3,
+                mist_width + 8,
+                mist_height + 6,
+            ),
+        )
+        pygame.draw.ellipse(
+            effect_surface,
+            (75, 69, 86, mist_alpha),
+            (
+                mist_x - mist_width // 2,
+                mist_y - mist_height // 2,
+                mist_width,
+                mist_height,
+            ),
+        )
+        pygame.draw.ellipse(
+            effect_surface,
+            (119, 108, 132, mist_alpha // 2),
+            (
+                mist_x - mist_width // 4,
+                mist_y - mist_height // 3,
+                mist_width // 2,
+                max(2, mist_height // 2),
+            ),
         )
 
     surface.blit(
         effect_surface,
-        (left - margin, top - margin),
+        (
+            left - margin,
+            top - margin,
+        ),
     )
 
 

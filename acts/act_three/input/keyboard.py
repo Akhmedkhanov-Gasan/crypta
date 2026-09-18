@@ -1,6 +1,9 @@
 import pygame
 
 from application.directional_input import MOVEMENT_KEYS, WAIT_KEYS
+from acts.act_three.settings import (
+    ASSASSIN_SHADOW_STEP_DURATION_MS,
+)
 from acts.act_three.input.cursors import (
     set_archer_barrage_zone_cursor,
     set_archer_empowered_cursor,
@@ -49,7 +52,7 @@ from acts.act_three.abilities.warlock import (
     request_warlock_soul_exchange,
 )
 from levels import FLOOR_CONFIGS
-from settings import (
+from acts.act_three.settings import (
     ARCHER_LEAP_DURATION_MS,
     BERSERKER_CRUSHING_LEAP_IMPACT_MS,
     BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
@@ -57,6 +60,15 @@ from settings import (
     WARLOCK_SOUL_EXCHANGE_TRAVEL_MS,
 )
 def handle_act_three_key_event(event, game_state):
+    if (
+        game_state.player.teleport_camera_origin is not None
+        and game_state.player.teleport_transition_started_at > 0
+        and pygame.time.get_ticks()
+        - game_state.player.teleport_transition_started_at
+        < ASSASSIN_SHADOW_STEP_DURATION_MS
+    ):
+        return True
+
     if event.key in MOVEMENT_KEYS or event.key in WAIT_KEYS:
         return False
 
@@ -320,7 +332,7 @@ def handle_act_three_key_event(event, game_state):
         return True
     
     if (
-        event.key == pygame.K_2
+        event.key == pygame.K_q
         and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
         and game_state.player.subclass == "assassin"
     ):
@@ -333,7 +345,7 @@ def handle_act_three_key_event(event, game_state):
         return True
     
     if (
-        event.key == pygame.K_3
+        event.key == pygame.K_f
         and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
         and game_state.player.subclass == "assassin"
     ):

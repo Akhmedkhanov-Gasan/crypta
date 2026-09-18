@@ -2,6 +2,10 @@ from acts.act_two.dev_commands import (
     ACT_TWO_CONSOLE_HELP,
     execute_act_two_console_command,
 )
+from acts.act_three.dev_commands import (
+    ACT_THREE_CONSOLE_HELP,
+    execute_act_three_console_command,
+)
 
 
 CONSOLE_HELP = (
@@ -11,6 +15,7 @@ CONSOLE_HELP = (
     "gold     - add 10 gold",
     "gold X   - add X gold",
     *ACT_TWO_CONSOLE_HELP,
+    *ACT_THREE_CONSOLE_HELP,
     "Up / Down - command history",
     "Esc / ~  - close console",
 )
@@ -71,6 +76,13 @@ def execute_console_command(game_state, command, close_console):
         game_state,
         parts,
         close_console,
+    )
+    if result is not None:
+        return result
+
+    result = execute_act_three_console_command(
+        game_state,
+        parts,
     )
     if result is not None:
         return result

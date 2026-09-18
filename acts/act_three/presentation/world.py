@@ -48,21 +48,21 @@ from presentation.layout import (
     ACT_THREE_VIEW_X,
     ACT_THREE_VIEW_Y,
 )
-from settings import (
-    ASSASSIN_ULTIMATE_OUTRO_MS,
-    ASSASSIN_ULTIMATE_PRELUDE_MS,
-    ASSASSIN_ULTIMATE_STEP_MS,
+from acts.act_three.settings import (
+    ASSASSIN_SHADOW_STEP_DURATION_MS,
     ARCHER_EMPOWERED_SHOT_PROJECTILE_MS,
     ARCHER_LEAP_DURATION_MS,
     BERSERKER_RAGE_CRITICAL_HEALTH_RATIO,
     BERSERKER_RAGE_INJURED_HEALTH_RATIO,
     BERSERKER_CRUSHING_LEAP_IMPACT_MS,
     BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
-    DANGER_BORDER_COLOR,
-    HEALTH_BAR_COLOR,
     PALADIN_HOLY_HAND_EFFECT_MS,
     PALADIN_SHIELD_CHARGE_TRAVEL_MS,
     WARLOCK_SOUL_EXCHANGE_TRAVEL_MS,
+)
+from settings import (
+    DANGER_BORDER_COLOR,
+    HEALTH_BAR_COLOR,
 )
 
 
@@ -76,8 +76,9 @@ _MOVE_FRAME_COUNT = 2
 _MOVE_FRAME_DURATION_MS = 90
 _ATTACK_FRAME_DURATION_MS = 240
 _FAMILIAR_MOVE_DURATION_MS = 180
-_TELEPORT_CAMERA_DURATION_MS = 480
-_TELEPORT_EFFECT_DURATION_MS = 600
+_TELEPORT_CAMERA_DURATION_MS = (
+    ASSASSIN_SHADOW_STEP_DURATION_MS
+)
 _ARCHER_BARRAGE_SHOT_EFFECT_MS = 360
 _TOP_VOID_CORNER_Y_OFFSET = 47
 _TOP_VOID_CORNER_X_OFFSETS = {
@@ -151,9 +152,12 @@ from acts.act_three.presentation.animation import (
     _stable_text_seed,
 )
 from acts.act_three.presentation.player_motion import (
+    ASSASSIN_SHADOW_STEP_FRAME_COUNT,
     ASSASSIN_WALK_FRAME_COUNT,
     assassin_attack_direction,
     assassin_attack_frame,
+    assassin_shadow_step_direction,
+    assassin_shadow_step_frame,
     assassin_idle_frame,
     assassin_walk_direction,
     assassin_walk_frame,
@@ -168,7 +172,6 @@ from acts.act_three.presentation.class_effects import (
     _draw_summoner_bond_pentagram,
     _draw_summoner_familiar_attack_glow,
     _draw_summoner_idle_lights,
-    _draw_teleport_effect,
     _draw_warlock_demon_aura,
     _draw_warlock_demon_overlay,
     _draw_warlock_idle_flashes,
@@ -225,6 +228,17 @@ from acts.act_three.presentation.status_effects import (
     _draw_warlock_curse_aura,
     _draw_assassin_idle_smoke,
 )
+from acts.act_three.presentation.targeting import (
+    draw_shadow_step_targeting,
+)
+from acts.act_three.presentation.assassin import (
+    draw_killing_spree_effects,
+    draw_killing_spree_final_impacts,
+    draw_killing_spree_target_marks,
+    killing_spree_camera_position,
+    killing_spree_player_sprite,
+)
+
 
 def _draw_act_three_world(
     screen,
@@ -256,10 +270,23 @@ def _draw_act_three_world(
             movement_progress,
         )
 
+    killing_spree_camera = (
+        killing_spree_camera_position(
+            game_state.player,
+            floor,
+            current_time,
+        )
+    )
+    if killing_spree_camera is not None:
+        camera_player_position = killing_spree_camera
+
     update_act_three_camera(
         floor,
         current_time,
         player_position=camera_player_position,
+        cinematic=(
+            killing_spree_camera is not None
+        ),
     )
     _get_act_three_visibility(floor)
     view_surface = pygame.Surface((view_width, view_height))
@@ -538,6 +565,30 @@ def _draw_act_three_world(
             camera_x,
             camera_y,
             (241, 192, 70),
+        )
+    if (
+        game_state.player.teleport_aiming
+        and game_state.player.teleport_preview_target is not None
+    ):
+        teleport_preview_target = (
+            game_state.player.teleport_preview_target
+        )
+        draw_shadow_step_targeting(
+            view_surface,
+            _view_position(
+                floor.player_column,
+                floor.player_row,
+                camera_x,
+                camera_y,
+            ),
+            _view_position(
+                teleport_preview_target[0],
+                teleport_preview_target[1],
+                camera_x,
+                camera_y,
+            ),
+            current_time,
+            ACT_THREE_TILE_SIZE,
         )
     berserker_impact_elapsed = (
         current_time
@@ -927,6 +978,19 @@ def _draw_act_three_world(
         <= shield_charge_elapsed
         < PALADIN_SHIELD_CHARGE_TRAVEL_MS
     )
+    shadow_step_elapsed = current_time - transition_started_at
+    shadow_step_active = (
+        player_subclass == "assassin"
+        and teleport_origin is not None
+        and transition_started_at > 0
+        and 0
+        <= shadow_step_elapsed
+        < _TELEPORT_CAMERA_DURATION_MS
+    )
+    shadow_step_frame = assassin_shadow_step_frame(
+        shadow_step_elapsed,
+        _TELEPORT_CAMERA_DURATION_MS,
+    )
     player_hurt_sprite_active = _player_hurt_sprite_active(
         game_state.player,
         current_time,
@@ -1008,6 +1072,22 @@ def _draw_act_three_world(
             player_sprite = assets[
                 f"player_{player_subclass}_idle_0"
             ]
+    elif shadow_step_active:
+        shadow_step_direction_name = (
+            assassin_shadow_step_direction(
+                teleport_origin,
+                (
+                    floor.player_column,
+                    floor.player_row,
+                ),
+            )
+        )
+        player_sprite = assets[
+            (
+                "player_assassin_shadow_step_"
+                f"{shadow_step_direction_name}_{shadow_step_frame}"
+            )
+        ]
     elif shield_charge_active:
         player_sprite = assets[
             "player_paladin_shield_charge"
@@ -1173,6 +1253,17 @@ def _draw_act_three_world(
             movement_origin_position,
             player_position,
             movement_progress,
+        )
+    if (
+        shadow_step_active
+        and shadow_step_frame
+        < ASSASSIN_SHADOW_STEP_FRAME_COUNT // 2
+    ):
+        player_position = _view_position(
+            teleport_origin[0],
+            teleport_origin[1],
+            camera_x,
+            camera_y,
         )
     if (
         player_subclass in (
@@ -1350,34 +1441,16 @@ def _draw_act_three_world(
         player_subclass == "assassin"
         and game_state.player.ultimate_animation_active
     ):
-        ultimate_elapsed_for_player = (
-            current_time - game_state.player.ultimate_animation_started_at
+        killing_spree_sprite = (
+            killing_spree_player_sprite(
+                game_state.player,
+                floor,
+                assets,
+                current_time,
+            )
         )
-        player_sprite = assets["player_assassin_attack"].copy()
-        fade_progress = min(1, max(0, ultimate_elapsed_for_player) / 700)
-        player_sprite.set_alpha(round(220 * (1 - fade_progress)))
-
-    ultimate_target_enemies = []
-    ultimate_step_started_at = 0
-    ultimate_elapsed = 0
-    if (
-        player_subclass == "assassin"
-        and game_state.player.ultimate_targets
-    ):
-        ultimate_target_enemies = [
-            enemy
-            for target_name in game_state.player.ultimate_targets
-            for enemy in floor.enemies
-            if enemy.name == target_name
-        ]
-        if game_state.player.ultimate_animation_active:
-            ultimate_elapsed = (
-                current_time
-                - game_state.player.ultimate_animation_started_at
-            )
-            ultimate_step_started_at = (
-                game_state.player.ultimate_animation_started_at
-            )
+        if killing_spree_sprite is not None:
+            player_sprite = killing_spree_sprite
 
     player_sprite, player_position = draw_player_control_effects(
         view_surface,
@@ -2153,32 +2226,11 @@ def _draw_act_three_world(
     if (
         teleport_origin is not None
         and transition_started_at
+        and current_time - transition_started_at
+        >= _TELEPORT_CAMERA_DURATION_MS
     ):
-        _draw_teleport_effect(
-            view_surface,
-            _view_position(
-                teleport_origin[0],
-                teleport_origin[1],
-                camera_x,
-                camera_y,
-            ),
-            current_time,
-            transition_started_at,
-            floor.visual_seed ^ _stable_text_seed("teleport:origin"),
-        )
-        _draw_teleport_effect(
-            view_surface,
-            player_position,
-            current_time,
-            transition_started_at,
-            floor.visual_seed ^ _stable_text_seed("teleport:arrival"),
-        )
-        if (
-            current_time - transition_started_at
-            >= _TELEPORT_EFFECT_DURATION_MS
-        ):
-            game_state.player.teleport_camera_origin = None
-            game_state.player.teleport_transition_started_at = 0
+        game_state.player.teleport_camera_origin = None
+        game_state.player.teleport_transition_started_at = 0
 
     if (
         player_subclass in ("assassin", "archer", "warlock")
@@ -2203,111 +2255,35 @@ def _draw_act_three_world(
                 flash_color,
             )
 
-    ultimate_target_counts = {}
-    for target_name in game_state.player.ultimate_targets:
-        ultimate_target_counts[target_name] = (
-            ultimate_target_counts.get(target_name, 0) + 1
+    if player_subclass == "assassin":
+        draw_killing_spree_target_marks(
+            view_surface,
+            game_state.player,
+            floor,
+            camera_x,
+            camera_y,
         )
-    if (
-        player_subclass == "assassin"
-        and (game_state.player.ultimate_aiming
-             or game_state.player.ultimate_animation_active)
-    ):
-        mark_font = pygame.font.Font(None, 22)
-        for enemy in floor.enemies:
-            mark_count = ultimate_target_counts.get(enemy.name, 0)
-            if enemy.health <= 0 or not mark_count:
-                continue
-            enemy_position = _view_position(
-                enemy.column,
-                enemy.row,
-                camera_x,
-                camera_y,
-            )
-            mark_surface = mark_font.render(
-                f"\u00d7{mark_count}",
-                True,
-                (245, 210, 120),
-            )
-            mark_rectangle = mark_surface.get_rect(
-                midbottom=(
-                    enemy_position[0] + ACT_THREE_TILE_SIZE // 2,
-                    enemy_position[1] - 3,
-                ),
-            )
-            view_surface.blit(mark_surface, mark_rectangle)
-
-    if (
-        player_subclass == "assassin"
-        and game_state.player.ultimate_animation_active
-        and ultimate_target_enemies
-    ):
-        impact_elapsed = (
-            current_time - game_state.player.ultimate_animation_started_at
+    if player_subclass == "assassin":
+        draw_killing_spree_effects(
+            view_surface,
+            game_state.player,
+            floor,
+            assets,
+            current_time,
+            camera_x,
+            camera_y,
         )
-        darkness_fade_out_start = (
-            ASSASSIN_ULTIMATE_PRELUDE_MS
-            + len(ultimate_target_enemies) * ASSASSIN_ULTIMATE_STEP_MS
+        draw_killing_spree_final_impacts(
+            view_surface,
+            game_state.player,
+            current_time,
+            camera_x,
+            camera_y,
         )
-        fade_in = min(1, impact_elapsed / ASSASSIN_ULTIMATE_PRELUDE_MS)
-        fade_out = min(
-            1,
-            max(0, (impact_elapsed - darkness_fade_out_start)
-                / ASSASSIN_ULTIMATE_OUTRO_MS),
-        )
-        ultimate_darkness = pygame.Surface(
-            view_surface.get_size(),
-            pygame.SRCALPHA,
-        )
-        darkness_alpha = round(110 * fade_in * (1 - fade_out))
-        ultimate_darkness.fill((0, 0, 0, darkness_alpha))
-        view_surface.blit(ultimate_darkness, (0, 0))
-
-        slash_elapsed = impact_elapsed - ASSASSIN_ULTIMATE_PRELUDE_MS
-        if 0 <= slash_elapsed < (
-            len(ultimate_target_enemies) * ASSASSIN_ULTIMATE_STEP_MS
-        ):
-            target_index = min(
-                len(ultimate_target_enemies) - 1,
-                slash_elapsed // ASSASSIN_ULTIMATE_STEP_MS,
-            )
-            target_enemy = ultimate_target_enemies[target_index]
-            target_position = _view_position(
-                target_enemy.column,
-                target_enemy.row,
-                camera_x,
-                camera_y,
-            )
-            step_elapsed = slash_elapsed % ASSASSIN_ULTIMATE_STEP_MS
-            slash_progress = step_elapsed / ASSASSIN_ULTIMATE_STEP_MS
-            variant_index = (
-                game_state.player.ultimate_visual_variants[target_index]
-                if target_index
-                < len(game_state.player.ultimate_visual_variants)
-                else target_index % 3
-            )
-            slash_sprite = assets[
-                f"assassin_ultimate_slash_{variant_index}"
-            ].copy()
-            slash_visibility = min(
-                1,
-                slash_progress * 5,
-                (1 - slash_progress) * 5,
-            )
-            slash_sprite.set_alpha(round(255 * slash_visibility))
-            slash_position = (
-                target_position[0]
-                + ACT_THREE_TILE_SIZE // 2
-                - slash_sprite.get_width() // 2,
-                target_position[1]
-                + ACT_THREE_TILE_SIZE // 2
-                - slash_sprite.get_height() // 2,
-            )
-            view_surface.blit(slash_sprite, slash_position)
-
     if (
         player_subclass == "assassin"
         and player_death_elapsed is None
+        and not game_state.player.ultimate_animation_active
     ):
         _draw_assassin_idle_smoke(
             view_surface,

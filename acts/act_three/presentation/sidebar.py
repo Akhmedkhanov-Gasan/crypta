@@ -22,7 +22,8 @@ from acts.act_three.presentation.hud.geometry import (
     get_act_three_popup_rectangle as _get_popup_rectangle,
     get_act_three_sidebar_tab_rectangles as _get_sidebar_tab_rectangles,
 )
-from settings import (
+from settings import CLASS_ABILITY_KILLS
+from acts.act_three.settings import (
     ARCHER_BARRAGE_ZONE_CHARGES,
     ARCHER_EMPOWERED_SHOT_CHARGES,
     ARCHER_LEAP_CHARGES,
@@ -34,7 +35,6 @@ from settings import (
     BERSERKER_RAGE_CRITICAL_HEALTH_RATIO,
     BERSERKER_RAGE_INJURED_DAMAGE_MULTIPLIER,
     BERSERKER_RAGE_INJURED_HEALTH_RATIO,
-    CLASS_ABILITY_KILLS,
     PALADIN_HOLY_HAND_CHARGES,
     PALADIN_HOLY_SHIELD_CHARGES,
     PALADIN_HOLY_SHIELD_DAMAGE_BONUS,
@@ -45,7 +45,6 @@ from settings import (
     WARLOCK_CURSE_CHARGES,
     WARLOCK_SOUL_EXCHANGE_CHARGES,
 )
-
 
 _PANEL_BACKGROUND = (8, 11, 14)
 _PANEL_INNER = (12, 16, 19)

@@ -4,6 +4,7 @@ ASSASSIN_WALK_FRAME_COUNT = 8
 ASSASSIN_IDLE_FRAME_DURATION_MS = 270
 ASSASSIN_WALK_FRAME_DURATION_MS = 40
 ASSASSIN_ATTACK_FRAME_COUNT = 8
+ASSASSIN_SHADOW_STEP_FRAME_COUNT = 8
 ASSASSIN_HURT_FRAME_COUNTS = {
     "down": 8,
     "left": 8,
@@ -100,6 +101,40 @@ def assassin_attack_frame(
     return movement_frame_for_progress(
         progress,
         ASSASSIN_ATTACK_FRAME_COUNT,
+    )
+
+
+def assassin_shadow_step_direction(
+    origin,
+    destination,
+):
+    column_change = destination[0] - origin[0]
+    row_change = destination[1] - origin[1]
+
+    if column_change > 0:
+        return "right"
+
+    if column_change < 0:
+        return "left"
+
+    if row_change < 0:
+        return "right"
+
+    return "left"
+
+
+def assassin_shadow_step_frame(
+    elapsed,
+    duration,
+):
+    progress = max(
+        0.0,
+        min(1.0, elapsed / duration),
+    )
+
+    return movement_frame_for_progress(
+        progress,
+        ASSASSIN_SHADOW_STEP_FRAME_COUNT,
     )
 
 

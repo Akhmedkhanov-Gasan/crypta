@@ -13,7 +13,7 @@ from logic import (
     get_enemy_occupied_positions,
     move_enemy_toward_position,
 )
-from settings import (
+from acts.act_three.settings import (
     SUMMONER_FAMILIAR_CHARGES,
     SUMMONER_BOND_CHARGES,
     SUMMONER_TRUE_FORM_CHARGES,

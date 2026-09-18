@@ -11,7 +11,7 @@ from logic import (
     get_enemy_occupied_positions,
     has_line_of_sight,
 )
-from settings import (
+from acts.act_three.settings import (
     ARCHER_BASIC_ATTACK_RANGE,
     ARCHER_BASIC_DAMAGE_MAX,
     ARCHER_BASIC_DAMAGE_MIN,

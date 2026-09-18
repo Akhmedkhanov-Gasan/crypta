@@ -13,7 +13,7 @@ from logic import (
     get_enemy_occupied_positions,
     has_line_of_sight,
 )
-from settings import (
+from acts.act_three.settings import (
     PALADIN_HOLY_HAND_CHARGES,
     PALADIN_HOLY_HAND_HEALING,
     PALADIN_HOLY_SHIELD_CHARGES,

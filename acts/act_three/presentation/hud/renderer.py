@@ -12,13 +12,12 @@ from acts.act_three.presentation.hud.ability_tooltips import (
 )
 from acts.act_three.abilities import (
     get_ability_definition,
-    get_ability_slot_charge,
     get_mastery_charge_rate,
     get_passive_definition,
     is_ability_slot_unlocked,
 )
-from acts.act_two.abilities import (
-    ability_charge_required,
+from acts.act_three.abilities.charges import (
+    get_act_three_ability_charge_state,
 )
 from acts.act_two.bloody_altar import (
     healing_consumables_are_blocked,
@@ -671,23 +670,23 @@ def _get_ability_charge_ratio(
     slot,
     ability,
 ):
-    if slot == "e":
-        if player.selected_rune_id == "rune_of_the_veil":
-            return 1.0
+    if (
+        slot == "e"
+        and player.selected_rune_id == "rune_of_the_veil"
+    ):
+        return 1.0
 
-        return _ratio(
-            player.ability_kill_charge,
-            ability_charge_required(player),
-        )
-
-    return _ratio(
-        get_ability_slot_charge(
+    current_charge, required_charge = (
+        get_act_three_ability_charge_state(
             player,
             slot,
-        ),
-        ability.charge_required,
+        )
     )
 
+    return _ratio(
+        current_charge,
+        required_charge,
+    )
 
 def _draw_locked_ability(
     screen,

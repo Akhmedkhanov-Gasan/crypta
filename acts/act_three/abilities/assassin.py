@@ -8,7 +8,7 @@ from game.state import (
     GameState,
 )
 from logic import get_enemy_occupied_positions
-from settings import (
+from acts.act_three.settings import (
     ASSASSIN_TELEPORT_CHARGES,
     ASSASSIN_ULTIMATE_CHARGES,
 )
@@ -23,6 +23,29 @@ OracleHitReaction = Callable[
     None,
 ]
 
+
+def assassin_teleport_facing_direction(
+    origin,
+    destination,
+):
+    column_change = destination[0] - origin[0]
+    row_change = destination[1] - origin[1]
+
+    if column_change == 0 and row_change == 0:
+        return 0, 1
+
+    if abs(column_change) >= abs(row_change):
+        return (
+            1 if column_change > 0 else -1,
+            0,
+        )
+
+    return (
+        0,
+        1 if row_change > 0 else -1,
+    )
+
+
 def request_assassin_teleport(game_state: GameState) -> bool:
     player = game_state.player
 
@@ -31,6 +54,8 @@ def request_assassin_teleport(game_state: GameState) -> bool:
 
     if player.teleport_aiming:
         player.teleport_aiming = False
+        player.teleport_target = None
+        player.teleport_preview_target = None
         add_log_message(
             game_state.combat_log,
             "Teleport aiming cancelled.",
@@ -45,6 +70,8 @@ def request_assassin_teleport(game_state: GameState) -> bool:
         return True
 
     player.teleport_aiming = True
+    player.teleport_target = None
+    player.teleport_preview_target = None
     add_log_message(
         game_state.combat_log,
         "Choose a free cell for teleportation.",
@@ -54,6 +81,7 @@ def request_assassin_teleport(game_state: GameState) -> bool:
 def cancel_assassin_teleport(game_state: GameState) -> None:
     game_state.player.teleport_aiming = False
     game_state.player.teleport_target = None
+    game_state.player.teleport_preview_target = None
     add_log_message(
         game_state.combat_log,
         "Teleport aiming cancelled.",
@@ -77,6 +105,8 @@ def is_valid_assassin_teleport_target(
     if floor.map[row][column] in ("#", "C"):
         return False
     if (column, row) == (floor.player_column, floor.player_row):
+        return False
+    if (column, row) not in floor.visible_cells:
         return False
     if any(
         enemy.health > 0
@@ -139,6 +169,8 @@ def select_assassin_ultimate_target(
     player = game_state.player
     if not player.ultimate_aiming:
         return False
+    if len(player.ultimate_targets) >= 5:
+        return False
     enemy = next(
         (
             enemy
@@ -151,10 +183,6 @@ def select_assassin_ultimate_target(
         return False
 
     player.ultimate_targets.append(enemy_name)
-    add_log_message(
-        game_state.combat_log,
-        f"Target {len(player.ultimate_targets)}/5: {enemy.name}.",
-    )
     return True
 
 def begin_assassin_ultimate(
@@ -169,14 +197,26 @@ def begin_assassin_ultimate(
     player.ultimate_charge = 0
     player.ultimate_visual_variants = []
     previous_variant = None
+
     for _ in player.ultimate_targets:
         available_variants = [
             variant
-            for variant in range(3)
+            for variant in range(4)
             if variant != previous_variant
         ]
-        previous_variant = random.choice(available_variants)
-        player.ultimate_visual_variants.append(previous_variant)
+        selected_variant = random.choice(
+            available_variants
+        )
+        player.ultimate_visual_variants.append(
+            selected_variant
+        )
+        previous_variant = selected_variant
+    player.ultimate_origin = (
+        game_state.floor.player_column,
+        game_state.floor.player_row,
+    )
+    player.ultimate_impact_positions.clear()
+    player.ultimate_impact_started_at = 0
     player.ultimate_animation_started_at = current_time
     player.ultimate_animation_active = True
     add_log_message(
@@ -188,21 +228,31 @@ def begin_assassin_ultimate(
 def resolve_assassin_ultimate(
     game_state: GameState,
     oracle_hit_reaction: OracleHitReaction,
+    current_time: int,
 ) -> None:
     player = game_state.player
     selected_targets = tuple(player.ultimate_targets)
+    enemies_by_name = {
+        enemy.name: enemy
+        for enemy in game_state.floor.enemies
+    }
+    player.ultimate_impact_positions = [
+        (
+            enemies_by_name[enemy_name].column,
+            enemies_by_name[enemy_name].row,
+        )
+        for enemy_name in selected_targets
+        if enemy_name in enemies_by_name
+    ]
+    player.ultimate_impact_started_at = current_time
     player.ultimate_targets.clear()
     player.ultimate_visual_variants.clear()
+    player.ultimate_origin = None
 
     for enemy_name in selected_targets:
-        enemy = next(
-            (
-                enemy
-                for enemy in game_state.floor.enemies
-                if enemy.name == enemy_name and enemy.health > 0
-            ),
-            None,
-        )
+        enemy = enemies_by_name.get(enemy_name)
+        if enemy is not None and enemy.health <= 0:
+            enemy = None
         if enemy is None:
             continue
 

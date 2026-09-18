@@ -347,11 +347,13 @@ from presentation.menu import (
     draw_run_save_error,
     handle_menu_event,
 )
-from settings import (
-    BACKGROUND_COLOR,
+from acts.act_three.settings import (
     ASSASSIN_ULTIMATE_OUTRO_MS,
     ASSASSIN_ULTIMATE_PRELUDE_MS,
     ASSASSIN_ULTIMATE_STEP_MS,
+)
+from settings import (
+    BACKGROUND_COLOR,
     FPS,
     GAME_HEIGHT,
     GAME_WIDTH,
@@ -376,6 +378,7 @@ from systems.player_combat import (
     remove_enemy_corpses_at_position,
 )
 from systems.player_abilities import (
+    assassin_teleport_facing_direction,
     AbilityRequestResult,
     advance_berserker_last_rage,
     advance_paladin_holy_shield,
@@ -2612,6 +2615,12 @@ def main():
                         game_state.floor.player_column,
                         game_state.floor.player_row,
                     )
+                    game_state.player.facing_direction = (
+                        assassin_teleport_facing_direction(
+                            teleport_origin,
+                            teleport_target,
+                        )
+                    )
                     game_state.floor.player_column = teleport_target[0]
                     game_state.floor.player_row = teleport_target[1]
                     game_state.player.teleport_target = None
@@ -3410,6 +3419,7 @@ def main():
                 resolve_assassin_ultimate(
                     game_state,
                     resolve_oracle_hit_reaction,
+                    current_time,
                 )
                 game_state.player.ultimate_animation_active = False
                 game_state.player.ultimate_animation_started_at = 0

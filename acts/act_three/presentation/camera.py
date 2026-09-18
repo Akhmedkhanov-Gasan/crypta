@@ -21,7 +21,7 @@ _CAMERA = PixelCamera(zoom=1)
 
 
 def act_three_camera_scale(floor):
-    return 0.5 if get_map_navigation(floor).overview else 1.0
+    return 0.5 if get_map_navigation(floor).overview else 1.25
 
 
 def act_three_world_view_size(floor):
@@ -52,6 +52,7 @@ def update_act_three_camera(
     floor,
     current_time,
     player_position=None,
+    cinematic=False,
 ):
     view_width, view_height = act_three_world_view_size(floor)
     viewport = pygame.Rect(
@@ -75,8 +76,12 @@ def update_act_three_camera(
         focus,
         id(floor),
         current_time,
-        _DEAD_ZONE,
-        response_ms=145,
+        (
+            (0, 0, 0, 0)
+            if cinematic
+            else _DEAD_ZONE
+        ),
+        response_ms=210 if cinematic else 145,
         constrain_to_world=False,
     )
 

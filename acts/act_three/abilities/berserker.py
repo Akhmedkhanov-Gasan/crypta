@@ -12,7 +12,7 @@ from logic import (
     get_enemy_occupied_positions,
     has_line_of_sight,
 )
-from settings import (
+from acts.act_three.settings import (
     BERSERKER_CRUSHING_LEAP_CHARGES,
     BERSERKER_CRUSHING_LEAP_RANGE,
     BERSERKER_LAST_RAGE_CHARGES,

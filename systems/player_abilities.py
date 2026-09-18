@@ -70,6 +70,7 @@ from acts.act_three.abilities.warlock import (
 )
 
 from acts.act_three.abilities.assassin import (
+    assassin_teleport_facing_direction,
     request_assassin_teleport,
     cancel_assassin_teleport,
     is_valid_assassin_teleport_target,
@@ -134,6 +135,7 @@ __all__ = [
     "request_warlock_soul_exchange",
     "cancel_warlock_soul_exchange",
     "perform_warlock_soul_exchange",
+    "assassin_teleport_facing_direction",
     "request_assassin_teleport",
     "cancel_assassin_teleport",
     "is_valid_assassin_teleport_target",

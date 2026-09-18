@@ -16,7 +16,12 @@ def load_assassin_animation_assets(
     attack_directory = assassin_directory / "attack"
     hurt_directory = assassin_directory / "hurt"
     death_directory = assassin_directory / "death"
-
+    shadow_step_directory = (
+        assassin_directory / "shadow_step"
+    )
+    killing_spree_directory = (
+        assassin_directory / "killing_spree"
+    )
     idle_directions = (
         "left",
         "right",
@@ -34,7 +39,10 @@ def load_assassin_animation_assets(
         "right",
         "up",
     )
-
+    shadow_step_directions = (
+        "left",
+        "right",
+    )
     for frame_index in range(8):
         source_index = frame_index + 1
 
@@ -74,6 +82,15 @@ def load_assassin_animation_assets(
                 / f"attack_{direction}_{source_index:02d}.png",
                 (tile_size, tile_size),
             )
+        for direction in shadow_step_directions:
+            assets[
+                f"player_assassin_shadow_step_{direction}_{frame_index}"
+            ] = image_loader(
+                shadow_step_directory
+                / f"shadow_step_{direction}"
+                / f"shadow_step_{direction}_{source_index:02d}.png",
+                (tile_size, tile_size),
+            )
 
         assets[
             f"player_assassin_death_{frame_index}"
@@ -82,7 +99,23 @@ def load_assassin_animation_assets(
             / f"death_{source_index:02d}.png",
             (tile_size, tile_size),
         )
-
+    for variant_index in range(4):
+        for phase_index in range(2):
+            source_index = (
+                variant_index * 2
+                + phase_index
+                + 1
+            )
+            assets[
+                (
+                    "player_assassin_killing_spree_"
+                    f"{variant_index}_{phase_index}"
+                )
+            ] = image_loader(
+                killing_spree_directory
+                / f"killing_spree_{source_index:02d}.png",
+                (tile_size, tile_size),
+            )
     for direction, frame_count in (
         ASSASSIN_HURT_FRAME_COUNTS.items()
     ):

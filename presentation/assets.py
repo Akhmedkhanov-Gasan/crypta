@@ -1830,20 +1830,6 @@ def load_act_three_gameplay_assets():
             / f"walk_{frame_index:02d}.png",
             (tile_size, tile_size),
         )
-    ultimate_directory = (
-        act_directory / "player" / "assassin" / "ultimate"
-    )
-    for variant_index, filename in enumerate(
-        (
-            "chain_slash_01.png",
-            "chain_slash_02.png",
-            "chain_slash_03.png",
-        )
-    ):
-        slash_path = ultimate_directory / filename
-        assets[f"assassin_ultimate_slash_{variant_index}"] = (
-            _load_pixel_scaled_image(slash_path, (96, 96))
-        )
     assets["player_archer_attack"] = _load_pixel_scaled_image(
         act_directory
         / "player"

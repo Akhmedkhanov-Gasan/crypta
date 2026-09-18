@@ -11,7 +11,7 @@ from logic import (
     get_enemy_occupied_positions,
     has_line_of_sight,
 )
-from settings import (
+from acts.act_three.settings import (
     WARLOCK_CURSE_CHARGES,
     WARLOCK_CURSE_RANGE,
     WARLOCK_CURSE_TURNS,
