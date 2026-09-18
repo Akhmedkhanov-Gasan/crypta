@@ -26,6 +26,7 @@ class ApplicationResources:
     act_one_sounds: Any
     act_two_transition_sounds: Any
     act_two_sounds: Any
+    act_three_sounds: Any
 
 
 def load_application_resources(startup):
@@ -49,6 +50,7 @@ def load_application_resources(startup):
         load_menu_assets,
         load_menu_layouts,
     )
+    from acts.act_three.audio import ActThreeSoundBank
     from presentation.audio import (
         ActOneSoundBank,
         ActTwoSoundBank,
@@ -101,6 +103,9 @@ def load_application_resources(startup):
         ActTwoSoundBank.load,
         ACT_TWO_SOUNDS_PATH,
     )
+    act_three_sounds = startup.load(
+        ActThreeSoundBank.load,
+    )
 
     return ApplicationResources(
         act_one_fonts=act_one_fonts,
@@ -123,4 +128,5 @@ def load_application_resources(startup):
         act_one_sounds=act_one_sounds,
         act_two_transition_sounds=act_two_transition_sounds,
         act_two_sounds=act_two_sounds,
+        act_three_sounds=act_three_sounds,
     )

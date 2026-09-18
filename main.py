@@ -410,7 +410,7 @@ FIRST_ACT_THREE_FLOOR = next(
     for index, floor_config in enumerate(FLOOR_CONFIGS)
     if floor_config["act"] == 3
 )
-ACT_THREE_MUSIC_ENABLED = False
+ACT_THREE_MUSIC_ENABLED = True
 
 
 def main():
@@ -444,6 +444,7 @@ def main():
     act_one_sounds = loaded_resources.act_one_sounds
     act_two_transition_sounds = loaded_resources.act_two_transition_sounds
     act_two_sounds = loaded_resources.act_two_sounds
+    act_three_sounds = loaded_resources.act_three_sounds
     if pygame.mixer.get_init() is not None:
         pygame.mixer.set_reserved(2)
 
@@ -472,6 +473,7 @@ def main():
         menu_state.effects_volume
     )
     act_two_sounds.set_master_volume(menu_state.effects_volume)
+    act_three_sounds.set_master_volume(menu_state.effects_volume)
     app_runtime = ApplicationRuntimeState(
         menu_started_at=pygame.time.get_ticks(),
     )
@@ -990,7 +992,17 @@ def main():
                     act_two_sounds.set_master_volume(
                         menu_state.effects_volume
                     )
+                    act_three_sounds.set_master_volume(
+                        menu_state.effects_volume
+                    )
                     if (
+                        act_three_music_attempted
+                        and pygame.mixer.get_init() is not None
+                    ):
+                        act_three_sounds.set_music_volume(
+                            menu_state.music_volume
+                        )
+                    elif (
                         (
                             act_one_music_attempted
                             or act_one_menu_music_playing
@@ -3179,6 +3191,11 @@ def main():
                             game_state.player.player_class,
                             game_state.floor,
                         )
+                    elif current_act == 3:
+                        act_three_sounds.play_events(
+                            game_state.events,
+                            game_state.player,
+                        )
         run_session.invalidate_finished(
             game_state,
             app_runtime,
@@ -3404,6 +3421,12 @@ def main():
             clock.tick(FPS)
             continue
 
+        if current_act == 3:
+            act_three_sounds.update(
+                game_state.player,
+                current_time,
+            )
+
         if game_state.player.ultimate_animation_active:
             animation_duration = (
                 ASSASSIN_ULTIMATE_PRELUDE_MS
@@ -3433,7 +3456,7 @@ def main():
             )
 
         if (
-            game_state.act_three_transition_open
+            current_act == 3
             and ACT_THREE_MUSIC_ENABLED
             and not act_three_music_attempted
         ):
@@ -3448,7 +3471,9 @@ def main():
                 resources.load_music(
                     str(ACT_THREE_MUSIC_PATH)
                 )
-                pygame.mixer.music.set_volume(0.65)
+                act_three_sounds.set_music_volume(
+                    menu_state.music_volume
+                )
                 pygame.mixer.music.play(-1, fade_ms=1800)
             except pygame.error as audio_error:
                 add_log_message(
