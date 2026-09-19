@@ -9,6 +9,7 @@ from acts.act_two.assets import (
 )
 from acts.act_three.presentation.player_assets import (
     load_assassin_animation_assets,
+    load_berserker_animation_assets,
 )
 from acts.act_three.presentation.ability_assets import (
     load_act_three_ability_assets,
@@ -1535,7 +1536,6 @@ def load_act_three_gameplay_assets():
     )
 
     for subclass in (
-        "berserker",
         "paladin",
         "archer",
         "warlock",
@@ -1557,6 +1557,12 @@ def load_act_three_gameplay_assets():
                 )
             )
     load_assassin_animation_assets(
+        assets,
+        act_directory,
+        tile_size,
+        _load_pixel_scaled_image,
+    )
+    load_berserker_animation_assets(
         assets,
         act_directory,
         tile_size,
@@ -1613,18 +1619,6 @@ def load_act_three_gameplay_assets():
         assets[f"player_archer_walk_{frame_index}"] = (
             _load_pixel_scaled_image(
                 archer_walk_directory
-                / f"walk_{frame_index:02d}.png",
-                (tile_size, tile_size),
-            )
-        )
-
-    berserker_walk_directory = (
-        act_directory / "player" / "berserker" / "walk"
-    )
-    for frame_index in range(2):
-        assets[f"player_berserker_walk_{frame_index}"] = (
-            _load_pixel_scaled_image(
-                berserker_walk_directory
                 / f"walk_{frame_index:02d}.png",
                 (tile_size, tile_size),
             )

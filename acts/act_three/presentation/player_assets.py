@@ -2,6 +2,63 @@ from acts.act_three.presentation.player_motion import (
     ASSASSIN_HURT_FRAME_COUNTS,
 )
 
+
+def load_berserker_animation_assets(
+    assets,
+    act_directory,
+    tile_size,
+    image_loader,
+):
+    berserker_directory = (
+        act_directory
+        / "player"
+        / "berserker"
+    )
+    idle_directory = berserker_directory / "idle"
+    walk_directory = berserker_directory / "walk"
+    idle_directions = (
+        "left",
+        "right",
+        "up",
+    )
+    walk_directions = (
+        "down",
+        "left",
+        "right",
+        "up",
+    )
+
+    for frame_index in range(8):
+        source_index = frame_index + 1
+
+        assets[
+            f"player_berserker_idle_{frame_index}"
+        ] = image_loader(
+            idle_directory / f"idle_{source_index:02d}.png",
+            (tile_size, tile_size),
+        )
+
+        for direction in idle_directions:
+            assets[
+                f"player_berserker_idle_{direction}_{frame_index}"
+            ] = image_loader(
+                idle_directory
+                / f"idle_{direction}"
+                / f"idle_{direction}_{source_index:02d}.png",
+                (tile_size, tile_size),
+            )
+
+        for direction in walk_directions:
+            assets[
+                f"player_berserker_walk_{direction}_{frame_index}"
+            ] = image_loader(
+                walk_directory
+                / f"walk_{direction}"
+                / f"walk_{direction}_{source_index:02d}.png",
+                (tile_size, tile_size),
+            )
+
+
 def load_assassin_animation_assets(
     assets,
     act_directory,

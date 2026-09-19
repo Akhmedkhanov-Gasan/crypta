@@ -100,6 +100,13 @@ _PORTRAIT_PATHS = {
         / "assassin"
         / "portrait.png"
     ),
+    "berserker": (
+        ASSET_ROOT
+        / "act_3"
+        / "player"
+        / "berserker"
+        / "portrait.png"
+    ),
 }
 
 

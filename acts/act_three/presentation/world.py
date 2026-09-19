@@ -154,11 +154,14 @@ from acts.act_three.presentation.animation import (
 from acts.act_three.presentation.player_motion import (
     ASSASSIN_SHADOW_STEP_FRAME_COUNT,
     ASSASSIN_WALK_FRAME_COUNT,
+    BERSERKER_WALK_FRAME_COUNT,
     assassin_attack_direction,
     assassin_attack_frame,
     assassin_shadow_step_direction,
     assassin_shadow_step_frame,
     assassin_idle_frame,
+    berserker_idle_frame,
+    berserker_walk_frame,
     assassin_walk_direction,
     assassin_walk_frame,
     assassin_hurt_frame,
@@ -1154,10 +1157,16 @@ def _draw_act_three_world(
         movement_frame_count = (
             ASSASSIN_WALK_FRAME_COUNT
             if player_subclass == "assassin"
-            else _MOVE_FRAME_COUNT
+            else (
+                BERSERKER_WALK_FRAME_COUNT
+                if player_subclass == "berserker"
+                else _MOVE_FRAME_COUNT
+            )
         )
         if player_subclass == "assassin":
             movement_frame = assassin_walk_frame(current_time)
+        elif player_subclass == "berserker":
+            movement_frame = berserker_walk_frame(current_time)
         else:
             movement_frame = movement_frame_for_progress(
                 movement_progress,
@@ -1170,6 +1179,13 @@ def _draw_act_three_world(
             )
             player_sprite = assets[
                 f"player_assassin_walk_{walk_direction}_{movement_frame}"
+            ]
+        elif player_subclass == "berserker":
+            walk_direction = assassin_walk_direction(
+                game_state.player.facing_direction
+            )
+            player_sprite = assets[
+                f"player_berserker_walk_{walk_direction}_{movement_frame}"
             ]
         elif (
             player_subclass == "warlock"
@@ -1192,6 +1208,8 @@ def _draw_act_three_world(
     else:
         if player_subclass == "assassin":
             player_frame = assassin_idle_frame(current_time)
+        elif player_subclass == "berserker":
+            player_frame = berserker_idle_frame(current_time)
         else:
             player_frame = _idle_frame(
                 current_time,
@@ -1214,6 +1232,19 @@ def _draw_act_three_world(
             else:
                 player_sprite = assets[
                     f"player_assassin_idle_{idle_direction}_{player_frame}"
+                ]
+        elif player_subclass == "berserker":
+            idle_direction = assassin_walk_direction(
+                game_state.player.facing_direction
+            )
+
+            if idle_direction == "down":
+                player_sprite = assets[
+                    f"player_berserker_idle_{player_frame}"
+                ]
+            else:
+                player_sprite = assets[
+                    f"player_berserker_idle_{idle_direction}_{player_frame}"
                 ]
         elif (
             player_subclass == "warlock"
