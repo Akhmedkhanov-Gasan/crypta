@@ -213,6 +213,9 @@ from acts.act_three.runtime import (
     choose_subclass,
     create_act_three_debug_transition,
 )
+from acts.act_three.presentation.assassin import (
+    record_shadow_reflex_feedback,
+)
 from acts.act_three.presentation.combat_effects import (
     record_enemy_death_feedback,
     record_enemy_hit_feedback,
@@ -2967,6 +2970,10 @@ def main():
                         enemy_movement_started_at,
                     )
                     record_player_death_feedback(
+                        game_state,
+                        enemy_movement_started_at,
+                    )
+                    record_shadow_reflex_feedback(
                         game_state,
                         enemy_movement_started_at,
                     )

@@ -2,6 +2,7 @@ from collections.abc import Callable
 import random
 
 from game.combat_log import add_log_message
+from acts.act_three.events import GameEvent, GameEventType
 from game.state import (
     EnemyState,
     FloorState,
@@ -44,6 +45,92 @@ def assassin_teleport_facing_direction(
         0,
         1 if row_change > 0 else -1,
     )
+
+
+def resolve_assassin_shadow_reflex(
+    game_state: GameState,
+    enemy: EnemyState,
+) -> bool:
+    player = game_state.player
+    floor = game_state.floor
+
+    if (
+        floor.presentation_act != 3
+        or player.subclass != "assassin"
+        or player.health <= 0
+        or enemy.health <= 0
+    ):
+        return False
+
+    origin = (
+        floor.player_column,
+        floor.player_row,
+    )
+    target = min(
+        get_enemy_occupied_positions(enemy),
+        key=lambda position: (
+            abs(position[0] - origin[0])
+            + abs(position[1] - origin[1])
+        ),
+    )
+    distance = (
+        abs(target[0] - origin[0])
+        + abs(target[1] - origin[1])
+    )
+    ranged = distance > 1
+
+    player.facing_direction = (
+        assassin_teleport_facing_direction(
+            origin,
+            target,
+        )
+    )
+    game_state.player_attack_targets = [target]
+
+    game_state.emit(
+        GameEvent(
+            type=GameEventType.ATTACK,
+            actor="hero",
+            target=enemy.name,
+            origin=origin,
+            destination=target,
+            positions=(target,),
+            data={
+                "kind": "assassin_shadow_reflex",
+                "ranged": ranged,
+            },
+        )
+    )
+
+    add_log_message(
+        game_state.combat_log,
+        f"Shadow Reflex counters {enemy.name}.",
+        category="ability",
+    )
+
+    enemy_was_defeated = attack_enemy(
+        game_state,
+        enemy,
+        player.damage_min,
+        player.damage_max,
+        player.crit_chance,
+        attacker_position=origin,
+        grant_ability_charge=False,
+    )
+
+    if enemy.type == "oracle":
+        from bosses.oracle import resolve_oracle_hit_reaction
+
+        resolve_oracle_hit_reaction(
+            enemy,
+            floor,
+            game_state.combat_log,
+        )
+
+    if enemy_was_defeated:
+        resolve_enemy_defeat(game_state, enemy)
+
+    return True
 
 
 def request_assassin_teleport(game_state: GameState) -> bool:

@@ -113,6 +113,10 @@ class ActThreePlayerState:
     summoner_attack_target: tuple[int, int] | None = None
 
     facing_direction: tuple[int, int] = (0, 1)
+    shadow_reflex_started_at: int = -1
+    shadow_reflex_origin: tuple[int, int] | None = None
+    shadow_reflex_target: tuple[int, int] | None = None
+    shadow_reflex_ranged: bool = False
     teleport_charge: int = 0
     teleport_aiming: bool = False
     teleport_target: tuple[int, int] | None = None

@@ -236,6 +236,7 @@ from acts.act_three.presentation.targeting import (
 )
 from acts.act_three.presentation.assassin import (
     draw_killing_spree_effects,
+    draw_shadow_reflex_feedback,
     draw_killing_spree_final_impacts,
     draw_killing_spree_target_marks,
     killing_spree_camera_position,
@@ -1126,6 +1127,17 @@ def _draw_act_three_world(
             )
             player_sprite = assets[
                 f"player_assassin_attack_{attack_direction}_{attack_frame}"
+            ]
+        elif player_subclass == "berserker":
+            attack_direction = assassin_attack_direction(
+                game_state.player.facing_direction
+            )
+            attack_frame = assassin_attack_frame(
+                attack_elapsed,
+                _ATTACK_FRAME_DURATION_MS,
+            )
+            player_sprite = assets[
+                f"player_berserker_attack_{attack_direction}_{attack_frame}"
             ]
         elif (
             player_subclass == "warlock"
@@ -2456,6 +2468,17 @@ def _draw_act_three_world(
         camera_y,
         ACT_THREE_TILE_SIZE,
     )
+
+    if player_subclass == "assassin":
+        draw_shadow_reflex_feedback(
+            view_surface,
+            game_state.player,
+            current_time,
+            camera_x,
+            camera_y,
+            fonts["sidebar_numbers"],
+        )
+
     _draw_player_hit_vignette(
         view_surface,
         game_state.player,

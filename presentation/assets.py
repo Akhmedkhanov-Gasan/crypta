@@ -1858,14 +1858,6 @@ def load_act_three_gameplay_assets():
             (tile_size, tile_size),
         )
     )
-    assets["player_berserker_attack"] = _load_pixel_scaled_image(
-        act_directory
-        / "player"
-        / "berserker"
-        / "attack"
-        / "attack_00.png",
-        (tile_size, tile_size),
-    )
     assets["player_berserker_crushing_leap"] = (
         _load_pixel_scaled_image(
             act_directory

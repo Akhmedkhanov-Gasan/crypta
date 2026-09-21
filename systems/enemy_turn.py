@@ -7,6 +7,9 @@ from acts.act_three.ai import (
 from acts.act_three.abilities.archer import (
     resolve_archer_barrage_zone_entry,
 )
+from acts.act_three.abilities.assassin import (
+    resolve_assassin_shadow_reflex,
+)
 from acts.act_three.abilities.summoner import (
     damage_summoner_familiar,
     resolve_summoner_familiar_turn,
@@ -467,6 +470,10 @@ def resolve_enemy_turn(
                             f"{enemy['name']}'s attack."
                         ),
                         category="defense",
+                    )
+                    resolve_assassin_shadow_reflex(
+                        game_state,
+                        enemy,
                     )
                 elif (
                             not is_lethal_oracle_shockwave

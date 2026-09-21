@@ -16,12 +16,19 @@ def load_berserker_animation_assets(
     )
     idle_directory = berserker_directory / "idle"
     walk_directory = berserker_directory / "walk"
+    attack_directory = berserker_directory / "attack"
     idle_directions = (
         "left",
         "right",
         "up",
     )
     walk_directions = (
+        "down",
+        "left",
+        "right",
+        "up",
+    )
+    attack_directions = (
         "down",
         "left",
         "right",
@@ -55,6 +62,15 @@ def load_berserker_animation_assets(
                 walk_directory
                 / f"walk_{direction}"
                 / f"walk_{direction}_{source_index:02d}.png",
+                (tile_size, tile_size),
+            )
+        for direction in attack_directions:
+            assets[
+                f"player_berserker_attack_{direction}_{frame_index}"
+            ] = image_loader(
+                attack_directory
+                / f"attack_{direction}"
+                / f"attack_{direction}_{source_index:02d}.png",
                 (tile_size, tile_size),
             )
 
