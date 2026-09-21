@@ -82,6 +82,19 @@ from acts.act_three.settings import (
     PALADIN_SHIELD_CHARGE_TRAVEL_MS,
     WARLOCK_SOUL_EXCHANGE_TRAVEL_MS,
 )
+from acts.act_three.progression import (
+    cancel_act_three_attribute_upgrade,
+    clear_act_three_attribute_upgrades,
+    confirm_act_three_attribute_upgrades,
+    queue_act_three_attribute_upgrade,
+    get_pending_attribute_points,
+)
+from acts.act_three.presentation.hud.geometry import (
+    get_act_three_attribute_button_rectangles,
+    get_act_three_character_confirm_rectangle,
+)
+
+
 def handle_act_three_pointer_event(
     event,
     game_state,
@@ -529,20 +542,64 @@ def handle_act_three_pointer_event(
                         )
                     )
                 elif tab_name in ("stats", "journal"):
+                    if game_state.sidebar_tab == "stats":
+                        clear_act_three_attribute_upgrades(
+                            game_state.player
+                        )
+
                     game_state.sidebar_tab = (
                         "closed"
                         if game_state.sidebar_tab == tab_name
                         else tab_name
                     )
-                return True
+                    return True
             if game_state.sidebar_tab in ("stats", "journal"):
+                if game_state.sidebar_tab == "stats":
+                    if (
+                            get_pending_attribute_points(game_state.player) > 0
+                            and get_act_three_character_confirm_rectangle().collidepoint(
+                        game_mouse_position
+                    )
+                    ):
+                        if confirm_act_three_attribute_upgrades(
+                                game_state.player
+                        ):
+                            add_log_message(
+                                game_state.combat_log,
+                                "Attribute upgrades confirmed.",
+                                category="progress",
+                            )
+                        return True
+
+                    for attribute, buttons in (
+                            get_act_three_attribute_button_rectangles().items()
+                    ):
+                        if buttons["plus"].collidepoint(game_mouse_position):
+                            queue_act_three_attribute_upgrade(
+                                game_state.player,
+                                attribute,
+                            )
+                            return True
+
+                        if buttons["minus"].collidepoint(game_mouse_position):
+                            cancel_act_three_attribute_upgrade(
+                                game_state.player,
+                                attribute,
+                            )
+                            return True
+
                 if get_act_three_panel_close_rectangle(
-                    game_state.sidebar_tab
+                        game_state.sidebar_tab
                 ).collidepoint(game_mouse_position):
+                    if game_state.sidebar_tab == "stats":
+                        clear_act_three_attribute_upgrades(
+                            game_state.player
+                        )
                     game_state.sidebar_tab = "closed"
                     return True
+
                 if get_act_three_popup_rectangle(
-                    game_state.sidebar_tab
+                        game_state.sidebar_tab
                 ).collidepoint(game_mouse_position):
                     return True
             if movement_available:

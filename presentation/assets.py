@@ -1053,8 +1053,8 @@ def _scale_to_width(source, target_width):
 
 
 def load_act_three_transition_assets():
-    ui_directory = ASSET_ROOT / "ui" / "act_3"
     player_directory = ASSET_ROOT / "act_3" / "player"
+    ui_directory = ASSET_ROOT / "ui" / "act_3"
     berserker_path = (
         player_directory
         / "berserker"
@@ -1201,207 +1201,21 @@ def load_act_three_gameplay_assets():
     ]
     first_act_three_index, act_three_config = act_three_configs[0]
     project_root = ASSET_ROOT.parent.parent
-    map_path = project_root / act_three_config["map_path"]
-    environment_directory = (
-            project_root
-            / "assets"
-            / "maps"
-            / "act_3"
-            / "environment_v1"
+    map_directory = (
+        project_root
+        / "assets"
+        / "maps"
+        / "act_3"
     )
-    new_environment_directory = map_path.parent
-    ui_directory = ASSET_ROOT / "ui" / "act_3"
+    map_path = project_root / act_three_config["map_path"]
     tile_size = ACT_THREE_TILE_SIZE
     assets = {
-        "floor_base": _load_scaled_image(
-            environment_directory / "floor" / "floor_base.png",
-            (tile_size, tile_size),
-            use_alpha=False,
-        ),
-        "floor_cracked": _load_scaled_image(
-            environment_directory
-            / "floor"
-            / "floor_cracked.png",
-            (tile_size, tile_size),
-            use_alpha=False,
-        ),
-        "floor_damp": _load_scaled_image(
-            environment_directory / "floor" / "floor_damp.png",
-            (tile_size, tile_size),
-            use_alpha=False,
-        ),
-        "wall_top": _load_scaled_image(
-            environment_directory
-            / "walls"
-            / "original"
-            / "wall_top_original.png",
-            (tile_size, tile_size),
-            use_alpha=False,
-        ),
-        "wall_top_variant": _load_scaled_image(
-            environment_directory
-            / "walls"
-            / "wall_top_variant_01.png",
-            (tile_size, tile_size),
-            use_alpha=False,
-        ),
-        "wall_top_turn_left": _load_scaled_image(
-            environment_directory
-            / "walls"
-            / "wall_top_turn_left.png",
-            (tile_size, tile_size),
-        ),
-        "wall_top_turn_right": _load_scaled_image(
-            environment_directory
-            / "walls"
-            / "wall_top_turn_right.png",
-            (tile_size, tile_size),
-        ),
-        "wall_bottom": _load_scaled_image(
-            environment_directory
-            / "walls"
-            / "wall_bottom.png",
-            (tile_size, tile_size),
-        ),
-        "wall_left": _load_scaled_image(
-            environment_directory / "walls" / "wall_left.png",
-            (tile_size, tile_size),
-        ),
-        "wall_right": _load_scaled_image(
-            environment_directory / "walls" / "wall_right.png",
-            (tile_size, tile_size),
-        ),
-        "wall_corner_bottom_left": _load_scaled_image(
-            environment_directory
-            / "walls"
-            / "wall_corner_bottom_left.png",
-            (tile_size, tile_size),
-        ),
-        "wall_corner_bottom_right": _load_scaled_image(
-            environment_directory
-            / "walls"
-            / "wall_corner_bottom_right.png",
-            (tile_size, tile_size),
-        ),
-        "wall_corner_top_left": _load_scaled_image(
-            environment_directory
-            / "walls"
-            / "wall_corner_top_left.png",
-            (tile_size, tile_size),
-        ),
-        "wall_corner_top_right": _load_scaled_image(
-            environment_directory
-            / "walls"
-            / "wall_corner_top_right.png",
-            (tile_size, tile_size),
-        ),
-        "chest_closed": _load_scaled_image(
-            environment_directory
-            / "chests"
-            / "chest_closed.png",
-            (tile_size, tile_size),
-        ),
-        "chest_open": _load_scaled_image(
-            environment_directory
-            / "chests"
-            / "chest_open.png",
-            (tile_size, tile_size),
-        ),
-        "coin": _load_scaled_image(
-            environment_directory / "items" / "coin.png",
-            (tile_size, tile_size),
-        ),
-        "key": _load_scaled_image(
-            environment_directory / "items" / "key.png",
-            (tile_size, tile_size),
-        ),
-        "potion": _load_scaled_image(
-            environment_directory
-            / "items"
-            / "potion_health.png",
-            (tile_size, tile_size),
-        ),
-                "stairs": _load_scaled_image(
-            environment_directory
-            / "stairs"
-            / "stairs_open_original.png",
-            (tile_size, tile_size),
-        ),
+
         "torch_base": _load_scaled_image(
-            new_environment_directory
+            map_directory
             / "torches"
             / "torches_v1_base.png",
             (tile_size, tile_size),
-        ),
-        "upgrade_altar_0": _load_pixel_scaled_image(
-            environment_directory
-            / "upgrade_altar"
-            / "upgrade_altar_00.png",
-            (tile_size * 2, tile_size * 2),
-        ),
-        "upgrade_altar_1": _load_pixel_scaled_image(
-            environment_directory
-            / "upgrade_altar"
-            / "upgrade_altar_01.png",
-            (tile_size * 2, tile_size * 2),
-        ),
-        "upgrade_altar_2": _load_pixel_scaled_image(
-            environment_directory
-            / "upgrade_altar"
-            / "upgrade_altar_02.png",
-            (tile_size * 2, tile_size * 2),
-        ),
-        "altar_menu_panel": _load_scaled_image(
-            ui_directory / "altar_menu" / "panel.png",
-            (1000, 590),
-        ),
-        "altar_menu_card": _load_scaled_image(
-            ui_directory / "altar_menu" / "attribute_card.png",
-            (410, 205),
-        ),
-        "altar_menu_tab": _load_scaled_image(
-            ui_directory / "altar_menu" / "tab.png",
-            (280, 58),
-        ),
-        "altar_menu_button": _load_scaled_image(
-            ui_directory / "altar_menu" / "upgrade_button.png",
-            (330, 42),
-        ),
-        "altar_menu_xp_bar": _load_scaled_image(
-            ui_directory / "altar_menu" / "xp_bar_frame.png",
-            (320, 34),
-        ),
-        "altar_menu_vitality": _load_scaled_image(
-            ui_directory / "altar_menu" / "vitality.png",
-            (72, 72),
-        ),
-        "altar_menu_power": _load_scaled_image(
-            ui_directory / "altar_menu" / "power.png",
-            (72, 72),
-        ),
-        "altar_menu_precision": _load_scaled_image(
-            ui_directory / "altar_menu" / "precision.png",
-            (72, 72),
-        ),
-        "altar_menu_evasion": _load_scaled_image(
-            ui_directory / "altar_menu" / "evasion.png",
-            (72, 72),
-        ),
-        "altar_menu_attribute_point": _load_scaled_image(
-            ui_directory / "altar_menu" / "attribute_point.png",
-            (24, 24),
-        ),
-        "altar_menu_skill_point": _load_scaled_image(
-            ui_directory / "altar_menu" / "skill_point.png",
-            (24, 24),
-        ),
-        "altar_menu_rank_filled": _load_scaled_image(
-            ui_directory / "altar_menu" / "rank_filled.png",
-            (14, 14),
-        ),
-        "altar_menu_rank_empty": _load_scaled_image(
-            ui_directory / "altar_menu" / "rank_empty.png",
-            (14, 14),
         ),
         "summoner_familiar_idle_0": _load_pixel_scaled_image(
             act_directory
@@ -1470,15 +1284,10 @@ def load_act_three_gameplay_assets():
             (tile_size, tile_size),
         ),
         "sidebar_potion": _load_scaled_image(
-            environment_directory / "items" / "potion_health.png",
-            (34, 34),
-        ),
-        "sidebar_coin": _load_scaled_image(
-            environment_directory / "items" / "coin.png",
-            (34, 34),
-        ),
-        "sidebar_key": _load_scaled_image(
-            environment_directory / "items" / "key.png",
+            act_directory
+            / "items"
+            / "consumables"
+            / "potion_original.png",
             (34, 34),
         ),
     }
@@ -1522,7 +1331,7 @@ def load_act_three_gameplay_assets():
     for frame_index in range(4):
         assets[f"torch_flame_{frame_index}"] = (
             _load_scaled_image(
-                new_environment_directory
+                map_directory
                 / "torches"
                 / f"torches_v1_flame_0{frame_index + 1}.png",
                 (tile_size, tile_size),

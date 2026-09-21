@@ -72,7 +72,6 @@ def _open_rune_selection(game_state, close_console):
         game_state.rune_selection_open
         or game_state.bloody_altar_open
         or game_state.trade_screen_open
-        or game_state.upgrade_screen_open
         or game_state.class_selection_open
         or game_state.subclass_selection_open
     ):

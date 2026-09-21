@@ -55,6 +55,53 @@ def get_act_three_popup_rectangle(panel_name):
     )
 
 
+def get_act_three_attribute_button_rectangles():
+    layout = get_act_three_hud_layout()
+    rows = layout[
+        "right_bar"
+    ][
+        "character_panel"
+    ][
+        "attributes"
+    ][
+        "rows"
+    ]
+
+    return {
+        name: {
+            "minus": get_layout_rect(
+                layout,
+                "right_bar",
+                "character_panel",
+                "attributes",
+                "rows",
+                name,
+                "minus_hitbox",
+            ),
+            "plus": get_layout_rect(
+                layout,
+                "right_bar",
+                "character_panel",
+                "attributes",
+                "rows",
+                name,
+                "plus_hitbox",
+            ),
+        }
+        for name in rows
+    }
+
+
+def get_act_three_character_confirm_rectangle():
+    return get_layout_rect(
+        get_act_three_hud_layout(),
+        "right_bar",
+        "character_panel",
+        "confirm",
+        "hitbox",
+    )
+
+
 def get_act_three_bottom_hud_rectangles():
     layout = get_act_three_hud_layout()
 

@@ -48,10 +48,6 @@ from acts.act_two.presentation.camera import (
     draw_act_two_camera_view,
     update_act_two_camera,
 )
-from acts.act_two.presentation.upgrade import (
-    draw_act_two_upgrade_screen,
-    get_act_two_upgrade_card_rectangles,
-)
 from acts.act_two.presentation.traps import draw_act_two_spike_traps
 from acts.act_two.presentation.runes import draw_act_two_rune_room
 from acts.act_two.presentation.rune_selection import (
@@ -87,7 +83,6 @@ __all__ = [
     "draw_act_two_pickup_effect",
     "draw_act_two_player_attack_effect",
     "draw_act_two_power_cleave_effect",
-    "draw_act_two_upgrade_screen",
     "draw_act_two_spike_traps",
     "draw_act_two_rune_room",
     "draw_rune_selection",
@@ -96,7 +91,6 @@ __all__ = [
     "draw_act_two_trade_window",
     "get_act_two_trade_buy_rectangles",
     "get_act_two_trade_close_rectangle",
-    "get_act_two_upgrade_card_rectangles",
     "draw_act_two_player_actor",
     "draw_act_two_player_feedback_overlay",
     "draw_act_two_wait_indicator",

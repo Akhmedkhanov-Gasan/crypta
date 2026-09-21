@@ -131,7 +131,7 @@ FLOOR_CONFIGS = [
         "act_floor": 1,
         "continues_previous_floor": True,
         "map_path": (
-            "assets/maps/act_3/environment_v3/"
+            "assets/maps/act_3/"
             "act3_start.tmx"
         ),
     },
@@ -139,15 +139,15 @@ FLOOR_CONFIGS = [
         "act": 3,
         "act_floor": 2,
         "tmx_room_sequence": (
-            "assets/maps/act_3/environment_v3/"
+            "assets/maps/act_3/"
             "room_entry_01.tmx",
-            "assets/maps/act_3/environment_v3/"
+            "assets/maps/act_3/"
             "corridor_straight_ns_01.tmx",
-            "assets/maps/act_3/environment_v3/"
+            "assets/maps/act_3/"
             "room_regular_01.tmx",
-            "assets/maps/act_3/environment_v3/"
+            "assets/maps/act_3/"
             "corridor_straight_ns_01.tmx",
-            "assets/maps/act_3/environment_v3/"
+            "assets/maps/act_3/"
             "room_exit_01.tmx",
         ),
     },

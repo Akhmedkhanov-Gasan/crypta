@@ -16,7 +16,6 @@ from presentation.map_navigation import (
 
 _BLOCKING_SCREENS = (
     "class_selection_open",
-    "upgrade_screen_open",
     "rune_selection_open",
     "bloody_altar_open",
     "trade_screen_open",

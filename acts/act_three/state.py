@@ -13,6 +13,14 @@ class ActThreePlayerState:
     mastery_rank: int = 0
     weapon_rank: int = 0
     armor_rank: int = 0
+    pending_attribute_upgrades: dict[str, int] = field(
+        default_factory=lambda: {
+            "valor": 0,
+            "instinct": 0,
+            "will": 0,
+            "fortitude": 0,
+        }
+    )
     unlocked_ability_slots: set[str] = field(
         default_factory=lambda: {"e"}
     )

@@ -1119,22 +1119,22 @@
       },
       "confirm": {
         "rect": {
-          "x": 876,
-          "y": 541,
-          "width": 75,
-          "height": 23
+          "x": 861,
+          "y": 539,
+          "width": 98,
+          "height": 29
         },
         "button": {
-          "x": 864,
-          "y": 538,
+          "x": 861,
+          "y": 539,
           "width": 98,
           "height": 29
         },
         "hitbox": {
-          "x": 876,
-          "y": 541,
-          "width": 75,
-          "height": 23
+          "x": 861,
+          "y": 539,
+          "width": 98,
+          "height": 29
         }
       },
       "mastery": {

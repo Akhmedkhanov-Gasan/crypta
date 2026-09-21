@@ -281,7 +281,6 @@ from rendering import (
     draw_act_two_power_cleave_effect,
     draw_act_two_rune_room,
     draw_rune_selection,
-    draw_act_two_upgrade_screen,
     draw_act_two_spike_traps,
     draw_act_two_treasury,
     draw_act_two_trader,
@@ -310,7 +309,6 @@ from rendering import (
     draw_passage,
     draw_status,
     draw_subclass_selection_screen,
-    draw_upgrade_screen,
     get_act_two_belt_slot_rectangles,
     get_act_two_sidebar_button_rectangles,
     get_act_two_journal_close_rectangle,
@@ -527,12 +525,6 @@ def main():
         ):
             set_warlock_staff_cursor(False)
             act_two_input_state.resonance_cursor_active = False
-
-        if current_act == 2 and game_state.upgrade_screen_open:
-            finish_upgrade_descent(
-                game_state,
-                pygame.time.get_ticks(),
-            )
         continuous_move_time = pygame.time.get_ticks()
 
         if oracle_cutscene_active(game_state.floor):
@@ -3229,16 +3221,6 @@ def main():
         if loading.completed:
             continue
 
-        if (
-            game_state.upgrade_screen_open
-            and game_state.player.attribute_points <= 0
-            and FLOOR_CONFIGS[game_state.floor_index]["act"] != 1
-        ):
-            finish_upgrade_descent(
-                game_state,
-                pygame.time.get_ticks(),
-            )
-
         current_time = pygame.time.get_ticks()
 
         if app_runtime.game_started and not app_runtime.menu_open:
@@ -4776,76 +4758,20 @@ def main():
                 current_time,
             )
 
-        if game_state.upgrade_screen_open:
-            active_upgrade_title_font = (
-                act_three_fonts["title"]
-                if current_act >= 3
-                else (
-                    act_two_fonts["title"]
-                    if current_act >= 2
-                    else title_font
-                )
-            )
-            active_upgrade_text_font = (
-                act_three_fonts["text"]
-                if current_act >= 3
-                else (
-                    act_two_fonts["text"]
-                    if current_act >= 2
-                    else act_one_fonts["interface"]
-                )
-            )
+        if current_act == 1 and game_state.upgrade_screen_open:
             upgrade_mouse_position = window_to_game_position(
                 window_state.screen,
                 pygame.mouse.get_pos(),
             )
-            if current_act == 1:
-                draw_act_one_upgrade_screen(
-                    game_surface,
-                    active_upgrade_title_font,
-                    active_upgrade_text_font,
-                    game_state.player,
-                    game_state.act_one_upgrades_remaining,
-                    game_state.upgrade_message,
-                    upgrade_mouse_position,
-                )
-            elif (
-                current_act == 2
-                and game_state.player.player_class in (
-                    "warrior",
-                    "rogue",
-                    "mage",
-                )
-                and game_state.player.subclass is None
-            ):
-                draw_act_two_upgrade_screen(
-                    game_surface,
-                    active_upgrade_title_font,
-                    active_upgrade_text_font,
-                    game_state.player,
-                    act_two_sprites,
-                    game_state.upgrade_message,
-                    upgrade_mouse_position,
-                    game_state.upgrade_reward_pending,
-                )
-            else:
-                draw_upgrade_screen(
-                    game_surface,
-                    active_upgrade_title_font,
-                    active_upgrade_text_font,
-                    game_state.player.gold_count,
-                    game_state.player.health,
-                    game_state.player.max_health,
-                    game_state.player.damage_min,
-                    game_state.player.damage_max,
-                    game_state.player.crit_chance,
-                    game_state.player.dodge_chance,
-                    game_state.player.critical_damage_multiplier,
-                    game_state.player.attribute_ranks,
-                    game_state.upgrade_message,
-                    upgrade_mouse_position,
-                    show_will=(current_act >= 2),
-                )
+            draw_act_one_upgrade_screen(
+                game_surface,
+                title_font,
+                act_one_fonts["interface"],
+                game_state.player,
+                game_state.act_one_upgrades_remaining,
+                game_state.upgrade_message,
+                upgrade_mouse_position,
+            )
         if game_state.class_selection_open:
             class_mouse_position = window_to_game_position(
                 window_state.screen,

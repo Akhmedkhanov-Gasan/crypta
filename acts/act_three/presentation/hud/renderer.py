@@ -46,6 +46,10 @@ from presentation.figma_ui import (
     figma_rect,
     get_figma_font as get_layout_font,
 )
+from acts.act_three.progression import (
+    get_act_three_attribute_preview,
+    get_pending_attribute_points,
+)
 
 _TEXT_COLOR = (174, 154, 143)
 _EMPTY_BAR_COLOR = (13, 10, 11)
@@ -952,6 +956,8 @@ def _draw_character_panel(
     )
 
     player = game_state.player
+    preview_player = get_act_three_attribute_preview(player)
+    pending_points = get_pending_attribute_points(player)
     panel = layout["right_bar"]["character_panel"]
     hovered_item = get_character_panel_hover(
         panel,
@@ -968,18 +974,19 @@ def _draw_character_panel(
             "frame",
         ),
     )
-    _blit_asset(
-        screen,
-        assets,
-        "hud_character_panel_button",
-        get_layout_rect(
-            layout,
-            "right_bar",
-            "character_panel",
-            "confirm",
-            "button",
-        ),
-    )
+    if pending_points > 0:
+        _blit_asset(
+            screen,
+            assets,
+            "hud_character_panel_button",
+            get_layout_rect(
+                layout,
+                "right_bar",
+                "character_panel",
+                "confirm",
+                "button",
+            ),
+        )
     draw_character_panel_highlight(
         screen,
         panel,
@@ -1005,10 +1012,10 @@ def _draw_character_panel(
     _draw_dynamic_figma_text(
         screen,
         attribute_points["value"],
-        player.attribute_points,
+        player.attribute_points - pending_points,
     )
 
-    ranks = player.attribute_ranks
+    ranks = preview_player.attribute_ranks
 
     for name, row in panel["attributes"]["rows"].items():
         draw_figma_text(
@@ -1076,25 +1083,25 @@ def _draw_character_panel(
     )
 
     armor_value = getattr(
-        player,
+        preview_player,
         "armor",
         0,
     )
     charge_rate = round(
-        get_mastery_charge_rate(player) * 100
+        get_mastery_charge_rate(preview_player) * 100
     )
 
     combat_values = {
-        "damage": _damage_value(player),
+        "damage": _damage_value(preview_player),
         "armor": armor_value,
         "critical_chance": (
-            f"{round(player.crit_chance * 100)}%"
+            f"{round(preview_player.crit_chance * 100)}%"
         ),
         "critical_damage": (
-            f"x{player.critical_damage_multiplier:.1f}"
+            f"x{preview_player.critical_damage_multiplier:.1f}"
         ),
         "dodge_chance": (
-            f"{round(player.dodge_chance * 100)}%"
+            f"{round(preview_player.dodge_chance * 100)}%"
         ),
         "charge_rate": f"{charge_rate}%",
     }
@@ -1147,7 +1154,7 @@ def _draw_character_panel(
 
     tooltip_content = character_panel_tooltip_content(
         hovered_item,
-        player,
+        preview_player,
         combat_values,
     )
 

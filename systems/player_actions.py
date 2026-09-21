@@ -308,28 +308,28 @@ def _resolve_floor_exit(
         )
         return True
 
+
     revisiting_act_one = (
-            current_floor_config["act"] == 1
-            and game_state.player.player_class is not None
+        current_floor_config["act"] == 1
+        and game_state.player.player_class is not None
     )
     moving_backward = (
         target_floor_index is not None
         and target_floor_index < game_state.floor_index
     )
-    if (
-        current_floor_config["act"] == 2
+    bypasses_descent_altar = (
+        current_floor_config["act"] in (2, 3)
         or revisiting_act_one
         or moving_backward
+    )
+
+    if (
+        target_floor_index is not None
+        and bypasses_descent_altar
     ):
-        game_state.floor_transition_started_at = (
-            transition_started_at
-        )
-        game_state.floor_transition_target_index = (
-            target_floor_index
-        )
-        game_state.floor_transition_target_passage_id = (
-            target_passage_id
-        )
+        game_state.floor_transition_started_at = transition_started_at
+        game_state.floor_transition_target_index = target_floor_index
+        game_state.floor_transition_target_passage_id = target_passage_id
         game_state.floor_transition_swapped = False
         game_state.upgrade_screen_open = False
         game_state.upgrade_message = ""
@@ -358,11 +358,9 @@ def _resolve_floor_exit(
         )
         return False
 
-    if current_floor_config["act"] == 1:
-        game_state.act_one_upgrades_remaining = (
-            ACT_ONE_FLOOR_UPGRADE_REWARD
-        )
-
+    game_state.act_one_upgrades_remaining = (
+        ACT_ONE_FLOOR_UPGRADE_REWARD
+    )
     game_state.upgrade_screen_open = True
     game_state.upgrade_message = ""
     game_state.player_attack_targets = []

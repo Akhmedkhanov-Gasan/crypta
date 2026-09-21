@@ -495,7 +495,6 @@ class GameState:
     bloody_altar_open: bool = False
     bloody_altar_pending_id: str | None = None
     upgrade_message: str = ""
-    upgrade_reward_pending: bool = False
     floor_transition_started_at: int = -1
     floor_transition_target_index: int | None = None
     floor_transition_target_passage_id: str | None = None

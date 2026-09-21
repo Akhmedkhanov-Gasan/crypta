@@ -23,9 +23,8 @@ from presentation.hud import (
     get_class_selection_rectangles,
 )
 from acts.act_one.interface import (
-    draw_sidebar,
     draw_act_one_upgrade_screen,
-    get_act_one_upgrade_card_rectangles,
+    draw_sidebar,
 )
 from acts.act_two.presentation import (
     draw_act_two_ability_preview,
@@ -45,7 +44,6 @@ from acts.act_two.presentation import (
     draw_act_two_rune_room,
     draw_brute_aftershocks,
     draw_rune_selection,
-    draw_act_two_upgrade_screen,
     draw_act_two_spike_traps,
     draw_act_two_treasury,
     draw_breakable_crate,
@@ -56,7 +54,6 @@ from acts.act_two.presentation import (
     get_act_two_journal_close_rectangle,
     get_act_two_journal_viewport_rectangle,
     get_act_two_journal_scrollbar_rectangles,
-    get_act_two_upgrade_card_rectangles,
     get_act_two_attribute_plus_rectangles,
     get_act_two_attribute_minus_rectangles,
     get_act_two_confirm_button_rectangle,
@@ -76,8 +73,6 @@ from presentation.screens import (
     draw_class_selection_screen,
     draw_floor_transition,
     draw_subclass_selection_screen,
-    draw_upgrade_screen,
-    get_upgrade_card_rectangles,
     get_act_three_debug_class_rectangles,
     get_subclass_selection_rectangles,
 )
@@ -108,7 +103,6 @@ __all__ = [
     "FLOOR_TRANSITION_CLOSE_END_MS",
     "FLOOR_TRANSITION_END_MS",
     "draw_act_three_awakening",
-    "draw_act_one_upgrade_screen",
     "draw_act_three_debug_class_selection",
     "draw_act_three_gameplay",
     "draw_attack_markers",
@@ -140,7 +134,6 @@ __all__ = [
     "draw_act_two_power_cleave_effect",
     "draw_act_two_rune_room",
     "draw_rune_selection",
-    "draw_act_two_upgrade_screen",
     "draw_act_two_spike_traps",
     "draw_act_two_treasury",
     "draw_act_one_pickup_effect",
@@ -166,10 +159,6 @@ __all__ = [
     "draw_passage",
     "draw_status",
     "draw_subclass_selection_screen",
-    "draw_upgrade_screen",
-    "get_upgrade_card_rectangles",
-    "get_act_one_upgrade_card_rectangles",
-    "get_act_two_upgrade_card_rectangles",
     "get_act_two_belt_slot_rectangles",
     "get_act_two_sidebar_button_rectangles",
     "get_act_two_journal_close_rectangle",
@@ -193,4 +182,5 @@ __all__ = [
     "load_menu_assets",
     "load_menu_layouts",
     "draw_brute_aftershocks",
+    "draw_act_one_upgrade_screen",
 ]
