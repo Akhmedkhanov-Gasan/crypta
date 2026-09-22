@@ -1433,29 +1433,6 @@ def load_act_three_gameplay_assets():
             )
         )
 
-    assets["player_berserker_hurt"] = (
-        _load_pixel_scaled_image(
-            act_directory
-            / "player"
-            / "berserker"
-            / "hurt"
-            / "hurt_00.png",
-            (tile_size, tile_size),
-        )
-    )
-
-    berserker_death_directory = (
-        act_directory / "player" / "berserker" / "death"
-    )
-    for frame_index in range(2):
-        assets[f"player_berserker_death_{frame_index}"] = (
-            _load_pixel_scaled_image(
-                berserker_death_directory
-                / f"death_{frame_index:02d}.png",
-                (tile_size, tile_size),
-            )
-        )
-
     assets["player_paladin_hurt"] = (
         _load_pixel_scaled_image(
             act_directory
@@ -1664,36 +1641,6 @@ def load_act_three_gameplay_assets():
             / "archer"
             / "barrage_zone"
             / "barrage_zone_cell.png",
-            (tile_size, tile_size),
-        )
-    )
-    assets["player_berserker_crushing_leap"] = (
-        _load_pixel_scaled_image(
-            act_directory
-            / "player"
-            / "berserker"
-            / "crushing_leap"
-            / "leap_00_original.png",
-            (tile_size, tile_size),
-        )
-    )
-    assets["player_berserker_crushing_leap_impact"] = (
-        _load_pixel_scaled_image(
-            act_directory
-            / "player"
-            / "berserker"
-            / "crushing_leap"
-            / "leap_impact_00_original.png",
-            (tile_size, tile_size),
-        )
-    )
-    assets["berserker_crushing_leap_area"] = (
-        _load_pixel_scaled_image(
-            act_directory
-            / "player"
-            / "berserker"
-            / "crushing_leap"
-            / "crushing_leap_area_original.png",
             (tile_size, tile_size),
         )
     )

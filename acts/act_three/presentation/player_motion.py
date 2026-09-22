@@ -5,6 +5,7 @@ ASSASSIN_IDLE_FRAME_DURATION_MS = 270
 ASSASSIN_WALK_FRAME_DURATION_MS = 40
 BERSERKER_IDLE_FRAME_COUNT = 8
 BERSERKER_WALK_FRAME_COUNT = 8
+BERSERKER_HURT_FRAME_COUNT = 8
 BERSERKER_IDLE_FRAME_DURATION_MS = 270
 BERSERKER_WALK_FRAME_DURATION_MS = 40
 ASSASSIN_ATTACK_FRAME_COUNT = 8
@@ -57,6 +58,21 @@ def berserker_walk_frame(current_time):
     return (
         current_time // BERSERKER_WALK_FRAME_DURATION_MS
     ) % BERSERKER_WALK_FRAME_COUNT
+
+
+def berserker_hurt_frame(
+    elapsed,
+    duration,
+):
+    progress = max(
+        0.0,
+        min(1.0, elapsed / duration),
+    )
+
+    return movement_frame_for_progress(
+        progress,
+        BERSERKER_HURT_FRAME_COUNT,
+    )
 
 
 def assassin_walk_frame(current_time):

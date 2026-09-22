@@ -1,4 +1,8 @@
 from dataclasses import dataclass
+from acts.act_three.settings import (
+    BERSERKER_CRUSHING_LEAP_CHARGES,
+    BERSERKER_LAST_RAGE_CHARGES,
+)
 
 
 @dataclass(frozen=True)
@@ -88,7 +92,9 @@ SUBCLASS_DEFINITIONS = {
                 icon_asset=(
                     "act_three_berserker_crushing_leap"
                 ),
-                charge_required=4.0,
+                charge_required=float(
+                    BERSERKER_CRUSHING_LEAP_CHARGES
+                ),
                 description=(
                     "Leap to a visible cell and damage "
                     "adjacent enemies on landing."
@@ -102,7 +108,9 @@ SUBCLASS_DEFINITIONS = {
                 icon_asset=(
                     "act_three_berserker_last_rage"
                 ),
-                charge_required=8.0,
+                charge_required=float(
+                    BERSERKER_LAST_RAGE_CHARGES
+                ),
                 description=(
                     "Refuse death for five turns and gain "
                     "the maximum Rage bonus."

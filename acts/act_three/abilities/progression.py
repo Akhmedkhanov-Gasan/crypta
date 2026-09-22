@@ -5,7 +5,9 @@ ABILITY_SLOTS = frozenset({
 })
 
 DEFAULT_UNLOCKED_ABILITY_SLOTS = frozenset({
+    "q",
     "e",
+    "f",
 })
 
 MASTERY_CHARGE_RATES = (

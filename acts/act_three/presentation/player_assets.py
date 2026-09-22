@@ -17,6 +17,11 @@ def load_berserker_animation_assets(
     idle_directory = berserker_directory / "idle"
     walk_directory = berserker_directory / "walk"
     attack_directory = berserker_directory / "attack"
+    crushing_leap_directory = (
+        berserker_directory / "crushing_leap"
+    )
+    hurt_directory = berserker_directory / "hurt"
+    death_directory = berserker_directory / "death"
     idle_directions = (
         "left",
         "right",
@@ -29,6 +34,24 @@ def load_berserker_animation_assets(
         "up",
     )
     attack_directions = (
+        "down",
+        "left",
+        "right",
+        "up",
+    )
+    crushing_leap_directions = (
+        "down",
+        "left",
+        "right",
+        "up",
+    )
+    hurt_directions = (
+        "down",
+        "left",
+        "right",
+        "up",
+    )
+    death_directions = (
         "down",
         "left",
         "right",
@@ -73,6 +96,41 @@ def load_berserker_animation_assets(
                 / f"attack_{direction}_{source_index:02d}.png",
                 (tile_size, tile_size),
             )
+        for direction in hurt_directions:
+            assets[
+                f"player_berserker_hurt_{direction}_{frame_index}"
+            ] = image_loader(
+                hurt_directory
+                / f"hurt_{direction}"
+                / f"hurt_{direction}_{source_index:02d}.png",
+                (tile_size, tile_size),
+            )
+
+        for direction in death_directions:
+            assets[
+                f"player_berserker_death_{direction}_{frame_index}"
+            ] = image_loader(
+                death_directory
+                / f"death_{direction}"
+                / f"death_{direction}_{source_index:02d}.png",
+                (tile_size, tile_size),
+            )
+        for direction in crushing_leap_directions:
+            assets[
+                f"player_berserker_crushing_leap_{direction}_{frame_index}"
+            ] = image_loader(
+                crushing_leap_directory
+                / f"crushing_leap_{direction}"
+                / (
+                    f"crushing_leap_{direction}_"
+                    f"{source_index:02d}.png"
+                ),
+                (tile_size, tile_size),
+            )
+
+    assets["player_berserker_hurt"] = assets[
+        "player_berserker_hurt_down_0"
+    ]
 
 
 def load_assassin_animation_assets(

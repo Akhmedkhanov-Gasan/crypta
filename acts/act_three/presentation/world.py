@@ -94,6 +94,7 @@ from acts.act_three.presentation.player_motion import (
     assassin_idle_frame,
     berserker_idle_frame,
     berserker_walk_frame,
+    berserker_hurt_frame,
     assassin_walk_direction,
     assassin_walk_frame,
     assassin_hurt_frame,
@@ -102,6 +103,15 @@ from acts.act_three.presentation.player_motion import (
     movement_frame_for_progress,
     player_movement_progress,
 
+)
+from acts.act_three.presentation.berserker import (
+    crushing_leap_camera_offset,
+    crushing_leap_direction,
+    crushing_leap_frame,
+    crushing_leap_position,
+    draw_crushing_leap_impact_effect,
+    draw_crushing_leap_targeting,
+    draw_crushing_leap_travel_effect,
 )
 from acts.act_three.presentation.class_effects import (
     _draw_summoner_bond_pentagram,
@@ -120,6 +130,7 @@ from acts.act_three.presentation.combat_effects import (
     _draw_assassin_death_impact,
     _PLAYER_HIT_SPRITE_DURATION_MS,
     _assassin_death_frame,
+    _berserker_death_frame,
     _draw_berserker_death_echoes,
     _draw_berserker_death_impact,
     _draw_paladin_death_echoes,
@@ -258,8 +269,26 @@ def _draw_act_three_world(
         game_state.player,
         current_time,
     )
-    camera_x += hit_camera_x + death_camera_x
-    camera_y += hit_camera_y + death_camera_y
+    crushing_leap_camera_x, crushing_leap_camera_y = (
+        crushing_leap_camera_offset(
+            (
+                current_time
+                - game_state.player.berserker_crushing_leap_started_at
+            ),
+            BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
+            BERSERKER_CRUSHING_LEAP_IMPACT_MS,
+        )
+    )
+    camera_x += (
+        hit_camera_x
+        + death_camera_x
+        + crushing_leap_camera_x
+    )
+    camera_y += (
+        hit_camera_y
+        + death_camera_y
+        + crushing_leap_camera_y
+    )
     exchange_player_origin = (
         game_state.player.warlock_soul_exchange_player_origin
     )
@@ -406,14 +435,18 @@ def _draw_act_three_world(
             preview=True,
         )
     if game_state.player.berserker_crushing_leap_aiming:
-        _draw_archer_barrage_zone_cells(
+        draw_crushing_leap_targeting(
             view_surface,
-            assets["berserker_crushing_leap_area"],
+            (
+                floor.player_column,
+                floor.player_row,
+            ),
+            game_state.player.berserker_crushing_leap_target,
             game_state.player.berserker_crushing_leap_preview_cells,
             camera_x,
             camera_y,
             current_time,
-            preview=True,
+            ACT_THREE_TILE_SIZE,
         )
     if game_state.player.paladin_shield_charge_aiming:
         _draw_tile_markers(
@@ -453,22 +486,21 @@ def _draw_act_three_world(
     )
     if (
         game_state.player.berserker_crushing_leap_origin is not None
-        and (
-            BERSERKER_CRUSHING_LEAP_TRAVEL_MS
-            <= berserker_impact_elapsed
-            < (
-                BERSERKER_CRUSHING_LEAP_TRAVEL_MS
-                + BERSERKER_CRUSHING_LEAP_IMPACT_MS
-            )
-        )
     ):
-        _draw_archer_barrage_zone_cells(
+        draw_crushing_leap_impact_effect(
             view_surface,
-            assets["berserker_crushing_leap_area"],
-            game_state.player.berserker_crushing_leap_preview_cells,
+            (
+                floor.player_column,
+                floor.player_row,
+            ),
             camera_x,
             camera_y,
-            current_time,
+            (
+                berserker_impact_elapsed
+                - BERSERKER_CRUSHING_LEAP_TRAVEL_MS
+            ),
+            BERSERKER_CRUSHING_LEAP_IMPACT_MS,
+            ACT_THREE_TILE_SIZE,
         )
 
     attack_positions = [
@@ -816,6 +848,11 @@ def _draw_act_three_world(
                 game_state.player,
                 current_time,
             )
+        elif player_subclass == "berserker":
+            player_death_frame = _berserker_death_frame(
+                game_state.player,
+                current_time,
+            )
         else:
             player_death_frame = _player_death_frame(
                 game_state.player,
@@ -826,17 +863,44 @@ def _draw_act_three_world(
                 player_sprite = assets[
                     "player_summoner_no_familiar_hurt"
                 ]
+            elif player_subclass == "berserker":
+                hurt_direction = assassin_hurt_direction(
+                    game_state.player.facing_direction
+                )
+                player_sprite = assets[
+                    f"player_berserker_hurt_{hurt_direction}_0"
+                ]
             else:
                 player_sprite = assets[
                     f"player_{player_subclass}_hurt"
                 ]
+        elif player_subclass == "berserker":
+            death_direction = assassin_hurt_direction(
+                game_state.player.facing_direction
+            )
+            player_sprite = assets[
+                f"player_berserker_death_{death_direction}_{player_death_frame}"
+            ]
         else:
             player_sprite = assets[
                 f"player_{player_subclass}_death_{player_death_frame}"
             ]
     elif player_hurt_sprite_active:
         if player_subclass == "berserker":
-            player_sprite = assets["player_berserker_hurt"]
+            hurt_elapsed = (
+                    current_time
+                    - game_state.player.hit_animation_started_at
+            )
+            hurt_direction = assassin_hurt_direction(
+                game_state.player.facing_direction
+            )
+            hurt_frame = berserker_hurt_frame(
+                hurt_elapsed,
+                _PLAYER_HIT_SPRITE_DURATION_MS,
+            )
+            player_sprite = assets[
+                f"player_berserker_hurt_{hurt_direction}_{hurt_frame}"
+            ]
         elif player_subclass == "paladin":
             player_sprite = assets["player_paladin_hurt"]
         elif player_subclass == "assassin":
@@ -894,12 +958,41 @@ def _draw_act_three_world(
             "player_paladin_shield_charge"
         ]
     elif berserker_leap_travel_active:
+        crushing_leap_direction_name = (
+            crushing_leap_direction(
+                berserker_leap_origin,
+                (
+                    floor.player_column,
+                    floor.player_row,
+                ),
+            )
+        )
+        crushing_leap_sprite_frame = crushing_leap_frame(
+            berserker_leap_elapsed,
+            BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
+        )
         player_sprite = assets[
-            "player_berserker_crushing_leap"
+            (
+                "player_berserker_crushing_leap_"
+                f"{crushing_leap_direction_name}_"
+                f"{crushing_leap_sprite_frame}"
+            )
         ]
     elif berserker_leap_impact_active:
+        crushing_leap_direction_name = (
+            crushing_leap_direction(
+                berserker_leap_origin,
+                (
+                    floor.player_column,
+                    floor.player_row,
+                ),
+            )
+        )
         player_sprite = assets[
-            "player_berserker_crushing_leap_impact"
+            (
+                "player_berserker_crushing_leap_"
+                f"{crushing_leap_direction_name}_7"
+            )
         ]
     elif leap_active:
         player_sprite = assets["player_archer_leap"]
@@ -1227,36 +1320,33 @@ def _draw_act_three_world(
             ),
         )
     elif berserker_leap_travel_active:
-        leap_progress = min(
-            1,
-            berserker_leap_elapsed
-            / BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
-        )
-        eased_progress = 1 - (1 - leap_progress) ** 3
         leap_start_position = _view_position(
             berserker_leap_origin[0],
             berserker_leap_origin[1],
             camera_x,
             camera_y,
         )
-        player_position = (
-            round(
-                leap_start_position[0]
-                + (
-                    leap_end_position[0]
-                    - leap_start_position[0]
-                )
-                * eased_progress
+        player_position = crushing_leap_position(
+            leap_start_position,
+            leap_end_position,
+            berserker_leap_elapsed,
+            BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
+            ACT_THREE_TILE_SIZE,
+        )
+    if berserker_leap_travel_active:
+        draw_crushing_leap_travel_effect(
+            view_surface,
+            player_sprite,
+            _view_position(
+                berserker_leap_origin[0],
+                berserker_leap_origin[1],
+                camera_x,
+                camera_y,
             ),
-            round(
-                leap_start_position[1]
-                + (
-                    leap_end_position[1]
-                    - leap_start_position[1]
-                )
-                * eased_progress
-                - math.sin(math.pi * leap_progress) * 13
-            ),
+            leap_end_position,
+            berserker_leap_elapsed,
+            BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
+            ACT_THREE_TILE_SIZE,
         )
     if player_subclass in ("archer", "assassin"):
         player_sprite = player_sprite.copy()
@@ -1307,7 +1397,10 @@ def _draw_act_three_world(
         ACT_THREE_TILE_SIZE,
     )
 
-    if player_death_elapsed is None:
+    if (
+        player_death_elapsed is None
+        and not berserker_leap_travel_active
+    ):
         draw_actor_shadow(
             view_surface,
             player_sprite,

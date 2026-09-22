@@ -41,6 +41,8 @@ _PLAYER_DEATH_MESSAGE_FADE_MS = 650
 _PLAYER_DEATH_IMPACT_SHAKE_MS = 380
 _ASSASSIN_DEATH_FRAME_COUNT = 8
 _ASSASSIN_DEATH_FRAME_DURATION_MS = 120
+_BERSERKER_DEATH_FRAME_COUNT = 8
+_BERSERKER_DEATH_FRAME_DURATION_MS = 120
 
 
 def record_enemy_hit_feedback(game_state, started_at):
@@ -254,7 +256,12 @@ def _player_death_frame(player, current_time):
     return 1
 
 
-def _assassin_death_frame(player, current_time):
+def _animated_player_death_frame(
+    player,
+    current_time,
+    frame_count,
+    frame_duration,
+):
     elapsed = _player_death_elapsed(player, current_time)
 
     if (
@@ -268,9 +275,26 @@ def _assassin_death_frame(player, current_time):
     )
 
     return min(
-        _ASSASSIN_DEATH_FRAME_COUNT - 1,
-        animation_elapsed
-        // _ASSASSIN_DEATH_FRAME_DURATION_MS,
+        frame_count - 1,
+        animation_elapsed // frame_duration,
+    )
+
+
+def _assassin_death_frame(player, current_time):
+    return _animated_player_death_frame(
+        player,
+        current_time,
+        _ASSASSIN_DEATH_FRAME_COUNT,
+        _ASSASSIN_DEATH_FRAME_DURATION_MS,
+    )
+
+
+def _berserker_death_frame(player, current_time):
+    return _animated_player_death_frame(
+        player,
+        current_time,
+        _BERSERKER_DEATH_FRAME_COUNT,
+        _BERSERKER_DEATH_FRAME_DURATION_MS,
     )
 
 

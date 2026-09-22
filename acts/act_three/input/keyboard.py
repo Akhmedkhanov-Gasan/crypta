@@ -211,7 +211,7 @@ def handle_act_three_key_event(event, game_state):
         return True
     
     if (
-        event.key in (pygame.K_2, pygame.K_KP2)
+        event.key == pygame.K_q
         and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
         and game_state.player.subclass == "berserker"
     ):
@@ -321,14 +321,12 @@ def handle_act_three_key_event(event, game_state):
         return True
     
     if (
-        event.key in (pygame.K_3, pygame.K_KP3)
+        event.key == pygame.K_f
         and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
         and game_state.player.subclass == "berserker"
     ):
         request_berserker_last_rage(game_state)
-        set_berserker_crushing_leap_cursor(
-            game_state.player.berserker_crushing_leap_aiming
-        )
+        set_berserker_crushing_leap_cursor()
         return True
     
     if (

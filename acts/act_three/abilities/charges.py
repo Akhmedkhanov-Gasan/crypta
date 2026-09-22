@@ -7,6 +7,8 @@ from acts.act_two.abilities import (
 from acts.act_three.settings import (
     ASSASSIN_TELEPORT_CHARGES,
     ASSASSIN_ULTIMATE_CHARGES,
+    BERSERKER_CRUSHING_LEAP_CHARGES,
+    BERSERKER_LAST_RAGE_CHARGES,
 )
 
 
@@ -20,7 +22,21 @@ _ASSASSIN_CHARGES = {
         ASSASSIN_ULTIMATE_CHARGES,
     ),
 }
+_BERSERKER_CHARGES = {
+    "q": (
+        "berserker_crushing_leap_charge",
+        BERSERKER_CRUSHING_LEAP_CHARGES,
+    ),
+    "f": (
+        "berserker_last_rage_charge",
+        BERSERKER_LAST_RAGE_CHARGES,
+    ),
+}
 
+_SUBCLASS_CHARGES = {
+    "assassin": _ASSASSIN_CHARGES,
+    "berserker": _BERSERKER_CHARGES,
+}
 
 def get_act_three_ability_charge_state(
     player,
@@ -32,18 +48,17 @@ def get_act_three_ability_charge_state(
             float(ability_charge_required(player)),
         )
 
-    if player.subclass == "assassin":
-        charge_definition = _ASSASSIN_CHARGES.get(
-            slot
+    charge_definition = _SUBCLASS_CHARGES.get(
+        player.subclass,
+        {},
+    ).get(slot)
+
+    if charge_definition is not None:
+        field_name, required_charge = charge_definition
+        return (
+            float(getattr(player, field_name)),
+            float(required_charge),
         )
-        if charge_definition is not None:
-            field_name, required_charge = (
-                charge_definition
-            )
-            return (
-                float(getattr(player, field_name)),
-                float(required_charge),
-            )
 
     ability = get_ability_definition(
         player.subclass,
