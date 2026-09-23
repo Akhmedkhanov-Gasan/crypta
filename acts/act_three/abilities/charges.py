@@ -42,6 +42,9 @@ def get_act_three_ability_charge_state(
     player,
     slot,
 ):
+    if player.debug_unlimited_abilities:
+        return 1.0, 1.0
+
     if slot == "e":
         return (
             float(player.ability_kill_charge),

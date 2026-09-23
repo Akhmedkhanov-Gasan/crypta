@@ -61,7 +61,11 @@ def release_summoner_familiar(game_state: GameState) -> bool:
         )
         return True
 
-    if player.summoner_familiar_charge < SUMMONER_FAMILIAR_CHARGES:
+    if (
+        not player.debug_unlimited_abilities
+        and player.summoner_familiar_charge
+        < SUMMONER_FAMILIAR_CHARGES
+    ):
         add_log_message(
             game_state.combat_log,
             "The familiar is not charged yet.",
@@ -150,7 +154,10 @@ def request_summoner_bond(game_state: GameState) -> bool:
             "The familiar must be present to form the bond.",
         )
         return True
-    if player.summoner_bond_charge < SUMMONER_BOND_CHARGES:
+    if (
+        not player.debug_unlimited_abilities
+        and player.summoner_bond_charge < SUMMONER_BOND_CHARGES
+    ):
         add_log_message(
             game_state.combat_log,
             "Bond is not charged.",
@@ -204,7 +211,11 @@ def request_summoner_true_form(game_state: GameState) -> bool:
             "The familiar returns to its normal form.",
         )
         return True
-    if player.summoner_true_form_charge < SUMMONER_TRUE_FORM_CHARGES:
+    if (
+        not player.debug_unlimited_abilities
+        and player.summoner_true_form_charge
+        < SUMMONER_TRUE_FORM_CHARGES
+    ):
         add_log_message(
             game_state.combat_log,
             "True Form is not fully charged.",

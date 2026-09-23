@@ -446,75 +446,317 @@ def _draw_berserker_rage_effect(
     if rage_stage <= 0:
         return
 
-    margin = 9
+    margin = 16
     effect_size = ACT_THREE_TILE_SIZE + margin * 2
     effect_surface = pygame.Surface(
         (effect_size, effect_size),
         pygame.SRCALPHA,
     )
-    pulse = (math.sin(current_time * 0.012) + 1) / 2
     center_x = effect_size // 2
     center_y = margin + ACT_THREE_TILE_SIZE // 2
-    aura_alpha = round(
-        (34 if rage_stage == 1 else 58) + pulse * 24
-    )
-    aura_rect = pygame.Rect(
-        margin + (7 if rage_stage == 1 else 3),
-        margin + (5 if rage_stage == 1 else 1),
-        ACT_THREE_TILE_SIZE - (14 if rage_stage == 1 else 6),
-        ACT_THREE_TILE_SIZE - (10 if rage_stage == 1 else 2),
+    strength = 0.58 if rage_stage == 1 else 1.0
+    pulse = (
+        math.sin(current_time * 0.0045)
+        + 1.0
+    ) / 2.0
+
+    for aura_index in range(4):
+        aura_progress = aura_index / 3
+        aura_width = round(
+            ACT_THREE_TILE_SIZE
+            * (
+                0.92
+                - aura_progress * 0.3
+            )
+        )
+        aura_height = round(
+            ACT_THREE_TILE_SIZE
+            * (
+                0.96
+                - aura_progress * 0.25
+            )
+        )
+        aura_rect = pygame.Rect(
+            center_x - aura_width // 2,
+            center_y - aura_height // 2,
+            aura_width,
+            aura_height,
+        )
+        pygame.draw.ellipse(
+            effect_surface,
+            (
+                round(66 + aura_progress * 42),
+                round(3 + aura_progress * 5),
+                round(5 + aura_progress * 3),
+                round(
+                    (
+                        4
+                        + aura_progress * 6
+                        + pulse * 3
+                    )
+                    * strength
+                ),
+            ),
+            aura_rect,
+        )
+
+    ground_rect = pygame.Rect(
+        center_x - round(ACT_THREE_TILE_SIZE * 0.42),
+        margin + round(ACT_THREE_TILE_SIZE * 0.76),
+        round(ACT_THREE_TILE_SIZE * 0.84),
+        round(ACT_THREE_TILE_SIZE * 0.24),
     )
     pygame.draw.ellipse(
         effect_surface,
-        (188, 25, 21, aura_alpha),
-        aura_rect,
-        width=2,
-    )
-    pygame.draw.ellipse(
-        effect_surface,
-        (105, 9, 12, aura_alpha // 2),
-        aura_rect.inflate(8, 5),
-        width=3,
+        (
+            88,
+            4,
+            6,
+            round(
+                (20 + pulse * 12)
+                * strength
+            ),
+        ),
+        ground_rect,
     )
 
-    particle_count = 3 if rage_stage == 1 else 6
-    for particle_index in range(particle_count):
+    flame_count = 4 if rage_stage == 1 else 7
+    flame_speed = 1900 if rage_stage == 1 else 1550
+
+    for flame_index in range(flame_count):
         phase = (
-            current_time / (980 if rage_stage == 1 else 720)
-            + particle_index / particle_count
-        ) % 1
-        side = -1 if particle_index % 2 == 0 else 1
-        drift = math.sin(
-            phase * math.tau + particle_index * 1.7
+            current_time / flame_speed
+            + flame_index / flame_count
+        ) % 1.0
+        base_progress = (
+            flame_index + 0.5
+        ) / flame_count
+        flame_x = round(
+            margin
+            + ACT_THREE_TILE_SIZE
+            * (
+                0.08
+                + base_progress * 0.84
+            )
         )
-        particle_x = round(
+        flame_base_y = round(
+            margin
+            + ACT_THREE_TILE_SIZE * 0.9
+        )
+        sway = math.sin(
+            current_time * 0.003
+            + flame_index * 1.9
+        )
+        flame_height = round(
+            ACT_THREE_TILE_SIZE
+            * (
+                0.12
+                + strength * 0.13
+                + math.sin(math.pi * phase) * 0.08
+            )
+        )
+        flame_width = (
+            4
+            if rage_stage == 1
+            else 5 + flame_index % 2
+        )
+        flame_tip_x = round(
+            flame_x
+            + sway
+            * (
+                3
+                if rage_stage == 1
+                else 5
+            )
+        )
+        flame_alpha = round(
+            (
+                40
+                + pulse * 18
+                + math.sin(math.pi * phase) * 18
+            )
+            * strength
+        )
+
+        pygame.draw.polygon(
+            effect_surface,
+            (
+                82,
+                3,
+                6,
+                flame_alpha,
+            ),
+            (
+                (
+                    flame_x - flame_width,
+                    flame_base_y,
+                ),
+                (
+                    flame_x - flame_width // 2,
+                    flame_base_y - flame_height // 2,
+                ),
+                (
+                    flame_tip_x,
+                    flame_base_y - flame_height,
+                ),
+                (
+                    flame_x + flame_width // 2,
+                    flame_base_y - flame_height // 2,
+                ),
+                (
+                    flame_x + flame_width,
+                    flame_base_y,
+                ),
+            ),
+        )
+
+        pygame.draw.line(
+            effect_surface,
+            (
+                154,
+                16,
+                13,
+                round(flame_alpha * 0.58),
+            ),
+            (
+                flame_x,
+                flame_base_y - 2,
+            ),
+            (
+                flame_tip_x,
+                flame_base_y - flame_height + 4,
+            ),
+            width=1 if rage_stage == 1 else 2,
+        )
+
+    smoke_count = 2 if rage_stage == 1 else 4
+
+    for smoke_index in range(smoke_count):
+        smoke_phase = (
+            current_time / 2400
+            + smoke_index / smoke_count
+        ) % 1.0
+        smoke_visibility = math.sin(
+            math.pi * smoke_phase
+        )
+        smoke_side = (
+            -1
+            if smoke_index % 2 == 0
+            else 1
+        )
+        smoke_x = round(
             center_x
-            + side * (16 + particle_index % 3 * 5)
-            + drift * 3
+            + smoke_side
+            * ACT_THREE_TILE_SIZE
+            * (
+                0.26
+                + smoke_index % 2 * 0.08
+            )
+            + math.sin(
+                current_time * 0.0018
+                + smoke_index * 2.1
+            )
+            * 4
         )
-        particle_y = round(
-            margin + ACT_THREE_TILE_SIZE - 7 - phase * 49
+        smoke_y = round(
+            margin
+            + ACT_THREE_TILE_SIZE * 0.8
+            - smoke_phase
+            * ACT_THREE_TILE_SIZE
+            * 0.72
         )
-        visibility = math.sin(math.pi * phase)
-        particle_alpha = round(
-            (130 if rage_stage == 1 else 205) * visibility
+        smoke_width = max(
+            3,
+            round(7 - smoke_phase * 3),
         )
-        pygame.draw.circle(
+        smoke_height = max(
+            5,
+            round(10 - smoke_phase * 4),
+        )
+        smoke_rect = pygame.Rect(
+            smoke_x - smoke_width,
+            smoke_y - smoke_height,
+            smoke_width * 2,
+            smoke_height * 2,
+        )
+
+        pygame.draw.ellipse(
             effect_surface,
-            (218, 34, 25, particle_alpha // 3),
-            (particle_x, particle_y),
-            3 if rage_stage == 1 else 4,
+            (
+                54,
+                2,
+                5,
+                round(
+                    24
+                    * smoke_visibility
+                    * strength
+                ),
+            ),
+            smoke_rect,
         )
-        pygame.draw.circle(
+
+    ember_count = 2 if rage_stage == 1 else 5
+
+    for ember_index in range(ember_count):
+        ember_phase = (
+            current_time
+            / (
+                1700
+                if rage_stage == 1
+                else 1250
+            )
+            + ember_index / ember_count
+        ) % 1.0
+        ember_visibility = math.sin(
+            math.pi * ember_phase
+        )
+        ember_x = round(
+            center_x
+            + math.sin(ember_index * 2.4)
+            * ACT_THREE_TILE_SIZE * 0.34
+            + math.sin(
+                current_time * 0.0025
+                + ember_index
+            )
+            * 3
+        )
+        ember_y = round(
+            margin
+            + ACT_THREE_TILE_SIZE * 0.84
+            - ember_phase
+            * ACT_THREE_TILE_SIZE * 0.68
+        )
+        ember_alpha = round(
+            (
+                70
+                if rage_stage == 1
+                else 115
+            )
+            * ember_visibility
+        )
+
+        pygame.draw.rect(
             effect_surface,
-            (255, 74, 43, particle_alpha),
-            (particle_x, particle_y),
-            1 if rage_stage == 1 else 2,
+            (
+                172,
+                25,
+                17,
+                ember_alpha,
+            ),
+            (
+                ember_x,
+                ember_y,
+                1 if rage_stage == 1 else 2,
+                2,
+            ),
         )
 
     surface.blit(
         effect_surface,
-        (left - margin, top - margin),
+        (
+            left - margin,
+            top - margin,
+        ),
     )
 
 
@@ -524,74 +766,237 @@ def _draw_berserker_last_rage_effect(
     top,
     current_time,
 ):
-    margin = 13
+    margin = 22
     effect_size = ACT_THREE_TILE_SIZE + margin * 2
     effect_surface = pygame.Surface(
         (effect_size, effect_size),
         pygame.SRCALPHA,
     )
-    center = (
-        effect_size // 2,
-        margin + ACT_THREE_TILE_SIZE // 2,
-    )
-    pulse = (math.sin(current_time * 0.016) + 1) / 2
+    center_x = effect_size // 2
+    center_y = margin + ACT_THREE_TILE_SIZE // 2
+    pulse = (
+        math.sin(current_time * 0.004)
+        + 1.0
+    ) / 2.0
 
-    for ring_index in range(3):
-        ring_inset = ring_index * 5
-        ring_rect = pygame.Rect(
-            margin - 5 + ring_inset,
-            margin - 7 + ring_inset,
-            ACT_THREE_TILE_SIZE + 10 - ring_inset * 2,
-            ACT_THREE_TILE_SIZE + 12 - ring_inset * 2,
+    for layer_index in range(6):
+        layer_progress = layer_index / 5
+        width = round(
+            ACT_THREE_TILE_SIZE
+            * (1.18 - layer_progress * 0.54)
+        )
+        height = round(
+            ACT_THREE_TILE_SIZE
+            * (1.28 - layer_progress * 0.48)
+        )
+        aura_rect = pygame.Rect(
+            center_x - width // 2,
+            center_y - height // 2,
+            width,
+            height,
         )
         pygame.draw.ellipse(
             effect_surface,
             (
-                225,
-                24 + ring_index * 8,
-                18,
-                round(42 + pulse * 35),
+                round(45 + layer_progress * 75),
+                round(1 + layer_progress * 5),
+                round(5 + layer_progress * 4),
+                round(
+                    (
+                        7
+                        + layer_progress * 9
+                        + pulse * 4
+                    )
+                ),
             ),
-            ring_rect,
+            aura_rect,
+        )
+
+    time_phase = current_time / 2100
+
+    for smoke_index in range(13):
+        phase = (
+            time_phase
+            + smoke_index / 13
+        ) % 1.0
+        visibility = math.sin(math.pi * phase)
+        horizontal_origin = math.sin(
+            smoke_index * 2.37
+        )
+        drift = math.sin(
+            current_time * 0.0022
+            + smoke_index * 1.71
+            + phase * math.pi
+        )
+
+        smoke_x = round(
+            center_x
+            + horizontal_origin
+            * ACT_THREE_TILE_SIZE
+            * 0.34
+            + drift * 6
+        )
+        smoke_y = round(
+            margin
+            + ACT_THREE_TILE_SIZE * 0.88
+            - phase * ACT_THREE_TILE_SIZE * 1.2
+        )
+        smoke_width = max(
+            5,
+            round(12 - phase * 5),
+        )
+        smoke_height = max(
+            7,
+            round(16 - phase * 6),
+        )
+        smoke_alpha = round(
+            (32 + pulse * 10)
+            * visibility
+        )
+
+        outer_smoke_rect = pygame.Rect(
+            smoke_x - smoke_width,
+            smoke_y - smoke_height,
+            smoke_width * 2,
+            smoke_height * 2,
+        )
+        inner_smoke_rect = outer_smoke_rect.inflate(
+            -smoke_width,
+            -smoke_height,
+        )
+
+        pygame.draw.ellipse(
+            effect_surface,
+            (
+                48,
+                0,
+                4,
+                smoke_alpha,
+            ),
+            outer_smoke_rect,
+        )
+        pygame.draw.ellipse(
+            effect_surface,
+            (
+                128,
+                7,
+                10,
+                round(smoke_alpha * 0.72),
+            ),
+            inner_smoke_rect,
+        )
+
+    for flame_index in range(7):
+        phase = (
+            current_time / 1450
+            + flame_index / 7
+        ) % 1.0
+        sway = math.sin(
+            current_time * 0.003
+            + flame_index * 1.8
+        )
+        flame_x = round(
+            margin
+            + ACT_THREE_TILE_SIZE
+            * (
+                0.08
+                + flame_index * 0.14
+            )
+        )
+        flame_base_y = round(
+            margin
+            + ACT_THREE_TILE_SIZE * 0.91
+        )
+        flame_height = round(
+            ACT_THREE_TILE_SIZE
+            * (
+                0.18
+                + 0.16 * phase
+            )
+        )
+        flame_width = 5 + flame_index % 3
+        flame_alpha = round(
+            (48 + pulse * 22)
+            * (0.7 + phase * 0.3)
+        )
+        flame_tip_x = round(
+            flame_x + sway * 7
+        )
+
+        pygame.draw.polygon(
+            effect_surface,
+            (
+                92,
+                2,
+                7,
+                flame_alpha,
+            ),
+            (
+                (
+                    flame_x - flame_width,
+                    flame_base_y,
+                ),
+                (
+                    flame_x - flame_width // 2,
+                    flame_base_y - flame_height // 2,
+                ),
+                (
+                    flame_tip_x,
+                    flame_base_y - flame_height,
+                ),
+                (
+                    flame_x + flame_width // 2,
+                    flame_base_y - flame_height // 2,
+                ),
+                (
+                    flame_x + flame_width,
+                    flame_base_y,
+                ),
+            ),
+        )
+
+        pygame.draw.line(
+            effect_surface,
+            (
+                188,
+                18,
+                14,
+                round(flame_alpha * 0.62),
+            ),
+            (
+                flame_x,
+                flame_base_y - 2,
+            ),
+            (
+                flame_tip_x,
+                flame_base_y - flame_height + 5,
+            ),
             width=2,
         )
 
-    rotation = current_time * 0.004
-    for particle_index in range(8):
-        angle = rotation + particle_index * math.tau / 8
-        radius_x = 31 + math.sin(angle * 1.7) * 4
-        radius_y = 27 + math.cos(angle * 1.4) * 3
-        particle_x = round(
-            center[0] + math.cos(angle) * radius_x
-        )
-        particle_y = round(
-            center[1] + math.sin(angle) * radius_y
-        )
-        particle_alpha = round(175 + pulse * 70)
-        pygame.draw.circle(
-            effect_surface,
-            (255, 35, 20, particle_alpha // 3),
-            (particle_x, particle_y),
-            4,
-        )
-        pygame.draw.circle(
-            effect_surface,
-            (255, 105, 55, particle_alpha),
-            (particle_x, particle_y),
-            2,
-        )
-
-    vertical_alpha = round(34 + pulse * 28)
-    pygame.draw.line(
-        effect_surface,
-        (255, 28, 18, vertical_alpha),
-        (center[0], margin - 2),
-        (center[0], effect_size - margin + 2),
-        width=3,
+    ground_rect = pygame.Rect(
+        center_x - round(ACT_THREE_TILE_SIZE * 0.46),
+        margin + round(ACT_THREE_TILE_SIZE * 0.75),
+        round(ACT_THREE_TILE_SIZE * 0.92),
+        round(ACT_THREE_TILE_SIZE * 0.28),
     )
+    pygame.draw.ellipse(
+        effect_surface,
+        (
+            94,
+            2,
+            7,
+            round(30 + pulse * 16),
+        ),
+        ground_rect,
+    )
+
     surface.blit(
         effect_surface,
-        (left - margin, top - margin),
+        (
+            left - margin,
+            top - margin,
+        ),
     )
 
 

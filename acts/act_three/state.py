@@ -31,6 +31,7 @@ class ActThreePlayerState:
             "f": 0.0,
         }
     )
+    debug_unlimited_abilities: bool = False
     archer_empowered_shot_charge: int = 0
     archer_leap_charge: int = 0
     archer_barrage_zone_charge: int = 0
@@ -64,6 +65,7 @@ class ActThreePlayerState:
     berserker_crushing_leap_started_at: int = 0
     berserker_last_rage_charge: int = 0
     berserker_last_rage_turns: int = 0
+    berserker_last_rage_started_at: int = 0
 
     paladin_holy_hand_charge: int = 0
     paladin_holy_hand_started_at: int = 0

@@ -132,7 +132,8 @@ def request_berserker_crushing_leap(
         return True
 
     if (
-        player.berserker_crushing_leap_charge
+        not player.debug_unlimited_abilities
+        and player.berserker_crushing_leap_charge
         < BERSERKER_CRUSHING_LEAP_CHARGES
     ):
         add_log_message(
@@ -292,6 +293,7 @@ def perform_berserker_crushing_leap(
 
 def request_berserker_last_rage(
     game_state: GameState,
+    current_time: int,
 ) -> bool:
     player = game_state.player
     if player.subclass != "berserker":
@@ -304,7 +306,8 @@ def request_berserker_last_rage(
         )
         return True
     if (
-        player.berserker_last_rage_charge
+        not player.debug_unlimited_abilities
+        and player.berserker_last_rage_charge
         < BERSERKER_LAST_RAGE_CHARGES
     ):
         add_log_message(
@@ -317,6 +320,7 @@ def request_berserker_last_rage(
     player.berserker_last_rage_turns = (
         BERSERKER_LAST_RAGE_TURNS
     )
+    player.berserker_last_rage_started_at = current_time
     player.berserker_crushing_leap_aiming = False
     player.berserker_crushing_leap_target = None
     player.berserker_crushing_leap_preview_cells.clear()

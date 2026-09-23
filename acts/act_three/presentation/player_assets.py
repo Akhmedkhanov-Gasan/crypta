@@ -20,6 +20,9 @@ def load_berserker_animation_assets(
     crushing_leap_directory = (
         berserker_directory / "crushing_leap"
     )
+    last_rage_directory = (
+        berserker_directory / "last_rage"
+    )
     hurt_directory = berserker_directory / "hurt"
     death_directory = berserker_directory / "death"
     idle_directions = (
@@ -42,6 +45,12 @@ def load_berserker_animation_assets(
     crushing_leap_directions = (
         "left",
         "right",
+    )
+    last_rage_directions = (
+        "down",
+        "left",
+        "right",
+        "up",
     )
     hurt_directions = (
         "down",
@@ -121,6 +130,18 @@ def load_berserker_animation_assets(
                 / f"crushing_leap_{direction}"
                 / (
                     f"crushing_leap_{direction}_"
+                    f"{source_index:02d}.png"
+                ),
+                (tile_size, tile_size),
+            )
+        for direction in last_rage_directions:
+            assets[
+                f"player_berserker_last_rage_{direction}_{frame_index}"
+            ] = image_loader(
+                last_rage_directory
+                / f"last_rage_{direction}"
+                / (
+                    f"last_rage_{direction}_"
                     f"{source_index:02d}.png"
                 ),
                 (tile_size, tile_size),

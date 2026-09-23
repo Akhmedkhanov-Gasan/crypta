@@ -47,7 +47,8 @@ def request_paladin_holy_hand(
         )
         return True
     if (
-        player.paladin_holy_hand_charge
+        not player.debug_unlimited_abilities
+        and player.paladin_holy_hand_charge
         < PALADIN_HOLY_HAND_CHARGES
     ):
         add_log_message(
@@ -95,7 +96,8 @@ def request_paladin_holy_shield(
         )
         return True
     if (
-        player.paladin_holy_shield_charge
+        not player.debug_unlimited_abilities
+        and player.paladin_holy_shield_charge
         < PALADIN_HOLY_SHIELD_CHARGES
     ):
         add_log_message(
@@ -239,7 +241,8 @@ def request_paladin_shield_charge(
         cancel_paladin_shield_charge(game_state)
         return True
     if (
-        player.paladin_shield_charge_charge
+        not player.debug_unlimited_abilities
+        and player.paladin_shield_charge_charge
         < PALADIN_SHIELD_CHARGE_CHARGES
     ):
         add_log_message(

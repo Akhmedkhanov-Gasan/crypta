@@ -81,6 +81,7 @@ from acts.act_three.settings import (
     BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
     PALADIN_SHIELD_CHARGE_TRAVEL_MS,
     WARLOCK_SOUL_EXCHANGE_TRAVEL_MS,
+    BERSERKER_LAST_RAGE_ANIMATION_MS,
 )
 from acts.act_three.progression import (
     cancel_act_three_attribute_upgrade,
@@ -497,6 +498,14 @@ def handle_act_three_pointer_event(
                 BERSERKER_CRUSHING_LEAP_TRAVEL_MS
                 + BERSERKER_CRUSHING_LEAP_IMPACT_MS
             )
+        ):
+            return True
+        if (
+            game_state.player.subclass == "berserker"
+            and game_state.player.berserker_last_rage_started_at > 0
+            and pygame.time.get_ticks()
+            - game_state.player.berserker_last_rage_started_at
+            < BERSERKER_LAST_RAGE_ANIMATION_MS
         ):
             return True
         if (

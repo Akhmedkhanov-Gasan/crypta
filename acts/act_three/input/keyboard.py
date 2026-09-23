@@ -58,6 +58,7 @@ from acts.act_three.settings import (
     BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
     PALADIN_SHIELD_CHARGE_TRAVEL_MS,
     WARLOCK_SOUL_EXCHANGE_TRAVEL_MS,
+    BERSERKER_LAST_RAGE_ANIMATION_MS,
 )
 def handle_act_three_key_event(event, game_state):
     if (
@@ -68,7 +69,14 @@ def handle_act_three_key_event(event, game_state):
         < ASSASSIN_SHADOW_STEP_DURATION_MS
     ):
         return True
-
+    if (
+        game_state.player.subclass == "berserker"
+        and game_state.player.berserker_last_rage_started_at > 0
+        and pygame.time.get_ticks()
+        - game_state.player.berserker_last_rage_started_at
+        < BERSERKER_LAST_RAGE_ANIMATION_MS
+    ):
+        return True
     if event.key in MOVEMENT_KEYS or event.key in WAIT_KEYS:
         return False
 
@@ -325,7 +333,10 @@ def handle_act_three_key_event(event, game_state):
         and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
         and game_state.player.subclass == "berserker"
     ):
-        request_berserker_last_rage(game_state)
+        request_berserker_last_rage(
+            game_state,
+            pygame.time.get_ticks(),
+        )
         set_berserker_crushing_leap_cursor()
         return True
     

@@ -47,7 +47,11 @@ def request_archer_empowered_shot(game_state: GameState) -> bool:
         )
         return True
 
-    if player.archer_empowered_shot_charge < ARCHER_EMPOWERED_SHOT_CHARGES:
+    if (
+        not player.debug_unlimited_abilities
+        and player.archer_empowered_shot_charge
+        < ARCHER_EMPOWERED_SHOT_CHARGES
+    ):
         add_log_message(
             game_state.combat_log,
             "Empowered Shot is not charged.",
@@ -167,7 +171,10 @@ def request_archer_leap(game_state: GameState) -> bool:
         )
         return True
 
-    if player.archer_leap_charge < ARCHER_LEAP_CHARGES:
+    if (
+        not player.debug_unlimited_abilities
+        and player.archer_leap_charge < ARCHER_LEAP_CHARGES
+    ):
         add_log_message(
             game_state.combat_log,
             "Leap is not charged.",
@@ -295,7 +302,8 @@ def request_archer_barrage_zone(
         return True
 
     if (
-        player.archer_barrage_zone_charge
+        not player.debug_unlimited_abilities
+        and player.archer_barrage_zone_charge
         < ARCHER_BARRAGE_ZONE_CHARGES
     ):
         add_log_message(

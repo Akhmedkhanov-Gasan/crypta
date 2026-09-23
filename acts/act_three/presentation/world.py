@@ -50,6 +50,7 @@ from acts.act_three.settings import (
     PALADIN_HOLY_HAND_EFFECT_MS,
     PALADIN_SHIELD_CHARGE_TRAVEL_MS,
     WARLOCK_SOUL_EXCHANGE_TRAVEL_MS,
+    BERSERKER_LAST_RAGE_ANIMATION_MS,
 )
 from settings import (
     DANGER_BORDER_COLOR,
@@ -112,6 +113,9 @@ from acts.act_three.presentation.berserker import (
     draw_crushing_leap_impact_effect,
     draw_crushing_leap_targeting,
     draw_crushing_leap_travel_effect,
+    draw_last_rage_activation_effect,
+    last_rage_camera_offset,
+    last_rage_frame,
 )
 from acts.act_three.presentation.class_effects import (
     _draw_summoner_bond_pentagram,
@@ -279,15 +283,26 @@ def _draw_act_three_world(
             BERSERKER_CRUSHING_LEAP_IMPACT_MS,
         )
     )
+    last_rage_camera_x, last_rage_camera_y = (
+        last_rage_camera_offset(
+            (
+                current_time
+                - game_state.player.berserker_last_rage_started_at
+            ),
+            BERSERKER_LAST_RAGE_ANIMATION_MS,
+        )
+    )
     camera_x += (
         hit_camera_x
         + death_camera_x
         + crushing_leap_camera_x
+        + last_rage_camera_x
     )
     camera_y += (
         hit_camera_y
         + death_camera_y
         + crushing_leap_camera_y
+        + last_rage_camera_y
     )
     exchange_player_origin = (
         game_state.player.warlock_soul_exchange_player_origin
@@ -794,6 +809,17 @@ def _draw_act_three_world(
             )
         )
     )
+    last_rage_elapsed = (
+        current_time
+        - game_state.player.berserker_last_rage_started_at
+    )
+    last_rage_activation_active = (
+        player_subclass == "berserker"
+        and game_state.player.berserker_last_rage_started_at > 0
+        and 0
+        <= last_rage_elapsed
+        < BERSERKER_LAST_RAGE_ANIMATION_MS
+    )
     shield_charge_origin = (
         game_state.player.paladin_shield_charge_origin
     )
@@ -937,6 +963,21 @@ def _draw_act_three_world(
             player_sprite = assets[
                 f"player_{player_subclass}_idle_0"
             ]
+    elif last_rage_activation_active:
+        last_rage_direction = assassin_walk_direction(
+            game_state.player.facing_direction
+        )
+        last_rage_sprite_frame = last_rage_frame(
+            last_rage_elapsed,
+            BERSERKER_LAST_RAGE_ANIMATION_MS,
+        )
+        player_sprite = assets[
+            (
+                "player_berserker_last_rage_"
+                f"{last_rage_direction}_"
+                f"{last_rage_sprite_frame}"
+            )
+        ]
     elif shadow_step_active:
         shadow_step_direction_name = (
             assassin_shadow_step_direction(
@@ -1427,6 +1468,15 @@ def _draw_act_three_world(
         fonts["sidebar_numbers"],
     )
 
+    if last_rage_activation_active:
+        draw_last_rage_activation_effect(
+            view_surface,
+            player_position,
+            last_rage_elapsed,
+            BERSERKER_LAST_RAGE_ANIMATION_MS,
+            ACT_THREE_TILE_SIZE,
+        )
+
     if (
         player_subclass == "assassin"
         and game_state.player.invisibility_turns > 0
@@ -1447,7 +1497,10 @@ def _draw_act_three_world(
         last_rage_is_active = (
             game_state.player.berserker_last_rage_turns > 0
         )
-        if last_rage_is_active:
+        if (
+            last_rage_is_active
+            and not last_rage_activation_active
+        ):
             _draw_berserker_last_rage_effect(
                 view_surface,
                 player_position[0],
@@ -1458,9 +1511,10 @@ def _draw_act_three_world(
             game_state.player.health
             / game_state.player.max_health
         )
-        if (
-            last_rage_is_active
-            or berserker_health_ratio
+        if last_rage_is_active:
+            berserker_rage_stage = 0
+        elif (
+            berserker_health_ratio
             <= BERSERKER_RAGE_CRITICAL_HEALTH_RATIO
         ):
             berserker_rage_stage = 2

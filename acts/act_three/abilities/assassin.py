@@ -149,7 +149,10 @@ def request_assassin_teleport(game_state: GameState) -> bool:
         )
         return True
 
-    if player.teleport_charge < ASSASSIN_TELEPORT_CHARGES:
+    if (
+        not player.debug_unlimited_abilities
+        and player.teleport_charge < ASSASSIN_TELEPORT_CHARGES
+    ):
         add_log_message(
             game_state.combat_log,
             "Teleport is not charged.",
@@ -225,7 +228,10 @@ def request_assassin_ultimate(game_state: GameState) -> bool:
         )
         return True
 
-    if player.ultimate_charge < ASSASSIN_ULTIMATE_CHARGES:
+    if (
+        not player.debug_unlimited_abilities
+        and player.ultimate_charge < ASSASSIN_ULTIMATE_CHARGES
+    ):
         add_log_message(
             game_state.combat_log,
             "Killing Spree is not charged.",

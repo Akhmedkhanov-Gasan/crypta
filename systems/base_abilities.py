@@ -112,7 +112,10 @@ def request_class_ability(
         return AbilityRequestResult.NOT_READY
 
     required_charge = ability_charge_required(player)
-    if player.ability_kill_charge < required_charge:
+    if (
+        not player.debug_unlimited_abilities
+        and player.ability_kill_charge < required_charge
+    ):
         add_log_message(
             game_state.combat_log,
             (

@@ -76,7 +76,10 @@ def request_warlock_curse(
     if player.warlock_curse_aiming:
         cancel_warlock_curse(game_state)
         return True
-    if player.warlock_curse_charge < WARLOCK_CURSE_CHARGES:
+    if (
+        not player.debug_unlimited_abilities
+        and player.warlock_curse_charge < WARLOCK_CURSE_CHARGES
+    ):
         add_log_message(
             game_state.combat_log,
             "Curse is not charged.",
@@ -257,7 +260,8 @@ def request_warlock_soul_exchange(
         cancel_warlock_soul_exchange(game_state)
         return True
     if (
-        player.warlock_soul_exchange_charge
+        not player.debug_unlimited_abilities
+        and player.warlock_soul_exchange_charge
         < WARLOCK_SOUL_EXCHANGE_CHARGES
     ):
         add_log_message(
