@@ -10,6 +10,7 @@ from acts.act_two.assets import (
 from acts.act_three.presentation.player_assets import (
     load_assassin_animation_assets,
     load_berserker_animation_assets,
+    load_warlock_animation_assets,
 )
 from acts.act_three.presentation.ability_assets import (
     load_act_three_ability_assets,
@@ -1083,7 +1084,8 @@ def load_act_three_transition_assets():
         player_directory
         / "warlock"
         / "idle"
-        / "idle_00_original.png"
+        / "idle_down"
+        / "idle_down_01.png"
     )
     summoner_path = (
         player_directory
@@ -1347,7 +1349,6 @@ def load_act_three_gameplay_assets():
     for subclass in (
         "paladin",
         "archer",
-        "warlock",
         "summoner",
     ):
         idle_directory = (
@@ -1377,6 +1378,12 @@ def load_act_three_gameplay_assets():
         tile_size,
         _load_pixel_scaled_image,
     )
+    load_warlock_animation_assets(
+        assets,
+        act_directory,
+        tile_size,
+        _load_pixel_scaled_image,
+    )
     summoner_no_familiar_idle_directory = (
         act_directory
         / "player"
@@ -1391,35 +1398,6 @@ def load_act_three_gameplay_assets():
             / f"idle_{frame_index:02d}.png",
             (tile_size, tile_size),
         )
-
-    demon_idle_directory = (
-        act_directory
-        / "player"
-        / "warlock"
-        / "warlock_demon_form"
-    )
-    for frame_index in range(3):
-        assets[f"player_warlock_demon_idle_{frame_index}"] = (
-            _load_pixel_scaled_image(
-                demon_idle_directory
-                / f"idle_{frame_index:02d}.png",
-                (tile_size, tile_size),
-            )
-        )
-    for frame_index in range(2):
-        assets[f"player_warlock_demon_walk_{frame_index}"] = (
-            _load_pixel_scaled_image(
-                demon_idle_directory
-                / f"walk_{frame_index:02d}.png",
-                (tile_size, tile_size),
-            )
-        )
-    assets["player_warlock_demon_attack"] = (
-        _load_pixel_scaled_image(
-            demon_idle_directory / "attack_00.png",
-            (tile_size, tile_size),
-        )
-    )
 
     archer_walk_directory = (
         act_directory / "player" / "archer" / "walk"
@@ -1491,41 +1469,6 @@ def load_act_three_gameplay_assets():
             )
         )
 
-    assets["player_warlock_hurt"] = (
-        _load_pixel_scaled_image(
-            act_directory
-            / "player"
-            / "warlock"
-            / "hurt"
-            / "hurt_00.png",
-            (tile_size, tile_size),
-        )
-    )
-
-    warlock_death_directory = (
-        act_directory / "player" / "warlock" / "death"
-    )
-    for frame_index in range(2):
-        assets[f"player_warlock_death_{frame_index}"] = (
-            _load_pixel_scaled_image(
-                warlock_death_directory
-                / f"death_{frame_index:02d}.png",
-                (tile_size, tile_size),
-            )
-        )
-
-    assets["player_warlock_demon_hurt"] = (
-        _load_pixel_scaled_image(
-            act_directory
-            / "player"
-            / "warlock"
-            / "warlock_demon_form"
-            / "hurt"
-            / "hurt_00.png",
-            (tile_size, tile_size),
-        )
-    )
-
     assets["player_summoner_hurt"] = (
         _load_pixel_scaled_image(
             act_directory
@@ -1567,18 +1510,6 @@ def load_act_three_gameplay_assets():
         assets[f"player_paladin_walk_{frame_index}"] = (
             _load_pixel_scaled_image(
                 paladin_walk_directory
-                / f"walk_{frame_index:02d}.png",
-                (tile_size, tile_size),
-            )
-        )
-
-    warlock_walk_directory = (
-        act_directory / "player" / "warlock" / "walk"
-    )
-    for frame_index in range(2):
-        assets[f"player_warlock_walk_{frame_index}"] = (
-            _load_pixel_scaled_image(
-                warlock_walk_directory
                 / f"walk_{frame_index:02d}.png",
                 (tile_size, tile_size),
             )
@@ -1661,14 +1592,6 @@ def load_act_three_gameplay_assets():
             / "shield_charge_00.png",
             (tile_size, tile_size),
         )
-    )
-    assets["player_warlock_attack"] = _load_pixel_scaled_image(
-        act_directory
-        / "player"
-        / "warlock"
-        / "attack"
-        / "attack_00.png",
-        (tile_size, tile_size),
     )
     assets["player_summoner_attack"] = _load_pixel_scaled_image(
         act_directory

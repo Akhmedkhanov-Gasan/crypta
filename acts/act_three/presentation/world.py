@@ -95,6 +95,8 @@ from acts.act_three.presentation.player_motion import (
     assassin_idle_frame,
     berserker_idle_frame,
     berserker_walk_frame,
+    warlock_idle_frame,
+    warlock_walk_frame,
     berserker_hurt_frame,
     assassin_walk_direction,
     assassin_walk_frame,
@@ -135,6 +137,7 @@ from acts.act_three.presentation.combat_effects import (
     _PLAYER_HIT_SPRITE_DURATION_MS,
     _assassin_death_frame,
     _berserker_death_frame,
+    _warlock_death_frame,
     _draw_berserker_death_echoes,
     _draw_berserker_death_impact,
     _draw_paladin_death_echoes,
@@ -879,6 +882,11 @@ def _draw_act_three_world(
                 game_state.player,
                 current_time,
             )
+        elif player_subclass == "warlock":
+            player_death_frame = _warlock_death_frame(
+                game_state.player,
+                current_time,
+            )
         else:
             player_death_frame = _player_death_frame(
                 game_state.player,
@@ -1071,13 +1079,28 @@ def _draw_act_three_world(
                 f"player_berserker_attack_{attack_direction}_{attack_frame}"
             ]
         elif (
-            player_subclass == "warlock"
-            and game_state.player.warlock_demon_form_active
-        ):
+                    player_subclass == "warlock"
+                    and game_state.player.warlock_demon_form_active
+            ):
             player_sprite = assets["player_warlock_demon_attack"]
+        elif player_subclass == "warlock":
+            attack_direction = assassin_attack_direction(
+                game_state.player.facing_direction
+            )
+            attack_frame = assassin_attack_frame(
+                attack_elapsed,
+                _ATTACK_FRAME_DURATION_MS,
+            )
+            player_sprite = assets[
+                (
+                    "player_warlock_attack_"
+                    f"{attack_direction}_"
+                    f"{attack_frame}"
+                )
+            ]
         elif (
-            player_subclass == "summoner"
-            and game_state.player.summoner_familiar_active
+                player_subclass == "summoner"
+                and game_state.player.summoner_familiar_active
         ):
             player_sprite = assets[
                 "player_summoner_no_familiar_attack"
@@ -1131,14 +1154,25 @@ def _draw_act_three_world(
                 f"player_berserker_walk_{walk_direction}_{movement_frame}"
             ]
         elif (
-            player_subclass == "warlock"
-            and game_state.player.warlock_demon_form_active
-        ):
+                    player_subclass == "warlock"
+                    and game_state.player.warlock_demon_form_active
+            ):
             player_sprite = assets[
                 f"player_warlock_demon_walk_{movement_frame}"
             ]
+        elif player_subclass == "warlock":
+            walk_direction = assassin_walk_direction(
+                game_state.player.facing_direction
+            )
+            player_sprite = assets[
+                (
+                    "player_warlock_walk_"
+                    f"{walk_direction}_"
+                    f"{warlock_walk_frame(current_time)}"
+                )
+            ]
         elif (
-            player_subclass == "summoner"
+                player_subclass == "summoner"
             and game_state.player.summoner_familiar_active
         ):
             player_sprite = assets[
@@ -1190,14 +1224,25 @@ def _draw_act_three_world(
                     f"player_berserker_idle_{idle_direction}_{player_frame}"
                 ]
         elif (
-            player_subclass == "warlock"
-            and game_state.player.warlock_demon_form_active
-        ):
+                    player_subclass == "warlock"
+                    and game_state.player.warlock_demon_form_active
+            ):
             player_sprite = assets[
                 f"player_warlock_demon_idle_{player_frame}"
             ]
+        elif player_subclass == "warlock":
+            idle_direction = assassin_walk_direction(
+                game_state.player.facing_direction
+            )
+            player_sprite = assets[
+                (
+                    "player_warlock_idle_"
+                    f"{idle_direction}_"
+                    f"{warlock_idle_frame(current_time)}"
+                )
+            ]
         elif (
-            player_subclass == "summoner"
+                player_subclass == "summoner"
             and game_state.player.summoner_familiar_active
         ):
             player_sprite = assets[

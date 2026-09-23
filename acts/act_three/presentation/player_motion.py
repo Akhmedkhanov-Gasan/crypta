@@ -8,6 +8,10 @@ BERSERKER_WALK_FRAME_COUNT = 8
 BERSERKER_HURT_FRAME_COUNT = 8
 BERSERKER_IDLE_FRAME_DURATION_MS = 270
 BERSERKER_WALK_FRAME_DURATION_MS = 40
+WARLOCK_IDLE_FRAME_COUNT = 8
+WARLOCK_WALK_FRAME_COUNT = 8
+WARLOCK_IDLE_FRAME_DURATION_MS = 270
+WARLOCK_WALK_FRAME_DURATION_MS = 40
 ASSASSIN_ATTACK_FRAME_COUNT = 8
 ASSASSIN_SHADOW_STEP_FRAME_COUNT = 8
 ASSASSIN_HURT_FRAME_COUNTS = {
@@ -52,6 +56,18 @@ def berserker_idle_frame(current_time):
     return (
         current_time // BERSERKER_IDLE_FRAME_DURATION_MS
     ) % BERSERKER_IDLE_FRAME_COUNT
+
+
+def warlock_idle_frame(current_time):
+    return (
+        current_time // WARLOCK_IDLE_FRAME_DURATION_MS
+    ) % WARLOCK_IDLE_FRAME_COUNT
+
+
+def warlock_walk_frame(current_time):
+    return (
+        current_time // WARLOCK_WALK_FRAME_DURATION_MS
+    ) % WARLOCK_WALK_FRAME_COUNT
 
 
 def berserker_walk_frame(current_time):

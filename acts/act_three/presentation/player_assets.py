@@ -152,6 +152,88 @@ def load_berserker_animation_assets(
     ]
 
 
+def load_warlock_animation_assets(
+    assets,
+    act_directory,
+    tile_size,
+    image_loader,
+):
+    warlock_directory = (
+        act_directory / "player" / "warlock"
+    )
+    idle_directory = warlock_directory / "idle"
+    walk_directory = warlock_directory / "walk"
+    attack_directory = warlock_directory / "attack"
+    death_directory = warlock_directory / "death"
+    directions = (
+        "down",
+        "left",
+        "right",
+        "up",
+    )
+
+    for direction in directions:
+        for frame_index in range(8):
+            source_index = frame_index + 1
+
+            assets[
+                f"player_warlock_idle_{direction}_{frame_index}"
+            ] = image_loader(
+                idle_directory
+                / f"idle_{direction}"
+                / f"idle_{direction}_{source_index:02d}.png",
+                (tile_size, tile_size),
+            )
+
+            assets[
+                f"player_warlock_walk_{direction}_{frame_index}"
+            ] = image_loader(
+                walk_directory
+                / f"walk_{direction}"
+                / f"walk_{direction}_{source_index:02d}.png",
+                (tile_size, tile_size),
+            )
+
+            assets[
+                f"player_warlock_attack_{direction}_{frame_index}"
+            ] = image_loader(
+                attack_directory
+                / f"attack_{direction}"
+                / f"attack_{direction}_{source_index:02d}.png",
+                (tile_size, tile_size),
+            )
+
+    for frame_index in range(8):
+        source_index = frame_index + 1
+
+        assets[f"player_warlock_idle_{frame_index}"] = assets[
+            f"player_warlock_idle_down_{frame_index}"
+        ]
+        assets[f"player_warlock_death_{frame_index}"] = (
+            image_loader(
+                death_directory
+                / f"death_down_{source_index:02d}.png",
+                (tile_size, tile_size),
+            )
+        )
+
+    fallback_sprite = assets["player_warlock_idle_down_0"]
+
+    assets["player_warlock_hurt"] = fallback_sprite
+    assets["player_warlock_demon_attack"] = fallback_sprite
+    assets["player_warlock_demon_hurt"] = fallback_sprite
+
+    for frame_index in range(3):
+        assets[
+            f"player_warlock_demon_idle_{frame_index}"
+        ] = fallback_sprite
+
+    for frame_index in range(2):
+        assets[
+            f"player_warlock_demon_walk_{frame_index}"
+        ] = fallback_sprite
+
+
 def load_assassin_animation_assets(
     assets,
     act_directory,

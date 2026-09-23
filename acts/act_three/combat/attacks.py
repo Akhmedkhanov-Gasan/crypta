@@ -8,6 +8,7 @@ from game.state import (
     GameState,
 )
 from logic import (
+    direction_toward,
     get_enemy_occupied_positions,
     has_line_of_sight,
 )
@@ -159,6 +160,12 @@ def perform_warlock_attack(
         for enemy in floor.enemies
         if enemy.health > 0
         and target_cell in get_enemy_occupied_positions(enemy)
+    )
+    player.facing_direction = direction_toward(
+        floor.player_column,
+        floor.player_row,
+        target_cell[0],
+        target_cell[1],
     )
     game_state.player_attack_targets = [target_cell]
     game_state.emit(

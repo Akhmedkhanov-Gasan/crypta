@@ -43,6 +43,8 @@ _ASSASSIN_DEATH_FRAME_COUNT = 8
 _ASSASSIN_DEATH_FRAME_DURATION_MS = 120
 _BERSERKER_DEATH_FRAME_COUNT = 8
 _BERSERKER_DEATH_FRAME_DURATION_MS = 120
+_WARLOCK_DEATH_FRAME_COUNT = 8
+_WARLOCK_DEATH_FRAME_DURATION_MS = 120
 
 
 def record_enemy_hit_feedback(game_state, started_at):
@@ -295,6 +297,15 @@ def _berserker_death_frame(player, current_time):
         current_time,
         _BERSERKER_DEATH_FRAME_COUNT,
         _BERSERKER_DEATH_FRAME_DURATION_MS,
+    )
+
+
+def _warlock_death_frame(player, current_time):
+    return _animated_player_death_frame(
+        player,
+        current_time,
+        _WARLOCK_DEATH_FRAME_COUNT,
+        _WARLOCK_DEATH_FRAME_DURATION_MS,
     )
 
 
