@@ -2,24 +2,18 @@ import math
 
 import pygame
 
+from acts.act_three.abilities.berserker import (
+    get_berserker_crushing_leap_direction,
+)
 
 CRUSHING_LEAP_FRAME_COUNT = 8
 
 
 def crushing_leap_direction(origin, destination):
-    column_change = destination[0] - origin[0]
-    row_change = destination[1] - origin[1]
-
-    if abs(column_change) >= abs(row_change):
-        if column_change < 0:
-            return "left"
-        if column_change > 0:
-            return "right"
-
-    if row_change < 0:
-        return "up"
-
-    return "down"
+    return get_berserker_crushing_leap_direction(
+        origin,
+        destination,
+    )
 
 
 def crushing_leap_frame(elapsed, duration):
@@ -45,15 +39,40 @@ def crushing_leap_position(
         0.0,
         min(1.0, elapsed / duration),
     )
+    anticipation_end = 0.16
+
+    if progress < anticipation_end:
+        anticipation_progress = (
+            progress / anticipation_end
+        )
+        crouch_offset = (
+            math.sin(
+                anticipation_progress * math.pi
+            )
+            * tile_size
+            * 0.055
+        )
+
+        return (
+            start_position[0],
+            round(
+                start_position[1]
+                + crouch_offset
+            ),
+        )
+
+    flight_progress = (
+        progress - anticipation_end
+    ) / (1 - anticipation_end)
     eased_progress = (
-        progress
-        * progress
-        * (3 - 2 * progress)
+        flight_progress
+        * flight_progress
+        * (3 - 2 * flight_progress)
     )
     jump_height = (
-        math.sin(math.pi * progress)
+        math.sin(math.pi * flight_progress)
         * tile_size
-        * 0.55
+        * 0.62
     )
 
     ground_position = (
@@ -77,7 +96,10 @@ def crushing_leap_position(
 
     return (
         ground_position[0],
-        round(ground_position[1] - jump_height),
+        round(
+            ground_position[1]
+            - jump_height
+        ),
     )
 
 
@@ -114,162 +136,465 @@ def draw_crushing_leap_targeting(
     if target is None:
         return
 
+    overlay = pygame.Surface(
+        surface.get_size(),
+        pygame.SRCALPHA,
+    )
+    half_tile = tile_size // 2
     pulse = (
-        math.sin(current_time * 0.011) + 1
+        math.sin(current_time * 0.009) + 1
     ) / 2
-    cell_surface = pygame.Surface(
-        (tile_size, tile_size),
-        pygame.SRCALPHA,
-    )
-    cell_surface.fill(
-        (
-            152,
-            24,
-            12,
-            round(36 + pulse * 24),
-        )
-    )
-    pygame.draw.rect(
-        cell_surface,
-        (
-            238,
-            67,
-            31,
-            round(145 + pulse * 70),
-        ),
-        cell_surface.get_rect().inflate(-4, -4),
-        width=2,
-    )
-    pygame.draw.polygon(
-        cell_surface,
-        (
-            255,
-            121,
-            48,
-            round(80 + pulse * 70),
-        ),
-        (
-            (tile_size // 2, 9),
-            (tile_size - 9, tile_size // 2),
-            (tile_size // 2, tile_size - 9),
-            (9, tile_size // 2),
-        ),
-        width=2,
-    )
-
-    for column, row in impact_cells:
-        surface.blit(
-            cell_surface,
-            (
-                column * tile_size - camera_x,
-                row * tile_size - camera_y,
-            ),
-        )
-
-    target_position = (
-        target[0] * tile_size - camera_x,
-        target[1] * tile_size - camera_y,
-    )
-    target_surface = pygame.Surface(
-        (tile_size, tile_size),
-        pygame.SRCALPHA,
-    )
-    target_surface.fill(
-        (
-            179,
-            27,
-            11,
-            round(58 + pulse * 38),
-        )
-    )
-
-    center = (tile_size // 2, tile_size // 2)
-    outer_radius = round(
-        tile_size * (0.31 + pulse * 0.08)
-    )
-    inner_radius = round(
-        tile_size * (0.16 + pulse * 0.04)
-    )
-
-    pygame.draw.circle(
-        target_surface,
-        (255, 96, 37, 225),
-        center,
-        outer_radius,
-        width=3,
-    )
-    pygame.draw.circle(
-        target_surface,
-        (255, 183, 79, 210),
-        center,
-        inner_radius,
-        width=2,
-    )
-    pygame.draw.line(
-        target_surface,
-        (255, 213, 123, 230),
-        (center[0] - 10, center[1]),
-        (center[0] + 10, center[1]),
-        width=2,
-    )
-    pygame.draw.line(
-        target_surface,
-        (255, 213, 123, 230),
-        (center[0], center[1] - 10),
-        (center[0], center[1] + 10),
-        width=2,
-    )
-
-    surface.blit(target_surface, target_position)
 
     origin_center = (
         origin[0] * tile_size
         - camera_x
-        + tile_size // 2,
+        + half_tile,
         origin[1] * tile_size
         - camera_y
-        + tile_size // 2,
+        + half_tile,
     )
     target_center = (
-        target_position[0] + tile_size // 2,
-        target_position[1] + tile_size // 2,
+        target[0] * tile_size
+        - camera_x
+        + half_tile,
+        target[1] * tile_size
+        - camera_y
+        + half_tile,
     )
 
-    pygame.draw.line(
-        surface,
-        (157, 48, 24),
-        origin_center,
-        target_center,
+    difference_x = (
+        target_center[0] - origin_center[0]
+    )
+    difference_y = (
+        target_center[1] - origin_center[1]
+    )
+    distance = max(
+        1.0,
+        math.hypot(
+            difference_x,
+            difference_y,
+        ),
+    )
+    perpendicular_x = -difference_y / distance
+    perpendicular_y = difference_x / distance
+    upper_path = []
+    lower_path = []
+
+    for step in range(33):
+        progress = step / 32
+        taper = math.sin(math.pi * progress)
+        wave = math.sin(
+            progress * math.tau * 2
+            - current_time * 0.009
+        )
+        separation = (
+            3
+            + taper * 5
+            + wave * 1.5
+        )
+        center_x = (
+            origin_center[0]
+            + difference_x * progress
+        )
+        center_y = (
+            origin_center[1]
+            + difference_y * progress
+        )
+
+        upper_path.append(
+            (
+                round(
+                    center_x
+                    + perpendicular_x * separation
+                ),
+                round(
+                    center_y
+                    + perpendicular_y * separation
+                ),
+            )
+        )
+        lower_path.append(
+            (
+                round(
+                    center_x
+                    - perpendicular_x * separation
+                ),
+                round(
+                    center_y
+                    - perpendicular_y * separation
+                ),
+            )
+        )
+
+    pygame.draw.lines(
+        overlay,
+        (25, 1, 3, 145),
+        False,
+        upper_path,
+        width=8,
+    )
+    pygame.draw.lines(
+        overlay,
+        (25, 1, 3, 145),
+        False,
+        lower_path,
+        width=8,
+    )
+    pygame.draw.lines(
+        overlay,
+        (119, 10, 13, 205),
+        False,
+        upper_path,
+        width=3,
+    )
+    pygame.draw.lines(
+        overlay,
+        (155, 16, 17, 195),
+        False,
+        lower_path,
         width=2,
     )
 
-    path_progress = (
-        current_time % 700
-    ) / 700
-    path_marker = (
-        round(
-            origin_center[0]
-            + (
+    stain_points = []
+    stain_point_count = 28
+
+    for point_index in range(stain_point_count):
+        angle = (
+            point_index
+            * math.tau
+            / stain_point_count
+        )
+        alternating_offset = (
+            9
+            if point_index % 2 == 0
+            else -6
+        )
+        noise_offset = math.sin(
+            point_index * 4.37
+            + current_time * 0.003
+        ) * 4
+        radius = (
+            tile_size * 1.18
+            + alternating_offset
+            + noise_offset
+            + pulse * 3
+        )
+
+        stain_points.append(
+            (
+                round(
+                    target_center[0]
+                    + math.cos(angle) * radius
+                ),
+                round(
+                    target_center[1]
+                    + math.sin(angle)
+                    * radius
+                    * 0.72
+                ),
+            )
+        )
+
+    pygame.draw.polygon(
+        overlay,
+        (
+            18,
+            1,
+            3,
+            round(112 + pulse * 18),
+        ),
+        stain_points,
+    )
+    pygame.draw.lines(
+        overlay,
+        (
+            91,
+            7,
+            10,
+            round(180 + pulse * 35),
+        ),
+        True,
+        stain_points,
+        width=3,
+    )
+
+    inner_stain_points = []
+
+    for point_index in range(20):
+        angle = (
+            point_index
+            * math.tau
+            / 20
+            + 0.13
+        )
+        radius = (
+            tile_size * 0.76
+            + math.sin(
+                point_index * 3.11
+                - current_time * 0.004
+            ) * 6
+        )
+        inner_stain_points.append(
+            (
+                round(
+                    target_center[0]
+                    + math.cos(angle) * radius
+                ),
+                round(
+                    target_center[1]
+                    + math.sin(angle)
+                    * radius
+                    * 0.68
+                ),
+            )
+        )
+
+    pygame.draw.polygon(
+        overlay,
+        (
+            42,
+            2,
+            5,
+            round(90 + pulse * 20),
+        ),
+        inner_stain_points,
+    )
+
+    for cell_index, (column, row) in enumerate(
+        impact_cells
+    ):
+        cell_center = (
+            column * tile_size
+            - camera_x
+            + half_tile,
+            row * tile_size
+            - camera_y
+            + half_tile,
+        )
+        slash_angle = (
+            -0.78
+            + (cell_index % 3 - 1) * 0.18
+        )
+        slash_length = round(
+            tile_size
+            * (0.21 + cell_index % 2 * 0.05)
+        )
+        offset_x = round(
+            math.cos(slash_angle)
+            * slash_length
+        )
+        offset_y = round(
+            math.sin(slash_angle)
+            * slash_length
+        )
+
+        for slash_index in (-1, 1):
+            perpendicular_offset = slash_index * 4
+            start = (
+                cell_center[0]
+                - offset_x
+                + perpendicular_offset,
+                cell_center[1] - offset_y,
+            )
+            end = (
+                cell_center[0]
+                + offset_x
+                + perpendicular_offset,
+                cell_center[1] + offset_y,
+            )
+            pygame.draw.line(
+                overlay,
+                (
+                    122,
+                    11,
+                    13,
+                    round(105 + pulse * 35),
+                ),
+                start,
+                end,
+                width=2,
+            )
+
+    for crack_index in range(15):
+        angle = (
+            crack_index * math.tau / 15
+            + math.sin(crack_index * 2.91) * 0.16
+        )
+        start_distance = tile_size * 0.13
+        middle_distance = (
+            tile_size
+            * (0.39 + crack_index % 3 * 0.08)
+        )
+        end_distance = (
+            tile_size
+            * (0.72 + crack_index % 4 * 0.09)
+        )
+        bend = (
+            0.08
+            if crack_index % 2 == 0
+            else -0.1
+        )
+        start = (
+            round(
                 target_center[0]
-                - origin_center[0]
-            )
-            * path_progress
-        ),
-        round(
-            origin_center[1]
-            + (
+                + math.cos(angle)
+                * start_distance
+            ),
+            round(
                 target_center[1]
-                - origin_center[1]
-            )
-            * path_progress
+                + math.sin(angle)
+                * start_distance
+                * 0.72
+            ),
+        )
+        middle = (
+            round(
+                target_center[0]
+                + math.cos(angle + bend)
+                * middle_distance
+            ),
+            round(
+                target_center[1]
+                + math.sin(angle + bend)
+                * middle_distance
+                * 0.72
+            ),
+        )
+        end = (
+            round(
+                target_center[0]
+                + math.cos(angle - bend)
+                * end_distance
+            ),
+            round(
+                target_center[1]
+                + math.sin(angle - bend)
+                * end_distance
+                * 0.72
+            ),
+        )
+
+        pygame.draw.lines(
+            overlay,
+            (
+                144,
+                13,
+                14,
+                round(125 + pulse * 45),
+            ),
+            False,
+            (
+                start,
+                middle,
+                end,
+            ),
+            width=2,
+        )
+
+    core_size = round(
+        tile_size * (0.22 + pulse * 0.025)
+    )
+    core_points = (
+        (
+            target_center[0],
+            target_center[1] - core_size,
+        ),
+        (
+            target_center[0] + core_size,
+            target_center[1],
+        ),
+        (
+            target_center[0],
+            target_center[1] + core_size,
+        ),
+        (
+            target_center[0] - core_size,
+            target_center[1],
         ),
     )
-    pygame.draw.circle(
-        surface,
-        (255, 154, 66),
-        path_marker,
-        4,
+
+    pygame.draw.polygon(
+        overlay,
+        (10, 0, 2, 230),
+        core_points,
     )
+    pygame.draw.lines(
+        overlay,
+        (
+            183,
+            20,
+            19,
+            round(185 + pulse * 45),
+        ),
+        True,
+        core_points,
+        width=3,
+    )
+
+    claw_length = round(tile_size * 0.36)
+
+    for claw_index in (-1, 0, 1):
+        horizontal_offset = claw_index * 7
+        pygame.draw.line(
+            overlay,
+            (
+                204,
+                28,
+                22,
+                round(155 + pulse * 55),
+            ),
+            (
+                target_center[0]
+                - claw_length // 2
+                + horizontal_offset,
+                target_center[1]
+                - claw_length // 2,
+            ),
+            (
+                target_center[0]
+                + claw_length // 2
+                + horizontal_offset,
+                target_center[1]
+                + claw_length // 2,
+            ),
+            width=2,
+        )
+
+    for mote_index in range(7):
+        progress = (
+            current_time / 900
+            + mote_index / 7
+        ) % 1
+        source_path = (
+            upper_path
+            if mote_index % 2 == 0
+            else lower_path
+        )
+        point_index = min(
+            len(source_path) - 1,
+            round(
+                progress
+                * (len(source_path) - 1)
+            ),
+        )
+        mote_alpha = round(
+            55
+            + math.sin(math.pi * progress) * 125
+        )
+
+        pygame.draw.circle(
+            overlay,
+            (
+                158,
+                17,
+                17,
+                mote_alpha,
+            ),
+            source_path[point_index],
+            2,
+        )
+
+    surface.blit(overlay, (0, 0))
 
 
 def draw_crushing_leap_travel_effect(
@@ -334,10 +659,10 @@ def draw_crushing_leap_travel_effect(
     )
     surface.blit(shadow_surface, ground_position)
 
-    for echo_index in range(3, 0, -1):
+    for echo_index in range(2, 0, -1):
         echo_elapsed = max(
             0,
-            elapsed - echo_index * 32,
+            elapsed - echo_index * 48,
         )
         echo_position = crushing_leap_position(
             start_position,
@@ -351,7 +676,7 @@ def draw_crushing_leap_travel_effect(
             (80, 24, 8, 0),
             special_flags=pygame.BLEND_RGBA_ADD,
         )
-        echo.set_alpha(26 + echo_index * 16)
+        echo.set_alpha(14 + echo_index * 12)
         surface.blit(echo, echo_position)
 
 

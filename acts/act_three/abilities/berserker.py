@@ -29,6 +29,26 @@ OracleHitReaction = Callable[
     None,
 ]
 
+
+def get_berserker_crushing_leap_direction(
+    origin: tuple[int, int],
+    target: tuple[int, int],
+) -> str:
+    column_change = target[0] - origin[0]
+    row_change = target[1] - origin[1]
+
+    if abs(column_change) >= abs(row_change):
+        if column_change < 0:
+            return "left"
+
+        return "right"
+
+    if row_change < 0:
+        return "left"
+
+    return "right"
+
+
 def get_berserker_crushing_leap_cells(
     game_state: GameState,
     target: tuple[int, int],
@@ -185,11 +205,20 @@ def perform_berserker_crushing_leap(
         return False
 
     origin = (floor.player_column, floor.player_row)
+    leap_direction = get_berserker_crushing_leap_direction(
+        origin,
+        target,
+    )
     impact_cells = get_berserker_crushing_leap_cells(
         game_state,
         target,
     )
     floor.player_column, floor.player_row = target
+    player.facing_direction = (
+        (-1, 0)
+        if leap_direction == "left"
+        else (1, 0)
+    )
     player.berserker_crushing_leap_charge = 0
     player.berserker_crushing_leap_aiming = False
     player.berserker_crushing_leap_target = None

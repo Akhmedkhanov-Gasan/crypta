@@ -40,10 +40,8 @@ def load_berserker_animation_assets(
         "up",
     )
     crushing_leap_directions = (
-        "down",
         "left",
         "right",
-        "up",
     )
     hurt_directions = (
         "down",
