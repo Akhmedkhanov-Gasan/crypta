@@ -5,8 +5,11 @@ from presentation.dev_console import DevConsole
 from application.transitions import (
     advance_floor_transition,
     complete_class_selection,
-    finish_upgrade_descent,
 )
+from acts.act_three.movement import (
+    create_act_three_held_movement_event,
+)
+from acts.act_three.movement_timing import PLAYER_STEP_MS
 from application.upgrade_input import (
     handle_upgrade_key_input,
     handle_upgrade_pointer_input,
@@ -585,7 +588,12 @@ def main():
         if game_state.bloody_altar_open:
             act_two_input_state.cancel_auto_move()
             act_two_input_state.cancel_consumable_drag()
-        held_movement_event = create_held_movement_event(
+        held_movement_factory = (
+            create_act_three_held_movement_event
+            if current_act == 3
+            else create_held_movement_event
+        )
+        held_movement_event = held_movement_factory(
             act_two_input_state,
             continuous_move_time,
             continuous_movement_available,
@@ -600,7 +608,11 @@ def main():
             game_state,
             continuous_move_time,
             continuous_movement_available,
-            AUTO_MOVE_INTERVAL_MS,
+            (
+                PLAYER_STEP_MS
+                if current_act == 3
+                else AUTO_MOVE_INTERVAL_MS
+            ),
         )
         if auto_move_event is not None:
             pygame.event.post(auto_move_event)

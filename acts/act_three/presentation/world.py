@@ -7,6 +7,10 @@ from acts.act_three.presentation.camera import (
     act_three_world_view_size,
     update_act_three_camera,
 )
+from acts.act_three.presentation.player_locomotion import (
+    locomotion_sprite,
+    sample_player_locomotion,
+)
 from presentation.map_navigation import draw_map_trail
 from presentation.ground_items import draw_ground_items
 from acts.act_three.presentation.tile_layers import (
@@ -204,25 +208,13 @@ def _draw_act_three_world(
     floor = game_state.floor
     dungeon_map = floor.map
     view_width, view_height = act_three_world_view_size(floor)
-    movement_progress = player_movement_progress(
+    locomotion_pose = sample_player_locomotion(
+        game_state.player,
+        floor,
         current_time,
-        game_state.player.movement_animation_started_at,
+        ACT_THREE_TILE_SIZE,
     )
-    camera_player_position = (
-        floor.player_column * ACT_THREE_TILE_SIZE,
-        floor.player_row * ACT_THREE_TILE_SIZE,
-    )
-    movement_origin = game_state.player.movement_origin
-
-    if movement_progress is not None and movement_origin is not None:
-        camera_player_position = interpolate_player_position(
-            (
-                movement_origin[0] * ACT_THREE_TILE_SIZE,
-                movement_origin[1] * ACT_THREE_TILE_SIZE,
-            ),
-            camera_player_position,
-            movement_progress,
-        )
+    camera_player_position = locomotion_pose.position
 
     killing_spree_camera = (
         killing_spree_camera_position(
@@ -861,6 +853,7 @@ def _draw_act_three_world(
         game_state.player,
         current_time,
     )
+    walking_sprite_active = False
     if (
         player_subclass in (
             "berserker",
@@ -1118,70 +1111,15 @@ def _draw_act_three_world(
             "warlock",
             "summoner",
         )
-        and movement_progress is not None
+        and locomotion_pose.active
     ):
-        movement_frame_count = (
-            ASSASSIN_WALK_FRAME_COUNT
-            if player_subclass == "assassin"
-            else (
-                BERSERKER_WALK_FRAME_COUNT
-                if player_subclass == "berserker"
-                else _MOVE_FRAME_COUNT
-            )
+        player_sprite = locomotion_sprite(
+            assets,
+            game_state.player,
+            locomotion_pose,
         )
-        if player_subclass == "assassin":
-            movement_frame = assassin_walk_frame(current_time)
-        elif player_subclass == "berserker":
-            movement_frame = berserker_walk_frame(current_time)
-        else:
-            movement_frame = movement_frame_for_progress(
-                movement_progress,
-                movement_frame_count,
-            )
+        walking_sprite_active = True
 
-        if player_subclass == "assassin":
-            walk_direction = assassin_walk_direction(
-                game_state.player.facing_direction
-            )
-            player_sprite = assets[
-                f"player_assassin_walk_{walk_direction}_{movement_frame}"
-            ]
-        elif player_subclass == "berserker":
-            walk_direction = assassin_walk_direction(
-                game_state.player.facing_direction
-            )
-            player_sprite = assets[
-                f"player_berserker_walk_{walk_direction}_{movement_frame}"
-            ]
-        elif (
-                    player_subclass == "warlock"
-                    and game_state.player.warlock_demon_form_active
-            ):
-            player_sprite = assets[
-                f"player_warlock_demon_walk_{movement_frame}"
-            ]
-        elif player_subclass == "warlock":
-            walk_direction = assassin_walk_direction(
-                game_state.player.facing_direction
-            )
-            player_sprite = assets[
-                (
-                    "player_warlock_walk_"
-                    f"{walk_direction}_"
-                    f"{warlock_walk_frame(current_time)}"
-                )
-            ]
-        elif (
-                player_subclass == "summoner"
-            and game_state.player.summoner_familiar_active
-        ):
-            player_sprite = assets[
-                f"player_summoner_no_familiar_walk_{movement_frame}"
-            ]
-        else:
-            player_sprite = assets[
-                f"player_{player_subclass}_walk_{movement_frame}"
-            ]
     else:
         if player_subclass == "assassin":
             player_frame = assassin_idle_frame(current_time)
@@ -1252,27 +1190,10 @@ def _draw_act_three_world(
             player_sprite = assets[
                 f"player_{player_subclass}_idle_{player_frame}"
             ]
-    player_position = _view_position(
-        floor.player_column,
-        floor.player_row,
-        camera_x,
-        camera_y,
+    player_position = (
+        round(locomotion_pose.position[0] - camera_x),
+        round(locomotion_pose.position[1] - camera_y),
     )
-    if (
-        movement_progress is not None
-        and game_state.player.movement_origin is not None
-    ):
-        movement_origin_position = _view_position(
-            game_state.player.movement_origin[0],
-            game_state.player.movement_origin[1],
-            camera_x,
-            camera_y,
-        )
-        player_position = interpolate_player_position(
-            movement_origin_position,
-            player_position,
-            movement_progress,
-        )
     if (
         shadow_step_active
         and shadow_step_frame
@@ -1501,7 +1422,20 @@ def _draw_act_three_world(
                 player_sprite.get_size(),
             ),
         )
-
+    if (
+        walking_sprite_active
+        and not game_state.player.ultimate_animation_active
+        and not exchange_active
+        and not shield_charge_active
+        and not leap_active
+        and not berserker_leap_travel_active
+        and not berserker_leap_impact_active
+        and not shadow_step_active
+    ):
+        player_position = (
+            player_position[0] + locomotion_pose.body_offset[0],
+            player_position[1] + locomotion_pose.body_offset[1],
+        )
     _draw_player_hit_feedback(
         view_surface,
         player_sprite,
