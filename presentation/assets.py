@@ -12,6 +12,9 @@ from acts.act_three.presentation.player_assets import (
     load_berserker_animation_assets,
     load_warlock_animation_assets,
 )
+from acts.act_three.presentation.enemies import (
+    load_enemy_animation_assets,
+)
 from acts.act_three.presentation.ability_assets import (
     load_act_three_ability_assets,
 )
@@ -1612,103 +1615,11 @@ def load_act_three_gameplay_assets():
         )
     )
 
-    for enemy_type in (
-        "archer",
-        "brute",
-        "sentinel",
-        "priest",
-    ):
-        enemy_idle_directory = (
-            act_directory
-            / "enemies"
-            / enemy_type
-            / "idle"
-        )
-
-        for frame_index in range(3):
-            assets[
-                f"enemy_{enemy_type}_idle_{frame_index}"
-            ] = _load_pixel_scaled_image(
-                enemy_idle_directory
-                / f"idle_{frame_index:02d}.png",
-                (tile_size, tile_size),
-            )
-
-    for enemy_type in (
-        "archer",
-        "brute",
-        "priest",
-        "sentinel",
-    ):
-        enemy_death_directory = (
-            act_directory
-            / "enemies"
-            / enemy_type
-            / "death"
-        )
-        for frame_index in range(2):
-            assets[
-                f"enemy_{enemy_type}_death_{frame_index}"
-            ] = _load_pixel_scaled_image(
-                enemy_death_directory
-                / f"death_{frame_index:02d}.png",
-                (tile_size, tile_size),
-            )
-
-    for enemy_type in (
-        "archer",
-        "brute",
-        "priest",
-        "sentinel",
-    ):
-        enemy_walk_directory = (
-            act_directory
-            / "enemies"
-            / enemy_type
-            / "walk"
-        )
-        for frame_index in range(2):
-            assets[
-                f"enemy_{enemy_type}_walk_{frame_index}"
-            ] = _load_pixel_scaled_image(
-                enemy_walk_directory
-                / f"walk_{frame_index:02d}.png",
-                (tile_size, tile_size),
-            )
-
-    for enemy_type in (
-        "archer",
-        "brute",
-        "sentinel",
-    ):
-        assets[
-            f"enemy_{enemy_type}_attack"
-        ] = _load_pixel_scaled_image(
-            act_directory
-            / "enemies"
-            / enemy_type
-            / "attack"
-            / "attack_00.png",
-            (tile_size, tile_size),
-        )
-
-    assets["sentinel_guard"] = (
-        _load_pixel_scaled_image(
-            act_directory
-            / "enemies"
-            / "sentinel"
-            / "guard.png",
-            (tile_size, tile_size),
-        )
-    )
-    assets["priest_heal_cast"] = (
-        _load_pixel_scaled_image(
-            act_directory
-            / "enemies"
-            / "priest"
-            / "heal_cast.png",
-            (tile_size, tile_size),
-        )
+    load_enemy_animation_assets(
+        assets,
+        act_directory,
+        tile_size,
+        _load_pixel_scaled_image,
     )
 
     rune_directory = (

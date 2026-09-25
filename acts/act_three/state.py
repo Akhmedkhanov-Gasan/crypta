@@ -150,6 +150,7 @@ class ActThreePlayerState:
     hit_animation_started_at: int = -1
     hit_damage: int = 0
     hit_origin: tuple[int, int] | None = None
+    dodge_animation_started_at: int = -1
     death_animation_started_at: int = -1
     old_man_position: tuple[int, int] | None = None
 

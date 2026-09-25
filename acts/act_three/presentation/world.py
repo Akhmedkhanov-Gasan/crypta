@@ -81,7 +81,11 @@ _TOP_VOID_CORNER_X_OFFSETS = {
 _TOP_VOID_DOUBLE_CORNER_CROP_WIDTH = 24
 
 
-from acts.act_three.presentation.actors import _enemy_sprite
+from acts.act_three.presentation.actors import (
+    _draw_enemy_movement_effects,
+    _enemy_sprite,
+    _enemy_world_position,
+)
 from acts.act_two.presentation.enemies.sentinel import draw_sentinel_status
 from presentation.control_effects import draw_player_control_effects
 from acts.act_three.presentation.animation import (
@@ -624,11 +628,14 @@ def _draw_act_three_world(
         rendered_enemies,
         key=lambda living_enemy: living_enemy.row,
     ):
-        enemy_position = _view_position(
-            enemy.column,
-            enemy.row,
-            camera_x,
-            camera_y,
+        enemy_world_position = _enemy_world_position(
+            enemy,
+            current_time,
+            ACT_THREE_TILE_SIZE,
+        )
+        enemy_position = (
+            enemy_world_position[0] - camera_x,
+            enemy_world_position[1] - camera_y,
         )
         if (
             exchange_active
@@ -670,6 +677,15 @@ def _draw_act_three_world(
             enemy,
             current_time,
             floor.visual_seed,
+        )
+        _draw_enemy_movement_effects(
+            view_surface,
+            assets,
+            enemy,
+            current_time,
+            ACT_THREE_TILE_SIZE,
+            camera_x,
+            camera_y,
         )
         if enemy.health > 0:
             draw_actor_shadow(

@@ -1,6 +1,3 @@
-
-
-
 from game.state import EnemyBehaviorState
 
 
@@ -33,6 +30,11 @@ from acts.act_three.presentation.animation import (
     _movement_frame,
     _stable_text_seed,
 )
+from acts.act_three.presentation.enemies import (
+    archer_sprite,
+    archer_world_position,
+    draw_archer_backhop_afterimages,
+)
 
 def _enemy_sprite(
     assets,
@@ -40,6 +42,14 @@ def _enemy_sprite(
     current_time,
     visual_seed,
 ):
+    if enemy.type == "archer":
+        return archer_sprite(
+            assets,
+            enemy,
+            current_time,
+            visual_seed,
+        )
+
     if (
         enemy.type in _ENEMY_DEATH_COLLAPSE_END_MS
         and enemy.behavior_state is EnemyBehaviorState.DEAD
@@ -138,3 +148,42 @@ def _enemy_sprite(
         "Act III has no visual asset set for enemy type "
         f"{enemy.type!r}. Add its animations to assets/sprites/act_3."
     )
+
+
+def _enemy_world_position(
+    enemy,
+    current_time,
+    tile_size,
+):
+    if enemy.type == "archer":
+        return archer_world_position(
+            enemy,
+            current_time,
+            tile_size,
+        )
+
+    return (
+        enemy.column * tile_size,
+        enemy.row * tile_size,
+    )
+
+
+def _draw_enemy_movement_effects(
+    surface,
+    assets,
+    enemy,
+    current_time,
+    tile_size,
+    camera_x,
+    camera_y,
+):
+    if enemy.type == "archer":
+        draw_archer_backhop_afterimages(
+            surface,
+            assets,
+            enemy,
+            current_time,
+            tile_size,
+            camera_x,
+            camera_y,
+        )

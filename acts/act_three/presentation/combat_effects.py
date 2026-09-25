@@ -2,6 +2,11 @@ import math
 
 import pygame
 
+from acts.act_three.presentation.dodge_feedback import (
+    draw_enemy_dodge_feedback,
+    draw_player_dodge_feedback,
+    record_dodge_feedback,
+)
 from game.events import GameEventType
 from presentation.layout import ACT_THREE_TILE_SIZE
 
@@ -48,6 +53,10 @@ _WARLOCK_DEATH_FRAME_DURATION_MS = 120
 
 
 def record_enemy_hit_feedback(game_state, started_at):
+    record_dodge_feedback(
+        game_state,
+        started_at,
+    )
     hit_events_by_target = {}
 
     for event in game_state.events:
@@ -89,6 +98,7 @@ def record_enemy_hit_feedback(game_state, started_at):
             continue
 
         enemy.hit_animation_started_at = started_at
+        enemy.hit_dodged = False
         enemy.hit_damage = sum(
             event.amount for event in regular_hit_events
         )
@@ -168,6 +178,7 @@ def record_player_hit_feedback(game_state, started_at):
         return
 
     player = game_state.player
+    player.dodge_animation_started_at = -1
     player.hit_animation_started_at = started_at
     player.hit_damage = sum(event.amount for event in hit_events)
     player.hit_origin = next(
@@ -2163,6 +2174,16 @@ def _draw_player_hit_feedback(
     current_time,
     damage_font,
 ):
+    if draw_player_dodge_feedback(
+        surface,
+        sprite,
+        position,
+        player,
+        current_time,
+        damage_font,
+    ):
+        return
+
     if not _player_hit_feedback_active(player, current_time):
         surface.blit(sprite, position)
         return
@@ -2332,6 +2353,16 @@ def _draw_enemy_hit_feedback(
     current_time,
     damage_font,
 ):
+    if draw_enemy_dodge_feedback(
+        surface,
+        sprite,
+        position,
+        enemy,
+        current_time,
+        damage_font,
+    ):
+        return
+
     if not _enemy_hit_feedback_active(enemy, current_time):
         surface.blit(sprite, position)
         return
