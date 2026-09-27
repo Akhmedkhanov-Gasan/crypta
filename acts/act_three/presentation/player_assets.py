@@ -164,6 +164,7 @@ def load_warlock_animation_assets(
     idle_directory = warlock_directory / "idle"
     walk_directory = warlock_directory / "walk"
     attack_directory = warlock_directory / "attack"
+    hurt_directory = warlock_directory / "hurt"
     death_directory = warlock_directory / "death"
     directions = (
         "down",
@@ -203,6 +204,15 @@ def load_warlock_animation_assets(
                 (tile_size, tile_size),
             )
 
+            assets[
+                f"player_warlock_hurt_{direction}_{frame_index}"
+            ] = image_loader(
+                hurt_directory
+                / f"hurt_{direction}"
+                / f"hurt_{direction}_{source_index:02d}.png",
+                (tile_size, tile_size),
+            )
+
     for frame_index in range(8):
         source_index = frame_index + 1
 
@@ -219,7 +229,9 @@ def load_warlock_animation_assets(
 
     fallback_sprite = assets["player_warlock_idle_down_0"]
 
-    assets["player_warlock_hurt"] = fallback_sprite
+    assets["player_warlock_hurt"] = assets[
+        "player_warlock_hurt_down_0"
+    ]
     assets["player_warlock_demon_attack"] = fallback_sprite
     assets["player_warlock_demon_hurt"] = fallback_sprite
 

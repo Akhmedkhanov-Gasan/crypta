@@ -2,25 +2,33 @@ import math
 
 import pygame
 
+from acts.act_three.presentation.world.context import (
+    create_world_render_context,
+)
+from acts.act_three.presentation.world.enemies import (
+    draw_world_enemies,
+)
+from acts.act_three.presentation.world.player_state import (
+    create_player_render_state,
+)
+from acts.act_three.presentation.world.player_sprite import (
+    select_player_sprite,
+)
+from acts.act_three.presentation.world.targeting import (
+    draw_world_attack_markers,
+    draw_world_targeting,
+)
+from acts.act_three.presentation.world.terrain import (
+    draw_world_terrain,
+)
 from acts.act_three.presentation.camera import (
     act_three_camera_scale,
-    act_three_world_view_size,
-    update_act_three_camera,
-)
-from acts.act_three.presentation.player_locomotion import (
-    locomotion_sprite,
-    sample_player_locomotion,
 )
 from presentation.map_navigation import draw_map_trail
-from presentation.ground_items import draw_ground_items
 from acts.act_three.presentation.tile_layers import (
     draw_fading_foreground_layers,
-    draw_tile_layer_shadows,
     draw_tile_layers,
     layer_names_by_prefix,
-)
-from acts.act_three.presentation.environment_grading import (
-    draw_environment_grading,
 )
 from acts.act_three.presentation.atmosphere import (
     draw_lit_atmosphere,
@@ -29,13 +37,10 @@ from acts.act_three.presentation.color_grading import (
     draw_act_three_color_grading,
 )
 from acts.act_three.presentation.view import (
-    _camera_position,
     _draw_fog_of_war,
-    _get_act_three_visibility,
     _view_position,
 )
 
-from game.state import EnemyBehaviorState
 from presentation.layout import (
     ACT_THREE_TILE_SIZE,
     ACT_THREE_VIEW_HEIGHT,
@@ -56,10 +61,7 @@ from acts.act_three.settings import (
     WARLOCK_SOUL_EXCHANGE_TRAVEL_MS,
     BERSERKER_LAST_RAGE_ANIMATION_MS,
 )
-from settings import (
-    DANGER_BORDER_COLOR,
-    HEALTH_BAR_COLOR,
-)
+from settings import HEALTH_BAR_COLOR
 
 
 _TORCH_LIGHT_SURFACE = None
@@ -81,51 +83,18 @@ _TOP_VOID_CORNER_X_OFFSETS = {
 _TOP_VOID_DOUBLE_CORNER_CROP_WIDTH = 24
 
 
-from acts.act_three.presentation.actors import (
-    _draw_enemy_movement_effects,
-    _enemy_sprite,
-    _enemy_world_position,
-)
-from acts.act_two.presentation.enemies.sentinel import draw_sentinel_status
 from presentation.control_effects import draw_player_control_effects
 from acts.act_three.presentation.animation import (
-    _idle_frame,
     _stable_text_seed,
 )
 from acts.act_three.presentation.player_motion import (
     ASSASSIN_SHADOW_STEP_FRAME_COUNT,
-    ASSASSIN_WALK_FRAME_COUNT,
-    BERSERKER_WALK_FRAME_COUNT,
-    assassin_attack_direction,
-    assassin_attack_frame,
-    assassin_shadow_step_direction,
-    assassin_shadow_step_frame,
-    assassin_idle_frame,
-    berserker_idle_frame,
-    berserker_walk_frame,
-    warlock_idle_frame,
-    warlock_walk_frame,
-    berserker_hurt_frame,
-    assassin_walk_direction,
-    assassin_walk_frame,
-    assassin_hurt_frame,
-    assassin_hurt_direction,
-    interpolate_player_position,
-    movement_frame_for_progress,
-    player_movement_progress,
-
 )
 from acts.act_three.presentation.berserker import (
-    crushing_leap_camera_offset,
-    crushing_leap_direction,
-    crushing_leap_frame,
     crushing_leap_position,
     draw_crushing_leap_impact_effect,
-    draw_crushing_leap_targeting,
     draw_crushing_leap_travel_effect,
     draw_last_rage_activation_effect,
-    last_rage_camera_offset,
-    last_rage_frame,
 )
 from acts.act_three.presentation.class_effects import (
     _draw_summoner_bond_pentagram,
@@ -142,10 +111,6 @@ from acts.act_three.presentation.combat_effects import (
     _draw_attack_impact_flash,
     _draw_assassin_death_echoes,
     _draw_assassin_death_impact,
-    _PLAYER_HIT_SPRITE_DURATION_MS,
-    _assassin_death_frame,
-    _berserker_death_frame,
-    _warlock_death_frame,
     _draw_berserker_death_echoes,
     _draw_berserker_death_impact,
     _draw_paladin_death_echoes,
@@ -154,18 +119,11 @@ from acts.act_three.presentation.combat_effects import (
     _draw_warlock_death_impact,
     _draw_summoner_death_echoes,
     _draw_summoner_death_impact,
-    _draw_enemy_hit_feedback,
     _draw_familiar_hit_feedback,
     _draw_player_hit_feedback,
     _draw_player_hit_vignette,
-    _enemy_hit_feedback_active,
     _familiar_hit_feedback_active,
-    _player_death_elapsed,
-    _player_death_frame,
-    _player_death_camera_offset,
     _player_death_sprite_offset,
-    _player_hit_camera_offset,
-    _player_hurt_sprite_active,
     _draw_warlock_orb,
 )
 from acts.act_three.presentation.lighting import (
@@ -174,30 +132,23 @@ from acts.act_three.presentation.lighting import (
     draw_torch_flame,
 )
 from acts.act_three.presentation.primitives import (
-    _draw_archer_barrage_zone_cells,
     _draw_health_bar,
-    _draw_tile_markers,
 )
 from acts.act_three.presentation.status_effects import (
     _draw_assassin_invisibility_effect,
     _draw_berserker_last_rage_effect,
     _draw_berserker_rage_effect,
-    _draw_healing_aura,
     _draw_paladin_holy_hand_glow,
     _draw_paladin_holy_shield_aura,
     _draw_rogue_idle_particles,
     _draw_warlock_curse_aura,
     _draw_assassin_idle_smoke,
 )
-from acts.act_three.presentation.targeting import (
-    draw_shadow_step_targeting,
-)
 from acts.act_three.presentation.assassin import (
     draw_killing_spree_effects,
     draw_shadow_reflex_feedback,
     draw_killing_spree_final_impacts,
     draw_killing_spree_target_marks,
-    killing_spree_camera_position,
     killing_spree_player_sprite,
 )
 
@@ -209,100 +160,27 @@ def _draw_act_three_world(
     assets,
     current_time,
 ):
-    floor = game_state.floor
-    dungeon_map = floor.map
-    view_width, view_height = act_three_world_view_size(floor)
-    locomotion_pose = sample_player_locomotion(
-        game_state.player,
-        floor,
+    context = create_world_render_context(
+        game_state,
+        assets,
         current_time,
-        ACT_THREE_TILE_SIZE,
     )
-    camera_player_position = locomotion_pose.position
 
-    killing_spree_camera = (
-        killing_spree_camera_position(
-            game_state.player,
-            floor,
-            current_time,
-        )
-    )
-    if killing_spree_camera is not None:
-        camera_player_position = killing_spree_camera
+    floor = context.floor
+    view_surface = context.view_surface
+    view_width = context.view_width
+    view_height = context.view_height
+    camera_x = context.camera_x
+    camera_y = context.camera_y
+    first_column = context.first_column
+    first_row = context.first_row
+    last_column = context.last_column
+    last_row = context.last_row
+    tile_assets = context.tile_assets
+    locomotion_pose = context.locomotion_pose
+    teleport_origin = context.teleport_origin
+    transition_started_at = context.transition_started_at
 
-    update_act_three_camera(
-        floor,
-        current_time,
-        player_position=camera_player_position,
-        cinematic=(
-            killing_spree_camera is not None
-        ),
-    )
-    _get_act_three_visibility(floor)
-    view_surface = pygame.Surface((view_width, view_height))
-    view_surface.fill((0, 0, 0))
-    camera_x, camera_y = _camera_position(floor)
-    teleport_origin = game_state.player.teleport_camera_origin
-    transition_started_at = (
-        game_state.player.teleport_transition_started_at
-    )
-    if teleport_origin is not None and transition_started_at:
-        transition_elapsed = current_time - transition_started_at
-        if transition_elapsed < _TELEPORT_CAMERA_DURATION_MS:
-            transition_progress = transition_elapsed / _TELEPORT_CAMERA_DURATION_MS
-            transition_progress = (
-                transition_progress
-                * transition_progress
-                * (3 - 2 * transition_progress)
-            )
-            start_camera = _camera_position(floor, teleport_origin)
-            camera_x = round(
-                start_camera[0]
-                + (camera_x - start_camera[0]) * transition_progress
-            )
-            camera_y = round(
-                start_camera[1]
-                + (camera_y - start_camera[1]) * transition_progress
-            )
-    hit_camera_x, hit_camera_y = _player_hit_camera_offset(
-        game_state.player,
-        current_time,
-    )
-    death_camera_x, death_camera_y = _player_death_camera_offset(
-        game_state.player,
-        current_time,
-    )
-    crushing_leap_camera_x, crushing_leap_camera_y = (
-        crushing_leap_camera_offset(
-            (
-                current_time
-                - game_state.player.berserker_crushing_leap_started_at
-            ),
-            BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
-            BERSERKER_CRUSHING_LEAP_IMPACT_MS,
-        )
-    )
-    last_rage_camera_x, last_rage_camera_y = (
-        last_rage_camera_offset(
-            (
-                current_time
-                - game_state.player.berserker_last_rage_started_at
-            ),
-            BERSERKER_LAST_RAGE_ANIMATION_MS,
-        )
-    )
-    camera_x += (
-        hit_camera_x
-        + death_camera_x
-        + crushing_leap_camera_x
-        + last_rage_camera_x
-    )
-    camera_y += (
-        hit_camera_y
-        + death_camera_y
-        + crushing_leap_camera_y
-        + last_rage_camera_y
-    )
     exchange_player_origin = (
         game_state.player.warlock_soul_exchange_player_origin
     )
@@ -339,161 +217,14 @@ def _draw_act_three_world(
         * exchange_progress
         * (3 - 2 * exchange_progress)
     )
-    first_column = max(0, camera_x // ACT_THREE_TILE_SIZE)
-    first_row = max(0, camera_y // ACT_THREE_TILE_SIZE)
-    last_column = min(
-        len(dungeon_map[0]),
-        math.ceil(
-            (camera_x + view_width)
-            / ACT_THREE_TILE_SIZE
-        ),
-    )
-    last_row = min(
-        len(dungeon_map),
-        math.ceil(
-            (camera_y + view_height)
-            / ACT_THREE_TILE_SIZE
-        ),
-    )
-    tile_assets = assets
-    floor_tiles = assets.get(
-        "tmx_tiles_by_floor",
-        {},
-    ).get(game_state.floor_index)
 
-    if floor_tiles is not None:
-        tile_assets = {
-            **assets,
-            "tmx_tiles": floor_tiles,
-        }
-    if floor.tile_layers and tile_assets.get("tmx_tiles"):
-        draw_tile_layers(
-            view_surface,
-            floor,
-            tile_assets,
-            layer_names_by_prefix(
-                floor,
-                "Ground",
-                "GroundDetails",
-                "WallsBack",
-                "DecorBack",
-            ),
-            first_column,
-            first_row,
-            last_column,
-            last_row,
-            camera_x,
-            camera_y,
-        )
-        draw_environment_grading(
-            view_surface,
-            floor,
-            camera_x,
-            camera_y,
-            first_column,
-            first_row,
-            last_column,
-            last_row,
-        )
-        draw_tile_layer_shadows(
-            view_surface,
-            floor,
-            tile_assets,
-            layer_names_by_prefix(
-                floor,
-                "DecorMiddle",
-                "Objects",
-                "Gate",
-            ),
-            first_column,
-            first_row,
-            last_column,
-            last_row,
-            camera_x,
-            camera_y,
-        )
-
-        draw_tile_layers(
-            view_surface,
-            floor,
-            tile_assets,
-            layer_names_by_prefix(
-                floor,
-                "DecorMiddle",
-                "Objects",
-            ),
-            first_column,
-            first_row,
-            last_column,
-            last_row,
-            camera_x,
-            camera_y,
-        )
-
-    _draw_archer_barrage_zone_cells(
-        view_surface,
-        assets["archer_barrage_zone_cell"],
-        game_state.player.archer_barrage_zone_cells,
-        camera_x,
-        camera_y,
+    draw_world_terrain(context)
+    draw_world_targeting(
+        context,
+        game_state,
+        assets,
         current_time,
     )
-    if game_state.player.archer_barrage_zone_aiming:
-        _draw_archer_barrage_zone_cells(
-            view_surface,
-            assets["archer_barrage_zone_cell"],
-            game_state.player.archer_barrage_zone_preview_cells,
-            camera_x,
-            camera_y,
-            current_time,
-            preview=True,
-        )
-    if game_state.player.berserker_crushing_leap_aiming:
-        draw_crushing_leap_targeting(
-            view_surface,
-            (
-                floor.player_column,
-                floor.player_row,
-            ),
-            game_state.player.berserker_crushing_leap_target,
-            game_state.player.berserker_crushing_leap_preview_cells,
-            camera_x,
-            camera_y,
-            current_time,
-            ACT_THREE_TILE_SIZE,
-        )
-    if game_state.player.paladin_shield_charge_aiming:
-        _draw_tile_markers(
-            view_surface,
-            game_state.player.paladin_shield_charge_preview_cells,
-            camera_x,
-            camera_y,
-            (241, 192, 70),
-        )
-    if (
-        game_state.player.teleport_aiming
-        and game_state.player.teleport_preview_target is not None
-    ):
-        teleport_preview_target = (
-            game_state.player.teleport_preview_target
-        )
-        draw_shadow_step_targeting(
-            view_surface,
-            _view_position(
-                floor.player_column,
-                floor.player_row,
-                camera_x,
-                camera_y,
-            ),
-            _view_position(
-                teleport_preview_target[0],
-                teleport_preview_target[1],
-                camera_x,
-                camera_y,
-            ),
-            current_time,
-            ACT_THREE_TILE_SIZE,
-        )
     berserker_impact_elapsed = (
         current_time
         - game_state.player.berserker_crushing_leap_started_at
@@ -517,695 +248,63 @@ def _draw_act_three_world(
             ACT_THREE_TILE_SIZE,
         )
 
-    attack_positions = [
-        position
-        for enemy in floor.enemies
-        if (
-            enemy.health > 0
-            and not (
-                enemy.type == "sentinel"
-                and enemy.prepared_attack_mode == "shield_bash"
-            )
-        )
-        for position in enemy.attack_targets
-    ]
-    _draw_tile_markers(
-        view_surface,
-        attack_positions,
-        camera_x,
-        camera_y,
-        (190, 48, 45),
-    )
-    _draw_tile_markers(
-        view_surface,
-        game_state.player_attack_targets,
-        camera_x,
-        camera_y,
-        (210, 152, 42),
-    )
+    draw_world_attack_markers(context, game_state)
 
-    living_enemies = [
-        enemy
-        for enemy in floor.enemies
-        if (
-            enemy.health > 0
-            and (enemy.column, enemy.row) in floor.visible_cells
-        )
-    ]
-    rendered_enemies = [
-        enemy
-        for enemy in floor.enemies
-        if (
-            (enemy.column, enemy.row) in floor.visible_cells
-            and (
-                enemy.health > 0
-                or (
-                    enemy.type
-                    in ("archer", "brute", "priest", "sentinel")
-                    and enemy.behavior_state
-                    is EnemyBehaviorState.DEAD
-                )
-                or _enemy_hit_feedback_active(
-                    enemy,
-                    current_time,
-                )
-            )
-        )
-    ]
-    healing_aura_seeds = {}
-
-    for enemy in living_enemies:
-        heal_target = enemy.heal_target
-
-        if (
-            enemy.type == "priest"
-            and enemy.behavior_state
-            is EnemyBehaviorState.PREPARING_HEAL
-            and heal_target is not None
-            and heal_target.health > 0
-        ):
-            link_seed = (
-                floor.visual_seed
-                ^ _stable_text_seed(
-                    f"heal:{enemy.name}:{heal_target.name}"
-                )
-            )
-            healing_aura_seeds[id(enemy)] = link_seed
-            healing_aura_seeds[id(heal_target)] = (
-                link_seed ^ 0x9E3779B9
-            )
-
-    draw_ground_items(
-        view_surface,
+    draw_world_enemies(
+        context,
         game_state,
-        assets["ground_item_sprites"],
+        fonts,
+        assets,
         current_time,
-        ACT_THREE_TILE_SIZE,
-        (-camera_x, -camera_y),
+        exchange_active,
+        exchange_player_origin,
+        exchange_enemy_origin,
+        exchange_enemy_name,
+        exchange_eased_progress,
     )
 
-    for enemy in living_enemies:
-        aura_seed = healing_aura_seeds.get(id(enemy))
-
-        if aura_seed is None:
-            continue
-
-        aura_position = _view_position(
-            enemy.column,
-            enemy.row,
-            camera_x,
-            camera_y,
-        )
-        _draw_healing_aura(
-            view_surface,
-            aura_position[0],
-            aura_position[1],
-            current_time,
-            aura_seed,
-        )
-
-    for enemy in sorted(
-        rendered_enemies,
-        key=lambda living_enemy: living_enemy.row,
-    ):
-        enemy_world_position = _enemy_world_position(
-            enemy,
-            current_time,
-            ACT_THREE_TILE_SIZE,
-        )
-        enemy_position = (
-            enemy_world_position[0] - camera_x,
-            enemy_world_position[1] - camera_y,
-        )
-        if (
-            exchange_active
-            and enemy.name == exchange_enemy_name
-        ):
-            exchange_enemy_start = _view_position(
-                exchange_enemy_origin[0],
-                exchange_enemy_origin[1],
-                camera_x,
-                camera_y,
-            )
-            exchange_enemy_end = _view_position(
-                exchange_player_origin[0],
-                exchange_player_origin[1],
-                camera_x,
-                camera_y,
-            )
-            enemy_position = (
-                round(
-                    exchange_enemy_start[0]
-                    + (
-                        exchange_enemy_end[0]
-                        - exchange_enemy_start[0]
-                    )
-                    * exchange_eased_progress
-                ),
-                round(
-                    exchange_enemy_start[1]
-                    + (
-                        exchange_enemy_end[1]
-                        - exchange_enemy_start[1]
-                    )
-                    * exchange_eased_progress
-                ),
-            )
-
-        enemy_sprite = _enemy_sprite(
-            assets,
-            enemy,
-            current_time,
-            floor.visual_seed,
-        )
-        _draw_enemy_movement_effects(
-            view_surface,
-            assets,
-            enemy,
-            current_time,
-            ACT_THREE_TILE_SIZE,
-            camera_x,
-            camera_y,
-        )
-        if enemy.health > 0:
-            draw_actor_shadow(
-                view_surface,
-                enemy_sprite,
-                enemy_position,
-                ACT_THREE_TILE_SIZE,
-                floor.torches,
-                camera_x,
-                camera_y,
-                (
-                    "enemy",
-                    enemy.type,
-                    enemy_sprite.get_size(),
-                ),
-            )
-        if enemy.health > 0 and enemy.curse_turns > 0:
-            _draw_warlock_curse_aura(
-                view_surface,
-                enemy_position[0],
-                enemy_position[1],
-                current_time,
-                floor.visual_seed
-                ^ _stable_text_seed(
-                    f"curse:{enemy.name}"
-                ),
-            )
-        if (
-            exchange_active
-            and enemy.name == exchange_enemy_name
-        ):
-            _draw_warlock_curse_aura(
-                view_surface,
-                enemy_position[0],
-                enemy_position[1],
-                current_time,
-                floor.visual_seed
-                ^ _stable_text_seed(
-                    f"exchange:enemy:{enemy.name}"
-                ),
-            )
-        _draw_enemy_hit_feedback(
-            view_surface,
-            enemy_sprite,
-            enemy_position,
-            enemy,
-            current_time,
-            fonts["sidebar_numbers"],
-        )
-        if enemy.health > 0 and enemy.is_aggro:
-            pygame.draw.rect(
-                view_surface,
-                DANGER_BORDER_COLOR,
-                (
-                    enemy_position[0] + 3,
-                    enemy_position[1] + 3,
-                    ACT_THREE_TILE_SIZE - 6,
-                    ACT_THREE_TILE_SIZE - 6,
-                ),
-                width=2,
-                border_radius=5,
-            )
-
-        if enemy.health > 0:
-            draw_sentinel_status(
-                view_surface,
-                enemy,
-                enemy_position,
-                current_time,
-                ACT_THREE_TILE_SIZE,
-            )
-            _draw_health_bar(
-                view_surface,
-                enemy_position[0],
-                enemy_position[1],
-                enemy.health,
-                enemy.max_health,
-                HEALTH_BAR_COLOR,
-            )
-
-    player_subclass = game_state.player.subclass
-
-    if player_subclass not in (
-        "berserker",
-        "paladin",
-        "assassin",
-        "archer",
-        "warlock",
-        "summoner",
-    ):
-        player_subclass = "berserker"
-
-    attack_elapsed = (
-        current_time
-        - game_state.player.attack_animation_started_at
+    player_state = create_player_render_state(
+        game_state.player,
+        teleport_origin,
+        transition_started_at,
+        current_time,
     )
-    leap_origin = game_state.player.archer_leap_origin
-    leap_started_at = game_state.player.archer_leap_started_at
-    leap_elapsed = current_time - leap_started_at
-    leap_active = (
-        player_subclass == "archer"
-        and leap_origin is not None
-        and leap_started_at > 0
-        and 0 <= leap_elapsed < ARCHER_LEAP_DURATION_MS
-    )
-    berserker_leap_origin = (
-        game_state.player.berserker_crushing_leap_origin
-    )
+    player_subclass = player_state.subclass
+    attack_elapsed = player_state.attack_elapsed
+    leap_origin = player_state.leap_origin
+    leap_started_at = player_state.leap_started_at
+    leap_elapsed = player_state.leap_elapsed
+    leap_active = player_state.leap_active
+    berserker_leap_origin = player_state.berserker_leap_origin
     berserker_leap_started_at = (
-        game_state.player.berserker_crushing_leap_started_at
+        player_state.berserker_leap_started_at
     )
-    berserker_leap_elapsed = (
-        current_time - berserker_leap_started_at
-    )
+    berserker_leap_elapsed = player_state.berserker_leap_elapsed
     berserker_leap_travel_active = (
-        player_subclass == "berserker"
-        and berserker_leap_origin is not None
-        and berserker_leap_started_at > 0
-        and 0
-        <= berserker_leap_elapsed
-        < BERSERKER_CRUSHING_LEAP_TRAVEL_MS
+        player_state.berserker_leap_travel_active
     )
     berserker_leap_impact_active = (
-        player_subclass == "berserker"
-        and berserker_leap_origin is not None
-        and (
-            BERSERKER_CRUSHING_LEAP_TRAVEL_MS
-            <= berserker_leap_elapsed
-            < (
-                BERSERKER_CRUSHING_LEAP_TRAVEL_MS
-                + BERSERKER_CRUSHING_LEAP_IMPACT_MS
-            )
-        )
+        player_state.berserker_leap_impact_active
     )
-    last_rage_elapsed = (
-        current_time
-        - game_state.player.berserker_last_rage_started_at
-    )
+    last_rage_elapsed = player_state.last_rage_elapsed
     last_rage_activation_active = (
-        player_subclass == "berserker"
-        and game_state.player.berserker_last_rage_started_at > 0
-        and 0
-        <= last_rage_elapsed
-        < BERSERKER_LAST_RAGE_ANIMATION_MS
+        player_state.last_rage_activation_active
     )
-    shield_charge_origin = (
-        game_state.player.paladin_shield_charge_origin
-    )
-    shield_charge_started_at = (
-        game_state.player.paladin_shield_charge_started_at
-    )
-    shield_charge_elapsed = (
-        current_time - shield_charge_started_at
-    )
-    shield_charge_active = (
-        player_subclass == "paladin"
-        and shield_charge_origin is not None
-        and shield_charge_started_at > 0
-        and 0
-        <= shield_charge_elapsed
-        < PALADIN_SHIELD_CHARGE_TRAVEL_MS
-    )
-    shadow_step_elapsed = current_time - transition_started_at
-    shadow_step_active = (
-        player_subclass == "assassin"
-        and teleport_origin is not None
-        and transition_started_at > 0
-        and 0
-        <= shadow_step_elapsed
-        < _TELEPORT_CAMERA_DURATION_MS
-    )
-    shadow_step_frame = assassin_shadow_step_frame(
-        shadow_step_elapsed,
-        _TELEPORT_CAMERA_DURATION_MS,
-    )
-    player_hurt_sprite_active = _player_hurt_sprite_active(
+    shield_charge_origin = player_state.shield_charge_origin
+    shield_charge_started_at = player_state.shield_charge_started_at
+    shield_charge_elapsed = player_state.shield_charge_elapsed
+    shield_charge_active = player_state.shield_charge_active
+    shadow_step_active = player_state.shadow_step_active
+    shadow_step_frame = player_state.shadow_step_frame
+    player_death_elapsed = player_state.death_elapsed
+    player_sprite, walking_sprite_active = select_player_sprite(
+        context,
+        player_state,
         game_state.player,
+        assets,
         current_time,
+        _ATTACK_FRAME_DURATION_MS,
     )
-    player_death_elapsed = _player_death_elapsed(
-        game_state.player,
-        current_time,
-    )
-    walking_sprite_active = False
-    if (
-        player_subclass in (
-            "berserker",
-            "paladin",
-            "assassin",
-            "archer",
-            "warlock",
-            "summoner",
-        )
-        and player_death_elapsed is not None
-    ):
-        if player_subclass == "assassin":
-            player_death_frame = _assassin_death_frame(
-                game_state.player,
-                current_time,
-            )
-        elif player_subclass == "berserker":
-            player_death_frame = _berserker_death_frame(
-                game_state.player,
-                current_time,
-            )
-        elif player_subclass == "warlock":
-            player_death_frame = _warlock_death_frame(
-                game_state.player,
-                current_time,
-            )
-        else:
-            player_death_frame = _player_death_frame(
-                game_state.player,
-                current_time,
-            )
-        if player_death_frame is None:
-            if player_subclass == "summoner":
-                player_sprite = assets[
-                    "player_summoner_no_familiar_hurt"
-                ]
-            elif player_subclass == "berserker":
-                hurt_direction = assassin_hurt_direction(
-                    game_state.player.facing_direction
-                )
-                player_sprite = assets[
-                    f"player_berserker_hurt_{hurt_direction}_0"
-                ]
-            else:
-                player_sprite = assets[
-                    f"player_{player_subclass}_hurt"
-                ]
-        elif player_subclass == "berserker":
-            death_direction = assassin_hurt_direction(
-                game_state.player.facing_direction
-            )
-            player_sprite = assets[
-                f"player_berserker_death_{death_direction}_{player_death_frame}"
-            ]
-        else:
-            player_sprite = assets[
-                f"player_{player_subclass}_death_{player_death_frame}"
-            ]
-    elif player_hurt_sprite_active:
-        if player_subclass == "berserker":
-            hurt_elapsed = (
-                    current_time
-                    - game_state.player.hit_animation_started_at
-            )
-            hurt_direction = assassin_hurt_direction(
-                game_state.player.facing_direction
-            )
-            hurt_frame = berserker_hurt_frame(
-                hurt_elapsed,
-                _PLAYER_HIT_SPRITE_DURATION_MS,
-            )
-            player_sprite = assets[
-                f"player_berserker_hurt_{hurt_direction}_{hurt_frame}"
-            ]
-        elif player_subclass == "paladin":
-            player_sprite = assets["player_paladin_hurt"]
-        elif player_subclass == "assassin":
-            hurt_elapsed = (
-                    current_time
-                    - game_state.player.hit_animation_started_at
-            )
-            hurt_direction = assassin_hurt_direction(
-                game_state.player.facing_direction
-            )
-            hurt_frame = assassin_hurt_frame(
-                hurt_elapsed,
-                _PLAYER_HIT_SPRITE_DURATION_MS,
-                hurt_direction,
-            )
-            player_sprite = assets[
-                f"player_assassin_hurt_{hurt_direction}_{hurt_frame}"
-            ]
-        elif player_subclass == "archer":
-            player_sprite = assets["player_archer_hurt"]
-        elif player_subclass == "warlock":
-            if game_state.player.warlock_demon_form_active:
-                player_sprite = assets["player_warlock_demon_hurt"]
-            else:
-                player_sprite = assets["player_warlock_hurt"]
-        elif player_subclass == "summoner":
-            if game_state.player.summoner_familiar_active:
-                player_sprite = assets[
-                    "player_summoner_no_familiar_hurt"
-                ]
-            else:
-                player_sprite = assets["player_summoner_hurt"]
-        else:
-            player_sprite = assets[
-                f"player_{player_subclass}_idle_0"
-            ]
-    elif last_rage_activation_active:
-        last_rage_direction = assassin_walk_direction(
-            game_state.player.facing_direction
-        )
-        last_rage_sprite_frame = last_rage_frame(
-            last_rage_elapsed,
-            BERSERKER_LAST_RAGE_ANIMATION_MS,
-        )
-        player_sprite = assets[
-            (
-                "player_berserker_last_rage_"
-                f"{last_rage_direction}_"
-                f"{last_rage_sprite_frame}"
-            )
-        ]
-    elif shadow_step_active:
-        shadow_step_direction_name = (
-            assassin_shadow_step_direction(
-                teleport_origin,
-                (
-                    floor.player_column,
-                    floor.player_row,
-                ),
-            )
-        )
-        player_sprite = assets[
-            (
-                "player_assassin_shadow_step_"
-                f"{shadow_step_direction_name}_{shadow_step_frame}"
-            )
-        ]
-    elif shield_charge_active:
-        player_sprite = assets[
-            "player_paladin_shield_charge"
-        ]
-    elif berserker_leap_travel_active:
-        crushing_leap_direction_name = (
-            crushing_leap_direction(
-                berserker_leap_origin,
-                (
-                    floor.player_column,
-                    floor.player_row,
-                ),
-            )
-        )
-        crushing_leap_sprite_frame = crushing_leap_frame(
-            berserker_leap_elapsed,
-            BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
-        )
-        player_sprite = assets[
-            (
-                "player_berserker_crushing_leap_"
-                f"{crushing_leap_direction_name}_"
-                f"{crushing_leap_sprite_frame}"
-            )
-        ]
-    elif berserker_leap_impact_active:
-        crushing_leap_direction_name = (
-            crushing_leap_direction(
-                berserker_leap_origin,
-                (
-                    floor.player_column,
-                    floor.player_row,
-                ),
-            )
-        )
-        player_sprite = assets[
-            (
-                "player_berserker_crushing_leap_"
-                f"{crushing_leap_direction_name}_7"
-            )
-        ]
-    elif leap_active:
-        player_sprite = assets["player_archer_leap"]
-    elif (
-        player_subclass in (
-            "assassin",
-            "archer",
-            "berserker",
-            "paladin",
-            "warlock",
-            "summoner",
-        )
-        and 0 <= attack_elapsed < _ATTACK_FRAME_DURATION_MS
-    ):
-        if player_subclass == "assassin":
-            attack_direction = assassin_attack_direction(
-                game_state.player.facing_direction
-            )
-            attack_frame = assassin_attack_frame(
-                attack_elapsed,
-                _ATTACK_FRAME_DURATION_MS,
-            )
-            player_sprite = assets[
-                f"player_assassin_attack_{attack_direction}_{attack_frame}"
-            ]
-        elif player_subclass == "berserker":
-            attack_direction = assassin_attack_direction(
-                game_state.player.facing_direction
-            )
-            attack_frame = assassin_attack_frame(
-                attack_elapsed,
-                _ATTACK_FRAME_DURATION_MS,
-            )
-            player_sprite = assets[
-                f"player_berserker_attack_{attack_direction}_{attack_frame}"
-            ]
-        elif (
-                    player_subclass == "warlock"
-                    and game_state.player.warlock_demon_form_active
-            ):
-            player_sprite = assets["player_warlock_demon_attack"]
-        elif player_subclass == "warlock":
-            attack_direction = assassin_attack_direction(
-                game_state.player.facing_direction
-            )
-            attack_frame = assassin_attack_frame(
-                attack_elapsed,
-                _ATTACK_FRAME_DURATION_MS,
-            )
-            player_sprite = assets[
-                (
-                    "player_warlock_attack_"
-                    f"{attack_direction}_"
-                    f"{attack_frame}"
-                )
-            ]
-        elif (
-                player_subclass == "summoner"
-                and game_state.player.summoner_familiar_active
-        ):
-            player_sprite = assets[
-                "player_summoner_no_familiar_attack"
-            ]
-        else:
-            player_sprite = assets[
-                f"player_{player_subclass}_attack"
-            ]
-    elif (
-        player_subclass in (
-            "assassin",
-            "archer",
-            "berserker",
-            "paladin",
-            "warlock",
-            "summoner",
-        )
-        and locomotion_pose.active
-    ):
-        player_sprite = locomotion_sprite(
-            assets,
-            game_state.player,
-            locomotion_pose,
-        )
-        walking_sprite_active = True
-
-    else:
-        if player_subclass == "assassin":
-            player_frame = assassin_idle_frame(current_time)
-        elif player_subclass == "berserker":
-            player_frame = berserker_idle_frame(current_time)
-        else:
-            player_frame = _idle_frame(
-                current_time,
-                (
-                        floor.visual_seed
-                        ^ _stable_text_seed(
-                    f"player:{player_subclass}"
-                )
-                ),
-            )
-        if player_subclass == "assassin":
-            idle_direction = assassin_walk_direction(
-                game_state.player.facing_direction
-            )
-
-            if idle_direction == "down":
-                player_sprite = assets[
-                    f"player_assassin_idle_{player_frame}"
-                ]
-            else:
-                player_sprite = assets[
-                    f"player_assassin_idle_{idle_direction}_{player_frame}"
-                ]
-        elif player_subclass == "berserker":
-            idle_direction = assassin_walk_direction(
-                game_state.player.facing_direction
-            )
-
-            if idle_direction == "down":
-                player_sprite = assets[
-                    f"player_berserker_idle_{player_frame}"
-                ]
-            else:
-                player_sprite = assets[
-                    f"player_berserker_idle_{idle_direction}_{player_frame}"
-                ]
-        elif (
-                    player_subclass == "warlock"
-                    and game_state.player.warlock_demon_form_active
-            ):
-            player_sprite = assets[
-                f"player_warlock_demon_idle_{player_frame}"
-            ]
-        elif player_subclass == "warlock":
-            idle_direction = assassin_walk_direction(
-                game_state.player.facing_direction
-            )
-            player_sprite = assets[
-                (
-                    "player_warlock_idle_"
-                    f"{idle_direction}_"
-                    f"{warlock_idle_frame(current_time)}"
-                )
-            ]
-        elif (
-                player_subclass == "summoner"
-            and game_state.player.summoner_familiar_active
-        ):
-            player_sprite = assets[
-                f"player_summoner_no_familiar_idle_{player_frame}"
-            ]
-        else:
-            player_sprite = assets[
-                f"player_{player_subclass}_idle_{player_frame}"
-            ]
     player_position = (
         round(locomotion_pose.position[0] - camera_x),
         round(locomotion_pose.position[1] - camera_y),

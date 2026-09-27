@@ -8,6 +8,7 @@ BERSERKER_HURT_FRAME_COUNT = 8
 BERSERKER_IDLE_FRAME_DURATION_MS = 270
 WARLOCK_IDLE_FRAME_COUNT = 8
 WARLOCK_WALK_FRAME_COUNT = 8
+WARLOCK_HURT_FRAME_COUNT = 8
 WARLOCK_IDLE_FRAME_DURATION_MS = 270
 ASSASSIN_ATTACK_FRAME_COUNT = 8
 ASSASSIN_SHADOW_STEP_FRAME_COUNT = 8
@@ -90,6 +91,21 @@ def berserker_hurt_frame(
     return movement_frame_for_progress(
         progress,
         BERSERKER_HURT_FRAME_COUNT,
+    )
+
+
+def warlock_hurt_frame(
+    elapsed,
+    duration,
+):
+    progress = max(
+        0.0,
+        min(1.0, elapsed / duration),
+    )
+
+    return movement_frame_for_progress(
+        progress,
+        WARLOCK_HURT_FRAME_COUNT,
     )
 
 
