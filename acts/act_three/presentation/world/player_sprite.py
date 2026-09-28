@@ -4,6 +4,8 @@ from acts.act_three.presentation.animation import (
 )
 from acts.act_three.presentation.warlock import (
     warlock_curse_sprite,
+    warlock_demon_idle_sprite,
+    warlock_demon_transition_sprite,
 )
 from acts.act_three.presentation.berserker import (
     crushing_leap_direction,
@@ -138,6 +140,16 @@ def select_player_sprite(
 
     if player_state.leap_active:
         return assets["player_archer_leap"], False
+
+    demon_transition_sprite = (
+        warlock_demon_transition_sprite(
+            player,
+            assets,
+            current_time,
+        )
+    )
+    if demon_transition_sprite is not None:
+        return demon_transition_sprite, False
 
     curse_sprite = warlock_curse_sprite(
         player,
@@ -338,9 +350,11 @@ def _idle_sprite(
 
     if player_subclass == "warlock":
         if player.warlock_demon_form_active:
-            return assets[
-                f"player_warlock_demon_idle_{player_frame}"
-            ]
+            return warlock_demon_idle_sprite(
+                player,
+                assets,
+                current_time,
+            )
 
         direction = assassin_walk_direction(player.facing_direction)
         frame = warlock_idle_frame(current_time)

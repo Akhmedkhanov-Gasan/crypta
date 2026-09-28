@@ -9,6 +9,19 @@ class ArcherBarrageShotState:
 
 
 @dataclass
+class MageArcaneBurstState:
+    ability_effect_started_at: int = 0
+    ability_effect_target: tuple[int, int] | None = None
+    ability_effect_kind: str | None = None
+    ability_effect_cells: tuple[tuple[int, int], ...] = ()
+    ability_effect_hit_positions: tuple[
+        tuple[int, int],
+        ...
+    ] = ()
+    preview_target: tuple[int, int] | None = None
+
+
+@dataclass
 class ActThreePlayerState:
     mastery_rank: int = 0
     weapon_rank: int = 0
@@ -32,6 +45,9 @@ class ActThreePlayerState:
         }
     )
     debug_unlimited_abilities: bool = False
+    mage_arcane_burst: MageArcaneBurstState = field(
+        default_factory=MageArcaneBurstState,
+    )
     archer_empowered_shot_charge: int = 0
     archer_leap_charge: int = 0
     archer_barrage_zone_charge: int = 0
@@ -101,6 +117,8 @@ class ActThreePlayerState:
     warlock_soul_exchange_enemy_name: str | None = None
     warlock_soul_exchange_started_at: int = 0
     warlock_demon_form_active: bool = False
+    warlock_demon_form_started_at: int = -1
+    warlock_demon_form_target_active: bool | None = None
 
     summoner_familiar_active: bool = False
     summoner_familiar_position: tuple[int, int] | None = None

@@ -22,6 +22,9 @@ from acts.act_three.input.cursors import (
     set_warlock_staff_cursor,
     set_warlock_curse_cursor,
 )
+from acts.act_three.abilities.mage import (
+    is_valid_act_three_arcane_burst_target,
+)
 from acts.act_three.abilities.archer import (
     is_valid_archer_barrage_zone_anchor,
     is_valid_archer_empowered_shot_target,
@@ -399,6 +402,25 @@ def handle_act_three_pointer_event(
             set_archer_empowered_cursor(True)
         elif (
                 game_state.player.player_class == "mage"
+                and game_state.player.directional_ability_aiming
+        ):
+            target_is_valid = (
+                is_valid_act_three_arcane_burst_target(
+                    game_state,
+                    target_cell,
+                )
+            )
+            game_state.player.act_three.mage_arcane_burst.preview_target = (
+                target_cell
+                if target_is_valid
+                else None
+            )
+            if game_state.player.subclass == "summoner":
+                set_summoner_staff_cursor(target_is_valid)
+            else:
+                set_warlock_staff_cursor(target_is_valid)
+        elif (
+                game_state.player.player_class == "mage"
                 and game_state.player.selected_rune_id == "rune_of_resonance"
         ):
             target_is_valid = (
@@ -630,6 +652,53 @@ def handle_act_three_pointer_event(
 
             if game_state.player.ultimate_animation_active:
                 return True
+            elif (
+                game_state.player.player_class == "mage"
+                and game_state.player.selected_rune_id
+                == "rune_of_resonance"
+            ):
+                target_cell = get_act_three_cell_from_position(
+                    game_state,
+                    game_mouse_position,
+                )
+                if (
+                    get_mage_resonance_target(
+                        game_state,
+                        target_cell,
+                    )
+                    is not None
+                ):
+                    pygame.event.post(
+                        pygame.event.Event(
+                            pygame.KEYDOWN,
+                            key=pygame.K_RETURN,
+                            resonance_target=target_cell,
+                        )
+                    )
+                return True
+            elif (
+                game_state.player.player_class == "mage"
+                and game_state.player.directional_ability_aiming
+            ):
+                target_cell = get_act_three_cell_from_position(
+                    game_state,
+                    game_mouse_position,
+                )
+                if is_valid_act_three_arcane_burst_target(
+                    game_state,
+                    target_cell,
+                ):
+                    game_state.player.act_three.mage_arcane_burst.preview_target = (
+                        target_cell
+                    )
+                    pygame.event.post(
+                        pygame.event.Event(
+                            pygame.KEYDOWN,
+                            key=pygame.K_UNKNOWN,
+                            mage_ability_target=target_cell,
+                        )
+                    )
+                return True
             elif game_state.player.warlock_curse_aiming:
                 target_cell = get_act_three_cell_from_position(
                     game_state,
@@ -803,25 +872,6 @@ def handle_act_three_pointer_event(
                         )
                     )
                 else:
-                    if (
-                            game_state.player.player_class == "mage"
-                            and game_state.player.selected_rune_id
-                            == "rune_of_resonance"
-                    ):
-                        target_cell = get_act_three_cell_from_position(
-                            game_state,
-                            game_mouse_position,
-                        )
-                        if get_mage_resonance_target(game_state, target_cell) is not None:
-                            pygame.event.post(
-                                pygame.event.Event(
-                                    pygame.KEYDOWN,
-                                    key=pygame.K_RETURN,
-                                    resonance_target=target_cell,
-                                )
-                            )
-                        return True
-
                     archer_target_cell = (
                         get_act_three_cell_from_position(
                             game_state,

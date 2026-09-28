@@ -20,6 +20,7 @@ from acts.act_three.presentation.world.player_position import (
 from acts.act_three.presentation.warlock import (
     WARLOCK_CURSE_CAST_DURATION_MS,
     draw_warlock_curse_cast,
+    draw_warlock_demon_transformation,
 )
 from acts.act_three.presentation.world.targeting import (
     draw_world_attack_markers,
@@ -98,6 +99,9 @@ from acts.act_three.presentation.berserker import (
     draw_crushing_leap_impact_effect,
     draw_crushing_leap_travel_effect,
     draw_last_rage_activation_effect,
+)
+from acts.act_three.presentation.mage import (
+    draw_act_three_arcane_burst_effect,
 )
 from acts.act_three.presentation.class_effects import (
     _draw_summoner_bond_pentagram,
@@ -433,6 +437,15 @@ def _draw_act_three_world(
         floor.player_row,
         current_time,
         fonts["sidebar_numbers"],
+    )
+    draw_act_three_arcane_burst_effect(
+        view_surface,
+        game_state,
+        player_position,
+        camera_x,
+        camera_y,
+        ACT_THREE_TILE_SIZE,
+        current_time,
     )
     curse_target = (
         game_state.player.warlock_curse_effect_target
@@ -1297,6 +1310,12 @@ def _draw_act_three_world(
             player_subclass,
         )
     elif player_subclass == "warlock" and player_death_elapsed is None:
+        draw_warlock_demon_transformation(
+            view_surface,
+            game_state.player,
+            player_position,
+            current_time,
+        )
         if game_state.player.warlock_demon_form_active:
             _draw_warlock_demon_aura(
                 view_surface,

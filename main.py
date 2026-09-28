@@ -382,6 +382,9 @@ from systems.player_combat import (
     perform_warlock_attack,
     remove_enemy_corpses_at_position,
 )
+from acts.act_three.abilities.mage import (
+    is_valid_act_three_arcane_burst_target,
+)
 from systems.player_abilities import (
     assassin_teleport_facing_direction,
     AbilityRequestResult,
@@ -2678,18 +2681,32 @@ def main():
                             attack_started_at
                         )
                 elif mage_ability_target is not None:
+                    mage_effect_state = (
+                        game_state.player.act_three.mage_arcane_burst
+                        if current_act == 3
+                        else game_state.player.act_two
+                    )
                     player_acted = cast_mage_arcane_burst(
                         game_state,
                         mage_ability_target,
                         resolve_oracle_hit_reaction,
+                        effect_state=mage_effect_state,
+                        target_validator=(
+                            is_valid_act_three_arcane_burst_target
+                            if current_act == 3
+                            else None
+                        ),
                     )
                     if player_acted:
                         ability_started_at = pygame.time.get_ticks()
                         game_state.player.attack_animation_started_at = (
                             ability_started_at
                         )
-                        game_state.player.act_two.ability_effect_started_at = (
+                        mage_effect_state.ability_effect_started_at = (
                             ability_started_at
+                        )
+                        game_state.player.act_three.mage_arcane_burst.preview_target = (
+                            None
                         )
                 elif directional_ability_cast:
                     player_acted = cast_directional_ability(

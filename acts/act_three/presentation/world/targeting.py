@@ -1,6 +1,9 @@
 from acts.act_three.presentation.berserker import (
     draw_crushing_leap_targeting,
 )
+from acts.act_three.presentation.mage import (
+    draw_act_three_arcane_burst_targeting,
+)
 from acts.act_three.presentation.primitives import (
     _draw_archer_barrage_zone_cells,
     _draw_tile_markers,
@@ -63,6 +66,15 @@ def draw_world_targeting(
             context.camera_y,
             (241, 192, 70),
         )
+
+    draw_act_three_arcane_burst_targeting(
+        context.view_surface,
+        game_state,
+        context.camera_x,
+        context.camera_y,
+        ACT_THREE_TILE_SIZE,
+        current_time,
+    )
 
     if (
         player.teleport_aiming

@@ -578,14 +578,22 @@ def cast_mage_arcane_burst(
     game_state: GameState,
     target: tuple[int, int],
     oracle_hit_reaction: OracleHitReaction,
+    effect_state=None,
+    target_validator=None,
 ) -> bool:
     player = game_state.player
     floor = game_state.floor
+
+    if effect_state is None:
+        effect_state = player.act_two
+    if target_validator is None:
+        target_validator = is_valid_mage_arcane_burst_target
+
     if (
         player.player_class != "mage"
         or player.selected_rune_id == "rune_of_resonance"
         or not player.directional_ability_aiming
-        or not is_valid_mage_arcane_burst_target(game_state, target)
+        or not target_validator(game_state, target)
     ):
         return False
 
@@ -606,9 +614,9 @@ def cast_mage_arcane_burst(
     cell_set = set(cells)
     game_state.player_attack_targets = cells
 
-    player.act_two.ability_effect_target = target
-    player.act_two.ability_effect_cells = tuple(cells)
-    player.act_two.ability_effect_kind = (
+    effect_state.ability_effect_target = target
+    effect_state.ability_effect_cells = tuple(cells)
+    effect_state.ability_effect_kind = (
         "concentration_release"
         if concentration_active
         else "fracture" if fracture_active else "arcane_burst"
@@ -622,7 +630,7 @@ def cast_mage_arcane_burst(
         if hit_cells:
             targets.append((enemy, hit_cells))
 
-    player.act_two.ability_effect_hit_positions = tuple(
+    effect_state.ability_effect_hit_positions = tuple(
         position
         for enemy, hit_cells in targets
         for position in sorted(hit_cells)

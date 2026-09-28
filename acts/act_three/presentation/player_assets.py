@@ -3,6 +3,7 @@ from acts.act_three.presentation.player_motion import (
 )
 from acts.act_three.presentation.warlock import (
     load_warlock_curse_assets,
+    load_warlock_demon_form_assets,
 )
 
 
@@ -230,24 +231,16 @@ def load_warlock_animation_assets(
             )
         )
 
-    fallback_sprite = assets["player_warlock_idle_down_0"]
-
     assets["player_warlock_hurt"] = assets[
         "player_warlock_hurt_down_0"
     ]
-    assets["player_warlock_demon_attack"] = fallback_sprite
-    assets["player_warlock_demon_hurt"] = fallback_sprite
 
-    for frame_index in range(3):
-        assets[
-            f"player_warlock_demon_idle_{frame_index}"
-        ] = fallback_sprite
-
-    for frame_index in range(2):
-        assets[
-            f"player_warlock_demon_walk_{frame_index}"
-        ] = fallback_sprite
-
+    load_warlock_demon_form_assets(
+        assets,
+        warlock_directory,
+        tile_size,
+        image_loader,
+    )
     load_warlock_curse_assets(
         assets,
         warlock_directory,

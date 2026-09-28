@@ -256,7 +256,7 @@ def locomotion_sprite(assets, player, pose):
     if subclass == "warlock":
         if player.warlock_demon_form_active:
             return assets[
-                f"player_warlock_demon_walk_{pose.frame(2)}"
+                f"player_warlock_demon_walk_{pose.frame(8)}"
             ]
 
         return assets[

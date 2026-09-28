@@ -17,6 +17,7 @@ from acts.act_three.settings import (
     WARLOCK_CURSE_RANGE,
     WARLOCK_CURSE_TURNS,
     WARLOCK_DEMON_FORM_HEALTH_DRAIN,
+    WARLOCK_DEMON_FORM_TRANSFORM_MS,
     WARLOCK_SOUL_EXCHANGE_CHARGES,
     WARLOCK_SOUL_EXCHANGE_RANGE,
 )
@@ -172,10 +173,54 @@ def advance_warlock_curses(
                 game_state.combat_log,
                 f"The curse on {enemy.name} fades.",
             )
+
     game_state.player.warlock_newly_cursed_enemy = None
 
-def advance_warlock_demon_form(
+
+def request_warlock_demon_form(
     game_state: GameState,
+    current_time: int,
+) -> bool:
+    player = game_state.player
+    if player.subclass != "warlock":
+        return False
+
+    if player.health <= 0:
+        return True
+
+    transition_elapsed = (
+        current_time - player.warlock_demon_form_started_at
+    )
+    if (
+        player.warlock_demon_form_target_active is not None
+        and 0
+        <= transition_elapsed
+        < WARLOCK_DEMON_FORM_TRANSFORM_MS
+    ):
+        return True
+
+    target_active = not player.warlock_demon_form_active
+    player.warlock_demon_form_active = target_active
+    player.warlock_demon_form_target_active = target_active
+    player.warlock_demon_form_started_at = current_time
+    player.warlock_curse_aiming = False
+    player.warlock_curse_target = None
+    player.warlock_soul_exchange_aiming = False
+    player.warlock_soul_exchange_target = None
+    game_state.player_attack_targets.clear()
+
+    add_log_message(
+        game_state.combat_log,
+        (
+            "The warlock embraces the Demon Form."
+            if target_active
+            else "The warlock releases the Demon Form."
+        ),
+    )
+    return True
+
+def advance_warlock_demon_form(
+        game_state: GameState,
 ) -> None:
     player = game_state.player
     if (

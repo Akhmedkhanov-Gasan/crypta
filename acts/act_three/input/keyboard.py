@@ -50,6 +50,7 @@ from acts.act_three.abilities.warlock import (
     cancel_warlock_curse,
     cancel_warlock_soul_exchange,
     request_warlock_curse,
+    request_warlock_demon_form,
     request_warlock_soul_exchange,
 )
 from levels import FLOOR_CONFIGS
@@ -58,10 +59,22 @@ from acts.act_three.settings import (
     BERSERKER_CRUSHING_LEAP_IMPACT_MS,
     BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
     PALADIN_SHIELD_CHARGE_TRAVEL_MS,
+    WARLOCK_DEMON_FORM_TRANSFORM_MS,
     WARLOCK_SOUL_EXCHANGE_TRAVEL_MS,
     BERSERKER_LAST_RAGE_ANIMATION_MS,
 )
 def handle_act_three_key_event(event, game_state):
+    if (
+        game_state.player.subclass == "warlock"
+        and game_state.player.warlock_demon_form_target_active
+        is not None
+        and game_state.player.warlock_demon_form_started_at >= 0
+        and pygame.time.get_ticks()
+        - game_state.player.warlock_demon_form_started_at
+        < WARLOCK_DEMON_FORM_TRANSFORM_MS
+    ):
+        return True
+
     if (
         game_state.player.teleport_camera_origin is not None
         and game_state.player.teleport_transition_started_at > 0
@@ -282,13 +295,15 @@ def handle_act_three_key_event(event, game_state):
         return True
     
     if (
-        event.key in (pygame.K_3, pygame.K_KP3)
+        event.key == pygame.K_f
         and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
         and game_state.player.subclass == "warlock"
     ):
-        game_state.player.warlock_demon_form_active = not (
-            game_state.player.warlock_demon_form_active
+        request_warlock_demon_form(
+            game_state,
+            pygame.time.get_ticks(),
         )
+        set_warlock_staff_cursor()
         return True
     
     if (
