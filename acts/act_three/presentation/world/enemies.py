@@ -5,6 +5,9 @@ from acts.act_three.presentation.actors import (
     _enemy_sprite,
     _enemy_world_position,
 )
+from acts.act_three.presentation.warlock import (
+    draw_warlock_curse_status,
+)
 from acts.act_three.presentation.animation import _stable_text_seed
 from acts.act_three.presentation.combat_effects import (
     _draw_enemy_hit_feedback,
@@ -197,17 +200,6 @@ def draw_world_enemies(
                 ),
             )
 
-        if enemy.health > 0 and enemy.curse_turns > 0:
-            _draw_warlock_curse_aura(
-                context.view_surface,
-                enemy_position[0],
-                enemy_position[1],
-                current_time,
-                floor.visual_seed
-                ^ _stable_text_seed(
-                    f"curse:{enemy.name}"
-                ),
-            )
 
         if exchange_active and enemy.name == exchange_enemy_name:
             _draw_warlock_curse_aura(
@@ -229,7 +221,19 @@ def draw_world_enemies(
             current_time,
             fonts["sidebar_numbers"],
         )
-
+        if enemy.health > 0 and enemy.curse_turns > 0:
+            draw_warlock_curse_status(
+                context.view_surface,
+                enemy_position[0],
+                enemy_position[1],
+                current_time,
+                floor.visual_seed
+                ^ _stable_text_seed(
+                    f"curse:{enemy.name}"
+                ),
+                enemy.curse_turns,
+                fonts["sidebar_numbers"],
+            )
         if enemy.health > 0 and enemy.is_aggro:
             pygame.draw.rect(
                 context.view_surface,

@@ -20,6 +20,7 @@ from acts.act_three.input.cursors import (
     set_paladin_shield_charge_cursor,
     set_summoner_staff_cursor,
     set_warlock_staff_cursor,
+    set_warlock_curse_cursor,
 )
 from acts.act_three.abilities.archer import (
     is_valid_archer_barrage_zone_anchor,
@@ -322,12 +323,16 @@ def handle_act_three_pointer_event(
             )
             set_assassin_target_cursor("teleport")
         elif game_state.player.warlock_curse_aiming:
-            set_warlock_staff_cursor(
-                target_cell is not None
-                and is_valid_warlock_curse_target(
-                    game_state,
-                    target_cell,
-                )
+            target_is_valid = (
+                    target_cell is not None
+                    and is_valid_warlock_curse_target(
+                game_state,
+                target_cell,
+            )
+            )
+            set_warlock_curse_cursor(
+                True,
+                target_is_valid,
             )
         elif game_state.player.warlock_soul_exchange_aiming:
             set_warlock_staff_cursor(

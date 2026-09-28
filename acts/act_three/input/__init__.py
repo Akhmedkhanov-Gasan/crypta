@@ -7,6 +7,7 @@ from acts.act_three.input.cursors import (
     set_berserker_crushing_leap_cursor,
     set_paladin_shield_charge_cursor,
     set_summoner_staff_cursor,
+    set_warlock_curse_cursor,
     set_warlock_staff_cursor,
 )
 from acts.act_three.input.pointer import (
@@ -28,5 +29,6 @@ __all__ = [
     "set_berserker_crushing_leap_cursor",
     "set_paladin_shield_charge_cursor",
     "set_summoner_staff_cursor",
+    "set_warlock_curse_cursor",
     "set_warlock_staff_cursor",
 ]

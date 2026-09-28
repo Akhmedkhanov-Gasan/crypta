@@ -1,6 +1,9 @@
 from acts.act_three.presentation.player_motion import (
     ASSASSIN_HURT_FRAME_COUNTS,
 )
+from acts.act_three.presentation.warlock import (
+    load_warlock_curse_assets,
+)
 
 
 def load_berserker_animation_assets(
@@ -244,6 +247,13 @@ def load_warlock_animation_assets(
         assets[
             f"player_warlock_demon_walk_{frame_index}"
         ] = fallback_sprite
+
+    load_warlock_curse_assets(
+        assets,
+        warlock_directory,
+        tile_size,
+        image_loader,
+    )
 
 
 def load_assassin_animation_assets(

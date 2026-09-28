@@ -108,6 +108,87 @@ def set_warlock_staff_cursor(active=False):
     )
 
 
+def set_warlock_curse_cursor(
+    aiming=False,
+    valid=False,
+):
+    if not aiming:
+        pygame.mouse.set_cursor(
+            pygame.SYSTEM_CURSOR_ARROW
+        )
+        return
+
+    cursor_surface = pygame.Surface(
+        (28, 28),
+        pygame.SRCALPHA,
+    )
+    center = (14, 14)
+    color = (
+        (224, 91, 255, 255)
+        if valid
+        else (132, 71, 151, 235)
+    )
+    inner_color = (
+        (255, 211, 255, 255)
+        if valid
+        else (190, 142, 204, 230)
+    )
+
+    pygame.draw.circle(
+        cursor_surface,
+        color,
+        center,
+        10,
+        width=2,
+    )
+
+    for offset_x, offset_y in (
+        (0, -11),
+        (9, -5),
+        (9, 5),
+        (0, 11),
+        (-9, 5),
+        (-9, -5),
+    ):
+        pygame.draw.circle(
+            cursor_surface,
+            color,
+            (
+                center[0] + offset_x,
+                center[1] + offset_y,
+            ),
+            2,
+        )
+
+    pygame.draw.line(
+        cursor_surface,
+        color,
+        (5, 14),
+        (23, 14),
+        width=1,
+    )
+    pygame.draw.line(
+        cursor_surface,
+        color,
+        (14, 5),
+        (14, 23),
+        width=1,
+    )
+    pygame.draw.circle(
+        cursor_surface,
+        inner_color,
+        center,
+        3,
+    )
+
+    pygame.mouse.set_cursor(
+        pygame.cursors.Cursor(
+            center,
+            cursor_surface,
+        )
+    )
+
+
 def set_summoner_staff_cursor(active=False):
     if not active:
         pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)

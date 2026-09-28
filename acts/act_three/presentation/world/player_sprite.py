@@ -2,6 +2,9 @@ from acts.act_three.presentation.animation import (
     _idle_frame,
     _stable_text_seed,
 )
+from acts.act_three.presentation.warlock import (
+    warlock_curse_sprite,
+)
 from acts.act_three.presentation.berserker import (
     crushing_leap_direction,
     crushing_leap_frame,
@@ -135,6 +138,14 @@ def select_player_sprite(
 
     if player_state.leap_active:
         return assets["player_archer_leap"], False
+
+    curse_sprite = warlock_curse_sprite(
+        player,
+        assets,
+        current_time,
+    )
+    if curse_sprite is not None:
+        return curse_sprite, False
 
     if 0 <= player_state.attack_elapsed < attack_frame_duration:
         return (

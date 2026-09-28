@@ -85,6 +85,10 @@ class ActThreePlayerState:
     warlock_curse_aiming: bool = False
     warlock_curse_target: tuple[int, int] | None = None
     warlock_newly_cursed_enemy: str | None = None
+    warlock_curse_started_at: int = 0
+    warlock_curse_effect_target: (
+        tuple[int, int] | None
+    ) = None
     warlock_soul_exchange_charge: int = 0
     warlock_soul_exchange_aiming: bool = False
     warlock_soul_exchange_target: tuple[int, int] | None = None

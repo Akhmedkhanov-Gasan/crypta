@@ -13,6 +13,7 @@ from acts.act_three.input.cursors import (
     set_paladin_shield_charge_cursor,
     set_summoner_staff_cursor,
     set_warlock_staff_cursor,
+    set_warlock_curse_cursor,
 )
 from acts.act_three.abilities.archer import (
     cancel_archer_barrage_zone,
@@ -196,7 +197,7 @@ def handle_act_three_key_event(event, game_state):
         and game_state.player.warlock_curse_aiming
     ):
         cancel_warlock_curse(game_state)
-        set_warlock_staff_cursor()
+        set_warlock_curse_cursor()
         return True
     
     if (
@@ -241,13 +242,14 @@ def handle_act_three_key_event(event, game_state):
         return True
     
     if (
-        event.key in (pygame.K_1, pygame.K_KP1)
+        event.key == pygame.K_q
         and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
         and game_state.player.subclass == "warlock"
     ):
         request_warlock_curse(game_state)
-        set_warlock_staff_cursor(
-            game_state.player.warlock_curse_aiming
+        set_warlock_curse_cursor(
+            game_state.player.warlock_curse_aiming,
+            False,
         )
         return True
     

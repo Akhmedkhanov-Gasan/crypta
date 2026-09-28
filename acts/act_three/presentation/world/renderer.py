@@ -14,6 +14,13 @@ from acts.act_three.presentation.world.player_state import (
 from acts.act_three.presentation.world.player_sprite import (
     select_player_sprite,
 )
+from acts.act_three.presentation.world.player_position import (
+    calculate_player_placement,
+)
+from acts.act_three.presentation.warlock import (
+    WARLOCK_CURSE_CAST_DURATION_MS,
+    draw_warlock_curse_cast,
+)
 from acts.act_three.presentation.world.targeting import (
     draw_world_attack_markers,
     draw_world_targeting,
@@ -87,11 +94,7 @@ from presentation.control_effects import draw_player_control_effects
 from acts.act_three.presentation.animation import (
     _stable_text_seed,
 )
-from acts.act_three.presentation.player_motion import (
-    ASSASSIN_SHADOW_STEP_FRAME_COUNT,
-)
 from acts.act_three.presentation.berserker import (
-    crushing_leap_position,
     draw_crushing_leap_impact_effect,
     draw_crushing_leap_travel_effect,
     draw_last_rage_activation_effect,
@@ -123,7 +126,6 @@ from acts.act_three.presentation.combat_effects import (
     _draw_player_hit_feedback,
     _draw_player_hit_vignette,
     _familiar_hit_feedback_active,
-    _player_death_sprite_offset,
     _draw_warlock_orb,
 )
 from acts.act_three.presentation.lighting import (
@@ -295,7 +297,6 @@ def _draw_act_three_world(
     shield_charge_elapsed = player_state.shield_charge_elapsed
     shield_charge_active = player_state.shield_charge_active
     shadow_step_active = player_state.shadow_step_active
-    shadow_step_frame = player_state.shadow_step_frame
     player_death_elapsed = player_state.death_elapsed
     player_sprite, walking_sprite_active = select_player_sprite(
         context,
@@ -305,156 +306,28 @@ def _draw_act_three_world(
         current_time,
         _ATTACK_FRAME_DURATION_MS,
     )
-    player_position = (
-        round(locomotion_pose.position[0] - camera_x),
-        round(locomotion_pose.position[1] - camera_y),
+    player_placement = calculate_player_placement(
+        context,
+        player_state,
+        game_state.player,
+        player_sprite,
+        current_time,
+        exchange_active,
+        exchange_player_origin,
+        exchange_enemy_origin,
+        exchange_eased_progress,
     )
-    if (
-        shadow_step_active
-        and shadow_step_frame
-        < ASSASSIN_SHADOW_STEP_FRAME_COUNT // 2
-    ):
-        player_position = _view_position(
-            teleport_origin[0],
-            teleport_origin[1],
-            camera_x,
-            camera_y,
-        )
-    if (
-        player_subclass in (
-            "berserker",
-            "paladin",
-            "assassin",
-            "archer",
-            "warlock",
-            "summoner",
-        )
-        and player_death_elapsed is not None
-    ):
-        death_offset_x, death_offset_y = _player_death_sprite_offset(
-            game_state.player,
-            current_time,
-        )
-        player_position = (
-            player_position[0] + death_offset_x,
-            player_position[1] + death_offset_y,
-        )
-    leap_progress = 0.0
-    leap_start_position = None
-    leap_end_position = player_position
-    shield_charge_progress = 0.0
-    shield_charge_start_position = None
-    if exchange_active:
-        exchange_player_start = _view_position(
-            exchange_player_origin[0],
-            exchange_player_origin[1],
-            camera_x,
-            camera_y,
-        )
-        exchange_player_end = _view_position(
-            exchange_enemy_origin[0],
-            exchange_enemy_origin[1],
-            camera_x,
-            camera_y,
-        )
-        player_position = (
-            round(
-                exchange_player_start[0]
-                + (
-                    exchange_player_end[0]
-                    - exchange_player_start[0]
-                )
-                * exchange_eased_progress
-            ),
-            round(
-                exchange_player_start[1]
-                + (
-                    exchange_player_end[1]
-                    - exchange_player_start[1]
-                )
-                * exchange_eased_progress
-            ),
-        )
-    elif shield_charge_active:
-        shield_charge_progress = min(
-            1,
-            shield_charge_elapsed
-            / PALADIN_SHIELD_CHARGE_TRAVEL_MS,
-        )
-        eased_progress = (
-            shield_charge_progress
-            * shield_charge_progress
-            * (3 - 2 * shield_charge_progress)
-        )
-        shield_charge_start_position = _view_position(
-            shield_charge_origin[0],
-            shield_charge_origin[1],
-            camera_x,
-            camera_y,
-        )
-        player_position = (
-            round(
-                shield_charge_start_position[0]
-                + (
-                    leap_end_position[0]
-                    - shield_charge_start_position[0]
-                )
-                * eased_progress
-            ),
-            round(
-                shield_charge_start_position[1]
-                + (
-                    leap_end_position[1]
-                    - shield_charge_start_position[1]
-                )
-                * eased_progress
-            ),
-        )
-        if floor.player_column < shield_charge_origin[0]:
-            player_sprite = pygame.transform.flip(
-                player_sprite,
-                True,
-                False,
-            )
-    elif leap_active:
-        leap_progress = min(
-            1,
-            leap_elapsed / ARCHER_LEAP_DURATION_MS,
-        )
-        eased_progress = 1 - (1 - leap_progress) ** 3
-        leap_start_position = _view_position(
-            leap_origin[0],
-            leap_origin[1],
-            camera_x,
-            camera_y,
-        )
-        player_position = (
-            round(
-                leap_start_position[0]
-                + (leap_end_position[0] - leap_start_position[0])
-                * eased_progress
-            ),
-            round(
-                leap_start_position[1]
-                + (leap_end_position[1] - leap_start_position[1])
-                * eased_progress
-                - math.sin(math.pi * leap_progress) * 8
-            ),
-        )
-    elif berserker_leap_travel_active:
-        leap_start_position = _view_position(
-            berserker_leap_origin[0],
-            berserker_leap_origin[1],
-            camera_x,
-            camera_y,
-        )
-        player_position = crushing_leap_position(
-            leap_start_position,
-            leap_end_position,
-            berserker_leap_elapsed,
-            BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
-            ACT_THREE_TILE_SIZE,
-        )
+    player_sprite = player_placement.sprite
+    player_position = player_placement.position
+    leap_progress = player_placement.leap_progress
+    leap_start_position = player_placement.leap_start_position
+    leap_end_position = player_placement.leap_end_position
+    shield_charge_progress = (
+        player_placement.shield_charge_progress
+    )
+    shield_charge_start_position = (
+        player_placement.shield_charge_start_position
+    )
     if berserker_leap_travel_active:
         draw_crushing_leap_travel_effect(
             view_surface,
@@ -561,7 +434,42 @@ def _draw_act_three_world(
         current_time,
         fonts["sidebar_numbers"],
     )
+    curse_target = (
+        game_state.player.warlock_curse_effect_target
+    )
+    curse_started_at = (
+        game_state.player.warlock_curse_started_at
+    )
+    curse_elapsed = current_time - curse_started_at
 
+    if (
+        player_subclass == "warlock"
+        and curse_target is not None
+        and curse_started_at > 0
+        and 0
+        <= curse_elapsed
+        < WARLOCK_CURSE_CAST_DURATION_MS
+    ):
+        draw_warlock_curse_cast(
+            view_surface,
+            player_position,
+            _view_position(
+                curse_target[0],
+                curse_target[1],
+                camera_x,
+                camera_y,
+            ),
+            current_time,
+            curse_started_at,
+        )
+    elif (
+        curse_target is not None
+        and curse_started_at > 0
+        and curse_elapsed
+        >= WARLOCK_CURSE_CAST_DURATION_MS
+    ):
+        game_state.player.warlock_curse_effect_target = None
+        game_state.player.warlock_curse_started_at = 0
     if last_rage_activation_active:
         draw_last_rage_activation_effect(
             view_surface,

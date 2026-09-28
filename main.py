@@ -209,6 +209,7 @@ from acts.act_three.input import (
     set_berserker_crushing_leap_cursor,
     set_paladin_shield_charge_cursor,
     set_summoner_staff_cursor,
+    set_warlock_curse_cursor,
     set_warlock_staff_cursor,
 )
 from acts.act_three.runtime import (
@@ -2502,12 +2503,9 @@ def main():
                     player_acted = perform_warlock_curse(
                         game_state,
                         curse_target,
+                        pygame.time.get_ticks(),
                     )
-                    if player_acted:
-                        game_state.player.attack_animation_started_at = (
-                            pygame.time.get_ticks()
-                        )
-                    set_warlock_staff_cursor()
+                    set_warlock_curse_cursor()
                 elif game_state.player.warlock_attack_target is not None:
                     warlock_target = (
                         game_state.player.warlock_attack_target

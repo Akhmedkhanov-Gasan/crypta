@@ -8,6 +8,7 @@ from game.state import (
     GameState,
 )
 from logic import (
+    direction_toward,
     get_enemy_occupied_positions,
     has_line_of_sight,
 )
@@ -76,16 +77,6 @@ def request_warlock_curse(
     if player.warlock_curse_aiming:
         cancel_warlock_curse(game_state)
         return True
-    if (
-        not player.debug_unlimited_abilities
-        and player.warlock_curse_charge < WARLOCK_CURSE_CHARGES
-    ):
-        add_log_message(
-            game_state.combat_log,
-            "Curse is not charged.",
-        )
-        return True
-
     player.warlock_curse_aiming = True
     player.warlock_curse_target = None
     player.warlock_soul_exchange_aiming = False
@@ -110,6 +101,7 @@ def cancel_warlock_curse(
 def perform_warlock_curse(
     game_state: GameState,
     target: tuple[int, int],
+    current_time: int,
 ) -> bool:
     player = game_state.player
     floor = game_state.floor
@@ -125,6 +117,15 @@ def perform_warlock_curse(
         if enemy.health > 0
         and target in get_enemy_occupied_positions(enemy)
     )
+    player.facing_direction = direction_toward(
+        floor.player_column,
+        floor.player_row,
+        target[0],
+        target[1],
+    )
+    player.attack_animation_started_at = current_time
+    player.warlock_curse_started_at = current_time
+    player.warlock_curse_effect_target = target
     target_enemy.curse_turns = WARLOCK_CURSE_TURNS
     player.warlock_curse_charge = 0
     player.warlock_curse_aiming = False
