@@ -269,15 +269,23 @@ def _hurt_sprite(
         return assets["player_archer_hurt"]
 
     if player_subclass == "warlock":
-        if player.warlock_demon_form_active:
-            return assets["player_warlock_demon_hurt"]
-
         elapsed = current_time - player.hit_animation_started_at
-        direction = assassin_hurt_direction(player.facing_direction)
+        direction = assassin_hurt_direction(
+            player.facing_direction
+        )
         frame = warlock_hurt_frame(
             elapsed,
             _PLAYER_HIT_SPRITE_DURATION_MS,
         )
+
+        if player.warlock_demon_form_active:
+            return assets[
+                (
+                    "player_warlock_demon_hurt_"
+                    f"{direction}_{frame}"
+                )
+            ]
+
         return assets[
             f"player_warlock_hurt_{direction}_{frame}"
         ]
@@ -296,17 +304,25 @@ def _attack_sprite(
     attack_frame_duration,
 ):
     if player_subclass in ("assassin", "berserker", "warlock"):
-        if (
-            player_subclass == "warlock"
-            and player.warlock_demon_form_active
-        ):
-            return assets["player_warlock_demon_attack"]
-
-        direction = assassin_attack_direction(player.facing_direction)
+        direction = assassin_attack_direction(
+            player.facing_direction
+        )
         frame = assassin_attack_frame(
             attack_elapsed,
             attack_frame_duration,
         )
+
+        if (
+            player_subclass == "warlock"
+            and player.warlock_demon_form_active
+        ):
+            return assets[
+                (
+                    "player_warlock_demon_attack_"
+                    f"{direction}_{frame}"
+                )
+            ]
+
         return assets[
             f"player_{player_subclass}_attack_{direction}_{frame}"
         ]

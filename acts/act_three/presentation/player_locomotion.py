@@ -70,7 +70,6 @@ def _special_movement_active(player):
                 "archer_leap_origin",
                 "berserker_crushing_leap_origin",
                 "paladin_shield_charge_origin",
-                "warlock_soul_exchange_player_origin",
             )
         )
     )
@@ -256,7 +255,10 @@ def locomotion_sprite(assets, player, pose):
     if subclass == "warlock":
         if player.warlock_demon_form_active:
             return assets[
-                f"player_warlock_demon_walk_{pose.frame(8)}"
+                (
+                    "player_warlock_demon_walk_"
+                    f"{direction}_{pose.frame(8)}"
+                )
             ]
 
         return assets[

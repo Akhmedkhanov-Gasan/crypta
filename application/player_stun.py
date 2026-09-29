@@ -17,7 +17,6 @@ def stunned_wait_event(game_state, wait_key):
         "berserker_crushing_leap_aiming",
         "paladin_shield_charge_aiming",
         "warlock_curse_aiming",
-        "warlock_soul_exchange_aiming",
         "teleport_aiming",
         "ultimate_aiming",
     ):
@@ -31,7 +30,6 @@ def stunned_wait_event(game_state, wait_key):
         "paladin_shield_charge_target",
         "warlock_attack_target",
         "warlock_curse_target",
-        "warlock_soul_exchange_target",
         "summoner_attack_target",
         "teleport_target",
     ):

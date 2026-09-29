@@ -1,3 +1,8 @@
+from acts.act_three.abilities.catalog import (
+    get_subclass_definition,
+)
+
+
 ABILITY_SLOTS = frozenset({
     "q",
     "e",
@@ -36,6 +41,7 @@ def initialize_act_three_progression(
         slot: 0.0
         for slot in ABILITY_SLOTS
     }
+    player.debug_unlimited_abilities = False
 
 
 def is_ability_slot_unlocked(
@@ -97,3 +103,55 @@ def clear_ability_slot_charge(
         )
 
     player.ability_slot_charges[slot] = 0.0
+
+
+def is_ability_slot_charged(
+    player,
+    slot,
+):
+    if player.debug_unlimited_abilities:
+        return True
+
+    if not is_ability_slot_unlocked(player, slot):
+        return False
+
+    definition = get_subclass_definition(player.subclass)
+    if definition is None:
+        return False
+
+    ability = definition.abilities.get(slot)
+    if ability is None:
+        return False
+
+    return (
+        get_ability_slot_charge(player, slot)
+        >= ability.charge_required
+    )
+
+
+def charge_ability_slots(
+    player,
+    slots,
+):
+    definition = get_subclass_definition(player.subclass)
+    if definition is None:
+        return
+
+    charge_gain = get_mastery_charge_rate(player)
+
+    for slot in slots:
+        if not is_ability_slot_unlocked(player, slot):
+            continue
+
+        ability = definition.abilities.get(slot)
+        if ability is None:
+            continue
+
+        current_charge = get_ability_slot_charge(
+            player,
+            slot,
+        )
+        player.ability_slot_charges[slot] = min(
+            ability.charge_required,
+            current_charge + charge_gain,
+        )

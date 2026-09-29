@@ -39,10 +39,6 @@ def calculate_player_placement(
     player,
     player_sprite,
     current_time,
-    exchange_active,
-    exchange_player_origin,
-    exchange_enemy_origin,
-    exchange_eased_progress,
 ):
     player_position = (
         round(
@@ -85,38 +81,7 @@ def calculate_player_placement(
     shield_charge_progress = 0.0
     shield_charge_start_position = None
 
-    if exchange_active:
-        exchange_player_start = _view_position(
-            exchange_player_origin[0],
-            exchange_player_origin[1],
-            context.camera_x,
-            context.camera_y,
-        )
-        exchange_player_end = _view_position(
-            exchange_enemy_origin[0],
-            exchange_enemy_origin[1],
-            context.camera_x,
-            context.camera_y,
-        )
-        player_position = (
-            round(
-                exchange_player_start[0]
-                + (
-                    exchange_player_end[0]
-                    - exchange_player_start[0]
-                )
-                * exchange_eased_progress
-            ),
-            round(
-                exchange_player_start[1]
-                + (
-                    exchange_player_end[1]
-                    - exchange_player_start[1]
-                )
-                * exchange_eased_progress
-            ),
-        )
-    elif player_state.shield_charge_active:
+    if player_state.shield_charge_active:
         shield_charge_progress = min(
             1,
             player_state.shield_charge_elapsed

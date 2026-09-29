@@ -3,11 +3,7 @@ import math
 import pygame
 
 
-from presentation.layout import (
-    ACT_THREE_TILE_SIZE,
-    ACT_THREE_VIEW_HEIGHT,
-    ACT_THREE_VIEW_WIDTH,
-)
+from presentation.layout import ACT_THREE_TILE_SIZE
 
 
 def _draw_warlock_idle_flashes(
@@ -88,73 +84,6 @@ def _draw_warlock_idle_flashes(
     surface.blit(
         effect_surface,
         (left - margin, top - margin),
-    )
-
-
-def _draw_warlock_demon_aura(
-    surface,
-    left,
-    top,
-    current_time,
-):
-    margin = 9
-    effect_surface = pygame.Surface(
-        (
-            ACT_THREE_TILE_SIZE + margin * 2,
-            ACT_THREE_TILE_SIZE + margin * 2,
-        ),
-        pygame.SRCALPHA,
-    )
-    pulse = 0.5 + 0.5 * math.sin(current_time / 420)
-    outer_alpha = round(34 + pulse * 18)
-    inner_alpha = round(54 + pulse * 22)
-    pygame.draw.ellipse(
-        effect_surface,
-        (92, 24, 190, outer_alpha),
-        (margin + 3, margin + 3, 58, 58),
-        width=4,
-    )
-    pygame.draw.ellipse(
-        effect_surface,
-        (190, 54, 255, inner_alpha),
-        (margin + 8, margin + 7, 48, 52),
-        width=2,
-    )
-    pygame.draw.circle(
-        effect_surface,
-        (210, 86, 255, round(42 + pulse * 18)),
-        (margin + 32, margin + 47),
-        4,
-    )
-    surface.blit(
-        effect_surface,
-        (left - margin, top - margin),
-    )
-
-
-def _draw_warlock_demon_overlay(
-    surface,
-    assets,
-    current_time,
-):
-    overlay = pygame.Surface(
-        (ACT_THREE_VIEW_WIDTH, ACT_THREE_VIEW_HEIGHT),
-        pygame.SRCALPHA,
-    )
-    pulse = 0.5 + 0.5 * math.sin(
-        current_time / 520
-    )
-    overlay.fill(
-        (
-            8,
-            2,
-            18,
-            round(38 + pulse * 14),
-        )
-    )
-    surface.blit(
-        overlay,
-        (0, 0),
     )
 
 

@@ -63,10 +63,6 @@ from acts.act_three.abilities.warlock import (
     perform_warlock_curse,
     advance_warlock_curses,
     advance_warlock_demon_form,
-    is_valid_warlock_soul_exchange_target,
-    request_warlock_soul_exchange,
-    cancel_warlock_soul_exchange,
-    perform_warlock_soul_exchange,
 )
 
 from acts.act_three.abilities.assassin import (
@@ -131,10 +127,6 @@ __all__ = [
     "perform_warlock_curse",
     "advance_warlock_curses",
     "advance_warlock_demon_form",
-    "is_valid_warlock_soul_exchange_target",
-    "request_warlock_soul_exchange",
-    "cancel_warlock_soul_exchange",
-    "perform_warlock_soul_exchange",
     "assassin_teleport_facing_direction",
     "request_assassin_teleport",
     "cancel_assassin_teleport",

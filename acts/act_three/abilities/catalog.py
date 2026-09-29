@@ -251,8 +251,8 @@ SUBCLASS_DEFINITIONS = {
             name="BLOOD MAGIC",
             icon_asset="act_three_warlock_passive",
             description=(
-                "Spend health to cast abilities\n"
-                "before they are charged."
+                "Successful attacks channel power\n"
+                "into Curse and Demon Form."
             ),
         ),
         abilities={
@@ -264,7 +264,7 @@ SUBCLASS_DEFINITIONS = {
                 charge_required=4.0,
                 description=(
                     "Curse an enemy, increasing the damage "
-                    "it receives for five turns."
+                    "it receives for several turns."
                 ),
             ),
             "e": ARCANE_BURST,
@@ -277,8 +277,8 @@ SUBCLASS_DEFINITIONS = {
                 ),
                 charge_required=8.0,
                 description=(
-                    "Transform for five turns, increasing "
-                    "damage while draining health."
+                    "Transform into a demon, increasing "
+                    "damage while draining health each turn."
                 ),
             ),
         },

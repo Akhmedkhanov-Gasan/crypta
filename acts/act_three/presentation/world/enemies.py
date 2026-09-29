@@ -35,11 +35,6 @@ def draw_world_enemies(
     fonts,
     assets,
     current_time,
-    exchange_active,
-    exchange_player_origin,
-    exchange_enemy_origin,
-    exchange_enemy_name,
-    exchange_eased_progress,
 ):
     floor = context.floor
     living_enemies = [
@@ -136,38 +131,6 @@ def draw_world_enemies(
             enemy_world_position[1] - context.camera_y,
         )
 
-        if exchange_active and enemy.name == exchange_enemy_name:
-            exchange_enemy_start = _view_position(
-                exchange_enemy_origin[0],
-                exchange_enemy_origin[1],
-                context.camera_x,
-                context.camera_y,
-            )
-            exchange_enemy_end = _view_position(
-                exchange_player_origin[0],
-                exchange_player_origin[1],
-                context.camera_x,
-                context.camera_y,
-            )
-            enemy_position = (
-                round(
-                    exchange_enemy_start[0]
-                    + (
-                        exchange_enemy_end[0]
-                        - exchange_enemy_start[0]
-                    )
-                    * exchange_eased_progress
-                ),
-                round(
-                    exchange_enemy_start[1]
-                    + (
-                        exchange_enemy_end[1]
-                        - exchange_enemy_start[1]
-                    )
-                    * exchange_eased_progress
-                ),
-            )
-
         enemy_sprite = _enemy_sprite(
             assets,
             enemy,
@@ -200,18 +163,6 @@ def draw_world_enemies(
                 ),
             )
 
-
-        if exchange_active and enemy.name == exchange_enemy_name:
-            _draw_warlock_curse_aura(
-                context.view_surface,
-                enemy_position[0],
-                enemy_position[1],
-                current_time,
-                floor.visual_seed
-                ^ _stable_text_seed(
-                    f"exchange:enemy:{enemy.name}"
-                ),
-            )
 
         _draw_enemy_hit_feedback(
             context.view_surface,

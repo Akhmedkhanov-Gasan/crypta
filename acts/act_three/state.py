@@ -97,7 +97,6 @@ class ActThreePlayerState:
     paladin_holy_shield_turns: int = 0
 
     warlock_attack_target: tuple[int, int] | None = None
-    warlock_curse_charge: int = 0
     warlock_curse_aiming: bool = False
     warlock_curse_target: tuple[int, int] | None = None
     warlock_newly_cursed_enemy: str | None = None
@@ -105,17 +104,6 @@ class ActThreePlayerState:
     warlock_curse_effect_target: (
         tuple[int, int] | None
     ) = None
-    warlock_soul_exchange_charge: int = 0
-    warlock_soul_exchange_aiming: bool = False
-    warlock_soul_exchange_target: tuple[int, int] | None = None
-    warlock_soul_exchange_player_origin: (
-        tuple[int, int] | None
-    ) = None
-    warlock_soul_exchange_enemy_origin: (
-        tuple[int, int] | None
-    ) = None
-    warlock_soul_exchange_enemy_name: str | None = None
-    warlock_soul_exchange_started_at: int = 0
     warlock_demon_form_active: bool = False
     warlock_demon_form_started_at: int = -1
     warlock_demon_form_target_active: bool | None = None

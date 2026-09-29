@@ -47,7 +47,6 @@ from acts.act_three.abilities.paladin import (
 )
 from acts.act_three.abilities.warlock import (
     is_valid_warlock_curse_target,
-    is_valid_warlock_soul_exchange_target,
 )
 from acts.act_three.combat import (
     is_valid_archer_attack_target,
@@ -84,7 +83,6 @@ from acts.act_three.settings import (
     BERSERKER_CRUSHING_LEAP_IMPACT_MS,
     BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
     PALADIN_SHIELD_CHARGE_TRAVEL_MS,
-    WARLOCK_SOUL_EXCHANGE_TRAVEL_MS,
     BERSERKER_LAST_RAGE_ANIMATION_MS,
 )
 from acts.act_three.progression import (
@@ -337,14 +335,6 @@ def handle_act_three_pointer_event(
                 True,
                 target_is_valid,
             )
-        elif game_state.player.warlock_soul_exchange_aiming:
-            set_warlock_staff_cursor(
-                target_cell is not None
-                and is_valid_warlock_soul_exchange_target(
-                    game_state,
-                    target_cell,
-                )
-            )
         elif game_state.player.paladin_shield_charge_aiming:
             preview_is_valid = (
                 target_cell is not None
@@ -545,16 +535,6 @@ def handle_act_three_pointer_event(
             < PALADIN_SHIELD_CHARGE_TRAVEL_MS
         ):
             return True
-        if (
-            game_state.player.warlock_soul_exchange_player_origin
-            is not None
-            and game_state.player.warlock_soul_exchange_started_at
-            > 0
-            and pygame.time.get_ticks()
-            - game_state.player.warlock_soul_exchange_started_at
-            < WARLOCK_SOUL_EXCHANGE_TRAVEL_MS
-        ):
-            return True
         game_mouse_position = window_to_game_position(
             screen,
             event.pos,
@@ -712,27 +692,6 @@ def handle_act_three_pointer_event(
                     )
                 ):
                     game_state.player.warlock_curse_target = (
-                        target_cell
-                    )
-                    pygame.event.post(
-                        pygame.event.Event(
-                            pygame.KEYDOWN,
-                            key=pygame.K_RETURN,
-                        )
-                    )
-            elif game_state.player.warlock_soul_exchange_aiming:
-                target_cell = get_act_three_cell_from_position(
-                    game_state,
-                    game_mouse_position,
-                )
-                if (
-                    target_cell is not None
-                    and is_valid_warlock_soul_exchange_target(
-                        game_state,
-                        target_cell,
-                    )
-                ):
-                    game_state.player.warlock_soul_exchange_target = (
                         target_cell
                     )
                     pygame.event.post(

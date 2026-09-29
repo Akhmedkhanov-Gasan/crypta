@@ -2,6 +2,9 @@ import math
 
 import pygame
 
+from acts.act_three.presentation.player_motion import (
+    assassin_walk_direction,
+)
 from acts.act_three.settings import (
     WARLOCK_DEMON_FORM_TRANSFORM_MS,
 )
@@ -21,29 +24,183 @@ def load_warlock_demon_form_assets(
     demon_form_directory = (
         warlock_directory / "demon_form"
     )
-    idle_directory = (
-        demon_form_directory
-        / "idle"
-        / "demon_idle_down"
-    )
+    idle_directory = demon_form_directory / "idle"
+    walk_directory = demon_form_directory / "walk"
+    attack_directory = demon_form_directory / "attack"
+    hurt_directory = demon_form_directory / "hurt"
     transform_directory = (
         demon_form_directory / "transform_down"
     )
+    idle_sources = {
+        "down": (
+            "demon_idle_down",
+            "idle_down",
+        ),
+        "left": (
+            "demon_idle_left",
+            "idle_left",
+        ),
+        "right": (
+            "idle_right_01",
+            "idle_right",
+        ),
+        "up": (
+            "demon_idle_up",
+            "idle_up",
+        ),
+    }
+    walk_sources = {
+        "down": (
+            "demon_walk_down",
+            "walk_down",
+        ),
+        "left": (
+            "demon_walk_left",
+            "walk_left",
+        ),
+        "right": (
+            "walk_right",
+            "walk_right",
+        ),
+        "up": (
+            "demon_walk_up",
+            "walk_up",
+        ),
+    }
+    attack_sources = {
+        "down": (
+            "demon_attack_down",
+            "attack_down",
+        ),
+        "left": (
+            "demon_attack_left",
+            "attack_left",
+        ),
+        "right": (
+            "attack_right",
+            "attack_right",
+        ),
+        "up": (
+            "demon_attack_up",
+            "attack_up",
+        ),
+    }
+    hurt_sources = {
+        "down": (
+            "demon_hurt_down",
+            "hurt_down",
+        ),
+        "left": (
+            "demon_hurt_left",
+            "hurt_left",
+        ),
+        "right": (
+            "hurt_right",
+            "hurt_right",
+        ),
+        "up": (
+            "demon_hurt_up",
+            "hurt_up",
+        ),
+    }
 
     for frame_index in range(_DEMON_FORM_FRAME_COUNT):
         source_index = frame_index + 1
-        idle_sprite = image_loader(
-            idle_directory
-            / f"idle_down_{source_index:02d}.png",
-            (tile_size, tile_size),
-        )
+
+        for direction, (
+            idle_directory_name,
+            idle_filename_prefix,
+        ) in idle_sources.items():
+            walk_directory_name, walk_filename_prefix = (
+                walk_sources[direction]
+            )
+            attack_directory_name, attack_filename_prefix = (
+                attack_sources[direction]
+            )
+            hurt_directory_name, hurt_filename_prefix = (
+                hurt_sources[direction]
+            )
+            idle_sprite = image_loader(
+                idle_directory
+                / idle_directory_name
+                / (
+                    f"{idle_filename_prefix}_"
+                    f"{source_index:02d}.png"
+                ),
+                (tile_size, tile_size),
+            )
+            walk_sprite = image_loader(
+                walk_directory
+                / walk_directory_name
+                / (
+                    f"{walk_filename_prefix}_"
+                    f"{source_index:02d}.png"
+                ),
+                (tile_size, tile_size),
+            )
+            attack_sprite = image_loader(
+                attack_directory
+                / attack_directory_name
+                / (
+                    f"{attack_filename_prefix}_"
+                    f"{source_index:02d}.png"
+                ),
+                (tile_size, tile_size),
+            )
+            hurt_sprite = image_loader(
+                hurt_directory
+                / hurt_directory_name
+                / (
+                    f"{hurt_filename_prefix}_"
+                    f"{source_index:02d}.png"
+                ),
+                (tile_size, tile_size),
+            )
+            assets[
+                (
+                    "player_warlock_demon_idle_"
+                    f"{direction}_{frame_index}"
+                )
+            ] = idle_sprite
+            assets[
+                (
+                    "player_warlock_demon_walk_"
+                    f"{direction}_{frame_index}"
+                )
+            ] = walk_sprite
+            assets[
+                (
+                    "player_warlock_demon_attack_"
+                    f"{direction}_{frame_index}"
+                )
+            ] = attack_sprite
+            assets[
+                (
+                    "player_warlock_demon_hurt_"
+                    f"{direction}_{frame_index}"
+                )
+            ] = hurt_sprite
 
         assets[
             f"player_warlock_demon_idle_{frame_index}"
-        ] = idle_sprite
+        ] = assets[
+            f"player_warlock_demon_idle_down_{frame_index}"
+        ]
         assets[
             f"player_warlock_demon_walk_{frame_index}"
-        ] = idle_sprite
+        ] = assets[
+            f"player_warlock_demon_walk_down_{frame_index}"
+        ]
+        assets[
+            f"player_warlock_demon_attack_{frame_index}"
+        ] = assets[
+            f"player_warlock_demon_attack_down_{frame_index}"
+        ]
+        assets[
+            f"player_warlock_demon_hurt_{frame_index}"
+        ] = assets[
+            f"player_warlock_demon_hurt_down_{frame_index}"
+        ]
         assets[
             f"player_warlock_demon_transform_{frame_index}"
         ] = image_loader(
@@ -53,10 +210,10 @@ def load_warlock_demon_form_assets(
         )
 
     assets["player_warlock_demon_attack"] = assets[
-        "player_warlock_demon_idle_0"
+        "player_warlock_demon_attack_down_0"
     ]
     assets["player_warlock_demon_hurt"] = assets[
-        "player_warlock_demon_idle_0"
+        "player_warlock_demon_hurt_down_0"
     ]
 
 
@@ -125,9 +282,241 @@ def warlock_demon_idle_sprite(
     frame = (
         elapsed // _DEMON_FORM_IDLE_FRAME_MS
     ) % _DEMON_FORM_FRAME_COUNT
+    direction = assassin_walk_direction(
+        player.facing_direction
+    )
     return assets[
-        f"player_warlock_demon_idle_{frame}"
+        (
+            "player_warlock_demon_idle_"
+            f"{direction}_{frame}"
+        )
     ]
+
+
+def draw_warlock_demon_smoke(
+    surface,
+    position,
+    current_time,
+):
+    horizontal_margin = 30
+    top_margin = 8
+    width = (
+        ACT_THREE_TILE_SIZE
+        + horizontal_margin * 2
+    )
+    height = ACT_THREE_TILE_SIZE + 20
+    smoke_surface = pygame.Surface(
+        (width, height),
+        pygame.SRCALPHA,
+    )
+    center_x = horizontal_margin + ACT_THREE_TILE_SIZE // 2
+    ground_y = top_margin + ACT_THREE_TILE_SIZE - 5
+    pulse = 0.5 + 0.5 * math.sin(current_time / 410)
+
+    pygame.draw.ellipse(
+        smoke_surface,
+        (
+            19,
+            4,
+            31,
+            round(58 + pulse * 24),
+        ),
+        (
+            center_x - 37,
+            ground_y - 6,
+            74,
+            17,
+        ),
+    )
+    pygame.draw.ellipse(
+        smoke_surface,
+        (
+            73,
+            19,
+            103,
+            round(30 + pulse * 18),
+        ),
+        (
+            center_x - 30,
+            ground_y - 4,
+            60,
+            11,
+        ),
+    )
+
+    anchors = (
+        -27,
+        -21,
+        -15,
+        -9,
+        -3,
+        4,
+        10,
+        16,
+        22,
+        28,
+    )
+    smoke_count = len(anchors)
+
+    for smoke_index, anchor in enumerate(anchors):
+        phase = (
+            current_time / 1750
+            + smoke_index / smoke_count
+        ) % 1
+        visibility = math.sin(math.pi * phase)
+        side = -1 if anchor < 0 else 1
+        outward = round(
+            side * phase * (5 + smoke_index % 3)
+        )
+        drift = round(
+            math.sin(
+                current_time / 330
+                + smoke_index * 1.8
+            )
+            * 4
+        )
+        rise = round(
+            phase * (11 + smoke_index % 4 * 4)
+        )
+        smoke_x = (
+            center_x
+            + anchor
+            + outward
+            + drift
+        )
+        smoke_y = (
+            ground_y
+            - rise
+            + round(
+                math.sin(
+                    current_time / 270
+                    + smoke_index
+                )
+                * 2
+            )
+        )
+        radius_x = round(
+            5
+            + visibility * (4 + smoke_index % 3)
+        )
+        radius_y = round(
+            3
+            + visibility * (3 + smoke_index % 2)
+        )
+        alpha = round(105 * visibility)
+
+        pygame.draw.ellipse(
+            smoke_surface,
+            (
+                24,
+                5,
+                38,
+                alpha,
+            ),
+            (
+                smoke_x - radius_x,
+                smoke_y - radius_y,
+                radius_x * 2,
+                radius_y * 2,
+            ),
+        )
+        pygame.draw.ellipse(
+            smoke_surface,
+            (
+                76,
+                20,
+                112,
+                alpha // 2,
+            ),
+            (
+                smoke_x - radius_x + 2,
+                smoke_y - radius_y,
+                max(2, radius_x * 2 - 4),
+                max(2, radius_y * 2 - 2),
+            ),
+        )
+        pygame.draw.circle(
+            smoke_surface,
+            (
+                137,
+                48,
+                181,
+                alpha // 3,
+            ),
+            (
+                smoke_x,
+                smoke_y - radius_y + 1,
+            ),
+            max(1, radius_y // 2),
+        )
+
+    for wisp_index in range(4):
+        phase = (
+            current_time / 2100
+            + wisp_index * 0.23
+        ) % 1
+        visibility = math.sin(math.pi * phase)
+        base_x = (
+            center_x
+            + (-18 + wisp_index * 12)
+        )
+        sway = round(
+            math.sin(
+                current_time / 290
+                + wisp_index * 2.1
+            )
+            * 5
+        )
+        height_offset = round(
+            phase * (17 + wisp_index % 2 * 7)
+        )
+        alpha = round(72 * visibility)
+        points = (
+            (
+                base_x,
+                ground_y + 1,
+            ),
+            (
+                base_x + sway // 2,
+                ground_y - height_offset // 2,
+            ),
+            (
+                base_x + sway,
+                ground_y - height_offset,
+            ),
+        )
+        pygame.draw.lines(
+            smoke_surface,
+            (
+                48,
+                9,
+                69,
+                alpha,
+            ),
+            False,
+            points,
+            width=5,
+        )
+        pygame.draw.lines(
+            smoke_surface,
+            (
+                119,
+                34,
+                157,
+                alpha // 2,
+            ),
+            False,
+            points,
+            width=2,
+        )
+
+    surface.blit(
+        smoke_surface,
+        (
+            position[0] - horizontal_margin,
+            position[1] - top_margin,
+        ),
+    )
 
 
 def draw_warlock_demon_transformation(

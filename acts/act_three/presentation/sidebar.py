@@ -42,9 +42,11 @@ from acts.act_three.settings import (
     SUMMONER_BOND_CHARGES,
     SUMMONER_FAMILIAR_CHARGES,
     SUMMONER_TRUE_FORM_CHARGES,
-    WARLOCK_CURSE_CHARGES,
-    WARLOCK_SOUL_EXCHANGE_CHARGES,
 )
+from acts.act_three.abilities.charges import (
+    get_act_three_ability_charge_state,
+)
+
 
 _PANEL_BACKGROUND = (8, 11, 14)
 _PANEL_INNER = (12, 16, 19)
@@ -85,9 +87,9 @@ _ABILITY_DESCRIPTIONS = {
     "paladin_holy_hand": "Restore health with holy power.",
     "paladin_shield_charge": "Rush forward behind the shield.",
     "paladin_holy_shield": "Gain a temporary holy shield.",
-    "warlock_curse": "Curse a target for several turns.",
-    "warlock_soul_exchange": "Exchange positions with a target.",
-    "warlock_demon_form": "Trade health for demonic power.",
+    "act_three_warlock_curse": "Curse a target for several turns.",
+    "act_three_arcane_burst": "Cast the inherited mage rune ability.",
+    "act_three_warlock_demon_form": "Transform into a demon.",
     "summoner_familiar": "Summon or release the familiar.",
     "summoner_bond": "Strengthen the bond with the familiar.",
     "summoner_true_form": "Unite with the familiar temporarily.",
@@ -324,30 +326,44 @@ def _ability_entries(player, accent_color):
             ),
         )
     if player.subclass == "warlock":
+        curse_charge = get_act_three_ability_charge_state(
+            player,
+            "q",
+        )
+        arcane_charge = get_act_three_ability_charge_state(
+            player,
+            "e",
+        )
+        demon_charge = get_act_three_ability_charge_state(
+            player,
+            "f",
+        )
+
         return (
             (
-                "warlock_curse",
+                "act_three_warlock_curse",
                 "Curse",
-                _ratio(player.warlock_curse_charge, WARLOCK_CURSE_CHARGES),
+                _ratio(*curse_charge),
                 (198, 91, 238),
                 None,
             ),
             (
-                "warlock_soul_exchange",
-                "Soul Exchange",
-                _ratio(
-                    player.warlock_soul_exchange_charge,
-                    WARLOCK_SOUL_EXCHANGE_CHARGES,
-                ),
-                (184, 78, 224),
+                "act_three_arcane_burst",
+                "Arcane Burst",
+                _ratio(*arcane_charge),
+                (137, 112, 238),
                 None,
             ),
             (
-                "warlock_demon_form",
+                "act_three_warlock_demon_form",
                 "Demon Form",
-                1.0,
+                _ratio(*demon_charge),
                 (220, 67, 194),
-                "ACTIVE" if player.warlock_demon_form_active else "READY",
+                (
+                    "ACTIVE"
+                    if player.warlock_demon_form_active
+                    else None
+                ),
             ),
         )
     if player.subclass == "summoner":

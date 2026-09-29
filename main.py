@@ -401,7 +401,6 @@ from systems.player_abilities import (
     perform_berserker_crushing_leap,
     perform_paladin_shield_charge,
     perform_warlock_curse,
-    perform_warlock_soul_exchange,
 )
 from acts.act_two.trader_logic import buy_trader_item
 from presentation.layout import MAP_OFFSET_X, MAP_OFFSET_Y
@@ -564,7 +563,6 @@ def main():
             and not game_state.player.berserker_crushing_leap_aiming
             and not game_state.player.paladin_shield_charge_aiming
             and not game_state.player.warlock_curse_aiming
-            and not game_state.player.warlock_soul_exchange_aiming
             and game_state.player.health > 0
             and not game_state.game_won
             and not game_state.trade_screen_open
@@ -2486,19 +2484,6 @@ def main():
                         scroll_target,
                         pygame.time.get_ticks(),
                     )
-                elif (
-                    game_state.player.warlock_soul_exchange_target
-                    is not None
-                ):
-                    exchange_target = (
-                        game_state.player.warlock_soul_exchange_target
-                    )
-                    player_acted = perform_warlock_soul_exchange(
-                        game_state,
-                        exchange_target,
-                        pygame.time.get_ticks(),
-                    )
-                    set_warlock_staff_cursor()
                 elif game_state.player.warlock_curse_target is not None:
                     curse_target = (
                         game_state.player.warlock_curse_target

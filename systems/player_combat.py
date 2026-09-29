@@ -18,6 +18,9 @@ from settings import (
     ROGUE_VEIL_INVISIBILITY_TURNS,
 )
 from acts.act_two.abilities import ability_charge_required
+from acts.act_three.abilities import (
+    charge_ability_slots,
+)
 from acts.act_two.bloody_altar import (
     BLOOD_HUNGER,
     adjusted_outgoing_damage,
@@ -71,9 +74,7 @@ from acts.act_three.settings import (
     SUMMONER_BOND_DAMAGE_BONUS,
     SUMMONER_TRUE_FORM_CHARGES,
     SUMMONER_TRUE_FORM_DAMAGE_BONUS,
-    WARLOCK_CURSE_CHARGES,
     WARLOCK_CURSE_DAMAGE_MULTIPLIER,
-    WARLOCK_SOUL_EXCHANGE_CHARGES,
 )
 from settings import CLASS_ABILITY_KILLS
 from systems.enemy_spawning import try_spawn_enemy_after_death
@@ -585,13 +586,9 @@ def attack_enemy(
                 player.paladin_holy_shield_charge + 1,
             )
     elif grant_ability_charge and player.subclass == "warlock":
-        player.warlock_curse_charge = min(
-            WARLOCK_CURSE_CHARGES,
-            player.warlock_curse_charge + 1,
-        )
-        player.warlock_soul_exchange_charge = min(
-            WARLOCK_SOUL_EXCHANGE_CHARGES,
-            player.warlock_soul_exchange_charge + 1,
+        charge_ability_slots(
+            player,
+            ("q", "f"),
         )
     elif grant_ability_charge and player.subclass == "summoner":
         if not player.summoner_true_form_active:

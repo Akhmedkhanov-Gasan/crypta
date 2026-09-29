@@ -20,6 +20,7 @@ from acts.act_three.presentation.world.player_position import (
 from acts.act_three.presentation.warlock import (
     WARLOCK_CURSE_CAST_DURATION_MS,
     draw_warlock_curse_cast,
+    draw_warlock_demon_smoke,
     draw_warlock_demon_transformation,
 )
 from acts.act_three.presentation.world.targeting import (
@@ -66,7 +67,6 @@ from acts.act_three.settings import (
     BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
     PALADIN_HOLY_HAND_EFFECT_MS,
     PALADIN_SHIELD_CHARGE_TRAVEL_MS,
-    WARLOCK_SOUL_EXCHANGE_TRAVEL_MS,
     BERSERKER_LAST_RAGE_ANIMATION_MS,
 )
 from settings import HEALTH_BAR_COLOR
@@ -107,8 +107,6 @@ from acts.act_three.presentation.class_effects import (
     _draw_summoner_bond_pentagram,
     _draw_summoner_familiar_attack_glow,
     _draw_summoner_idle_lights,
-    _draw_warlock_demon_aura,
-    _draw_warlock_demon_overlay,
     _draw_warlock_idle_flashes,
 )
 from acts.act_three.presentation.combat_effects import (
@@ -187,43 +185,6 @@ def _draw_act_three_world(
     teleport_origin = context.teleport_origin
     transition_started_at = context.transition_started_at
 
-    exchange_player_origin = (
-        game_state.player.warlock_soul_exchange_player_origin
-    )
-    exchange_enemy_origin = (
-        game_state.player.warlock_soul_exchange_enemy_origin
-    )
-    exchange_enemy_name = (
-        game_state.player.warlock_soul_exchange_enemy_name
-    )
-    exchange_started_at = (
-        game_state.player.warlock_soul_exchange_started_at
-    )
-    exchange_elapsed = current_time - exchange_started_at
-    exchange_active = (
-        game_state.player.subclass == "warlock"
-        and exchange_player_origin is not None
-        and exchange_enemy_origin is not None
-        and exchange_enemy_name is not None
-        and exchange_started_at > 0
-        and 0
-        <= exchange_elapsed
-        < WARLOCK_SOUL_EXCHANGE_TRAVEL_MS
-    )
-    exchange_progress = min(
-        1,
-        max(
-            0,
-            exchange_elapsed
-            / WARLOCK_SOUL_EXCHANGE_TRAVEL_MS,
-        ),
-    )
-    exchange_eased_progress = (
-        exchange_progress
-        * exchange_progress
-        * (3 - 2 * exchange_progress)
-    )
-
     draw_world_terrain(context)
     draw_world_targeting(
         context,
@@ -262,11 +223,6 @@ def _draw_act_three_world(
         fonts,
         assets,
         current_time,
-        exchange_active,
-        exchange_player_origin,
-        exchange_enemy_origin,
-        exchange_enemy_name,
-        exchange_eased_progress,
     )
 
     player_state = create_player_render_state(
@@ -316,10 +272,6 @@ def _draw_act_three_world(
         game_state.player,
         player_sprite,
         current_time,
-        exchange_active,
-        exchange_player_origin,
-        exchange_enemy_origin,
-        exchange_eased_progress,
     )
     player_sprite = player_placement.sprite
     player_position = player_placement.position
@@ -417,7 +369,6 @@ def _draw_act_three_world(
     if (
         walking_sprite_active
         and not game_state.player.ultimate_animation_active
-        and not exchange_active
         and not shield_charge_active
         and not leap_active
         and not berserker_leap_travel_active
@@ -577,16 +528,6 @@ def _draw_act_three_world(
             player_position[0],
             player_position[1],
             current_time,
-        )
-
-    if exchange_active:
-        _draw_warlock_curse_aura(
-            view_surface,
-            player_position[0],
-            player_position[1],
-            current_time,
-            floor.visual_seed
-            ^ _stable_text_seed("exchange:warlock"),
         )
 
     if leap_active and leap_start_position is not None:
@@ -1109,18 +1050,6 @@ def _draw_act_three_world(
     ):
         game_state.player.paladin_shield_charge_origin = None
         game_state.player.paladin_shield_charge_started_at = 0
-    if (
-        player_subclass == "warlock"
-        and exchange_player_origin is not None
-        and exchange_enemy_origin is not None
-        and exchange_started_at > 0
-        and exchange_elapsed
-        >= WARLOCK_SOUL_EXCHANGE_TRAVEL_MS
-    ):
-        game_state.player.warlock_soul_exchange_player_origin = None
-        game_state.player.warlock_soul_exchange_enemy_origin = None
-        game_state.player.warlock_soul_exchange_enemy_name = None
-        game_state.player.warlock_soul_exchange_started_at = 0
 
     empowered_target = game_state.player.archer_empowered_shot_target
     empowered_started_at = game_state.player.archer_empowered_shot_started_at
@@ -1317,24 +1246,24 @@ def _draw_act_three_world(
             current_time,
         )
         if game_state.player.warlock_demon_form_active:
-            _draw_warlock_demon_aura(
+            draw_warlock_demon_smoke(
+                view_surface,
+                player_position,
+                current_time,
+            )
+        else:
+            _draw_warlock_idle_flashes(
                 view_surface,
                 player_position[0],
                 player_position[1],
                 current_time,
-            )
-        _draw_warlock_idle_flashes(
-            view_surface,
-            player_position[0],
-            player_position[1],
-            current_time,
-            (
-                floor.visual_seed
-                ^ _stable_text_seed(
+                (
+                        floor.visual_seed
+                        ^ _stable_text_seed(
                     "player:warlock:flashes"
                 )
-            ),
-        )
+                ),
+            )
     elif player_subclass == "summoner" and player_death_elapsed is None:
         _draw_summoner_idle_lights(
             view_surface,
@@ -1349,16 +1278,6 @@ def _draw_act_three_world(
             ),
         )
 
-    if (
-        player_subclass == "warlock"
-        and game_state.player.warlock_demon_form_active
-        and player_death_elapsed is None
-    ):
-        _draw_warlock_demon_overlay(
-            view_surface,
-            assets,
-            current_time,
-        )
     if floor.tile_layers and tile_assets.get("tmx_tiles"):
         draw_fading_foreground_layers(
             view_surface,
