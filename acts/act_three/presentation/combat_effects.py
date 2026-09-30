@@ -1419,7 +1419,13 @@ def _draw_warlock_death_echoes(
             (elapsed - 150)
             / (_PLAYER_DEATH_COLLAPSE_END_MS - 150)
         )
-        hurt_sprite = assets["player_warlock_hurt"]
+        hurt_sprite = assets[
+            (
+                "player_warlock_demon_hurt"
+                if player.warlock_demon_form_active
+                else "player_warlock_hurt"
+            )
+        ]
         for echo_index, (offset_x, offset_y, alpha) in enumerate(
             ((-2, -2, 56), (3, -5, 34), (-4, -8, 19))
         ):
@@ -1440,7 +1446,13 @@ def _draw_warlock_death_echoes(
             (elapsed - _PLAYER_DEATH_COLLAPSE_END_MS)
             / (spirit_end - _PLAYER_DEATH_COLLAPSE_END_MS)
         )
-        spirit = assets["player_warlock_hurt"].copy()
+        spirit = assets[
+            (
+                "player_warlock_demon_hurt"
+                if player.warlock_demon_form_active
+                else "player_warlock_hurt"
+            )
+        ].copy()
         spirit.fill(
             (85, 16, 98, 0),
             special_flags=pygame.BLEND_RGBA_ADD,

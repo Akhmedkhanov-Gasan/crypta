@@ -212,6 +212,17 @@ def _death_sprite(
         if player_subclass == "summoner":
             return assets["player_summoner_no_familiar_hurt"]
 
+        if (
+            player_subclass == "warlock"
+            and player.warlock_demon_form_active
+        ):
+            direction = assassin_hurt_direction(
+                player.facing_direction
+            )
+            return assets[
+                f"player_warlock_demon_hurt_{direction}_0"
+            ]
+
         if player_subclass in ("berserker", "warlock"):
             direction = assassin_hurt_direction(
                 player.facing_direction
@@ -223,9 +234,25 @@ def _death_sprite(
         return assets[f"player_{player_subclass}_hurt"]
 
     if player_subclass == "berserker":
-        direction = assassin_hurt_direction(player.facing_direction)
+        direction = assassin_hurt_direction(
+            player.facing_direction
+        )
         return assets[
             f"player_berserker_death_{direction}_{death_frame}"
+        ]
+
+    if (
+        player_subclass == "warlock"
+        and player.warlock_demon_form_active
+    ):
+        direction = assassin_hurt_direction(
+            player.facing_direction
+        )
+        return assets[
+            (
+                "player_warlock_demon_death_"
+                f"{direction}_{death_frame}"
+            )
         ]
 
     return assets[

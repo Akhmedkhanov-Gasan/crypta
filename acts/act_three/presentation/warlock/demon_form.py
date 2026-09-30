@@ -28,6 +28,8 @@ def load_warlock_demon_form_assets(
     walk_directory = demon_form_directory / "walk"
     attack_directory = demon_form_directory / "attack"
     hurt_directory = demon_form_directory / "hurt"
+    death_directory = demon_form_directory / "death"
+    cast_directory = demon_form_directory / "cast"
     transform_directory = (
         demon_form_directory / "transform_down"
     )
@@ -103,6 +105,42 @@ def load_warlock_demon_form_assets(
             "hurt_up",
         ),
     }
+    cast_sources = {
+        "down": (
+            "demon_cast_down",
+            "cast_down",
+        ),
+        "left": (
+            "demon_cast_left",
+            "cast_left",
+        ),
+        "right": (
+            "cast_right",
+            "cast_right",
+        ),
+        "up": (
+            "demon_cast_up",
+            "cast_up",
+        ),
+    }
+    death_sources = {
+        "down": (
+            "demon_death_down",
+            "death_down",
+        ),
+        "left": (
+            "demon_death_left",
+            "death_left",
+        ),
+        "right": (
+            "death_right",
+            "death_right",
+        ),
+        "up": (
+            "demon_death_up",
+            "death_up",
+        ),
+    }
 
     for frame_index in range(_DEMON_FORM_FRAME_COUNT):
         source_index = frame_index + 1
@@ -119,6 +157,12 @@ def load_warlock_demon_form_assets(
             )
             hurt_directory_name, hurt_filename_prefix = (
                 hurt_sources[direction]
+            )
+            cast_directory_name, cast_filename_prefix = (
+                cast_sources[direction]
+            )
+            death_directory_name, death_filename_prefix = (
+                death_sources[direction]
             )
             idle_sprite = image_loader(
                 idle_directory
@@ -156,6 +200,24 @@ def load_warlock_demon_form_assets(
                 ),
                 (tile_size, tile_size),
             )
+            cast_sprite = image_loader(
+                cast_directory
+                / cast_directory_name
+                / (
+                    f"{cast_filename_prefix}_"
+                    f"{source_index:02d}.png"
+                ),
+                (tile_size, tile_size),
+            )
+            death_sprite = image_loader(
+                death_directory
+                / death_directory_name
+                / (
+                    f"{death_filename_prefix}_"
+                    f"{source_index:02d}.png"
+                ),
+                (tile_size, tile_size),
+            )
             assets[
                 (
                     "player_warlock_demon_idle_"
@@ -180,6 +242,18 @@ def load_warlock_demon_form_assets(
                     f"{direction}_{frame_index}"
                 )
             ] = hurt_sprite
+            assets[
+                (
+                    "player_warlock_demon_cast_"
+                    f"{direction}_{frame_index}"
+                )
+            ] = cast_sprite
+            assets[
+                (
+                    "player_warlock_demon_death_"
+                    f"{direction}_{frame_index}"
+                )
+            ] = death_sprite
 
         assets[
             f"player_warlock_demon_idle_{frame_index}"
@@ -202,6 +276,16 @@ def load_warlock_demon_form_assets(
             f"player_warlock_demon_hurt_down_{frame_index}"
         ]
         assets[
+            f"player_warlock_demon_cast_{frame_index}"
+        ] = assets[
+            f"player_warlock_demon_cast_down_{frame_index}"
+        ]
+        assets[
+            f"player_warlock_demon_death_{frame_index}"
+        ] = assets[
+            f"player_warlock_demon_death_down_{frame_index}"
+        ]
+        assets[
             f"player_warlock_demon_transform_{frame_index}"
         ] = image_loader(
             transform_directory
@@ -214,6 +298,12 @@ def load_warlock_demon_form_assets(
     ]
     assets["player_warlock_demon_hurt"] = assets[
         "player_warlock_demon_hurt_down_0"
+    ]
+    assets["player_warlock_demon_cast"] = assets[
+        "player_warlock_demon_cast_down_0"
+    ]
+    assets["player_warlock_demon_death"] = assets[
+        "player_warlock_demon_death_down_0"
     ]
 
 

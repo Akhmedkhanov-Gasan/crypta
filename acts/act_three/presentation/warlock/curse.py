@@ -45,17 +45,26 @@ def warlock_curse_sprite(
     assets,
     current_time,
 ):
-    if (
-        player.subclass != "warlock"
-        or player.warlock_curse_started_at <= 0
-    ):
+    if player.subclass != "warlock":
         return None
 
-    elapsed = (
-        current_time
-        - player.warlock_curse_started_at
-    )
+    started_at = player.warlock_curse_started_at
 
+    if player.warlock_demon_form_active:
+        started_at = max(
+            started_at,
+            (
+                player.act_three
+                .mage_arcane_burst
+                .ability_effect_started_at
+            ),
+            player.act_two.ability_effect_started_at,
+        )
+
+    if started_at <= 0:
+        return None
+
+    elapsed = current_time - started_at
     if not 0 <= elapsed < WARLOCK_CURSE_CAST_DURATION_MS:
         return None
 
@@ -66,9 +75,14 @@ def warlock_curse_sprite(
         elapsed / WARLOCK_CURSE_CAST_DURATION_MS,
         WARLOCK_CURSE_FRAME_COUNT,
     )
+    asset_prefix = (
+        "player_warlock_demon_cast"
+        if player.warlock_demon_form_active
+        else "player_warlock_curse"
+    )
 
     return assets[
-        f"player_warlock_curse_{direction}_{frame}"
+        f"{asset_prefix}_{direction}_{frame}"
     ]
 
 
