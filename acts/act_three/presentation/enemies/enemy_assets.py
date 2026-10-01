@@ -1,3 +1,8 @@
+from acts.act_three.presentation.enemies.brute import (
+    BRUTE_ATTACK_DIRECTIONS,
+)
+
+
 def _load_directional_animation(
     assets,
     enemy_directory,
@@ -96,6 +101,60 @@ def _load_archer_assets(
     ]
 
 
+def _load_brute_assets(
+    assets,
+    enemies_directory,
+    tile_size,
+    image_loader,
+):
+    enemy_type = "brute"
+    enemy_directory = (
+        enemies_directory / enemy_type
+    )
+    directions = (
+        "down",
+        "left",
+        "right",
+        "up",
+    )
+
+    for action in (
+        "idle",
+        "walk",
+    ):
+        _load_directional_animation(
+            assets,
+            enemy_directory,
+            enemy_type,
+            action,
+            directions,
+            8,
+            tile_size,
+            image_loader,
+        )
+
+    for frame_index in range(2):
+        assets[
+            f"enemy_brute_death_{frame_index}"
+        ] = image_loader(
+            enemy_directory
+            / "death"
+            / f"death_{frame_index:02d}.png",
+            (tile_size, tile_size),
+        )
+
+    _load_directional_animation(
+        assets,
+        enemy_directory,
+        enemy_type,
+        "attack",
+        BRUTE_ATTACK_DIRECTIONS,
+        8,
+        tile_size,
+        image_loader,
+    )
+
+
 def _load_legacy_enemy_assets(
     assets,
     enemies_directory,
@@ -154,8 +213,14 @@ def load_enemy_animation_assets(
         image_loader,
     )
 
+    _load_brute_assets(
+        assets,
+        enemies_directory,
+        tile_size,
+        image_loader,
+    )
+
     for enemy_type in (
-        "brute",
         "priest",
         "sentinel",
     ):
@@ -167,19 +232,13 @@ def load_enemy_animation_assets(
             image_loader,
         )
 
-    for enemy_type in (
-        "brute",
-        "sentinel",
-    ):
-        assets[
-            f"enemy_{enemy_type}_attack"
-        ] = image_loader(
-            enemies_directory
-            / enemy_type
-            / "attack"
-            / "attack_00.png",
-            (tile_size, tile_size),
-        )
+    assets["enemy_sentinel_attack"] = image_loader(
+        enemies_directory
+        / "sentinel"
+        / "attack"
+        / "attack_00.png",
+        (tile_size, tile_size),
+    )
 
     assets["sentinel_guard"] = image_loader(
         enemies_directory

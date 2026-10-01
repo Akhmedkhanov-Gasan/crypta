@@ -33,6 +33,8 @@ from acts.act_three.presentation.animation import (
 from acts.act_three.presentation.enemies import (
     archer_sprite,
     archer_world_position,
+    brute_sprite,
+    brute_world_position,
     draw_archer_backhop_afterimages,
 )
 
@@ -49,7 +51,13 @@ def _enemy_sprite(
             current_time,
             visual_seed,
         )
-
+    if enemy.type == "brute":
+        return brute_sprite(
+            assets,
+            enemy,
+            current_time,
+            visual_seed,
+        )
     if (
         enemy.type in _ENEMY_DEATH_COLLAPSE_END_MS
         and enemy.behavior_state is EnemyBehaviorState.DEAD
@@ -157,6 +165,13 @@ def _enemy_world_position(
 ):
     if enemy.type == "archer":
         return archer_world_position(
+            enemy,
+            current_time,
+            tile_size,
+        )
+
+    if enemy.type == "brute":
+        return brute_world_position(
             enemy,
             current_time,
             tile_size,
