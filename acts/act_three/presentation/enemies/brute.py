@@ -5,8 +5,12 @@ BRUTE_FRAME_COUNT = 8
 BRUTE_IDLE_FRAME_MS = 160
 BRUTE_MOVE_DURATION_MS = 240
 BRUTE_ATTACK_DURATION_MS = 480
-BRUTE_ATTACK_DIRECTIONS = (
+BRUTE_HURT_DURATION_MS = 400
+BRUTE_DIRECTIONS = (
     "down",
+    "left",
+    "right",
+    "up",
 )
 BRUTE_DEATH_IMPACT_HOLD_MS = 190
 BRUTE_DEATH_COLLAPSE_END_MS = 850
@@ -33,7 +37,7 @@ def _direction_from_delta(
     return "down"
 
 
-def _brute_direction(enemy):
+def _brute_movement_direction(enemy):
     origin = enemy.movement_origin
 
     if origin is None:
@@ -47,13 +51,34 @@ def _brute_direction(enemy):
 
 def _brute_attack_direction(enemy):
     if not enemy.attack_effect_positions:
-        return _brute_direction(enemy)
+        return _brute_movement_direction(enemy)
 
     target = enemy.attack_effect_positions[0]
 
     return _direction_from_delta(
         target[0] - enemy.column,
         target[1] - enemy.row,
+    )
+
+
+def _brute_direction(enemy):
+    if (
+        enemy.attack_effect_positions
+        and enemy.attack_animation_started_at
+        >= enemy.movement_animation_started_at
+    ):
+        return _brute_attack_direction(enemy)
+
+    return _brute_movement_direction(enemy)
+
+
+def _brute_hurt_direction(enemy):
+    if enemy.hit_origin is None:
+        return _brute_direction(enemy)
+
+    return _direction_from_delta(
+        enemy.hit_origin[0] - enemy.column,
+        enemy.hit_origin[1] - enemy.row,
     )
 
 
@@ -154,6 +179,31 @@ def brute_sprite(
 
         return assets["enemy_brute_death_1"]
 
+    hurt_elapsed = (
+        current_time
+        - enemy.hit_animation_started_at
+    )
+
+    if (
+        enemy.hit_damage > 0
+        and not enemy.hit_dodged
+        and 0 <= hurt_elapsed < BRUTE_HURT_DURATION_MS
+    ):
+        hurt_direction = _brute_hurt_direction(
+            enemy,
+        )
+        frame_index = _brute_action_frame(
+            hurt_elapsed,
+            BRUTE_HURT_DURATION_MS,
+        )
+
+        return assets[
+            (
+                f"enemy_brute_hurt_"
+                f"{hurt_direction}_{frame_index}"
+            )
+        ]
+
     attack_elapsed = (
         current_time
         - enemy.attack_animation_started_at
@@ -164,8 +214,8 @@ def brute_sprite(
             enemy,
         )
 
-        if attack_direction not in BRUTE_ATTACK_DIRECTIONS:
-            attack_direction = BRUTE_ATTACK_DIRECTIONS[0]
+        if attack_direction not in BRUTE_DIRECTIONS:
+            attack_direction = BRUTE_DIRECTIONS[0]
 
         frame_index = _brute_action_frame(
             attack_elapsed,
@@ -178,7 +228,6 @@ def brute_sprite(
                 f"{attack_direction}_{frame_index}"
             )
         ]
-
     movement_elapsed = _brute_movement_state(
         enemy,
         current_time,

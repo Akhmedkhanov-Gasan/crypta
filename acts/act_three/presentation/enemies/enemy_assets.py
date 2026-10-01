@@ -1,5 +1,5 @@
 from acts.act_three.presentation.enemies.brute import (
-    BRUTE_ATTACK_DIRECTIONS,
+    BRUTE_DIRECTIONS,
 )
 
 
@@ -111,23 +111,18 @@ def _load_brute_assets(
     enemy_directory = (
         enemies_directory / enemy_type
     )
-    directions = (
-        "down",
-        "left",
-        "right",
-        "up",
-    )
-
     for action in (
         "idle",
         "walk",
+        "attack",
+        "hurt",
     ):
         _load_directional_animation(
             assets,
             enemy_directory,
             enemy_type,
             action,
-            directions,
+            BRUTE_DIRECTIONS,
             8,
             tile_size,
             image_loader,
@@ -142,17 +137,6 @@ def _load_brute_assets(
             / f"death_{frame_index:02d}.png",
             (tile_size, tile_size),
         )
-
-    _load_directional_animation(
-        assets,
-        enemy_directory,
-        enemy_type,
-        "attack",
-        BRUTE_ATTACK_DIRECTIONS,
-        8,
-        tile_size,
-        image_loader,
-    )
 
 
 def _load_legacy_enemy_assets(
