@@ -1,10 +1,14 @@
-def resolve_enemy_turn(*args, **kwargs):
-    """Current Act Three turn adapter.
+from acts.act_three.ai.registry import (
+    ACT_THREE_ENEMY_TURN_HANDLERS,
+)
 
-    The implementation deliberately delegates to the shared turn system until
-    the new Act Three AI replaces it.
-    """
 
+def resolve_enemy_turn(game_state, *args, **kwargs):
     from systems.enemy_turn import resolve_enemy_turn as shared_turn
 
-    return shared_turn(*args, **kwargs)
+    return shared_turn(
+        game_state,
+        *args,
+        enemy_turn_handlers=ACT_THREE_ENEMY_TURN_HANDLERS,
+        **kwargs,
+    )

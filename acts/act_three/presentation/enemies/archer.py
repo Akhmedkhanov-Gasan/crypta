@@ -11,6 +11,7 @@ ARCHER_MOVE_DURATION_MS = 220
 ARCHER_BACKHOP_DURATION_MS = 360
 ARCHER_BACKHOP_HEIGHT = 12
 ARCHER_ATTACK_DURATION_MS = 320
+ARCHER_HURT_DURATION_MS = 320
 ARCHER_DEATH_FRAME_MS = 90
 ARCHER_DEATH_DURATION_MS = (
     ARCHER_FRAME_COUNT * ARCHER_DEATH_FRAME_MS
@@ -71,6 +72,16 @@ def _archer_direction(enemy):
         return _archer_attack_direction(enemy)
 
     return _archer_movement_direction(enemy)
+
+
+def _archer_hurt_direction(enemy):
+    if enemy.hit_origin is None:
+        return _archer_direction(enemy)
+
+    return _direction_from_delta(
+        enemy.hit_origin[0] - enemy.column,
+        enemy.hit_origin[1] - enemy.row,
+    )
 
 
 def _archer_is_backhop(enemy):
@@ -221,7 +232,6 @@ def archer_sprite(
     visual_seed,
 ):
     direction = _archer_direction(enemy)
-
     if enemy.behavior_state is EnemyBehaviorState.DEAD:
         if enemy.death_animation_started_at < 0:
             frame_index = ARCHER_FRAME_COUNT - 1
@@ -240,6 +250,31 @@ def archer_sprite(
             (
                 f"enemy_archer_death_"
                 f"{direction}_{frame_index}"
+            )
+        ]
+
+    hurt_elapsed = (
+        current_time
+        - enemy.hit_animation_started_at
+    )
+
+    if (
+        enemy.hit_damage > 0
+        and not enemy.hit_dodged
+        and 0 <= hurt_elapsed < ARCHER_HURT_DURATION_MS
+    ):
+        hurt_direction = _archer_hurt_direction(
+            enemy,
+        )
+        frame_index = _archer_action_frame(
+            hurt_elapsed,
+            ARCHER_HURT_DURATION_MS,
+        )
+
+        return assets[
+            (
+                f"enemy_archer_hurt_"
+                f"{hurt_direction}_{frame_index}"
             )
         ]
 

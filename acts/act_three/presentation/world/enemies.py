@@ -1,5 +1,10 @@
 import pygame
 
+from acts.act_three.enemies import LANTERN_WARDEN_TYPE
+from acts.act_three.presentation.enemies.lantern_warden import (
+    draw_lantern_warden,
+)
+from logic import get_enemy_occupied_positions
 from acts.act_three.presentation.actors import (
     _draw_enemy_movement_effects,
     _enemy_sprite,
@@ -37,31 +42,30 @@ def draw_world_enemies(
     current_time,
 ):
     floor = context.floor
-    living_enemies = [
+    visible_enemies = [
         enemy
         for enemy in floor.enemies
-        if (
-            enemy.health > 0
-            and (enemy.column, enemy.row) in floor.visible_cells
-        )
+        if get_enemy_occupied_positions(enemy) & floor.visible_cells
+    ]
+    living_enemies = [
+        enemy
+        for enemy in visible_enemies
+        if enemy.health > 0
     ]
     rendered_enemies = [
         enemy
-        for enemy in floor.enemies
+        for enemy in visible_enemies
         if (
-            (enemy.column, enemy.row) in floor.visible_cells
-            and (
-                enemy.health > 0
-                or (
-                    enemy.type
-                    in ("archer", "brute", "priest", "sentinel")
-                    and enemy.behavior_state
-                    is EnemyBehaviorState.DEAD
-                )
-                or _enemy_hit_feedback_active(
-                    enemy,
-                    current_time,
-                )
+            enemy.health > 0
+            or (
+                enemy.type
+                in ("archer", "brute", "priest", "sentinel")
+                and enemy.behavior_state
+                is EnemyBehaviorState.DEAD
+            )
+            or _enemy_hit_feedback_active(
+                enemy,
+                current_time,
             )
         )
     ]
@@ -119,8 +123,21 @@ def draw_world_enemies(
 
     for enemy in sorted(
         rendered_enemies,
-        key=lambda living_enemy: living_enemy.row,
+        key=lambda living_enemy: (
+            living_enemy.row
+            + living_enemy.footprint_height
+            - 1
+        ),
     ):
+        if enemy.type == LANTERN_WARDEN_TYPE:
+            draw_lantern_warden(
+                context,
+                assets,
+                enemy,
+                current_time,
+            )
+            continue
+
         enemy_world_position = _enemy_world_position(
             enemy,
             current_time,

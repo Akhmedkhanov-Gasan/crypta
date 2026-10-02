@@ -1,7 +1,10 @@
 from acts.act_three.presentation.enemies.brute import (
     BRUTE_DIRECTIONS,
 )
-
+from acts.act_three.presentation.enemies.lantern_warden import (
+    LANTERN_WARDEN_DIRECTIONS,
+    LANTERN_WARDEN_FRAME_COUNT,
+)
 
 def _load_directional_animation(
     assets,
@@ -61,6 +64,7 @@ def _load_archer_assets(
         "walk",
         "attack",
         "backhop",
+        "hurt",
         "death",
     ):
         _load_directional_animation(
@@ -116,6 +120,7 @@ def _load_brute_assets(
         "walk",
         "attack",
         "hurt",
+        "death",
     ):
         _load_directional_animation(
             assets,
@@ -126,16 +131,6 @@ def _load_brute_assets(
             8,
             tile_size,
             image_loader,
-        )
-
-    for frame_index in range(2):
-        assets[
-            f"enemy_brute_death_{frame_index}"
-        ] = image_loader(
-            enemy_directory
-            / "death"
-            / f"death_{frame_index:02d}.png",
-            (tile_size, tile_size),
         )
 
 
@@ -201,6 +196,17 @@ def load_enemy_animation_assets(
         assets,
         enemies_directory,
         tile_size,
+        image_loader,
+    )
+
+    _load_directional_animation(
+        assets,
+        enemies_directory / "lantern_warden",
+        "lantern_warden",
+        "idle",
+        LANTERN_WARDEN_DIRECTIONS,
+        LANTERN_WARDEN_FRAME_COUNT,
+        tile_size * 2,
         image_loader,
     )
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 import random
 
 from enemies import ENEMY_TYPES
+from logic import get_enemy_occupied_positions
 
 from acts.act_three.settings import (
     ACT_THREE_ENCOUNTER_SETTINGS,
@@ -24,10 +25,26 @@ def _reserved_positions(floor):
         floor["stairs"],
     }
 
-    positions.update(
-        enemy["position"]
-        for enemy in floor["enemies"]
-    )
+    for enemy in floor["enemies"]:
+        column, row = enemy["position"]
+        config = ENEMY_TYPES[enemy["type"]]
+
+        positions.update(
+            get_enemy_occupied_positions(
+                {
+                    "column": column,
+                    "row": row,
+                    "footprint_width": config.get(
+                        "footprint_width",
+                        1,
+                    ),
+                    "footprint_height": config.get(
+                        "footprint_height",
+                        1,
+                    ),
+                }
+            )
+        )
     positions.update(
         chest["position"]
         for chest in floor["chests"]

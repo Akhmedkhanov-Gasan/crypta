@@ -1032,6 +1032,9 @@ def move_enemy_toward_cell(
     occupied_positions,
     barriers=(),
     hazard_costs=None,
+    *,
+    step_validator=None,
+    destination_test=None,
 ):
     if hazard_costs is None:
         hazard_costs = {}
@@ -1045,12 +1048,18 @@ def move_enemy_toward_cell(
         target_row,
     )
 
-    if start_position == target_position:
+    def reached_destination(position):
+        if destination_test is not None:
+            return destination_test(position)
+        return position == target_position
+
+    if reached_destination(start_position):
         return start_position
 
     positions_to_visit = [(0, start_position)]
     path_costs = {start_position: 0}
     previous_position = {start_position: None}
+    destination = None
 
     while positions_to_visit:
         current_cost, current_position = heapq.heappop(
@@ -1060,7 +1069,8 @@ def move_enemy_toward_cell(
         if current_cost != path_costs[current_position]:
             continue
 
-        if current_position == target_position:
+        if reached_destination(current_position):
+            destination = current_position
             break
 
         current_column, current_row = current_position
@@ -1088,6 +1098,15 @@ def move_enemy_toward_cell(
             ):
                 continue
 
+            if (
+                step_validator is not None
+                and not step_validator(
+                    current_position,
+                    next_position,
+                )
+            ):
+                continue
+
             next_cost = (
                 current_cost
                 + 1
@@ -1107,10 +1126,10 @@ def move_enemy_toward_cell(
                 (next_cost, next_position),
             )
 
-    if target_position not in previous_position:
+    if destination is None:
         return start_position
 
-    next_step = target_position
+    next_step = destination
 
     while previous_position[next_step] != start_position:
         next_step = previous_position[next_step]

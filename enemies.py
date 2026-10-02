@@ -18,6 +18,7 @@ from settings import (
     MIMIC_COLOR,
     SLEEPING_MIMIC_COLOR,
 )
+from acts.act_three.enemies import ACT_THREE_ENEMY_TYPES
 
 
 ENEMY_TYPES = {
@@ -194,3 +195,4 @@ ENEMY_TYPES = {
         "projectile_cooldown": 1,
     },
 }
+ENEMY_TYPES.update(ACT_THREE_ENEMY_TYPES)

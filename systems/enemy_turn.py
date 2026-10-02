@@ -219,6 +219,7 @@ def resolve_enemy_turn(
     rogue_ability_activated: bool,
     hazard_costs: dict[tuple[int, int], int] | None = None,
     goblin_summoning_enabled: bool = False,
+    enemy_turn_handlers=None,
 ) -> None:
     if hazard_costs is None:
         hazard_costs = {}
@@ -775,7 +776,21 @@ def resolve_enemy_turn(
             for crate in game_state.floor.breakable_crates
             if not crate.is_broken
         )
+        turn_handler = (
+            enemy_turn_handlers.get(enemy.type)
+            if enemy_turn_handlers is not None
+            else None
+        )
 
+        if turn_handler is not None:
+            turn_handler(
+                game_state,
+                enemy,
+                occupied_positions,
+                attack_blocking_positions,
+                hazard_costs,
+            )
+            continue
         if _familiar_is_preferred_target(game_state, enemy):
             enemy.is_aggro = True
             enemy.behavior_state = EnemyBehaviorState.CHASING

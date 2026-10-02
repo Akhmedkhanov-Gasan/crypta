@@ -12,8 +12,7 @@ BRUTE_DIRECTIONS = (
     "right",
     "up",
 )
-BRUTE_DEATH_IMPACT_HOLD_MS = 190
-BRUTE_DEATH_COLLAPSE_END_MS = 850
+BRUTE_DEATH_FRAME_MS = 170
 
 
 def _direction_from_delta(
@@ -162,22 +161,24 @@ def brute_sprite(
 
     if enemy.behavior_state is EnemyBehaviorState.DEAD:
         if enemy.death_animation_started_at < 0:
-            return assets["enemy_brute_death_1"]
+            frame_index = BRUTE_FRAME_COUNT - 1
+        else:
+            death_elapsed = max(
+                0,
+                current_time
+                - enemy.death_animation_started_at,
+            )
+            frame_index = min(
+                BRUTE_FRAME_COUNT - 1,
+                death_elapsed // BRUTE_DEATH_FRAME_MS,
+            )
 
-        death_elapsed = (
-            current_time
-            - enemy.death_animation_started_at
-        )
-
-        if death_elapsed < BRUTE_DEATH_IMPACT_HOLD_MS:
-            return assets[
-                f"enemy_brute_idle_{direction}_0"
-            ]
-
-        if death_elapsed < BRUTE_DEATH_COLLAPSE_END_MS:
-            return assets["enemy_brute_death_0"]
-
-        return assets["enemy_brute_death_1"]
+        return assets[
+            (
+                f"enemy_brute_death_"
+                f"{direction}_{frame_index}"
+            )
+        ]
 
     hurt_elapsed = (
         current_time

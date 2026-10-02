@@ -93,10 +93,12 @@ def move_toward_player(
     enemy: EnemyState,
     occupied_positions: set[tuple[int, int]],
     hazard_costs: dict[tuple[int, int], int],
+    *,
+    movement_resolver=move_enemy,
 ) -> None:
     floor = game_state.floor
     previous_position = (enemy.column, enemy.row)
-    enemy.column, enemy.row = move_enemy(
+    enemy.column, enemy.row = movement_resolver(
         floor.map,
         enemy,
         floor.player_column,
