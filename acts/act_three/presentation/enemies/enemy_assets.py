@@ -199,16 +199,17 @@ def load_enemy_animation_assets(
         image_loader,
     )
 
-    _load_directional_animation(
-        assets,
-        enemies_directory / "lantern_warden",
-        "lantern_warden",
-        "idle",
-        LANTERN_WARDEN_DIRECTIONS,
-        LANTERN_WARDEN_FRAME_COUNT,
-        tile_size * 2,
-        image_loader,
-    )
+    for action in ("idle", "walk", "attack", "hurt", "death"):
+        _load_directional_animation(
+            assets,
+            enemies_directory / "lantern_warden",
+            "lantern_warden",
+            action,
+            LANTERN_WARDEN_DIRECTIONS,
+            LANTERN_WARDEN_FRAME_COUNT,
+            tile_size * 2,
+            image_loader,
+        )
 
     for enemy_type in (
         "priest",

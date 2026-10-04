@@ -13,7 +13,10 @@ from acts.act_three.presentation.targeting import (
 )
 from acts.act_three.presentation.view import _view_position
 from presentation.layout import ACT_THREE_TILE_SIZE
-
+from acts.act_three.enemies import LANTERN_WARDEN_TYPE
+from acts.act_three.presentation.enemies.lantern_warden.lantern_warden_combat import (
+    draw_warden_telegraph,
+)
 
 def draw_world_targeting(
     context,
@@ -100,12 +103,13 @@ def draw_world_targeting(
         )
 
 
-def draw_world_attack_markers(context, game_state):
+def draw_world_attack_markers(context, game_state, current_time):
     attack_positions = [
         position
         for enemy in context.floor.enemies
         if (
             enemy.health > 0
+            and enemy.type != LANTERN_WARDEN_TYPE
             and not (
                 enemy.type == "sentinel"
                 and enemy.prepared_attack_mode == "shield_bash"
@@ -120,10 +124,16 @@ def draw_world_attack_markers(context, game_state):
         context.camera_y,
         (190, 48, 45),
     )
-    _draw_tile_markers(
-        context.view_surface,
-        game_state.player_attack_targets,
-        context.camera_x,
-        context.camera_y,
-        (210, 152, 42),
-    )
+
+    for enemy in context.floor.enemies:
+        if (
+            enemy.health > 0
+            and enemy.type == LANTERN_WARDEN_TYPE
+            and enemy.attack_targets
+        ):
+            draw_warden_telegraph(
+                context,
+                enemy,
+                current_time,
+                ACT_THREE_TILE_SIZE,
+            )

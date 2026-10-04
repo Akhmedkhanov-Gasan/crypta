@@ -215,7 +215,11 @@ def _draw_act_three_world(
             ACT_THREE_TILE_SIZE,
         )
 
-    draw_world_attack_markers(context, game_state)
+    draw_world_attack_markers(
+        context,
+        game_state,
+        current_time,
+    )
 
     draw_world_enemies(
         context,

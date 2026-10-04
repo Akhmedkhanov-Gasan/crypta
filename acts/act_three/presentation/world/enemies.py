@@ -57,6 +57,7 @@ def draw_world_enemies(
         for enemy in visible_enemies
         if (
             enemy.health > 0
+            or enemy.type == LANTERN_WARDEN_TYPE
             or (
                 enemy.type
                 in ("archer", "brute", "priest", "sentinel")

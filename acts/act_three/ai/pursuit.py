@@ -19,6 +19,8 @@ def _move_toward_player_with_footprint(
     occupied_positions,
     barriers=(),
     hazard_costs=None,
+    *,
+    destination_test=None,
 ):
     offsets = get_enemy_occupied_positions(
         {
@@ -40,6 +42,9 @@ def _move_toward_player_with_footprint(
         }
 
     def reached_player(position):
+        if destination_test is not None:
+            return destination_test(position)
+
         return any(
             positions_are_adjacent(
                 column,
