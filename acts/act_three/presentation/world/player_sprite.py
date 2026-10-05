@@ -2,6 +2,9 @@ from acts.act_three.presentation.animation import (
     _idle_frame,
     _stable_text_seed,
 )
+from acts.act_three.presentation.paladin.animation import (
+    paladin_idle_frame,
+)
 from acts.act_three.presentation.warlock import (
     warlock_curse_sprite,
     warlock_demon_idle_sprite,
@@ -330,7 +333,12 @@ def _attack_sprite(
     attack_elapsed,
     attack_frame_duration,
 ):
-    if player_subclass in ("assassin", "berserker", "warlock"):
+    if player_subclass in (
+        "assassin",
+        "berserker",
+        "warlock",
+        "paladin",
+    ):
         direction = assassin_attack_direction(
             player.facing_direction
         )
@@ -370,6 +378,15 @@ def _idle_sprite(
     assets,
     current_time,
 ):
+    if player_subclass == "paladin":
+        direction = assassin_walk_direction(
+            player.facing_direction
+        )
+        frame = paladin_idle_frame(current_time)
+        return assets[
+            f"player_paladin_idle_{direction}_{frame}"
+        ]
+
     if player_subclass == "assassin":
         player_frame = assassin_idle_frame(current_time)
     elif player_subclass == "berserker":

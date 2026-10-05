@@ -2,6 +2,10 @@ import math
 
 import pygame
 
+from acts.act_three.presentation.paladin.attack_effects import (
+    draw_paladin_attack_effects,
+)
+
 from acts.act_three.presentation.world.context import (
     create_world_render_context,
 )
@@ -1166,6 +1170,16 @@ def _draw_act_three_world(
     ):
         game_state.player.teleport_camera_origin = None
         game_state.player.teleport_transition_started_at = 0
+
+    draw_paladin_attack_effects(
+        view_surface,
+        game_state.player,
+        player_position,
+        game_state.player_attack_targets,
+        camera_x,
+        camera_y,
+        current_time,
+    )
 
     if (
         player_subclass in ("assassin", "archer", "warlock")

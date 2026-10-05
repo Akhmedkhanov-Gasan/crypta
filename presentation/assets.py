@@ -1,4 +1,7 @@
 import pygame
+from acts.act_three.presentation.awakening_assets import (
+    load_act_three_transition_assets,
+)
 from acts.act_three.presentation.hud import (
     load_act_three_hud_assets,
 )
@@ -11,6 +14,9 @@ from acts.act_three.presentation.player_assets import (
     load_assassin_animation_assets,
     load_berserker_animation_assets,
     load_warlock_animation_assets,
+)
+from acts.act_three.presentation.paladin.animation import (
+    load_paladin_animation_assets,
 )
 from acts.act_three.presentation.enemies import (
     load_enemy_animation_assets,
@@ -1045,126 +1051,6 @@ def load_act_two_sprites():
     return sprites
 
 
-def _scale_to_width(source, target_width):
-    source_width, source_height = source.get_size()
-    target_height = round(
-        source_height * target_width / source_width
-    )
-    return pygame.transform.smoothscale(
-        source,
-        (target_width, target_height),
-    )
-
-
-def load_act_three_transition_assets():
-    player_directory = ASSET_ROOT / "act_3" / "player"
-    ui_directory = ASSET_ROOT / "ui" / "act_3"
-    berserker_path = (
-        player_directory
-        / "berserker"
-        / "idle"
-        / "idle_00_original.png"
-    )
-    paladin_path = (
-        player_directory
-        / "paladin"
-        / "idle"
-        / "idle_00_original.png"
-    )
-    assassin_path = (
-        player_directory
-        / "assassin"
-        / "idle"
-        / "idle_00_original.png"
-    )
-    archer_path = (
-        player_directory
-        / "archer"
-        / "idle"
-        / "idle_00_original.png"
-    )
-    warlock_path = (
-        player_directory
-        / "warlock"
-        / "idle"
-        / "idle_down"
-        / "idle_down_01.png"
-    )
-    summoner_path = (
-        player_directory
-        / "summoner"
-        / "idle"
-        / "idle_00_original.png"
-    )
-    background_source = resources.load_image(
-        str(ui_directory / "awakening_background_v2.png")
-    ).convert()
-    background_width = round(GAME_WIDTH * 1.12)
-    hands_width = GAME_WIDTH
-
-    assets = {
-        "background": _scale_to_width(
-            background_source,
-            background_width,
-        ),
-        "berserker_portrait": pygame.transform.smoothscale(
-            resources.load_image(
-                str(berserker_path)
-            ).convert_alpha(),
-            (230, 230),
-        ),
-        "paladin_portrait": pygame.transform.smoothscale(
-            resources.load_image(
-                str(paladin_path)
-            ).convert_alpha(),
-            (230, 230),
-        ),
-        "assassin_portrait": pygame.transform.smoothscale(
-            resources.load_image(
-                str(assassin_path)
-            ).convert_alpha(),
-            (230, 230),
-        ),
-        "archer_portrait": pygame.transform.smoothscale(
-            resources.load_image(
-                str(archer_path)
-            ).convert_alpha(),
-            (230, 230),
-        ),
-        "warlock_portrait": pygame.transform.smoothscale(
-            resources.load_image(
-                str(warlock_path)
-            ).convert_alpha(),
-            (230, 230),
-        ),
-        "summoner_portrait": pygame.transform.smoothscale(
-            resources.load_image(
-                str(summoner_path)
-            ).convert_alpha(),
-            (230, 230),
-        ),
-    }
-
-    for player_class in ("warrior", "rogue", "mage"):
-        for pose in ("open", "clenched"):
-            hands = _scale_to_width(
-                resources.load_image(
-                    str(
-                        ui_directory
-                        / f"{player_class}_hands_{pose}.png"
-                    )
-                ).convert_alpha(),
-                hands_width,
-            )
-            hands.fill(
-                (185, 190, 200, 255),
-                special_flags=pygame.BLEND_RGBA_MULT,
-            )
-            assets[f"{player_class}_hands_{pose}"] = hands
-
-    return assets
-
-
 def _load_scaled_image(path, size, use_alpha=True):
     source = resources.load_image(str(path))
     source = (
@@ -1350,7 +1236,6 @@ def load_act_three_gameplay_assets():
     )
 
     for subclass in (
-        "paladin",
         "archer",
         "summoner",
     ):
@@ -1382,6 +1267,12 @@ def load_act_three_gameplay_assets():
         _load_pixel_scaled_image,
     )
     load_warlock_animation_assets(
+        assets,
+        act_directory,
+        tile_size,
+        _load_pixel_scaled_image,
+    )
+    load_paladin_animation_assets(
         assets,
         act_directory,
         tile_size,
@@ -1506,18 +1397,6 @@ def load_act_three_gameplay_assets():
             )
         )
 
-    paladin_walk_directory = (
-        act_directory / "player" / "paladin" / "walk"
-    )
-    for frame_index in range(2):
-        assets[f"player_paladin_walk_{frame_index}"] = (
-            _load_pixel_scaled_image(
-                paladin_walk_directory
-                / f"walk_{frame_index:02d}.png",
-                (tile_size, tile_size),
-            )
-        )
-
     summoner_walk_directory = (
         act_directory / "player" / "summoner" / "walk"
     )
@@ -1577,14 +1456,6 @@ def load_act_three_gameplay_assets():
             / "barrage_zone_cell.png",
             (tile_size, tile_size),
         )
-    )
-    assets["player_paladin_attack"] = _load_pixel_scaled_image(
-        act_directory
-        / "player"
-        / "paladin"
-        / "attack"
-        / "attack_00.png",
-        (tile_size, tile_size),
     )
     assets["player_paladin_shield_charge"] = (
         _load_pixel_scaled_image(

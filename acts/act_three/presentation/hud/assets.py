@@ -92,21 +92,18 @@ _ART_RECTS = {
     ),
 }
 
+_PLAYER_DIRECTORY = ASSET_ROOT / "act_3" / "player"
+
 _PORTRAIT_PATHS = {
-    "assassin": (
-        ASSET_ROOT
-        / "act_3"
-        / "player"
-        / "assassin"
-        / "portrait.png"
-    ),
-    "berserker": (
-        ASSET_ROOT
-        / "act_3"
-        / "player"
-        / "berserker"
-        / "portrait.png"
-    ),
+    subclass: _PLAYER_DIRECTORY / subclass / filename
+    for subclass, filename in (
+        ("assassin", "portrait.png"),
+        ("berserker", "portrait.png"),
+        ("paladin", "portrait.png"),
+        ("archer", "portrait.png",),
+        ("warlock", "portrait.png"),
+        ("summoner", "portrait.png"),
+    )
 }
 
 

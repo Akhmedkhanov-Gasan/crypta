@@ -247,7 +247,7 @@ def locomotion_sprite(assets, player, pose):
     subclass = player.subclass
     direction = assassin_walk_direction(player.facing_direction)
 
-    if subclass in ("assassin", "berserker"):
+    if subclass in ("assassin", "berserker", "paladin"):
         return assets[
             f"player_{subclass}_walk_{direction}_{pose.frame(8)}"
         ]
