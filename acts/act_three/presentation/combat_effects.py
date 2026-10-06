@@ -157,13 +157,41 @@ def record_player_hit_feedback(game_state, started_at):
         game_state.events,
         started_at,
     )
-    if any(
-        event.type is GameEventType.ABILITY
-        and event.actor == "hero"
-        and event.data.get("ability") == "impact_block"
-        for event in game_state.events
-    ):
-        game_state.player.impact_block_started_at = started_at
+    block_event = next(
+        (
+            event
+            for event in reversed(game_state.events)
+            if (
+                event.type is GameEventType.ABILITY
+                and event.actor == "hero"
+                and event.data.get("ability") == "impact_block"
+            )
+        ),
+        None,
+    )
+
+    if block_event is not None:
+        player = game_state.player
+        player.impact_block_started_at = started_at
+        player.impact_block_direction = player.facing_direction
+
+        if block_event.origin is not None:
+            destination = block_event.destination or (
+                game_state.floor.player_column,
+                game_state.floor.player_row,
+            )
+            dx = block_event.origin[0] - destination[0]
+            dy = block_event.origin[1] - destination[1]
+
+            if dx or dy:
+                player.impact_block_direction = (
+                    (1 if dx > 0 else -1, 0)
+                    if abs(dx) >= abs(dy)
+                    else (0, 1 if dy > 0 else -1)
+                )
+
+        if player.subclass == "paladin" and player.health > 0:
+            player.facing_direction = player.impact_block_direction
 
     hit_events = [
         event

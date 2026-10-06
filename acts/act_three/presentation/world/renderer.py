@@ -5,7 +5,9 @@ import pygame
 from acts.act_three.presentation.paladin.attack_effects import (
     draw_paladin_attack_effects,
 )
-
+from acts.act_three.presentation.paladin.block import (
+    draw_player_block_effect,
+)
 from acts.act_three.presentation.world.context import (
     create_world_render_context,
 )
@@ -727,9 +729,7 @@ def _draw_act_three_world(
             current_time,
         )
 
-    from presentation.world import draw_impact_block_effect
-
-    draw_impact_block_effect(
+    draw_player_block_effect(
         view_surface,
         game_state.player,
         (
@@ -738,6 +738,7 @@ def _draw_act_three_world(
         ),
         current_time,
         ACT_THREE_TILE_SIZE,
+        fonts["sidebar_numbers"],
     )
 
     if (

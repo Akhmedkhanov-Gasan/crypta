@@ -1305,29 +1305,6 @@ def load_act_three_gameplay_assets():
             )
         )
 
-    assets["player_paladin_hurt"] = (
-        _load_pixel_scaled_image(
-            act_directory
-            / "player"
-            / "paladin"
-            / "hurt"
-            / "hurt_00.png",
-            (tile_size, tile_size),
-        )
-    )
-
-    paladin_death_directory = (
-        act_directory / "player" / "paladin" / "death"
-    )
-    for frame_index in range(2):
-        assets[f"player_paladin_death_{frame_index}"] = (
-            _load_pixel_scaled_image(
-                paladin_death_directory
-                / f"death_{frame_index:02d}.png",
-                (tile_size, tile_size),
-            )
-        )
-
     old_man_appearance_directory = (
         act_directory / "npcs" / "old_man" / "appearance"
     )

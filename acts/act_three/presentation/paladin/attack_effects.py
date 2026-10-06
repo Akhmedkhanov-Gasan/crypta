@@ -14,14 +14,17 @@ from acts.act_three.presentation.player_motion import (
 from acts.act_three.presentation.view import (
     _view_position,
 )
+from acts.act_three.presentation.paladin.block import (
+    paladin_block_frame,
+)
 from presentation.layout import ACT_THREE_TILE_SIZE
 
 
-_DIRECTION_ANGLES = {
-    "right": 0.0,
-    "down": math.pi / 2,
-    "left": math.pi,
-    "up": -math.pi / 2,
+_SWING_ANGLES = {
+    "right": (-0.95, 0.95),
+    "left": (math.pi + 0.95, math.pi - 0.95),
+    "up": (-math.pi / 2 - 0.95, -math.pi / 2 + 0.95),
+    "down": (math.pi / 2 - 0.9, math.pi / 2 + 0.9),
 }
 
 
@@ -37,6 +40,9 @@ def draw_paladin_attack_effects(
     if player.subclass != "paladin" or player.health <= 0:
         return
 
+    if paladin_block_frame(player, current_time) is not None:
+        return
+
     started_at = player.attack_animation_started_at
     elapsed = current_time - started_at
 
@@ -44,8 +50,12 @@ def draw_paladin_attack_effects(
         return
 
     progress = elapsed / _ATTACK_FRAME_DURATION_MS
-    swing = max(0.0, min(1.0, (progress - 0.15) / 0.85))
-    visibility = math.sin(math.pi * swing)
+    swing = max(0.0, min(1.0, (progress - 0.5) / 0.375))
+    visibility = (
+        math.sin(math.pi * swing)
+        if 0.0 < swing < 1.0
+        else 0.0
+    )
 
     if visibility > 0:
         tile_size = ACT_THREE_TILE_SIZE
@@ -55,9 +65,14 @@ def draw_paladin_attack_effects(
         direction = assassin_attack_direction(
             player.facing_direction
         )
-        angle = _DIRECTION_ANGLES[direction]
-        leading_angle = angle - 0.9 + swing * 1.8
-        trail_length = 0.25 + visibility * 0.7
+        start_angle, end_angle = _SWING_ANGLES[direction]
+        angle_delta = end_angle - start_angle
+        swing_direction = 1.0 if angle_delta > 0 else -1.0
+        leading_angle = start_angle + angle_delta * swing
+        trail_length = min(
+            abs(angle_delta) * swing,
+            0.25 + visibility * 0.7,
+        )
 
         effect = pygame.Surface(
             (effect_size, effect_size),
@@ -68,8 +83,9 @@ def draw_paladin_attack_effects(
         for index in range(21):
             point_angle = (
                 leading_angle
-                - trail_length
-                + trail_length * index / 20
+                - swing_direction
+                * trail_length
+                * (1.0 - index / 20)
             )
             points.append(
                 (

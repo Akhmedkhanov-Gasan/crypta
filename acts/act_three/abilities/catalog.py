@@ -122,12 +122,11 @@ SUBCLASS_DEFINITIONS = {
         id="paladin",
         parent_class="warrior",
         passive=PassiveDefinition(
-            id="hold_the_line",
-            name="HOLD THE LINE",
+            id="paladin_guard",
+            name="DARK AEGIS",
             icon_asset="act_three_paladin_passive",
             description=(
-                "Remain in place to brace\n"
-                "against the next direct hit."
+                "25% chance to fully block attacks."
             ),
         ),
         abilities={

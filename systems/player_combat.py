@@ -2,6 +2,9 @@ import random
 from collections.abc import Callable
 from math import ceil
 
+from acts.act_three.combat.paladin import (
+    add_paladin_block_chance,
+)
 from acts.act_two.ability_scaling import (
     mage_basic_attack_damage_bonus,
     rogue_ambush_damage_bonus,
@@ -93,15 +96,31 @@ def try_block_enemy_attack(
     attacker_position: tuple[int, int] | None = None,
 ) -> bool:
     player = game_state.player
-    if (
-        player.health <= 0
-        or player.player_class != "warrior"
-        or player.selected_rune_id != "rune_of_impact"
-    ):
+
+    if player.health <= 0:
         return False
 
-    if random.random() >= WARRIOR_IMPACT_BLOCK_CHANCE:
+    rune_chance = (
+        WARRIOR_IMPACT_BLOCK_CHANCE
+        if (
+            player.player_class == "warrior"
+            and player.selected_rune_id == "rune_of_impact"
+        )
+        else 0.0
+    )
+    block_chance = add_paladin_block_chance(
+        player,
+        rune_chance,
+    )
+
+    if block_chance <= 0 or random.random() >= block_chance:
         return False
+
+    source = (
+        "paladin_guard"
+        if player.subclass == "paladin"
+        else "rune_of_impact"
+    )
 
     game_state.emit(
         GameEvent(
@@ -115,13 +134,20 @@ def try_block_enemy_attack(
             ),
             data={
                 "ability": "impact_block",
-                "source": "rune_of_impact",
+                "source": source,
+                "block_chance": block_chance,
             },
         )
     )
+
+    defender = (
+        "Paladin"
+        if player.subclass == "paladin"
+        else "Rune of Impact"
+    )
     add_log_message(
         game_state.combat_log,
-        f"Rune of Impact blocks {attacker_name}'s attack.",
+        f"{defender} blocks {attacker_name}'s attack.",
         category="defense",
     )
     return True

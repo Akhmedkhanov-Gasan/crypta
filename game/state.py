@@ -401,6 +401,7 @@ class PlayerState:
     invisibility_turns: int = 0
     selected_rune_id: str | None = None
     impact_block_started_at: int = -1
+    impact_block_direction: tuple[int, int] = (0, 1)
     veil_triggered_this_turn: bool = False
     directional_ability_aiming: bool = False
     potion_effect_started_at: int = 0
