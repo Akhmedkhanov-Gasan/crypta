@@ -17,6 +17,10 @@ from acts.act_three.presentation.world.enemies import (
 from acts.act_three.presentation.world.player_state import (
     create_player_render_state,
 )
+from acts.act_three.presentation.paladin.shield_charge import (
+    draw_shield_charge_effect,
+    shield_charge_motion_progress,
+)
 from acts.act_three.presentation.world.player_sprite import (
     select_player_sprite,
 )
@@ -72,7 +76,7 @@ from acts.act_three.settings import (
     BERSERKER_CRUSHING_LEAP_IMPACT_MS,
     BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
     PALADIN_HOLY_HAND_EFFECT_MS,
-    PALADIN_SHIELD_CHARGE_TRAVEL_MS,
+    PALADIN_SHIELD_CHARGE_TOTAL_MS,
     BERSERKER_LAST_RAGE_ANIMATION_MS,
 )
 from settings import HEALTH_BAR_COLOR
@@ -619,20 +623,26 @@ def _draw_act_three_world(
         shield_charge_active
         and shield_charge_start_position is not None
     ):
-        for lag, alpha in (
-            (0.09, 125),
-            (0.18, 78),
-            (0.28, 38),
+        draw_shield_charge_effect(
+            view_surface,
+            shield_charge_start_position,
+            leap_end_position,
+            player_position,
+            shield_charge_elapsed,
+            ACT_THREE_TILE_SIZE,
+        )
+
+        for delay, alpha in (
+            (70, 135),
+            (145, 82),
+            (225, 38),
         ):
-            ghost_progress = max(
-                0,
-                shield_charge_progress - lag,
+            ghost_progress = shield_charge_motion_progress(
+                shield_charge_elapsed - delay
             )
-            ghost_eased_progress = (
-                ghost_progress
-                * ghost_progress
-                * (3 - 2 * ghost_progress)
-            )
+            if ghost_progress <= 0:
+                continue
+
             ghost_position = (
                 round(
                     shield_charge_start_position[0]
@@ -640,7 +650,7 @@ def _draw_act_three_world(
                         leap_end_position[0]
                         - shield_charge_start_position[0]
                     )
-                    * ghost_eased_progress
+                    * ghost_progress
                 ),
                 round(
                     shield_charge_start_position[1]
@@ -648,12 +658,12 @@ def _draw_act_three_world(
                         leap_end_position[1]
                         - shield_charge_start_position[1]
                     )
-                    * ghost_eased_progress
+                    * ghost_progress
                 ),
             )
             ghost_sprite = player_sprite.copy()
             ghost_sprite.fill(
-                (72, 49, 8),
+                (73, 46, 17),
                 special_flags=pygame.BLEND_RGB_ADD,
             )
             ghost_sprite.set_alpha(alpha)
@@ -1055,7 +1065,7 @@ def _draw_act_three_world(
         and shield_charge_origin is not None
         and shield_charge_started_at > 0
         and shield_charge_elapsed
-        >= PALADIN_SHIELD_CHARGE_TRAVEL_MS
+        >= PALADIN_SHIELD_CHARGE_TOTAL_MS
     ):
         game_state.player.paladin_shield_charge_origin = None
         game_state.player.paladin_shield_charge_started_at = 0

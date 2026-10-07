@@ -14,7 +14,7 @@ from acts.act_three.settings import (
     BERSERKER_CRUSHING_LEAP_IMPACT_MS,
     BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
     BERSERKER_LAST_RAGE_ANIMATION_MS,
-    PALADIN_SHIELD_CHARGE_TRAVEL_MS,
+    PALADIN_SHIELD_CHARGE_TOTAL_MS,
 )
 
 
@@ -121,7 +121,7 @@ def create_player_render_state(
         and shield_charge_started_at > 0
         and 0
         <= shield_charge_elapsed
-        < PALADIN_SHIELD_CHARGE_TRAVEL_MS
+        < PALADIN_SHIELD_CHARGE_TOTAL_MS
     )
 
     shadow_step_elapsed = current_time - transition_started_at

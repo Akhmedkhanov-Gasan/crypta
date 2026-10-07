@@ -2279,10 +2279,9 @@ def main():
                     and player_tried_to_move
                 )
                 if (
-                        directional_ability_cast
-                        and current_act == 2
-                        and game_state.player.player_class == "warrior"
-                        and game_state.player.subclass is None
+                    directional_ability_cast
+                    and current_act in (2, 3)
+                    and game_state.player.player_class == "warrior"
                 ):
                     directional_ability_cast = (
                         select_directional_ability_direction(
@@ -2307,6 +2306,14 @@ def main():
                     ability_request = request_class_ability(
                         game_state
                     )
+                    if (
+                        current_act == 3
+                        and game_state.player.player_class
+                        == "warrior"
+                    ):
+                        set_archer_attack_cursor(
+                            game_state.player.directional_ability_aiming
+                        )
                     rogue_ability_activated = (
                         ability_request
                         is AbilityRequestResult.ROGUE_ACTIVATED

@@ -9,6 +9,8 @@ from acts.act_three.settings import (
     ASSASSIN_ULTIMATE_CHARGES,
     BERSERKER_CRUSHING_LEAP_CHARGES,
     BERSERKER_LAST_RAGE_CHARGES,
+    PALADIN_HOLY_SHIELD_CHARGES,
+    PALADIN_SHIELD_CHARGE_CHARGES,
 )
 
 
@@ -20,6 +22,16 @@ _ASSASSIN_CHARGES = {
     "f": (
         "ultimate_charge",
         ASSASSIN_ULTIMATE_CHARGES,
+    ),
+}
+_PALADIN_CHARGES = {
+    "q": (
+        "paladin_shield_charge_charge",
+        PALADIN_SHIELD_CHARGE_CHARGES,
+    ),
+    "f": (
+        "paladin_holy_shield_charge",
+        PALADIN_HOLY_SHIELD_CHARGES,
     ),
 }
 _BERSERKER_CHARGES = {
@@ -36,6 +48,7 @@ _BERSERKER_CHARGES = {
 _SUBCLASS_CHARGES = {
     "assassin": _ASSASSIN_CHARGES,
     "berserker": _BERSERKER_CHARGES,
+    "paladin": _PALADIN_CHARGES,
 }
 
 def get_act_three_ability_charge_state(

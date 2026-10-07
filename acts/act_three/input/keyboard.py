@@ -1,6 +1,13 @@
 import pygame
 
-from application.directional_input import MOVEMENT_KEYS, WAIT_KEYS
+from application.directional_input import (
+    CHORD_MOVEMENT_KEYS,
+    IMMEDIATE_MOVEMENT_KEYS,
+    MOVEMENT_KEYS,
+    WAIT_KEYS,
+    movement_direction_for_key,
+    movement_direction_for_keys,
+)
 from acts.act_three.settings import (
     ASSASSIN_SHADOW_STEP_DURATION_MS,
 )
@@ -14,6 +21,7 @@ from acts.act_three.input.cursors import (
     set_summoner_staff_cursor,
     set_warlock_staff_cursor,
     set_warlock_curse_cursor,
+    set_archer_attack_cursor,
 )
 from acts.act_three.abilities.archer import (
     cancel_archer_barrage_zone,
@@ -37,14 +45,23 @@ from acts.act_three.abilities.berserker import (
 )
 from acts.act_three.abilities.paladin import (
     cancel_paladin_shield_charge,
-    request_paladin_holy_hand,
     request_paladin_holy_shield,
     request_paladin_shield_charge,
+    select_paladin_shield_charge_direction,
+)
+from acts.act_two.abilities import (
+    select_directional_ability_direction,
 )
 from acts.act_three.abilities.summoner import (
     release_summoner_familiar,
     request_summoner_bond,
     request_summoner_true_form,
+)
+from acts.act_two.abilities import (
+    select_directional_ability_direction,
+)
+from systems.player_abilities import (
+    cancel_ability_aiming,
 )
 from acts.act_three.abilities.warlock import (
     cancel_warlock_curse,
@@ -56,10 +73,42 @@ from acts.act_three.settings import (
     ARCHER_LEAP_DURATION_MS,
     BERSERKER_CRUSHING_LEAP_IMPACT_MS,
     BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
-    PALADIN_SHIELD_CHARGE_TRAVEL_MS,
+    PALADIN_SHIELD_CHARGE_TOTAL_MS,
     WARLOCK_DEMON_FORM_TRANSFORM_MS,
     BERSERKER_LAST_RAGE_ANIMATION_MS,
 )
+
+
+def _act_three_aiming_direction(event):
+    event_direction = getattr(
+        event,
+        "movement_direction",
+        None,
+    )
+    if event_direction is not None:
+        return event_direction
+
+    if event.key not in MOVEMENT_KEYS:
+        return None
+
+    if event.key in IMMEDIATE_MOVEMENT_KEYS:
+        return movement_direction_for_key(event.key)
+
+    pressed_keys = pygame.key.get_pressed()
+    held_keys = {
+        key
+        for key in CHORD_MOVEMENT_KEYS
+        if pressed_keys[key]
+    }
+    held_keys.add(event.key)
+
+    direction = movement_direction_for_keys(held_keys)
+    if direction == (0, 0):
+        return movement_direction_for_key(event.key)
+
+    return direction
+
+
 def handle_act_three_key_event(event, game_state):
     if (
         game_state.player.subclass == "warlock"
@@ -87,6 +136,90 @@ def handle_act_three_key_event(event, game_state):
         - game_state.player.berserker_last_rage_started_at
         < BERSERKER_LAST_RAGE_ANIMATION_MS
     ):
+        return True
+    aiming_direction = _act_three_aiming_direction(event)
+
+    if (
+        game_state.player.paladin_shield_charge_aiming
+        and aiming_direction is not None
+    ):
+        previous_target = (
+            game_state.player.paladin_shield_charge_target
+        )
+        target_selected = (
+            select_paladin_shield_charge_direction(
+                game_state,
+                aiming_direction,
+            )
+        )
+        current_target = (
+            game_state.player.paladin_shield_charge_target
+        )
+        set_paladin_shield_charge_cursor(
+            current_target is not None
+        )
+
+        if (
+            target_selected
+            and previous_target is not None
+            and previous_target == current_target
+        ):
+            pygame.event.post(
+                pygame.event.Event(
+                    pygame.KEYDOWN,
+                    key=pygame.K_RETURN,
+                )
+            )
+
+        return True
+
+    if (
+        game_state.player.player_class == "warrior"
+        and game_state.player.directional_ability_aiming
+        and event.key == pygame.K_ESCAPE
+    ):
+        cancel_ability_aiming(game_state)
+        set_archer_attack_cursor()
+        return True
+
+    warrior_direction = movement_direction_for_key(
+        event.key
+    )
+
+    if (
+        game_state.player.player_class == "warrior"
+        and game_state.player.directional_ability_aiming
+        and warrior_direction in (
+            (-1, 0),
+            (1, 0),
+            (0, -1),
+            (0, 1),
+        )
+        and not getattr(
+            event,
+            "confirm_directional_ability",
+            False,
+        )
+    ):
+        direction_confirmed = (
+            select_directional_ability_direction(
+                game_state,
+                warrior_direction[0],
+                warrior_direction[1],
+            )
+        )
+        set_archer_attack_cursor(True)
+
+        if direction_confirmed:
+            pygame.event.post(
+                pygame.event.Event(
+                    pygame.KEYDOWN,
+                    key=event.key,
+                    confirm_directional_ability=True,
+                )
+            )
+            set_archer_attack_cursor()
+
         return True
     if event.key in MOVEMENT_KEYS or event.key in WAIT_KEYS:
         return False
@@ -126,7 +259,7 @@ def handle_act_three_key_event(event, game_state):
         > 0
         and pygame.time.get_ticks()
         - game_state.player.paladin_shield_charge_started_at
-        < PALADIN_SHIELD_CHARGE_TRAVEL_MS
+        < PALADIN_SHIELD_CHARGE_TOTAL_MS
     ):
         return True
 
@@ -222,17 +355,7 @@ def handle_act_three_key_event(event, game_state):
             game_state.player.berserker_crushing_leap_aiming
         )
         return True
-    
-    if (
-        event.key in (pygame.K_1, pygame.K_KP1)
-        and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
-        and game_state.player.subclass == "paladin"
-    ):
-        request_paladin_holy_hand(
-            game_state,
-            pygame.time.get_ticks(),
-        )
-        return True
+
     
     if (
         event.key == pygame.K_q
@@ -282,9 +405,8 @@ def handle_act_three_key_event(event, game_state):
     ):
         request_summoner_true_form(game_state)
         return True
-    
     if (
-        event.key in (pygame.K_2, pygame.K_KP2)
+        event.key == pygame.K_q
         and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
         and game_state.player.subclass == "paladin"
     ):
@@ -293,9 +415,9 @@ def handle_act_three_key_event(event, game_state):
             game_state.player.paladin_shield_charge_aiming
         )
         return True
-    
+
     if (
-        event.key in (pygame.K_3, pygame.K_KP3)
+        event.key == pygame.K_f
         and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
         and game_state.player.subclass == "paladin"
     ):
@@ -384,5 +506,9 @@ def handle_act_three_key_event(event, game_state):
     
     if game_state.player.ultimate_aiming:
         return True
-
+    if game_state.player.paladin_shield_charge_aiming:
+        return event.key not in (
+            pygame.K_RETURN,
+            pygame.K_KP_ENTER,
+        )
     return False

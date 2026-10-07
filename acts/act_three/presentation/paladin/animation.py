@@ -40,6 +40,7 @@ def load_paladin_animation_assets(
         "hurt",
         "death",
         "block",
+        "shield_charge",
     ):
         for direction in ("down", "left", "right", "up"):
             frame_prefix = f"{animation}_{direction}"

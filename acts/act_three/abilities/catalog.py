@@ -139,22 +139,22 @@ SUBCLASS_DEFINITIONS = {
                 ),
                 charge_required=4.0,
                 description=(
-                    "Rush forward, damage enemies in the "
-                    "path and push them aside."
+                    "Rush in a chosen direction, damaging "
+                    "and stunning enemies in the path."
                 ),
             ),
             "e": POWER_CLEAVE,
             "f": AbilityDefinition(
-                id="sacred_ground",
-                name="SACRED GROUND",
+                id="holy_shield",
+                name="HOLY SHIELD",
                 slot="f",
                 icon_asset=(
                     "act_three_paladin_sacred_ground"
                 ),
                 charge_required=8.0,
                 description=(
-                    "Consecrate a 4 by 4 area. Enemies "
-                    "inside are paralyzed for two turns."
+                    "Gain a holy shield that halves incoming "
+                    "damage and empowers attacks."
                 ),
             ),
         },

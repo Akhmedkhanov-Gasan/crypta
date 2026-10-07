@@ -42,7 +42,6 @@ from acts.act_three.abilities.berserker import (
     update_berserker_crushing_leap_preview,
 )
 from acts.act_three.abilities.paladin import (
-    is_valid_paladin_shield_charge_target,
     update_paladin_shield_charge_preview,
 )
 from acts.act_three.abilities.warlock import (
@@ -82,8 +81,11 @@ from acts.act_three.settings import (
     ARCHER_LEAP_DURATION_MS,
     BERSERKER_CRUSHING_LEAP_IMPACT_MS,
     BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
-    PALADIN_SHIELD_CHARGE_TRAVEL_MS,
+    PALADIN_SHIELD_CHARGE_TOTAL_MS,
     BERSERKER_LAST_RAGE_ANIMATION_MS,
+)
+from acts.act_three.abilities.warrior import (
+    update_warrior_cleave_preview,
 )
 from acts.act_three.progression import (
     cancel_act_three_attribute_upgrade,
@@ -309,7 +311,16 @@ def handle_act_three_pointer_event(
             if game_mouse_position is not None
             else None
         )
-        if game_state.player.teleport_aiming:
+        if (
+            game_state.player.player_class == "warrior"
+            and game_state.player.directional_ability_aiming
+        ):
+            update_warrior_cleave_preview(
+                game_state,
+                target_cell,
+            )
+            set_archer_attack_cursor(True)
+        elif game_state.player.teleport_aiming:
             preview_is_valid = (
                 target_cell is not None
                 and is_valid_assassin_teleport_target(
@@ -337,15 +348,10 @@ def handle_act_three_pointer_event(
             )
         elif game_state.player.paladin_shield_charge_aiming:
             preview_is_valid = (
-                target_cell is not None
-                and is_valid_paladin_shield_charge_target(
+                update_paladin_shield_charge_preview(
                     game_state,
                     target_cell,
                 )
-            )
-            update_paladin_shield_charge_preview(
-                game_state,
-                target_cell if preview_is_valid else None,
             )
             set_paladin_shield_charge_cursor(
                 preview_is_valid
@@ -532,7 +538,7 @@ def handle_act_three_pointer_event(
             > 0
             and pygame.time.get_ticks()
             - game_state.player.paladin_shield_charge_started_at
-            < PALADIN_SHIELD_CHARGE_TRAVEL_MS
+            < PALADIN_SHIELD_CHARGE_TOTAL_MS
         ):
             return True
         game_mouse_position = window_to_game_position(
@@ -631,6 +637,37 @@ def handle_act_three_pointer_event(
                 return True
 
             if game_state.player.ultimate_animation_active:
+                return True
+            elif (
+                game_state.player.player_class == "warrior"
+                and game_state.player.directional_ability_aiming
+            ):
+                target_cell = get_act_three_cell_from_position(
+                    game_state,
+                    game_mouse_position,
+                )
+                direction = update_warrior_cleave_preview(
+                    game_state,
+                    target_cell,
+                )
+                key_by_direction = {
+                    (-1, 0): pygame.K_LEFT,
+                    (1, 0): pygame.K_RIGHT,
+                    (0, -1): pygame.K_UP,
+                    (0, 1): pygame.K_DOWN,
+                }
+                direction_key = key_by_direction.get(direction)
+
+                if direction_key is not None:
+                    pygame.event.post(
+                        pygame.event.Event(
+                            pygame.KEYDOWN,
+                            key=direction_key,
+                            confirm_directional_ability=True,
+                        )
+                    )
+                    set_archer_attack_cursor()
+
                 return True
             elif (
                 game_state.player.player_class == "mage"

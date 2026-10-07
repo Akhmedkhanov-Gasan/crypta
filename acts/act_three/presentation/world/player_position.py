@@ -7,6 +7,9 @@ import pygame
 from acts.act_three.presentation.berserker import (
     crushing_leap_position,
 )
+from acts.act_three.presentation.paladin.shield_charge import (
+    shield_charge_motion_progress,
+)
 from acts.act_three.presentation.combat_effects import (
     _player_death_sprite_offset,
 )
@@ -17,7 +20,6 @@ from acts.act_three.presentation.view import _view_position
 from acts.act_three.settings import (
     ARCHER_LEAP_DURATION_MS,
     BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
-    PALADIN_SHIELD_CHARGE_TRAVEL_MS,
 )
 from presentation.layout import ACT_THREE_TILE_SIZE
 
@@ -82,15 +84,10 @@ def calculate_player_placement(
     shield_charge_start_position = None
 
     if player_state.shield_charge_active:
-        shield_charge_progress = min(
-            1,
-            player_state.shield_charge_elapsed
-            / PALADIN_SHIELD_CHARGE_TRAVEL_MS,
-        )
-        eased_progress = (
-            shield_charge_progress
-            * shield_charge_progress
-            * (3 - 2 * shield_charge_progress)
+        shield_charge_progress = (
+            shield_charge_motion_progress(
+                player_state.shield_charge_elapsed
+            )
         )
         shield_charge_start_position = _view_position(
             player_state.shield_charge_origin[0],
@@ -105,7 +102,7 @@ def calculate_player_placement(
                     leap_end_position[0]
                     - shield_charge_start_position[0]
                 )
-                * eased_progress
+                * shield_charge_progress
             ),
             round(
                 shield_charge_start_position[1]
@@ -113,19 +110,10 @@ def calculate_player_placement(
                     leap_end_position[1]
                     - shield_charge_start_position[1]
                 )
-                * eased_progress
+                * shield_charge_progress
             ),
         )
 
-        if (
-            context.floor.player_column
-            < player_state.shield_charge_origin[0]
-        ):
-            player_sprite = pygame.transform.flip(
-                player_sprite,
-                True,
-                False,
-            )
     elif player_state.leap_active:
         leap_progress = min(
             1,

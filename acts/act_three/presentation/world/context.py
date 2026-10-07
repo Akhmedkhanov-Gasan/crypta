@@ -32,6 +32,9 @@ from acts.act_three.settings import (
     BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
     BERSERKER_LAST_RAGE_ANIMATION_MS,
 )
+from acts.act_three.presentation.paladin.shield_charge import (
+    shield_charge_camera_offset,
+)
 from presentation.layout import ACT_THREE_TILE_SIZE
 
 
@@ -146,6 +149,14 @@ def create_world_render_context(
             BERSERKER_CRUSHING_LEAP_IMPACT_MS,
         )
     )
+    shield_charge_camera_x, shield_charge_camera_y = (
+        shield_charge_camera_offset(
+            (
+                current_time
+                - game_state.player.paladin_shield_charge_started_at
+            )
+        )
+    )
     last_rage_camera_x, last_rage_camera_y = (
         last_rage_camera_offset(
             (
@@ -160,12 +171,14 @@ def create_world_render_context(
         hit_camera_x
         + death_camera_x
         + crushing_leap_camera_x
+        + shield_charge_camera_x
         + last_rage_camera_x
     )
     camera_y += (
         hit_camera_y
         + death_camera_y
         + crushing_leap_camera_y
+        + shield_charge_camera_y
         + last_rage_camera_y
     )
 

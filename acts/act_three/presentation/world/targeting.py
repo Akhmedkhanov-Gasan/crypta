@@ -17,6 +17,10 @@ from acts.act_three.enemies import LANTERN_WARDEN_TYPE
 from acts.act_three.presentation.enemies.lantern_warden.lantern_warden_combat import (
     draw_warden_telegraph,
 )
+from acts.act_three.presentation.warrior.power_cleave import (
+    draw_power_cleave_targeting,
+)
+
 
 def draw_world_targeting(
     context,
@@ -25,7 +29,14 @@ def draw_world_targeting(
     current_time,
 ):
     player = game_state.player
-
+    draw_power_cleave_targeting(
+        context.view_surface,
+        game_state,
+        context.camera_x,
+        context.camera_y,
+        current_time,
+        ACT_THREE_TILE_SIZE,
+    )
     _draw_archer_barrage_zone_cells(
         context.view_surface,
         assets["archer_barrage_zone_cell"],

@@ -9,6 +9,9 @@ from acts.act_three.presentation.paladin.animation import (
 from acts.act_three.presentation.paladin.block import (
     paladin_block_sprite,
 )
+from acts.act_three.presentation.paladin.shield_charge import (
+    shield_charge_sprite,
+)
 from acts.act_three.presentation.warlock import (
     warlock_curse_sprite,
     warlock_demon_idle_sprite,
@@ -116,7 +119,14 @@ def select_player_sprite(
         )
 
     if player_state.shield_charge_active:
-        return assets["player_paladin_shield_charge"], False
+        return (
+            shield_charge_sprite(
+                player_state,
+                context.floor,
+                assets,
+            ),
+            False,
+        )
 
     if player_state.berserker_leap_travel_active:
         direction = crushing_leap_direction(

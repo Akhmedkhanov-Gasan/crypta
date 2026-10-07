@@ -1434,16 +1434,6 @@ def load_act_three_gameplay_assets():
             (tile_size, tile_size),
         )
     )
-    assets["player_paladin_shield_charge"] = (
-        _load_pixel_scaled_image(
-            act_directory
-            / "player"
-            / "paladin"
-            / "shield_charge"
-            / "shield_charge_00.png",
-            (tile_size, tile_size),
-        )
-    )
     assets["player_summoner_attack"] = _load_pixel_scaled_image(
         act_directory
         / "player"

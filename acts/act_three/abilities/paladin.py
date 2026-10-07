@@ -20,6 +20,7 @@ from acts.act_three.settings import (
     PALADIN_HOLY_SHIELD_TURNS,
     PALADIN_SHIELD_CHARGE_CHARGES,
     PALADIN_SHIELD_CHARGE_RANGE,
+    PALADIN_SHIELD_CHARGE_STUN_TURNS,
 )
 from systems.player_combat import (
     attack_enemy,
@@ -272,18 +273,159 @@ def cancel_paladin_shield_charge(
         "Shield Charge aiming cancelled.",
     )
 
+def _paladin_shield_charge_target_in_direction(
+    game_state: GameState,
+    direction: tuple[int, int],
+    maximum_distance: int,
+) -> tuple[int, int] | None:
+    floor = game_state.floor
+    origin = (
+        floor.player_column,
+        floor.player_row,
+    )
+    target = None
+
+    for distance in range(
+        1,
+        min(
+            maximum_distance,
+            PALADIN_SHIELD_CHARGE_RANGE,
+        ) + 1,
+    ):
+        candidate = (
+            origin[0] + direction[0] * distance,
+            origin[1] + direction[1] * distance,
+        )
+
+        if not is_valid_paladin_shield_charge_target(
+            game_state,
+            candidate,
+        ):
+            break
+
+        target = candidate
+
+        if any(
+            enemy.health > 0
+            and candidate in get_enemy_occupied_positions(enemy)
+            for enemy in floor.enemies
+        ):
+            break
+
+    return target
+
+
+def _paladin_shield_charge_direction_to_target(
+    origin: tuple[int, int],
+    target: tuple[int, int],
+) -> tuple[int, int]:
+    column_difference = target[0] - origin[0]
+    row_difference = target[1] - origin[1]
+
+    if column_difference == 0:
+        return (
+            0,
+            1 if row_difference > 0 else -1,
+        )
+
+    if row_difference == 0:
+        return (
+            1 if column_difference > 0 else -1,
+            0,
+        )
+
+    horizontal_distance = abs(column_difference)
+    vertical_distance = abs(row_difference)
+
+    if horizontal_distance > vertical_distance * 2:
+        return (
+            1 if column_difference > 0 else -1,
+            0,
+        )
+
+    if vertical_distance > horizontal_distance * 2:
+        return (
+            0,
+            1 if row_difference > 0 else -1,
+        )
+
+    return (
+        1 if column_difference > 0 else -1,
+        1 if row_difference > 0 else -1,
+    )
+
+
 def update_paladin_shield_charge_preview(
     game_state: GameState,
     target: tuple[int, int] | None,
 ) -> bool:
     player = game_state.player
-    if (
-        target is None
-        or not is_valid_paladin_shield_charge_target(
-            game_state,
+    floor = game_state.floor
+
+    if target is None:
+        player.paladin_shield_charge_target = None
+        player.paladin_shield_charge_preview_cells.clear()
+        return False
+
+    origin = (
+        floor.player_column,
+        floor.player_row,
+    )
+    direction = (
+        _paladin_shield_charge_direction_to_target(
+            origin,
             target,
         )
+    )
+    requested_distance = min(
+        PALADIN_SHIELD_CHARGE_RANGE,
+        max(
+            abs(target[0] - origin[0]),
+            abs(target[1] - origin[1]),
+        ),
+    )
+    snapped_target = (
+        _paladin_shield_charge_target_in_direction(
+            game_state,
+            direction,
+            requested_distance,
+        )
+    )
+
+    if snapped_target is None:
+        player.paladin_shield_charge_target = None
+        player.paladin_shield_charge_preview_cells.clear()
+        return False
+
+    player.paladin_shield_charge_target = snapped_target
+    player.paladin_shield_charge_preview_cells = (
+        get_paladin_shield_charge_path(
+            game_state,
+            snapped_target,
+        )
+    )
+    return True
+
+
+def select_paladin_shield_charge_direction(
+    game_state: GameState,
+    direction: tuple[int, int],
+) -> bool:
+    player = game_state.player
+
+    if (
+        not player.paladin_shield_charge_aiming
+        or direction == (0, 0)
     ):
+        return False
+
+    target = _paladin_shield_charge_target_in_direction(
+        game_state,
+        direction,
+        PALADIN_SHIELD_CHARGE_RANGE,
+    )
+
+    if target is None:
         player.paladin_shield_charge_target = None
         player.paladin_shield_charge_preview_cells.clear()
         return False
@@ -296,6 +438,7 @@ def update_paladin_shield_charge_preview(
         )
     )
     return True
+
 
 def perform_paladin_shield_charge(
     game_state: GameState,
@@ -322,6 +465,21 @@ def perform_paladin_shield_charge(
     destination = _get_paladin_shield_charge_destination(
         game_state,
         path,
+    )
+    movement = (
+        target[0] - origin[0],
+        target[1] - origin[1],
+    )
+    player.facing_direction = (
+        (
+            1 if movement[0] > 0 else -1,
+            0,
+        )
+        if abs(movement[0]) >= abs(movement[1])
+        else (
+            0,
+            1 if movement[1] > 0 else -1,
+        )
     )
     enemies_hit = [
         enemy
@@ -383,6 +541,40 @@ def perform_paladin_shield_charge(
             )
         if enemy_was_defeated:
             resolve_enemy_defeat(game_state, enemy)
+            continue
+
+        enemy.stun_turns = max(
+            enemy.stun_turns,
+            PALADIN_SHIELD_CHARGE_STUN_TURNS,
+        )
+        enemy.attack_targets = []
+        enemy.prepared_attack_mode = None
+        enemy.attack_windup_turns_remaining = 0
+        enemy.heal_target = None
+
+        game_state.emit(
+            GameEvent(
+                type=GameEventType.ABILITY,
+                actor="hero",
+                target=enemy.name,
+                origin=origin,
+                destination=(
+                    enemy.column,
+                    enemy.row,
+                ),
+                data={
+                    "kind": "paladin_shield_charge_stun",
+                    "turns": (
+                        PALADIN_SHIELD_CHARGE_STUN_TURNS
+                    ),
+                },
+            )
+        )
+        add_log_message(
+            game_state.combat_log,
+            f"{enemy.name} is stunned by Shield Charge.",
+            category="debuff",
+        )
 
     add_log_message(
         game_state.combat_log,
