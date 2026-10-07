@@ -11,7 +11,8 @@ from application.directional_input import (
 from acts.act_three.settings import (
     ASSASSIN_SHADOW_STEP_DURATION_MS,
 )
-from acts.act_three.input.cursors import (
+from presentation.cursors import (
+    set_archer_attack_cursor,
     set_archer_barrage_zone_cursor,
     set_archer_empowered_cursor,
     set_archer_leap_cursor,
@@ -19,9 +20,8 @@ from acts.act_three.input.cursors import (
     set_berserker_crushing_leap_cursor,
     set_paladin_shield_charge_cursor,
     set_summoner_staff_cursor,
-    set_warlock_staff_cursor,
     set_warlock_curse_cursor,
-    set_archer_attack_cursor,
+    set_warlock_staff_cursor,
 )
 from acts.act_three.abilities.archer import (
     cancel_archer_barrage_zone,
@@ -45,9 +45,12 @@ from acts.act_three.abilities.berserker import (
 )
 from acts.act_three.abilities.paladin import (
     cancel_paladin_shield_charge,
-    request_paladin_holy_shield,
     request_paladin_shield_charge,
     select_paladin_shield_charge_direction,
+)
+from acts.act_three.abilities.paladin_sacred_ground import (
+    paladin_sacred_ground_cast_active,
+    request_paladin_sacred_ground,
 )
 from acts.act_two.abilities import (
     select_directional_ability_direction,
@@ -110,6 +113,20 @@ def _act_three_aiming_direction(event):
 
 
 def handle_act_three_key_event(event, game_state):
+    sacred_ground_turn = getattr(
+        event,
+        "paladin_sacred_ground_turn",
+        False,
+    )
+    if (
+        paladin_sacred_ground_cast_active(
+            game_state.player,
+            pygame.time.get_ticks(),
+        )
+        and not sacred_ground_turn
+    ):
+        return True
+
     if (
         game_state.player.subclass == "warlock"
         and game_state.player.warlock_demon_form_target_active
@@ -316,7 +333,7 @@ def handle_act_three_key_event(event, game_state):
             game_state.player.archer_empowered_shot_aiming
         )
         return True
-    
+
     if (
         event.key == pygame.K_ESCAPE
         and game_state.player.paladin_shield_charge_aiming
@@ -421,8 +438,10 @@ def handle_act_three_key_event(event, game_state):
         and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
         and game_state.player.subclass == "paladin"
     ):
-        request_paladin_holy_shield(game_state)
-        set_paladin_shield_charge_cursor()
+        request_paladin_sacred_ground(
+            game_state,
+            pygame.time.get_ticks(),
+        )
         return True
     
     if (

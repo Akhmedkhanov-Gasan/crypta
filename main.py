@@ -202,11 +202,14 @@ from acts.act_two.turns import act_two_combat_is_active
 from acts.act_three.input import (
     handle_act_three_key_event,
     handle_act_three_pointer_event,
+)
+from presentation.cursors import (
     set_archer_attack_cursor,
     set_archer_empowered_cursor,
     set_archer_leap_cursor,
     set_assassin_target_cursor,
     set_berserker_crushing_leap_cursor,
+    set_default_cursor,
     set_paladin_shield_charge_cursor,
     set_summoner_staff_cursor,
     set_warlock_curse_cursor,
@@ -389,7 +392,7 @@ from systems.player_abilities import (
     assassin_teleport_facing_direction,
     AbilityRequestResult,
     advance_berserker_last_rage,
-    advance_paladin_holy_shield,
+    advance_paladin_sacred_ground,
     advance_warlock_curses,
     advance_warlock_demon_form,
     cancel_ability_aiming,
@@ -400,6 +403,10 @@ from systems.player_abilities import (
     perform_archer_empowered_shot,
     perform_berserker_crushing_leap,
     perform_paladin_shield_charge,
+    paladin_sacred_ground_cast_active,
+    paladin_sacred_ground_impact_ready,
+    perform_paladin_sacred_ground,
+    resolve_paladin_sacred_ground,
     perform_warlock_curse,
 )
 from acts.act_two.trader_logic import buy_trader_item
@@ -562,6 +569,10 @@ def main():
             and not game_state.player.archer_barrage_zone_aiming
             and not game_state.player.berserker_crushing_leap_aiming
             and not game_state.player.paladin_shield_charge_aiming
+            and not paladin_sacred_ground_cast_active(
+                game_state.player,
+                continuous_move_time,
+            )
             and not game_state.player.warlock_curse_aiming
             and game_state.player.health > 0
             and not game_state.game_won
@@ -627,6 +638,27 @@ def main():
         active_menu_layouts = menu_layouts[
             menu_visual_theme
         ]
+        sacred_ground_time = pygame.time.get_ticks()
+        if (
+            app_runtime.game_started
+            and not app_runtime.menu_open
+            and current_act == 3
+            and paladin_sacred_ground_impact_ready(
+                game_state,
+                sacred_ground_time,
+            )
+            and perform_paladin_sacred_ground(
+                game_state,
+                sacred_ground_time,
+            )
+        ):
+            pygame.event.post(
+                pygame.event.Event(
+                    pygame.KEYDOWN,
+                    key=pygame.K_SPACE,
+                    paladin_sacred_ground_turn=True,
+                )
+            )
 
         for event in pygame.event.get():
             if app_runtime.quit_requested:
@@ -949,9 +981,7 @@ def main():
                         menu_state.can_continue = True
                         menu_state.selected_index = 0
 
-                    pygame.mouse.set_cursor(
-                        pygame.SYSTEM_CURSOR_ARROW
-                    )
+                    set_default_cursor()
                 elif menu_action == "quit":
                     if app_runtime.game_started:
                         if not run_session.save(
@@ -2531,9 +2561,10 @@ def main():
                             pygame.time.get_ticks()
                         )
                     set_summoner_staff_cursor()
+
                 elif (
-                    game_state.player.paladin_shield_charge_target
-                    is not None
+                        game_state.player.paladin_shield_charge_target
+                        is not None
                 ):
                     player_acted = perform_paladin_shield_charge(
                         game_state,
@@ -2958,11 +2989,22 @@ def main():
                             player_position_before_action,
                             rogue_ability_activated,
                         )
+                    if (
+                        current_act == 3
+                        and not getattr(
+                            event,
+                            "paladin_sacred_ground_turn",
+                            False,
+                        )
+                    ):
+                        resolve_paladin_sacred_ground(
+                            game_state
+                        )
                     if current_act == 2:
                         advance_fire_zones(game_state)
                     update_treasury_trial(game_state)
                     advance_berserker_last_rage(game_state)
-                    advance_paladin_holy_shield(game_state)
+                    advance_paladin_sacred_ground(game_state)
                     advance_warlock_curses(game_state)
                     advance_warlock_demon_form(game_state)
                     enemy_movement_started_at = (

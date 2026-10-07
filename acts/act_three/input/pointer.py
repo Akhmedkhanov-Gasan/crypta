@@ -10,7 +10,7 @@ from acts.act_three.altar import (
 from acts.act_three.settings import (
     ASSASSIN_SHADOW_STEP_DURATION_MS,
 )
-from acts.act_three.input.cursors import (
+from presentation.cursors import (
     set_archer_attack_cursor,
     set_archer_barrage_zone_cursor,
     set_archer_empowered_cursor,
@@ -19,8 +19,8 @@ from acts.act_three.input.cursors import (
     set_berserker_crushing_leap_cursor,
     set_paladin_shield_charge_cursor,
     set_summoner_staff_cursor,
-    set_warlock_staff_cursor,
     set_warlock_curse_cursor,
+    set_warlock_staff_cursor,
 )
 from acts.act_three.abilities.mage import (
     is_valid_act_three_arcane_burst_target,
@@ -43,6 +43,9 @@ from acts.act_three.abilities.berserker import (
 )
 from acts.act_three.abilities.paladin import (
     update_paladin_shield_charge_preview,
+)
+from acts.act_three.abilities.paladin_sacred_ground import (
+    paladin_sacred_ground_cast_active,
 )
 from acts.act_three.abilities.warlock import (
     is_valid_warlock_curse_target,
@@ -108,6 +111,11 @@ def handle_act_three_pointer_event(
     movement_state,
     movement_available,
 ):
+    if paladin_sacred_ground_cast_active(
+        game_state.player,
+        pygame.time.get_ticks(),
+    ):
+        return True
     if (
         game_state.player.teleport_camera_origin is not None
         and game_state.player.teleport_transition_started_at > 0

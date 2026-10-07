@@ -22,6 +22,7 @@ def begin_application_startup(fullscreen=True):
         enable_high_dpi,
         get_initial_window_size,
     )
+    from presentation.cursors import set_default_cursor
     from presentation.layout import ASSET_ROOT
     from presentation.startup import StartupScreen
     from settings import GAME_HEIGHT, GAME_WIDTH
@@ -36,6 +37,7 @@ def begin_application_startup(fullscreen=True):
     display_flags = pygame.FULLSCREEN if fullscreen else 0
     display_size = (0, 0) if fullscreen else windowed_size
     screen = pygame.display.set_mode(display_size, display_flags)
+    set_default_cursor()
     game_surface = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
     pygame.display.set_caption("Crypta")
     clock = pygame.time.Clock()

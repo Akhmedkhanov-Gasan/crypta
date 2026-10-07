@@ -145,16 +145,17 @@ SUBCLASS_DEFINITIONS = {
             ),
             "e": POWER_CLEAVE,
             "f": AbilityDefinition(
-                id="holy_shield",
-                name="HOLY SHIELD",
+                id="sacred_ground",
+                name="SACRED GROUND",
                 slot="f",
                 icon_asset=(
                     "act_three_paladin_sacred_ground"
                 ),
                 charge_required=8.0,
                 description=(
-                    "Gain a holy shield that halves incoming "
-                    "damage and empowers attacks."
+                    "Drive the blade into the earth and "
+                    "corrupt the surrounding ground. "
+                    "Enemies inside are struck by black lightning."
                 ),
             ),
         },

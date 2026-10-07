@@ -9,7 +9,7 @@ from acts.act_three.settings import (
     ASSASSIN_ULTIMATE_CHARGES,
     BERSERKER_CRUSHING_LEAP_CHARGES,
     BERSERKER_LAST_RAGE_CHARGES,
-    PALADIN_HOLY_SHIELD_CHARGES,
+    PALADIN_SACRED_GROUND_CHARGES,
     PALADIN_SHIELD_CHARGE_CHARGES,
 )
 
@@ -30,8 +30,8 @@ _PALADIN_CHARGES = {
         PALADIN_SHIELD_CHARGE_CHARGES,
     ),
     "f": (
-        "paladin_holy_shield_charge",
-        PALADIN_HOLY_SHIELD_CHARGES,
+        "paladin_sacred_ground_charge",
+        PALADIN_SACRED_GROUND_CHARGES,
     ),
 }
 _BERSERKER_CHARGES = {

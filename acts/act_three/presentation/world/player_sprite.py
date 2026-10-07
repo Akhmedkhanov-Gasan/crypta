@@ -12,6 +12,9 @@ from acts.act_three.presentation.paladin.block import (
 from acts.act_three.presentation.paladin.shield_charge import (
     shield_charge_sprite,
 )
+from acts.act_three.presentation.paladin.sacred_ground import (
+    paladin_sacred_ground_sprite,
+)
 from acts.act_three.presentation.warlock import (
     warlock_curse_sprite,
     warlock_demon_idle_sprite,
@@ -69,6 +72,14 @@ def select_player_sprite(
             ),
             False,
         )
+
+    sacred_ground_sprite = paladin_sacred_ground_sprite(
+        player,
+        assets,
+        current_time,
+    )
+    if sacred_ground_sprite is not None:
+        return sacred_ground_sprite, False
 
     block_sprite = paladin_block_sprite(
         player,

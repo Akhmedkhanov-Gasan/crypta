@@ -1,7 +1,7 @@
-"""Mutable state and operations for the application window."""
-
 from dataclasses import dataclass
 from typing import Any
+
+from presentation.cursors import refresh_cursor
 
 
 @dataclass
@@ -22,6 +22,7 @@ class ApplicationWindowState:
             self.windowed_size,
             pygame.RESIZABLE,
         )
+        refresh_cursor()
 
     def toggle_fullscreen(self):
         import pygame
@@ -39,3 +40,4 @@ class ApplicationWindowState:
             )
 
         self.fullscreen = not self.fullscreen
+        refresh_cursor()

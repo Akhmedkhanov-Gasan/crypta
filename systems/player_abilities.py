@@ -55,6 +55,15 @@ from acts.act_three.abilities.paladin import (
     update_paladin_shield_charge_preview,
     perform_paladin_shield_charge,
 )
+from acts.act_three.abilities.paladin_sacred_ground import (
+    advance_paladin_sacred_ground,
+    get_paladin_sacred_ground_cells,
+    paladin_sacred_ground_cast_active,
+    paladin_sacred_ground_impact_ready,
+    perform_paladin_sacred_ground,
+    request_paladin_sacred_ground,
+    resolve_paladin_sacred_ground,
+)
 
 from acts.act_three.abilities.warlock import (
     is_valid_warlock_curse_target,

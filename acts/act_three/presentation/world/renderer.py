@@ -21,6 +21,10 @@ from acts.act_three.presentation.paladin.shield_charge import (
     draw_shield_charge_effect,
     shield_charge_motion_progress,
 )
+from acts.act_three.presentation.paladin.sacred_ground import (
+    draw_paladin_sacred_ground_cast_effect,
+    draw_paladin_sacred_ground_lightnings,
+)
 from acts.act_three.presentation.world.player_sprite import (
     select_player_sprite,
 )
@@ -239,6 +243,15 @@ def _draw_act_three_world(
         current_time,
     )
 
+    draw_paladin_sacred_ground_lightnings(
+        view_surface,
+        game_state.player,
+        camera_x,
+        camera_y,
+        current_time,
+        ACT_THREE_TILE_SIZE,
+    )
+
     player_state = create_player_render_state(
         game_state.player,
         teleport_origin,
@@ -393,6 +406,14 @@ def _draw_act_three_world(
             player_position[0] + locomotion_pose.body_offset[0],
             player_position[1] + locomotion_pose.body_offset[1],
         )
+    draw_paladin_sacred_ground_cast_effect(
+        view_surface,
+        game_state.player,
+        player_position,
+        current_time,
+        ACT_THREE_TILE_SIZE,
+    )
+
     _draw_player_hit_feedback(
         view_surface,
         player_sprite,

@@ -112,6 +112,7 @@ def choose_subclass(game_state, subclass):
         game_state.floor = create_floor_state(game_state.floor_index)
         clear_archer_barrage_zone(game_state)
         clear_berserker_crushing_leap(game_state)
+        clear_paladin_sacred_ground(game_state)
     game_state.player.key_count = 0
     game_state.player_attack_targets = []
     game_state.subclass_selection_open = False
@@ -153,3 +154,13 @@ def clear_berserker_crushing_leap(game_state):
     player.berserker_crushing_leap_preview_cells.clear()
     player.berserker_crushing_leap_origin = None
     player.berserker_crushing_leap_started_at = 0
+
+
+def clear_paladin_sacred_ground(game_state):
+    player = game_state.player
+    player.paladin_sacred_ground_cast_requested = False
+    player.paladin_sacred_ground_anchor = None
+    player.paladin_sacred_ground_cells.clear()
+    player.paladin_sacred_ground_lightnings.clear()
+    player.paladin_sacred_ground_turns = 0
+    player.paladin_sacred_ground_started_at = 0

@@ -8,6 +8,12 @@ class ArcherBarrageShotState:
     started_at: int = 0
 
 
+@dataclass(eq=False)
+class PaladinSacredLightningState:
+    target: tuple[int, int]
+    started_at: int = 0
+
+
 @dataclass
 class MageArcaneBurstState:
     ability_effect_started_at: int = 0
@@ -95,6 +101,17 @@ class ActThreePlayerState:
     paladin_shield_charge_started_at: int = 0
     paladin_holy_shield_charge: int = 0
     paladin_holy_shield_turns: int = 0
+    paladin_sacred_ground_charge: int = 0
+    paladin_sacred_ground_cast_requested: bool = False
+    paladin_sacred_ground_anchor: tuple[int, int] | None = None
+    paladin_sacred_ground_cells: list[
+        tuple[int, int]
+    ] = field(default_factory=list)
+    paladin_sacred_ground_turns: int = 0
+    paladin_sacred_ground_started_at: int = 0
+    paladin_sacred_ground_lightnings: list[
+        PaladinSacredLightningState
+    ] = field(default_factory=list)
 
     warlock_attack_target: tuple[int, int] | None = None
     warlock_curse_aiming: bool = False

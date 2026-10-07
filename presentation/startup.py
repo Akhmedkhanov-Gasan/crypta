@@ -3,6 +3,7 @@ import random
 import pygame
 import resource_store as resources
 
+from presentation.cursors import refresh_cursor
 from presentation.display import game_viewport
 from presentation.layout import ASSET_ROOT
 from settings import (
@@ -136,6 +137,7 @@ class StartupScreen:
                     (max(320, event.w), max(180, event.h)),
                     pygame.RESIZABLE,
                 )
+                refresh_cursor()
 
             if allow_skip:
                 if event.type == pygame.MOUSEBUTTONDOWN:

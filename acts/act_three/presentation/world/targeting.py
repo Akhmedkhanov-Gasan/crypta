@@ -4,6 +4,9 @@ from acts.act_three.presentation.berserker import (
 from acts.act_three.presentation.mage import (
     draw_act_three_arcane_burst_targeting,
 )
+from acts.act_three.presentation.paladin.sacred_ground import (
+    draw_paladin_sacred_ground_cells,
+)
 from acts.act_three.presentation.primitives import (
     _draw_archer_barrage_zone_cells,
     _draw_tile_markers,
@@ -29,6 +32,17 @@ def draw_world_targeting(
     current_time,
 ):
     player = game_state.player
+
+    draw_paladin_sacred_ground_cells(
+        context.view_surface,
+        player.paladin_sacred_ground_cells,
+        player.paladin_sacred_ground_anchor,
+        context.camera_x,
+        context.camera_y,
+        current_time,
+        ACT_THREE_TILE_SIZE,
+    )
+
     draw_power_cleave_targeting(
         context.view_surface,
         game_state,
