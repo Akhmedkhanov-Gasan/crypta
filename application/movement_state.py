@@ -9,6 +9,9 @@ class MovementInputState:
     pending_movement_at: int = 0
     next_held_move_at: int = 0
     movement_input_locked_until: int = 0
+    next_step_at: int = 0
+    movement_revision: int = 0
+    movement_scope: tuple[int, int] | None = None
     auto_move_target: tuple[int, int] | None = None
     auto_move_enemy: object | None = None
     auto_move_revision: int = 0
@@ -22,6 +25,7 @@ class MovementInputState:
         self.pending_movement_direction = None
         self.pending_movement_at = 0
         self.next_held_move_at = 0
+        self.movement_revision += 1
 
     def cancel_auto_move(self):
         self.auto_move_target = None
