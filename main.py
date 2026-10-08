@@ -6,9 +6,7 @@ from application.transitions import (
     advance_floor_transition,
     complete_class_selection,
 )
-from acts.act_three.movement import (
-    create_act_three_held_movement_event,
-)
+from acts.act_three.movement import ACT_THREE_MOVEMENT_PROFILE
 from acts.act_three.movement_timing import PLAYER_STEP_MS
 from application.upgrade_input import (
     handle_upgrade_key_input,
@@ -116,10 +114,15 @@ from application.movement_interruptions import (
     apply_movement_interruptions,
 )
 from application.movement_input import (
+    DEFAULT_MOVEMENT_PROFILE,
+    accept_movement_direction,
     begin_held_movement,
     create_held_movement_event,
+    mark_movement_step,
+    movement_event_is_current,
     movement_input_is_locked,
     release_held_movement,
+    sync_movement_scope,
 )
 from acts.act_two.held_movement import (
     apply_turn_movement_interruptions,
@@ -601,16 +604,23 @@ def main():
         if game_state.bloody_altar_open:
             act_two_input_state.cancel_auto_move()
             act_two_input_state.cancel_consumable_drag()
-        held_movement_factory = (
-            create_act_three_held_movement_event
-            if current_act == 3
-            else create_held_movement_event
+        movement_profile = (
+            ACT_THREE_MOVEMENT_PROFILE
+            if game_state.floor.presentation_act == 3
+            else DEFAULT_MOVEMENT_PROFILE
         )
-        held_movement_event = held_movement_factory(
+        sync_movement_scope(
+            act_two_input_state,
+            game_state.player,
+            game_state.floor,
+            movement_profile,
+        )
+        held_movement_event = create_held_movement_event(
             act_two_input_state,
             continuous_move_time,
             continuous_movement_available,
             act_two_combat_is_active(game_state),
+            profile=movement_profile,
         )
 
         if held_movement_event is not None:
@@ -697,7 +707,31 @@ def main():
                 and not getattr(event, "automatic_movement", False)
             ):
                 act_two_input_state.cancel_auto_move()
+            movement_profile = (
+                ACT_THREE_MOVEMENT_PROFILE
+                if game_state.floor.presentation_act == 3
+                else DEFAULT_MOVEMENT_PROFILE
+            )
+            sync_movement_scope(
+                act_two_input_state,
+                game_state.player,
+                game_state.floor,
+                movement_profile,
+            )
 
+            if not movement_event_is_current(
+                act_two_input_state,
+                event,
+            ):
+                continue
+
+            if (
+                movement_profile.step_duration_ms > 0
+                and event.type == pygame.KEYDOWN
+                and not getattr(event, "automatic_movement", False)
+                and event.key not in MOVEMENT_KEYS
+            ):
+                act_two_input_state.reset_held_movement()
             if hasattr(event, "auto_move_revision"):
                 if (
                     app_runtime.menu_open
@@ -1870,6 +1904,11 @@ def main():
                                     pygame.KEYDOWN,
                                     key=pygame.K_UNKNOWN,
                                     movement_direction=adjacent_direction,
+                                    movement_revision=(
+                                        act_two_input_state.movement_revision
+                                        if movement_profile.step_duration_ms > 0
+                                        else None
+                                    ),
                                 )
                             )
 
@@ -1992,6 +2031,9 @@ def main():
                         event,
                         game_state,
                 ):
+                    if movement_profile.step_duration_ms > 0:
+                        act_two_input_state.reset_held_movement()
+                        act_two_input_state.cancel_auto_move()
                     continue
 
                 if game_state.act_three_debug_class_selection_open:
@@ -2292,9 +2334,22 @@ def main():
                             act_two_input_state,
                             event.key,
                             pygame.time.get_ticks(),
+                            profile=movement_profile,
                         )
 
                 if movement_direction is not None:
+                    if (
+                        not game_state.player.directional_ability_aiming
+                        and not accept_movement_direction(
+                            act_two_input_state,
+                            movement_direction,
+                            pygame.time.get_ticks(),
+                            profile=movement_profile,
+                            auto_path=hasattr(event, "auto_move_revision"),
+                        )
+                    ):
+                        continue
+
                     column_change, row_change = movement_direction
                     game_state.player.facing_direction = (
                         act_two_visual_direction(movement_direction)
@@ -3158,6 +3213,11 @@ def main():
                         )
                         game_state.player.movement_animation_started_at = (
                             enemy_movement_started_at
+                        )
+                        mark_movement_step(
+                            act_two_input_state,
+                            enemy_movement_started_at,
+                            profile=movement_profile,
                         )
                     for enemy in game_state.floor["enemies"]:
                         if enemy.name in moved_enemy_names:

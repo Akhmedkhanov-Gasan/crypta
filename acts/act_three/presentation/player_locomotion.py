@@ -1,14 +1,19 @@
 from dataclasses import dataclass
 import math
 
+from presentation.movement import (
+    sample_movement_travel,
+    smoothstep,
+)
 from acts.act_three.movement_timing import (
+    PLAYER_POSE_HOLD_MS,
     PLAYER_SETTLE_MS,
     PLAYER_STEP_MS,
+    PLAYER_TRAVEL_MS,
     PLAYER_WALK_CYCLE_TILES,
 )
 from acts.act_three.presentation.player_motion import (
     assassin_walk_direction,
-    interpolate_player_position,
 )
 
 
@@ -39,7 +44,6 @@ class LocomotionState:
     started_at: int = -1
     phase_origin: float = 0.0
     phase_distance: float = 0.0
-    continuing: bool = False
     last_sample_at: int = -1
 
 
@@ -55,11 +59,6 @@ _PROFILES = {
 _STATE = None
 
 
-def _smoothstep(value):
-    value = max(0.0, min(1.0, value))
-    return value * value * (3.0 - 2.0 * value)
-
-
 def _special_movement_active(player):
     return (
         player.ultimate_animation_active
@@ -73,6 +72,43 @@ def _special_movement_active(player):
             )
         )
     )
+
+
+def _sample_body_offset(profile, direction, progress, phase, elapsed):
+    dx, dy = direction
+    direction_length = math.hypot(dx, dy)
+    direction_x = dx / direction_length
+    direction_y = dy / direction_length
+
+    stride = math.sin(math.pi * progress)
+    sway = math.sin(math.tau * phase) * stride
+
+    offset_x = (
+        direction_x * profile.lean * stride
+        - direction_y * profile.sway * sway
+    )
+    offset_y = (
+        direction_y * profile.lean * stride
+        + direction_x * profile.sway * sway
+        - profile.lift * stride
+    )
+
+    if elapsed >= PLAYER_TRAVEL_MS:
+        settle_progress = max(
+            0.0,
+            min(
+                1.0,
+                (elapsed - PLAYER_TRAVEL_MS) / PLAYER_SETTLE_MS,
+            ),
+        )
+        landing = math.sin(math.pi * settle_progress)
+        offset_x = -direction_x * profile.lean * 0.35 * landing
+        offset_y = (
+            profile.lift * 0.5
+            - direction_y * profile.lean * 0.35
+        ) * landing
+
+    return round(offset_x), round(offset_y)
 
 
 def sample_player_locomotion(
@@ -118,6 +154,8 @@ def sample_player_locomotion(
     started_at = player.movement_animation_started_at
 
     if origin is None or started_at <= 0:
+        state.token = None
+        state.destination = None
         return idle_pose
 
     origin = tuple(origin)
@@ -141,16 +179,30 @@ def sample_player_locomotion(
     )
 
     if token != state.token:
-        state.continuing = (
+        step_interval = started_at - state.started_at
+        combat_between_steps = (
+            state.started_at
+            <= player.attack_animation_started_at
+            < started_at
+            or state.started_at
+            <= player.hit_animation_started_at
+            < started_at
+        )
+        continuing = (
             state.token is not None
             and state.destination == origin
-            and 0 < started_at - state.started_at
-            <= PLAYER_STEP_MS + PLAYER_SETTLE_MS
+            and 0 < step_interval
+            <= PLAYER_STEP_MS + PLAYER_POSE_HOLD_MS
+            and not combat_between_steps
         )
 
-        if state.continuing:
+        if continuing:
+            previous_progress = smoothstep(
+                step_interval / PLAYER_TRAVEL_MS
+            )
             state.phase_origin = (
-                state.phase_origin + state.phase_distance
+                state.phase_origin
+                + state.phase_distance * previous_progress
             ) % 1.0
         else:
             state.phase_origin = 0.0
@@ -162,82 +214,49 @@ def sample_player_locomotion(
         state.destination = destination
         state.started_at = started_at
 
-    progress = min(1.0, elapsed / PLAYER_STEP_MS)
-
-    if state.continuing:
-        travel_progress = progress
-        position = (
-            round((origin[0] + dx * progress) * tile_size),
-            round((origin[1] + dy * progress) * tile_size),
-        )
-    else:
-        travel_progress = (
-            progress * 0.85 + _smoothstep(progress) * 0.15
-        )
-        position = interpolate_player_position(
-            (
-                origin[0] * tile_size,
-                origin[1] * tile_size,
-            ),
-            destination_pixels,
-            progress,
-        )
+    travel = sample_movement_travel(
+        (
+            origin[0] * tile_size,
+            origin[1] * tile_size,
+        ),
+        destination_pixels,
+        elapsed,
+        PLAYER_TRAVEL_MS,
+    )
 
     phase = (
         state.phase_origin
-        + state.phase_distance * travel_progress
+        + state.phase_distance * travel.eased_progress
     ) % 1.0
-
-    settle_progress = max(
-        0.0,
-        (elapsed - PLAYER_STEP_MS) / PLAYER_SETTLE_MS,
-    )
-    visibility = 1.0 - _smoothstep(settle_progress)
-    onset = (
-        1.0
-        if state.continuing
-        else _smoothstep(elapsed / 75.0)
-    )
-    strength = onset * visibility
-
-    profile = _PROFILES.get(
-        player.subclass,
-        _PROFILES["berserker"],
-    )
-    direction_length = math.hypot(dx, dy)
-    direction_x = dx / direction_length
-    direction_y = dy / direction_length
-
-    lift = math.sin(phase * math.tau) ** 2
-    sway = math.sin(phase * math.tau)
-
-    offset_x = (
-        direction_x * profile.lean
-        - direction_y * sway * profile.sway
-    ) * strength
-    offset_y = (
-        direction_y * profile.lean
-        + direction_x * sway * profile.sway
-        - lift * profile.lift
-    ) * strength
 
     combat_interrupted = (
         player.attack_animation_started_at >= started_at
         or player.hit_animation_started_at >= started_at
     )
-
     active = (
-        elapsed < PLAYER_STEP_MS + PLAYER_SETTLE_MS
+        elapsed < PLAYER_STEP_MS + PLAYER_POSE_HOLD_MS
         and not combat_interrupted
     )
 
+    profile = _PROFILES.get(
+        player.subclass,
+        _PROFILES["berserker"],
+    )
+    body_offset = (
+        _sample_body_offset(
+            profile,
+            (dx, dy),
+            travel.progress,
+            phase,
+            elapsed,
+        )
+        if active
+        else (0, 0)
+    )
+
     return LocomotionPose(
-        position=position,
-        body_offset=(
-            (round(offset_x), round(offset_y))
-            if active
-            else (0, 0)
-        ),
+        position=travel.position,
+        body_offset=body_offset,
         phase=phase,
         active=active,
     )

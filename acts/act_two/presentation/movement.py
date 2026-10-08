@@ -4,6 +4,10 @@ import math
 import pygame
 
 from presentation.layout import MAP_OFFSET_X, MAP_OFFSET_Y
+from presentation.movement import (
+    sample_movement_travel,
+    smootherstep,
+)
 from settings import TILE_SIZE
 
 
@@ -39,21 +43,6 @@ def _cell_position(column, row):
     return (
         MAP_OFFSET_X + column * TILE_SIZE,
         MAP_OFFSET_Y + row * TILE_SIZE,
-    )
-
-
-def _smoothstep(progress):
-    progress = max(0.0, min(1.0, progress))
-    return progress * progress * (3.0 - 2.0 * progress)
-
-
-def _smootherstep(progress):
-    progress = max(0.0, min(1.0, progress))
-    return (
-        progress
-        * progress
-        * progress
-        * (progress * (progress * 6.0 - 15.0) + 10.0)
     )
 
 
@@ -138,21 +127,14 @@ def sample_warrior_movement(
     if not 0 <= elapsed < WARRIOR_MOVE_DURATION_MS:
         return inactive_pose
 
-    travel_progress = min(1.0, elapsed / WARRIOR_MOVE_TRAVEL_MS)
-    eased_progress = _smoothstep(travel_progress)
-    origin_position = _cell_position(*origin)
-    ground_position = (
-        round(
-            origin_position[0]
-            + (destination_position[0] - origin_position[0])
-            * eased_progress
-        ),
-        round(
-            origin_position[1]
-            + (destination_position[1] - origin_position[1])
-            * eased_progress
-        ),
+    travel = sample_movement_travel(
+        _cell_position(*origin),
+        destination_position,
+        elapsed,
+        WARRIOR_MOVE_TRAVEL_MS,
     )
+    travel_progress = travel.progress
+    ground_position = travel.position
 
     stride = math.sin(math.pi * travel_progress)
     body_lift = round(stride * 1.35)
@@ -206,21 +188,14 @@ def sample_rogue_movement(
     if not 0 <= elapsed < ROGUE_MOVE_DURATION_MS:
         return inactive_pose
 
-    travel_progress = min(1.0, elapsed / ROGUE_MOVE_TRAVEL_MS)
-    eased_progress = _smoothstep(travel_progress)
-    origin_position = _cell_position(*origin)
-    ground_position = (
-        round(
-            origin_position[0]
-            + (destination_position[0] - origin_position[0])
-            * eased_progress
-        ),
-        round(
-            origin_position[1]
-            + (destination_position[1] - origin_position[1])
-            * eased_progress
-        ),
+    travel = sample_movement_travel(
+        _cell_position(*origin),
+        destination_position,
+        elapsed,
+        ROGUE_MOVE_TRAVEL_MS,
     )
+    travel_progress = travel.progress
+    ground_position = travel.position
 
     landing_progress = 0.0
     settle_recoil = 0
@@ -271,21 +246,15 @@ def sample_mage_movement(
     if not 0 <= elapsed < MAGE_MOVE_DURATION_MS:
         return inactive_pose
 
-    travel_progress = min(1.0, elapsed / MAGE_MOVE_TRAVEL_MS)
-    eased_progress = _smootherstep(travel_progress)
-    origin_position = _cell_position(*origin)
-    ground_position = (
-        round(
-            origin_position[0]
-            + (destination_position[0] - origin_position[0])
-            * eased_progress
-        ),
-        round(
-            origin_position[1]
-            + (destination_position[1] - origin_position[1])
-            * eased_progress
-        ),
+    travel = sample_movement_travel(
+        _cell_position(*origin),
+        destination_position,
+        elapsed,
+        MAGE_MOVE_TRAVEL_MS,
+        easing=smootherstep,
     )
+    travel_progress = travel.progress
+    ground_position = travel.position
 
     landing_progress = 0.0
     body_lift = round(math.sin(math.pi * travel_progress) * 2.2)
