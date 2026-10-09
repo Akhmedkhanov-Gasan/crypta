@@ -4,6 +4,9 @@ from acts.act_three.enemies import LANTERN_WARDEN_TYPE
 from acts.act_three.presentation.enemies.lantern_warden import (
     draw_lantern_warden,
 )
+from acts.act_three.presentation.stun_effect import (
+    draw_act_three_enemy_stun,
+)
 from logic import get_enemy_occupied_positions
 from acts.act_three.presentation.actors import (
     _draw_enemy_movement_effects,
@@ -42,6 +45,15 @@ def draw_world_enemies(
     current_time,
 ):
     floor = context.floor
+    stun_visuals = game_state.act_three.enemy_stun_visuals
+    living_enemy_ids = {
+        id(enemy)
+        for enemy in floor.enemies
+        if enemy.health > 0
+    }
+    for enemy_id in tuple(stun_visuals):
+        if enemy_id not in living_enemy_ids:
+            del stun_visuals[enemy_id]
     visible_enemies = [
         enemy
         for enemy in floor.enemies
@@ -190,6 +202,16 @@ def draw_world_enemies(
             current_time,
             fonts["sidebar_numbers"],
         )
+        stun_started_at = stun_visuals.get(id(enemy))
+        if enemy.health > 0 and stun_started_at is not None:
+            draw_act_three_enemy_stun(
+                context.view_surface,
+                enemy_position,
+                ACT_THREE_TILE_SIZE,
+                current_time,
+                stun_started_at,
+                fonts["sidebar_numbers"],
+            )
         if enemy.health > 0 and enemy.curse_turns > 0:
             draw_warlock_curse_status(
                 context.view_surface,

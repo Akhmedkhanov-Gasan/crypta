@@ -31,6 +31,16 @@ from acts.act_three.abilities.archer import (
     request_archer_empowered_shot,
     request_archer_leap,
 )
+from acts.act_three.combat.archer_aim import (
+    begin_archer_aim,
+    cancel_archer_aim,
+    confirm_archer_aim,
+    select_archer_aim_target,
+)
+from acts.act_three.abilities.archer_piercing_shot import (
+    piercing_shot_ready,
+)
+from game.combat_log import add_log_message
 from acts.act_three.abilities.assassin import (
     begin_assassin_ultimate,
     cancel_assassin_teleport,
@@ -155,6 +165,76 @@ def handle_act_three_key_event(event, game_state):
     ):
         return True
     aiming_direction = _act_three_aiming_direction(event)
+
+    if (
+        game_state.player.archer_basic_aiming
+        or game_state.player.archer_piercing_aiming
+    ):
+        if event.key == pygame.K_ESCAPE:
+            cancel_archer_aim(game_state)
+            return True
+
+        confirm_key = (
+            pygame.K_q
+            if game_state.player.archer_piercing_aiming
+            else pygame.K_r
+        )
+        if event.key == confirm_key:
+            if confirm_archer_aim(game_state):
+                pygame.event.post(
+                    pygame.event.Event(
+                        pygame.KEYDOWN,
+                        key=pygame.K_RETURN,
+                    )
+                )
+            return True
+
+        if aiming_direction is not None:
+            select_archer_aim_target(
+                game_state,
+                aiming_direction,
+            )
+            return True
+
+        if event.key in WAIT_KEYS:
+            return True
+
+        cancel_archer_aim(game_state)
+
+    if (
+        FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
+        and game_state.player.subclass == "archer"
+    ):
+        if event.key in (
+            pygame.K_1,
+            pygame.K_2,
+            pygame.K_3,
+            pygame.K_KP1,
+            pygame.K_KP2,
+            pygame.K_KP3,
+        ):
+            return True
+
+        if event.key == pygame.K_q:
+            if not piercing_shot_ready(game_state):
+                add_log_message(
+                    game_state.combat_log,
+                    "Piercing Shot is not charged.",
+                )
+                return True
+            begin_archer_aim(
+                game_state,
+                pygame.time.get_ticks(),
+                piercing=True,
+            )
+            return True
+
+        if event.key == pygame.K_r:
+            begin_archer_aim(
+                game_state,
+                pygame.time.get_ticks(),
+            )
+            return True
 
     if (
         game_state.player.paladin_shield_charge_aiming

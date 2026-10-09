@@ -3,6 +3,9 @@ from collections.abc import Callable
 from game.combat_log import add_log_message
 from game.healing import heal_player
 from acts.act_three.events import GameEvent, GameEventType
+from acts.act_three.combat.stun import (
+    apply_act_three_enemy_stun,
+)
 from game.state import (
     EnemyState,
     FloorState,
@@ -543,14 +546,12 @@ def perform_paladin_shield_charge(
             resolve_enemy_defeat(game_state, enemy)
             continue
 
-        enemy.stun_turns = max(
-            enemy.stun_turns,
+        apply_act_three_enemy_stun(
+            game_state,
+            enemy,
             PALADIN_SHIELD_CHARGE_STUN_TURNS,
+            current_time,
         )
-        enemy.attack_targets = []
-        enemy.prepared_attack_mode = None
-        enemy.attack_windup_turns_remaining = 0
-        enemy.heal_target = None
 
         game_state.emit(
             GameEvent(

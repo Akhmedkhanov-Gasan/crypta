@@ -21,6 +21,16 @@ from acts.act_three.presentation.paladin.shield_charge import (
     draw_shield_charge_effect,
     shield_charge_motion_progress,
 )
+from acts.act_three.presentation.archer.aim_effect import (
+    draw_archer_aim_effect,
+)
+from acts.act_three.presentation.archer.projectile import (
+    PIERCING_TOTAL_MS,
+    PIERCING_WINDUP_MS,
+    PIERCING_TRAVEL_MS,
+    draw_piercing_impact,
+    draw_piercing_projectile,
+)
 from acts.act_three.presentation.paladin.sacred_ground import (
     draw_paladin_sacred_ground_cast_effect,
     draw_paladin_sacred_ground_lightnings,
@@ -241,6 +251,15 @@ def _draw_act_three_world(
         fonts,
         assets,
         current_time,
+    )
+
+    draw_archer_aim_effect(
+        view_surface,
+        game_state,
+        camera_x,
+        camera_y,
+        current_time,
+        ACT_THREE_TILE_SIZE,
     )
 
     draw_paladin_sacred_ground_lightnings(
@@ -1091,6 +1110,71 @@ def _draw_act_three_world(
         game_state.player.paladin_shield_charge_origin = None
         game_state.player.paladin_shield_charge_started_at = 0
 
+    piercing_target = (
+        game_state.player.archer_piercing_effect_target
+    )
+    piercing_started_at = (
+        game_state.player.archer_piercing_effect_started_at
+    )
+    piercing_elapsed = current_time - piercing_started_at
+
+    if (
+        player_subclass == "archer"
+        and piercing_target is not None
+        and 0 <= piercing_elapsed < PIERCING_TOTAL_MS
+    ):
+        end_position = _view_position(
+            piercing_target[0],
+            piercing_target[1],
+            camera_x,
+            camera_y,
+        )
+        destination = (
+            end_position[0] + ACT_THREE_TILE_SIZE // 2,
+            end_position[1] + ACT_THREE_TILE_SIZE // 2,
+        )
+        origin = (
+            player_position[0] + ACT_THREE_TILE_SIZE // 2,
+            player_position[1] + ACT_THREE_TILE_SIZE // 2,
+        )
+
+        if (
+            PIERCING_WINDUP_MS
+            <= piercing_elapsed
+            < PIERCING_WINDUP_MS + PIERCING_TRAVEL_MS
+        ):
+            draw_piercing_projectile(
+                view_surface,
+                origin,
+                destination,
+                (
+                    piercing_elapsed - PIERCING_WINDUP_MS
+                ) / PIERCING_TRAVEL_MS,
+                ACT_THREE_TILE_SIZE,
+            )
+        elif piercing_elapsed >= (
+            PIERCING_WINDUP_MS + PIERCING_TRAVEL_MS
+        ):
+            draw_piercing_impact(
+                view_surface,
+                destination,
+                ACT_THREE_TILE_SIZE,
+                (
+                    piercing_elapsed
+                    - PIERCING_WINDUP_MS
+                    - PIERCING_TRAVEL_MS
+                ) / (
+                    PIERCING_TOTAL_MS
+                    - PIERCING_WINDUP_MS
+                    - PIERCING_TRAVEL_MS
+                ),
+            )
+    elif (
+        piercing_target is not None
+        and piercing_elapsed >= PIERCING_TOTAL_MS
+    ):
+        game_state.player.archer_piercing_effect_target = None
+        game_state.player.archer_piercing_effect_started_at = 0
     empowered_target = game_state.player.archer_empowered_shot_target
     empowered_started_at = game_state.player.archer_empowered_shot_started_at
     empowered_elapsed = current_time - empowered_started_at

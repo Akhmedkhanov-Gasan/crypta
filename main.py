@@ -226,6 +226,12 @@ from acts.act_three.runtime import (
 from acts.act_three.presentation.assassin import (
     record_shadow_reflex_feedback,
 )
+from acts.act_three.combat.archer_aim import (
+    archer_shot_direction,
+)
+from acts.act_three.abilities.archer_piercing_shot import (
+    perform_archer_piercing_shot,
+)
 from acts.act_three.presentation.combat_effects import (
     record_enemy_death_feedback,
     record_enemy_hit_feedback,
@@ -1931,6 +1937,13 @@ def main():
                         or getattr(event, "movement_direction", None)
                         is not None
                     )
+                    and not (
+                        current_act == 3
+                        and (
+                            game_state.player.archer_basic_aiming
+                            or game_state.player.archer_piercing_aiming
+                        )
+                    )
                     and movement_input_is_locked(
                         act_two_input_state,
                         pygame.time.get_ticks(),
@@ -2692,9 +2705,43 @@ def main():
                             pygame.time.get_ticks()
                         )
                     set_archer_empowered_cursor()
+                elif game_state.player.archer_piercing_target is not None:
+                    piercing_target = (
+                        game_state.player.archer_piercing_target
+                    )
+                    game_state.player.archer_piercing_target = None
+                    game_state.player.facing_direction = (
+                        archer_shot_direction(
+                            (
+                                game_state.floor.player_column,
+                                game_state.floor.player_row,
+                            ),
+                            piercing_target,
+                        )
+                    )
+                    shot_time = pygame.time.get_ticks()
+                    player_acted = perform_archer_piercing_shot(
+                        game_state,
+                        piercing_target,
+                        shot_time,
+                        resolve_oracle_hit_reaction,
+                    )
+                    if player_acted:
+                        game_state.player.attack_animation_started_at = (
+                            shot_time
+                        )
                 elif game_state.player.archer_attack_target is not None:
                     archer_target = game_state.player.archer_attack_target
                     game_state.player.archer_attack_target = None
+                    game_state.player.facing_direction = (
+                        archer_shot_direction(
+                            (
+                                game_state.floor.player_column,
+                                game_state.floor.player_row,
+                            ),
+                            archer_target,
+                        )
+                    )
                     player_acted = perform_archer_attack(
                         game_state,
                         archer_target,

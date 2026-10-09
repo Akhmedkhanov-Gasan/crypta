@@ -10,6 +10,12 @@ from acts.act_two.assets import (
     load_item_pile_sprite,
     load_pickup_hint_font,
 )
+from acts.act_three.presentation.archer.animation import (
+    load_archer_animation_assets,
+)
+from acts.act_three.presentation.archer.projectile import (
+    make_archer_arrow_sprite,
+)
 from acts.act_three.presentation.player_assets import (
     load_assassin_animation_assets,
     load_berserker_animation_assets,
@@ -1235,10 +1241,7 @@ def load_act_three_gameplay_assets():
         "idle_02.png",
     )
 
-    for subclass in (
-        "archer",
-        "summoner",
-    ):
+    for subclass in ("summoner",):
         idle_directory = (
             act_directory / "player" / subclass / "idle"
         )
@@ -1254,6 +1257,12 @@ def load_act_three_gameplay_assets():
                     (tile_size, tile_size),
                 )
             )
+    load_archer_animation_assets(
+        assets,
+        act_directory,
+        tile_size,
+        _load_pixel_scaled_image,
+    )
     load_assassin_animation_assets(
         assets,
         act_directory,
@@ -1291,18 +1300,6 @@ def load_act_three_gameplay_assets():
             summoner_no_familiar_idle_directory
             / f"idle_{frame_index:02d}.png",
             (tile_size, tile_size),
-        )
-
-    archer_walk_directory = (
-        act_directory / "player" / "archer" / "walk"
-    )
-    for frame_index in range(2):
-        assets[f"player_archer_walk_{frame_index}"] = (
-            _load_pixel_scaled_image(
-                archer_walk_directory
-                / f"walk_{frame_index:02d}.png",
-                (tile_size, tile_size),
-            )
         )
 
     old_man_appearance_directory = (
@@ -1400,39 +1397,18 @@ def load_act_three_gameplay_assets():
             / f"walk_{frame_index:02d}.png",
             (tile_size, tile_size),
         )
-    assets["player_archer_attack"] = _load_pixel_scaled_image(
-        act_directory
-        / "player"
-        / "archer"
-        / "attack"
-        / "attack_00.png",
+    assets["player_archer_attack"] = assets[
+        "player_archer_attack_right_0"
+    ]
+    assets["archer_empowered_shot_arrow"] = (
+        make_archer_arrow_sprite()
+    )
+    assets["player_archer_leap"] = assets[
+        "player_archer_attack_down_0"
+    ]
+    assets["archer_barrage_zone_cell"] = pygame.Surface(
         (tile_size, tile_size),
-    )
-    assets["archer_empowered_shot_arrow"] = _load_scaled_image(
-        act_directory
-        / "player"
-        / "archer"
-        / "empowered_shot"
-        / "empowered_shot_arrow.png",
-        (64, 64),
-    )
-    assets["player_archer_leap"] = _load_pixel_scaled_image(
-        act_directory
-        / "player"
-        / "archer"
-        / "leap"
-        / "leap_00.png",
-        (tile_size, tile_size),
-    )
-    assets["archer_barrage_zone_cell"] = (
-        _load_pixel_scaled_image(
-            act_directory
-            / "player"
-            / "archer"
-            / "barrage_zone"
-            / "barrage_zone_cell.png",
-            (tile_size, tile_size),
-        )
+        pygame.SRCALPHA,
     )
     assets["player_summoner_attack"] = _load_pixel_scaled_image(
         act_directory

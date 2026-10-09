@@ -52,6 +52,11 @@ from acts.act_three.settings import (
     BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
     BERSERKER_LAST_RAGE_ANIMATION_MS,
 )
+from acts.act_three.presentation.archer.projectile import (
+    PIERCING_TOTAL_MS,
+    PIERCING_WINDUP_MS,
+    PIERCING_TRAVEL_MS,
+)
 
 
 def select_player_sprite(
@@ -194,6 +199,32 @@ def select_player_sprite(
     )
     if curse_sprite is not None:
         return curse_sprite, False
+    piercing_elapsed = (
+        current_time
+        - player.archer_piercing_effect_started_at
+    )
+    if (
+        player_state.subclass == "archer"
+        and player.archer_piercing_effect_target is not None
+        and 0 <= piercing_elapsed < PIERCING_TOTAL_MS
+    ):
+        direction = assassin_walk_direction(
+            player.facing_direction
+        )
+        if piercing_elapsed < PIERCING_WINDUP_MS:
+            frame = 3
+        else:
+            release_elapsed = (
+                piercing_elapsed - PIERCING_WINDUP_MS
+            )
+            frame = min(
+                7,
+                release_elapsed * 8 // PIERCING_TRAVEL_MS,
+            )
+        return (
+            assets[f"player_archer_attack_{direction}_{frame}"],
+            False,
+        )
 
     if 0 <= player_state.attack_elapsed < attack_frame_duration:
         return (
@@ -204,6 +235,30 @@ def select_player_sprite(
                 player_state.attack_elapsed,
                 attack_frame_duration,
             ),
+            False,
+        )
+
+    if (
+        player_state.subclass == "archer"
+        and (
+            player.archer_basic_aiming
+            or player.archer_piercing_aiming
+        )
+    ):
+        direction = assassin_walk_direction(
+            player.facing_direction
+        )
+        target = player.archer_basic_aim_target
+        if target is not None:
+            dx = target[0] - context.floor.player_column
+            dy = target[1] - context.floor.player_row
+            if abs(dx) >= abs(dy):
+                direction = "right" if dx > 0 else "left"
+            else:
+                direction = "down" if dy > 0 else "up"
+
+        return (
+            assets[f"player_archer_attack_{direction}_3"],
             False,
         )
 
@@ -366,6 +421,7 @@ def _attack_sprite(
     attack_frame_duration,
 ):
     if player_subclass in (
+        "archer",
         "assassin",
         "berserker",
         "warlock",
@@ -419,7 +475,7 @@ def _idle_sprite(
             f"player_paladin_idle_{direction}_{frame}"
         ]
 
-    if player_subclass == "assassin":
+    if player_subclass in ("archer", "assassin"):
         player_frame = assassin_idle_frame(current_time)
     elif player_subclass == "berserker":
         player_frame = berserker_idle_frame(current_time)
@@ -429,7 +485,11 @@ def _idle_sprite(
             visual_seed
             ^ _stable_text_seed(f"player:{player_subclass}"),
         )
-
+    if player_subclass == "archer":
+        direction = assassin_walk_direction(player.facing_direction)
+        return assets[
+            f"player_archer_idle_{direction}_{player_frame}"
+        ]
     if player_subclass in ("assassin", "berserker"):
         direction = assassin_walk_direction(player.facing_direction)
         if direction == "down":

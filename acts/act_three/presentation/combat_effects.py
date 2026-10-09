@@ -2124,7 +2124,22 @@ def _draw_familiar_hit_feedback(
     shadow.set_alpha(number_alpha)
     surface.blit(shadow, number_position.move(1, 2))
     surface.blit(number_surface, number_position)
-
+    if enemy.hit_critical:
+        critical_label = damage_font.render(
+            "CRIT",
+            True,
+            (255, 204, 92),
+        )
+        critical_label.set_alpha(number_alpha)
+        surface.blit(
+            critical_label,
+            critical_label.get_rect(
+                midleft=(
+                    number_position.right + 4,
+                    number_position.centery,
+                )
+            ),
+        )
 
 def _player_hit_feedback_active(player, current_time):
     elapsed = current_time - player.hit_animation_started_at

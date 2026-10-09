@@ -7,6 +7,9 @@ from acts.act_three.ai import (
 from acts.act_three.abilities.archer import (
     resolve_archer_barrage_zone_entry,
 )
+from acts.act_three.combat.stun import (
+    finish_act_three_enemy_stun,
+)
 from acts.act_three.abilities.assassin import (
     resolve_assassin_shadow_reflex,
 )
@@ -297,13 +300,27 @@ def resolve_enemy_turn(
             enemy.prepared_attack_mode = None
             enemy.attack_windup_turns_remaining = 0
             enemy.heal_target = None
-            if enemy.stun_turns == 0:
+            if (
+                enemy.stun_turns == 0
+                and game_state.floor.presentation_act != 3
+            ):
                 add_log_message(
                     game_state.combat_log,
                     f"{enemy.name} recovers from the stun.",
                     category="buff",
                 )
             continue
+
+        if (
+            game_state.floor.presentation_act == 3
+            and finish_act_three_enemy_stun(game_state, enemy)
+        ):
+            add_log_message(
+                game_state.combat_log,
+                f"{enemy.name} recovers from the stun.",
+                category="buff",
+            )
+
         if game_state.player.invisibility_turns > 0:
             if (
                 game_state.player.selected_rune_id == "rune_of_the_veil"

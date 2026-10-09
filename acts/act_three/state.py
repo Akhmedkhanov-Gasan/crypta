@@ -58,6 +58,13 @@ class ActThreePlayerState:
     archer_leap_charge: int = 0
     archer_barrage_zone_charge: int = 0
     archer_attack_target: tuple[int, int] | None = None
+    archer_basic_aiming: bool = False
+    archer_basic_aim_target: tuple[int, int] | None = None
+    archer_basic_aim_started_at: int = 0
+    archer_piercing_aiming: bool = False
+    archer_piercing_target: tuple[int, int] | None = None
+    archer_piercing_effect_target: tuple[int, int] | None = None
+    archer_piercing_effect_started_at: int = 0
     archer_empowered_shot_aiming: bool = False
     archer_empowered_shot_target: tuple[int, int] | None = None
     archer_empowered_shot_started_at: int = 0
@@ -192,6 +199,9 @@ class ActThreeSessionState:
     act_three_test_mode: bool = False
     sidebar_tab: str = "closed"
     log_scroll_offset: int = 0
+    enemy_stun_visuals: dict[int, int] = field(
+        default_factory=dict,
+    )
     upgrade_altar_hovered: bool = False
     upgrade_altar_menu_open: bool = False
     upgrade_altar_menu_tab: str = "attributes"

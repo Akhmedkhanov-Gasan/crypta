@@ -285,6 +285,7 @@ def attack_enemy(
     attacker_position: tuple[int, int] | None = None,
     grant_ability_charge: bool = True,
     attacker_name: str = "hero",
+    suppress_veil_retrigger: bool = False,
 ) -> bool:
     player = game_state.player
     veil_passive = (
@@ -292,11 +293,11 @@ def attack_enemy(
         and player.selected_rune_id == "rune_of_the_veil"
     )
 
-    if (
+    attack_from_invisibility = (
         attacker_name == "hero"
-        and veil_passive
         and player.invisibility_turns > 0
-    ):
+    )
+    if attack_from_invisibility:
         player.invisibility_turns = 0
         add_log_message(
             game_state.combat_log,
@@ -430,6 +431,7 @@ def attack_enemy(
         damage += PALADIN_HOLY_SHIELD_DAMAGE_BONUS
     critical_hit = (
         force_critical
+        or attack_from_invisibility
         or random.random() < critical_chance
     )
 
@@ -575,18 +577,7 @@ def attack_enemy(
             player.ultimate_charge + 1,
         )
     elif grant_ability_charge and player.subclass == "archer":
-        player.archer_empowered_shot_charge = min(
-            ARCHER_EMPOWERED_SHOT_CHARGES,
-            player.archer_empowered_shot_charge + 1,
-        )
-        player.archer_leap_charge = min(
-            ARCHER_LEAP_CHARGES,
-            player.archer_leap_charge + 1,
-        )
-        player.archer_barrage_zone_charge = min(
-            ARCHER_BARRAGE_ZONE_CHARGES,
-            player.archer_barrage_zone_charge + 1,
-        )
+        charge_ability_slots(player, ("q",))
     elif grant_ability_charge and player.subclass == "berserker":
         player.berserker_crushing_leap_charge = min(
             BERSERKER_CRUSHING_LEAP_CHARGES,
@@ -679,6 +670,8 @@ def attack_enemy(
             and veil_passive
             and critical_hit
             and damage_dealt > 0
+            and not attack_from_invisibility
+            and not suppress_veil_retrigger
     ):
         player.invisibility_turns = ROGUE_VEIL_INVISIBILITY_TURNS
         player.veil_triggered_this_turn = True
@@ -1071,9 +1064,9 @@ def perform_basic_attack(
             damage_maximum,
             player.crit_chance,
             damage_bonus=ambush_damage_bonus,
-            force_critical=(
+            force_critical=attack_was_from_invisibility,
+            suppress_veil_retrigger=(
                 attack_was_from_invisibility
-                and selected_rune_id != "rune_of_the_veil"
             ),
             grant_ability_charge=(
                 not attack_was_from_invisibility

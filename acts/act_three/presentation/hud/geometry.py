@@ -151,3 +151,14 @@ def get_act_three_log_panel_rect():
 
 def get_act_three_log_arrow_rectangles():
     return {}
+
+
+def get_act_three_ability_slot_rectangle(slot):
+    return get_layout_rect(
+        get_act_three_hud_layout(),
+        "down_bar",
+        "abilities",
+        "slots",
+        f"ability_{slot}",
+        "hitbox",
+    )

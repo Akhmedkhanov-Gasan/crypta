@@ -55,6 +55,12 @@ from acts.act_three.combat import (
     is_valid_summoner_attack_target,
     is_valid_warlock_attack_target,
 )
+from acts.act_three.combat.archer_aim import (
+    cancel_archer_aim,
+)
+from acts.act_three.presentation.hud.geometry import (
+    get_act_three_ability_slot_rectangle,
+)
 from acts.act_three.presentation import (
     get_act_three_cell_from_position,
     get_act_three_bottom_hud_rectangles,
@@ -402,8 +408,19 @@ def handle_act_three_pointer_event(
                     *target_cell,
                 )
             )
-        elif game_state.player.archer_empowered_shot_aiming:
-            set_archer_empowered_cursor(True)
+        elif game_state.player.archer_piercing_aiming:
+            valid = (
+                    target_cell is not None
+                    and is_valid_archer_attack_target(
+                game_state,
+                target_cell,
+            )
+            )
+            if valid:
+                game_state.player.archer_basic_aim_target = (
+                    target_cell
+                )
+            set_archer_empowered_cursor(valid)
         elif (
                 game_state.player.player_class == "mage"
                 and game_state.player.directional_ability_aiming
@@ -554,6 +571,20 @@ def handle_act_three_pointer_event(
             event.pos,
         )
         if game_mouse_position is not None:
+            if (
+                game_state.player.subclass == "archer"
+                and get_act_three_ability_slot_rectangle(
+                    "q"
+                ).collidepoint(game_mouse_position)
+            ):
+                pygame.event.post(
+                    pygame.event.Event(
+                        pygame.KEYDOWN,
+                        key=pygame.K_q,
+                    )
+                )
+                return True
+
             if any(
                 rectangle.collidepoint(game_mouse_position)
                 for rectangle in get_act_three_bottom_hud_rectangles()
@@ -632,6 +663,34 @@ def handle_act_three_pointer_event(
                         game_state.sidebar_tab
                 ).collidepoint(game_mouse_position):
                     return True
+            if (
+                game_state.player.archer_basic_aiming
+                or game_state.player.archer_piercing_aiming
+            ):
+                target_cell = get_act_three_cell_from_position(
+                    game_state,
+                    game_mouse_position,
+                )
+                if (
+                    target_cell is not None
+                    and is_valid_archer_attack_target(
+                        game_state,
+                        target_cell,
+                    )
+                ):
+                    piercing = game_state.player.archer_piercing_aiming
+                    cancel_archer_aim(game_state)
+                    if piercing:
+                        game_state.player.archer_piercing_target = target_cell
+                    else:
+                        game_state.player.archer_attack_target = target_cell
+                    pygame.event.post(
+                        pygame.event.Event(
+                            pygame.KEYDOWN,
+                            key=pygame.K_RETURN,
+                        )
+                    )
+                return True
             if movement_available:
                 target_cell = get_act_three_cell_from_position(
                     game_state,
@@ -854,36 +913,13 @@ def handle_act_three_pointer_event(
                                 pygame.time.get_ticks(),
                             )
                             set_assassin_target_cursor()
-            elif game_state.player.archer_empowered_shot_aiming:
-                target_cell = get_act_three_cell_from_position(
-                    game_state,
-                    game_mouse_position,
-                )
-                if (
-                    target_cell is not None
-                    and is_valid_archer_empowered_shot_target(
+            elif game_state.player.subclass == "archer":
+                archer_target_cell = (
+                    get_act_three_cell_from_position(
                         game_state,
-                        target_cell,
+                        game_mouse_position,
                     )
-                ):
-                    game_state.player.archer_empowered_shot_target = (
-                        target_cell
-                    )
-                    pygame.event.post(
-                        pygame.event.Event(
-                            pygame.KEYDOWN,
-                            key=pygame.K_RETURN,
-                        )
-                    )
-                else:
-                    archer_target_cell = (
-                        get_act_three_cell_from_position(
-                            game_state,
-                            game_mouse_position,
-                        )
-                        if game_state.player.subclass == "archer"
-                        else None
-                    )
+                )
                 if (
                     archer_target_cell is not None
                     and is_valid_archer_attack_target(
@@ -900,7 +936,8 @@ def handle_act_three_pointer_event(
                             key=pygame.K_RETURN,
                         )
                     )
-                    return True
+                return True
+
     
                 warlock_target_cell = (
                     get_act_three_cell_from_position(
