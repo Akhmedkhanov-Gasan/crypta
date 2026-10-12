@@ -237,8 +237,8 @@ SUBCLASS_DEFINITIONS = {
                 ),
                 charge_required=8.0,
                 description=(
-                    "Prepare an area that fires at enemies "
-                    "entering its cells."
+                    "Place a permanent three-cell trap. Phantom "
+                    "archers strike enemies entering it."
                 ),
             ),
         },

@@ -7,6 +7,9 @@ from acts.act_three.presentation.dodge_feedback import (
     draw_player_dodge_feedback,
     record_dodge_feedback,
 )
+from acts.act_three.presentation.archer.animation import (
+    archer_hurt_sprite,
+)
 from game.events import GameEventType
 from presentation.layout import ACT_THREE_TILE_SIZE
 
@@ -1177,7 +1180,7 @@ def _draw_archer_death_echoes(
             (elapsed - 160)
             / (_PLAYER_DEATH_COLLAPSE_END_MS - 160)
         )
-        hurt_sprite = assets["player_archer_hurt"]
+        hurt_sprite = archer_hurt_sprite(assets, player)
         for echo_index, (offset_x, offset_y, alpha) in enumerate(
             ((-4, -1, 54), (-7, -3, 33), (-10, -5, 18))
         ):
@@ -1198,7 +1201,7 @@ def _draw_archer_death_echoes(
             (elapsed - _PLAYER_DEATH_COLLAPSE_END_MS)
             / (spirit_end - _PLAYER_DEATH_COLLAPSE_END_MS)
         )
-        spirit = assets["player_archer_hurt"].copy()
+        spirit = archer_hurt_sprite(assets, player).copy()
         spirit.fill(
             (70, 86, 28, 0),
             special_flags=pygame.BLEND_RGBA_ADD,
@@ -1352,7 +1355,7 @@ def _draw_archer_death_foreground(
         progress = (
             (elapsed - spirit_start) / (spirit_end - spirit_start)
         )
-        spirit = assets["player_archer_hurt"].copy()
+        spirit = archer_hurt_sprite(assets, player).copy()
         spirit.fill(
             (80, 93, 31, 0),
             special_flags=pygame.BLEND_RGBA_ADD,

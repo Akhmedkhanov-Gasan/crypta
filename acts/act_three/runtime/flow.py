@@ -144,7 +144,12 @@ def clear_archer_barrage_zone(game_state):
     player.archer_barrage_zone_anchor = None
     player.archer_barrage_zone_preview_cells.clear()
     player.archer_barrage_zone_cells.clear()
+    player.archer_barrage_zones.clear()
+    player.archer_barrage_directions.clear()
+    player.archer_barrage_hit_turns.clear()
     player.archer_barrage_shots.clear()
+    player.archer_barrage_pending_hits.clear()
+    game_state.act_three.barrage_turn = None
 
 
 def clear_berserker_crushing_leap(game_state):

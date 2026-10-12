@@ -24,6 +24,10 @@ from acts.act_three.presentation.paladin.shield_charge import (
 from acts.act_three.presentation.archer.aim_effect import (
     draw_archer_aim_effect,
 )
+from acts.act_three.presentation.archer.barrage_zone import (
+    BARRAGE_SHOT_MS,
+    draw_barrage_shot,
+)
 from acts.act_three.presentation.archer.projectile import (
     PIERCING_TOTAL_MS,
     PIERCING_WINDUP_MS,
@@ -106,7 +110,6 @@ _FAMILIAR_MOVE_DURATION_MS = 180
 _TELEPORT_CAMERA_DURATION_MS = (
     ASSASSIN_SHADOW_STEP_DURATION_MS
 )
-_ARCHER_BARRAGE_SHOT_EFFECT_MS = 360
 _TOP_VOID_CORNER_Y_OFFSET = 47
 _TOP_VOID_CORNER_X_OFFSETS = {
     "wall_corner_top_left": -18,
@@ -998,82 +1001,36 @@ def _draw_act_three_world(
             current_time,
             fonts["sidebar_numbers"],
         )
-
     active_barrage_shots = []
     for barrage_shot in game_state.player.archer_barrage_shots:
         if barrage_shot.started_at <= 0:
             active_barrage_shots.append(barrage_shot)
             continue
 
-        barrage_elapsed = (
-            current_time - barrage_shot.started_at
-        )
-        if not (
-            0
-            <= barrage_elapsed
-            < _ARCHER_BARRAGE_SHOT_EFFECT_MS
-        ):
+        elapsed = current_time - barrage_shot.started_at
+        if not 0 <= elapsed < BARRAGE_SHOT_MS:
             continue
 
         active_barrage_shots.append(barrage_shot)
-        barrage_progress = min(
-            1,
-            barrage_elapsed
-            / ARCHER_EMPOWERED_SHOT_PROJECTILE_MS,
-        )
-        ghost_visibility = math.sin(
-            math.pi
-            * min(
-                1,
-                barrage_elapsed
-                / _ARCHER_BARRAGE_SHOT_EFFECT_MS,
-            )
-        )
-        ghost_sprite = assets["player_archer_attack"].copy()
-        ghost_sprite.fill(
-            (18, 75, 42),
-            special_flags=pygame.BLEND_RGB_ADD,
-        )
-        ghost_sprite.set_alpha(
-            round(145 * ghost_visibility)
-        )
-        ghost_position = _view_position(
-            barrage_shot.origin[0],
-            barrage_shot.origin[1],
+        target_position = _view_position(
+            barrage_shot.target[0],
+            barrage_shot.target[1],
             camera_x,
             camera_y,
         )
-        view_surface.blit(ghost_sprite, ghost_position)
-
-        if (
-            barrage_elapsed
-            < ARCHER_EMPOWERED_SHOT_PROJECTILE_MS
-        ):
-            target_position = _view_position(
-                barrage_shot.target[0],
-                barrage_shot.target[1],
-                camera_x,
-                camera_y,
-            )
-            _draw_archer_projectile(
-                view_surface,
-                assets["archer_empowered_shot_arrow"],
-                (
-                    ghost_position[0]
-                    + ACT_THREE_TILE_SIZE // 2,
-                    ghost_position[1]
-                    + ACT_THREE_TILE_SIZE // 2,
-                ),
-                (
-                    target_position[0]
-                    + ACT_THREE_TILE_SIZE // 2,
-                    target_position[1]
-                    + ACT_THREE_TILE_SIZE // 2,
-                ),
-                barrage_progress,
-                empowered=True,
-                current_time=current_time,
-            )
+        draw_barrage_shot(
+            view_surface,
+            assets,
+            target_position,
+            elapsed,
+            ACT_THREE_TILE_SIZE,
+            barrage_shot.direction,
+            (
+                barrage_shot.started_at
+                ^ (barrage_shot.target[0] * 73856093)
+                ^ (barrage_shot.target[1] * 19349663)
+            ),
+        )
 
     game_state.player.archer_barrage_shots = (
         active_barrage_shots

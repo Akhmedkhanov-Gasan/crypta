@@ -5,6 +5,7 @@ from dataclasses import dataclass, field, fields
 class ArcherBarrageShotState:
     origin: tuple[int, int]
     target: tuple[int, int]
+    direction: tuple[int, int] = (1, 0)
     started_at: int = 0
 
 
@@ -56,7 +57,6 @@ class ActThreePlayerState:
     )
     archer_empowered_shot_charge: int = 0
     archer_leap_charge: int = 0
-    archer_barrage_zone_charge: int = 0
     archer_attack_target: tuple[int, int] | None = None
     archer_basic_aiming: bool = False
     archer_basic_aim_target: tuple[int, int] | None = None
@@ -80,8 +80,21 @@ class ActThreePlayerState:
     archer_barrage_zone_cells: list[
         tuple[int, int]
     ] = field(default_factory=list)
+    archer_barrage_zones: list[
+        tuple[tuple[int, int], ...]
+    ] = field(default_factory=list)
+    archer_barrage_directions: dict[
+        tuple[tuple[int, int], ...],
+        tuple[int, int],
+    ] = field(default_factory=dict)
+    archer_barrage_hit_turns: dict[int, int] = field(
+        default_factory=dict,
+    )
     archer_barrage_shots: list[
         ArcherBarrageShotState
+    ] = field(default_factory=list)
+    archer_barrage_pending_hits: list[
+        tuple[int, tuple[int, int], tuple[int, int]]
     ] = field(default_factory=list)
 
     berserker_crushing_leap_charge: int = 0
@@ -190,7 +203,19 @@ class ActThreePlayerState:
 
 
 @dataclass
+class ArcherBarrageTurnState:
+    enemy_ids: tuple[int, ...]
+    next_index: int
+    player_position_before_action: tuple[int, int]
+    rogue_ability_activated: bool
+    damaged_enemy_names: frozenset[str]
+    prelude_done: bool = False
+    ready_at: int = 0
+
+
+@dataclass
 class ActThreeSessionState:
+    barrage_turn: ArcherBarrageTurnState | None = None
     act_three_transition_open: bool = False
     act_three_transition_started_at: int = 0
     act_three_visual_started_at: int = 0

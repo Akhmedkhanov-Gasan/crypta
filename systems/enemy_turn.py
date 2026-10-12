@@ -223,13 +223,18 @@ def resolve_enemy_turn(
     hazard_costs: dict[tuple[int, int], int] | None = None,
     goblin_summoning_enabled: bool = False,
     enemy_turn_handlers=None,
+    selected_enemy_id: int | None = None,
+    run_prelude: bool = True,
+    run_postlude: bool = True,
+    initial_damaged_enemy_names: frozenset[str] | None = None,
 ) -> None:
     if hazard_costs is None:
         hazard_costs = {}
-    update_oracle_projectiles(game_state)
-    resolve_summoner_familiar_turn(game_state)
+    if run_prelude:
+        update_oracle_projectiles(game_state)
+        resolve_summoner_familiar_turn(game_state)
 
-    if game_state.player.health <= 0:
+    if run_prelude and game_state.player.health <= 0:
         game_state.emit(
             GameEvent(
                 type=GameEventType.DEATH,
@@ -250,17 +255,26 @@ def resolve_enemy_turn(
             "The hero has fallen.",
             category="death",
         )
-    damaged_enemy_names = {
-        event.target
-        for event in game_state.events
-        if (
+    damaged_enemy_names = (
+        initial_damaged_enemy_names
+        if initial_damaged_enemy_names is not None
+        else {
+            event.target
+            for event in game_state.events
+            if (
                 event.type is GameEventType.HIT
                 and event.target is not None
                 and event.amount is not None
                 and event.amount > 0
-        )
-    }
+            )
+        }
+    )
     for enemy in tuple(game_state.floor.enemies):
+        if (
+            selected_enemy_id is not None
+            and id(enemy) != selected_enemy_id
+        ):
+            continue
         if game_state.player.health <= 0:
             break
         if enemy["health"] <= 0:
@@ -994,18 +1008,19 @@ def resolve_enemy_turn(
                 hazard_costs,
             )
 
-    if (
-        game_state.player.invisibility_turns > 0
-        and not rogue_ability_activated
-        and not game_state.player.veil_triggered_this_turn
-    ):
-        game_state.player.invisibility_turns -= 1
+    if run_postlude:
+        if (
+            game_state.player.invisibility_turns > 0
+            and not rogue_ability_activated
+            and not game_state.player.veil_triggered_this_turn
+        ):
+            game_state.player.invisibility_turns -= 1
 
-        if game_state.player.invisibility_turns == 0:
-            add_log_message(
-                game_state.combat_log,
-                "The rogue becomes visible.",
-                category="ability",
-            )
+            if game_state.player.invisibility_turns == 0:
+                add_log_message(
+                    game_state.combat_log,
+                    "The rogue becomes visible.",
+                    category="ability",
+                )
 
-    game_state.player.veil_triggered_this_turn = False
+        game_state.player.veil_triggered_this_turn = False

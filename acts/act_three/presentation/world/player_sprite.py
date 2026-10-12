@@ -12,6 +12,11 @@ from acts.act_three.presentation.paladin.block import (
 from acts.act_three.presentation.paladin.shield_charge import (
     shield_charge_sprite,
 )
+from acts.act_three.presentation.archer.animation import (
+    ARCHER_DEATH_FRAME_DURATION_MS,
+    ARCHER_FRAME_COUNT,
+    archer_hurt_sprite,
+)
 from acts.act_three.presentation.paladin.sacred_ground import (
     paladin_sacred_ground_sprite,
 )
@@ -27,6 +32,7 @@ from acts.act_three.presentation.berserker import (
 )
 from acts.act_three.presentation.combat_effects import (
     _PLAYER_HIT_SPRITE_DURATION_MS,
+    _animated_player_death_frame,
     _assassin_death_frame,
     _berserker_death_frame,
     _player_death_frame,
@@ -292,6 +298,13 @@ def _death_sprite(
 ):
     if player_subclass == "assassin":
         death_frame = _assassin_death_frame(player, current_time)
+    elif player_subclass == "archer":
+        death_frame = _animated_player_death_frame(
+            player,
+            current_time,
+            ARCHER_FRAME_COUNT,
+            ARCHER_DEATH_FRAME_DURATION_MS,
+        )
     elif player_subclass == "berserker":
         death_frame = _berserker_death_frame(player, current_time)
     elif player_subclass == "paladin":
@@ -315,7 +328,8 @@ def _death_sprite(
             return assets[
                 f"player_warlock_demon_hurt_{direction}_0"
             ]
-
+        if player_subclass == "archer":
+            return archer_hurt_sprite(assets, player)
         if player_subclass in ("berserker", "warlock", "paladin"):
             direction = assassin_hurt_direction(
                 player.facing_direction
@@ -326,7 +340,7 @@ def _death_sprite(
 
         return assets[f"player_{player_subclass}_hurt"]
 
-    if player_subclass in ("berserker", "paladin"):
+    if player_subclass in ("archer", "berserker", "paladin"):
         direction = assassin_hurt_direction(
             player.facing_direction
         )
@@ -383,7 +397,12 @@ def _hurt_sprite(
         ]
 
     if player_subclass == "archer":
-        return assets["player_archer_hurt"]
+        elapsed = current_time - player.hit_animation_started_at
+        frame = berserker_hurt_frame(
+            elapsed,
+            _PLAYER_HIT_SPRITE_DURATION_MS,
+        )
+        return archer_hurt_sprite(assets, player, frame)
 
     if player_subclass == "warlock":
         elapsed = current_time - player.hit_animation_started_at

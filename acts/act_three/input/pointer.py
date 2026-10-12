@@ -29,7 +29,6 @@ from acts.act_three.abilities.archer import (
     is_valid_archer_barrage_zone_anchor,
     is_valid_archer_empowered_shot_target,
     is_valid_archer_leap_target,
-    place_archer_barrage_zone,
     update_archer_barrage_zone_preview,
 )
 from acts.act_three.abilities.assassin import (
@@ -584,7 +583,19 @@ def handle_act_three_pointer_event(
                     )
                 )
                 return True
-
+            if (
+                game_state.player.subclass == "archer"
+                and get_act_three_ability_slot_rectangle(
+                    "f"
+                ).collidepoint(game_mouse_position)
+            ):
+                pygame.event.post(
+                    pygame.event.Event(
+                        pygame.KEYDOWN,
+                        key=pygame.K_f,
+                    )
+                )
+                return True
             if any(
                 rectangle.collidepoint(game_mouse_position)
                 for rectangle in get_act_three_bottom_hud_rectangles()
@@ -863,8 +874,14 @@ def handle_act_three_pointer_event(
                     game_state,
                     target_cell,
                 ):
-                    place_archer_barrage_zone(game_state)
-                    set_archer_barrage_zone_cursor()
+                    pygame.event.post(
+                        pygame.event.Event(
+                            pygame.KEYDOWN,
+                            key=pygame.K_UNKNOWN,
+                            archer_barrage_commit=True,
+                        )
+                    )
+                return True
             elif game_state.player.archer_leap_aiming:
                 target_cell = get_act_three_cell_from_position(
                     game_state,

@@ -30,6 +30,7 @@ from acts.act_three.abilities.archer import (
     request_archer_barrage_zone,
     request_archer_empowered_shot,
     request_archer_leap,
+    select_archer_barrage_zone_direction,
 )
 from acts.act_three.combat.archer_aim import (
     begin_archer_aim,
@@ -123,6 +124,11 @@ def _act_three_aiming_direction(event):
 
 
 def handle_act_three_key_event(event, game_state):
+    if (
+        getattr(event, "archer_barrage_commit", False)
+        or getattr(event, "archer_barrage_resume", False)
+    ):
+        return False
     sacred_ground_turn = getattr(
         event,
         "paladin_sacred_ground_turn",
@@ -165,7 +171,36 @@ def handle_act_three_key_event(event, game_state):
     ):
         return True
     aiming_direction = _act_three_aiming_direction(event)
+    if game_state.player.archer_barrage_zone_aiming:
+        if event.key == pygame.K_ESCAPE:
+            cancel_archer_barrage_zone(game_state)
+            set_archer_barrage_zone_cursor()
+            return True
 
+        if aiming_direction is not None:
+            valid = select_archer_barrage_zone_direction(
+                game_state,
+                aiming_direction,
+            )
+            set_archer_barrage_zone_cursor(valid)
+            return True
+
+        if event.key in (
+            pygame.K_f,
+            pygame.K_RETURN,
+            pygame.K_KP_ENTER,
+        ):
+            if game_state.player.archer_barrage_zone_preview_cells:
+                pygame.event.post(
+                    pygame.event.Event(
+                        pygame.KEYDOWN,
+                        key=pygame.K_UNKNOWN,
+                        archer_barrage_commit=True,
+                    )
+                )
+            return True
+
+        return True
     if (
         game_state.player.archer_basic_aiming
         or game_state.player.archer_piercing_aiming
@@ -236,9 +271,16 @@ def handle_act_three_key_event(event, game_state):
             )
             return True
 
+        if event.key == pygame.K_f:
+            request_archer_barrage_zone(game_state)
+            set_archer_barrage_zone_cursor(
+                game_state.player.archer_barrage_zone_aiming
+            )
+            return True
+
     if (
-        game_state.player.paladin_shield_charge_aiming
-        and aiming_direction is not None
+            game_state.player.paladin_shield_charge_aiming
+    and aiming_direction is not None
     ):
         previous_target = (
             game_state.player.paladin_shield_charge_target
@@ -521,17 +563,6 @@ def handle_act_three_key_event(event, game_state):
         request_paladin_sacred_ground(
             game_state,
             pygame.time.get_ticks(),
-        )
-        return True
-    
-    if (
-        event.key in (pygame.K_3, pygame.K_KP3)
-        and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
-        and game_state.player.subclass == "archer"
-    ):
-        request_archer_barrage_zone(game_state)
-        set_archer_barrage_zone_cursor(
-            game_state.player.archer_barrage_zone_aiming
         )
         return True
     

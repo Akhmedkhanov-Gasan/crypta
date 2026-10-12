@@ -1314,29 +1314,6 @@ def load_act_three_gameplay_assets():
             )
         )
 
-    assets["player_archer_hurt"] = (
-        _load_pixel_scaled_image(
-            act_directory
-            / "player"
-            / "archer"
-            / "hurt"
-            / "hurt_00.png",
-            (tile_size, tile_size),
-        )
-    )
-
-    archer_death_directory = (
-        act_directory / "player" / "archer" / "death"
-    )
-    for frame_index in range(2):
-        assets[f"player_archer_death_{frame_index}"] = (
-            _load_pixel_scaled_image(
-                archer_death_directory
-                / f"death_{frame_index:02d}.png",
-                (tile_size, tile_size),
-            )
-        )
-
     assets["player_summoner_hurt"] = (
         _load_pixel_scaled_image(
             act_directory

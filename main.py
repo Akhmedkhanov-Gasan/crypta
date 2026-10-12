@@ -206,8 +206,10 @@ from acts.act_three.input import (
     handle_act_three_key_event,
     handle_act_three_pointer_event,
 )
+from acts.act_three.turns import resume_barrage_turn
 from presentation.cursors import (
     set_archer_attack_cursor,
+    set_archer_barrage_zone_cursor,
     set_archer_empowered_cursor,
     set_archer_leap_cursor,
     set_assassin_target_cursor,
@@ -231,6 +233,9 @@ from acts.act_three.combat.archer_aim import (
 )
 from acts.act_three.abilities.archer_piercing_shot import (
     perform_archer_piercing_shot,
+)
+from acts.act_three.abilities.archer_barrage_zone import (
+    place_archer_barrage_zone,
 )
 from acts.act_three.presentation.combat_effects import (
     record_enemy_death_feedback,
@@ -676,6 +681,22 @@ def main():
                 )
             )
 
+        barrage_turn = game_state.act_three.barrage_turn
+        if (
+            current_act == 3
+            and app_runtime.game_started
+            and not app_runtime.menu_open
+            and barrage_turn is not None
+            and pygame.time.get_ticks() >= barrage_turn.ready_at
+        ):
+            pygame.event.post(
+                pygame.event.Event(
+                    pygame.KEYDOWN,
+                    key=pygame.K_UNKNOWN,
+                    archer_barrage_resume=True,
+                )
+            )
+
         for event in pygame.event.get():
             if app_runtime.quit_requested:
                 continue
@@ -683,6 +704,31 @@ def main():
             if loading.completed:
                 if event.type == pygame.QUIT:
                     app_runtime.request_quit()
+                continue
+
+            if (
+                current_act == 3
+                and game_state.act_three.barrage_turn is not None
+                and event.type in (
+                    pygame.KEYDOWN,
+                    pygame.MOUSEBUTTONDOWN,
+                    pygame.MOUSEBUTTONUP,
+                )
+                and not getattr(
+                    event,
+                    "archer_barrage_resume",
+                    False,
+                )
+                and not (
+                    event.type == pygame.KEYDOWN
+                    and event.key in (
+                        pygame.K_F1,
+                        pygame.K_F2,
+                        pygame.K_F3,
+                        pygame.K_F4,
+                    )
+                )
+            ):
                 continue
 
             if cutscene_skip.handle_event(
@@ -1919,35 +1965,41 @@ def main():
                             )
 
                         continue
-
                     start_auto_move(
                         act_two_input_state,
                         game_state,
                         target_cell,
                     )
+
             elif event.type == pygame.KEYDOWN:
+                barrage_resume = getattr(
+                    event,
+                    "archer_barrage_resume",
+                    False,
+                )
                 automatic_movement = getattr(
                     event,
                     "automatic_movement",
                     False,
                 )
                 if (
-                    (
-                        event.key in MOVEMENT_KEYS
-                        or getattr(event, "movement_direction", None)
-                        is not None
-                    )
-                    and not (
+                        (
+                                event.key in MOVEMENT_KEYS
+                                or getattr(event, "movement_direction", None)
+                                is not None
+                        )
+                        and not (
                         current_act == 3
                         and (
-                            game_state.player.archer_basic_aiming
-                            or game_state.player.archer_piercing_aiming
+                                game_state.player.archer_basic_aiming
+                                or game_state.player.archer_piercing_aiming
+                                or game_state.player.archer_barrage_zone_aiming
                         )
-                    )
-                    and movement_input_is_locked(
-                        act_two_input_state,
-                        pygame.time.get_ticks(),
-                    )
+                )
+                        and movement_input_is_locked(
+                    act_two_input_state,
+                    pygame.time.get_ticks(),
+                )
                 ):
                     act_two_input_state.reset_held_movement()
                     continue
@@ -2119,7 +2171,10 @@ def main():
                         )
                     continue
 
-                if game_state.player.health <= 0 or game_state.game_won:
+                if (
+                    game_state.player.health <= 0
+                    or game_state.game_won
+                ) and not barrage_resume:
                     if event.key == pygame.K_r:
                         if (
                             act_three_music_attempted
@@ -2199,7 +2254,10 @@ def main():
                         continue
 
                 stunned_action = False
-                if game_state.player.stun_turns > 0:
+                if (
+                    game_state.player.stun_turns > 0
+                    and not barrage_resume
+                ):
                     if forced_movement_is_active(
                         game_state.player,
                         pygame.time.get_ticks(),
@@ -2554,7 +2612,9 @@ def main():
                 player_acted = False
                 game_state.player_attack_targets = []
 
-                if stunned_action:
+                if barrage_resume:
+                    player_acted = True
+                elif stunned_action:
                     game_state.player.stun_turns -= 1
                     player_acted = True
                     add_log_message(
@@ -2705,6 +2765,12 @@ def main():
                             pygame.time.get_ticks()
                         )
                     set_archer_empowered_cursor()
+                elif getattr(event, "archer_barrage_commit", False):
+                    player_acted = place_archer_barrage_zone(
+                        game_state
+                    )
+                    if player_acted:
+                        set_archer_barrage_zone_cursor()
                 elif game_state.player.archer_piercing_target is not None:
                     piercing_target = (
                         game_state.player.archer_piercing_target
@@ -3030,7 +3096,7 @@ def main():
                             FIRST_ACT_FINAL_FLOOR,
                             movement_attempt_started_at,
                         )
-                if player_acted:
+                if player_acted and not barrage_resume:
                     game_state.run_stats.turns_taken += 1
                 elif automatic_movement:
                     act_two_input_state.cancel_auto_move()
@@ -3080,35 +3146,47 @@ def main():
                     )
 
                 if player_acted and current_act != 2:
-                    game_state.player.familiar_turn_started_at = (
-                        pygame.time.get_ticks()
-                    )
-                    advance_spike_traps(game_state)
-                    update_treasury_trial(game_state)
+                    if not barrage_resume:
+                        game_state.player.familiar_turn_started_at = (
+                            pygame.time.get_ticks()
+                        )
+                        advance_spike_traps(game_state)
+                        update_treasury_trial(game_state)
+
                     if game_state.player.health > 0:
-                        resolve_enemy_turn(
-                            game_state,
-                            player_position_before_action,
-                            rogue_ability_activated,
-                        )
-                    if (
-                        current_act == 3
-                        and not getattr(
-                            event,
-                            "paladin_sacred_ground_turn",
-                            False,
-                        )
-                    ):
-                        resolve_paladin_sacred_ground(
-                            game_state
-                        )
-                    if current_act == 2:
-                        advance_fire_zones(game_state)
-                    update_treasury_trial(game_state)
-                    advance_berserker_last_rage(game_state)
-                    advance_paladin_sacred_ground(game_state)
-                    advance_warlock_curses(game_state)
-                    advance_warlock_demon_form(game_state)
+                        if barrage_resume:
+                            resume_barrage_turn(game_state)
+                        else:
+                            resolve_enemy_turn(
+                                game_state,
+                                player_position_before_action,
+                                rogue_ability_activated,
+                            )
+
+                    if game_state.act_three.barrage_turn is None:
+                        if (
+                            current_act == 3
+                            and not getattr(
+                                event,
+                                "paladin_sacred_ground_turn",
+                                False,
+                            )
+                        ):
+                            resolve_paladin_sacred_ground(
+                                game_state
+                            )
+                        if current_act == 2:
+                            advance_fire_zones(game_state)
+                        update_treasury_trial(game_state)
+                        advance_berserker_last_rage(game_state)
+                        advance_paladin_sacred_ground(game_state)
+                        advance_warlock_curses(game_state)
+                        advance_warlock_demon_form(game_state)
+
+                    if game_state.act_three.barrage_turn is not None:
+                        act_two_input_state.cancel_auto_move()
+                        act_two_input_state.reset_held_movement()
+
                     enemy_movement_started_at = (
                         pygame.time.get_ticks()
                     )
