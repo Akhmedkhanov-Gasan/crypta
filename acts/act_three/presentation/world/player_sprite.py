@@ -6,6 +6,9 @@ from acts.act_three.presentation.paladin.animation import (
     paladin_death_frame,
     paladin_idle_frame,
 )
+from acts.act_three.presentation.summoner.animation import (
+    summoner_idle_frame,
+)
 from acts.act_three.presentation.paladin.block import (
     paladin_block_sprite,
 )
@@ -492,6 +495,18 @@ def _idle_sprite(
         frame = paladin_idle_frame(current_time)
         return assets[
             f"player_paladin_idle_{direction}_{frame}"
+        ]
+
+    if (
+        player_subclass == "summoner"
+        and not player.summoner_familiar_active
+    ):
+        direction = assassin_walk_direction(
+            player.facing_direction
+        )
+        frame = summoner_idle_frame(current_time)
+        return assets[
+            f"player_summoner_idle_{direction}_{frame}"
         ]
 
     if player_subclass in ("archer", "assassin"):

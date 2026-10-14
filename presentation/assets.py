@@ -24,6 +24,9 @@ from acts.act_three.presentation.player_assets import (
 from acts.act_three.presentation.paladin.animation import (
     load_paladin_animation_assets,
 )
+from acts.act_three.presentation.summoner.animation import (
+    load_summoner_animation_assets,
+)
 from acts.act_three.presentation.enemies import (
     load_enemy_animation_assets,
 )
@@ -1235,28 +1238,12 @@ def load_act_three_gameplay_assets():
             )
         )
 
-    idle_filenames = (
-        "idle_00.png",
-        "idle_01.png",
-        "idle_02.png",
+    load_summoner_animation_assets(
+        assets,
+        act_directory,
+        tile_size,
+        _load_pixel_scaled_image,
     )
-
-    for subclass in ("summoner",):
-        idle_directory = (
-            act_directory / "player" / subclass / "idle"
-        )
-
-        for frame_index, filename in enumerate(
-            idle_filenames
-        ):
-            assets[
-                f"player_{subclass}_idle_{frame_index}"
-            ] = (
-                _load_scaled_image(
-                    idle_directory / filename,
-                    (tile_size, tile_size),
-                )
-            )
     load_archer_animation_assets(
         assets,
         act_directory,
@@ -1344,18 +1331,6 @@ def load_act_three_gameplay_assets():
             _load_pixel_scaled_image(
                 summoner_death_directory
                 / f"death_{frame_index:02d}.png",
-                (tile_size, tile_size),
-            )
-        )
-
-    summoner_walk_directory = (
-        act_directory / "player" / "summoner" / "walk"
-    )
-    for frame_index in range(2):
-        assets[f"player_summoner_walk_{frame_index}"] = (
-            _load_pixel_scaled_image(
-                summoner_walk_directory
-                / f"walk_{frame_index:02d}.png",
                 (tile_size, tile_size),
             )
         )
