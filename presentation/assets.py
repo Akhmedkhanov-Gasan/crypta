@@ -1362,14 +1362,6 @@ def load_act_three_gameplay_assets():
         (tile_size, tile_size),
         pygame.SRCALPHA,
     )
-    assets["player_summoner_attack"] = _load_pixel_scaled_image(
-        act_directory
-        / "player"
-        / "summoner"
-        / "attack"
-        / "attack_00.png",
-        (tile_size, tile_size),
-    )
     assets["player_summoner_no_familiar_attack"] = (
         _load_pixel_scaled_image(
             act_directory

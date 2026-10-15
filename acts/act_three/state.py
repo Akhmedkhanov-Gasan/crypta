@@ -168,6 +168,9 @@ class ActThreePlayerState:
     summoner_familiar_hit_position: tuple[int, int] | None = None
     familiar_turn_started_at: int = 0
     summoner_attack_target: tuple[int, int] | None = None
+    summoner_aiming: bool = False
+    summoner_aim_target: tuple[int, int] | None = None
+    summoner_aim_started_at: int = 0
 
     facing_direction: tuple[int, int] = (0, 1)
     shadow_reflex_started_at: int = -1

@@ -18,6 +18,7 @@ from presentation.cursors import (
     set_assassin_target_cursor,
     set_berserker_crushing_leap_cursor,
     set_paladin_shield_charge_cursor,
+    set_summoner_attack_cursor,
     set_summoner_staff_cursor,
     set_warlock_curse_cursor,
     set_warlock_staff_cursor,
@@ -56,6 +57,10 @@ from acts.act_three.combat import (
 )
 from acts.act_three.combat.archer_aim import (
     cancel_archer_aim,
+)
+from acts.act_three.combat.summoner_aim import (
+    cancel_summoner_aim,
+    confirm_summoner_aim,
 )
 from acts.act_three.presentation.hud.geometry import (
     get_act_three_ability_slot_rectangle,
@@ -420,6 +425,19 @@ def handle_act_three_pointer_event(
                     target_cell
                 )
             set_archer_empowered_cursor(valid)
+        elif game_state.player.summoner_aiming:
+            target_is_valid = (
+                    target_cell is not None
+                    and is_valid_summoner_attack_target(
+                game_state,
+                target_cell,
+            )
+            )
+            if target_is_valid:
+                game_state.player.summoner_aim_target = (
+                    target_cell
+                )
+            set_summoner_attack_cursor(target_is_valid)
         elif (
                 game_state.player.player_class == "mage"
                 and game_state.player.directional_ability_aiming
@@ -468,7 +486,7 @@ def handle_act_three_pointer_event(
                 )
             )
         elif game_state.player.subclass == "summoner":
-            set_summoner_staff_cursor(
+            set_summoner_attack_cursor(
                 target_cell is not None
                 and is_valid_summoner_attack_target(
                     game_state,
@@ -701,6 +719,30 @@ def handle_act_three_pointer_event(
                             key=pygame.K_RETURN,
                         )
                     )
+                    return True
+            if game_state.player.summoner_aiming:
+                target_cell = get_act_three_cell_from_position(
+                    game_state,
+                    game_mouse_position,
+                )
+                if (
+                        target_cell is not None
+                        and is_valid_summoner_attack_target(
+                    game_state,
+                    target_cell,
+                )
+                ):
+                    game_state.player.summoner_aim_target = (
+                        target_cell
+                    )
+                    if confirm_summoner_aim(game_state):
+                        pygame.event.post(
+                            pygame.event.Event(
+                                pygame.KEYDOWN,
+                                key=pygame.K_RETURN,
+                            )
+                        )
+                    set_summoner_attack_cursor()
                 return True
             if movement_available:
                 target_cell = get_act_three_cell_from_position(
@@ -955,7 +997,7 @@ def handle_act_three_pointer_event(
                     )
                 return True
 
-    
+
                 warlock_target_cell = (
                     get_act_three_cell_from_position(
                         game_state,
@@ -981,7 +1023,7 @@ def handle_act_three_pointer_event(
                         )
                     )
                     return True
-    
+
                 summoner_target_cell = (
                     get_act_three_cell_from_position(
                         game_state,

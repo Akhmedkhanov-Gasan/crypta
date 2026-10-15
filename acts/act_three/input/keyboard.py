@@ -19,6 +19,7 @@ from presentation.cursors import (
     set_assassin_target_cursor,
     set_berserker_crushing_leap_cursor,
     set_paladin_shield_charge_cursor,
+    set_summoner_attack_cursor,
     set_summoner_staff_cursor,
     set_warlock_curse_cursor,
     set_warlock_staff_cursor,
@@ -37,6 +38,12 @@ from acts.act_three.combat.archer_aim import (
     cancel_archer_aim,
     confirm_archer_aim,
     select_archer_aim_target,
+)
+from acts.act_three.combat.summoner_aim import (
+    begin_summoner_aim,
+    cancel_summoner_aim,
+    confirm_summoner_aim,
+    select_summoner_aim_target,
 )
 from acts.act_three.abilities.archer_piercing_shot import (
     piercing_shot_ready,
@@ -171,6 +178,38 @@ def handle_act_three_key_event(event, game_state):
     ):
         return True
     aiming_direction = _act_three_aiming_direction(event)
+
+    if game_state.player.summoner_aiming:
+        if event.key == pygame.K_ESCAPE:
+            cancel_summoner_aim(game_state)
+            set_summoner_attack_cursor()
+            return True
+
+        if event.key == pygame.K_r:
+            if confirm_summoner_aim(game_state):
+                pygame.event.post(
+                    pygame.event.Event(
+                        pygame.KEYDOWN,
+                        key=pygame.K_RETURN,
+                    )
+                )
+            set_summoner_attack_cursor()
+            return True
+
+        if aiming_direction is not None:
+            valid = select_summoner_aim_target(
+                game_state,
+                aiming_direction,
+            )
+            set_summoner_attack_cursor(valid)
+            return True
+
+        if event.key in WAIT_KEYS:
+            return True
+
+        cancel_summoner_aim(game_state)
+        set_summoner_attack_cursor()
+
     if game_state.player.archer_barrage_zone_aiming:
         if event.key == pygame.K_ESCAPE:
             cancel_archer_barrage_zone(game_state)
@@ -508,6 +547,18 @@ def handle_act_three_key_event(event, game_state):
         )
         return True
     
+    if (
+        event.key == pygame.K_r
+        and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
+        and game_state.player.subclass == "summoner"
+    ):
+        aiming = begin_summoner_aim(
+            game_state,
+            pygame.time.get_ticks(),
+        )
+        set_summoner_attack_cursor(aiming)
+        return True
+
     if (
         event.key in (pygame.K_1, pygame.K_KP1)
         and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3

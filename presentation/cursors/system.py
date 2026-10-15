@@ -709,6 +709,20 @@ def set_summoner_staff_cursor(active=False):
     )
 
 
+def set_summoner_attack_cursor(active=False):
+    if not active:
+        set_default_cursor()
+        return
+
+    _apply_cursor(
+        "summoner_attack",
+        lambda: _build_target_cursor(
+            (32, 194, 190, 255),
+            (177, 255, 246, 255),
+        ),
+    )
+
+
 def set_warlock_curse_cursor(
     aiming=False,
     valid=False,

@@ -5,6 +5,12 @@ import pygame
 from acts.act_three.presentation.paladin.attack_effects import (
     draw_paladin_attack_effects,
 )
+from acts.act_three.presentation.summoner.animation import (
+    SUMMONER_ATTACK_DURATION_MS,
+)
+from acts.act_three.presentation.summoner.projectile import (
+    draw_summoner_bird_attack,
+)
 from acts.act_three.presentation.paladin.block import (
     draw_player_block_effect,
 )
@@ -23,6 +29,9 @@ from acts.act_three.presentation.paladin.shield_charge import (
 )
 from acts.act_three.presentation.archer.aim_effect import (
     draw_archer_aim_effect,
+)
+from acts.act_three.presentation.summoner.aim_effect import (
+    draw_summoner_aim_effect,
 )
 from acts.act_three.presentation.archer.barrage_zone import (
     BARRAGE_SHOT_MS,
@@ -257,6 +266,14 @@ def _draw_act_three_world(
     )
 
     draw_archer_aim_effect(
+        view_surface,
+        game_state,
+        camera_x,
+        camera_y,
+        current_time,
+        ACT_THREE_TILE_SIZE,
+    )
+    draw_summoner_aim_effect(
         view_surface,
         game_state,
         camera_x,
@@ -1205,7 +1222,10 @@ def _draw_act_three_world(
             assets["archer_empowered_shot_arrow"],
             origin,
             destination,
-            min(1, ordinary_elapsed / _ATTACK_FRAME_DURATION_MS),
+            min(
+                1,
+                ordinary_elapsed / _ATTACK_FRAME_DURATION_MS,
+            ),
         )
     elif (
         player_subclass == "warlock"
@@ -1221,17 +1241,53 @@ def _draw_act_three_world(
         _draw_warlock_orb(
             view_surface,
             (
-                player_position[0] + ACT_THREE_TILE_SIZE // 2,
-                player_position[1] + ACT_THREE_TILE_SIZE // 2,
+                player_position[0]
+                + ACT_THREE_TILE_SIZE // 2,
+                player_position[1]
+                + ACT_THREE_TILE_SIZE // 2,
             ),
             (
-                target_position[0] + ACT_THREE_TILE_SIZE // 2,
-                target_position[1] + ACT_THREE_TILE_SIZE // 2,
+                target_position[0]
+                + ACT_THREE_TILE_SIZE // 2,
+                target_position[1]
+                + ACT_THREE_TILE_SIZE // 2,
             ),
             min(
                 1,
                 ordinary_elapsed / _ATTACK_FRAME_DURATION_MS,
             ),
+            current_time,
+        )
+    elif (
+        player_subclass == "summoner"
+        and not game_state.player.summoner_familiar_active
+        and ordinary_target is not None
+        and 0
+        <= ordinary_elapsed
+        < SUMMONER_ATTACK_DURATION_MS
+    ):
+        target_position = _view_position(
+            ordinary_target[0],
+            ordinary_target[1],
+            camera_x,
+            camera_y,
+        )
+        draw_summoner_bird_attack(
+            view_surface,
+            (
+                player_position[0]
+                + ACT_THREE_TILE_SIZE // 2,
+                player_position[1]
+                + ACT_THREE_TILE_SIZE // 2,
+            ),
+            (
+                target_position[0]
+                + ACT_THREE_TILE_SIZE // 2,
+                target_position[1]
+                + ACT_THREE_TILE_SIZE // 2,
+            ),
+            ordinary_elapsed,
+            ACT_THREE_TILE_SIZE,
             current_time,
         )
 

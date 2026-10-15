@@ -7,6 +7,7 @@ from acts.act_three.presentation.paladin.animation import (
     paladin_idle_frame,
 )
 from acts.act_three.presentation.summoner.animation import (
+    SUMMONER_ATTACK_DURATION_MS,
     summoner_idle_frame,
 )
 from acts.act_three.presentation.paladin.block import (
@@ -232,6 +233,24 @@ def select_player_sprite(
             )
         return (
             assets[f"player_archer_attack_{direction}_{frame}"],
+            False,
+        )
+
+    if (
+        player_state.subclass == "summoner"
+        and not player.summoner_familiar_active
+        and 0
+        <= player_state.attack_elapsed
+        < SUMMONER_ATTACK_DURATION_MS
+    ):
+        return (
+            _attack_sprite(
+                player_state.subclass,
+                player,
+                assets,
+                player_state.attack_elapsed,
+                SUMMONER_ATTACK_DURATION_MS,
+            ),
             False,
         )
 
@@ -472,11 +491,25 @@ def _attack_sprite(
             f"player_{player_subclass}_attack_{direction}_{frame}"
         ]
 
-    if (
-        player_subclass == "summoner"
-        and player.summoner_familiar_active
-    ):
-        return assets["player_summoner_no_familiar_attack"]
+    if player_subclass == "summoner":
+        if player.summoner_familiar_active:
+            return assets[
+                "player_summoner_no_familiar_attack"
+            ]
+
+        direction = assassin_attack_direction(
+            player.facing_direction
+        )
+        frame = assassin_attack_frame(
+            attack_elapsed,
+            attack_frame_duration,
+        )
+        return assets[
+            (
+                "player_summoner_attack_"
+                f"{direction}_{frame}"
+            )
+        ]
 
     return assets[f"player_{player_subclass}_attack"]
 

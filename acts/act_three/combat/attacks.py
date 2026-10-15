@@ -282,20 +282,20 @@ def is_valid_summoner_attack_target(
     if target_enemy is None:
         return False
 
+    if origin is None:
+        origin = (floor.player_column, floor.player_row)
+
     attack_range = (
         SUMMONER_ATTACK_RANGE_WITH_FAMILIAR
         if player.summoner_familiar_active
         else SUMMONER_ATTACK_RANGE
     )
-    if origin is None:
-        origin = (floor.player_column, floor.player_row)
-
     distance = max(
         abs(target_cell[0] - origin[0]),
         abs(target_cell[1] - origin[1]),
     )
     return (
-        distance <= attack_range
+        0 < distance <= attack_range
         and has_line_of_sight(
             floor.map,
             *origin,
@@ -311,12 +311,19 @@ def perform_summoner_attack(
     if not is_valid_summoner_attack_target(game_state, target_cell):
         return False
 
+    player = game_state.player
     floor = game_state.floor
     hit_enemy = next(
         enemy
         for enemy in floor.enemies
         if enemy.health > 0
         and target_cell in get_enemy_occupied_positions(enemy)
+    )
+    player.facing_direction = direction_toward(
+        floor.player_column,
+        floor.player_row,
+        target_cell[0],
+        target_cell[1],
     )
     game_state.player_attack_targets = [target_cell]
     game_state.emit(
@@ -325,16 +332,25 @@ def perform_summoner_attack(
             actor="hero",
             origin=(floor.player_column, floor.player_row),
             positions=(target_cell,),
-            data={"kind": "summoner_magic"},
+            data={
+                "kind": (
+                    "summoner_magic"
+                    if player.summoner_familiar_active
+                    else "summoner_bird"
+                )
+            },
         )
     )
     enemy_was_defeated = attack_enemy(
         game_state,
         hit_enemy,
-        game_state.player.damage_min,
-        game_state.player.damage_max,
-        game_state.player.crit_chance,
-        attacker_position=(floor.player_column, floor.player_row),
+        player.damage_min,
+        player.damage_max,
+        player.crit_chance,
+        attacker_position=(
+            floor.player_column,
+            floor.player_row,
+        ),
     )
     if hit_enemy.type == "oracle":
         oracle_hit_reaction(
