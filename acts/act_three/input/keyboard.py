@@ -560,7 +560,7 @@ def handle_act_three_key_event(event, game_state):
         return True
 
     if (
-        event.key in (pygame.K_1, pygame.K_KP1)
+        event.key == pygame.K_q
         and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
         and game_state.player.subclass == "summoner"
     ):

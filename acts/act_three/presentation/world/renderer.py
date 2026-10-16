@@ -8,6 +8,13 @@ from acts.act_three.presentation.paladin.attack_effects import (
 from acts.act_three.presentation.summoner.animation import (
     SUMMONER_ATTACK_DURATION_MS,
 )
+from acts.act_three.presentation.summoner.familiar import (
+    SUMMONER_FAMILIAR_MOVE_DURATION_MS,
+    draw_summoner_familiar_aura,
+    summoner_familiar_direction,
+    summoner_familiar_is_moving,
+    summoner_familiar_sprite,
+)
 from acts.act_three.presentation.summoner.projectile import (
     draw_summoner_bird_attack,
 )
@@ -115,7 +122,6 @@ _IDLE_TIMELINE_CYCLE_COUNT = 4
 _MOVE_FRAME_COUNT = 2
 _MOVE_FRAME_DURATION_MS = 90
 _ATTACK_FRAME_DURATION_MS = 240
-_FAMILIAR_MOVE_DURATION_MS = 180
 _TELEPORT_CAMERA_DURATION_MS = (
     ASSASSIN_SHADOW_STEP_DURATION_MS
 )
@@ -882,28 +888,20 @@ def _draw_act_three_world(
             current_time
             - game_state.player.summoner_familiar_attack_started_at
         )
-        if (
-            game_state.player.summoner_true_form_active
-            and 0 <= familiar_attack_elapsed < _ATTACK_FRAME_DURATION_MS
-        ):
-            familiar_sprite = assets[
-                "summoner_true_form_attack"
-            ]
-        elif game_state.player.summoner_true_form_active:
-            familiar_frame = (current_time // 180) % 3
-            familiar_sprite = assets[
-                f"summoner_true_form_idle_{familiar_frame}"
-            ]
-        elif 0 <= familiar_attack_elapsed < _ATTACK_FRAME_DURATION_MS:
-            familiar_sprite = assets[
-                "summoner_familiar_attack"
-            ]
-        else:
-            familiar_frame = (current_time // 180) % 3
-            familiar_asset_frame = (0, 1, 2)[familiar_frame]
-            familiar_sprite = assets[
-                f"summoner_familiar_idle_{familiar_asset_frame}"
-            ]
+        familiar_direction = summoner_familiar_direction(
+            game_state.player
+        )
+        familiar_moving = summoner_familiar_is_moving(
+            game_state.player,
+            current_time,
+        )
+        familiar_sprite = summoner_familiar_sprite(
+            assets,
+            game_state.player,
+            current_time,
+            _ATTACK_FRAME_DURATION_MS,
+            familiar_direction,
+        )
         familiar_render_position = _view_position(
             familiar_position[0],
             familiar_position[1],
@@ -917,11 +915,11 @@ def _draw_act_three_world(
             current_time
             - game_state.player.summoner_familiar_movement_started_at
         )
-        if (
-            familiar_origin is not None
-            and 0 <= familiar_move_elapsed < _FAMILIAR_MOVE_DURATION_MS
-        ):
-            move_progress = familiar_move_elapsed / _FAMILIAR_MOVE_DURATION_MS
+        if familiar_moving:
+            move_progress = (
+                familiar_move_elapsed
+                / SUMMONER_FAMILIAR_MOVE_DURATION_MS
+            )
             move_progress = (
                 move_progress
                 * move_progress
@@ -951,6 +949,13 @@ def _draw_act_three_world(
                     * move_progress
                 ),
             )
+        draw_summoner_familiar_aura(
+            view_surface,
+            familiar_render_position,
+            current_time,
+            familiar_direction,
+            familiar_moving,
+        )
         _draw_familiar_hit_feedback(
             view_surface,
             familiar_sprite,

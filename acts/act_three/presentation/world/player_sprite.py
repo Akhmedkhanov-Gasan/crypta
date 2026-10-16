@@ -8,6 +8,8 @@ from acts.act_three.presentation.paladin.animation import (
 )
 from acts.act_three.presentation.summoner.animation import (
     SUMMONER_ATTACK_DURATION_MS,
+    SUMMONER_DEATH_FRAME_DURATION_MS,
+    SUMMONER_FRAME_COUNT,
     summoner_idle_frame,
 )
 from acts.act_three.presentation.paladin.block import (
@@ -331,6 +333,13 @@ def _death_sprite(
         death_frame = _berserker_death_frame(player, current_time)
     elif player_subclass == "paladin":
         death_frame = paladin_death_frame(player, current_time)
+    elif player_subclass == "summoner":
+        death_frame = _animated_player_death_frame(
+            player,
+            current_time,
+            SUMMONER_FRAME_COUNT,
+            SUMMONER_DEATH_FRAME_DURATION_MS,
+        )
     elif player_subclass == "warlock":
         death_frame = _warlock_death_frame(player, current_time)
     else:
@@ -338,7 +347,12 @@ def _death_sprite(
 
     if death_frame is None:
         if player_subclass == "summoner":
-            return assets["player_summoner_no_familiar_hurt"]
+            direction = assassin_hurt_direction(
+                player.facing_direction
+            )
+            return assets[
+                f"player_summoner_hurt_{direction}_0"
+            ]
 
         if (
             player_subclass == "warlock"
@@ -362,7 +376,12 @@ def _death_sprite(
 
         return assets[f"player_{player_subclass}_hurt"]
 
-    if player_subclass in ("archer", "berserker", "paladin"):
+    if player_subclass in (
+        "archer",
+        "berserker",
+        "paladin",
+        "summoner",
+    ):
         direction = assassin_hurt_direction(
             player.facing_direction
         )
@@ -451,7 +470,17 @@ def _hurt_sprite(
     if player.summoner_familiar_active:
         return assets["player_summoner_no_familiar_hurt"]
 
-    return assets["player_summoner_hurt"]
+    elapsed = current_time - player.hit_animation_started_at
+    direction = assassin_hurt_direction(
+        player.facing_direction
+    )
+    frame = berserker_hurt_frame(
+        elapsed,
+        _PLAYER_HIT_SPRITE_DURATION_MS,
+    )
+    return assets[
+        f"player_summoner_hurt_{direction}_{frame}"
+    ]
 
 
 def _attack_sprite(
