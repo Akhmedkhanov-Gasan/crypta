@@ -162,6 +162,7 @@ class ActThreePlayerState:
     summoner_familiar_movement_origin: tuple[int, int] | None = None
     summoner_familiar_movement_started_at: int = 0
     summoner_familiar_attack_started_at: int = 0
+    summoner_familiar_attack_target: tuple[int, int] | None = None
     summoner_familiar_hit_animation_started_at: int = -1
     summoner_familiar_hit_damage: int = 0
     summoner_familiar_hit_origin: tuple[int, int] | None = None

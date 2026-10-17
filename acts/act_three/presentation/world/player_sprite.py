@@ -614,8 +614,15 @@ def _idle_sprite(
         player_subclass == "summoner"
         and player.summoner_familiar_active
     ):
+        direction = assassin_walk_direction(
+            player.facing_direction
+        )
+        frame = summoner_idle_frame(current_time)
         return assets[
-            f"player_summoner_no_familiar_idle_{player_frame}"
+            (
+                "player_summoner_no_familiar_idle_"
+                f"{direction}_{frame}"
+            )
         ]
 
     return assets[f"player_{player_subclass}_idle_{player_frame}"]

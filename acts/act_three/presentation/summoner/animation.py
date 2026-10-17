@@ -26,6 +26,11 @@ def load_summoner_animation_assets(
         act_directory / "player" / "summoner"
     )
     idle_directory = summoner_directory / "idle"
+    no_familiar_idle_directory = (
+        summoner_directory
+        / "no_familiar"
+        / "idle"
+    )
     walk_directory = summoner_directory / "walk"
     attack_directory = summoner_directory / "attack"
     hurt_directory = summoner_directory / "hurt"
@@ -39,6 +44,18 @@ def load_summoner_animation_assets(
                 f"player_summoner_idle_{direction}_{frame_index}"
             ] = image_loader(
                 idle_directory
+                / f"idle_{direction}"
+                / f"idle_{direction}_{source_index:02d}.png",
+                (tile_size, tile_size),
+            )
+
+            assets[
+                (
+                    "player_summoner_no_familiar_idle_"
+                    f"{direction}_{frame_index}"
+                )
+            ] = image_loader(
+                no_familiar_idle_directory
                 / f"idle_{direction}"
                 / f"idle_{direction}_{source_index:02d}.png",
                 (tile_size, tile_size),

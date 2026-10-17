@@ -1250,20 +1250,6 @@ def load_act_three_gameplay_assets():
         tile_size,
         _load_pixel_scaled_image,
     )
-    summoner_no_familiar_idle_directory = (
-        act_directory
-        / "player"
-        / "summoner"
-        / "idle_no_familiar"
-    )
-    for frame_index in range(3):
-        assets[
-            f"player_summoner_no_familiar_idle_{frame_index}"
-        ] = _load_pixel_scaled_image(
-            summoner_no_familiar_idle_directory
-            / f"idle_{frame_index:02d}.png",
-            (tile_size, tile_size),
-        )
 
     old_man_appearance_directory = (
         act_directory / "npcs" / "old_man" / "appearance"

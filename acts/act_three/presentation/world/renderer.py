@@ -9,8 +9,11 @@ from acts.act_three.presentation.summoner.animation import (
     SUMMONER_ATTACK_DURATION_MS,
 )
 from acts.act_three.presentation.summoner.familiar import (
+    SUMMONER_FAMILIAR_ATTACK_DURATION_MS,
     SUMMONER_FAMILIAR_MOVE_DURATION_MS,
+    draw_summoner_familiar_attack_effect,
     draw_summoner_familiar_aura,
+    summoner_familiar_death_active,
     summoner_familiar_direction,
     summoner_familiar_is_moving,
     summoner_familiar_sprite,
@@ -899,7 +902,6 @@ def _draw_act_three_world(
             assets,
             game_state.player,
             current_time,
-            _ATTACK_FRAME_DURATION_MS,
             familiar_direction,
         )
         familiar_render_position = _view_position(
@@ -966,13 +968,36 @@ def _draw_act_three_world(
             current_time,
             fonts["sidebar_numbers"],
         )
-        if 0 <= familiar_attack_elapsed < _ATTACK_FRAME_DURATION_MS:
+        if (
+            0
+            <= familiar_attack_elapsed
+            < SUMMONER_FAMILIAR_ATTACK_DURATION_MS
+        ):
             _draw_summoner_familiar_attack_glow(
                 view_surface,
                 familiar_render_position[0],
                 familiar_render_position[1],
                 current_time,
             )
+
+            familiar_attack_target = (
+                game_state.player.summoner_familiar_attack_target
+            )
+            if familiar_attack_target is not None:
+                familiar_attack_target_position = _view_position(
+                    familiar_attack_target[0],
+                    familiar_attack_target[1],
+                    camera_x,
+                    camera_y,
+                )
+                draw_summoner_familiar_attack_effect(
+                    view_surface,
+                    familiar_render_position,
+                    familiar_attack_target_position,
+                    current_time,
+                    game_state.player.summoner_familiar_attack_started_at,
+                )
+
         if game_state.player.summoner_familiar_max_health > 0:
             _draw_health_bar(
                 view_surface,
@@ -998,11 +1023,18 @@ def _draw_act_three_world(
             )
     elif (
         player_subclass == "summoner"
-        and _familiar_hit_feedback_active(
-            game_state.player,
-            current_time,
+        and (
+            _familiar_hit_feedback_active(
+                game_state.player,
+                current_time,
+            )
+            or summoner_familiar_death_active(
+                game_state.player,
+                current_time,
+            )
         )
-        and game_state.player.summoner_familiar_hit_position is not None
+        and game_state.player.summoner_familiar_hit_position
+        is not None
     ):
         defeated_familiar_position = (
             game_state.player.summoner_familiar_hit_position
@@ -1013,9 +1045,18 @@ def _draw_act_three_world(
             camera_x,
             camera_y,
         )
+        familiar_direction = summoner_familiar_direction(
+            game_state.player
+        )
+        familiar_sprite = summoner_familiar_sprite(
+            assets,
+            game_state.player,
+            current_time,
+            familiar_direction,
+        )
         _draw_familiar_hit_feedback(
             view_surface,
-            None,
+            familiar_sprite,
             familiar_render_position,
             game_state.player,
             defeated_familiar_position[0],
