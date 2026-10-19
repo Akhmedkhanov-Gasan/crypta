@@ -10,6 +10,9 @@ from acts.act_three.presentation.dodge_feedback import (
 from acts.act_three.presentation.archer.animation import (
     archer_hurt_sprite,
 )
+from acts.act_three.presentation.player_motion import (
+    assassin_hurt_direction,
+)
 from game.events import GameEventType
 from presentation.layout import ACT_THREE_TILE_SIZE
 
@@ -1700,6 +1703,15 @@ def _draw_warlock_death_foreground(
     )
 
 
+def _summoner_death_hurt_sprite(assets, player):
+    direction = assassin_hurt_direction(
+        player.facing_direction
+    )
+    return assets[
+        f"player_summoner_hurt_{direction}_0"
+    ]
+
+
 def _draw_summoner_death_echoes(
     surface,
     assets,
@@ -1716,7 +1728,10 @@ def _draw_summoner_death_echoes(
             (elapsed - 160)
             / (_PLAYER_DEATH_COLLAPSE_END_MS - 160)
         )
-        hurt_sprite = assets["player_summoner_no_familiar_hurt"]
+        hurt_sprite = _summoner_death_hurt_sprite(
+            assets,
+            player,
+        )
         for echo_index, (offset_x, offset_y, alpha) in enumerate(
             ((-2, -2, 54), (2, -5, 32), (-3, -8, 18))
         ):
@@ -1737,7 +1752,10 @@ def _draw_summoner_death_echoes(
             (elapsed - _PLAYER_DEATH_COLLAPSE_END_MS)
             / (spirit_end - _PLAYER_DEATH_COLLAPSE_END_MS)
         )
-        spirit = assets["player_summoner_no_familiar_hurt"].copy()
+        spirit = _summoner_death_hurt_sprite(
+            assets,
+            player,
+        ).copy()
         spirit.fill(
             (9, 86, 91, 0),
             special_flags=pygame.BLEND_RGBA_ADD,

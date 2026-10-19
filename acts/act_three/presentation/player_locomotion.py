@@ -287,7 +287,10 @@ def locomotion_sprite(assets, player, pose):
     if subclass == "summoner":
         if player.summoner_familiar_active:
             return assets[
-                f"player_summoner_no_familiar_walk_{pose.frame(2)}"
+                (
+                    "player_summoner_no_familiar_walk_"
+                    f"{direction}_{pose.frame(8)}"
+                )
             ]
 
         return assets[

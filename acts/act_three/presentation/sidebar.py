@@ -393,7 +393,11 @@ def _ability_entries(player, accent_color):
                     SUMMONER_TRUE_FORM_CHARGES,
                 ),
                 (91, 224, 238),
-                None,
+                (
+                    "ACTIVE"
+                    if player.summoner_true_form_active
+                    else None
+                ),
             ),
         )
     selected_rune = RUNES_BY_ID.get(player.selected_rune_id)

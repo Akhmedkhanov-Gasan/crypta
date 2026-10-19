@@ -25,6 +25,9 @@ from acts.act_three.presentation.enemies.lantern_warden.lantern_warden_combat im
 from acts.act_three.presentation.warrior.power_cleave import (
     draw_power_cleave_targeting,
 )
+from acts.act_three.presentation.summoner.summon_effect import (
+    draw_summoner_familiar_summon_targeting,
+)
 
 
 def draw_world_targeting(
@@ -34,6 +37,14 @@ def draw_world_targeting(
     current_time,
 ):
     player = game_state.player
+
+    draw_summoner_familiar_summon_targeting(
+        context.view_surface,
+        game_state,
+        context.camera_x,
+        context.camera_y,
+        current_time,
+    )
 
     draw_paladin_sacred_ground_cells(
         context.view_surface,

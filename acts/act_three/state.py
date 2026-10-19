@@ -147,11 +147,18 @@ class ActThreePlayerState:
 
     summoner_familiar_active: bool = False
     summoner_familiar_position: tuple[int, int] | None = None
+    summoner_familiar_summon_aiming: bool = False
+    summoner_familiar_summon_target: tuple[int, int] | None = None
+    summoner_familiar_summoned_at: int = -1
+    summoner_familiar_summon_direction: str = "left"
+    summoner_familiar_skip_turn: bool = False
     summoner_familiar_max_health: int = 0
     summoner_familiar_health: int = 0
     summoner_familiar_charge: float = 0.0
     summoner_familiar_death_penalty: bool = False
     summoner_true_form_active: bool = False
+    summoner_true_form_started_at: int = -1
+    summoner_true_form_ending_started_at: int = -1
     summoner_true_form_charge: int = 0
     summoner_true_form_base_max_health: int = 0
     summoner_bond_charge: int = 0

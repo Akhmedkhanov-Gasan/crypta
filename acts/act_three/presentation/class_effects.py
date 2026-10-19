@@ -94,7 +94,7 @@ def _draw_summoner_idle_lights(
     current_time,
     identity_seed,
 ):
-    margin = 7
+    margin = 18
     effect_surface = pygame.Surface(
         (
             ACT_THREE_TILE_SIZE + margin * 2,
@@ -103,28 +103,240 @@ def _draw_summoner_idle_lights(
         pygame.SRCALPHA,
     )
     center_x = margin + ACT_THREE_TILE_SIZE // 2
-    center_y = margin + ACT_THREE_TILE_SIZE // 2 - 5
+    center_y = margin + ACT_THREE_TILE_SIZE // 2 - 3
+    seed_phase = (
+        identity_seed % 997
+    ) / 997 * math.tau
+    breath = (
+        0.5
+        + 0.5
+        * math.sin(
+            current_time / 920
+            + seed_phase
+        )
+    )
 
-    for light_index in range(5):
-        phase = (
-            current_time / 1050
-            + light_index * math.tau / 5
-            + (identity_seed % 127) / 127
+    ground_rect = pygame.Rect(
+        center_x - 29,
+        center_y + 19,
+        58,
+        17,
+    )
+    pygame.draw.ellipse(
+        effect_surface,
+        (
+            11,
+            62,
+            68,
+            round(26 + breath * 18),
+        ),
+        ground_rect,
+    )
+    pygame.draw.ellipse(
+        effect_surface,
+        (
+            52,
+            187,
+            184,
+            round(54 + breath * 38),
+        ),
+        ground_rect,
+        width=1,
+    )
+
+    ground_phase = (
+        seed_phase
+        + current_time / 4700
+    )
+    for arc_index in range(3):
+        arc_rect = ground_rect.inflate(
+            -arc_index * 9,
+            -arc_index * 3,
         )
-        light_x = center_x + round(math.cos(phase) * 27)
-        light_y = center_y + round(math.sin(phase) * 22)
-        pulse = (math.sin(phase * 1.7) + 1) / 2
-        alpha = round(115 + pulse * 80)
+        arc_alpha = round(
+            78
+            + breath * 45
+            - arc_index * 12
+        )
+        arc_start = (
+            ground_phase
+            + arc_index * 1.8
+        )
+        pygame.draw.arc(
+            effect_surface,
+            (
+                91,
+                229,
+                218,
+                arc_alpha,
+            ),
+            arc_rect,
+            arc_start,
+            arc_start + 0.9,
+            width=2 if arc_index == 0 else 1,
+        )
+        pygame.draw.arc(
+            effect_surface,
+            (
+                56,
+                156,
+                165,
+                arc_alpha,
+            ),
+            arc_rect,
+            arc_start + math.pi,
+            arc_start + math.pi + 0.72,
+            width=1,
+        )
+
+    orbit_specs = (
+        (31, 23, 1.15, 0.0),
+        (26, 19, 0.82, 2.1),
+        (21, 16, 0.64, 4.0),
+    )
+    orbit_phase = (
+        seed_phase
+        + current_time / 5600
+    )
+
+    for (
+        radius_x,
+        radius_y,
+        arc_length,
+        phase_offset,
+    ) in orbit_specs:
+        orbit_rect = pygame.Rect(
+            center_x - radius_x,
+            center_y - radius_y,
+            radius_x * 2,
+            radius_y * 2,
+        )
+        start_angle = orbit_phase + phase_offset
+        alpha = round(
+            62
+            + breath * 42
+            + (31 - radius_x) * 2
+        )
+        pygame.draw.arc(
+            effect_surface,
+            (
+                45,
+                149,
+                158,
+                alpha // 2,
+            ),
+            orbit_rect.inflate(4, 4),
+            start_angle - 0.08,
+            start_angle + arc_length + 0.08,
+            width=3,
+        )
+        pygame.draw.arc(
+            effect_surface,
+            (
+                106,
+                226,
+                216,
+                alpha,
+            ),
+            orbit_rect,
+            start_angle,
+            start_angle + arc_length,
+            width=1,
+        )
+        pygame.draw.arc(
+            effect_surface,
+            (
+                66,
+                184,
+                189,
+                alpha,
+            ),
+            orbit_rect,
+            start_angle + math.pi,
+            start_angle + math.pi + arc_length * 0.72,
+            width=1,
+        )
+
+    rune_phase = (
+        seed_phase
+        - current_time / 6900
+    )
+    for rune_index in range(3):
+        angle = (
+            rune_phase
+            + rune_index * math.tau / 3
+        )
+        rune_x = (
+            center_x
+            + round(math.cos(angle) * 27)
+        )
+        rune_y = (
+            center_y
+            + round(math.sin(angle) * 19)
+            + round(
+                math.sin(
+                    current_time / 780
+                    + rune_index * 1.7
+                )
+                * 2
+            )
+        )
+        rune_pulse = (
+            0.5
+            + 0.5
+            * math.sin(
+                current_time / 830
+                + rune_index * 2.2
+                + seed_phase
+            )
+        )
+        rune_alpha = round(
+            105 + rune_pulse * 75
+        )
         pygame.draw.circle(
             effect_surface,
-            (35, 126, 137, alpha // 3),
-            (light_x, light_y),
-            3,
+            (
+                29,
+                115,
+                124,
+                rune_alpha // 4,
+            ),
+            (rune_x, rune_y),
+            7,
+        )
+        rune_rect = pygame.Rect(
+            rune_x - 5,
+            rune_y - 5,
+            10,
+            10,
+        )
+        pygame.draw.arc(
+            effect_surface,
+            (
+                124,
+                244,
+                229,
+                rune_alpha,
+            ),
+            rune_rect,
+            angle + 0.35,
+            angle + 4.45,
+            width=2,
         )
         pygame.draw.circle(
             effect_surface,
-            (105, 229, 231, alpha),
-            (light_x, light_y),
+            (
+                190,
+                255,
+                244,
+                min(255, rune_alpha + 45),
+            ),
+            (
+                rune_x
+                + round(math.cos(angle) * 4),
+                rune_y
+                + round(math.sin(angle) * 4),
+            ),
             1,
         )
 

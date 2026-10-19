@@ -17,6 +17,10 @@ from acts.act_three.presentation.summoner.familiar import (
     summoner_familiar_direction,
     summoner_familiar_is_moving,
     summoner_familiar_sprite,
+    summoner_familiar_summon_active,
+)
+from acts.act_three.presentation.summoner.summon_effect import (
+    draw_summoner_familiar_summon_effect,
 )
 from acts.act_three.presentation.summoner.projectile import (
     draw_summoner_bird_attack,
@@ -29,6 +33,14 @@ from acts.act_three.presentation.world.context import (
 )
 from acts.act_three.presentation.world.enemies import (
     draw_world_enemies,
+)
+from acts.act_three.presentation.summoner.true_form import (
+    summoner_true_form_visual_active,
+)
+from acts.act_three.presentation.summoner.true_form_effects import (
+    draw_summoner_true_form_attack_effect,
+    draw_summoner_true_form_aura,
+    draw_summoner_true_form_foreground,
 )
 from acts.act_three.presentation.world.player_state import (
     create_player_render_state,
@@ -951,13 +963,41 @@ def _draw_act_three_world(
                     * move_progress
                 ),
             )
-        draw_summoner_familiar_aura(
-            view_surface,
-            familiar_render_position,
+        summon_active = summoner_familiar_summon_active(
+            game_state.player,
             current_time,
-            familiar_direction,
-            familiar_moving,
         )
+        true_form_visual_active = (
+            summoner_true_form_visual_active(
+                game_state.player,
+                current_time,
+            )
+        )
+
+        if summon_active:
+            draw_summoner_familiar_summon_effect(
+                view_surface,
+                familiar_render_position,
+                current_time,
+                game_state.player.summoner_familiar_summoned_at,
+            )
+        elif true_form_visual_active:
+            draw_summoner_true_form_aura(
+                view_surface,
+                familiar_render_position,
+                game_state.player,
+                current_time,
+                familiar_moving,
+            )
+        else:
+            draw_summoner_familiar_aura(
+                view_surface,
+                familiar_render_position,
+                current_time,
+                familiar_direction,
+                familiar_moving,
+            )
+
         _draw_familiar_hit_feedback(
             view_surface,
             familiar_sprite,
@@ -968,6 +1008,14 @@ def _draw_act_three_world(
             current_time,
             fonts["sidebar_numbers"],
         )
+
+        if true_form_visual_active:
+            draw_summoner_true_form_foreground(
+                view_surface,
+                familiar_render_position,
+                game_state.player,
+                current_time,
+            )
         if (
             0
             <= familiar_attack_elapsed
@@ -990,13 +1038,22 @@ def _draw_act_three_world(
                     camera_x,
                     camera_y,
                 )
-                draw_summoner_familiar_attack_effect(
-                    view_surface,
-                    familiar_render_position,
-                    familiar_attack_target_position,
-                    current_time,
-                    game_state.player.summoner_familiar_attack_started_at,
-                )
+                if game_state.player.summoner_true_form_active:
+                    draw_summoner_true_form_attack_effect(
+                        view_surface,
+                        familiar_render_position,
+                        familiar_attack_target_position,
+                        current_time,
+                        game_state.player.summoner_familiar_attack_started_at,
+                    )
+                else:
+                    draw_summoner_familiar_attack_effect(
+                        view_surface,
+                        familiar_render_position,
+                        familiar_attack_target_position,
+                        current_time,
+                        game_state.player.summoner_familiar_attack_started_at,
+                    )
 
         if game_state.player.summoner_familiar_max_health > 0:
             _draw_health_bar(

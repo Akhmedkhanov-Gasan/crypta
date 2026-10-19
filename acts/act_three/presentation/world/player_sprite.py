@@ -10,6 +10,7 @@ from acts.act_three.presentation.summoner.animation import (
     SUMMONER_ATTACK_DURATION_MS,
     SUMMONER_DEATH_FRAME_DURATION_MS,
     SUMMONER_FRAME_COUNT,
+    summoner_familiar_cast_sprite,
     summoner_idle_frame,
 )
 from acts.act_three.presentation.paladin.block import (
@@ -116,6 +117,19 @@ def select_player_sprite(
             ),
             False,
         )
+
+    if player_state.subclass == "summoner":
+        familiar_cast_sprite = summoner_familiar_cast_sprite(
+            assets,
+            player,
+            (
+                context.floor.player_column,
+                context.floor.player_row,
+            ),
+            current_time,
+        )
+        if familiar_cast_sprite is not None:
+            return familiar_cast_sprite, False
 
     if player_state.last_rage_activation_active:
         direction = assassin_walk_direction(player.facing_direction)
@@ -240,7 +254,6 @@ def select_player_sprite(
 
     if (
         player_state.subclass == "summoner"
-        and not player.summoner_familiar_active
         and 0
         <= player_state.attack_elapsed
         < SUMMONER_ATTACK_DURATION_MS
@@ -467,9 +480,6 @@ def _hurt_sprite(
             f"player_warlock_hurt_{direction}_{frame}"
         ]
 
-    if player.summoner_familiar_active:
-        return assets["player_summoner_no_familiar_hurt"]
-
     elapsed = current_time - player.hit_animation_started_at
     direction = assassin_hurt_direction(
         player.facing_direction
@@ -478,6 +488,15 @@ def _hurt_sprite(
         elapsed,
         _PLAYER_HIT_SPRITE_DURATION_MS,
     )
+
+    if player.summoner_familiar_active:
+        return assets[
+            (
+                "player_summoner_no_familiar_hurt_"
+                f"{direction}_{frame}"
+            )
+        ]
+
     return assets[
         f"player_summoner_hurt_{direction}_{frame}"
     ]
@@ -521,11 +540,6 @@ def _attack_sprite(
         ]
 
     if player_subclass == "summoner":
-        if player.summoner_familiar_active:
-            return assets[
-                "player_summoner_no_familiar_attack"
-            ]
-
         direction = assassin_attack_direction(
             player.facing_direction
         )
@@ -533,6 +547,15 @@ def _attack_sprite(
             attack_elapsed,
             attack_frame_duration,
         )
+
+        if player.summoner_familiar_active:
+            return assets[
+                (
+                    "player_summoner_no_familiar_attack_"
+                    f"{direction}_{frame}"
+                )
+            ]
+
         return assets[
             (
                 "player_summoner_attack_"

@@ -30,6 +30,9 @@ from acts.act_three.presentation.summoner.animation import (
 from acts.act_three.presentation.summoner.familiar import (
     load_summoner_familiar_assets,
 )
+from acts.act_three.presentation.summoner.true_form import (
+    load_summoner_true_form_assets,
+)
 from acts.act_three.presentation.enemies import (
     load_enemy_animation_assets,
 )
@@ -1120,39 +1123,6 @@ def load_act_three_gameplay_assets():
             / "torches_v1_base.png",
             (tile_size, tile_size),
         ),
-        "summoner_true_form_idle_0": _load_pixel_scaled_image(
-            act_directory
-            / "player"
-            / "summoner"
-            / "summoner_true_form"
-            / "idle_00.png",
-            (tile_size, tile_size),
-        ),
-        "summoner_true_form_idle_1": _load_pixel_scaled_image(
-            act_directory
-            / "player"
-            / "summoner"
-            / "summoner_true_form"
-            / "idle_01.png",
-            (tile_size, tile_size),
-        ),
-        "summoner_true_form_idle_2": _load_pixel_scaled_image(
-            act_directory
-            / "player"
-            / "summoner"
-            / "summoner_true_form"
-            / "idle_02.png",
-            (tile_size, tile_size),
-        ),
-        "summoner_true_form_attack": _load_pixel_scaled_image(
-            act_directory
-            / "player"
-            / "summoner"
-            / "summoner_true_form"
-            / "attack"
-            / "attack_00.png",
-            (tile_size, tile_size),
-        ),
         "sidebar_potion": _load_scaled_image(
             act_directory
             / "items"
@@ -1220,6 +1190,12 @@ def load_act_three_gameplay_assets():
         tile_size,
         _load_pixel_scaled_image,
     )
+    load_summoner_true_form_assets(
+        assets,
+        act_directory,
+        tile_size,
+        _load_pixel_scaled_image,
+    )
     load_archer_animation_assets(
         assets,
         act_directory,
@@ -1263,31 +1239,6 @@ def load_act_three_gameplay_assets():
             )
         )
 
-    assets["player_summoner_no_familiar_hurt"] = (
-        _load_pixel_scaled_image(
-            act_directory
-            / "player"
-            / "summoner"
-            / "hurt_no_familiar"
-            / "hurt_00.png",
-            (tile_size, tile_size),
-        )
-    )
-
-    summoner_no_familiar_walk_directory = (
-        act_directory
-        / "player"
-        / "summoner"
-        / "walk_no_familiar"
-    )
-    for frame_index in range(2):
-        assets[
-            f"player_summoner_no_familiar_walk_{frame_index}"
-        ] = _load_pixel_scaled_image(
-            summoner_no_familiar_walk_directory
-            / f"walk_{frame_index:02d}.png",
-            (tile_size, tile_size),
-        )
     assets["player_archer_attack"] = assets[
         "player_archer_attack_right_0"
     ]
@@ -1300,16 +1251,6 @@ def load_act_three_gameplay_assets():
     assets["archer_barrage_zone_cell"] = pygame.Surface(
         (tile_size, tile_size),
         pygame.SRCALPHA,
-    )
-    assets["player_summoner_no_familiar_attack"] = (
-        _load_pixel_scaled_image(
-            act_directory
-            / "player"
-            / "summoner"
-            / "attack_no_familiar"
-            / "attack_00.png",
-            (tile_size, tile_size),
-        )
     )
 
     load_enemy_animation_assets(

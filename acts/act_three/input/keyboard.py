@@ -61,6 +61,9 @@ from acts.act_three.abilities.berserker import (
     request_berserker_crushing_leap,
     request_berserker_last_rage,
 )
+from acts.act_three.presentation.summoner.true_form import (
+    SUMMONER_TRUE_FORM_TRANSFORM_DURATION_MS,
+)
 from acts.act_three.abilities.paladin import (
     cancel_paladin_shield_charge,
     request_paladin_shield_charge,
@@ -74,9 +77,12 @@ from acts.act_two.abilities import (
     select_directional_ability_direction,
 )
 from acts.act_three.abilities.summoner import (
+    cancel_summoner_familiar_summon,
+    confirm_summoner_familiar_summon,
     release_summoner_familiar,
     request_summoner_bond,
     request_summoner_true_form,
+    select_summoner_familiar_summon_direction,
 )
 from acts.act_two.abilities import (
     select_directional_ability_direction,
@@ -130,6 +136,16 @@ def _act_three_aiming_direction(event):
     return direction
 
 
+def _commit_summoner_turn():
+    pygame.event.post(
+        pygame.event.Event(
+            pygame.KEYDOWN,
+            key=pygame.K_SPACE,
+            summoner_turn_commit=True,
+        )
+    )
+
+
 def handle_act_three_key_event(event, game_state):
     if (
         getattr(event, "archer_barrage_commit", False)
@@ -162,6 +178,32 @@ def handle_act_three_key_event(event, game_state):
         return True
 
     if (
+        game_state.player.subclass == "summoner"
+        and not getattr(
+            event,
+            "summoner_turn_commit",
+            False,
+        )
+        and (
+            (
+                game_state.player.summoner_true_form_active
+                and game_state.player.summoner_true_form_started_at >= 0
+                and pygame.time.get_ticks()
+                - game_state.player.summoner_true_form_started_at
+                < SUMMONER_TRUE_FORM_TRANSFORM_DURATION_MS
+                and event.key != pygame.K_f
+            )
+            or (
+                game_state.player.summoner_true_form_ending_started_at >= 0
+                and pygame.time.get_ticks()
+                - game_state.player.summoner_true_form_ending_started_at
+                < SUMMONER_TRUE_FORM_TRANSFORM_DURATION_MS
+            )
+        )
+    ):
+        return True
+
+    if (
         game_state.player.teleport_camera_origin is not None
         and game_state.player.teleport_transition_started_at > 0
         and pygame.time.get_ticks()
@@ -178,6 +220,32 @@ def handle_act_three_key_event(event, game_state):
     ):
         return True
     aiming_direction = _act_three_aiming_direction(event)
+
+    if game_state.player.summoner_familiar_summon_aiming:
+        if event.key == pygame.K_ESCAPE:
+            cancel_summoner_familiar_summon(game_state)
+            set_summoner_staff_cursor()
+            return True
+
+        if event.key == pygame.K_q:
+            summoned = confirm_summoner_familiar_summon(
+                game_state,
+                pygame.time.get_ticks(),
+            )
+            set_summoner_staff_cursor()
+            if summoned:
+                _commit_summoner_turn()
+            return True
+
+        if aiming_direction is not None:
+            valid = select_summoner_familiar_summon_direction(
+                game_state,
+                aiming_direction,
+            )
+            set_summoner_staff_cursor(valid)
+            return True
+
+        return True
 
     if game_state.player.summoner_aiming:
         if event.key == pygame.K_ESCAPE:
@@ -564,8 +632,18 @@ def handle_act_three_key_event(event, game_state):
         and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
         and game_state.player.subclass == "summoner"
     ):
+        familiar_was_active = (
+            game_state.player.summoner_familiar_active
+        )
         release_summoner_familiar(game_state)
-        set_summoner_staff_cursor()
+        set_summoner_staff_cursor(
+            game_state.player.summoner_familiar_summon_aiming
+        )
+        if (
+            familiar_was_active
+            and not game_state.player.summoner_familiar_active
+        ):
+            _commit_summoner_turn()
         return True
     
     if (
@@ -589,11 +667,16 @@ def handle_act_three_key_event(event, game_state):
         return True
     
     if (
-        event.key in (pygame.K_3, pygame.K_KP3)
+        event.key == pygame.K_f
         and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
         and game_state.player.subclass == "summoner"
     ):
-        request_summoner_true_form(game_state)
+        transformed = request_summoner_true_form(
+            game_state,
+            pygame.time.get_ticks(),
+        )
+        if transformed:
+            _commit_summoner_turn()
         return True
     if (
         event.key == pygame.K_q

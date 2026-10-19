@@ -62,6 +62,9 @@ from acts.act_three.combat.summoner_aim import (
     cancel_summoner_aim,
     confirm_summoner_aim,
 )
+from acts.act_three.abilities.summoner import (
+    select_summoner_familiar_summon_target,
+)
 from acts.act_three.presentation.hud.geometry import (
     get_act_three_ability_slot_rectangle,
 )
@@ -425,6 +428,14 @@ def handle_act_three_pointer_event(
                     target_cell
                 )
             set_archer_empowered_cursor(valid)
+        elif game_state.player.summoner_familiar_summon_aiming:
+            target_is_valid = (
+                select_summoner_familiar_summon_target(
+                    game_state,
+                    target_cell,
+                )
+            )
+            set_summoner_staff_cursor(target_is_valid)
         elif game_state.player.summoner_aiming:
             target_is_valid = (
                     target_cell is not None
@@ -744,6 +755,22 @@ def handle_act_three_pointer_event(
                         )
                     set_summoner_attack_cursor()
                 return True
+            if (
+                game_state.player.summoner_familiar_summon_aiming
+            ):
+                target_cell = get_act_three_cell_from_position(
+                    game_state,
+                    game_mouse_position,
+                )
+                target_is_valid = (
+                    select_summoner_familiar_summon_target(
+                        game_state,
+                        target_cell,
+                    )
+                )
+                set_summoner_staff_cursor(target_is_valid)
+                return True
+
             if movement_available:
                 target_cell = get_act_three_cell_from_position(
                     game_state,

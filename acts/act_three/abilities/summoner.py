@@ -8,7 +8,7 @@ from game.state import (
     GameState,
 )
 from logic import (
-    can_move_to,
+    can_player_move_between,
     distance_between,
     get_enemy_occupied_positions,
     move_enemy_toward_position,
@@ -20,6 +20,7 @@ from acts.act_three.settings import (
     SUMMONER_BOND_CHARGES,
     SUMMONER_TRUE_FORM_CHARGES,
     SUMMONER_TRUE_FORM_HEALTH_BONUS,
+    SUMMONER_TRUE_FORM_HEALTH_DRAIN,
 )
 from systems.player_combat import (
     attack_enemy,
@@ -31,6 +32,128 @@ OracleHitReaction = Callable[
     [EnemyState, FloorState, list[str]],
     None,
 ]
+
+
+_SUMMONER_FAMILIAR_SUMMON_DIRECTIONS = (
+    (-1, -1),
+    (0, -1),
+    (1, -1),
+    (1, 0),
+    (1, 1),
+    (0, 1),
+    (-1, 1),
+    (-1, 0),
+)
+
+
+def summoner_familiar_summon_targets(
+    game_state: GameState,
+) -> tuple[tuple[int, int], ...]:
+    player = game_state.player
+    floor = game_state.floor
+    if (
+        player.subclass != "summoner"
+        or player.summoner_familiar_active
+    ):
+        return ()
+
+    origin = (
+        floor.player_column,
+        floor.player_row,
+    )
+    occupied_positions = {
+        *(
+            position
+            for enemy in floor.enemies
+            if enemy.health > 0
+            for position in get_enemy_occupied_positions(enemy)
+        ),
+        *(
+            (chest.column, chest.row)
+            for chest in floor.chests
+            if not chest.is_open
+        ),
+        *(
+            (crate.column, crate.row)
+            for crate in floor.breakable_crates
+            if not crate.is_broken
+        ),
+        (
+            floor.stairs_column,
+            floor.stairs_row,
+        ),
+    }
+
+    return tuple(
+        (
+            origin[0] + direction[0],
+            origin[1] + direction[1],
+        )
+        for direction in _SUMMONER_FAMILIAR_SUMMON_DIRECTIONS
+        if (
+            (
+                origin[0] + direction[0],
+                origin[1] + direction[1],
+            )
+            not in occupied_positions
+            and can_player_move_between(
+                floor.map,
+                origin[0],
+                origin[1],
+                origin[0] + direction[0],
+                origin[1] + direction[1],
+                floor.barriers,
+            )
+        )
+    )
+
+
+def select_summoner_familiar_summon_target(
+    game_state: GameState,
+    target: tuple[int, int] | None,
+) -> bool:
+    player = game_state.player
+    if (
+        not player.summoner_familiar_summon_aiming
+        or target not in summoner_familiar_summon_targets(
+            game_state
+        )
+    ):
+        player.summoner_familiar_summon_target = None
+        return False
+
+    player.summoner_familiar_summon_target = target
+    return True
+
+
+def select_summoner_familiar_summon_direction(
+    game_state: GameState,
+    direction: tuple[int, int],
+) -> bool:
+    origin = (
+        game_state.floor.player_column,
+        game_state.floor.player_row,
+    )
+    return select_summoner_familiar_summon_target(
+        game_state,
+        (
+            origin[0] + direction[0],
+            origin[1] + direction[1],
+        ),
+    )
+
+
+def cancel_summoner_familiar_summon(
+    game_state: GameState,
+) -> None:
+    player = game_state.player
+    player.summoner_familiar_summon_aiming = False
+    player.summoner_familiar_summon_target = None
+    add_log_message(
+        game_state.combat_log,
+        "Familiar summoning cancelled.",
+    )
+
 
 def release_summoner_familiar(game_state: GameState) -> bool:
     player = game_state.player
@@ -51,8 +174,13 @@ def release_summoner_familiar(game_state: GameState) -> bool:
             )
             player.summoner_familiar_active = False
             player.summoner_familiar_position = None
+            player.summoner_familiar_summon_aiming = False
+            player.summoner_familiar_summon_target = None
+            player.summoner_familiar_summoned_at = -1
             player.summoner_familiar_movement_origin = None
             player.summoner_familiar_attack_target = None
+            player.summoner_true_form_started_at = -1
+            player.summoner_true_form_ending_started_at = -1
             add_log_message(
                 game_state.combat_log,
                 "The familiar returns to its master.",
@@ -75,53 +203,92 @@ def release_summoner_familiar(game_state: GameState) -> bool:
         )
         return True
 
-    player.summoner_familiar_charge = 0.0
-    player.summoner_familiar_death_penalty = False
-    player.summoner_true_form_active = False
-    player.summoner_true_form_charge = SUMMONER_TRUE_FORM_CHARGES
-    player.summoner_true_form_base_max_health = 0
-
-    direction_column, direction_row = player.facing_direction
-    target_position = (
-        game_state.floor.player_column + direction_column,
-        game_state.floor.player_row + direction_row,
+    summon_targets = summoner_familiar_summon_targets(
+        game_state
     )
-    if not can_move_to(
-        game_state.floor.map,
-        target_position[0],
-        target_position[1],
+    if not summon_targets:
+        add_log_message(
+            game_state.combat_log,
+            "There is no room to summon the familiar.",
+        )
+        return True
+
+    player.summoner_aiming = False
+    player.summoner_aim_target = None
+    player.summoner_familiar_summon_aiming = True
+
+    facing_target = (
+        game_state.floor.player_column
+        + player.facing_direction[0],
+        game_state.floor.player_row
+        + player.facing_direction[1],
+    )
+    player.summoner_familiar_summon_target = (
+        facing_target
+        if facing_target in summon_targets
+        else summon_targets[0]
+    )
+    add_log_message(
+        game_state.combat_log,
+        "Choose a neighboring cell and press Q again.",
+    )
+    return True
+
+
+def confirm_summoner_familiar_summon(
+    game_state: GameState,
+    current_time: int,
+) -> bool:
+    player = game_state.player
+    floor = game_state.floor
+    target_position = player.summoner_familiar_summon_target
+
+    if (
+        player.subclass != "summoner"
+        or not player.summoner_familiar_summon_aiming
+        or target_position
+        not in summoner_familiar_summon_targets(game_state)
     ):
         add_log_message(
             game_state.combat_log,
-            "There is no room to release the familiar.",
+            "Choose an available neighboring cell.",
         )
-        return True
-    occupied_positions = {
-        (
-            game_state.floor.player_column,
-            game_state.floor.player_row,
-        ),
-        *(
-            position
-            for enemy in game_state.floor.enemies
-            if enemy.health > 0
-            for position in get_enemy_occupied_positions(enemy)
-        ),
-        *(
-            (chest["column"], chest["row"])
-            for chest in game_state.floor.chests
-            if not chest["is_open"]
-        ),
-    }
-    if target_position in occupied_positions:
-        add_log_message(
-            game_state.combat_log,
-            "There is no room to release the familiar.",
+        return False
+
+    player_position = (
+        floor.player_column,
+        floor.player_row,
+    )
+    if target_position[0] < player_position[0]:
+        summon_direction = "right"
+    elif target_position[0] > player_position[0]:
+        summon_direction = "left"
+    else:
+        summon_direction = (
+            "right"
+            if player.facing_direction[0] > 0
+            else "left"
         )
-        return True
+
+    player.summoner_familiar_summon_aiming = False
+    player.summoner_familiar_summon_target = None
+    player.summoner_familiar_charge = 0.0
+    player.summoner_familiar_death_penalty = False
+    player.summoner_true_form_active = False
+    player.summoner_true_form_started_at = -1
+    player.summoner_true_form_ending_started_at = -1
+    player.summoner_true_form_charge = (
+        SUMMONER_TRUE_FORM_CHARGES
+    )
+    player.summoner_true_form_base_max_health = 0
 
     player.summoner_familiar_active = True
     player.summoner_familiar_position = target_position
+    player.summoner_familiar_summoned_at = current_time
+    player.summoner_familiar_summon_direction = (
+        summon_direction
+    )
+    player.summoner_familiar_skip_turn = True
     player.summoner_familiar_max_health = max(
         1,
         player.max_health // 2,
@@ -137,11 +304,22 @@ def release_summoner_familiar(game_state: GameState) -> bool:
     player.summoner_familiar_hit_damage = 0
     player.summoner_familiar_hit_origin = None
     player.summoner_familiar_hit_position = None
+
+    game_state.emit(
+        GameEvent(
+            type=GameEventType.SUMMON,
+            actor="familiar",
+            origin=player_position,
+            destination=target_position,
+            data={"kind": "summoner_familiar"},
+        )
+    )
     add_log_message(
         game_state.combat_log,
-        "The familiar is released beside the summoner.",
+        "The familiar answers the summoner's call.",
     )
     return True
+
 
 def request_summoner_bond(game_state: GameState) -> bool:
     player = game_state.player
@@ -193,7 +371,10 @@ def request_summoner_bond(game_state: GameState) -> bool:
     )
     return True
 
-def request_summoner_true_form(game_state: GameState) -> bool:
+def request_summoner_true_form(
+    game_state: GameState,
+    current_time: int,
+) -> bool:
     player = game_state.player
     if player.subclass != "summoner":
         return False
@@ -202,23 +383,37 @@ def request_summoner_true_form(game_state: GameState) -> bool:
             game_state.combat_log,
             "The familiar must be present to enter its true form.",
         )
-        return True
+        return False
+
     if player.summoner_true_form_active:
-        player.summoner_true_form_active = False
-        player.summoner_familiar_max_health = max(
+        base_max_health = max(
             1,
             player.summoner_true_form_base_max_health,
         )
+        player.summoner_true_form_active = False
+        player.summoner_true_form_started_at = -1
+        player.summoner_true_form_ending_started_at = (
+            current_time
+        )
+        player.summoner_familiar_skip_turn = True
+        player.summoner_true_form_charge = 0
+        player.summoner_true_form_base_max_health = 0
+        player.summoner_familiar_max_health = base_max_health
         player.summoner_familiar_health = min(
             player.summoner_familiar_health,
-            player.summoner_familiar_max_health,
+            base_max_health,
         )
-        player.summoner_true_form_base_max_health = 0
+        if player.summoner_bond_active:
+            player.health = min(
+                player.health,
+                player.summoner_familiar_health,
+            )
         add_log_message(
             game_state.combat_log,
-            "The familiar returns to its normal form.",
+            "The familiar abandons its true form. Its power is exhausted.",
         )
         return True
+
     if (
         not player.debug_unlimited_abilities
         and player.summoner_true_form_charge
@@ -228,8 +423,12 @@ def request_summoner_true_form(game_state: GameState) -> bool:
             game_state.combat_log,
             "True Form is not fully charged.",
         )
-        return True
+        return False
+
     player.summoner_true_form_active = True
+    player.summoner_true_form_started_at = current_time
+    player.summoner_true_form_ending_started_at = -1
+    player.summoner_familiar_skip_turn = True
     player.summoner_true_form_base_max_health = (
         player.summoner_familiar_max_health
     )
@@ -250,6 +449,8 @@ def deplete_summoner_true_form(game_state: GameState) -> None:
     if not player.summoner_true_form_active:
         return
     player.summoner_true_form_active = False
+    player.summoner_true_form_started_at = -1
+    player.summoner_true_form_ending_started_at = -1
     player.summoner_true_form_charge = 0
     player.summoner_familiar_health = 0
     player.summoner_familiar_active = False
@@ -310,6 +511,17 @@ def _familiar_distance_to_enemy(
     )
 
 
+def _enemy_is_attacking_summoner(
+    game_state: GameState,
+    enemy,
+) -> bool:
+    return (
+        enemy.health > 0
+        and enemy.is_aggro
+        and enemy.prepared_attack_target != "familiar"
+    )
+
+
 def resolve_summoner_familiar_turn(game_state: GameState) -> None:
     player = game_state.player
     floor = game_state.floor
@@ -323,25 +535,63 @@ def resolve_summoner_familiar_turn(game_state: GameState) -> None:
     ):
         return
 
+    if player.summoner_true_form_active:
+        damage_summoner_familiar(
+            game_state,
+            SUMMONER_TRUE_FORM_HEALTH_DRAIN,
+        )
+        if (
+            not player.summoner_familiar_active
+            or player.summoner_familiar_health <= 0
+        ):
+            return
+        familiar_position = (
+            player.summoner_familiar_position
+        )
+
+    if player.summoner_familiar_skip_turn:
+        player.summoner_familiar_skip_turn = False
+        player.summoner_familiar_attack_target = None
+        return
+
     player.summoner_familiar_attack_target = None
     player_position = (floor.player_column, floor.player_row)
-    if distance_between(
-        familiar_position[0],
-        familiar_position[1],
-        player_position[0],
-        player_position[1],
-    ) > SUMMONER_FAMILIAR_LEASH_RANGE:
-        target_position = player_position
-        target_enemy = None
-    else:
+
+    summoner_threats = [
+        enemy
+        for enemy in floor.enemies
+        if _enemy_is_attacking_summoner(
+            game_state,
+            enemy,
+        )
+    ]
+    target_enemy = min(
+        summoner_threats,
+        key=lambda enemy: (
+            _familiar_distance_to_enemy(
+                player_position,
+                enemy,
+            ),
+            _familiar_distance_to_enemy(
+                familiar_position,
+                enemy,
+            ),
+        ),
+        default=None,
+    )
+    protecting_summoner = target_enemy is not None
+
+    if target_enemy is None:
         nearby_enemies = [
             enemy
             for enemy in floor.enemies
-            if enemy.health > 0
-               and _familiar_distance_to_enemy(
-                familiar_position,
-                enemy,
-            ) <= SUMMONER_FAMILIAR_AGGRO_RANGE
+            if (
+                enemy.health > 0
+                and _familiar_distance_to_enemy(
+                    familiar_position,
+                    enemy,
+                ) <= SUMMONER_FAMILIAR_AGGRO_RANGE
+            )
         ]
         target_enemy = min(
             nearby_enemies,
@@ -351,9 +601,17 @@ def resolve_summoner_familiar_turn(game_state: GameState) -> None:
             ),
             default=None,
         )
-        if target_enemy is None:
-            return
 
+    if target_enemy is None:
+        if distance_between(
+            familiar_position[0],
+            familiar_position[1],
+            player_position[0],
+            player_position[1],
+        ) <= SUMMONER_FAMILIAR_LEASH_RANGE:
+            return
+        target_position = player_position
+    else:
         target_position = min(
             get_enemy_occupied_positions(target_enemy),
             key=lambda position: distance_between(
@@ -371,11 +629,15 @@ def resolve_summoner_familiar_turn(game_state: GameState) -> None:
                 for position in get_enemy_occupied_positions(
                     target_enemy
                 )
-                if distance_between(
-                    familiar_position[0],
-                    familiar_position[1],
-                    position[0],
-                    position[1],
+                if max(
+                    abs(
+                        familiar_position[0]
+                        - position[0]
+                    ),
+                    abs(
+                        familiar_position[1]
+                        - position[1]
+                    ),
                 ) == 1
             ),
             None,
@@ -453,12 +715,15 @@ def resolve_summoner_familiar_turn(game_state: GameState) -> None:
         )
     if candidate == familiar_position:
         return
-    if distance_between(
-        candidate[0],
-        candidate[1],
-        player_position[0],
-        player_position[1],
-    ) > 3:
+    if (
+        not protecting_summoner
+        and distance_between(
+            candidate[0],
+            candidate[1],
+            player_position[0],
+            player_position[1],
+        ) > SUMMONER_FAMILIAR_LEASH_RANGE
+    ):
         return
     player.summoner_familiar_movement_origin = familiar_position
     player.summoner_familiar_position = candidate
@@ -511,8 +776,13 @@ def damage_summoner_familiar(
     if player.summoner_familiar_health <= 0:
         player.summoner_familiar_active = False
         player.summoner_familiar_position = None
+        player.summoner_familiar_summon_aiming = False
+        player.summoner_familiar_summon_target = None
+        player.summoner_familiar_summoned_at = -1
         player.summoner_familiar_attack_target = None
         player.summoner_true_form_active = False
+        player.summoner_true_form_started_at = -1
+        player.summoner_true_form_ending_started_at = -1
         player.summoner_true_form_charge = 0
         player.summoner_true_form_base_max_health = 0
         player.summoner_familiar_charge = 0.0

@@ -3,10 +3,14 @@ import math
 import pygame
 
 from presentation.layout import ACT_THREE_TILE_SIZE
+from acts.act_three.presentation.summoner.true_form import (
+    summoner_true_form_sprite,
+)
 
 
 SUMMONER_FAMILIAR_FRAME_COUNT = 8
 SUMMONER_FAMILIAR_FRAME_DURATION_MS = 120
+SUMMONER_FAMILIAR_SUMMON_DURATION_MS = 760
 SUMMONER_FAMILIAR_MOVE_DURATION_MS = 180
 SUMMONER_FAMILIAR_ATTACK_DURATION_MS = 480
 SUMMONER_FAMILIAR_HURT_DURATION_MS = 320
@@ -67,6 +71,31 @@ def load_summoner_familiar_assets(
                 animation_directory
                 / f"{file_prefix}_{source_index:02d}.png",
                 (tile_size, tile_size),
+            )
+
+        summon_directory = (
+                familiar_directory
+                / "summon"
+                / "summon_left"
+        )
+        for frame_index in range(
+                SUMMONER_FAMILIAR_FRAME_COUNT
+        ):
+            source_index = frame_index + 1
+            left_sprite = image_loader(
+                summon_directory
+                / f"summon_left_{source_index:02d}.png",
+                (tile_size, tile_size),
+            )
+            assets[
+                f"summoner_familiar_summon_left_{frame_index}"
+            ] = left_sprite
+            assets[
+                f"summoner_familiar_summon_right_{frame_index}"
+            ] = pygame.transform.flip(
+                left_sprite,
+                True,
+                False,
             )
 
 
@@ -160,6 +189,22 @@ def summoner_familiar_death_active(
     )
 
 
+def summoner_familiar_summon_active(
+    player,
+    current_time,
+):
+    elapsed = (
+        current_time
+        - player.summoner_familiar_summoned_at
+    )
+    return (
+        player.summoner_familiar_summoned_at >= 0
+        and 0
+        <= elapsed
+        < SUMMONER_FAMILIAR_SUMMON_DURATION_MS
+    )
+
+
 def summoner_familiar_sprite(
     assets,
     player,
@@ -183,6 +228,34 @@ def summoner_familiar_sprite(
             f"summoner_familiar_death_{direction}_{frame}"
         ]
 
+    if summoner_familiar_summon_active(
+        player,
+        current_time,
+    ):
+        summon_elapsed = (
+            current_time
+            - player.summoner_familiar_summoned_at
+        )
+        frame = _summoner_familiar_animation_frame(
+            summon_elapsed,
+            SUMMONER_FAMILIAR_SUMMON_DURATION_MS,
+        )
+        return assets[
+            (
+                "summoner_familiar_summon_"
+                f"{player.summoner_familiar_summon_direction}_"
+                f"{frame}"
+            )
+        ]
+
+    true_form_sprite = summoner_true_form_sprite(
+        assets,
+        player,
+        current_time,
+    )
+    if true_form_sprite is not None:
+        return true_form_sprite
+
     if (
         player.summoner_familiar_hit_animation_started_at >= 0
         and 0 <= hit_elapsed < SUMMONER_FAMILIAR_HURT_DURATION_MS
@@ -199,20 +272,6 @@ def summoner_familiar_sprite(
         current_time
         - player.summoner_familiar_attack_started_at
     )
-
-    if (
-        player.summoner_true_form_active
-        and 0
-        <= attack_elapsed
-        < SUMMONER_FAMILIAR_ATTACK_DURATION_MS
-    ):
-        return assets["summoner_true_form_attack"]
-
-    if player.summoner_true_form_active:
-        frame = (current_time // 180) % 3
-        return assets[
-            f"summoner_true_form_idle_{frame}"
-        ]
 
     if (
         0

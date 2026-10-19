@@ -98,6 +98,7 @@ SUMMONER_BOND_DAMAGE_BONUS = 2
 SUMMONER_TRUE_FORM_CHARGES = 5
 SUMMONER_TRUE_FORM_HEALTH_BONUS = 8
 SUMMONER_TRUE_FORM_DAMAGE_BONUS = 3
+SUMMONER_TRUE_FORM_HEALTH_DRAIN = 1
 
 # Base stats for every Act Three subclass, excluding run upgrades.
 # They currently match their parent classes and can be balanced independently.
