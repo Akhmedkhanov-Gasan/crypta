@@ -4,6 +4,7 @@ import pygame
 
 from presentation.layout import ACT_THREE_TILE_SIZE
 from acts.act_three.presentation.summoner.true_form import (
+    summoner_true_form_direction,
     summoner_true_form_sprite,
 )
 
@@ -224,6 +225,17 @@ def summoner_familiar_sprite(
             hit_elapsed,
             SUMMONER_FAMILIAR_DEATH_DURATION_MS,
         )
+        if player.summoner_familiar_death_true_form:
+            true_form_direction = (
+                summoner_true_form_direction(player)
+            )
+            return assets[
+                (
+                    "summoner_true_form_death_"
+                    f"{true_form_direction}_{frame}"
+                )
+            ]
+
         return assets[
             f"summoner_familiar_death_{direction}_{frame}"
         ]

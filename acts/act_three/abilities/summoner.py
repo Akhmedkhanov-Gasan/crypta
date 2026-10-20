@@ -274,6 +274,7 @@ def confirm_summoner_familiar_summon(
     player.summoner_familiar_summon_target = None
     player.summoner_familiar_charge = 0.0
     player.summoner_familiar_death_penalty = False
+    player.summoner_familiar_death_true_form = False
     player.summoner_true_form_active = False
     player.summoner_true_form_started_at = -1
     player.summoner_true_form_ending_started_at = -1
@@ -448,6 +449,9 @@ def deplete_summoner_true_form(game_state: GameState) -> None:
     player = game_state.player
     if not player.summoner_true_form_active:
         return
+
+    familiar_position = player.summoner_familiar_position
+    player.summoner_familiar_death_true_form = True
     player.summoner_true_form_active = False
     player.summoner_true_form_started_at = -1
     player.summoner_true_form_ending_started_at = -1
@@ -461,6 +465,7 @@ def deplete_summoner_true_form(game_state: GameState) -> None:
         GameEvent(
             type=GameEventType.DEATH,
             actor="familiar",
+            destination=familiar_position,
             data={"kind": "summoner_true_form_depleted"},
         )
     )
@@ -751,6 +756,10 @@ def damage_summoner_familiar(
     ):
         return 0
 
+    familiar_position = player.summoner_familiar_position
+    familiar_was_true_form = (
+        player.summoner_true_form_active
+    )
     previous_health = (
         player.health
         if player.summoner_bond_active
@@ -774,6 +783,9 @@ def damage_summoner_familiar(
             player.summoner_true_form_charge + 1,
         )
     if player.summoner_familiar_health <= 0:
+        player.summoner_familiar_death_true_form = (
+            familiar_was_true_form
+        )
         player.summoner_familiar_active = False
         player.summoner_familiar_position = None
         player.summoner_familiar_summon_aiming = False
@@ -792,7 +804,14 @@ def damage_summoner_familiar(
             GameEvent(
                 type=GameEventType.DEATH,
                 actor="familiar",
-                data={"kind": "summoner_familiar"},
+                destination=familiar_position,
+                data={
+                    "kind": (
+                        "summoner_true_form"
+                        if familiar_was_true_form
+                        else "summoner_familiar"
+                    )
+                },
             )
         )
         add_log_message(

@@ -156,6 +156,7 @@ class ActThreePlayerState:
     summoner_familiar_health: int = 0
     summoner_familiar_charge: float = 0.0
     summoner_familiar_death_penalty: bool = False
+    summoner_familiar_death_true_form: bool = False
     summoner_true_form_active: bool = False
     summoner_true_form_started_at: int = -1
     summoner_true_form_ending_started_at: int = -1

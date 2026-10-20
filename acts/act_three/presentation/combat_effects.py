@@ -1975,7 +1975,18 @@ def record_familiar_hit_feedback(game_state, started_at):
             and event.amount
         )
     ]
-    if not hit_events:
+    death_event = next(
+        (
+            event
+            for event in reversed(game_state.events)
+            if (
+                event.type is GameEventType.DEATH
+                and event.actor == "familiar"
+            )
+        ),
+        None,
+    )
+    if not hit_events and death_event is None:
         return
 
     player = game_state.player
@@ -1997,7 +2008,11 @@ def record_familiar_hit_feedback(game_state, started_at):
             for event in reversed(hit_events)
             if event.destination is not None
         ),
-        None,
+        (
+            death_event.destination
+            if death_event is not None
+            else None
+        ),
     )
 
 

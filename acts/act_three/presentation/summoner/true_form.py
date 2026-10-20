@@ -16,6 +16,7 @@ _TRUE_FORM_ANIMATIONS = (
     "walk",
     "attack",
     "hurt",
+    "death",
 )
 
 

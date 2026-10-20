@@ -769,6 +769,13 @@ def handle_act_three_pointer_event(
                     )
                 )
                 set_summoner_staff_cursor(target_is_valid)
+                if target_is_valid:
+                    pygame.event.post(
+                        pygame.event.Event(
+                            pygame.KEYDOWN,
+                            key=pygame.K_q,
+                        )
+                    )
                 return True
 
             if movement_available:
