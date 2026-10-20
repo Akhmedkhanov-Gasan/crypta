@@ -1,5 +1,6 @@
 import random
 
+from acts.act_one.state import ActOneIntroState
 from acts.act_one.settings import (
     PLAYER_STARTING_ATTRIBUTE_RANKS,
     PLAYER_STARTING_STATS,
@@ -385,6 +386,14 @@ def create_game_state(
         floor=initial_floor,
         player=create_player_state(),
         combat_log=[opening_message],
+        act_one_intro=(
+            ActOneIntroState(
+                column=initial_floor.player_column,
+                row=initial_floor.player_row,
+            )
+            if floor_index == 0
+            else None
+        ),
         act_two_trader_floor_index=(
             act_two_trader_floor_index
         ),

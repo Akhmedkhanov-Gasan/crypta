@@ -7,32 +7,89 @@ from settings import GAME_WIDTH, TILE_SIZE
 
 
 def draw_archer_attack_markers(screen, enemy, current_time):
-    pulse = (math.sin(current_time / 180) + 1) / 2
-    border_color = (
-        83,
-        round(157 + pulse * 45),
-        112,
-    )
-
-    marker = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
-    rectangle = marker.get_rect().inflate(-4, -4)
-
-    pygame.draw.rect(marker, (31, 91, 53, 125), rectangle)
-    pygame.draw.rect(marker, border_color, rectangle, width=2)
-
+    pulse = (
+        math.sin(current_time / 190) + 1
+    ) / 2
     center = TILE_SIZE // 2
 
+    marker = pygame.Surface(
+        (TILE_SIZE, TILE_SIZE),
+        pygame.SRCALPHA,
+    )
+
+    for radius, alpha in (
+        (14, 18),
+        (11, 27),
+        (8, 38),
+    ):
+        pygame.draw.circle(
+            marker,
+            (48, 126, 69, alpha),
+            (center, center),
+            radius,
+        )
+
+    radius = round(
+        9 + pulse * 2
+    )
+    marker_color = (
+        126,
+        round(192 + pulse * 36),
+        111,
+        round(150 + pulse * 65),
+    )
+
+    pygame.draw.circle(
+        marker,
+        marker_color,
+        (center, center),
+        radius,
+        width=1,
+    )
+    pygame.draw.arc(
+        marker,
+        marker_color,
+        (
+            center - radius - 3,
+            center - radius - 3,
+            radius * 2 + 6,
+            radius * 2 + 6,
+        ),
+        0.25,
+        1.25,
+        2,
+    )
+    pygame.draw.arc(
+        marker,
+        marker_color,
+        (
+            center - radius - 3,
+            center - radius - 3,
+            radius * 2 + 6,
+            radius * 2 + 6,
+        ),
+        3.4,
+        4.4,
+        2,
+    )
+
     pygame.draw.line(
         marker,
-        (170, 228, 154),
-        (center - 4, center),
-        (center + 4, center),
+        marker_color,
+        (center - 5, center),
+        (center + 5, center),
     )
     pygame.draw.line(
         marker,
-        (170, 228, 154),
-        (center, center - 4),
-        (center, center + 4),
+        marker_color,
+        (center, center - 5),
+        (center, center + 5),
+    )
+    pygame.draw.circle(
+        marker,
+        (213, 231, 128, 220),
+        (center, center),
+        2,
     )
 
     for column, row in enemy["attack_targets"]:
@@ -139,89 +196,166 @@ def draw_warden_braziers(screen, floor, current_time):
 
 
 def draw_warden_status(screen, warden, font, current_time):
-    panel = pygame.Rect(GAME_WIDTH // 2 - 260, 38, 520, 96)
+    panel = pygame.Rect(
+        GAME_WIDTH // 2 - 172,
+        10,
+        344,
+        60,
+    )
 
     pygame.draw.rect(
         screen,
-        (8, 9, 14),
-        panel.move(3, 4),
-        border_radius=5,
+        (5, 6, 10, 215),
+        panel.move(2, 3),
+        border_radius=8,
     )
     pygame.draw.rect(
         screen,
-        (22, 18, 28),
+        (17, 14, 23),
         panel,
-        border_radius=5,
+        border_radius=8,
     )
     pygame.draw.rect(
         screen,
-        (94, 69, 101),
+        (80, 66, 91),
         panel,
         width=1,
-        border_radius=5,
+        border_radius=8,
     )
 
-    second_phase = warden["health"] <= warden["max_health"] // 2
+    second_phase = (
+        warden["health"]
+        <= warden["max_health"] // 2
+    )
     phase = "II" if second_phase else "I"
-    color = (205, 74, 105) if second_phase else (151, 96, 171)
+    color = (
+        (205, 67, 112)
+        if second_phase
+        else (145, 86, 174)
+    )
 
     title = font.render(
-        f"CRYPT WARDEN  |  PHASE {phase}",
+        f"CRYPT WARDEN  {phase}",
         True,
-        (218, 198, 218),
+        (215, 203, 218),
     )
     screen.blit(
         title,
-        title.get_rect(midleft=(panel.left + 16, panel.top + 22)),
+        title.get_rect(
+            midleft=(
+                panel.left + 12,
+                panel.top + 14,
+            ),
+        ),
     )
 
     health = font.render(
-        f"{warden['health']}/{warden['max_health']}",
+        (
+            f"{warden['health']}"
+            f" / {warden['max_health']}"
+        ),
         True,
-        (218, 198, 218),
+        (225, 213, 224),
     )
     screen.blit(
         health,
-        health.get_rect(midright=(panel.right - 16, panel.top + 22)),
+        health.get_rect(
+            midright=(
+                panel.right - 12,
+                panel.top + 14,
+            ),
+        ),
     )
 
-    bar = pygame.Rect(panel.left + 16, panel.top + 42, panel.width - 32, 12)
-    pygame.draw.rect(screen, (9, 8, 14), bar)
+    bar = pygame.Rect(
+        panel.left + 12,
+        panel.top + 27,
+        panel.width - 24,
+        9,
+    )
+    pygame.draw.rect(
+        screen,
+        (7, 6, 11),
+        bar,
+        border_radius=4,
+    )
 
-    ratio = max(0.0, min(1.0, warden["health"] / max(1, warden["max_health"])))
-    fill = bar.inflate(-4, -4)
-    fill.width = round(fill.width * ratio)
+    ratio = max(
+        0.0,
+        min(
+            1.0,
+            warden["health"]
+            / max(1, warden["max_health"]),
+        ),
+    )
+    fill = bar.inflate(-2, -2)
+    fill.width = round(
+        fill.width * ratio
+    )
+
     if fill.width > 0:
-        pygame.draw.rect(screen, color, fill)
+        pygame.draw.rect(
+            screen,
+            color,
+            fill,
+            border_radius=3,
+        )
 
-    pygame.draw.rect(screen, (83, 60, 90), bar, width=1)
+    pygame.draw.rect(
+        screen,
+        (75, 60, 86),
+        bar,
+        width=1,
+        border_radius=4,
+    )
 
-    phase_started_at = warden.get("phase_transition_started_at", -1)
-    phase_elapsed = current_time - phase_started_at
-    mode = warden.get("prepared_attack_mode")
+    phase_started_at = warden.get(
+        "phase_transition_started_at",
+        -1,
+    )
+    phase_elapsed = (
+        current_time - phase_started_at
+    )
+    mode = warden.get(
+        "prepared_attack_mode",
+    )
 
-    if phase_started_at >= 0 and 0 <= phase_elapsed < 1150:
-        status = "THE WARDEN UNBOUND"
+    if (
+        phase_started_at >= 0
+        and 0 <= phase_elapsed < 1150
+    ):
+        status = "UNBOUND"
         status_color = (226, 151, 220)
-    elif warden.get("warden_reposition_target") is not None:
-        status = "REPOSITIONING"
+    elif (
+        warden.get(
+            "warden_reposition_target",
+        )
+        is not None
+    ):
+        status = "SHIFTING"
         status_color = (174, 139, 218)
     elif warden["attack_targets"] and mode:
-        status = f"PREPARING {mode.upper()}"
+        status = mode.upper()
         status_color = {
-            "cross": (230, 79, 86),
-            "sweep": (235, 135, 57),
-            "runes": (190, 95, 214),
+            "cross": (224, 91, 107),
+            "sweep": (230, 142, 72),
+            "runes": (192, 111, 211),
         }.get(mode, color)
     else:
         status = ""
-        status_color = color
 
     if status:
-        surface = font.render(status, True, status_color)
+        surface = font.render(
+            status,
+            True,
+            status_color,
+        )
         screen.blit(
             surface,
             surface.get_rect(
-                center=(panel.centerx, panel.top + 76),
+                center=(
+                    panel.centerx,
+                    panel.top + 49,
+                ),
             ),
         )
