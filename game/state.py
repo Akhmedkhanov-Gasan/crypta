@@ -467,6 +467,7 @@ class GameState:
     run_stats: RunStatistics = field(
         default_factory=RunStatistics,
     )
+    act_one_intro: Any | None = None
     visited_floors: dict[int, FloorState] = field(default_factory=dict)
     act_two_quests: ActTwoQuestState = field(
         default_factory=ActTwoQuestState,

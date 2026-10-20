@@ -24,6 +24,7 @@ _STATE_MODULES = (
     "game.state",
     "game.control_state",
     "game.events",
+    "acts.act_one.state",
     "acts.act_two.state",
     "acts.act_two.quests.state",
     "acts.act_three.state",

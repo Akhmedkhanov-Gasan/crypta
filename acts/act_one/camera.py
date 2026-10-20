@@ -34,6 +34,7 @@ _VIEWPORT = pygame.Rect(
 @dataclass
 class ActOneCamera(PixelCamera):
     zoom: int = ACT_ONE_CAMERA_SCALE
+    cinematic_focus_active: bool = False
 
 
 def update_act_one_camera(
@@ -43,14 +44,28 @@ def update_act_one_camera(
     player_row,
     floor_index,
     current_time,
+    focus_offset_y=None,
 ):
     world_size = (
         len(dungeon_map[0]) * TILE_SIZE,
         len(dungeon_map) * TILE_SIZE,
     )
+    cinematic_focus = focus_offset_y is not None
+    cinematic_ending = (
+        camera.cinematic_focus_active
+        and not cinematic_focus
+    )
+    camera.cinematic_focus_active = cinematic_focus
+
     player_focus = (
         player_column * TILE_SIZE + TILE_SIZE / 2,
-        player_row * TILE_SIZE + TILE_SIZE / 2,
+        player_row * TILE_SIZE
+        + TILE_SIZE / 2
+        + (
+            focus_offset_y
+            if focus_offset_y is not None
+            else 0.0
+        ),
     )
 
     update_pixel_camera(
@@ -60,8 +75,18 @@ def update_act_one_camera(
         player_focus,
         floor_index,
         current_time,
-        _DEAD_ZONE,
-        response_ms=_CAMERA_RESPONSE_MS,
+        (
+            (0, 0)
+            if cinematic_focus or cinematic_ending
+            else _DEAD_ZONE
+        ),
+        response_ms=(
+            280
+            if cinematic_focus
+            else 220
+            if cinematic_ending
+            else _CAMERA_RESPONSE_MS
+        ),
         constrain_to_world=False,
     )
 

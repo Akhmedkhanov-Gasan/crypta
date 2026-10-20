@@ -15,6 +15,9 @@ from application.upgrade_input import (
 from application.resources import load_application_resources
 from application.map_navigation import MapNavigationController
 from application.bootstrap import begin_application_startup
+from application.debug_shortcuts import (
+    create_debug_game_state,
+)
 from application.loading import LoadingCoordinator
 from application.state import ApplicationRuntimeState
 from application.run_session import RunSession
@@ -84,6 +87,13 @@ from acts.act_one.camera import (
     get_act_one_cell_from_position,
     update_act_one_camera,
 )
+from acts.act_one.presentation.environment import (
+    draw_act_one_fog_of_war,
+)
+from acts.act_one.visibility import (
+    position_is_visible as act_one_position_is_visible,
+    update_act_one_visibility,
+)
 from acts.act_one.interface import act_one_hud_contains_position
 from acts.act_one.presentation.tutorial_presentation import (
     draw_tutorial_floor_labels,
@@ -95,6 +105,17 @@ from acts.act_one.presentation.death_scene import (
     begin_act_one_death,
     draw_act_one_death_overlay,
     handle_act_one_death_event,
+)
+from acts.act_one.presentation.intro import (
+    act_one_intro_active,
+    act_one_intro_camera_offset,
+    act_one_intro_head_lift,
+    act_one_intro_hud_opacity,
+    act_one_intro_knife_pickup,
+    act_one_intro_player_has_knife,
+    draw_act_one_intro_overlay,
+    draw_act_one_intro_world,
+    update_act_one_intro,
 )
 from acts.act_one.settings import (
     FLOOR_INTRO_SUBTITLES,
@@ -554,7 +575,10 @@ def main():
             act_two_input_state.resonance_cursor_active = False
         continuous_move_time = pygame.time.get_ticks()
 
-        if oracle_cutscene_active(game_state.floor):
+        if (
+            oracle_cutscene_active(game_state.floor)
+            or act_one_intro_active(game_state)
+        ):
             act_two_input_state.reset_held_movement()
             act_two_input_state.cancel_auto_move()
             act_two_input_state.cancel_consumable_drag()
@@ -592,6 +616,7 @@ def main():
             and not game_state.game_won
             and not game_state.trade_screen_open
             and not oracle_cutscene_active(game_state.floor)
+            and not act_one_intro_active(game_state)
         )
         ground_item_window.update(
             game_state,
@@ -706,6 +731,53 @@ def main():
                     app_runtime.request_quit()
                 continue
 
+            debug_game_state = create_debug_game_state(
+                event,
+                pygame.time.get_ticks(),
+                FIRST_ACT_FINAL_FLOOR,
+                FIRST_ACT_THREE_FLOOR,
+                CLASS_SELECTION_READY_MS,
+            )
+
+            if debug_game_state is not None:
+                if pygame.mixer.get_init() is not None:
+                    pygame.mixer.music.stop()
+                    pygame.mixer.Channel(0).stop()
+
+                if act_one_warden_music_channel is not None:
+                    act_one_warden_music_channel.stop()
+
+                act_one_music_attempted = False
+                act_one_warden_music_attempted = False
+                act_one_warden_music_channel = None
+                act_two_music_attempted = False
+                act_three_music_attempted = False
+                act_two_transition_audio_started = False
+                act_two_eyes_close_played = False
+                act_two_eyes_open_played = False
+
+                game_state = debug_game_state
+                current_act = (
+                    game_state.floor.presentation_act
+                )
+
+                app_runtime.progress_tracking_enabled = False
+                app_runtime.start_game()
+
+                act_one_camera = ActOneCamera()
+                act_two_camera = ActTwoCamera()
+                act_two_world_surface = None
+                act_two_map_surface = None
+                act_two_map_cache_key = None
+                ground_item_window = GroundItemInput()
+                cutscene_skip = ActTwoCutsceneSkip()
+
+                act_two_input_state.reset_for_loading()
+                menu_state.pause_background = None
+                menu_state.transition_from_theme = None
+                set_default_cursor()
+                continue
+
             if (
                 current_act == 3
                 and game_state.act_three.barrage_turn is not None
@@ -729,6 +801,24 @@ def main():
                     )
                 )
             ):
+                continue
+
+            if (
+                act_one_intro_active(game_state)
+                and app_runtime.game_started
+                and not app_runtime.menu_open
+                and event.type not in (
+                    pygame.QUIT,
+                    pygame.VIDEORESIZE,
+                )
+                and not (
+                    event.type == pygame.KEYDOWN
+                    and event.key == pygame.K_ESCAPE
+                )
+            ):
+                act_two_input_state.reset_held_movement()
+                act_two_input_state.cancel_auto_move()
+                act_two_input_state.cancel_consumable_drag()
                 continue
 
             if cutscene_skip.handle_event(
@@ -2010,88 +2100,6 @@ def main():
                     continue
 
 
-                if event.key == pygame.K_F1:
-                    if (
-                        act_three_music_attempted
-                        and pygame.mixer.get_init() is not None
-                    ):
-                        pygame.mixer.music.stop()
-                    act_three_music_attempted = False
-                    app_runtime.progress_tracking_enabled = False
-                    game_state = create_game_state(
-                        floor_index=FIRST_ACT_FINAL_FLOOR,
-                        opening_message=(
-                            "Debug: replay the Act II awakening."
-                        ),
-                    )
-                    game_state.class_selection_open = True
-                    game_state.class_transition_started_at = (
-                        pygame.time.get_ticks()
-                    )
-                    continue
-
-                if event.key == pygame.K_F2:
-                    if (
-                        act_three_music_attempted
-                        and pygame.mixer.get_init() is not None
-                    ):
-                        pygame.mixer.music.stop()
-                    act_three_music_attempted = False
-                    app_runtime.progress_tracking_enabled = False
-                    game_state = create_game_state(
-                        floor_index=FIRST_ACT_FINAL_FLOOR,
-                        opening_message="Debug jump: choose an Act II class.",
-                    )
-                    game_state.class_selection_open = True
-                    game_state.class_transition_started_at = (
-                        pygame.time.get_ticks()
-                        - CLASS_SELECTION_READY_MS
-                    )
-                    continue
-
-                if event.key == pygame.K_F3:
-                    if (
-                            act_three_music_attempted
-                            and pygame.mixer.get_init() is not None
-                    ):
-                        pygame.mixer.music.stop()
-
-                    act_three_music_attempted = False
-                    app_runtime.progress_tracking_enabled = False
-                    act_two_input_state.cancel_auto_move()
-
-                    game_state = create_game_state(
-                        floor_index=FIRST_ACT_FINAL_FLOOR,
-                        opening_message=(
-                            "Debug: choose an Act II class "
-                            "to test the Oracle arena."
-                        ),
-                    )
-                    game_state.oracle_debug_mode = True
-                    game_state.class_selection_open = True
-                    game_state.class_transition_started_at = (
-                            pygame.time.get_ticks()
-                            - CLASS_SELECTION_READY_MS
-                    )
-                    continue
-                if event.key == pygame.K_F4:
-                    if (
-                            act_three_music_attempted
-                            and pygame.mixer.get_init() is not None
-                    ):
-                        pygame.mixer.music.stop()
-
-                    act_three_music_attempted = False
-                    app_runtime.progress_tracking_enabled = False
-                    act_two_input_state.cancel_auto_move()
-
-                    game_state = create_game_state(
-                        floor_index=FIRST_ACT_THREE_FLOOR,
-                        opening_message="Debug: Act III environment v3.",
-                    )
-                    game_state.act_three_test_mode = True
-                    game_state.act_three_debug_class_selection_open = True
-                    continue
                 if handle_act_three_key_event(
                         event,
                         game_state,
@@ -3469,6 +3477,16 @@ def main():
 
         current_time = pygame.time.get_ticks()
 
+        update_act_one_intro(
+            game_state,
+            current_time,
+            enabled=(
+                app_runtime.game_started
+                and not app_runtime.menu_open
+                and not loading.completed
+            ),
+        )
+
         if app_runtime.game_started and not app_runtime.menu_open:
             begin_act_one_death(game_state, current_time)
 
@@ -3863,6 +3881,9 @@ def main():
                     game_state.combat_log,
                     f"Act II music unavailable: {audio_error}", category="system",
                 )
+        if current_act == 1:
+            update_act_one_visibility(game_state.floor)
+
         if current_act == 2:
             update_oracle_intro(
                 game_state,
@@ -3950,6 +3971,9 @@ def main():
                 game_state.floor["player_row"],
                 game_state.floor_index,
                 current_time,
+                focus_offset_y=act_one_intro_camera_offset(
+                    getattr(game_state, "act_one_intro", None)
+                ),
             )
         if current_act == 2:
             if not oracle_cutscene_active(game_state.floor):
@@ -4613,8 +4637,26 @@ def main():
                 if current_act == 2
                 else -1
             ),
+            act_one_head_lift_progress=act_one_intro_head_lift(
+                getattr(game_state, "act_one_intro", None)
+            ),
+            act_one_knife_visible=act_one_intro_player_has_knife(
+                getattr(game_state, "act_one_intro", None)
+            ),
+            act_one_knife_pickup_progress=act_one_intro_knife_pickup(
+                getattr(game_state, "act_one_intro", None)
+            ),
+            act_one_hud_opacity=act_one_intro_hud_opacity(
+                getattr(game_state, "act_one_intro", None),
+                current_time,
+            ),
             control_player=game_state.player,
         )
+        if current_act == 1 and game_state.floor_index == 0:
+            draw_act_one_intro_world(
+                world_target,
+                getattr(game_state, "act_one_intro", None),
+            )
         if current_act == 2 and game_state.player.health > 0:
             draw_impact_block_effect(
                 world_target,
@@ -4645,6 +4687,19 @@ def main():
                 continue
 
             if current_act == 2 and enemy.health <= 0:
+                continue
+
+            if (
+                current_act == 1
+                and not any(
+                    act_one_position_is_visible(
+                        game_state.floor,
+                        position[0],
+                        position[1],
+                    )
+                    for position in get_enemy_occupied_positions(enemy)
+                )
+            ):
                 continue
 
             if (
@@ -4836,6 +4891,14 @@ def main():
                 ground_item_input_available(game_state),
             )
         elif current_act == 1:
+            draw_act_one_fog_of_war(
+                world_target,
+                current_act,
+                game_state.floor,
+                current_time,
+                game_state.player.movement_animation_started_at,
+                game_state.player.act_one_movement_origin,
+            )
             draw_act_one_camera_view(
                 game_surface,
                 act_one_world_surface,
@@ -4847,14 +4910,33 @@ def main():
             else None
         )
 
-        draw_status(
-            game_surface,
-            active_status_font,
-            game_state.floor_index,
-            game_state.player.health,
-            game_state.floor["enemies"],
-            game_state.game_won,
-        )
+        act_one_hud_target = game_surface
+        act_one_hud_alpha = 255
+
+        if current_act == 1:
+            act_one_hud_alpha = act_one_intro_hud_opacity(
+                getattr(game_state, "act_one_intro", None),
+                current_time,
+            )
+
+            if act_one_hud_alpha <= 0:
+                act_one_hud_target = None
+            elif act_one_hud_alpha < 255:
+                act_one_hud_target = pygame.Surface(
+                    game_surface.get_size(),
+                    pygame.SRCALPHA,
+                )
+
+        if act_one_hud_target is not None:
+            draw_status(
+                act_one_hud_target,
+                active_status_font,
+                game_state.floor_index,
+                game_state.player.health,
+                game_state.floor["enemies"],
+                game_state.game_won,
+            )
+
         if current_act == 2:
             draw_oracle_ui(
                 game_surface,
@@ -4870,17 +4952,26 @@ def main():
                 current_time,
                 act_two_camera,
             )
+
         if current_act == 1:
-            draw_sidebar(
-                game_surface,
-                active_heading_font,
-                active_text_font,
-                game_state.combat_log,
-                game_state.player.health,
-                game_state.player.max_health,
-                game_state.player.potion_count,
-                act_one_gameplay_assets,
-            )
+            if act_one_hud_target is not None:
+                draw_sidebar(
+                    act_one_hud_target,
+                    active_heading_font,
+                    active_text_font,
+                    game_state.combat_log,
+                    game_state.player.health,
+                    game_state.player.max_health,
+                    game_state.player.potion_count,
+                    act_one_gameplay_assets,
+                )
+
+                if act_one_hud_target is not game_surface:
+                    act_one_hud_target.set_alpha(act_one_hud_alpha)
+                    game_surface.blit(
+                        act_one_hud_target,
+                        (0, 0),
+                    )
         elif current_act == 2:
             preview_player = get_act_two_attribute_preview(
                 game_state.player,
@@ -5125,6 +5216,14 @@ def main():
                     window_state.screen,
                     pygame.mouse.get_pos(),
                 ),
+            )
+
+        if current_act == 1:
+            draw_act_one_intro_overlay(
+                game_surface,
+                getattr(game_state, "act_one_intro", None),
+                act_one_fonts["interface"],
+                act_one_fonts["text"],
             )
 
         if (
