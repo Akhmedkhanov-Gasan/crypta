@@ -43,8 +43,8 @@ def generate_warden_floor(config, floor_index, crate_placer=None):
     )
     boss_positions = (
         ("warden", (19, 7)),
-        ("archer", (16, 4)),
-        ("archer", (22, 10)),
+        ("archer", (19, 4)),
+        ("archer", (19, 10)),
     )
 
     enemies = [
@@ -131,6 +131,7 @@ def generate_warden_floor(config, floor_index, crate_placer=None):
         "boss_columns": [],
         "boss_emitters": [],
         "seal_boss_door_during_fight": True,
+        "warden_intro": True,
         "torches": [],
         "visual_seed": 10301,
     }

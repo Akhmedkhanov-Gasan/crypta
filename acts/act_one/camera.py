@@ -45,12 +45,16 @@ def update_act_one_camera(
     floor_index,
     current_time,
     focus_offset_y=None,
+    focus_position=None,
 ):
     world_size = (
         len(dungeon_map[0]) * TILE_SIZE,
         len(dungeon_map) * TILE_SIZE,
     )
-    cinematic_focus = focus_offset_y is not None
+    cinematic_focus = (
+        focus_offset_y is not None
+        or focus_position is not None
+    )
     cinematic_ending = (
         camera.cinematic_focus_active
         and not cinematic_focus
@@ -58,14 +62,18 @@ def update_act_one_camera(
     camera.cinematic_focus_active = cinematic_focus
 
     player_focus = (
-        player_column * TILE_SIZE + TILE_SIZE / 2,
-        player_row * TILE_SIZE
-        + TILE_SIZE / 2
-        + (
-            focus_offset_y
-            if focus_offset_y is not None
-            else 0.0
-        ),
+        focus_position
+        if focus_position is not None
+        else (
+            player_column * TILE_SIZE + TILE_SIZE / 2,
+            player_row * TILE_SIZE
+            + TILE_SIZE / 2
+            + (
+                focus_offset_y
+                if focus_offset_y is not None
+                else 0.0
+            ),
+        )
     )
 
     update_pixel_camera(

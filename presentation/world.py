@@ -29,6 +29,7 @@ from acts.act_one.presentation.enemies import (
     draw_goblin_corpse,
     draw_goblin_death,
     draw_warden,
+    draw_warden_corpse,
     enemy_attack_offset,
 )
 from acts.act_two.presentation import draw_act_two_player_actor
@@ -1015,6 +1016,19 @@ def _draw_act_one_archer(
         facing,
         draw_strength,
         arrow_visible,
+        round(
+            255
+            * max(
+                0.0,
+                min(
+                    1.0,
+                    enemy.get(
+                        "intro_spawn_progress",
+                        1.0,
+                    ),
+                ),
+            )
+        ),
     )
 
 
@@ -1161,6 +1175,18 @@ def _draw_act_one_enemy_death(
         if is_boss
         else ACT_ONE_ENEMY_DEATH_DURATION_MS
     )
+
+    if (
+        is_boss
+        and elapsed >= duration
+    ):
+        draw_warden_corpse(
+            screen,
+            center_x,
+            center_y,
+        )
+        return
+
     if not 0 <= elapsed < duration:
         return
 
@@ -1318,11 +1344,30 @@ def _draw_act_one_enemy_death(
                 ),
                 2,
             )
-        screen.blit(
-            spark,
-            (center_x - spark_center, center_y - spark_center),
-        )
+            screen.blit(
+                spark,
+                (center_x - spark_center, center_y - spark_center),
+            )
 
+    if (
+            is_boss
+            and progress >= 0.54
+    ):
+        corpse_progress = (
+                                  progress - 0.54
+                          ) / 0.46
+        draw_warden_corpse(
+            screen,
+            center_x,
+            center_y,
+            opacity=round(
+                255
+                * min(
+                    1.0,
+                    corpse_progress,
+                )
+            ),
+        )
 
 def _act_one_tile_noise(column, row, visual_seed, salt=0):
     return (
@@ -2331,6 +2376,9 @@ def draw_player(
             MAP_OFFSET_Y + row * TILE_SIZE + TILE_SIZE // 2,
             current_time,
             death_animation_started_at,
+            ACT_ONE_PLAYER_CLOAK,
+            ACT_ONE_PLAYER_EDGE,
+            ACT_ONE_PLAYER_FACE,
         )
         return
 
@@ -2792,6 +2840,9 @@ def draw_enemy(
                 enemy["hit_animation_started_at"],
             )
 
+    if not enemy["is_active"]:
+        return
+
     health_ratio = enemy["health"] / enemy["max_health"]
     bar_x = MAP_OFFSET_X + column * TILE_SIZE + 4 + movement_offset_x
     bar_y = (
@@ -2941,63 +2992,21 @@ def draw_potion(screen, column, row, act_number, sprites):
         _draw_act_two_potion(screen, column, row, sprites)
         return
 
-    cell_x = MAP_OFFSET_X + column * TILE_SIZE
-    cell_y = MAP_OFFSET_Y + row * TILE_SIZE
-    potion_sprite = sprites.get("act_one_potion")
-    if potion_sprite is not None:
-        center = (
-            cell_x + TILE_SIZE // 2,
-            cell_y + TILE_SIZE // 2,
-        )
-        _draw_act_one_glow(screen, center, (190, 35, 45), 16)
-        screen.blit(
-            potion_sprite,
-            potion_sprite.get_rect(center=center),
-        )
-        return
-
-    bottle_rectangle = pygame.Rect(
-        cell_x + TILE_SIZE // 2 - 6,
-        cell_y + 11,
-        12,
-        17,
+    center = (
+        MAP_OFFSET_X + column * TILE_SIZE + TILE_SIZE // 2,
+        MAP_OFFSET_Y + row * TILE_SIZE + TILE_SIZE // 2 + 2,
     )
 
     _draw_act_one_glow(
         screen,
-        (cell_x + TILE_SIZE // 2, cell_y + 19),
-        (190, 35, 45),
-        16,
+        center,
+        (152, 35, 48),
+        9,
     )
-    pygame.draw.rect(
+    draw_potion_icon(
         screen,
-        (12, 18, 20),
-        bottle_rectangle.inflate(4, 3).move(1, 2),
-        border_radius=5,
-    )
-    pygame.draw.rect(
-        screen,
-        (129, 20, 31),
-        bottle_rectangle,
-        border_radius=4,
-    )
-    pygame.draw.rect(
-        screen,
-        (255, 112, 105),
-        (bottle_rectangle.x + 3, bottle_rectangle.y + 8, 3, 6),
-        border_radius=1,
-    )
-    pygame.draw.rect(
-        screen,
-        ACT_ONE_IRON_LIGHT,
-        (cell_x + TILE_SIZE // 2 - 4, cell_y + 7, 8, 5),
-        border_radius=1,
-    )
-    pygame.draw.line(
-        screen,
-        (137, 134, 129),
-        (cell_x + TILE_SIZE // 2 - 2, cell_y + 8),
-        (cell_x + TILE_SIZE // 2 + 2, cell_y + 8),
+        center,
+        scale=0.82,
     )
 
 

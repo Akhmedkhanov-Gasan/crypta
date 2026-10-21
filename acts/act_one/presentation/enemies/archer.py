@@ -65,6 +65,7 @@ def draw_archer(
     facing=1,
     draw_strength=0.0,
     arrow_visible=False,
+    opacity=255,
 ):
     actor = pygame.Surface(
         (30, 26),
@@ -349,6 +350,13 @@ def draw_archer(
             True,
             False,
         )
+
+    actor.set_alpha(
+        max(
+            0,
+            min(255, opacity),
+        )
+    )
 
     center_x = x + size // 2
     floor_y = y + size

@@ -11,4 +11,16 @@ class ActOneIntroState:
     updated_at: int = -1
 
 
-__all__ = ["ActOneIntroState"]
+@dataclass
+class ActOneWardenIntroState:
+    elapsed: int = 0
+    started: bool = False
+    finished: bool = False
+    skip_held_ms: int = 0
+    updated_at: int = -1
+
+
+__all__ = [
+    "ActOneIntroState",
+    "ActOneWardenIntroState",
+]

@@ -44,6 +44,20 @@ def _draw_crack(screen, x, y, value, color):
     middle_y = start_y + 5
     end_x = middle_x + value // 19 % 7 - 3
     end_y = min(y + TILE_SIZE - 4, middle_y + 6)
+    branch_direction = (
+        -1
+        if value % 2
+        else 1
+    )
+    branch_end = (
+        middle_x + branch_direction * (
+            2 + value // 23 % 3
+        ),
+        min(
+            y + TILE_SIZE - 4,
+            middle_y + 2 + value // 29 % 3,
+        ),
+    )
 
     pygame.draw.aaline(
         screen,
@@ -57,6 +71,172 @@ def _draw_crack(screen, x, y, value, color):
         (middle_x, middle_y),
         (end_x, end_y),
     )
+    pygame.draw.aaline(
+        screen,
+        color,
+        (middle_x, middle_y),
+        branch_end,
+    )
+
+
+def _draw_floor_decor(screen, rectangle, value):
+    x = rectangle.x
+    y = rectangle.y
+    detail = value % 113
+
+    if detail in (7, 71):
+        puddle = pygame.Surface(
+            (TILE_SIZE, TILE_SIZE),
+            pygame.SRCALPHA,
+        )
+        puddle_x = 4 + value // 17 % 6
+        puddle_y = 17 + value // 31 % 4
+        puddle_width = 14 + value // 43 % 5
+
+        pygame.draw.ellipse(
+            puddle,
+            (10, 20, 21, 88),
+            (
+                puddle_x,
+                puddle_y,
+                puddle_width,
+                6,
+            ),
+        )
+        pygame.draw.ellipse(
+            puddle,
+            (24, 36, 36, 56),
+            (
+                puddle_x + 3,
+                puddle_y + 1,
+                max(5, puddle_width - 7),
+                3,
+            ),
+        )
+        pygame.draw.aaline(
+            puddle,
+            (69, 76, 75, 52),
+            (
+                puddle_x + 4,
+                puddle_y + 2,
+            ),
+            (
+                puddle_x
+                + puddle_width
+                - 5,
+                puddle_y + 2,
+            ),
+        )
+        screen.blit(
+            puddle,
+            rectangle,
+        )
+    elif detail in (19, 83):
+        debris_x = x + 7 + value // 17 % 8
+        debris_y = y + 18 + value // 29 % 5
+
+        pygame.draw.polygon(
+            screen,
+            (43, 40, 38),
+            (
+                (
+                    debris_x,
+                    debris_y + 2,
+                ),
+                (
+                    debris_x + 4,
+                    debris_y,
+                ),
+                (
+                    debris_x + 6,
+                    debris_y + 3,
+                ),
+                (
+                    debris_x + 2,
+                    debris_y + 5,
+                ),
+            ),
+        )
+        pygame.draw.line(
+            screen,
+            (60, 52, 43),
+            (
+                debris_x + 8,
+                debris_y + 4,
+            ),
+            (
+                debris_x + 13,
+                debris_y + 1,
+            ),
+        )
+        pygame.draw.line(
+            screen,
+            (27, 25, 24),
+            (
+                debris_x + 10,
+                debris_y + 5,
+            ),
+            (
+                debris_x + 14,
+                debris_y + 6,
+            ),
+        )
+    elif detail in (43, 101):
+        bone_start = (
+            x + 7 + value // 19 % 6,
+            y + 22 + value // 37 % 3,
+        )
+        bone_end = (
+            bone_start[0] + 8,
+            bone_start[1] - 3,
+        )
+        bone_color = (91, 87, 76)
+        bone_shadow = (48, 47, 43)
+
+        pygame.draw.line(
+            screen,
+            bone_shadow,
+            (
+                bone_start[0] + 1,
+                bone_start[1] + 1,
+            ),
+            (
+                bone_end[0] + 1,
+                bone_end[1] + 1,
+            ),
+            2,
+        )
+        pygame.draw.line(
+            screen,
+            bone_color,
+            bone_start,
+            bone_end,
+            2,
+        )
+        pygame.draw.circle(
+            screen,
+            bone_color,
+            bone_start,
+            2,
+        )
+        pygame.draw.circle(
+            screen,
+            bone_color,
+            bone_end,
+            2,
+        )
+        pygame.draw.line(
+            screen,
+            (69, 66, 59),
+            (
+                bone_start[0] + 11,
+                bone_start[1] + 2,
+            ),
+            (
+                bone_start[0] + 15,
+                bone_start[1] + 4,
+            ),
+        )
 
 
 def _draw_floor_tile(screen, rectangle, column, row, value):
@@ -103,22 +283,141 @@ def _draw_floor_tile(screen, rectangle, column, row, value):
             (10, 11, 13),
         )
 
-    if value % 13 == 0:
-        stain = pygame.Surface(
-            (TILE_SIZE, TILE_SIZE),
-            pygame.SRCALPHA,
+    _draw_floor_decor(
+        screen,
+        rectangle,
+        value,
+    )
+
+
+def _wall_is_exposed(
+    dungeon_map,
+    column,
+    row,
+):
+    return any(
+        0 <= row + row_change < len(dungeon_map)
+        and 0 <= column + column_change < len(
+            dungeon_map[row + row_change]
         )
-        pygame.draw.ellipse(
-            stain,
-            (16, 24, 23, 74),
+        and dungeon_map[
+            row + row_change
+        ][
+            column + column_change
+        ] not in ("#", "S")
+        for column_change, row_change in (
+            (-1, 0),
+            (1, 0),
+            (0, -1),
+            (0, 1),
+        )
+    )
+
+
+def _wall_has_torch(value):
+    return value % 53 == 11
+
+
+def _draw_wall_torch(
+    screen,
+    rectangle,
+    value,
+):
+    x = rectangle.x + 16
+    y = rectangle.y + 16
+    lean = value // 19 % 3 - 1
+
+    pygame.draw.line(
+        screen,
+        (24, 23, 25),
+        (
+            x,
+            y + 2,
+        ),
+        (
+            x + lean,
+            y + 10,
+        ),
+        3,
+    )
+    pygame.draw.line(
+        screen,
+        (77, 55, 35),
+        (
+            x,
+            y,
+        ),
+        (
+            x + lean,
+            y + 8,
+        ),
+        2,
+    )
+    pygame.draw.line(
+        screen,
+        (64, 63, 65),
+        (
+            x - 4,
+            y + 7,
+        ),
+        (
+            x + 4,
+            y + 7,
+        ),
+        2,
+    )
+    pygame.draw.polygon(
+        screen,
+        (111, 43, 20),
+        (
             (
-                5 + value % 6,
-                13 + value // 11 % 5,
-                18,
-                8,
+                x - 3,
+                y,
             ),
-        )
-        screen.blit(stain, rectangle)
+            (
+                x - 1,
+                y - 7,
+            ),
+            (
+                x + 1,
+                y - 4,
+            ),
+            (
+                x + 3,
+                y - 1,
+            ),
+            (
+                x + 1,
+                y + 3,
+            ),
+            (
+                x - 2,
+                y + 2,
+            ),
+        ),
+    )
+    pygame.draw.polygon(
+        screen,
+        (181, 101, 39),
+        (
+            (
+                x - 1,
+                y,
+            ),
+            (
+                x,
+                y - 4,
+            ),
+            (
+                x + 2,
+                y,
+            ),
+            (
+                x,
+                y + 2,
+            ),
+        ),
+    )
 
 
 def _draw_wall_tile(
@@ -177,20 +476,14 @@ def _draw_wall_tile(
         (lower_seam, y + TILE_SIZE - 3),
     )
 
-    exposed = any(
-        0 <= row + row_change < len(dungeon_map)
-        and 0 <= column + column_change < len(
-            dungeon_map[row + row_change]
-        )
-        and dungeon_map[row + row_change][
-            column + column_change
-        ] != "#"
-        for column_change, row_change in (
-            (-1, 0),
-            (1, 0),
-            (0, -1),
-            (0, 1),
-        )
+    exposed = _wall_is_exposed(
+        dungeon_map,
+        column,
+        row,
+    )
+    has_torch = (
+        exposed
+        and _wall_has_torch(value)
     )
 
     if value % 9 == 0:
@@ -202,7 +495,11 @@ def _draw_wall_tile(
             (17, 17, 20),
         )
 
-    if exposed and value % 17 == 0:
+    if (
+        exposed
+        and value % 17 == 0
+        and not has_torch
+    ):
         pygame.draw.line(
             screen,
             IRON_COLOR,
@@ -243,6 +540,12 @@ def _draw_wall_tile(
         )
         screen.blit(damp, rectangle)
 
+    if has_torch:
+        _draw_wall_torch(
+            screen,
+            rectangle,
+            value,
+        )
 
 def draw_act_one_dungeon(
     screen,
@@ -298,6 +601,176 @@ def draw_act_one_dungeon(
             )
 
 
+def _draw_wall_torch_light(
+    screen,
+    dungeon_map,
+    column,
+    row,
+    value,
+    current_time,
+):
+    flicker = (
+        math.sin(
+            current_time / 170
+            + value % 19
+        )
+        + math.sin(
+            current_time / 73
+            + value % 7
+        )
+        * 0.35
+    )
+    radius = 23 + round(flicker)
+    size = radius * 2
+    light = pygame.Surface(
+        (size, size),
+    )
+    center = (
+        radius,
+        radius,
+    )
+
+    pygame.draw.circle(
+        light,
+        (7, 4, 2),
+        center,
+        radius,
+    )
+    pygame.draw.circle(
+        light,
+        (13, 7, 3),
+        center,
+        max(1, radius - 7),
+    )
+    pygame.draw.circle(
+        light,
+        (19, 10, 4),
+        center,
+        max(1, radius - 14),
+    )
+
+    source_center = (
+        MAP_OFFSET_X
+        + column * TILE_SIZE
+        + TILE_SIZE // 2,
+        MAP_OFFSET_Y
+        + row * TILE_SIZE
+        + TILE_SIZE // 2,
+    )
+    light_rectangle = light.get_rect(
+        center=source_center,
+    )
+    allowed_positions = [
+        (
+            column,
+            row,
+        )
+    ]
+
+    for column_change, row_change in (
+        (-1, 0),
+        (1, 0),
+        (0, -1),
+        (0, 1),
+    ):
+        target_column = (
+            column + column_change
+        )
+        target_row = (
+            row + row_change
+        )
+
+        if not (
+            0 <= target_row < len(dungeon_map)
+            and 0 <= target_column < len(
+                dungeon_map[target_row]
+            )
+        ):
+            continue
+
+        if dungeon_map[
+            target_row
+        ][
+            target_column
+        ] in ("#", "S"):
+            continue
+
+        allowed_positions.append(
+            (
+                target_column,
+                target_row,
+            )
+        )
+
+    for target_column, target_row in allowed_positions:
+        tile_rectangle = pygame.Rect(
+            MAP_OFFSET_X
+            + target_column * TILE_SIZE,
+            MAP_OFFSET_Y
+            + target_row * TILE_SIZE,
+            TILE_SIZE,
+            TILE_SIZE,
+        )
+        clipped = light_rectangle.clip(
+            tile_rectangle
+        )
+
+        if clipped.width <= 0 or clipped.height <= 0:
+            continue
+
+        source_rectangle = pygame.Rect(
+            clipped.x - light_rectangle.x,
+            clipped.y - light_rectangle.y,
+            clipped.width,
+            clipped.height,
+        )
+        screen.blit(
+            light,
+            clipped.topleft,
+            source_rectangle,
+            special_flags=pygame.BLEND_RGB_ADD,
+        )
+
+
+def _draw_wall_torch_lights(
+    screen,
+    dungeon_map,
+    floor_number,
+    visual_seed,
+    current_time,
+):
+    for row, map_row in enumerate(dungeon_map):
+        for column, tile in enumerate(map_row):
+            if tile not in ("#", "S"):
+                continue
+
+            value = _noise(
+                column,
+                row,
+                visual_seed,
+                floor_number,
+            )
+
+            if (
+                not _wall_has_torch(value)
+                or not _wall_is_exposed(
+                    dungeon_map,
+                    column,
+                    row,
+                )
+            ):
+                continue
+
+            _draw_wall_torch_light(
+                screen,
+                dungeon_map,
+                column,
+                row,
+                value,
+                current_time,
+            )
+
+
 def draw_act_one_ambient(
     screen,
     player_column,
@@ -337,6 +810,14 @@ def draw_act_one_ambient(
         )
 
     screen.blit(veil, (MAP_OFFSET_X, MAP_OFFSET_Y))
+
+    _draw_wall_torch_lights(
+        screen,
+        dungeon_map,
+        floor_number,
+        visual_seed,
+        current_time,
+    )
 
     particles = pygame.Surface(
         (map_width, map_height),

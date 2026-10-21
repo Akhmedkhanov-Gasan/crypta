@@ -28,6 +28,62 @@ def _line_of_sight(dungeon_map, origin, target):
     return True
 
 
+def _inside_hidden_warden_room(
+    floor,
+    column,
+    row,
+):
+    state = getattr(
+        floor,
+        "act_one_warden_intro",
+        None,
+    )
+    room = floor.boss_room
+
+    if (
+        state is None
+        or state.started
+        or room is None
+    ):
+        return False
+
+    return (
+        room.x < column < room.x + room.width
+        and room.y <= row < room.y + room.height
+    )
+
+
+def _reveal_warden_room(
+    floor,
+    visible_cells,
+):
+    state = getattr(
+        floor,
+        "act_one_warden_intro",
+        None,
+    )
+    room = floor.boss_room
+
+    if (
+        state is None
+        or not state.started
+        or state.finished
+        or room is None
+    ):
+        return
+
+    for row in range(
+        room.y,
+        room.y + room.height,
+    ):
+        for column in range(
+            room.x,
+            room.x + room.width,
+        ):
+            if floor.map[row][column] != "#":
+                visible_cells.add((column, row))
+
+
 def update_act_one_visibility(floor):
     origin = (floor.player_column, floor.player_row)
     radius_squared = VISION_RADIUS_TILES * VISION_RADIUS_TILES
@@ -45,12 +101,24 @@ def update_act_one_visibility(floor):
             ):
                 continue
 
+            if _inside_hidden_warden_room(
+                floor,
+                column,
+                row,
+            ):
+                continue
+
             if _line_of_sight(
                 floor.map,
                 origin,
                 (column, row),
             ):
                 visible_cells.add((column, row))
+
+    _reveal_warden_room(
+        floor,
+        visible_cells,
+    )
 
     floor.visible_cells = visible_cells
     floor.explored_cells.update(visible_cells)
@@ -59,3 +127,4 @@ def update_act_one_visibility(floor):
 
 def position_is_visible(floor, column, row):
     return (column, row) in floor.visible_cells
+

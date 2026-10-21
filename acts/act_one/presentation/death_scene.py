@@ -1,22 +1,31 @@
-import math
 from dataclasses import dataclass
 from functools import lru_cache
 
 import pygame
 import resource_store as resources
 
+from acts.act_one.presentation.player import (
+    draw_act_one_prisoner,
+)
 from enemies import ENEMY_TYPES
 from levels import FLOOR_CONFIGS
 from presentation.layout import FONT_ROOT
 
 
+KNEEL_FRAME_MS = 1100
+FALL_TRANSITION_MS = 700
 DEATH_EFFECT_MS = 2200
 DIALOGUE_START_MS = 2400
-DIALOGUE_FADE_OUT_MS = 11400
-SCORE_START_MS = 11600
-MENU_READY_MS = 11800
+DIALOGUE_FADE_OUT_MS = 8100
+SCORE_START_MS = 8400
+MENU_READY_MS = 8700
 
-SCORE_ENEMY_TYPES = ("goblin", "brute", "archer")
+SCORE_ENEMY_TYPES = (
+    "goblin",
+    "brute",
+    "archer",
+    "warden",
+)
 
 OLD_MAN_LINES = (
     "The dark has taken your breath, not your chance.",
@@ -79,78 +88,812 @@ def begin_act_one_death(game_state, current_time):
     game_state.player.death_animation_started_at = current_time
 
 
+def _darker(color, amount):
+    return tuple(
+        max(0, channel - amount)
+        for channel in color
+    )
+
+
+def _lighter(color, amount):
+    return tuple(
+        min(255, channel + amount)
+        for channel in color
+    )
+
+
+def _draw_kneeling_prisoner(
+    screen,
+    center_x,
+    floor_y,
+    cloth_color,
+    edge_color,
+    skin_color,
+):
+    actor = pygame.Surface(
+        (40, 42),
+        pygame.SRCALPHA,
+    )
+    cloth_shadow = _darker(
+        cloth_color,
+        31,
+    )
+    cloth_deep = _darker(
+        cloth_color,
+        47,
+    )
+    cloth_light = _lighter(
+        cloth_color,
+        13,
+    )
+    skin_shadow = _darker(
+        skin_color,
+        39,
+    )
+
+    pygame.draw.ellipse(
+        actor,
+        (2, 3, 5, 165),
+        (6, 32, 28, 6),
+    )
+
+    pygame.draw.line(
+        actor,
+        (44, 44, 45),
+        (17, 24),
+        (12, 29),
+        5,
+    )
+    pygame.draw.line(
+        actor,
+        (48, 48, 49),
+        (12, 29),
+        (8, 34),
+        4,
+    )
+    pygame.draw.line(
+        actor,
+        (37, 38, 40),
+        (21, 24),
+        (25, 30),
+        5,
+    )
+    pygame.draw.line(
+        actor,
+        (41, 42, 44),
+        (25, 30),
+        (31, 33),
+        4,
+    )
+
+    pygame.draw.line(
+        actor,
+        (18, 18, 20),
+        (5, 35),
+        (11, 34),
+        3,
+    )
+    pygame.draw.line(
+        actor,
+        (18, 18, 20),
+        (28, 34),
+        (34, 34),
+        3,
+    )
+
+    pygame.draw.polygon(
+        actor,
+        cloth_deep,
+        (
+            (12, 12),
+            (20, 10),
+            (27, 15),
+            (28, 24),
+            (24, 27),
+            (20, 25),
+            (17, 28),
+            (12, 25),
+            (9, 18),
+        ),
+    )
+    pygame.draw.polygon(
+        actor,
+        cloth_color,
+        (
+            (13, 13),
+            (20, 12),
+            (25, 16),
+            (26, 23),
+            (22, 25),
+            (19, 23),
+            (16, 26),
+            (12, 23),
+            (11, 17),
+        ),
+    )
+    pygame.draw.line(
+        actor,
+        cloth_light,
+        (14, 14),
+        (22, 14),
+    )
+    pygame.draw.line(
+        actor,
+        cloth_shadow,
+        (17, 14),
+        (15, 23),
+    )
+    pygame.draw.line(
+        actor,
+        edge_color,
+        (12, 22),
+        (25, 22),
+    )
+
+    pygame.draw.line(
+        actor,
+        cloth_deep,
+        (13, 15),
+        (8, 21),
+        4,
+    )
+    pygame.draw.line(
+        actor,
+        skin_shadow,
+        (8, 21),
+        (9, 27),
+        2,
+    )
+    pygame.draw.line(
+        actor,
+        cloth_deep,
+        (24, 16),
+        (29, 22),
+        4,
+    )
+    pygame.draw.line(
+        actor,
+        skin_color,
+        (29, 22),
+        (28, 28),
+        2,
+    )
+
+    pygame.draw.circle(
+        actor,
+        skin_shadow,
+        (9, 27),
+        1,
+    )
+    pygame.draw.circle(
+        actor,
+        skin_color,
+        (28, 28),
+        1,
+    )
+
+    pygame.draw.rect(
+        actor,
+        skin_shadow,
+        (15, 9, 5, 5),
+    )
+    pygame.draw.ellipse(
+        actor,
+        skin_color,
+        (11, 4, 10, 9),
+    )
+    pygame.draw.polygon(
+        actor,
+        (28, 26, 27),
+        (
+            (10, 8),
+            (11, 4),
+            (15, 1),
+            (20, 3),
+            (23, 8),
+            (20, 10),
+            (17, 8),
+            (14, 10),
+        ),
+    )
+    pygame.draw.line(
+        actor,
+        skin_shadow,
+        (13, 10),
+        (19, 11),
+    )
+
+    screen.blit(
+        actor,
+        (
+            center_x - 20,
+            floor_y - 37,
+        ),
+    )
+
+
+def _draw_fallen_prisoner(
+    screen,
+    center_x,
+    floor_y,
+    cloth_color,
+    edge_color,
+    skin_color,
+):
+    actor = pygame.Surface(
+        (56, 28),
+        pygame.SRCALPHA,
+    )
+    cloth_shadow = _darker(
+        cloth_color,
+        31,
+    )
+    cloth_deep = _darker(
+        cloth_color,
+        47,
+    )
+    cloth_light = _lighter(
+        cloth_color,
+        12,
+    )
+    skin_shadow = _darker(
+        skin_color,
+        41,
+    )
+
+    pygame.draw.ellipse(
+        actor,
+        (2, 3, 5, 175),
+        (4, 18, 48, 7),
+    )
+
+    pygame.draw.line(
+        actor,
+        (40, 41, 43),
+        (18, 15),
+        (8, 20),
+        5,
+    )
+    pygame.draw.line(
+        actor,
+        (33, 34, 36),
+        (20, 17),
+        (11, 23),
+        5,
+    )
+    pygame.draw.line(
+        actor,
+        (18, 18, 20),
+        (5, 22),
+        (11, 20),
+        3,
+    )
+    pygame.draw.line(
+        actor,
+        (17, 17, 19),
+        (8, 24),
+        (14, 22),
+        3,
+    )
+
+    pygame.draw.polygon(
+        actor,
+        cloth_deep,
+        (
+            (16, 8),
+            (31, 6),
+            (40, 10),
+            (42, 17),
+            (36, 21),
+            (27, 19),
+            (20, 22),
+            (14, 17),
+        ),
+    )
+    pygame.draw.polygon(
+        actor,
+        cloth_color,
+        (
+            (18, 9),
+            (31, 8),
+            (38, 11),
+            (39, 16),
+            (34, 19),
+            (27, 17),
+            (21, 20),
+            (16, 16),
+        ),
+    )
+    pygame.draw.line(
+        actor,
+        cloth_light,
+        (19, 10),
+        (33, 9),
+    )
+    pygame.draw.line(
+        actor,
+        cloth_shadow,
+        (24, 9),
+        (22, 18),
+    )
+    pygame.draw.line(
+        actor,
+        edge_color,
+        (18, 16),
+        (38, 16),
+    )
+
+    pygame.draw.line(
+        actor,
+        cloth_deep,
+        (25, 11),
+        (29, 21),
+        4,
+    )
+    pygame.draw.line(
+        actor,
+        skin_shadow,
+        (29, 21),
+        (35, 23),
+        2,
+    )
+    pygame.draw.line(
+        actor,
+        cloth_deep,
+        (35, 11),
+        (42, 17),
+        4,
+    )
+    pygame.draw.line(
+        actor,
+        skin_color,
+        (42, 17),
+        (46, 19),
+        2,
+    )
+
+    pygame.draw.rect(
+        actor,
+        skin_shadow,
+        (39, 10, 5, 5),
+    )
+    pygame.draw.ellipse(
+        actor,
+        skin_color,
+        (41, 7, 9, 9),
+    )
+    pygame.draw.polygon(
+        actor,
+        (27, 25, 27),
+        (
+            (39, 11),
+            (40, 7),
+            (44, 4),
+            (49, 6),
+            (52, 11),
+            (49, 14),
+            (46, 11),
+            (43, 14),
+        ),
+    )
+    pygame.draw.line(
+        actor,
+        skin_shadow,
+        (43, 13),
+        (49, 13),
+    )
+
+    screen.blit(
+        actor,
+        (
+            center_x - 28,
+            floor_y - 22,
+        ),
+    )
+
+
+def _draw_dropped_knife(
+    screen,
+    handle,
+    guard,
+    tip,
+):
+    pygame.draw.line(
+        screen,
+        (18, 16, 16),
+        handle,
+        guard,
+        3,
+    )
+    pygame.draw.line(
+        screen,
+        (94, 68, 47),
+        handle,
+        guard,
+    )
+    pygame.draw.line(
+        screen,
+        (31, 34, 37),
+        (
+            guard[0] - 1,
+            guard[1] - 2,
+        ),
+        (
+            guard[0] + 1,
+            guard[1] + 2,
+        ),
+        2,
+    )
+    pygame.draw.line(
+        screen,
+        (67, 76, 82),
+        guard,
+        tip,
+        2,
+    )
+    pygame.draw.line(
+        screen,
+        (136, 144, 148),
+        guard,
+        tip,
+    )
+
+
+def _draw_death_impact(
+    screen,
+    center_x,
+    floor_y,
+    elapsed,
+):
+    impact_elapsed = (
+        elapsed
+        - KNEEL_FRAME_MS
+        - FALL_TRANSITION_MS
+    )
+
+    if not 0 <= impact_elapsed < 760:
+        return
+
+    progress = impact_elapsed / 760
+    visibility = 1.0 - progress
+    effect = pygame.Surface(
+        (74, 38),
+        pygame.SRCALPHA,
+    )
+
+    ring_width = round(
+        18 + progress * 40
+    )
+    pygame.draw.ellipse(
+        effect,
+        (
+            94,
+            89,
+            84,
+            round(105 * visibility),
+        ),
+        (
+            37 - ring_width // 2,
+            25 - round(progress * 3),
+            ring_width,
+            5 + round(progress * 4),
+        ),
+        width=1,
+    )
+
+    fragments = (
+        (-15, -3),
+        (-11, -7),
+        (-6, -10),
+        (7, -9),
+        (12, -6),
+        (17, -2),
+    )
+
+    for index, offset in enumerate(fragments):
+        x = round(
+            37 + offset[0] * progress
+        )
+        lift = round(
+            8
+            * progress
+            * (1.0 - progress)
+        )
+        y = round(
+            25
+            + offset[1] * progress
+            - lift
+        )
+        shade = 91 + index * 8
+
+        pygame.draw.rect(
+            effect,
+            (
+                shade,
+                shade - 4,
+                shade - 8,
+                round(150 * visibility),
+            ),
+            (
+                x,
+                y,
+                2 if index % 2 == 0 else 1,
+                2,
+            ),
+        )
+
+    screen.blit(
+        effect,
+        (
+            center_x - 37,
+            floor_y - 25,
+        ),
+    )
+
+
 def draw_act_one_player_death(
     screen,
     center_x,
     center_y,
     current_time,
     started_at,
+    cloth_color,
+    edge_color,
+    skin_color,
 ):
     if started_at < 0:
         return
 
-    elapsed = max(0, current_time - started_at)
-    if elapsed >= DEATH_EFFECT_MS:
+    elapsed = max(
+        0,
+        current_time - started_at,
+    )
+    floor_y = center_y + 14
+
+    base_actor = pygame.Surface(
+        (48, 56),
+        pygame.SRCALPHA,
+    )
+    draw_act_one_prisoner(
+        base_actor,
+        24,
+        31,
+        cloth_color,
+        edge_color,
+        skin_color,
+        current_time=current_time,
+        movement_direction=(0, 1),
+        head_lift_progress=0.0,
+        knife_visible=False,
+        pain_pose=False,
+    )
+
+    agony_actor = pygame.Surface(
+        (48, 56),
+        pygame.SRCALPHA,
+    )
+    draw_act_one_prisoner(
+        agony_actor,
+        24,
+        31,
+        cloth_color,
+        edge_color,
+        skin_color,
+        current_time=current_time,
+        movement_direction=(0, 1),
+        head_lift_progress=0.0,
+        knife_visible=False,
+        pain_pose=True,
+    )
+
+    standing_position = (
+        center_x - 24,
+        center_y - 31,
+    )
+    knife_handle = (
+        center_x + 7,
+        floor_y - 2,
+    )
+    knife_guard = (
+        center_x + 10,
+        floor_y,
+    )
+    knife_tip = (
+        center_x + 15,
+        floor_y + 1,
+    )
+
+    if elapsed < KNEEL_FRAME_MS:
+        agony_progress = _fade(
+            elapsed,
+            120,
+            520,
+        )
+
+        if agony_progress < 1.0:
+            base_pose = base_actor.copy()
+            base_pose.set_alpha(
+                round(
+                    255
+                    * (
+                        1.0
+                        - agony_progress
+                    )
+                )
+            )
+            screen.blit(
+                base_pose,
+                standing_position,
+            )
+
+        agony_pose = agony_actor.copy()
+        agony_pose.set_alpha(
+            round(
+                255 * agony_progress
+            )
+        )
+        screen.blit(
+            agony_pose,
+            standing_position,
+        )
+
+        _draw_dropped_knife(
+            screen,
+            knife_handle,
+            knife_guard,
+            knife_tip,
+        )
         return
 
-    fall = _fade(elapsed, 0, 1200)
-    vanish = _fade(elapsed, 1000, 1200)
-
-    body = pygame.Surface((32, 32), pygame.SRCALPHA)
-
-    pygame.draw.polygon(
-        body,
-        (18, 20, 26),
-        ((16, 4), (25, 13), (27, 26), (5, 26), (7, 13)),
+    transition_progress = min(
+        1.0,
+        (
+            elapsed - KNEEL_FRAME_MS
+        )
+        / FALL_TRANSITION_MS,
     )
-    pygame.draw.polygon(
-        body,
-        (58, 65, 76),
-        ((16, 6), (23, 14), (24, 24), (8, 24), (9, 14)),
+
+    agony_bounds = agony_actor.get_bounding_rect(
+        min_alpha=1
     )
-    pygame.draw.circle(body, (116, 132, 145), (16, 11), 7)
-    pygame.draw.circle(body, (25, 29, 37), (16, 12), 5)
-    pygame.draw.line(body, (82, 94, 107), (16, 17), (16, 23))
-    pygame.draw.rect(body, (174, 165, 151), (13, 11, 2, 1))
-    pygame.draw.rect(body, (174, 165, 151), (18, 11, 2, 1))
+    agony_sprite = agony_actor.subsurface(
+        agony_bounds
+    ).copy()
 
-    fallen_body = pygame.transform.rotate(body, -80 * fall)
-    fallen_body.set_alpha(round(255 * (1.0 - vanish)))
-
+    stain_progress = _fade(
+        elapsed,
+        KNEEL_FRAME_MS
+        + FALL_TRANSITION_MS
+        - 100,
+        1000,
+    )
+    stain = pygame.Surface(
+        (38, 12),
+        pygame.SRCALPHA,
+    )
+    pygame.draw.ellipse(
+        stain,
+        (
+            68,
+            24,
+            29,
+            round(68 * stain_progress),
+        ),
+        (
+            19 - round(15 * stain_progress),
+            5,
+            max(
+                1,
+                round(30 * stain_progress),
+            ),
+            5,
+        ),
+    )
     screen.blit(
-        fallen_body,
-        fallen_body.get_rect(
-            center=(
-                round(center_x + 7 * fall),
-                round(center_y + 7 * fall),
-            )
+        stain,
+        (
+            center_x - 19,
+            floor_y - 7,
         ),
     )
 
-    if elapsed < 800:
-        return
-
-    dust = pygame.Surface((80, 80), pygame.SRCALPHA)
-    dust_progress = min(1.0, (elapsed - 800) / 1400)
-    alpha = round(190 * math.sin(math.pi * dust_progress))
-
-    for index in range(14):
-        angle = index * 2.39996
-        distance = (5 + index % 5 * 3) * dust_progress
-        x = round(40 + 7 * fall + math.cos(angle) * distance)
-        y = round(
-            40 + 6
-            + math.sin(angle) * distance * 0.5
-            - dust_progress * (8 + index % 4 * 3)
+    if transition_progress < 1.0:
+        standing = agony_actor.copy()
+        standing.set_alpha(
+            round(
+                255
+                * (
+                    1.0
+                    - transition_progress
+                )
+            )
         )
-        shade = 115 + index % 4 * 22
-        pygame.draw.rect(
-            dust,
-            (shade, shade, shade, alpha),
-            (x, y, 2, 2),
+        screen.blit(
+            standing,
+            standing_position,
         )
 
-    screen.blit(dust, (center_x - 40, center_y - 40))
+        afterimages = (
+            (-18, 0.24),
+            (-42, 0.50),
+            (-70, 0.76),
+        )
+
+        for angle, position in afterimages:
+            distance = abs(
+                transition_progress
+                - position
+            )
+            visibility = max(
+                0.0,
+                1.0 - distance / 0.34,
+            )
+
+            if visibility <= 0.0:
+                continue
+
+            afterimage = pygame.transform.rotate(
+                agony_sprite,
+                angle,
+            )
+            afterimage.set_alpha(
+                round(
+                    82 * visibility
+                )
+            )
+            screen.blit(
+                afterimage,
+                afterimage.get_rect(
+                    midbottom=(
+                        center_x,
+                        floor_y
+                        - round(
+                            (
+                                1.0
+                                - position
+                            )
+                            * 6
+                        ),
+                    ),
+                ),
+            )
+
+    fallen_visibility = _fade(
+        transition_progress,
+        0.35,
+        0.65,
+    )
+    fallen = pygame.transform.rotate(
+        agony_sprite,
+        -90,
+    )
+    fallen.set_alpha(
+        round(
+            255 * fallen_visibility
+        )
+    )
+    screen.blit(
+        fallen,
+        fallen.get_rect(
+            midbottom=(
+                center_x,
+                floor_y + 1,
+            ),
+        ),
+    )
+
+    _draw_dropped_knife(
+        screen,
+        knife_handle,
+        knife_guard,
+        knife_tip,
+    )
+    _draw_death_impact(
+        screen,
+        center_x,
+        floor_y,
+        elapsed,
+    )
 
 
 def handle_act_one_death_event(
@@ -353,14 +1096,43 @@ def draw_act_one_death_overlay(
             scene.background = gray
             screen.blit(gray, (0, 0))
         else:
-            gray.set_alpha(round(255 * _fade(elapsed, 300, 1900)))
+            gray.set_alpha(
+                round(
+                    255
+                    * _fade(
+                        elapsed,
+                        0,
+                        1400,
+                    )
+                )
+            )
             screen.blit(gray, (0, 0))
     else:
         screen.blit(scene.background, (0, 0))
 
-    shade = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
-    shade.fill((0, 0, 0, round(155 * _fade(elapsed, 1300, 1800))))
-    screen.blit(shade, (0, 0))
+    shade = pygame.Surface(
+        screen.get_size(),
+        pygame.SRCALPHA,
+    )
+    shade.fill(
+        (
+            0,
+            0,
+            0,
+            round(
+                155
+                * _fade(
+                    elapsed,
+                    550,
+                    1300,
+                )
+            ),
+        )
+    )
+    screen.blit(
+        shade,
+        (0, 0),
+    )
 
     if elapsed < DIALOGUE_START_MS:
         return

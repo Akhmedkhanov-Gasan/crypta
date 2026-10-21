@@ -117,6 +117,17 @@ from acts.act_one.presentation.intro import (
     draw_act_one_intro_world,
     update_act_one_intro,
 )
+from acts.act_one.warden_intro import (
+    update_warden_intro,
+    warden_intro_active,
+    warden_intro_camera_focus,
+    warden_intro_enemy_visible,
+    warden_intro_hud_opacity,
+)
+from acts.act_one.presentation.warden_intro import (
+    draw_warden_intro_overlay,
+    draw_warden_intro_world,
+)
 from acts.act_one.settings import (
     FLOOR_INTRO_SUBTITLES,
 )
@@ -560,6 +571,7 @@ def main():
             and not game_state.act_three_transition_open
             and not game_state.act_three_debug_class_selection_open
             and not oracle_cutscene_active(game_state.floor)
+            and not warden_intro_active(game_state.floor)
         )
 
         if not console_available:
@@ -578,6 +590,7 @@ def main():
         if (
             oracle_cutscene_active(game_state.floor)
             or act_one_intro_active(game_state)
+            or warden_intro_active(game_state.floor)
         ):
             act_two_input_state.reset_held_movement()
             act_two_input_state.cancel_auto_move()
@@ -617,6 +630,7 @@ def main():
             and not game_state.trade_screen_open
             and not oracle_cutscene_active(game_state.floor)
             and not act_one_intro_active(game_state)
+            and not warden_intro_active(game_state.floor)
         )
         ground_item_window.update(
             game_state,
@@ -804,7 +818,12 @@ def main():
                 continue
 
             if (
-                act_one_intro_active(game_state)
+                (
+                    act_one_intro_active(game_state)
+                    or warden_intro_active(
+                        game_state.floor
+                    )
+                )
                 and app_runtime.game_started
                 and not app_runtime.menu_open
                 and event.type not in (
@@ -3477,14 +3496,20 @@ def main():
 
         current_time = pygame.time.get_ticks()
 
+        act_one_cutscenes_enabled = (
+            app_runtime.game_started
+            and not app_runtime.menu_open
+            and not loading.completed
+        )
         update_act_one_intro(
             game_state,
             current_time,
-            enabled=(
-                app_runtime.game_started
-                and not app_runtime.menu_open
-                and not loading.completed
-            ),
+            enabled=act_one_cutscenes_enabled,
+        )
+        update_warden_intro(
+            game_state,
+            current_time,
+            enabled=act_one_cutscenes_enabled,
         )
 
         if app_runtime.game_started and not app_runtime.menu_open:
@@ -3973,6 +3998,9 @@ def main():
                 current_time,
                 focus_offset_y=act_one_intro_camera_offset(
                     getattr(game_state, "act_one_intro", None)
+                ),
+                focus_position=warden_intro_camera_focus(
+                    game_state.floor
                 ),
             )
         if current_act == 2:
@@ -4646,9 +4674,19 @@ def main():
             act_one_knife_pickup_progress=act_one_intro_knife_pickup(
                 getattr(game_state, "act_one_intro", None)
             ),
-            act_one_hud_opacity=act_one_intro_hud_opacity(
-                getattr(game_state, "act_one_intro", None),
-                current_time,
+            act_one_hud_opacity=min(
+                act_one_intro_hud_opacity(
+                    getattr(
+                        game_state,
+                        "act_one_intro",
+                        None,
+                    ),
+                    current_time,
+                ),
+                warden_intro_hud_opacity(
+                    game_state.floor,
+                    current_time,
+                ),
             ),
             control_player=game_state.player,
         )
@@ -4679,7 +4717,23 @@ def main():
                 current_time,
                 game_state.player.act_two.wait_effect_started_at,
             )
+        if current_act == 1:
+            draw_warden_intro_world(
+                world_target,
+                game_state.floor,
+                current_time,
+            )
+
         for enemy in game_state.floor["enemies"]:
+            if (
+                current_act == 1
+                and not warden_intro_enemy_visible(
+                    game_state.floor,
+                    enemy,
+                )
+            ):
+                continue
+
             if (
                 current_act == 2
                 and enemy.type == "oracle_pillar"
@@ -4914,9 +4968,19 @@ def main():
         act_one_hud_alpha = 255
 
         if current_act == 1:
-            act_one_hud_alpha = act_one_intro_hud_opacity(
-                getattr(game_state, "act_one_intro", None),
-                current_time,
+            act_one_hud_alpha = min(
+                act_one_intro_hud_opacity(
+                    getattr(
+                        game_state,
+                        "act_one_intro",
+                        None,
+                    ),
+                    current_time,
+                ),
+                warden_intro_hud_opacity(
+                    game_state.floor,
+                    current_time,
+                ),
             )
 
             if act_one_hud_alpha <= 0:
@@ -5222,6 +5286,12 @@ def main():
             draw_act_one_intro_overlay(
                 game_surface,
                 getattr(game_state, "act_one_intro", None),
+                act_one_fonts["interface"],
+                act_one_fonts["text"],
+            )
+            draw_warden_intro_overlay(
+                game_surface,
+                game_state.floor,
                 act_one_fonts["interface"],
                 act_one_fonts["text"],
             )

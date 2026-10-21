@@ -61,6 +61,7 @@ def draw_act_one_prisoner(
         head_lift_progress=1.0,
         knife_visible=True,
         knife_pickup_progress=0.0,
+        pain_pose=False,
 ):
     actor = pygame.Surface(
         (30, 42),
@@ -85,7 +86,11 @@ def draw_act_one_prisoner(
     pickup_reach = math.sin(
         math.pi * pickup_progress
     )
-    torso_y = 11 + round(pickup_reach * 7)
+    torso_y = (
+        11
+        + round(pickup_reach * 7)
+        + (2 if pain_pose else 0)
+    )
     cloth_shadow = tuple(
         max(0, channel - 30)
         for channel in cloth_color
@@ -140,6 +145,16 @@ def draw_act_one_prisoner(
         right_foot = (
             19,
             28 - stride,
+        )
+
+    if pain_pose:
+        left_foot = (
+            12,
+            29,
+        )
+        right_foot = (
+            18,
+            29,
         )
 
     pygame.draw.line(
@@ -294,6 +309,24 @@ def draw_act_one_prisoner(
         right_hand = (
             21,
             torso_y + 10 + attack_offset[1],
+        )
+
+    if pain_pose:
+        left_elbow = (
+            12,
+            torso_y + 4,
+        )
+        right_elbow = (
+            18,
+            torso_y + 4,
+        )
+        left_hand = (
+            14,
+            torso_y + 6,
+        )
+        right_hand = (
+            16,
+            torso_y + 6,
         )
 
     pickup_arm_bend = round(

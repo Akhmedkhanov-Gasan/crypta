@@ -17,6 +17,7 @@ from acts.act_one.presentation.enemies.goblin import (
 )
 from acts.act_one.presentation.enemies.warden import (
     draw_warden,
+    draw_warden_corpse,
 )
 
 def enemy_attack_offset(enemy, current_time):
@@ -46,5 +47,6 @@ __all__ = [
     "draw_goblin_corpse",
     "draw_goblin_death",
     "draw_warden",
+    "draw_warden_corpse",
     "enemy_attack_offset",
 ]

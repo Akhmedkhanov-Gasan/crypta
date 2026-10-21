@@ -1,3 +1,4 @@
+from acts.act_one.warden_intro import begin_warden_intro
 from acts.act_two.oracle_gate import oracle_gate_allows_entry
 from acts.ground_items import (
     collect_act_one_potions,
@@ -216,8 +217,18 @@ def _position_is_inside_room(
     )
 
 
-def _activate_boss_fight(game_state: GameState) -> None:
+def _activate_boss_fight(
+    game_state: GameState,
+    current_time: int,
+) -> None:
     floor = game_state.floor
+
+    if begin_warden_intro(
+        game_state,
+        current_time,
+    ):
+        return
+
     floor.boss_fight_started = True
 
     for enemy in floor.enemies:
@@ -558,7 +569,10 @@ def try_move_player(
     )
 
     if entered_boss_room:
-        _activate_boss_fight(game_state)
+        _activate_boss_fight(
+            game_state,
+            transition_started_at,
+        )
 
     collect_ground_gold(game_state, transition_started_at)
     collect_act_one_potions(game_state, transition_started_at)

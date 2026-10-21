@@ -832,9 +832,22 @@ def draw_warden(
                 ),
             )
 
+    intro_pose_progress = max(
+        0.0,
+        min(
+            1.0,
+            enemy.get(
+                "intro_pose_progress",
+                1.0,
+            ),
+        ),
+    )
+    actor_height = round(
+        32 + 16 * intro_pose_progress
+    )
     actor = pygame.transform.scale(
         actor,
-        (44, 48),
+        (44, actor_height),
     )
 
     screen.blit(
@@ -844,10 +857,161 @@ def draw_warden(
             - actor.get_width() // 2,
             y + size
             - 44
+            + 48
+            - actor_height
             + bob,
         ),
     )
 
+
+def draw_warden_corpse(
+        screen,
+        center_x,
+        center_y,
+        opacity=255,
+):
+    corpse = pygame.Surface(
+        (52, 28),
+        pygame.SRCALPHA,
+    )
+
+    pygame.draw.ellipse(
+        corpse,
+        (5, 4, 8, 150),
+        (4, 19, 44, 7),
+    )
+
+    pygame.draw.polygon(
+        corpse,
+        (18, 13, 24),
+        (
+            (7, 15),
+            (15, 9),
+            (31, 8),
+            (43, 13),
+            (47, 20),
+            (39, 23),
+            (20, 22),
+            (8, 20),
+        ),
+    )
+    pygame.draw.polygon(
+        corpse,
+        (39, 24, 49),
+        (
+            (12, 14),
+            (19, 10),
+            (33, 10),
+            (42, 15),
+            (38, 20),
+            (21, 19),
+        ),
+    )
+    pygame.draw.polygon(
+        corpse,
+        (58, 43, 67),
+        (
+            (18, 10),
+            (24, 6),
+            (34, 8),
+            (37, 13),
+            (31, 16),
+            (21, 15),
+        ),
+    )
+
+    pygame.draw.polygon(
+        corpse,
+        (37, 34, 43),
+        (
+            (9, 12),
+            (13, 7),
+            (20, 6),
+            (23, 11),
+            (19, 15),
+            (12, 15),
+        ),
+    )
+    pygame.draw.polygon(
+        corpse,
+        (83, 76, 91),
+        (
+            (12, 8),
+            (16, 5),
+            (21, 7),
+            (21, 11),
+            (17, 13),
+            (12, 11),
+        ),
+    )
+    pygame.draw.line(
+        corpse,
+        (135, 112, 145),
+        (13, 8),
+        (20, 9),
+    )
+
+    pygame.draw.polygon(
+        corpse,
+        (112, 48, 129),
+        (
+            (27, 12),
+            (31, 15),
+            (27, 18),
+            (23, 15),
+        ),
+    )
+    pygame.draw.polygon(
+        corpse,
+        (176, 71, 138),
+        (
+            (27, 14),
+            (29, 15),
+            (27, 17),
+            (25, 15),
+        ),
+    )
+
+    pygame.draw.line(
+        corpse,
+        (26, 22, 30),
+        (5, 23),
+        (46, 20),
+        4,
+    )
+    pygame.draw.line(
+        corpse,
+        (75, 67, 82),
+        (5, 22),
+        (46, 19),
+        2,
+    )
+    pygame.draw.polygon(
+        corpse,
+        (94, 82, 103),
+        (
+            (43, 16),
+            (49, 18),
+            (46, 23),
+        ),
+    )
+
+    corpse.set_alpha(
+        max(
+            0,
+            min(255, opacity),
+        )
+    )
+    screen.blit(
+        corpse,
+        (
+            center_x - corpse.get_width() // 2,
+            center_y,
+        ),
+    )
+
+
 __all__ = [
     "draw_warden",
+    "draw_warden_corpse",
 ]

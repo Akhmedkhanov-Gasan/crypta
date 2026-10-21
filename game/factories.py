@@ -1,6 +1,9 @@
 import random
 
-from acts.act_one.state import ActOneIntroState
+from acts.act_one.state import (
+    ActOneIntroState,
+    ActOneWardenIntroState,
+)
 from acts.act_one.settings import (
     PLAYER_STARTING_ATTRIBUTE_RANKS,
     PLAYER_STARTING_STATS,
@@ -89,6 +92,15 @@ def create_floor_state(
             )
         )
         enemies[-1].movement_bounds = enemy_data.get("movement_bounds")
+
+        if (
+                floor.get("warden_intro", False)
+                and belongs_to_boss_group
+        ):
+            if enemy_type == "warden":
+                enemies[-1].intro_pose_progress = 0.0
+            elif enemy_type == "archer":
+                enemies[-1].intro_spawn_progress = 0.0
 
     eligible_key_carriers = [
         enemy
@@ -294,6 +306,11 @@ def create_floor_state(
             "seal_boss_door_during_fight"
         ],
         boss_fight_started=floor["boss_door"] is None,
+        act_one_warden_intro=(
+            ActOneWardenIntroState()
+            if floor.get("warden_intro", False)
+            else None
+        ),
         has_oracle_gate=floor.get("has_oracle_gate", False),
         passages=passages,
         act_one_revisit=act_one_revisit,

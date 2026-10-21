@@ -160,6 +160,8 @@ class EnemyState(AttributeMapping):
     second_phase_announced: bool = False
     boss_group: bool = False
     is_active: bool = True
+    intro_pose_progress: float = 1.0
+    intro_spawn_progress: float = 1.0
     sentinel: SentinelState = field(default_factory=SentinelState)
     shield_blocks_remaining: int = 0
     shield_durability: int = 0
@@ -299,6 +301,7 @@ class FloorState(AttributeMapping):
     boss_emitters: list[tuple[int, int]]
     seal_boss_door_during_fight: bool
     boss_fight_started: bool
+    act_one_warden_intro: Any | None = None
     has_oracle_gate: bool = False
     oracle_gate_opened: bool = False
     oracle_gate_opening_started_at: int = -1
