@@ -1,4 +1,4 @@
-from bosses.oracle import resolve_oracle_hit_reaction
+from acts.act_two.oracle import resolve_oracle_hit_reaction
 from acts.act_two.settings import (
     ARCANE_IMPULSE_SCROLL_DAMAGE,
     BINDING_SCROLL_TURNS,
@@ -14,7 +14,7 @@ from acts.act_two.bloody_altar import (
     healing_consumables_are_blocked,
 )
 from acts.act_two.state import DroppedConsumableState, FireZoneState
-from acts.act_two.presentation.bosses.oracle_health import (
+from acts.act_two.oracle_health import (
     limit_oracle_phase_one_damage,
 )
 from game.combat_log import add_log_message
@@ -27,7 +27,7 @@ from logic import (
     get_enemy_occupied_positions,
 )
 from systems.player_combat import damage_player, resolve_enemy_defeat
-from acts.act_two.presentation.bosses.oracle_balance import (
+from acts.act_two.oracle_balance import (
     ORACLE_BINDING_TURNS,
 )
 

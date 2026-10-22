@@ -37,9 +37,11 @@ def load_application_resources(startup):
     from acts.act_two.presentation.death_score import (
         load_act_two_death_score,
     )
-    from presentation.assets import (
+    from acts.act_one.resources import (
         load_act_one_fonts,
         load_act_one_gameplay_assets,
+    )
+    from application.assets import (
         load_act_three_fonts,
         load_act_three_gameplay_assets,
         load_act_three_transition_assets,
@@ -51,11 +53,8 @@ def load_application_resources(startup):
         load_menu_layouts,
     )
     from acts.act_three.audio import ActThreeSoundBank
-    from presentation.audio import (
-        ActOneSoundBank,
-        ActTwoSoundBank,
-        ActTwoTransitionSoundBank,
-    )
+    from acts.act_one.audio import ActOneSoundBank
+    from acts.act_two.audio import ActTwoSoundBank, ActTwoTransitionSoundBank
     from presentation.layout import (
         ACT_ONE_SOUNDS_PATH,
         ACT_TWO_SOUNDS_PATH,

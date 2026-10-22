@@ -68,7 +68,7 @@ def draw_player_block_effect(
     damage_font,
 ):
     if player.subclass != "paladin":
-        from presentation.world import draw_impact_block_effect
+        from presentation.combat_effects import draw_impact_block_effect
 
         draw_impact_block_effect(
             surface,

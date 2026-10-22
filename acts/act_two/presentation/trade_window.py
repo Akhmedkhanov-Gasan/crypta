@@ -5,7 +5,7 @@ from presentation.figma_ui import (
     figma_rect,
     get_figma_font,
 )
-from presentation.hud import (
+from presentation.text import (
     fit_text_to_width,
     wrap_text,
 )

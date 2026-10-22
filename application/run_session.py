@@ -30,7 +30,7 @@ _STATE_MODULES = (
     "acts.act_three.state",
     "acts.act_one.presentation.death_scene",
     "acts.act_two.presentation.bosses.oracle_intro",
-    "acts.act_two.presentation.bosses.oracle_combat",
+    "acts.act_two.oracle_combat",
     "acts.act_two.presentation.bosses.oracle_ground_fire",
     "acts.act_two.presentation.bosses.oracle_phase_transition",
     "acts.act_two.presentation.bosses.oracle_phase_two",

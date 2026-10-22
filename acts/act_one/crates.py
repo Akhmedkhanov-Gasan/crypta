@@ -1,6 +1,6 @@
 import random
 
-from levels import ACT_ONE_CRATE_POTION_CHANCE
+from acts.act_one.settings import ACT_ONE_CRATE_POTION_CHANCE
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from game.state import PotionState

@@ -14,7 +14,7 @@ from logic import (
     get_oracle_ray,
 )
 
-ORACLE_LEGACY_COMBAT_ENABLED = False
+ORACLE_LEGACY_COMBAT_ENABLED: bool = False
 
 
 def choose_oracle_action(oracle):

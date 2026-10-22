@@ -31,7 +31,8 @@ from game.state import (
     GameState,
     RoomState,
 )
-from levels import ACT_ONE_FLOOR_UPGRADE_REWARD, FLOOR_CONFIGS
+from acts.act_one.settings import ACT_ONE_FLOOR_UPGRADE_REWARD
+from levels import FLOOR_CONFIGS
 from logic import can_player_move_between
 from settings import POTION_HEALING
 

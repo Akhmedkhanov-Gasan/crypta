@@ -11,7 +11,7 @@ from acts.act_two.settings import ACT_TWO_CHEST_LOOT_WEIGHTS
 from enemies import ENEMY_TYPES
 from levels import FLOOR_CONFIGS
 from settings import MAP_COLUMNS, MAP_ROWS
-from worldgen.boss_rooms import (
+from acts.act_two.generation.oracle_floor import (
     BOSS_ROOM_HEIGHT,
     BOSS_ROOM_WIDTH,
     create_boss_room_entrance,

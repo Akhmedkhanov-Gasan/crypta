@@ -17,11 +17,14 @@ from acts.act_three.abilities.summoner import (
     damage_summoner_familiar,
     resolve_summoner_familiar_turn,
 )
-from bosses.oracle import (
+from acts.act_two.oracle import (
     ORACLE_LEGACY_COMBAT_ENABLED,
     update_oracle_projectiles,
 )
-from acts.act_two.presentation.bosses.oracle_health import (
+from acts.act_two.oracle_combat import (
+    take_oracle_combat_turn as take_oracle_turn,
+)
+from acts.act_two.oracle_health import (
     limit_oracle_phase_one_damage,
 )
 from game.combat_log import add_log_message
@@ -39,26 +42,29 @@ from logic import (
     update_enemy_aggro,
     has_line_of_sight,
 )
-from systems.enemy_ai import (
+from acts.act_one.enemies.warden import (
     note_warden_attack_completed,
     resolve_warden_reposition,
-    take_archer_turn,
-    take_oracle_turn,
-    take_standard_turn,
     take_warden_turn,
-    try_raise_shield,
-    try_start_healing,
-    priest_should_join_combat,
-    take_brute_turn,
-    take_goblin_turn,
+)
+from systems.enemy_ai.archer import take_archer_turn
+from systems.enemy_ai.brute import take_brute_turn
+from systems.enemy_ai.goblin import (
     goblin_should_join_combat,
-    take_priest_turn,
     resolve_goblin_summon,
+    take_goblin_turn,
+)
+from systems.enemy_ai.priest import (
+    priest_should_join_combat,
+    take_priest_turn,
+    try_start_healing,
 )
 from systems.enemy_ai.sentinel import (
     apply_sentinel_knockback,
     take_sentinel_turn,
+    try_raise_shield,
 )
+from systems.enemy_ai.standard import take_standard_turn
 from systems.player_combat import (
     damage_player,
     resolve_enemy_defeat,
@@ -924,7 +930,6 @@ def resolve_enemy_turn(
             take_oracle_turn(
                 game_state,
                 enemy,
-                attack_blocking_positions,
             )
             continue
 

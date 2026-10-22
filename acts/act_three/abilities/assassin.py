@@ -119,7 +119,7 @@ def resolve_assassin_shadow_reflex(
     )
 
     if enemy.type == "oracle":
-        from bosses.oracle import resolve_oracle_hit_reaction
+        from acts.act_two.oracle import resolve_oracle_hit_reaction
 
         resolve_oracle_hit_reaction(
             enemy,

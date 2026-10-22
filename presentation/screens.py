@@ -14,7 +14,7 @@ from acts.act_two.presentation.awakening  import (
     draw_awakening_choices,
     draw_awakening_old_man,
 )
-from presentation.hud import wrap_text
+from presentation.text import wrap_text
 from presentation.layout import (
     ACT_THREE_AWAKENING_END_MS,
     ACT_THREE_CAMERA_END_MS,

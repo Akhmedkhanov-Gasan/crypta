@@ -4,7 +4,7 @@ from functools import lru_cache
 import pygame
 import resource_store as resources
 
-from acts.act_two.presentation.bosses.oracle_balance import (
+from acts.act_two.oracle_balance import (
     IMPACT_MS,
 )
 from presentation.layout import (

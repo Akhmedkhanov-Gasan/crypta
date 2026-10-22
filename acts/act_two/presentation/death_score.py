@@ -12,7 +12,7 @@ from presentation.figma_ui import (
     figma_rect,
     get_figma_font,
 )
-from presentation.hud import fit_text_to_width
+from presentation.text import fit_text_to_width
 
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[3]

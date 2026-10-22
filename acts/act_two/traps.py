@@ -1,6 +1,6 @@
 from acts.act_two.settings import SPIKE_TRAP_DAMAGE
 from acts.act_two.state import SpikeTrapPhase
-from acts.act_two.presentation.bosses.oracle_health import (
+from acts.act_two.oracle_health import (
     limit_oracle_phase_one_damage,
 )
 from game.combat_log import add_log_message

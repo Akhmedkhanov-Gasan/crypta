@@ -1,4 +1,4 @@
-def limit_oracle_phase_one_damage(enemy, damage):
+def limit_oracle_phase_one_damage(enemy, damage: int) -> int:
     if (
         enemy.type != "oracle"
         or enemy.oracle_phase != 1

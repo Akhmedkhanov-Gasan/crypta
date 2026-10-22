@@ -58,53 +58,7 @@ from presentation.layout import (
 from settings import GAME_HEIGHT, GAME_WIDTH, TILE_SIZE
 
 
-def load_act_one_fonts():
-    regular_path = FONT_ROOT / "AtkinsonHyperlegible-Regular.ttf"
-    bold_path = FONT_ROOT / "AtkinsonHyperlegible-Bold.ttf"
-    pixel_path = FONT_ROOT / "PixelOperator.ttf"
-    pixel_bold_path = FONT_ROOT / "PixelOperator-Bold.ttf"
-
-    return {
-        "title": resources.load_font(str(bold_path), 42),
-        "heading": resources.load_font(str(bold_path), 27),
-        "status": resources.load_font(str(bold_path), 21),
-        "text": resources.load_font(str(regular_path), 19),
-        "controls": resources.load_font(str(bold_path), 17),
-        "interface": resources.load_font(str(regular_path), 19),
-        "hud": resources.load_font(str(pixel_bold_path), 19),
-        "hud_small": resources.load_font(str(pixel_path), 16),
-    }
-
-
-def load_act_one_gameplay_assets():
-    return {}
-
-
-def _create_act_one_health_potion():
-    potion = pygame.Surface((26, 30), pygame.SRCALPHA)
-
-    pygame.draw.polygon(
-        potion,
-        (8, 7, 11),
-        ((8, 8), (18, 8), (22, 13), (22, 25), (19, 28),
-         (7, 28), (4, 25), (4, 13)),
-    )
-    pygame.draw.polygon(
-        potion,
-        (129, 20, 31),
-        ((9, 9), (17, 9), (20, 14), (20, 24), (18, 26),
-         (8, 26), (6, 24), (6, 14)),
-    )
-    pygame.draw.rect(potion, (213, 42, 52), (8, 14, 10, 10))
-    pygame.draw.rect(potion, (255, 112, 105), (9, 14, 3, 8))
-    pygame.draw.rect(potion, (32, 25, 29), (8, 3, 10, 6))
-    pygame.draw.rect(potion, (91, 79, 71), (9, 1, 8, 4))
-    pygame.draw.rect(potion, (241, 226, 211), (11, 16, 4, 8))
-    pygame.draw.rect(potion, (241, 226, 211), (9, 18, 8, 4))
-    return pygame.transform.scale(potion, (22, 25))
-
-
-def load_menu_assets():
+def load_menu_assets() -> dict:
     menu_directory = ASSET_ROOT / "ui" / "menu"
 
     act_one_directory = menu_directory / "act_1"

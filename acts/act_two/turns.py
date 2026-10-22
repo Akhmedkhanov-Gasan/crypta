@@ -1,5 +1,5 @@
 from game.events import GameEventType
-from acts.act_two.presentation.bosses.oracle_combat import (
+from acts.act_two.oracle_combat import (
     advance_oracle_fire,
 )
 from acts.act_two.presentation.bosses.oracle_phase_two import (

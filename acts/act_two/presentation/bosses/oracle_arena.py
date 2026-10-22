@@ -14,7 +14,7 @@ from acts.act_two.presentation.bosses.oracle_intro import (
     oracle_player_position,
 )
 
-from acts.act_two.presentation.bosses.oracle_balance import (
+from acts.act_two.oracle_balance import (
     PHASE_TWO_PILLAR_BREAK_MS,
 )
 from acts.act_two.presentation.bosses.oracle_phase_two import (

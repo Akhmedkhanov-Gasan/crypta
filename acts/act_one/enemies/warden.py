@@ -217,8 +217,8 @@ def take_warden_turn(
     )
 
 
-__all__ = [
+__all__ = (
     "note_warden_attack_completed",
     "resolve_warden_reposition",
     "take_warden_turn",
-]
+)

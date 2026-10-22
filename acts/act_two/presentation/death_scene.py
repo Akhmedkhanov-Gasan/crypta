@@ -1,7 +1,7 @@
 import pygame
 
 from presentation.camera import camera_render_rectangle
-from presentation.hud import wrap_text
+from presentation.text import wrap_text
 from presentation.layout import (
     ACT_TWO_VIEW_HEIGHT,
     ACT_TWO_VIEW_WIDTH,

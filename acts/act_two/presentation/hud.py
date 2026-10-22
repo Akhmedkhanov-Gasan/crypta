@@ -13,7 +13,7 @@ from acts.act_two.settings import (
 )
 from acts.act_two.bloody_altar import BLOOD_HUNGER
 from game.progression import experience_required_for_level
-from presentation.hud import (
+from presentation.text import (
     fit_text_to_width,
     get_event_color,
     wrap_text,

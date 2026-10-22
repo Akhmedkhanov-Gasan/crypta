@@ -1,7 +1,7 @@
 import random
 
 from acts.act_one.generation import generate_warden_floor
-from generation import generate_floor
+from acts.floor_factory import generate_floor
 from levels import FLOOR_CONFIGS
 from worldgen.passages import create_north_wall_passage
 

@@ -11,8 +11,8 @@ from worldgen.geometry import (
 from settings import MAP_COLUMNS, MAP_ROWS
 
 
-BOSS_ROOM_WIDTH = 9
-BOSS_ROOM_HEIGHT = 9
+BOSS_ROOM_WIDTH: int = 9
+BOSS_ROOM_HEIGHT: int = 9
 
 
 def create_reserved_boss_room(

@@ -7,7 +7,7 @@ from acts.act_one.upgrades import (
     get_act_one_upgrade_preview_lines,
 )
 from game.attributes import MAX_ATTRIBUTE_RANK
-from presentation.hud import fit_text_to_width, get_event_color
+from presentation.text import fit_text_to_width, get_event_color
 from presentation.screens import (
     _draw_upgrade_icon,
     get_upgrade_card_rectangles,

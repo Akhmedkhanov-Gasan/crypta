@@ -38,7 +38,7 @@ from acts.act_three.presentation.hud.tooltips import (
     get_character_panel_hover,
 )
 from game.progression import experience_required_for_level
-from presentation.hud import get_event_color, wrap_text
+from presentation.text import get_event_color, wrap_text
 from presentation.tooltips import draw_tooltip
 from presentation.figma_ui import (
     draw_figma_rectangle,
