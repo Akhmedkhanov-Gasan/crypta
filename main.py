@@ -90,6 +90,9 @@ from acts.act_one.camera import (
 from acts.act_one.presentation.environment import (
     draw_act_one_fog_of_war,
 )
+from acts.act_one.presentation.player import (
+    draw_act_one_wait_indicator,
+)
 from acts.act_one.visibility import (
     position_is_visible as act_one_position_is_visible,
     update_act_one_visibility,
@@ -2545,6 +2548,8 @@ def main():
                 new_column = game_state.floor["player_column"] + column_change
                 new_row = game_state.floor["player_row"] + row_change
                 player_waited = event.key in WAIT_KEYS
+                if current_act == 1 and not player_waited:
+                    game_state.player.act_one_wait_effect_started_at = -1
                 if current_act == 2 and not player_waited:
                     game_state.player.act_two.wait_effect_started_at = -1
                 if current_act == 2:
@@ -2992,10 +2997,21 @@ def main():
                             pygame.time.get_ticks()
                         )
                 elif player_waited:
-                    if current_act == 2:
-                        game_state.player.act_two.wait_effect_started_at = (
-                            pygame.time.get_ticks()
+                    wait_started_at = pygame.time.get_ticks()
+
+                    if current_act == 1:
+                        game_state.player.act_one_wait_effect_started_at = (
+                            wait_started_at
                         )
+                        add_log_message(
+                            game_state.combat_log,
+                            "The player waits.",
+                        )
+                    elif current_act == 2:
+                        game_state.player.act_two.wait_effect_started_at = (
+                            wait_started_at
+                        )
+
                     player_acted = True
                 elif player_tried_to_move:
                     movement_attempt_started_at = pygame.time.get_ticks()
@@ -4690,6 +4706,24 @@ def main():
             ),
             control_player=game_state.player,
         )
+        if current_act == 1 and game_state.player.health > 0:
+            draw_act_one_wait_indicator(
+                world_target,
+                (
+                    MAP_OFFSET_X
+                    + game_state.floor.player_column
+                    * TILE_SIZE
+                    + TILE_SIZE // 2
+                ),
+                (
+                    MAP_OFFSET_Y
+                    + game_state.floor.player_row
+                    * TILE_SIZE
+                    + TILE_SIZE // 2
+                ),
+                current_time,
+                game_state.player.act_one_wait_effect_started_at,
+            )
         if current_act == 1 and game_state.floor_index == 0:
             draw_act_one_intro_world(
                 world_target,

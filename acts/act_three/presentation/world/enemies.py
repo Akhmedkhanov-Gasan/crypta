@@ -72,7 +72,14 @@ def draw_world_enemies(
             or enemy.type == LANTERN_WARDEN_TYPE
             or (
                 enemy.type
-                in ("archer", "brute", "priest", "sentinel")
+                in (
+                    "archer",
+                    "brute",
+                    "goblin",
+                    "priest",
+                    "priest_ghost",
+                    "sentinel",
+                )
                 and enemy.behavior_state
                 is EnemyBehaviorState.DEAD
             )

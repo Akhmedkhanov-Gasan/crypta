@@ -36,6 +36,10 @@ from acts.act_three.presentation.enemies import (
     brute_sprite,
     brute_world_position,
     draw_archer_backhop_afterimages,
+    goblin_sprite,
+    goblin_world_position,
+    priest_sprite,
+    priest_world_position,
 )
 
 def _enemy_sprite(
@@ -58,6 +62,26 @@ def _enemy_sprite(
             current_time,
             visual_seed,
         )
+
+    if enemy.type == "goblin":
+        return goblin_sprite(
+            assets,
+            enemy,
+            current_time,
+            visual_seed,
+        )
+
+    if enemy.type in (
+        "priest",
+        "priest_ghost",
+    ):
+        return priest_sprite(
+            assets,
+            enemy,
+            current_time,
+            visual_seed,
+        )
+
     if (
         enemy.type in _ENEMY_DEATH_COLLAPSE_END_MS
         and enemy.behavior_state is EnemyBehaviorState.DEAD
@@ -172,6 +196,23 @@ def _enemy_world_position(
 
     if enemy.type == "brute":
         return brute_world_position(
+            enemy,
+            current_time,
+            tile_size,
+        )
+
+    if enemy.type == "goblin":
+        return goblin_world_position(
+            enemy,
+            current_time,
+            tile_size,
+        )
+
+    if enemy.type in (
+        "priest",
+        "priest_ghost",
+    ):
+        return priest_world_position(
             enemy,
             current_time,
             tile_size,

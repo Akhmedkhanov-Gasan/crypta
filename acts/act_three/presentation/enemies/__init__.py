@@ -10,6 +10,14 @@ from acts.act_three.presentation.enemies.brute import (
 from acts.act_three.presentation.enemies.enemy_assets import (
     load_enemy_animation_assets,
 )
+from acts.act_three.presentation.enemies.goblin import (
+    goblin_sprite,
+    goblin_world_position,
+)
+from acts.act_three.presentation.enemies.priest import (
+    priest_sprite,
+    priest_world_position,
+)
 
 
 __all__ = [
@@ -18,5 +26,9 @@ __all__ = [
     "brute_sprite",
     "brute_world_position",
     "draw_archer_backhop_afterimages",
+    "goblin_sprite",
+    "goblin_world_position",
     "load_enemy_animation_assets",
+    "priest_sprite",
+    "priest_world_position",
 ]

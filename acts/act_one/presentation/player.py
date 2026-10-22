@@ -6,6 +6,7 @@ from settings import TILE_SIZE
 
 
 ACT_ONE_PLAYER_MOVE_MS = 170
+ACT_ONE_WAIT_EFFECT_DURATION_MS = 900
 
 
 def act_one_player_movement_offset(
@@ -42,6 +43,96 @@ def act_one_player_movement_offset(
     )
 
     return offset_x, offset_y - step_lift
+
+
+def draw_act_one_wait_indicator(
+        screen,
+        center_x,
+        center_y,
+        current_time,
+        started_at,
+):
+    elapsed = current_time - started_at
+
+    if (
+            elapsed < 0
+            or elapsed >= ACT_ONE_WAIT_EFFECT_DURATION_MS
+    ):
+        return
+
+    fade_in = min(
+        1.0,
+        elapsed / 100,
+    )
+    fade_out = min(
+        1.0,
+        (
+                ACT_ONE_WAIT_EFFECT_DURATION_MS
+                - elapsed
+        )
+        / 220,
+    )
+    effect = pygame.Surface(
+        (28, 14),
+        pygame.SRCALPHA,
+    )
+
+    for dot_index in range(3):
+        reveal = max(
+            0.0,
+            min(
+                1.0,
+                (
+                        elapsed
+                        - dot_index * 70
+                )
+                / 100,
+            ),
+        )
+        alpha = round(
+            230
+            * fade_in
+            * fade_out
+            * reveal
+        )
+        dot_center = (
+            6 + dot_index * 8,
+            7,
+        )
+
+        pygame.draw.circle(
+            effect,
+            (
+                12,
+                13,
+                16,
+                round(alpha * 0.7),
+            ),
+            (
+                dot_center[0] + 1,
+                dot_center[1] + 1,
+            ),
+            3,
+        )
+        pygame.draw.circle(
+            effect,
+            (
+                181,
+                176,
+                163,
+                alpha,
+            ),
+            dot_center,
+            2,
+        )
+
+    screen.blit(
+        effect,
+        (
+            center_x - effect.get_width() // 2,
+            center_y - 37,
+        ),
+    )
 
 
 def draw_act_one_prisoner(

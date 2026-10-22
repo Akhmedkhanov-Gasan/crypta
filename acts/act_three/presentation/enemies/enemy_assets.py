@@ -1,6 +1,10 @@
 from acts.act_three.presentation.enemies.brute import (
     BRUTE_DIRECTIONS,
 )
+from acts.act_three.presentation.enemies.directional import (
+    DIRECTIONAL_DIRECTIONS,
+    DIRECTIONAL_FRAME_COUNT,
+)
 from acts.act_three.presentation.enemies.lantern_warden import (
     LANTERN_WARDEN_DIRECTIONS,
     LANTERN_WARDEN_FRAME_COUNT,
@@ -134,6 +138,60 @@ def _load_brute_assets(
         )
 
 
+def _load_goblin_assets(
+    assets,
+    enemies_directory,
+    tile_size,
+    image_loader,
+):
+    enemy_directory = enemies_directory / "goblin"
+
+    for action in (
+        "idle",
+        "walk",
+        "attack",
+        "hurt",
+        "death",
+    ):
+        _load_directional_animation(
+            assets,
+            enemy_directory,
+            "goblin",
+            action,
+            DIRECTIONAL_DIRECTIONS,
+            DIRECTIONAL_FRAME_COUNT,
+            tile_size,
+            image_loader,
+        )
+
+
+def _load_priest_assets(
+    assets,
+    enemies_directory,
+    tile_size,
+    image_loader,
+):
+    enemy_directory = enemies_directory / "priest"
+
+    for action in (
+        "idle",
+        "walk",
+        "cast",
+        "hurt",
+        "death",
+    ):
+        _load_directional_animation(
+            assets,
+            enemy_directory,
+            "priest",
+            action,
+            DIRECTIONAL_DIRECTIONS,
+            DIRECTIONAL_FRAME_COUNT,
+            tile_size,
+            image_loader,
+        )
+
+
 def _load_legacy_enemy_assets(
     assets,
     enemies_directory,
@@ -199,6 +257,20 @@ def load_enemy_animation_assets(
         image_loader,
     )
 
+    _load_goblin_assets(
+        assets,
+        enemies_directory,
+        tile_size,
+        image_loader,
+    )
+
+    _load_priest_assets(
+        assets,
+        enemies_directory,
+        tile_size,
+        image_loader,
+    )
+
     for action in ("idle", "walk", "attack", "hurt", "death"):
         _load_directional_animation(
             assets,
@@ -212,7 +284,6 @@ def load_enemy_animation_assets(
         )
 
     for enemy_type in (
-        "priest",
         "sentinel",
     ):
         _load_legacy_enemy_assets(
@@ -235,12 +306,5 @@ def load_enemy_animation_assets(
         enemies_directory
         / "sentinel"
         / "guard.png",
-        (tile_size, tile_size),
-    )
-
-    assets["priest_heal_cast"] = image_loader(
-        enemies_directory
-        / "priest"
-        / "heal_cast.png",
         (tile_size, tile_size),
     )
