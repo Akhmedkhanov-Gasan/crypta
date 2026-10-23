@@ -17,14 +17,14 @@ from acts.act_three.abilities.summoner import (
     damage_summoner_familiar,
     resolve_summoner_familiar_turn,
 )
-from acts.act_two.oracle import (
+from acts.act_two.enemies.oracle.behavior import (
     ORACLE_LEGACY_COMBAT_ENABLED,
     update_oracle_projectiles,
 )
-from acts.act_two.oracle_combat import (
+from acts.act_two.enemies.oracle.combat import (
     take_oracle_combat_turn as take_oracle_turn,
 )
-from acts.act_two.oracle_health import (
+from acts.act_two.enemies.oracle.health import (
     limit_oracle_phase_one_damage,
 )
 from game.combat_log import add_log_message

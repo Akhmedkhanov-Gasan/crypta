@@ -1,6 +1,6 @@
 import pygame
 
-from acts.act_three.enemies import LANTERN_WARDEN_TYPE
+from acts.act_three.enemies.catalog import LANTERN_WARDEN_TYPE
 from acts.act_three.presentation.enemies.lantern_warden import (
     draw_lantern_warden,
 )

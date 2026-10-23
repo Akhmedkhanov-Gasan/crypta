@@ -2,7 +2,7 @@ import math
 
 import pygame
 
-from acts.act_two.presentation.enemy_effects import (
+from acts.act_two.presentation.enemies.effects import (
     ACT_TWO_CLASS_EFFECT_COLORS,
     ACT_TWO_HIT_FEEDBACK_MS,
     ACT_TWO_HIT_REACTION_MS,

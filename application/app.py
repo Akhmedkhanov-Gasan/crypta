@@ -32,56 +32,18 @@ from application.ground_items import (
     GroundItemInput,
     ground_item_input_available,
 )
-from acts.act_two.presentation.items.ground_items import (
-    draw_ground_items,
-    draw_pickup_hint,
-)
+from application.frame_overlays import draw_frame_overlays
+from application.turn_feedback import present_turn_feedback
 from presentation.ground_items import draw_ground_item_window
-from acts.act_two.presentation.cutscene_skip import draw_cutscene_skip
-
-from acts.act_two.presentation.bosses.oracle_death import (
-    draw_oracle_death_fx,
-    draw_oracle_death_overlay,
-    update_oracle_death,
-)
-from acts.act_two.oracle_gate import update_oracle_gate
 from acts.act_two.presentation.bosses.oracle_audio import (
     update_oracle_fire_audio,
 )
-from acts.act_two.combat_pacing import enemy_reaction_delay
-from acts.act_two.oracle_combat import (
+from acts.act_two.enemies.oracle.combat import (
     finish_oracle_animation_before_action,
-    update_oracle_combat,
-)
-from acts.act_two.presentation.bosses.oracle_combat_fx import (
-    draw_oracle_attack_fx,
-    draw_oracle_blackfire,
-)
-from acts.act_two.presentation.bosses.oracle_intro import (
-    draw_oracle_intro,
-    update_oracle_intro,
 )
 from acts.act_two.presentation.bosses.oracle_phase_transition import (
-    draw_oracle_phase_transition,
     handle_oracle_cutscene_event,
     oracle_cutscene_active,
-    oracle_phase_transition_active,
-    update_oracle_phase_transition,
-)
-from acts.act_two.presentation.bosses.oracle_phase_two import (
-    draw_oracle_phase_two_fx,
-    update_oracle_phase_two,
-)
-from acts.act_two.presentation.bosses.oracle_room import (
-    draw_oracle_braziers,
-    draw_oracle_gate,
-)
-from acts.act_two.presentation.bosses.oracle_arena import (
-    draw_oracle_lighting,
-    draw_oracle_pillars,
-)
-from acts.act_two.presentation.bosses.oracle_ui import (
-    draw_oracle_ui,
 )
 from acts.act_two.class_selection import (
     apply_act_two_class_selection,
@@ -89,160 +51,70 @@ from acts.act_two.class_selection import (
 
 from acts.act_one.camera import (
     ActOneCamera,
-    draw_act_one_camera_view,
-    update_act_one_camera,
 )
-from acts.act_one.pointer_input import handle_act_one_pointer_input
-from acts.act_one.presentation.environment import (
-    draw_act_one_fog_of_war,
+from acts.act_one.input import handle_act_one_pointer_input
+from acts.act_one.runtime import (
+    advance_act_one_scenes,
+    refresh_act_one_visibility,
+    update_act_one_view,
 )
-from acts.act_one.presentation.player import (
-    draw_act_one_wait_indicator,
-)
-from acts.act_one.presentation.hud import draw_act_one_hud
-from acts.act_one.visibility import (
-    position_is_visible as act_one_position_is_visible,
-    update_act_one_visibility,
-)
-from acts.act_one.presentation.tutorial_presentation import (
-    draw_tutorial_floor_labels,
-)
-from acts.act_one.crates import break_act_one_crate
-from acts.act_one.presentation.crate_presentation import draw_act_one_crate
-from acts.act_one.presentation.warden_floor import draw_warden_braziers
+from acts.act_one.presentation.renderer import draw_act_one_gameplay
+from acts.act_one.player_actions import resolve_act_one_player_action
 from acts.act_one.presentation.death_scene import (
-    begin_act_one_death,
-    draw_act_one_death_overlay,
     handle_act_one_death_event,
 )
-from acts.act_one.presentation.intro import (
-    act_one_intro_active,
-    act_one_intro_camera_offset,
-    act_one_intro_head_lift,
-    act_one_intro_hud_opacity,
-    act_one_intro_knife_pickup,
-    act_one_intro_player_has_knife,
-    draw_act_one_intro_overlay,
-    draw_act_one_intro_world,
-    update_act_one_intro,
-)
-from acts.act_one.warden_intro import (
-    update_warden_intro,
-    warden_intro_active,
-    warden_intro_camera_focus,
-    warden_intro_enemy_visible,
-    warden_intro_hud_opacity,
-)
-from acts.act_one.presentation.warden_intro import (
-    draw_warden_intro_overlay,
-    draw_warden_intro_world,
-)
-from acts.act_one.settings import (
-    FLOOR_INTRO_SUBTITLES,
-)
-from acts.act_one.controls import POTION_KEYS
 from application.directional_input import (
     MOVEMENT_KEYS,
     WAIT_KEYS,
     movement_direction_for_key,
 )
 from acts.act_two.controls import (
-    CONSUMABLE_KEY_ORDER,
     CONSUMABLE_KEYS,
     visual_direction as act_two_visual_direction,
-)
-from application.movement_interruptions import (
-    apply_movement_interruptions,
 )
 from application.movement_input import (
     DEFAULT_MOVEMENT_PROFILE,
     accept_movement_direction,
     begin_held_movement,
     create_held_movement_event,
-    mark_movement_step,
     movement_event_is_current,
     movement_input_is_locked,
     release_held_movement,
     sync_movement_scope,
 )
-from acts.act_two.held_movement import (
-    apply_turn_movement_interruptions,
-)
 from acts.act_two.input_state import ActTwoInputRuntimeState
+from acts.act_two.input.interface import ActTwoInterfaceInput
+from acts.act_two.input.pointer import handle_act_two_pointer_event
+from acts.act_two.input.class_selection import (
+    handle_class_selection_key,
+    handle_class_selection_pointer,
+)
+from acts.act_two.input.action_request import ActTwoActionRequest
 from acts.act_two.player_actions import (
-    find_act_two_cell_targets,
-    resolve_act_two_cell_action,
+    resolve_act_two_action_request,
 )
 from acts.act_two.abilities import (
-    ability_charge_required,
-    is_valid_mage_arcane_burst_target,
     select_directional_ability_direction,
-)
-from acts.act_two.presentation.bloody_altar import (
-    draw_bloody_altar_object,
-    draw_bloody_altar_window,
-    handle_bloody_altar_event,
-)
-from acts.act_two.presentation.death_scene import (
-    draw_act_two_death_dialogue_overlay,
 )
 from acts.act_two.presentation.death_score import (
     draw_act_two_death_score,
     handle_act_two_death_event,
 )
-from acts.act_two.crates import break_crate
 from application.player_stun import stunned_wait_event
 from presentation.control_effects import forced_movement_is_active
 from acts.act_two.consumables import (
-    FIRE_BOMB,
-    HEALING_SCROLL,
-    POTION,
-    SCROLLS,
-    TARGETED_SCROLLS,
     advance_fire_zones,
-    cancel_fire_bomb_aiming,
-    cancel_scroll_aiming,
-    enemy_at_scroll_target,
-    get_act_two_consumable_slots,
-    is_valid_fire_bomb_target,
-    request_fire_bomb_aiming,
-    request_scroll_aiming,
-    throw_fire_bomb,
-    throw_act_two_consumable,
-    use_scroll,
-)
-from acts.act_two.progression import (
-    cancel_queued_act_two_attribute_upgrade,
-    confirm_queued_act_two_attribute_upgrades,
-    get_act_two_attribute_preview,
-    queue_act_two_attribute_upgrade,
-)
-from acts.act_two.visibility import (
-    position_is_visible,
-    update_act_two_visibility,
 )
 from acts.act_two.traps import advance_spike_traps
-from acts.act_two.brute_aftershocks import (
-    advance_brute_aftershocks,
-    create_brute_aftershocks_from_events,
-)
-from acts.act_two.runes import (
-    cancel_rune_selection,
-    select_rune,
-)
-from game.rune_catalog import runes_for_class
 from acts.act_two.treasury import update_treasury_trial
-from acts.act_two.presentation.camera import (
-    ActTwoCamera,
-    act_two_screen_to_cell,
-    act_two_world_surface_size,
-    draw_act_two_camera_view,
-    update_act_two_camera,
+from acts.act_two.presentation.camera import ActTwoCamera
+from acts.act_two.presentation.renderer import ActTwoRenderer
+from acts.act_two.presentation.interface import ActTwoInterface
+from acts.act_two.runtime import advance_oracle_runtime
+from acts.act_two.turns import (
+    act_two_combat_is_active,
+    complete_act_two_player_turn,
 )
-from acts.act_two.presentation.turn_events import (
-    present_act_two_turn_events,
-)
-from acts.act_two.turns import act_two_combat_is_active
 from acts.act_three.input import (
     handle_act_three_key_event,
     handle_act_three_pointer_event,
@@ -250,15 +122,7 @@ from acts.act_three.input import (
 from acts.act_three.turns import resume_barrage_turn
 from presentation.cursors import (
     set_archer_attack_cursor,
-    set_archer_barrage_zone_cursor,
-    set_archer_empowered_cursor,
-    set_archer_leap_cursor,
-    set_assassin_target_cursor,
-    set_berserker_crushing_leap_cursor,
     set_default_cursor,
-    set_paladin_shield_charge_cursor,
-    set_summoner_staff_cursor,
-    set_warlock_curse_cursor,
     set_warlock_staff_cursor,
 )
 from acts.act_three.runtime import (
@@ -266,34 +130,10 @@ from acts.act_three.runtime import (
     choose_subclass,
     create_act_three_debug_transition,
 )
-from acts.act_three.presentation.assassin import (
-    record_shadow_reflex_feedback,
-)
-from acts.act_three.combat.archer_aim import (
-    archer_shot_direction,
-)
-from acts.act_three.abilities.archer_piercing_shot import (
-    perform_archer_piercing_shot,
-)
-from acts.act_three.abilities.archer_barrage_zone import (
-    place_archer_barrage_zone,
-)
-from acts.act_three.presentation.combat_effects import (
-    record_enemy_death_feedback,
-    record_enemy_hit_feedback,
-    record_familiar_hit_feedback,
-    record_player_death_feedback,
-    record_player_hit_feedback,
-)
-from presentation.floor_progress import (
-    roman_number,
-    tower_floor_number,
-)
-
+from acts.act_three.player_actions import resolve_act_three_player_action
 from acts.turns import resolve_enemy_turn
-from acts.act_two.oracle import resolve_oracle_hit_reaction
+from acts.act_two.enemies.oracle.behavior import resolve_oracle_hit_reaction
 from game.combat_log import add_log_message
-from game.events import GameEvent, GameEventType
 from game.factories import (
     create_game_state,
 )
@@ -307,88 +147,10 @@ from application.auto_movement import (
     AUTO_MOVE_INTERVAL_MS,
     accept_auto_move_event,
     create_auto_move_event,
-    start_auto_move,
-)
-from acts.act_two.presentation.items import (
-    draw_act_one_revisit_corpses,
-    draw_coin_pile,
 )
 from levels import FLOOR_CONFIGS
-from logic import (
-    get_enemy_occupied_positions,
-    get_mage_resonance_target,
-)
-from acts.act_one.interface import draw_act_one_upgrade_screen
 from acts.act_three.presentation import draw_act_three_gameplay
-from acts.act_two.presentation import (
-    draw_act_two_ability_preview,
-    draw_act_two_arcane_burst_effect,
-    draw_act_two_atmosphere,
-    draw_act_two_fog_of_war,
-    draw_act_two_sidebar,
-    draw_fire_bomb_flight,
-    draw_fire_bomb_targeting,
-    draw_fire_zones,
-    draw_scroll_effect,
-    draw_act_two_pickup_effect,
-    draw_act_two_player_attack_effect,
-    draw_act_two_player_feedback_overlay,
-    draw_act_two_wait_indicator,
-    draw_act_two_power_cleave_effect,
-    draw_act_two_rune_room,
-    draw_brute_aftershocks,
-    draw_rune_selection,
-    draw_act_two_spike_traps,
-    draw_act_two_treasury,
-    draw_breakable_crate,
-    draw_oracle_projectiles,
-    get_act_two_belt_slot_rectangles,
-    get_act_two_sidebar_button_rectangles,
-    get_act_two_journal_close_rectangle,
-    get_act_two_journal_viewport_rectangle,
-    get_act_two_journal_scrollbar_rectangles,
-    get_act_two_attribute_plus_rectangles,
-    get_act_two_attribute_minus_rectangles,
-    get_act_two_confirm_button_rectangle,
-    get_rune_selection_card_rectangles,
-    get_rune_selection_confirm_rectangle,
-    draw_act_two_trader,
-    draw_act_two_trade_window,
-    get_act_two_trade_buy_rectangles,
-    get_act_two_trade_close_rectangle,
-)
-from acts.act_two.presentation.awakening import (
-    get_awakening_hitboxes as get_class_selection_rectangles,
-)
 from presentation.layout import CLASS_SELECTION_READY_MS
-from presentation.screens import (
-    draw_act_three_awakening,
-    draw_act_three_debug_class_selection,
-    draw_class_selection_screen,
-    draw_floor_transition,
-    draw_subclass_selection_screen,
-)
-from presentation.status import draw_status
-from acts.act_one.presentation.world import (
-    draw_act_one_atmosphere,
-    draw_act_one_boss_effects,
-    draw_act_one_pickup_effect,
-    draw_act_one_player_attack_effect,
-    draw_attack_markers,
-    draw_boss_door,
-    draw_chest,
-    draw_coin,
-    draw_dungeon,
-    draw_enemy,
-    draw_fire_bomb,
-    draw_key,
-    draw_map_frame,
-    draw_passage,
-    draw_player,
-    draw_player_attack_markers,
-    draw_potion,
-    draw_scroll,
-)
 from presentation.layout import (
     ACT_THREE_AWAKENING_END_MS,
     AWAKENING_HOLD_END_MS,
@@ -420,52 +182,19 @@ from settings import (
     GAME_HEIGHT,
     GAME_WIDTH,
 )
-from systems.grid_geometry import (
-    can_reach_adjacent_cell,
-    direction_between_adjacent_cells,
-)
-from systems.player_actions import (
-    break_secret_passage,
-    open_chest,
-    try_move_player,
-    try_use_potion,
-)
-from systems.player_combat import (
-    basic_attack_damage_range,
-    perform_archer_attack,
-    perform_basic_attack,
-    perform_mage_resonance_attack,
-    perform_summoner_attack,
-    perform_warlock_attack,
-    remove_enemy_corpses_at_position,
-)
-from acts.act_three.abilities.mage import (
-    is_valid_act_three_arcane_burst_target,
-)
 from systems.player_abilities import (
-    assassin_teleport_facing_direction,
     AbilityRequestResult,
     advance_berserker_last_rage,
     advance_paladin_sacred_ground,
     advance_warlock_curses,
     advance_warlock_demon_form,
     cancel_ability_aiming,
-    cast_directional_ability,
-    cast_mage_arcane_burst,
     resolve_assassin_ultimate,
     request_class_ability,
-    perform_archer_empowered_shot,
-    perform_berserker_crushing_leap,
-    perform_paladin_shield_charge,
     paladin_sacred_ground_impact_ready,
     perform_paladin_sacred_ground,
     resolve_paladin_sacred_ground,
-    perform_warlock_curse,
 )
-from acts.act_two.trader_logic import buy_trader_item
-from presentation.layout import MAP_OFFSET_X, MAP_OFFSET_Y
-from presentation.combat_effects import draw_impact_block_effect
-from settings import TILE_SIZE
 
 FIRST_ACT_FINAL_FLOOR = max(
     index
@@ -490,8 +219,6 @@ def run():
     loaded_resources = load_application_resources(startup)
     act_one_fonts = loaded_resources.act_one_fonts
     act_one_gameplay_assets = loaded_resources.act_one_gameplay_assets
-    title_font = act_one_fonts["title"]
-    font = act_one_fonts["status"]
     log_font = act_one_fonts["text"]
     act_two_fonts = loaded_resources.act_two_fonts
     act_two_sprites = loaded_resources.act_two_sprites
@@ -521,11 +248,23 @@ def run():
     dev_console = DevConsole()
     act_one_camera = ActOneCamera()
     act_two_camera = ActTwoCamera()
+    act_two_renderer = ActTwoRenderer()
+    act_two_interface = ActTwoInterface(
+        act_two_fonts,
+        act_two_sprites,
+        act_two_hud_layout,
+        act_two_trade_layout,
+        bloody_altar_layout,
+        oracle_ui_layout,
+        oracle_ui_assets,
+    )
+    act_two_interface_input = ActTwoInterfaceInput(
+        act_two_hud_layout,
+        act_two_trade_layout,
+        bloody_altar_layout,
+    )
     map_navigation = MapNavigationController(act_two_hud_layout)
     act_one_world_surface = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
-    act_two_world_surface = None
-    act_two_map_surface = None
-    act_two_map_cache_key = None
     menu_progress = startup.load(load_progress)
 
     startup.finish()
@@ -743,9 +482,7 @@ def run():
 
                 act_one_camera = ActOneCamera()
                 act_two_camera = ActTwoCamera()
-                act_two_world_surface = None
-                act_two_map_surface = None
-                act_two_map_cache_key = None
+                act_two_renderer.reset()
                 ground_item_window = GroundItemInput()
                 cutscene_skip = ActTwoCutsceneSkip()
 
@@ -1075,9 +812,7 @@ def run():
                         current_act = game_state.floor.presentation_act
                         act_one_camera = ActOneCamera()
                         act_two_camera = ActTwoCamera()
-                        act_two_world_surface = None
-                        act_two_map_surface = None
-                        act_two_map_cache_key = None
+                        act_two_renderer.reset()
                         ground_item_window = GroundItemInput()
                         act_two_input_state.reset_for_loading()
                         menu_state.pause_background = None
@@ -1257,372 +992,21 @@ def run():
                     enabled=continuous_movement_available,
                 ):
                 continue
-            elif game_state.bloody_altar_open:
-                event_position = getattr(
-                    event,
-                    "pos",
-                    pygame.mouse.get_pos(),
-                )
-                handle_bloody_altar_event(
+            elif (
+                current_act == 2
+                and act_two_interface_input.handle_event(
                     event,
                     game_state,
-                    bloody_altar_layout,
-                    window_to_game_position(window_state.screen, event_position),
-                )
-                act_two_input_state.reset_held_movement()
-                continue
-            elif game_state.trade_screen_open:
-                if (
-                        event.type == pygame.KEYDOWN
-                        and event.key == pygame.K_ESCAPE
-                ):
-                    game_state.trade_screen_open = False
-                    act_two_input_state.reset_held_movement()
-                elif (
-                        event.type == pygame.MOUSEBUTTONDOWN
-                        and event.button == 1
-                ):
-                    game_mouse_position = window_to_game_position(
+                    act_two_camera,
+                    act_two_input_state,
+                    act_two_sounds,
+                    window_to_game_position(
                         window_state.screen,
-                        event.pos,
-                    )
-
-                    if game_mouse_position is not None:
-                        close_rectangle = (
-                            get_act_two_trade_close_rectangle(
-                                act_two_trade_layout
-                            )
-                        )
-
-                        if close_rectangle.collidepoint(
-                                game_mouse_position
-                        ):
-                            game_state.trade_screen_open = False
-                            act_two_input_state.reset_held_movement()
-                        else:
-                            clicked_slot = next(
-                                (
-                                    slot_name
-                                    for slot_name, rectangle
-                                    in get_act_two_trade_buy_rectangles(
-                                    act_two_trade_layout
-                                ).items()
-                                    if rectangle.collidepoint(
-                                    game_mouse_position
-                                )
-                                ),
-                                None,
-                            )
-
-                            if clicked_slot is not None:
-                                purchase_succeeded = buy_trader_item(
-                                    game_state,
-                                    clicked_slot,
-                                )
-
-                                if purchase_succeeded:
-                                    act_two_sounds.play_ui_sound(
-                                        "gold_pickup"
-                                    )
-                continue
-
-            elif game_state.rune_selection_open:
-                available_runes = runes_for_class(
-                    game_state.player.player_class
+                        getattr(event, "pos", pygame.mouse.get_pos()),
+                    ),
                 )
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        cancel_rune_selection(game_state)
-                    elif event.key in (
-                        pygame.K_1,
-                        pygame.K_2,
-                        pygame.K_3,
-                    ):
-                        rune_index = event.key - pygame.K_1
-                        if rune_index < len(available_runes):
-                            game_state.rune_selection_pending_id = (
-                                available_runes[rune_index].id
-                            )
-                    elif (
-                        event.key in (pygame.K_RETURN, pygame.K_KP_ENTER)
-                        and game_state.rune_selection_pending_id is not None
-                    ):
-                        select_rune(
-                            game_state,
-                            game_state.rune_selection_pending_id,
-                        )
-                elif (
-                    event.type == pygame.MOUSEBUTTONDOWN
-                    and event.button == 3
-                ):
-                    cancel_rune_selection(game_state)
-                elif (
-                    event.type == pygame.MOUSEBUTTONDOWN
-                    and event.button == 1
-                ):
-                    game_mouse_position = window_to_game_position(
-                        window_state.screen,
-                        event.pos,
-                    )
-                    if game_mouse_position is not None:
-                        confirm_rectangle = (
-                            get_rune_selection_confirm_rectangle(
-                                game_state.player.player_class
-                            )
-                        )
-                        clicked_rune_id = next(
-                            (
-                                rune_id
-                                for rune_id, rectangle in (
-                                    get_rune_selection_card_rectangles(
-                                        game_state.player.player_class
-                                    ).items()
-                                )
-                                if rectangle.collidepoint(
-                                    game_mouse_position
-                                )
-                            ),
-                            None,
-                        )
-                        if clicked_rune_id is not None:
-                            game_state.rune_selection_pending_id = (
-                                clicked_rune_id
-                            )
-                        elif (
-                            game_state.rune_selection_pending_id
-                            is not None
-                            and confirm_rectangle.collidepoint(
-                                game_mouse_position
-                            )
-                        ):
-                            select_rune(
-                                game_state,
-                                game_state.rune_selection_pending_id,
-                            )
-                continue
-            elif (
-                    event.type == pygame.MOUSEBUTTONDOWN
-                    and event.button == 1
-                    and current_act == 2
-                    and game_state.act_two_stats_open
-                    and not game_state.class_selection_open
-                    and not game_state.upgrade_screen_open
-                    and (
-                            game_mouse_position := window_to_game_position(
-                                window_state.screen,
-                                event.pos,
-                            )
-                    )
-                    is not None
-                    and get_act_two_confirm_button_rectangle(
-                            act_two_hud_layout
-                        ).collidepoint(
-                            game_mouse_position
-                        )
             ):
-                confirmed, message = (
-                    confirm_queued_act_two_attribute_upgrades(
-                        game_state.player,
-                    )
-                )
-
-                if confirmed:
-                    add_log_message(
-                        game_state.combat_log,
-                        message,
-                        category="progress",
-                    )
-
                 continue
-
-            elif (
-                    event.type == pygame.MOUSEBUTTONDOWN
-                    and event.button == 1
-                    and current_act == 2
-                    and game_state.act_two_stats_open
-                    and not game_state.class_selection_open
-                    and not game_state.upgrade_screen_open
-                    and (
-                            game_mouse_position := window_to_game_position(
-                                window_state.screen,
-                                event.pos,
-                            )
-                    )
-                    is not None
-                    and (
-                            clicked_attribute := next(
-                                (
-                                        attribute
-                                        for attribute, rectangle in (
-                                        get_act_two_attribute_minus_rectangles(
-                                            act_two_hud_layout
-                                        ).items()
-                                )
-                                        if rectangle.collidepoint(game_mouse_position)
-                                ),
-                                None,
-                            )
-                    )
-                    is not None
-            ):
-                cancel_queued_act_two_attribute_upgrade(
-                    game_state.player,
-                    clicked_attribute,
-                )
-                continue
-            elif (
-                    event.type == pygame.MOUSEBUTTONDOWN
-                    and event.button == 1
-                    and current_act == 2
-                    and game_state.act_two_stats_open
-                    and not game_state.class_selection_open
-                    and not game_state.upgrade_screen_open
-                    and (
-                            game_mouse_position := window_to_game_position(
-                                window_state.screen,
-                                event.pos,
-                            )
-                    )
-                    is not None
-                    and (
-                            clicked_attribute := next(
-                                (
-                                        attribute
-                                        for attribute, rectangle in (
-                                        get_act_two_attribute_plus_rectangles(
-                                            act_two_hud_layout
-                                        ).items()
-                                )
-                                        if rectangle.collidepoint(game_mouse_position)
-                                ),
-                                None,
-                            )
-                    )
-                    is not None
-            ):
-                queue_act_two_attribute_upgrade(
-                    game_state.player,
-                    clicked_attribute,
-                )
-                continue
-            elif (
-                event.type == pygame.MOUSEBUTTONUP
-                and event.button == 1
-                and current_act == 2
-                and act_two_input_state.dragged_consumable_slot is not None
-            ):
-                dragged_slot = act_two_input_state.dragged_consumable_slot
-                act_two_input_state.cancel_consumable_drag()
-                game_mouse_position = window_to_game_position(
-                    window_state.screen,
-                    event.pos,
-                )
-                released_belt_slot = None
-                if game_mouse_position is not None:
-                    released_belt_slot = next(
-                        (
-                            slot_index
-                            for slot_index, rectangle in enumerate(
-                            get_act_two_belt_slot_rectangles(
-                                act_two_hud_layout
-                            )
-                            )
-                            if rectangle.collidepoint(game_mouse_position)
-                        ),
-                        None,
-                    )
-                if released_belt_slot is not None:
-                    if released_belt_slot == dragged_slot:
-                        pygame.event.post(
-                            pygame.event.Event(
-                                pygame.KEYDOWN,
-                                key=CONSUMABLE_KEY_ORDER[
-                                    dragged_slot
-                                ],
-                            )
-                        )
-                    else:
-                        slots = game_state.player.act_two.consumable_slots
-                        slots[dragged_slot], slots[released_belt_slot] = (
-                            slots[released_belt_slot],
-                            slots[dragged_slot],
-                        )
-                    continue
-                target_cell = (
-                    act_two_screen_to_cell(
-                        game_mouse_position,
-                        act_two_camera,
-                    )
-                    if game_mouse_position is not None
-                    else None
-                )
-                if target_cell is not None:
-                    pygame.event.post(
-                        pygame.event.Event(
-                            pygame.KEYDOWN,
-                            key=pygame.K_UNKNOWN,
-                            dropped_consumable_slot=dragged_slot,
-                            dropped_consumable_target=target_cell,
-                            dropped_consumable_started_at=(
-                                pygame.time.get_ticks()
-                            ),
-                        )
-                    )
-                continue
-            elif (
-                event.type == pygame.MOUSEBUTTONDOWN
-                and event.button == 1
-                and current_act == 2
-                and not game_state.class_selection_open
-                and not game_state.upgrade_screen_open
-                and (
-                    game_mouse_position := window_to_game_position(
-                        window_state.screen,
-                        event.pos,
-                    )
-                )
-                is not None
-                and (
-                    clicked_sidebar_button := next(
-                        (
-                            button_name
-                            for button_name, rectangle in (
-                                get_act_two_sidebar_button_rectangles(
-                                    act_two_hud_layout
-                                ).items()
-                            )
-                            if rectangle.collidepoint(game_mouse_position)
-                        ),
-                        None,
-                    )
-                )
-                is not None
-            ):
-                if clicked_sidebar_button == "stats":
-                    game_state.act_two_stats_open = (
-                        not game_state.act_two_stats_open
-                    )
-                    game_state.act_two_journal_open = False
-                    continue
-
-                if clicked_sidebar_button == "journal":
-                    game_state.act_two_journal_open = (
-                        not game_state.act_two_journal_open
-                    )
-
-                    if game_state.act_two_journal_open:
-                        game_state.act_two_journal_scroll = 1.0
-
-                    game_state.act_two_stats_open = False
-                    continue
-                if clicked_sidebar_button == "settings":
-                    pygame.event.post(
-                        pygame.event.Event(
-                            pygame.KEYDOWN,
-                            key=pygame.K_ESCAPE,
-                        )
-                    )
-                    continue
             elif (
                     current_act == 3
                     and handle_act_three_pointer_event(
@@ -1653,202 +1037,30 @@ def run():
                     )
 
                 continue
-            elif (
-                event.type == pygame.MOUSEBUTTONDOWN
-                and event.button == 1
-                and game_state.class_selection_open
-            ):
-                current_time = pygame.time.get_ticks()
-                transition_elapsed = (
-                    current_time - game_state.class_transition_started_at
-                )
-
-                if game_state.class_selection_choice is not None:
-                    continue
-
-                if transition_elapsed < CLASS_SELECTION_READY_MS:
-                    continue
-
-                game_mouse_position = window_to_game_position(
+            elif handle_class_selection_pointer(
+                event,
+                game_state,
+                window_to_game_position(
                     window_state.screen,
-                    event.pos,
-                )
-
-                if game_mouse_position is None:
-                    continue
-
-                class_keys = {
-                    "warrior": pygame.K_1,
-                    "rogue": pygame.K_2,
-                    "mage": pygame.K_3,
-                }
-
-                for (
-                    class_name,
-                    class_rectangle,
-                ) in get_class_selection_rectangles().items():
-                    if class_rectangle.collidepoint(
-                        game_mouse_position
-                    ):
-                        pygame.event.post(
-                            pygame.event.Event(
-                                pygame.KEYDOWN,
-                                key=class_keys[class_name],
-                            )
-                        )
-                        break
-            elif (
-                event.type == pygame.MOUSEBUTTONDOWN
-                and event.button == 3
-                and current_act == 2
-                and (
-                    game_state.player.directional_ability_aiming
-                    or
-                    game_state.player.act_two.fire_bomb_aiming
-                    or game_state.player.act_two.scroll_aiming_kind
-                    is not None
-                )
+                    getattr(event, "pos", pygame.mouse.get_pos()),
+                ),
+                pygame.time.get_ticks(),
             ):
-                if game_state.player.directional_ability_aiming:
-                    cancel_ability_aiming(game_state)
-                cancel_fire_bomb_aiming(game_state)
-                cancel_scroll_aiming(game_state)
                 continue
             elif (
-                event.type == pygame.MOUSEWHEEL
-                and current_act == 2
-                and game_state.act_two_journal_open
-                and (
-                    game_mouse_position := window_to_game_position(
+                current_act == 2
+                and handle_act_two_pointer_event(
+                    event,
+                    game_state,
+                    act_two_camera,
+                    act_two_input_state,
+                    movement_profile,
+                    window_to_game_position(
                         window_state.screen,
-                        pygame.mouse.get_pos(),
-                    )
-                )
-                is not None
-                and get_act_two_journal_viewport_rectangle(
-                    act_two_hud_layout
-                ).collidepoint(game_mouse_position)
-            ):
-                game_state.act_two_journal_scroll = max(
-                    0.0,
-                    min(
-                        1.0,
-                        game_state.act_two_journal_scroll
-                        - event.y * 0.08,
+                        getattr(event, "pos", pygame.mouse.get_pos()),
                     ),
                 )
-                continue
-            elif (
-                event.type == pygame.MOUSEBUTTONDOWN
-                and event.button == 1
-                and current_act == 2
-                and game_state.act_two_journal_open
-                and (
-                    game_mouse_position := window_to_game_position(
-                        window_state.screen,
-                        event.pos,
-                    )
-                )
-                is not None
-                and (
-                    journal_scrollbar_rectangles
-                    := get_act_two_journal_scrollbar_rectangles(
-                        act_two_hud_layout,
-                        game_state.act_two_journal_scroll,
-                    )
-                )
-                and journal_scrollbar_rectangles[1].collidepoint(
-                    game_mouse_position
-                )
             ):
-                journal_thumb_rectangle = (
-                    journal_scrollbar_rectangles[1]
-                )
-
-                game_state.act_two_journal_dragging = True
-                game_state.act_two_journal_drag_offset = (
-                    game_mouse_position[1]
-                    - journal_thumb_rectangle.y
-                )
-                continue
-
-            elif (
-                event.type == pygame.MOUSEMOTION
-                and current_act == 2
-                and game_state.act_two_journal_open
-                and game_state.act_two_journal_dragging
-                and (
-                    game_mouse_position := window_to_game_position(
-                        window_state.screen,
-                        event.pos,
-                    )
-                )
-                is not None
-            ):
-                (
-                    journal_track_rectangle,
-                    journal_thumb_rectangle,
-                ) = get_act_two_journal_scrollbar_rectangles(
-                    act_two_hud_layout,
-                    game_state.act_two_journal_scroll,
-                )
-
-                thumb_travel = max(
-                    0,
-                    journal_track_rectangle.height
-                    - journal_thumb_rectangle.height,
-                )
-
-                desired_thumb_y = (
-                    game_mouse_position[1]
-                    - game_state.act_two_journal_drag_offset
-                )
-
-                clamped_thumb_y = max(
-                    journal_track_rectangle.top,
-                    min(
-                        journal_track_rectangle.bottom
-                        - journal_thumb_rectangle.height,
-                        desired_thumb_y,
-                    ),
-                )
-
-                if thumb_travel > 0:
-                    game_state.act_two_journal_scroll = (
-                        clamped_thumb_y
-                        - journal_track_rectangle.top
-                    ) / thumb_travel
-                else:
-                    game_state.act_two_journal_scroll = 0.0
-
-                continue
-
-            elif (
-                event.type == pygame.MOUSEBUTTONUP
-                and event.button == 1
-                and current_act == 2
-                and game_state.act_two_journal_dragging
-            ):
-                game_state.act_two_journal_dragging = False
-                continue
-            elif (
-                event.type == pygame.MOUSEBUTTONDOWN
-                and event.button == 1
-                and current_act == 2
-                and game_state.act_two_journal_open
-                and (
-                    game_mouse_position := window_to_game_position(
-                        window_state.screen,
-                        event.pos,
-                    )
-                )
-                is not None
-                and get_act_two_journal_close_rectangle(
-                    act_two_hud_layout
-                ).collidepoint(game_mouse_position)
-            ):
-                game_state.act_two_journal_open = False
-                game_state.act_two_journal_dragging = False
                 continue
             elif handle_act_one_pointer_input(
                     event,
@@ -1859,172 +1071,6 @@ def run():
                     continuous_movement_available,
                 ):
                 continue
-            elif (
-                    event.type == pygame.MOUSEBUTTONDOWN
-                    and event.button == 1
-                    and current_act == 2
-                    and not game_state.class_selection_open
-                    and not game_state.upgrade_screen_open
-                    and game_state.player.health > 0
-            ):
-                game_mouse_position = window_to_game_position(
-                    window_state.screen,
-                    event.pos,
-                )
-                belt_slot_clicked = False
-                if game_mouse_position is not None:
-                    for slot_index, rectangle in enumerate(
-                            get_act_two_belt_slot_rectangles(
-                                act_two_hud_layout
-                            )
-                    ):
-                        if not rectangle.collidepoint(game_mouse_position):
-                            continue
-                        if (
-                            game_state.player.act_two.consumable_slots[
-                                slot_index
-                            ]
-                            is not None
-                        ):
-                            cancel_fire_bomb_aiming(game_state)
-                            cancel_scroll_aiming(game_state)
-                            act_two_input_state.dragged_consumable_slot = (
-                                slot_index
-                            )
-                        belt_slot_clicked = True
-                        break
-                if belt_slot_clicked:
-                    continue
-                target_cell = (
-                    act_two_screen_to_cell(
-                        game_mouse_position,
-                        act_two_camera,
-                    )
-                    if game_mouse_position is not None
-                    else None
-                )
-                if (
-                    game_state.player.player_class == "mage"
-                    and game_state.player.directional_ability_aiming
-                ):
-                    if is_valid_mage_arcane_burst_target(
-                        game_state,
-                        target_cell,
-                    ):
-                        pygame.event.post(
-                            pygame.event.Event(
-                                pygame.KEYDOWN,
-                                key=pygame.K_UNKNOWN,
-                                mage_ability_target=target_cell,
-                            )
-                        )
-                    continue
-                if game_state.player.act_two.fire_bomb_aiming:
-                    if is_valid_fire_bomb_target(
-                        game_state,
-                        target_cell,
-                    ):
-                        pygame.event.post(
-                            pygame.event.Event(
-                                pygame.KEYDOWN,
-                                key=pygame.K_UNKNOWN,
-                                fire_bomb_target=target_cell,
-                                fire_bomb_slot=(
-                                    game_state.player.act_two.fire_bomb_aiming_slot
-                                ),
-                            )
-                        )
-                    continue
-                if (
-                    game_state.player.act_two.scroll_aiming_kind
-                    is not None
-                ):
-                    if enemy_at_scroll_target(game_state, target_cell):
-                        pygame.event.post(
-                            pygame.event.Event(
-                                pygame.KEYDOWN,
-                                key=pygame.K_UNKNOWN,
-                                scroll_target=target_cell,
-                                scroll_slot=(
-                                    game_state.player.act_two.scroll_aiming_slot
-                                ),
-                            )
-                        )
-                    continue
-                if (
-                    game_state.player.player_class == "mage"
-                    and game_state.player.selected_rune_id
-                    == "rune_of_resonance"
-                    and target_cell is not None
-                    and target_cell in game_state.floor.visible_cells
-                    and any(
-                        enemy.health > 0
-                        and target_cell in get_enemy_occupied_positions(enemy)
-                        for enemy in game_state.floor.enemies
-                    )
-                ):
-                    act_two_input_state.cancel_auto_move()
-                    act_two_input_state.reset_held_movement()
-
-                    if get_mage_resonance_target(game_state, target_cell) is not None:
-                        pygame.event.post(
-                            pygame.event.Event(
-                                pygame.KEYDOWN,
-                                key=pygame.K_UNKNOWN,
-                                resonance_target=target_cell,
-                            )
-                        )
-                    else:
-                        start_auto_move(
-                            act_two_input_state,
-                            game_state,
-                            target_cell,
-                        )
-                    continue
-
-                if (
-                    target_cell is not None
-                    and target_cell in game_state.floor.visible_cells
-                ):
-                    player_position = (
-                        game_state.floor.player_column,
-                        game_state.floor.player_row,
-                    )
-                    adjacent_direction = (
-                        direction_between_adjacent_cells(
-                            player_position,
-                            target_cell,
-                        )
-                    )
-
-                    if adjacent_direction is not None:
-                        act_two_input_state.cancel_auto_move()
-                        act_two_input_state.reset_held_movement()
-
-                        if not movement_input_is_locked(
-                            act_two_input_state,
-                            pygame.time.get_ticks(),
-                        ):
-                            pygame.event.post(
-                                pygame.event.Event(
-                                    pygame.KEYDOWN,
-                                    key=pygame.K_UNKNOWN,
-                                    movement_direction=adjacent_direction,
-                                    movement_revision=(
-                                        act_two_input_state.movement_revision
-                                        if movement_profile.step_duration_ms > 0
-                                        else None
-                                    ),
-                                )
-                            )
-
-                        continue
-                    start_auto_move(
-                        act_two_input_state,
-                        game_state,
-                        target_cell,
-                    )
-
             elif event.type == pygame.KEYDOWN:
                 barrage_resume = getattr(
                     event,
@@ -2158,40 +1204,12 @@ def run():
                         app_runtime.progress_tracking_enabled = True
                     continue
 
-                if game_state.class_selection_open:
-                    if game_state.class_selection_choice is not None:
-                        continue
-                    transition_elapsed = (
-                        pygame.time.get_ticks()
-                        - game_state.class_transition_started_at
-                    )
-
-                    if transition_elapsed < CLASS_SELECTION_READY_MS:
-                        continue
-
-                    chosen_class = None
-
-                    if event.key in (pygame.K_1, pygame.K_KP1):
-                        chosen_class = "warrior"
-                    elif event.key in (pygame.K_2, pygame.K_KP2):
-                        chosen_class = "rogue"
-                    elif event.key in (pygame.K_3, pygame.K_KP3):
-                        chosen_class = "mage"
-
-                    if chosen_class is None:
-                        continue
-
-                    game_state.class_selection_preview_ranks = (
-                        apply_act_two_class_selection(
-                            game_state.player,
-                            chosen_class,
-                        )
-                    )
-                    game_state.class_selection_choice = chosen_class
-                    game_state.class_selection_choice_started_at = (
-                        pygame.time.get_ticks()
-                    )
-                    act_two_transition_sounds.play("class_select")
+                if handle_class_selection_key(
+                    event,
+                    game_state,
+                    act_two_transition_sounds,
+                    pygame.time.get_ticks(),
+                ):
                     continue
                 if handle_upgrade_key_input(
                     game_state,
@@ -2260,94 +1278,22 @@ def run():
                     act_two_input_state.cancel_auto_move()
 
                 game_state.clear_events()
-                fire_bomb_target = getattr(
+                act_two_action_request = ActTwoActionRequest.from_event(
                     event,
-                    "fire_bomb_target",
-                    None,
+                    game_state,
+                    enabled=current_act == 2,
                 )
-                fire_bomb_slot = getattr(
-                    event,
-                    "fire_bomb_slot",
-                    None,
-                )
-                scroll_target = getattr(event, "scroll_target", None)
-                scroll_slot = getattr(event, "scroll_slot", None)
-                mage_ability_target = getattr(
-                    event,
-                    "mage_ability_target",
-                    None,
-                )
-                resonance_target = getattr(
-                    event,
-                    "resonance_target",
-                    None,
-                )
-                dropped_consumable_slot = getattr(
-                    event,
-                    "dropped_consumable_slot",
-                    None,
-                )
-                dropped_consumable_target = getattr(
-                    event,
-                    "dropped_consumable_target",
-                    None,
-                )
-                dropped_consumable_started_at = getattr(
-                    event,
-                    "dropped_consumable_started_at",
-                    0,
-                )
-                consumable_slot = (
-                    CONSUMABLE_KEYS.get(event.key)
-                    if current_act == 2
-                    else None
-                )
-                act_one_potion_slot = (
-                    POTION_KEYS.get(event.key)
-                    if current_act == 1
-                    else None
-                )
-                consumable_slots = get_act_two_consumable_slots(
-                    game_state.player
-                )
-                selected_consumable = (
-                    consumable_slots[consumable_slot]
-                    if consumable_slot is not None
-                    else None
+                mage_ability_target = (
+                    act_two_action_request.mage_ability_target
                 )
                 if (
                     current_act == 2
-                    and game_state.player.act_two.fire_bomb_aiming
-                    and fire_bomb_target is None
-                ):
-                    if (
-                        event.key == pygame.K_ESCAPE
-                        or selected_consumable == FIRE_BOMB
-                    ):
-                        cancel_fire_bomb_aiming(game_state)
-                    continue
-                if selected_consumable == FIRE_BOMB:
-                    act_two_input_state.reset_held_movement()
-                    request_fire_bomb_aiming(
+                    and act_two_action_request.handle_aiming(
+                        event,
                         game_state,
-                        consumable_slot,
+                        act_two_input_state,
                     )
-                    continue
-                if (
-                    current_act == 2
-                    and game_state.player.act_two.scroll_aiming_kind
-                    is not None
-                    and scroll_target is None
                 ):
-                    if (
-                        event.key == pygame.K_ESCAPE
-                        or selected_consumable in TARGETED_SCROLLS
-                    ):
-                        cancel_scroll_aiming(game_state)
-                    continue
-                if selected_consumable in TARGETED_SCROLLS:
-                    act_two_input_state.reset_held_movement()
-                    request_scroll_aiming(game_state, consumable_slot)
                     continue
 
                 column_change = 0
@@ -2487,102 +1433,11 @@ def run():
                     game_state.floor["player_column"],
                     game_state.floor["player_row"],
                 )
-                new_column = game_state.floor["player_column"] + column_change
-                new_row = game_state.floor["player_row"] + row_change
                 player_waited = event.key in WAIT_KEYS
                 if current_act == 1 and not player_waited:
                     game_state.player.act_one_wait_effect_started_at = -1
                 if current_act == 2 and not player_waited:
                     game_state.player.act_two.wait_effect_started_at = -1
-                if current_act == 2:
-                    act_two_targets = find_act_two_cell_targets(
-                        game_state,
-                        (new_column, new_row),
-                        player_tried_to_move,
-                    )
-                    target_enemy = act_two_targets.enemy
-                    target_chest = act_two_targets.chest
-                    target_breakable_crate = (
-                        act_two_targets.breakable_crate
-                    )
-                    target_treasury_chest = (
-                        act_two_targets.treasury_chest
-                    )
-                    target_rune_wall = act_two_targets.rune_wall
-                    target_rune_pedestal = (
-                        act_two_targets.rune_pedestal
-                    )
-                    target_trader = act_two_targets.trader
-                    target_bloody_altar = (
-                        act_two_targets.bloody_altar
-                    )
-                    target_secret_wall = (
-                        act_two_targets.secret_wall
-                    )
-                else:
-                    living_enemies = [
-                        enemy
-                        for enemy in game_state.floor["enemies"]
-                        if enemy["health"] > 0
-                    ]
-                    target_enemy = next(
-                        (
-                            enemy
-                            for enemy in living_enemies
-                            if (new_column, new_row)
-                               in get_enemy_occupied_positions(enemy)
-                        ),
-                        None,
-                    )
-                    target_chest = next(
-                        (
-                            chest
-                            for chest in game_state.floor["chests"]
-                            if (
-                                not chest["is_open"]
-                                and (
-                                    chest["column"],
-                                    chest["row"],
-                                )
-                                == (new_column, new_row)
-                        )
-                        ),
-                        None,
-                    )
-                    target_breakable_crate = next(
-                        (
-                            crate
-                            for crate
-                            in game_state.floor.breakable_crates
-                            if (
-                                not crate.is_broken
-                                and (
-                                    crate.column,
-                                    crate.row,
-                                )
-                                == (new_column, new_row)
-                        )
-                        ),
-                        None,
-                    )
-                    target_treasury_chest = False
-                    target_rune_wall = False
-                    target_rune_pedestal = False
-                    target_trader = False
-                    target_bloody_altar = False
-                    target_secret_wall = (
-                            player_tried_to_move
-                            and 0
-                            <= new_row
-                            < len(game_state.floor["map"])
-                            and 0
-                            <= new_column
-                            < len(game_state.floor["map"][new_row])
-                            and game_state.floor["map"][new_row][
-                                new_column
-                            ]
-                            == "S"
-                    )
                 player_acted = False
                 game_state.player_attack_targets = []
 
@@ -2596,491 +1451,55 @@ def run():
                         "The hero loses a turn recovering from the stun.",
                         category="debuff",
                     )
-                elif (
-                    fire_bomb_target is not None
-                    and fire_bomb_slot is not None
-                ):
-                    player_acted = throw_fire_bomb(
+                elif current_act == 1:
+                    act_one_action = resolve_act_one_player_action(
                         game_state,
-                        fire_bomb_slot,
-                        fire_bomb_target,
+                        event.key,
+                        (column_change, row_change),
                         pygame.time.get_ticks(),
-                    )
-                elif (
-                    dropped_consumable_slot is not None
-                    and dropped_consumable_target is not None
-                ):
-                    player_acted = throw_act_two_consumable(
-                        game_state,
-                        dropped_consumable_slot,
-                        dropped_consumable_target,
-                        dropped_consumable_started_at,
-                    )
-                elif scroll_target is not None and scroll_slot is not None:
-                    player_acted = use_scroll(
-                        game_state,
-                        scroll_slot,
-                        scroll_target,
-                        pygame.time.get_ticks(),
-                    )
-                elif game_state.player.warlock_curse_target is not None:
-                    curse_target = (
-                        game_state.player.warlock_curse_target
-                    )
-                    player_acted = perform_warlock_curse(
-                        game_state,
-                        curse_target,
-                        pygame.time.get_ticks(),
-                    )
-                    set_warlock_curse_cursor()
-                elif game_state.player.warlock_attack_target is not None:
-                    warlock_target = (
-                        game_state.player.warlock_attack_target
-                    )
-                    game_state.player.warlock_attack_target = None
-                    player_acted = perform_warlock_attack(
-                        game_state,
-                        warlock_target,
+                        FIRST_ACT_FINAL_FLOOR,
                         resolve_oracle_hit_reaction,
                     )
-                    if player_acted:
-                        game_state.player.attack_animation_started_at = (
-                            pygame.time.get_ticks()
-                        )
-                    set_warlock_staff_cursor()
-                elif game_state.player.summoner_attack_target is not None:
-                    summoner_target = (
-                        game_state.player.summoner_attack_target
-                    )
-                    game_state.player.summoner_attack_target = None
-                    player_acted = perform_summoner_attack(
-                        game_state,
-                        summoner_target,
-                        resolve_oracle_hit_reaction,
-                    )
-                    if player_acted:
-                        game_state.player.attack_animation_started_at = (
-                            pygame.time.get_ticks()
-                        )
-                    set_summoner_staff_cursor()
-
-                elif (
-                        game_state.player.paladin_shield_charge_target
-                        is not None
-                ):
-                    player_acted = perform_paladin_shield_charge(
-                        game_state,
-                        pygame.time.get_ticks(),
-                        resolve_oracle_hit_reaction,
-                    )
-                    if player_acted:
-                        set_paladin_shield_charge_cursor()
-                elif (
-                    game_state.player.berserker_crushing_leap_target
-                    is not None
-                ):
-                    player_acted = perform_berserker_crushing_leap(
-                        game_state,
-                        pygame.time.get_ticks(),
-                        resolve_oracle_hit_reaction,
-                    )
-                    if player_acted:
-                        set_berserker_crushing_leap_cursor()
-                elif game_state.player.archer_leap_target is not None:
-                    leap_target = game_state.player.archer_leap_target
-                    leap_origin = (
-                        game_state.floor.player_column,
-                        game_state.floor.player_row,
-                    )
-                    leap_started_at = pygame.time.get_ticks()
-                    game_state.floor.player_column = leap_target[0]
-                    game_state.floor.player_row = leap_target[1]
-                    game_state.player.archer_leap_target = None
-                    game_state.player.archer_leap_aiming = False
-                    game_state.player.archer_leap_charge = 0
-                    game_state.player.archer_leap_origin = leap_origin
-                    game_state.player.archer_leap_started_at = (
-                        leap_started_at
-                    )
-                    game_state.emit(
-                        GameEvent(
-                            type=GameEventType.MOVE,
-                            actor="hero",
-                            origin=leap_origin,
-                            destination=leap_target,
-                            data={"kind": "archer_leap"},
-                        )
-                    )
-                    add_log_message(
-                        game_state.combat_log,
-                        "The archer leaps backward.",
-                        category="ability",
-                    )
-                    set_archer_leap_cursor()
-                    player_acted = True
-                elif (
-                    game_state.player.archer_empowered_shot_target
-                    is not None
-                ):
-                    empowered_target = (
-                        game_state.player.archer_empowered_shot_target
-                    )
-                    game_state.player.archer_empowered_shot_target = None
-                    player_acted = perform_archer_empowered_shot(
-                        game_state,
-                        empowered_target,
-                        resolve_oracle_hit_reaction,
-                    )
-                    if player_acted:
-                        game_state.player.attack_animation_started_at = (
-                            pygame.time.get_ticks()
-                        )
-                        game_state.player.archer_empowered_shot_started_at = (
-                            pygame.time.get_ticks()
-                        )
-                    set_archer_empowered_cursor()
-                elif getattr(event, "archer_barrage_commit", False):
-                    player_acted = place_archer_barrage_zone(
-                        game_state
-                    )
-                    if player_acted:
-                        set_archer_barrage_zone_cursor()
-                elif game_state.player.archer_piercing_target is not None:
-                    piercing_target = (
-                        game_state.player.archer_piercing_target
-                    )
-                    game_state.player.archer_piercing_target = None
-                    game_state.player.facing_direction = (
-                        archer_shot_direction(
-                            (
-                                game_state.floor.player_column,
-                                game_state.floor.player_row,
-                            ),
-                            piercing_target,
-                        )
-                    )
-                    shot_time = pygame.time.get_ticks()
-                    player_acted = perform_archer_piercing_shot(
-                        game_state,
-                        piercing_target,
-                        shot_time,
-                        resolve_oracle_hit_reaction,
-                    )
-                    if player_acted:
-                        game_state.player.attack_animation_started_at = (
-                            shot_time
-                        )
-                elif game_state.player.archer_attack_target is not None:
-                    archer_target = game_state.player.archer_attack_target
-                    game_state.player.archer_attack_target = None
-                    game_state.player.facing_direction = (
-                        archer_shot_direction(
-                            (
-                                game_state.floor.player_column,
-                                game_state.floor.player_row,
-                            ),
-                            archer_target,
-                        )
-                    )
-                    player_acted = perform_archer_attack(
-                        game_state,
-                        archer_target,
-                        resolve_oracle_hit_reaction,
-                    )
-                    if player_acted:
-                        game_state.player.attack_animation_started_at = (
-                            pygame.time.get_ticks()
-                        )
-                    set_archer_attack_cursor()
-                elif rogue_ability_activated:
-                    player_acted = True
-                elif game_state.player.teleport_target is not None:
-                    teleport_target = game_state.player.teleport_target
-                    teleport_origin = (
-                        game_state.floor.player_column,
-                        game_state.floor.player_row,
-                    )
-                    game_state.player.facing_direction = (
-                        assassin_teleport_facing_direction(
-                            teleport_origin,
-                            teleport_target,
-                        )
-                    )
-                    game_state.floor.player_column = teleport_target[0]
-                    game_state.floor.player_row = teleport_target[1]
-                    game_state.player.teleport_target = None
-                    game_state.player.teleport_aiming = False
-                    set_assassin_target_cursor()
-                    game_state.player.teleport_charge = 0
-                    game_state.player.teleport_camera_origin = teleport_origin
-                    game_state.player.teleport_transition_started_at = (
-                        pygame.time.get_ticks()
-                    )
-                    game_state.emit(
-                        GameEvent(
-                            type=GameEventType.MOVE,
-                            actor="hero",
-                            origin=teleport_origin,
-                            destination=teleport_target,
-                            data={"kind": "teleport"},
-                        )
-                    )
-                    add_log_message(
-                        game_state.combat_log,
-                        "The assassin teleports through the shadows.",
-                        category="ability",
-                    )
-                    player_acted = True
-                elif resonance_target is not None:
-                    player_acted = perform_mage_resonance_attack(
-                        game_state,
-                        resonance_target,
-                        resolve_oracle_hit_reaction,
-                    )
-                    if player_acted:
-                        attack_started_at = pygame.time.get_ticks()
-                        game_state.player.attack_animation_started_at = (
-                            attack_started_at
-                        )
-                        game_state.player.act_two.ability_effect_started_at = (
-                            attack_started_at
-                        )
-                elif mage_ability_target is not None:
-                    mage_effect_state = (
-                        game_state.player.act_three.mage_arcane_burst
-                        if current_act == 3
-                        else game_state.player.act_two
-                    )
-                    player_acted = cast_mage_arcane_burst(
-                        game_state,
-                        mage_ability_target,
-                        resolve_oracle_hit_reaction,
-                        effect_state=mage_effect_state,
-                        target_validator=(
-                            is_valid_act_three_arcane_burst_target
-                            if current_act == 3
-                            else None
-                        ),
-                    )
-                    if player_acted:
-                        ability_started_at = pygame.time.get_ticks()
-                        game_state.player.attack_animation_started_at = (
-                            ability_started_at
-                        )
-                        mage_effect_state.ability_effect_started_at = (
-                            ability_started_at
-                        )
-                        game_state.player.act_three.mage_arcane_burst.preview_target = (
-                            None
-                        )
-                elif directional_ability_cast:
-                    player_acted = cast_directional_ability(
-                        game_state,
-                        column_change,
-                        row_change,
-                        resolve_oracle_hit_reaction,
-                    )
-                    if player_acted:
-                        ability_started_at = pygame.time.get_ticks()
-                        game_state.player.attack_animation_started_at = (
-                            ability_started_at
-                        )
-                        if current_act == 2:
-                            game_state.player.act_two.ability_effect_started_at = (
-                                ability_started_at
-                            )
-                            game_state.player.act_two.ability_effect_direction = (
-                                column_change,
-                                row_change,
-                            )
-                elif (
-                    current_act == 2
-                    and selected_consumable == POTION
-                ):
-                    player_acted = try_use_potion(
-                        game_state,
-                        consumable_slot,
-                    )
-                    if player_acted:
-                        game_state.player.potion_effect_started_at = (
-                            pygame.time.get_ticks()
-                        )
-                elif (
-                    current_act == 2
-                    and selected_consumable in SCROLLS
-                ):
-                    player_acted = use_scroll(
-                        game_state,
-                        consumable_slot,
-                        effect_started_at=pygame.time.get_ticks(),
-                    )
-                    if (
-                        player_acted
-                        and selected_consumable == HEALING_SCROLL
-                    ):
-                        game_state.player.potion_effect_started_at = (
-                            pygame.time.get_ticks()
-                        )
-                elif (
-                    current_act == 1
-                    and act_one_potion_slot is not None
-                    and act_one_potion_slot
-                    < game_state.player.potion_count
-                ):
-                    player_acted = try_use_potion(game_state)
-                    if player_acted:
-                        game_state.player.potion_effect_started_at = (
-                            pygame.time.get_ticks()
-                        )
-                elif current_act >= 3 and event.key == pygame.K_h:
-                    player_acted = try_use_potion(game_state)
-                    if player_acted:
-                        game_state.player.potion_effect_started_at = (
-                            pygame.time.get_ticks()
-                        )
-                elif player_waited:
-                    wait_started_at = pygame.time.get_ticks()
-
-                    if current_act == 1:
-                        game_state.player.act_one_wait_effect_started_at = (
-                            wait_started_at
-                        )
-                        add_log_message(
-                            game_state.combat_log,
-                            "The player waits.",
-                        )
-                    elif current_act == 2:
-                        game_state.player.act_two.wait_effect_started_at = (
-                            wait_started_at
-                        )
-
-                    player_acted = True
-                elif player_tried_to_move:
-                    movement_attempt_started_at = pygame.time.get_ticks()
-                    target_position = (
-                        new_column,
-                        new_row,
-                    )
-                    attempted_direction = (
-                        column_change,
-                        row_change,
-                    )
-
-                    if not can_reach_adjacent_cell(
-                        game_state.floor.map,
-                        (
-                            game_state.floor.player_column,
-                            game_state.floor.player_row,
-                        ),
-                        target_position,
-                        game_state.floor.barriers,
-                        target_must_be_walkable=False,
-                    ):
+                    if act_one_action.movement_blocked:
                         act_two_input_state.cancel_auto_move()
                         continue
-
-                    if current_act == 2:
-                        game_state.player.act_two_movement_started_at = 0
-                        game_state.player.act_two_movement_origin = None
-                        game_state.player.act_two_facing_direction = (
-                            act_two_visual_direction(
-                                attempted_direction
-                            )
+                    player_acted = act_one_action.player_acted
+                elif current_act == 3:
+                    act_three_action = resolve_act_three_player_action(
+                        game_state,
+                        event,
+                        (column_change, row_change),
+                        mage_ability_target,
+                        directional_ability_cast,
+                        rogue_ability_activated,
+                        FIRST_ACT_FINAL_FLOOR,
+                        resolve_oracle_hit_reaction,
+                    )
+                    if act_three_action.movement_blocked:
+                        act_two_input_state.cancel_auto_move()
+                        continue
+                    player_acted = act_three_action.player_acted
+                elif current_act == 2:
+                    act_two_action = resolve_act_two_action_request(
+                        game_state,
+                        event,
+                        (column_change, row_change),
+                        act_two_action_request,
+                        directional_ability_cast,
+                        rogue_ability_activated,
+                        FIRST_ACT_FINAL_FLOOR,
+                        resolve_oracle_hit_reaction,
+                    )
+                    if act_two_action.movement_blocked:
+                        act_two_input_state.cancel_auto_move()
+                        continue
+                    if act_two_action.reset_held_movement:
+                        act_two_input_state.reset_held_movement()
+                    if act_two_action.trader_sound is not None:
+                        act_two_sounds.play_ui_sound(
+                            act_two_action.trader_sound
                         )
-                        game_state.player.act_two_blocked_movement_started_at = (
-                            movement_attempt_started_at
-                        )
-                        game_state.player.act_two_blocked_movement_direction = (
-                            attempted_direction
-                        )
-
-                        action_result = resolve_act_two_cell_action(
-                            game_state,
-                            act_two_targets,
-                            target_position,
-                            attempted_direction,
-                            movement_attempt_started_at,
-                            resolve_oracle_hit_reaction,
-                        )
-
-                        if action_result.reset_held_movement:
-                            act_two_input_state.reset_held_movement()
-
-                        if action_result.trader_sound is not None:
-                            act_two_sounds.play_ui_sound(
-                                action_result.trader_sound
-                            )
-
-                        if action_result.handled:
-                            player_acted = action_result.player_acted
-                        else:
-                            player_acted = try_move_player(
-                                game_state,
-                                new_column,
-                                new_row,
-                                FIRST_ACT_FINAL_FLOOR,
-                                movement_attempt_started_at,
-                            )
-                    elif target_enemy:
-                        if game_state.player.subclass == "warlock":
-                            perform_warlock_attack(
-                                game_state,
-                                target_position,
-                                resolve_oracle_hit_reaction,
-                            )
-                        else:
-                            perform_basic_attack(
-                                game_state,
-                                column_change,
-                                row_change,
-                                resolve_oracle_hit_reaction,
-                            )
-
-                        game_state.player.attack_animation_started_at = (
-                            movement_attempt_started_at
-                        )
-                        player_acted = True
-                    elif target_chest:
-                        player_acted = open_chest(
-                            game_state,
-                            target_chest,
-                            movement_attempt_started_at,
-                        )
-                    elif target_breakable_crate:
-                        if current_act == 1:
-                            player_acted = break_act_one_crate(
-                                game_state,
-                                target_breakable_crate,
-                            )
-                        else:
-                            player_acted = break_crate(
-                                game_state,
-                                target_breakable_crate,
-                            )
-
-                        if player_acted:
-                            game_state.player.attack_animation_started_at = (
-                                movement_attempt_started_at
-                            )
-                    elif target_secret_wall:
-                        player_acted = break_secret_passage(
-                            game_state,
-                            new_column,
-                            new_row,
-                        )
-
-                        if player_acted:
-                            game_state.player.attack_animation_started_at = (
-                                movement_attempt_started_at
-                            )
-                    else:
-                        player_acted = try_move_player(
-                            game_state,
-                            new_column,
-                            new_row,
-                            FIRST_ACT_FINAL_FLOOR,
-                            movement_attempt_started_at,
-                        )
+                    player_acted = act_two_action.player_acted
                 if player_acted and not barrage_resume:
                     game_state.run_stats.turns_taken += 1
                 elif automatic_movement:
@@ -3088,46 +1507,13 @@ def run():
 
                 if player_acted and current_act == 2:
                     action_started_at = pygame.time.get_ticks()
-
-                    game_state.player.familiar_turn_started_at = (
-                        action_started_at
-                    )
-
-                    advance_spike_traps(game_state)
-                    advance_brute_aftershocks(game_state)
-                    update_treasury_trial(game_state)
-
-                    if game_state.player.health > 0:
-                        resolve_enemy_turn(
-                            game_state,
-                            player_position_before_action,
-                            rogue_ability_activated,
-                        )
-
-                    create_brute_aftershocks_from_events(game_state)
-                    advance_fire_zones(game_state)
-                    update_treasury_trial(game_state)
-
-                    enemy_reaction_delay_ms = enemy_reaction_delay(
+                    complete_act_two_player_turn(
                         game_state,
-                        act_two_combat_is_active(game_state),
-                    )
-
-                    present_act_two_turn_events(
-                        game_state,
-                        action_started_at,
-                        enemy_reaction_delay_ms,
-                    )
-
-                    act_two_sounds.play_events(
-                        game_state.events,
-                        game_state.player.player_class,
-                        game_state.floor,
-                    )
-
-                    apply_turn_movement_interruptions(
+                        player_position_before_action,
+                        rogue_ability_activated,
                         act_two_input_state,
-                        game_state,
+                        act_two_sounds,
+                        action_started_at,
                     )
 
                 if player_acted and current_act != 2:
@@ -3172,260 +1558,16 @@ def run():
                         act_two_input_state.cancel_auto_move()
                         act_two_input_state.reset_held_movement()
 
-                    enemy_movement_started_at = (
-                        pygame.time.get_ticks()
-                    )
-                    record_enemy_hit_feedback(
+                    present_turn_feedback(
                         game_state,
-                        enemy_movement_started_at,
-                    )
-                    record_enemy_death_feedback(
-                        game_state,
-                        enemy_movement_started_at,
-                    )
-                    record_player_hit_feedback(
-                        game_state,
-                        enemy_movement_started_at,
-                    )
-                    record_player_death_feedback(
-                        game_state,
-                        enemy_movement_started_at,
-                    )
-                    record_shadow_reflex_feedback(
-                        game_state,
-                        enemy_movement_started_at,
-                    )
-                    if (
-                        current_act == 2
-                        and any(
-                            emitted_event.type is GameEventType.LEVEL_UP
-                            and emitted_event.actor == "hero"
-                            for emitted_event in game_state.events
-                        )
-                    ):
-                        (
-                            game_state.player.act_two.level_up_effect_started_at
-                        ) = enemy_movement_started_at
-                    if current_act == 2 and game_state.player.health <= 0:
-                        remove_enemy_corpses_at_position(
-                            game_state.floor,
-                            (
-                                game_state.floor.player_column,
-                                game_state.floor.player_row,
-                            ),
-                        )
-                    record_familiar_hit_feedback(
-                        game_state,
-                        enemy_movement_started_at,
-                    )
-                    for barrage_shot in (
-                        game_state.player.archer_barrage_shots
-                    ):
-                        if barrage_shot.started_at == 0:
-                            barrage_shot.started_at = (
-                                enemy_movement_started_at
-                            )
-                    moved_enemy_names = {
-                        emitted_event.actor
-                        for emitted_event in game_state.events
-                        if emitted_event.type is GameEventType.MOVE
-                    }
-                    attacked_enemy_names = {
-                        emitted_event.actor
-                        for emitted_event in game_state.events
-                        if emitted_event.type is GameEventType.ATTACK
-                    }
-                    healed_enemy_names = {
-                        emitted_event.actor
-                        for emitted_event in game_state.events
-                        if emitted_event.type is GameEventType.HEAL
-                    }
-                    hero_attack_event = next(
-                        (
-                            emitted_event
-                            for emitted_event in reversed(game_state.events)
-                            if (
-                                emitted_event.type is GameEventType.ATTACK
-                                and emitted_event.actor == "hero"
-                                and emitted_event.positions
-                            )
-                        ),
-                        None,
-                    )
-                    if hero_attack_event is not None:
-                        game_state.player.act_one_attack_target = (
-                            hero_attack_event.positions[0]
-                        )
-                        game_state.player.act_one_attack_was_critical = any(
-                            emitted_event.type is GameEventType.HIT
-                            and emitted_event.actor == "hero"
-                            and emitted_event.data.get("critical", False)
-                            for emitted_event in game_state.events
-                        )
-                    dodge_event = next(
-                        (
-                            emitted_event
-                            for emitted_event in reversed(game_state.events)
-                            if (
-                                emitted_event.type is GameEventType.DODGE
-                                and emitted_event.target == "hero"
-                            )
-                        ),
-                        None,
-                    )
-                    if current_act < 2 and dodge_event is not None:
-                        game_state.player.act_one_dodge_started_at = (
-                            enemy_movement_started_at
-                        )
-                        game_state.player.act_one_dodge_origin = (
-                            dodge_event.origin
-                        )
-                    hero_move_event = next(
-                        (
-                            emitted_event
-                            for emitted_event in reversed(game_state.events)
-                            if (
-                                emitted_event.type is GameEventType.MOVE
-                                and emitted_event.actor == "hero"
-                                and emitted_event.origin is not None
-                            )
-                        ),
-                        None,
-                    )
-                    if current_act < 2 and hero_move_event is not None:
-                        game_state.player.act_one_movement_origin = (
-                            hero_move_event.origin
-                        )
-                        game_state.player.movement_animation_started_at = (
-                            enemy_movement_started_at
-                        )
-                    elif current_act == 2 and hero_move_event is not None:
-                        game_state.player.act_two_movement_started_at = (
-                            enemy_movement_started_at
-                        )
-                        game_state.player.act_two_movement_origin = (
-                            hero_move_event.origin
-                        )
-                        if hero_move_event.destination is not None:
-                            game_state.player.act_two_facing_direction = (
-                                act_two_visual_direction(
-                                    (
-                                        hero_move_event.destination[0]
-                                        - hero_move_event.origin[0],
-                                        hero_move_event.destination[1]
-                                        - hero_move_event.origin[1],
-                                    )
-                                )
-                            )
-                    elif current_act >= 3 and hero_move_event is not None:
-                        game_state.player.movement_origin = (
-                            hero_move_event.origin
-                        )
-                        game_state.player.movement_animation_started_at = (
-                            enemy_movement_started_at
-                        )
-                        mark_movement_step(
-                            act_two_input_state,
-                            enemy_movement_started_at,
-                            profile=movement_profile,
-                        )
-                    for enemy in game_state.floor["enemies"]:
-                        if enemy.name in moved_enemy_names:
-                            enemy.movement_animation_started_at = (
-                                enemy_movement_started_at
-                            )
-                            movement_event = next(
-                                (
-                                    emitted_event
-                                    for emitted_event in reversed(
-                                        game_state.events
-                                    )
-                                    if (
-                                        emitted_event.type
-                                        is GameEventType.MOVE
-                                        and emitted_event.actor == enemy.name
-                                        and emitted_event.origin is not None
-                                    )
-                                ),
-                                None,
-                            )
-                            if movement_event is not None:
-                                enemy.movement_origin = movement_event.origin
-                                enemy.movement_animation_kind = (
-                                    movement_event.data.get("kind")
-                                )
-                                if (
-                                    enemy.movement_animation_kind
-                                    == "arcane_burst_knockback"
-                                ):
-                                    enemy.movement_animation_started_at += 220
-                        if (
-                            enemy.name in attacked_enemy_names
-                            or enemy.name in healed_enemy_names
-                        ):
-                            enemy.attack_animation_started_at = (
-                                enemy_movement_started_at
-                            )
-                        if enemy.name in attacked_enemy_names:
-                            attack_event = next(
-                                (
-                                    emitted_event
-                                    for emitted_event in reversed(
-                                        game_state.events
-                                    )
-                                    if (
-                                        emitted_event.type
-                                        is GameEventType.ATTACK
-                                        and emitted_event.actor
-                                        == enemy.name
-                                    )
-                                ),
-                                None,
-                            )
-                            if attack_event is not None:
-                                enemy.attack_effect_mode = (
-                                    attack_event.data.get("mode")
-                                )
-                                enemy.attack_effect_positions = (
-                                    attack_event.positions
-                                )
-                        elif enemy.name in healed_enemy_names:
-                            enemy.attack_effect_mode = "heal"
-                            enemy.attack_effect_positions = ()
-                        if (
-                            enemy.type == "warden"
-                            and enemy.second_phase_announced
-                            and enemy.phase_transition_started_at < 0
-                        ):
-                            enemy.phase_transition_started_at = (
-                                enemy_movement_started_at
-                            )
-                    apply_movement_interruptions(
-                        act_two_input_state,
-                        game_state,
+                        current_act,
                         pygame.time.get_ticks(),
+                        act_two_input_state,
+                        movement_profile,
+                        act_one_sounds,
+                        act_two_sounds,
+                        act_three_sounds,
                     )
-
-                    if current_act == 1:
-                        act_one_sounds.play_events(game_state.events)
-                    elif current_act == 2:
-                        if any(
-                            emitted_event.target == "hero"
-                            and emitted_event.type
-                            in (GameEventType.HIT, GameEventType.DODGE)
-                            for emitted_event in game_state.events
-                        ):
-                            act_two_input_state.cancel_auto_move()
-                        act_two_sounds.play_events(
-                            game_state.events,
-                            game_state.player.player_class,
-                            game_state.floor,
-                        )
-                    elif current_act == 3:
-                        act_three_sounds.play_events(
-                            game_state.events,
-                            game_state.player,
-                        )
         run_session.invalidate_finished(
             game_state,
             app_runtime,
@@ -3454,24 +1596,16 @@ def run():
 
         current_time = pygame.time.get_ticks()
 
-        act_one_cutscenes_enabled = (
+        act_one_scenes_enabled = (
             app_runtime.game_started
             and not app_runtime.menu_open
             and not loading.completed
         )
-        update_act_one_intro(
+        advance_act_one_scenes(
             game_state,
             current_time,
-            enabled=act_one_cutscenes_enabled,
+            enabled=act_one_scenes_enabled,
         )
-        update_warden_intro(
-            game_state,
-            current_time,
-            enabled=act_one_cutscenes_enabled,
-        )
-
-        if app_runtime.game_started and not app_runtime.menu_open:
-            begin_act_one_death(game_state, current_time)
 
         advance_floor_transition(game_state, current_time)
 
@@ -3806,49 +1940,17 @@ def run():
                     game_state.combat_log,
                     f"Act II music unavailable: {audio_error}", category="system",
                 )
-        if current_act == 1:
-            update_act_one_visibility(game_state.floor)
+        refresh_act_one_visibility(game_state)
 
         if current_act == 2:
-            update_oracle_intro(
-                game_state,
-                act_two_camera,
-                current_time,
-            )
-            update_oracle_phase_transition(
+            advance_oracle_runtime(
                 game_state,
                 act_two_camera,
                 current_time,
                 act_two_sounds,
                 menu_state.music_volume,
+                act_two_input_state,
             )
-            update_oracle_phase_two(
-                game_state,
-                current_time,
-                act_two_sounds,
-            )
-            update_oracle_death(
-                game_state,
-                act_two_camera,
-                current_time,
-                act_two_sounds,
-                menu_state.music_volume,
-            )
-
-            if oracle_phase_transition_active(game_state.floor):
-                oracle_interrupted_player = False
-            else:
-                oracle_interrupted_player = update_oracle_combat(
-                    game_state,
-                    current_time,
-                    act_two_sounds,
-                )
-
-            if oracle_interrupted_player:
-                act_two_input_state.cancel_auto_move()
-
-            update_oracle_gate(game_state.floor, current_time)
-            update_act_two_visibility(game_state.floor)
         if (
             app_runtime.progress_tracking_enabled
             and current_act > menu_progress.highest_act_reached
@@ -3858,1388 +1960,135 @@ def run():
                 current_act,
             )
             menu_state.menu_theme = menu_progress.menu_theme
-        active_status_font = (
-            act_two_fonts["status"]
-            if current_act >= 2
-            else font
+        frame_mouse_position = window_to_game_position(
+            window_state.screen,
+            pygame.mouse.get_pos(),
         )
-        active_heading_font = (
-            act_two_fonts["sidebar_heading"]
-            if current_act >= 2
-            else act_one_fonts["hud"]
-        )
-        active_text_font = (
-            act_two_fonts["log"]
-            if current_act == 2
-            else act_two_fonts["sidebar_text"]
-            if current_act >= 3
-            else act_one_fonts["hud_small"]
-        )
-        active_controls_font = (
-            act_two_fonts["sidebar_controls"]
-            if current_act >= 2
-            else act_one_fonts["controls"]
-        )
-        active_ability_font = (
-            act_two_fonts["ability_text"]
-            if current_act == 2
-            else active_text_font
-        )
-        game_surface.fill(BACKGROUND_COLOR)
-        map_navigation.update(game_state, act_two_camera)
 
         if current_act == 1:
-            update_act_one_camera(
+            update_act_one_view(
                 act_one_camera,
-                game_state.floor["map"],
-                game_state.floor["player_column"],
-                game_state.floor["player_row"],
-                game_state.floor_index,
-                current_time,
-                focus_offset_y=act_one_intro_camera_offset(
-                    getattr(game_state, "act_one_intro", None)
-                ),
-                focus_position=warden_intro_camera_focus(
-                    game_state.floor
-                ),
-            )
-        if current_act == 2:
-            if not oracle_cutscene_active(game_state.floor):
-                update_act_two_camera(
-                    act_two_camera,
-                    game_state.floor["map"],
-                    game_state.floor["player_column"],
-                    game_state.floor["player_row"],
-                    game_state.floor_index,
-                    current_time,
-                )
-
-            world_size = act_two_world_surface_size(
-                game_state.floor["map"]
-            )
-            if (
-                act_two_world_surface is None
-                or act_two_world_surface.get_size() != world_size
-            ):
-                act_two_world_surface = pygame.Surface(world_size)
-                act_two_map_surface = None
-                act_two_map_cache_key = None
-            floor_decor_excluded_positions = {
-                (
-                    game_state.floor.stairs_column,
-                    game_state.floor.stairs_row,
-                ),
-                *(
-                    (chest.column, chest.row)
-                    for chest in game_state.floor.chests
-                ),
-                *(
-                    (crate.column, crate.row)
-                    for crate in game_state.floor.breakable_crates
-                ),
-                *(
-                    (potion.column, potion.row)
-                    for potion in game_state.floor.potions
-                ),
-                *(
-                    (trap.column, trap.row)
-                    for trap in game_state.floor.spike_traps
-                ),
-                *game_state.floor.boss_columns,
-                *game_state.floor.boss_emitters,
-            }
-            if game_state.floor.boss_door is not None:
-                floor_decor_excluded_positions.add(
-                    game_state.floor.boss_door
-                )
-            if game_state.floor.upgrade_altar is not None:
-                floor_decor_excluded_positions.add(
-                    game_state.floor.upgrade_altar
-                )
-            if game_state.floor.bloody_altar is not None:
-                floor_decor_excluded_positions.add(
-                    (
-                        game_state.floor.bloody_altar.column,
-                        game_state.floor.bloody_altar.row,
-                    )
-                )
-            if game_state.floor.treasury_room is not None:
-                treasury_room = game_state.floor.treasury_room
-                floor_decor_excluded_positions.update(
-                    {
-                        treasury_room.door_position,
-                        treasury_room.chest_position,
-                        *treasury_room.statue_positions,
-                    }
-                )
-            if game_state.floor.rune_room is not None:
-                rune_room = game_state.floor.rune_room
-                floor_decor_excluded_positions.update(
-                    {
-                        rune_room.door_position,
-                        rune_room.pedestal_position,
-                        *rune_room.floor_rune_positions,
-                    }
-                )
-            floor_decor_excluded_positions = tuple(
-                sorted(floor_decor_excluded_positions)
-            )
-            map_cache_key = (
-                game_state.floor_index,
-                game_state.floor.visual_seed,
-                tuple(game_state.floor["map"]),
-                floor_decor_excluded_positions,
-            )
-            if act_two_map_cache_key != map_cache_key:
-                act_two_map_surface = pygame.Surface(world_size)
-                act_two_map_surface.fill(BACKGROUND_COLOR)
-
-                visual_map = game_state.floor["map"]
-                if game_state.floor.has_oracle_gate:
-                    visual_map = [
-                        row.replace("C", ".")
-                        for row in visual_map
-                    ]
-
-                draw_dungeon(
-                    act_two_map_surface,
-                    visual_map,
-                    current_act,
-                    act_two_sprites,
-                    current_act_floor,
-                    game_state.floor.visual_seed,
-                    floor_decor_excluded_positions,
-                )
-                act_two_map_cache_key = map_cache_key
-            act_two_world_surface.fill(BACKGROUND_COLOR)
-            act_two_world_surface.blit(act_two_map_surface, (0, 0))
-            world_target = act_two_world_surface
-        else:
-            world_target = (
-                act_one_world_surface
-                if current_act == 1
-                else game_surface
-            )
-            world_target.fill(BACKGROUND_COLOR)
-            draw_dungeon(
-                world_target,
-                game_state.floor["map"],
-                current_act,
-                act_two_sprites,
-                current_act_floor,
-                game_state.floor.visual_seed,
-            )
-        draw_act_one_atmosphere(
-            world_target,
-            current_act,
-            game_state.floor["player_column"],
-            game_state.floor["player_row"],
-            game_state.floor["map"],
-            current_act_floor,
-            game_state.floor.visual_seed,
-            current_time,
-        )
-        if current_act == 1:
-            draw_tutorial_floor_labels(
-                world_target,
-                game_state,
-            )
-            draw_warden_braziers(
-                world_target,
-                game_state.floor,
-                current_time,
-            )
-        if current_act == 2:
-            if not game_state.floor.has_oracle_gate:
-                draw_act_two_atmosphere(
-                    world_target,
-                    game_state.floor["player_column"],
-                    game_state.floor["player_row"],
-                    game_state.floor["map"],
-                    current_act_floor,
-                    game_state.floor.visual_seed,
-                    current_time,
-                )
-
-            draw_oracle_braziers(
-                world_target,
-                game_state.floor,
-                current_time,
-            )
-            draw_oracle_pillars(
-                world_target,
-                game_state.floor,
-                current_time,
-            )
-            draw_act_two_spike_traps(
-                world_target,
-                game_state.floor.spike_traps,
-                act_two_sprites,
-                game_state.floor.visible_cells,
-                current_time,
-            )
-            draw_brute_aftershocks(
-                world_target,
-                game_state.floor,
-                current_time,
-            )
-            draw_act_two_treasury(
-                world_target,
-                game_state.floor.treasury_room,
-                act_two_sprites,
-                game_state.floor.visible_cells,
-                current_time,
-            )
-            draw_act_two_rune_room(
-                world_target,
-                game_state.floor.rune_room,
-                act_two_sprites,
-                game_state.floor.visible_cells,
-                game_state.floor.explored_cells,
-                current_time,
-            )
-            for trader in (
-                    game_state.floor.trader,
-                    game_state.floor.quest_trader,
-            ):
-                draw_act_two_trader(
-                    world_target,
-                    trader,
-                    act_two_sprites,
-                    game_state.floor.visible_cells,
-                    current_time,
-                )
-            draw_bloody_altar_object(
-                world_target,
-                game_state.floor.bloody_altar,
-                act_two_sprites,
-                game_state.floor.visible_cells,
-                current_time,
-            )
-            draw_fire_zones(
-                world_target,
-                game_state,
-                act_two_sprites,
-                current_time,
-            )
-        if current_act != 2:
-            draw_map_frame(
-                world_target,
-                current_act,
-            )
-        act_two_ability_effect_duration = (
-            620
-            if game_state.player.player_class == "mage"
-            else (
-                760
-                if game_state.player.selected_rune_id
-                == "rune_of_aftershock"
-                else 460
-            )
-        )
-        act_two_ability_effect_elapsed = (
-            current_time
-            - game_state.player.act_two.ability_effect_started_at
-        )
-        act_two_ability_effect_active = (
-            current_act == 2
-            and game_state.player.act_two.ability_effect_started_at > 0
-            and game_state.player.act_two.ability_effect_started_at
-            == game_state.player.attack_animation_started_at
-            and 0
-            <= act_two_ability_effect_elapsed
-            < act_two_ability_effect_duration
-        )
-        draw_player_attack_markers(
-            world_target,
-            (
-                []
-                if current_act == 2
-                else game_state.player_attack_targets
-            ),
-        )
-        if current_act == 2:
-            mage_preview_mouse_position = window_to_game_position(
-                window_state.screen,
-                pygame.mouse.get_pos(),
-            )
-            mage_preview_target = (
-                act_two_screen_to_cell(
-                    mage_preview_mouse_position,
-                    act_two_camera,
-                )
-                if mage_preview_mouse_position is not None
-                else None
-            )
-            resonance_cursor_active = (
-                game_state.player.health > 0
-                and not game_state.class_selection_open
-                and not game_state.upgrade_screen_open
-                and not game_state.trade_screen_open
-                and not game_state.rune_selection_open
-                and not game_state.bloody_altar_open
-                and not game_state.act_two_stats_open
-                and not game_state.act_two_journal_open
-                and game_state.floor_transition_started_at < 0
-                and not oracle_cutscene_active(game_state.floor)
-                and act_two_input_state.dragged_consumable_slot is None
-                and not game_state.player.act_two.fire_bomb_aiming
-                and game_state.player.act_two.scroll_aiming_kind is None
-                and get_mage_resonance_target(
-                    game_state,
-                    mage_preview_target,
-                ) is not None
-            )
-            if (
-                resonance_cursor_active
-                != act_two_input_state.resonance_cursor_active
-            ):
-                set_warlock_staff_cursor(resonance_cursor_active)
-                act_two_input_state.resonance_cursor_active = (
-                    resonance_cursor_active
-                )
-
-            draw_act_two_ability_preview(
-                world_target,
-                game_state,
-                current_time,
-                mage_preview_target,
-            )
-        draw_attack_markers(
-            world_target,
-            game_state.floor["enemies"],
-            current_act,
-            current_time,
-            (
-                game_state.floor.visible_cells
-                if current_act == 2
-                else None
-            ),
-            (
-                (
-                    game_state.floor["player_column"],
-                    game_state.floor["player_row"],
-                )
-                if current_act == 2
-                else None
-            ),
-        )
-        draw_act_one_boss_effects(
-            world_target,
-            game_state.floor["enemies"],
-            current_act,
-            current_time,
-            active_status_font,
-        )
-        if (
-            game_state.floor["boss_door"] is not None
-            and not game_state.floor.has_oracle_gate
-        ):
-            living_boss_group = any(
-                enemy["health"] > 0 and enemy["boss_group"]
-                for enemy in game_state.floor["enemies"]
-            )
-            living_boss_guards = any(
-                enemy["health"] > 0 and not enemy["boss_group"]
-                for enemy in game_state.floor["enemies"]
-            )
-            boss_door_is_open = not living_boss_guards
-
-            if game_state.floor[
-                "seal_boss_door_during_fight"
-            ] and game_state.floor["boss_fight_started"]:
-                boss_door_is_open = (
-                    not living_boss_group
-                )
-
-            draw_boss_door(
-                world_target,
-                game_state.floor["boss_door"][0],
-                game_state.floor["boss_door"][1],
-                boss_door_is_open,
-            )
-        if game_state.floor.passages:
-            living_enemies_remain = any(
-                enemy["health"] > 0
-                for enemy in game_state.floor["enemies"]
-            )
-            oracle_is_alive = any(
-                enemy["type"] == "oracle"
-                and enemy["health"] > 0
-                for enemy in game_state.floor["enemies"]
-            )
-
-            for passage in game_state.floor.passages:
-                if current_act == 2 and not passage.discovered:
-                    continue
-
-                if (
-                        game_state.floor.has_oracle_gate
-                        and passage.passage_id == "exit"
-                        and oracle_is_alive
-                ):
-                    continue
-
-                passage_is_open = (
-                        not passage.requires_clear
-                        or game_state.player.player_class is not None
-                        or not living_enemies_remain
-                )
-                passage_is_return = (
-                        current_act == 2
-                        and passage.passage_id == "entrance"
-                )
-
-                draw_passage(
-                    world_target,
-                    passage.wall_position[0],
-                    passage.wall_position[1],
-                    passage_is_open,
-                    current_act,
-                    act_two_sprites,
-                    is_return=passage_is_return,
-                )
-        if current_act == 1:
-            for crate in game_state.floor.breakable_crates:
-                draw_act_one_crate(
-                    world_target,
-                    crate,
-                )
-        for potion in game_state.floor["potions"]:
-            if current_act == 2:
-                continue
-            draw_potion(
-                world_target,
-                potion["column"],
-                potion["row"],
-                current_act,
-                (
-                    act_one_gameplay_assets
-                    if current_act == 1
-                    else act_two_sprites
-                ),
-            )
-        if current_act == 2:
-            for crate in game_state.floor.breakable_crates:
-                crate_is_visible = position_is_visible(
-                    game_state.floor,
-                    crate.column,
-                    crate.row,
-                )
-                remembered_crate = (
-                    {
-                        "column": crate.column,
-                        "row": crate.row,
-                        "variant": crate.variant,
-                        "is_broken": crate.is_broken,
-                        "loot_kind": crate.loot_kind,
-                        "loot_available": crate.loot_available,
-                    }
-                    if crate_is_visible
-                    else game_state.floor.act_two_remembered_crates.get(
-                        (crate.column, crate.row)
-                    )
-                )
-                if remembered_crate is None:
-                    continue
-                draw_breakable_crate(
-                    world_target,
-                    remembered_crate,
-                    act_two_sprites,
-                )
-                if (
-                    remembered_crate["loot_available"]
-                    and not crate_is_visible
-                ):
-                    draw_loot = (
-                        draw_potion
-                        if remembered_crate["loot_kind"] == "potion"
-                        else draw_coin
-                    )
-                    draw_loot(
-                        world_target,
-                        remembered_crate["column"],
-                        remembered_crate["row"],
-                        current_act,
-                        act_two_sprites,
-                    )
-
-        if current_act == 2:
-            corpse_enemy_types = {
-                "goblin",
-                "mimic",
-                "archer",
-                "brute",
-                "sentinel",
-                "priest",
-                "priest_ghost",
-            }
-
-            for enemy in game_state.floor.enemies:
-                if (
-                        enemy.type in corpse_enemy_types
-                        and enemy.health <= 0
-                        and position_is_visible(
-                    game_state.floor,
-                    enemy.column,
-                    enemy.row,
-                )
-                ):
-                    draw_enemy(
-                        world_target,
-                        enemy,
-                        current_act,
-                        act_two_sprites,
-                        current_time,
-                        active_status_font,
-                    )
-        for chest in game_state.floor["chests"]:
-            remembered_chest = chest
-            if current_act == 2:
-                chest_is_visible = position_is_visible(
-                    game_state.floor,
-                    chest["column"],
-                    chest["row"],
-                )
-                if not chest_is_visible:
-                    remembered_chest = (
-                        game_state.floor.act_two_remembered_chests.get(
-                            (chest["column"], chest["row"])
-                        )
-                    )
-                    if remembered_chest is None:
-                        continue
-            draw_chest(
-                world_target,
-                remembered_chest,
-                current_act,
-                act_two_sprites,
-                current_time,
-            )
-            if (
-                remembered_chest["loot_available"]
-                and (
-                    current_act != 2
-                    or not chest_is_visible
-                )
-            ):
-                chest_loot_kind = remembered_chest.get("contains")
-                if chest_loot_kind == "potion":
-                    draw_potion(
-                        world_target,
-                        remembered_chest["column"],
-                        remembered_chest["row"],
-                        current_act,
-                        act_two_sprites,
-                    )
-                elif chest_loot_kind == FIRE_BOMB:
-                    draw_fire_bomb(
-                        world_target,
-                        remembered_chest["column"],
-                        remembered_chest["row"],
-                        current_act,
-                        act_two_sprites,
-                    )
-                elif chest_loot_kind in SCROLLS:
-                    draw_scroll(
-                        world_target,
-                        remembered_chest["column"],
-                        remembered_chest["row"],
-                        chest_loot_kind,
-                        current_act,
-                        act_two_sprites,
-                    )
-                elif (
-                        chest_loot_kind == "gold"
-                        and current_act == 2
-                        and remembered_chest.get(
-                    "requires_key",
-                    True,
-                )
-                ):
-                    draw_coin_pile(
-                        world_target,
-                        remembered_chest["column"],
-                        remembered_chest["row"],
-                        act_two_sprites,
-                    )
-                else:
-                    draw_coin(
-                        world_target,
-                        remembered_chest["column"],
-                        remembered_chest["row"],
-                        current_act,
-                        act_two_sprites,
-                    )
-        if current_act == 2:
-            draw_act_one_revisit_corpses(
-                world_target,
-                game_state.floor.act_one_revisit,
-                game_state.floor.visible_cells,
-                act_two_sprites,
-            )
-        for dropped_gold in game_state.floor.dropped_gold:
-            if current_act == 2:
-                continue
-            draw_coin(
-                world_target,
-                dropped_gold[0],
-                dropped_gold[1],
-                current_act,
-                act_two_sprites,
-            )
-        for dropped_key in game_state.floor["dropped_keys"]:
-            if current_act == 2:
-                continue
-            draw_key(
-                world_target,
-                dropped_key[0],
-                dropped_key[1],
-                current_act,
-                act_two_sprites,
-            )
-        if current_act == 2:
-            draw_ground_items(
-                world_target,
-                game_state,
-                act_two_sprites,
-                current_time,
-            )
-            draw_oracle_blackfire(
-                world_target,
-                game_state.floor,
-                current_time,
-            )
-
-        draw_player(
-            world_target,
-            game_state.floor["player_column"],
-            game_state.floor["player_row"],
-            game_state.player.health,
-            game_state.player.max_health,
-            game_state.player.player_class,
-            current_act,
-            act_two_sprites,
-            game_state.player.invisibility_turns,
-            current_time,
-            game_state.player.potion_effect_started_at,
-            game_state.player.hit_animation_started_at,
-            game_state.player.hit_origin,
-            game_state.player.attack_animation_started_at,
-            game_state.player.act_one_attack_target,
-            (
-                game_state.player.act_two_movement_started_at
-                if current_act == 2
-                else game_state.player.movement_animation_started_at
-            ),
-            (
-                game_state.player.act_two_movement_origin
-                if current_act == 2
-                else game_state.player.act_one_movement_origin
-            ),
-            game_state.player.act_one_dodge_started_at,
-            game_state.player.act_one_dodge_origin,
-            game_state.player.death_animation_started_at,
-            game_state.player.hit_damage,
-            active_status_font,
-            game_state.player.act_two_facing_direction,
-            game_state.player.act_two_blocked_movement_started_at,
-            game_state.player.act_two_blocked_movement_direction,
-            (
-                game_state.player.act_two.level_up_effect_started_at
-                if current_act == 2
-                else -1
-            ),
-            (
-                game_state.player.act_two.stoneflesh_hits
-                if current_act == 2
-                else 0
-            ),
-            (
-                game_state.player.act_two.stoneflesh_effect_started_at
-                if current_act == 2
-                else -1
-            ),
-            (
-                game_state.player.act_two.dodge_effect_started_at
-                if current_act == 2
-                else -1
-            ),
-            act_one_head_lift_progress=act_one_intro_head_lift(
-                getattr(game_state, "act_one_intro", None)
-            ),
-            act_one_knife_visible=act_one_intro_player_has_knife(
-                getattr(game_state, "act_one_intro", None)
-            ),
-            act_one_knife_pickup_progress=act_one_intro_knife_pickup(
-                getattr(game_state, "act_one_intro", None)
-            ),
-            act_one_hud_opacity=min(
-                act_one_intro_hud_opacity(
-                    getattr(
-                        game_state,
-                        "act_one_intro",
-                        None,
-                    ),
-                    current_time,
-                ),
-                warden_intro_hud_opacity(
-                    game_state.floor,
-                    current_time,
-                ),
-            ),
-            control_player=game_state.player,
-        )
-        if current_act == 1 and game_state.player.health > 0:
-            draw_act_one_wait_indicator(
-                world_target,
-                (
-                    MAP_OFFSET_X
-                    + game_state.floor.player_column
-                    * TILE_SIZE
-                    + TILE_SIZE // 2
-                ),
-                (
-                    MAP_OFFSET_Y
-                    + game_state.floor.player_row
-                    * TILE_SIZE
-                    + TILE_SIZE // 2
-                ),
-                current_time,
-                game_state.player.act_one_wait_effect_started_at,
-            )
-        if current_act == 1 and game_state.floor_index == 0:
-            draw_act_one_intro_world(
-                world_target,
-                getattr(game_state, "act_one_intro", None),
-            )
-        if current_act == 2 and game_state.player.health > 0:
-            draw_impact_block_effect(
-                world_target,
-                game_state.player,
-                (
-                    MAP_OFFSET_X
-                    + game_state.floor.player_column * TILE_SIZE
-                    + TILE_SIZE // 2,
-                    MAP_OFFSET_Y
-                    + game_state.floor.player_row * TILE_SIZE
-                    + TILE_SIZE // 2,
-                ),
-                current_time,
-                TILE_SIZE,
-            )
-            draw_act_two_wait_indicator(
-                world_target,
-                game_state.floor.player_column,
-                game_state.floor.player_row,
-                current_time,
-                game_state.player.act_two.wait_effect_started_at,
-            )
-        if current_act == 1:
-            draw_warden_intro_world(
-                world_target,
-                game_state.floor,
-                current_time,
-            )
-
-        for enemy in game_state.floor["enemies"]:
-            if (
-                current_act == 1
-                and not warden_intro_enemy_visible(
-                    game_state.floor,
-                    enemy,
-                )
-            ):
-                continue
-
-            if (
-                current_act == 2
-                and enemy.type == "oracle_pillar"
-            ):
-                continue
-
-            if current_act == 2 and enemy.health <= 0:
-                continue
-
-            if (
-                current_act == 1
-                and not any(
-                    act_one_position_is_visible(
-                        game_state.floor,
-                        position[0],
-                        position[1],
-                    )
-                    for position in get_enemy_occupied_positions(enemy)
-                )
-            ):
-                continue
-
-            if (
-                current_act == 2
-                and not any(
-                    position in game_state.floor.visible_cells
-                    for position in get_enemy_occupied_positions(enemy)
-                )
-            ):
-                continue
-            recent_act_one_hit = (
-                current_act < 2
-                and enemy.hit_animation_started_at >= 0
-                and 0
-                <= current_time - enemy.hit_animation_started_at
-                < 380
-            )
-            has_act_one_death_effect = (
-                current_act < 2
-                and enemy.death_animation_started_at >= 0
-            )
-            if (
-                enemy["health"] > 0
-                or recent_act_one_hit
-                or has_act_one_death_effect
-            ):
-                draw_enemy(
-                    world_target,
-                    enemy,
-                    current_act,
-                    act_two_sprites,
-                    current_time,
-                    active_status_font,
-                )
-        if current_act == 2:
-            draw_attack_markers(
-                world_target,
-                game_state.floor["enemies"],
-                current_act,
-                current_time,
-                game_state.floor.visible_cells,
-                (
-                    game_state.floor["player_column"],
-                    game_state.floor["player_row"],
-                ),
-                foreground=True,
-            )
-        draw_act_one_player_attack_effect(
-            world_target,
-            current_act,
-            game_state.floor["player_column"],
-            game_state.floor["player_row"],
-            game_state.player.act_one_attack_target,
-            current_time,
-            game_state.player.attack_animation_started_at,
-            game_state.player.act_one_attack_was_critical,
-        )
-        if current_act == 2:
-            mage_ability_effect_active = (
-                game_state.player.player_class == "mage"
-                and act_two_ability_effect_active
-            )
-            draw_act_two_player_attack_effect(
-                world_target,
-                game_state.floor["player_column"],
-                game_state.floor["player_row"],
-                (
-                    None
-                    if mage_ability_effect_active
-                    else game_state.player.act_one_attack_target
-                ),
-                game_state.player.player_class,
-                current_time,
-                game_state.player.attack_animation_started_at,
-                game_state.player.act_one_attack_was_critical,
-            )
-            draw_act_two_power_cleave_effect(
-                world_target,
                 game_state,
                 current_time,
             )
-            draw_act_two_arcane_burst_effect(
-                world_target,
-                game_state,
-                current_time,
-            )
-            draw_scroll_effect(
-                world_target,
-                game_state,
-                current_time,
-            )
-        draw_act_one_pickup_effect(
-            world_target,
-            current_act,
-            game_state.player.act_one_pickup_kind,
-            game_state.player.act_one_pickup_origin,
-            current_time,
-            game_state.player.act_one_pickup_started_at,
-        )
-        if current_act == 2:
-            draw_act_two_pickup_effect(
-                world_target,
-                act_two_sprites,
-                game_state.player.act_two_pickup_kind,
-                game_state.player.act_two_pickup_origin,
-                current_time,
-                game_state.player.act_two_pickup_started_at,
-            )
-        if current_act == 2:
-            draw_oracle_projectiles(
-                world_target,
-                [
-                    projectile
-                    for projectile in game_state.floor["projectiles"]
-                    if position_is_visible(
-                        game_state.floor,
-                        projectile["column"],
-                        projectile["row"],
-                    )
-                ],
-                act_two_sprites,
-            )
-            draw_fire_bomb_flight(
-                world_target,
-                game_state,
-                act_two_sprites,
-                current_time,
-            )
-            fire_bomb_mouse_position = window_to_game_position(
-                window_state.screen,
-                pygame.mouse.get_pos(),
-            )
-            fire_bomb_target = (
-                act_two_screen_to_cell(
-                    fire_bomb_mouse_position,
-                    act_two_camera,
-                )
-                if fire_bomb_mouse_position is not None
-                else None
-            )
-            draw_fire_bomb_targeting(
-                world_target,
-                game_state,
-                fire_bomb_target,
-            )
-            draw_oracle_lighting(
-                world_target,
-                game_state.floor,
-                current_time,
-            )
-            draw_oracle_attack_fx(
-                world_target,
-                game_state.floor,
-                current_time,
-            )
-            draw_oracle_phase_two_fx(
-                world_target,
-                game_state.floor,
-                current_time,
-            )
-            draw_oracle_death_fx(
-                world_target,
-                game_state.floor,
-                current_time,
-            )
-            draw_act_two_fog_of_war(
-                world_target,
-                current_act,
-                game_state.floor,
-            )
-            draw_oracle_gate(
-                world_target,
-                game_state.floor,
-                current_time,
-            )
-            draw_act_two_camera_view(
-                game_surface,
-                world_target,
-                act_two_camera,
-                game_state.floor,
-            )
-            draw_pickup_hint(
-                game_surface,
-                game_state,
-                ground_item_window,
-                act_two_camera,
-                act_two_fonts["pickup_hint"],
-                current_time,
-                ground_item_input_available(game_state),
-            )
-        elif current_act == 1:
-            draw_act_one_fog_of_war(
-                world_target,
-                current_act,
-                game_state.floor,
-                current_time,
-                game_state.player.movement_animation_started_at,
-                game_state.player.act_one_movement_origin,
-            )
-            draw_act_one_camera_view(
+            draw_act_one_gameplay(
                 game_surface,
                 act_one_world_surface,
                 act_one_camera,
-            )
-        oracle_world_frame = (
-            game_surface.copy()
-            if oracle_cutscene_active(game_state.floor)
-            else None
-        )
-
-        if current_act == 1:
-            draw_act_one_hud(
-                game_surface,
                 game_state,
-                active_heading_font,
-                active_text_font,
-                active_status_font,
+                act_one_fonts,
                 act_one_gameplay_assets,
+                act_two_sprites,
                 current_time,
+                current_act_floor,
+                frame_mouse_position,
             )
-        else:
-            draw_status(
-                game_surface,
-                active_status_font,
-                game_state.floor_index,
-                game_state.player.health,
-                game_state.floor["enemies"],
-                game_state.game_won,
-            )
-
-        if current_act == 2:
-            draw_oracle_ui(
-                game_surface,
-                game_state.floor,
-                oracle_ui_layout,
-                oracle_ui_assets,
-            )
-            draw_act_two_player_feedback_overlay(
+            draw_frame_overlays(
                 game_surface,
                 game_state,
+                current_act,
+                current_time,
+                act_one_fonts,
                 act_two_fonts,
+                act_three_fonts,
                 act_two_sprites,
-                current_time,
-                act_two_camera,
+                act_three_transition_assets,
+                cutscene_skip,
+                dev_console,
+                frame_mouse_position,
             )
+            present_game(window_state.screen, game_surface)
+            clock.tick(FPS)
+            continue
 
-        if current_act == 2:
-            preview_player = get_act_two_attribute_preview(
-                game_state.player,
-            )
-            (
-                displayed_damage_minimum,
-                displayed_damage_maximum,
-            ) = basic_attack_damage_range(preview_player)
-            draw_act_two_sidebar(
-                game_surface,
-                active_heading_font,
-                active_text_font,
-                active_controls_font,
-                active_ability_font,
-                game_state.combat_log,
-                preview_player.health,
-                preview_player.max_health,
-                displayed_damage_minimum,
-                displayed_damage_maximum,
-                preview_player.crit_chance,
-                preview_player.critical_damage_multiplier,
-                preview_player.dodge_chance,
-                game_state.player.attribute_ranks,
-                game_state.player.act_two.pending_attribute_upgrades,
-                get_act_two_consumable_slots(game_state.player),
-                game_state.player.gold_count,
-                game_state.player.player_class,
-                game_state.player.selected_rune_id,
-                game_state.player.level,
-                game_state.player.experience,
-                game_state.player.ability_kill_charge,
-                ability_charge_required(game_state.player),
-                game_state.player.attribute_points,
-                game_state.act_two_stats_open,
-                game_state.act_two_journal_open,
-                game_state.act_two_journal_scroll,
-                window_to_game_position(
-                    window_state.screen,
-                    pygame.mouse.get_pos(),
-                ),
-                act_two_sprites,
-                act_two_hud_layout,
-                game_state.player.invisibility_turns,
-                game_state.player.act_two.stoneflesh_hits,
-                game_state.player.act_two.bloody_pact_id,
-                dragged_consumable_slot=(
-                    act_two_input_state.dragged_consumable_slot
-                ),
-            )
-            map_navigation.draw(
-                game_surface,
-                game_state,
-                window_to_game_position(
-                    window_state.screen,
-                    pygame.mouse.get_pos(),
-                ),
-                enabled=continuous_movement_available,
-            )
-            if game_state.rune_selection_open:
-                draw_rune_selection(
-                    game_surface,
-                    game_state,
-                    act_two_fonts,
-                    act_two_sprites,
-                    window_to_game_position(
-                        window_state.screen,
-                        pygame.mouse.get_pos(),
-                    ),
-                )
-            if game_state.trade_screen_open:
-                draw_act_two_trade_window(
-                    game_surface,
-                    act_two_sprites,
-                    act_two_trade_layout,
-                    act_two_fonts,
-                    window_to_game_position(
-                        window_state.screen,
-                        pygame.mouse.get_pos(),
-                    ),
-                )
-            if game_state.bloody_altar_open:
-                draw_bloody_altar_window(
-                    game_surface,
-                    game_state,
-                    act_two_sprites,
-                    bloody_altar_layout,
-                    window_to_game_position(
-                        window_state.screen,
-                        pygame.mouse.get_pos(),
-                    ),
-                )
         if current_act >= 3:
+            game_surface.fill(BACKGROUND_COLOR)
+            map_navigation.update(game_state, act_two_camera)
             draw_act_three_gameplay(
                 game_surface,
                 game_state,
                 act_three_fonts,
                 act_three_gameplay_assets,
                 current_time,
-                window_to_game_position(
-                    window_state.screen,
-                    pygame.mouse.get_pos(),
-                ),
+                frame_mouse_position,
             )
             map_navigation.draw(
                 game_surface,
                 game_state,
-                window_to_game_position(
-                    window_state.screen,
-                    pygame.mouse.get_pos(),
-                ),
+                frame_mouse_position,
                 enabled=continuous_movement_available,
             )
-
-        if current_act in (2, 3) and ground_item_input_available(game_state):
-            draw_ground_item_window(
+            if ground_item_input_available(game_state):
+                draw_ground_item_window(
+                    game_surface,
+                    game_state,
+                    ground_item_window,
+                    act_two_sprites,
+                    act_two_fonts,
+                    current_time,
+                )
+            draw_frame_overlays(
                 game_surface,
                 game_state,
-                ground_item_window,
-                act_two_sprites,
-                act_two_fonts,
+                current_act,
                 current_time,
-            )
-
-        if current_act == 1 and game_state.upgrade_screen_open:
-            upgrade_mouse_position = window_to_game_position(
-                window_state.screen,
-                pygame.mouse.get_pos(),
-            )
-            draw_act_one_upgrade_screen(
-                game_surface,
-                title_font,
-                act_one_fonts["interface"],
-                game_state.player,
-                game_state.act_one_upgrades_remaining,
-                game_state.upgrade_message,
-                upgrade_mouse_position,
-            )
-        if game_state.class_selection_open:
-            class_mouse_position = window_to_game_position(
-                window_state.screen,
-                pygame.mouse.get_pos(),
-            )
-            draw_class_selection_screen(
-                game_surface,
-                act_two_fonts["title"],
-                act_two_fonts["heading"],
-                act_two_fonts["heading"],
-                act_two_fonts["text"],
-                act_two_sprites,
-                (
-                    pygame.time.get_ticks()
-                    - game_state.class_transition_started_at
-                ),
-                class_mouse_position,
-                game_state.class_selection_choice,
-                (
-                    None
-                    if game_state.class_selection_choice_started_at == 0
-                    else (
-                        current_time
-                        - game_state.class_selection_choice_started_at
-                    )
-                ),
-                attribute_ranks=(
-                    game_state.class_selection_preview_ranks
-                    if game_state.class_selection_choice is not None
-                    else game_state.player.attribute_ranks
-                ),
-            )
-        if game_state.act_three_debug_class_selection_open:
-            debug_mouse_position = window_to_game_position(
-                window_state.screen,
-                pygame.mouse.get_pos(),
-            )
-            draw_act_three_debug_class_selection(
-                game_surface,
-                act_three_fonts["title"],
-                act_three_fonts["heading"],
-                act_three_fonts["text"],
-                debug_mouse_position,
-            )
-        elif game_state.act_three_transition_open:
-            draw_act_three_awakening(
-                game_surface,
-                act_three_transition_assets,
-                act_three_fonts["narrative"],
-                (
-                    current_time
-                    - game_state.act_three_transition_started_at
-                ),
-                (
-                    None
-                    if game_state.act_three_visual_started_at == 0
-                    else (
-                        current_time
-                        - game_state.act_three_visual_started_at
-                    )
-                ),
-                game_state.player.player_class,
-            )
-        elif game_state.subclass_selection_open:
-            subclass_mouse_position = window_to_game_position(
-                window_state.screen,
-                pygame.mouse.get_pos(),
-            )
-            draw_subclass_selection_screen(
-                game_surface,
-                act_three_fonts["title"],
-                act_three_fonts["heading"],
-                act_three_fonts["text"],
-                act_three_transition_assets,
-                subclass_mouse_position,
-                game_state.player.subclass,
-                game_state.player.player_class,
-            )
-
-        if current_act == 2:
-            draw_act_two_death_dialogue_overlay(
-                game_surface,
-                game_state,
+                act_one_fonts,
                 act_two_fonts,
-                current_time,
-                act_two_camera,
+                act_three_fonts,
+                act_two_sprites,
+                act_three_transition_assets,
+                cutscene_skip,
+                dev_console,
+                frame_mouse_position,
             )
-            draw_oracle_intro(
-                game_surface,
-                oracle_world_frame,
-                game_state.floor,
-                oracle_ui_layout,
-                oracle_ui_assets,
-            )
-            draw_oracle_phase_transition(
-                game_surface,
-                oracle_world_frame,
-                game_state.floor,
-            )
-            draw_oracle_death_overlay(
-                game_surface,
-                oracle_world_frame,
-                game_state.floor,
-                window_to_game_position(
-                    window_state.screen,
-                    pygame.mouse.get_pos(),
-                ),
-            )
+            present_game(window_state.screen, game_surface)
+            clock.tick(FPS)
+            continue
 
-        if current_act == 1:
-            draw_act_one_intro_overlay(
-                game_surface,
-                getattr(game_state, "act_one_intro", None),
-                act_one_fonts["interface"],
-                act_one_fonts["text"],
-            )
-            draw_warden_intro_overlay(
-                game_surface,
-                game_state.floor,
-                act_one_fonts["interface"],
-                act_one_fonts["text"],
-            )
-
-        if (
-                game_state.floor_transition_started_at >= 0
-                and game_state.floor_transition_target_index is not None
-        ):
-            target_floor_config = FLOOR_CONFIGS[
-                game_state.floor_transition_target_index
-            ]
-            target_act = target_floor_config["act"]
-            target_act_floor = target_floor_config["act_floor"]
-            transition_title_font = (
-                act_one_fonts["title"]
-                if target_act == 1
-                else act_two_fonts["title"]
-                if target_act == 2
-                else act_three_fonts["title"]
-            )
-            transition_text_font = (
-                act_one_fonts["interface"]
-                if target_act == 1
-                else act_two_fonts["text"]
-                if target_act == 2
-                else act_three_fonts["text"]
-            )
-            draw_floor_transition(
-                game_surface,
-                transition_title_font,
-                transition_text_font,
-                (
-                    current_time
-                    - game_state.floor_transition_started_at
-                ),
-                roman_number(
-                    tower_floor_number(
-                        game_state.floor_transition_target_index
-                    )
-                ),
-                (
-                    FLOOR_INTRO_SUBTITLES.get(target_act_floor, "")
-                    if target_act == 1
-                    else "THE DESCENT CONTINUES"
-                ),
-            )
-        draw_cutscene_skip(
+        game_surface.fill(BACKGROUND_COLOR)
+        map_navigation.update(game_state, act_two_camera)
+        oracle_world_frame = act_two_renderer.draw_gameplay(
             game_surface,
-            cutscene_skip,
+            game_state,
+            act_two_camera,
+            act_two_sprites,
+            act_two_fonts,
+            act_two_fonts["status"],
             current_time,
+            current_act_floor,
+            frame_mouse_position,
+            act_two_input_state,
+            ground_item_window,
         )
-        dev_console.draw(game_surface)
+        act_two_interface.draw(
+            game_surface,
+            game_state,
+            act_two_camera,
+            map_navigation,
+            ground_item_window,
+            act_two_input_state,
+            current_time,
+            frame_mouse_position,
+            oracle_world_frame,
+            continuous_movement_available,
+        )
 
-        if current_act == 1 and game_state.player.health <= 0:
-            draw_act_one_death_overlay(
-                game_surface,
-                game_state,
-                current_time,
-                window_to_game_position(
-                    window_state.screen,
-                    pygame.mouse.get_pos(),
-                ),
-            )
+        draw_frame_overlays(
+            game_surface,
+            game_state,
+            current_act,
+            current_time,
+            act_one_fonts,
+            act_two_fonts,
+            act_three_fonts,
+            act_two_sprites,
+            act_three_transition_assets,
+            cutscene_skip,
+            dev_console,
+            frame_mouse_position,
+        )
 
         present_game(window_state.screen, game_surface)
         clock.tick(FPS)
 
     pygame.quit()
-

@@ -229,7 +229,7 @@ def resolve_paladin_sacred_ground(
         )
 
         if enemy.type == "oracle":
-            from acts.act_two.oracle import resolve_oracle_hit_reaction
+            from acts.act_two.enemies.oracle.behavior import resolve_oracle_hit_reaction
 
             resolve_oracle_hit_reaction(
                 enemy,

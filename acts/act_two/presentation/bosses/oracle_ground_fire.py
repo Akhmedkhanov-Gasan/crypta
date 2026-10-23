@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 import pygame
 
-from acts.act_two.oracle_balance import (
+from acts.act_two.enemies.oracle.balance import (
     BLACKFIRE_CONTACT_DAMAGE,
     BLACKFIRE_EXPLOSION_DAMAGE,
     BLACKFIRE_TURNS,

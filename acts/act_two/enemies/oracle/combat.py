@@ -7,7 +7,7 @@ import pygame
 from acts.act_two.presentation.bosses.oracle_audio import (
     play_oracle_attack_sound,
 )
-from acts.act_two.oracle_balance import (
+from acts.act_two.enemies.oracle.balance import (
     ATTACK_REACTION_MS,
     CLOSE_RANGE_GRACE_TURNS,
     IMPACT_MS,

@@ -1,6 +1,6 @@
-from acts.act_one.enemy_catalog import ACT_ONE_ENEMY_TYPES
-from acts.act_three.enemies import ACT_THREE_ENEMY_TYPES
-from acts.act_two.enemy_catalog import ACT_TWO_ENEMY_TYPES
+from acts.act_one.enemies.catalog import ACT_ONE_ENEMY_TYPES
+from acts.act_three.enemies.catalog import ACT_THREE_ENEMY_TYPES
+from acts.act_two.enemies.catalog import ACT_TWO_ENEMY_TYPES
 from game.enemy_catalog import SHARED_ENEMY_TYPES
 
 

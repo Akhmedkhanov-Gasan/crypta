@@ -4,7 +4,7 @@ from acts.act_one.settings import ACT_ONE_BELT_SIZE
 from acts.act_two.ground_items import (
     GROUND_ITEM_RULES as ACT_TWO_GROUND_ITEM_RULES,
 )
-from acts.act_two.oracle_combat import (
+from acts.act_two.enemies.oracle.combat import (
     finish_oracle_animation_before_action,
 )
 from acts.act_two.presentation.bosses.oracle_phase_transition import (

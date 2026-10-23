@@ -136,7 +136,7 @@ def take_sentinel_turn(
 
 
 def apply_sentinel_knockback(game_state, enemy):
-    from acts.act_two.crates import break_crate
+    from acts.crates import break_crate
     from systems.player_combat import damage_player
 
     floor = game_state.floor

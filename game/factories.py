@@ -13,7 +13,7 @@ from acts.act_two.state import (
     ActOneRevisitCorpseState,
     ActOneRevisitState,
 )
-from acts.act_two.enemy_balance import act_two_enemy_config
+from acts.act_two.enemies.balance import act_two_enemy_config
 from game.attributes import ATTRIBUTE_ORDER
 from enemies import ENEMY_TYPES
 from acts.floor_factory import generate_floor

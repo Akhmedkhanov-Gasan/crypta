@@ -238,7 +238,7 @@ def resolve_archer_barrage_hits(game_state):
             grant_ability_charge=False,
         )
         if enemy.type == "oracle":
-            from acts.act_two.oracle import resolve_oracle_hit_reaction
+            from acts.act_two.enemies.oracle.behavior import resolve_oracle_hit_reaction
 
             resolve_oracle_hit_reaction(
                 enemy,

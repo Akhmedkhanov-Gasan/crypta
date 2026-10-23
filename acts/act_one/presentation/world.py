@@ -32,7 +32,7 @@ from acts.act_one.presentation.enemies import (
     draw_warden_corpse,
     enemy_attack_offset,
 )
-from acts.act_two.presentation import draw_act_two_player_actor
+from acts.act_two.presentation.player import draw_act_two_player_actor
 from acts.act_two.presentation.enemies import (
     draw_act_two_attack_markers,
     draw_act_two_enemy,

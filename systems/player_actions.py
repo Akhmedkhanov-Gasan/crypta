@@ -1,5 +1,5 @@
 from acts.act_one.warden_intro import begin_warden_intro
-from acts.act_two.oracle_gate import oracle_gate_allows_entry
+from acts.act_two.enemies.oracle.gate import oracle_gate_allows_entry
 from acts.ground_items import (
     collect_act_one_potions,
     collect_ground_gold,

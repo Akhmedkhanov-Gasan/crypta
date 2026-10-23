@@ -18,7 +18,7 @@ from acts.act_three.presentation.targeting import (
 )
 from acts.act_three.presentation.view import _view_position
 from presentation.layout import ACT_THREE_TILE_SIZE
-from acts.act_three.enemies import LANTERN_WARDEN_TYPE
+from acts.act_three.enemies.catalog import LANTERN_WARDEN_TYPE
 from acts.act_three.presentation.enemies.lantern_warden.lantern_warden_combat import (
     draw_warden_telegraph,
 )
