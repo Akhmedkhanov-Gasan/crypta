@@ -9,9 +9,11 @@ from acts.act_two.presentation.bosses.oracle_phase_transition import (
 
 
 def console_input_available(app_runtime, game_state):
+    if app_runtime.menu_open:
+        return True
+
     return (
         app_runtime.game_started
-        and not app_runtime.menu_open
         and game_state.player.health > 0
         and not game_state.game_won
         and game_state.floor_transition_started_at < 0

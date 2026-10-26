@@ -6,11 +6,11 @@ import resource_store as resources
 from game.state import GameState
 
 from game.combat_log import add_log_message
-from presentation.layout import (
-    ACT_TWO_MUSIC_PATH,
-    AWAKENING_HOLD_END_MS,
-    AWAKENING_SECOND_OPEN_START_MS,
+from acts.act_two.presentation.awakening_timing import (
+    AWAKENING_BLACKOUT_END_MS,
+    AWAKENING_BLACKOUT_START_MS,
 )
+from presentation.layout import ACT_TWO_MUSIC_PATH
 
 
 @dataclass
@@ -59,25 +59,33 @@ class ActTwoAudioRuntime:
             if warden_music_channel is not None:
                 warden_music_channel.fadeout(1400)
                 warden_music_channel = None
-            if awakening_elapsed >= AWAKENING_SECOND_OPEN_START_MS:
-                self.eyes_close_played = True
-            if not self.music_attempted:
-                self.music_attempted = True
-                music_started = True
-                self._play_music(game_state, music_volume, fade_ms=1400)
 
         if (
-            awakening_elapsed >= AWAKENING_HOLD_END_MS
+            awakening_elapsed >= AWAKENING_BLACKOUT_START_MS
             and not self.eyes_close_played
         ):
             self.eyes_close_played = True
             transition_sounds.play("eyes_close")
+
         if (
-            awakening_elapsed >= AWAKENING_SECOND_OPEN_START_MS
+            game_state.class_transition_world_swapped
+            and not self.music_attempted
+        ):
+            self.music_attempted = True
+            music_started = True
+            self._play_music(
+                game_state,
+                music_volume,
+                fade_ms=1600,
+            )
+
+        if (
+            awakening_elapsed >= AWAKENING_BLACKOUT_END_MS
             and not self.eyes_open_played
         ):
             self.eyes_open_played = True
             transition_sounds.play("eyes_open")
+
         return warden_music_channel, music_started
 
     def ensure_gameplay_music(

@@ -18,6 +18,15 @@ from acts.act_one.presentation.world import (
     draw_scroll,
 )
 from acts.act_two.consumables import FIRE_BOMB, SCROLLS
+from acts.act_two.presentation.awakening_timing import (
+    AWAKENING_WORLD_SWAP_MS,
+    CLASS_SELECTION_OLD_MAN_FADE_END_MS,
+    CLASS_SELECTION_OLD_MAN_FADE_START_MS,
+    CLASS_SELECTION_TRANSFORM_END_MS,
+    CLASS_SELECTION_TURN_TO_OLD_MAN_MS,
+    CLASS_SELECTION_WALK_END_MS,
+    CLASS_SELECTION_WALK_START_MS,
+)
 from acts.act_two.presentation.abilities import (
     draw_act_two_ability_preview,
     draw_act_two_arcane_burst_effect,
@@ -73,6 +82,14 @@ from acts.act_two.presentation.items.ground_items import (
     draw_pickup_hint,
 )
 from acts.act_two.presentation.items.renderer import draw_breakable_crate
+from acts.act_two.presentation.movement import (
+    MAGE_MOVE_DURATION_MS,
+    ROGUE_MOVE_DURATION_MS,
+    WARRIOR_MOVE_DURATION_MS,
+    sample_mage_movement,
+    sample_rogue_movement,
+    sample_warrior_movement,
+)
 from acts.act_two.presentation.player import draw_act_two_wait_indicator
 from acts.act_two.presentation.runes import draw_act_two_rune_room
 from acts.act_two.presentation.scrolls import draw_scroll_effect
@@ -86,6 +103,246 @@ from presentation.combat_effects import draw_impact_block_effect
 from presentation.cursors import set_warlock_staff_cursor
 from presentation.layout import MAP_OFFSET_X, MAP_OFFSET_Y
 from settings import TILE_SIZE
+
+
+_CLASS_TRANSFORMATION_COLORS = {
+    "warrior": (186, 58, 48),
+    "rogue": (126, 48, 166),
+    "mage": (55, 108, 183),
+}
+
+_AWAKENING_WALK_PATH = (
+    (18, 7),
+    (18, 6),
+    (18, 5),
+    (18, 4),
+    (18, 3),
+    (19, 3),
+)
+
+_CLASS_MOVEMENT_SAMPLERS = {
+    "warrior": sample_warrior_movement,
+    "rogue": sample_rogue_movement,
+    "mage": sample_mage_movement,
+}
+
+_CLASS_MOVEMENT_DURATIONS = {
+    "warrior": WARRIOR_MOVE_DURATION_MS,
+    "rogue": ROGUE_MOVE_DURATION_MS,
+    "mage": MAGE_MOVE_DURATION_MS,
+}
+
+
+def _awakening_player_movement(
+    game_state,
+    current_time,
+):
+    floor = game_state.floor
+    player = game_state.player
+    default_state = (
+        floor.player_column,
+        floor.player_row,
+        player.act_two_movement_started_at,
+        player.act_two_movement_origin,
+        player.act_two_facing_direction,
+        float(floor.player_column),
+        float(floor.player_row),
+    )
+
+    if (
+        not game_state.class_selection_open
+        or not game_state.class_transition_world_swapped
+        or game_state.class_selection_choice_started_at <= 0
+    ):
+        return default_state
+
+    choice_elapsed = (
+        current_time
+        - game_state.class_selection_choice_started_at
+    )
+    if choice_elapsed < CLASS_SELECTION_WALK_START_MS:
+        return default_state
+
+    final_column, final_row = _AWAKENING_WALK_PATH[-1]
+    if choice_elapsed >= CLASS_SELECTION_WALK_END_MS:
+        return (
+            final_column,
+            final_row,
+            -1,
+            None,
+            (0, -1),
+            float(final_column),
+            float(final_row),
+        )
+
+    movement_sampler = _CLASS_MOVEMENT_SAMPLERS.get(
+        player.player_class,
+    )
+    movement_duration = _CLASS_MOVEMENT_DURATIONS.get(
+        player.player_class,
+    )
+    if movement_sampler is None or movement_duration is None:
+        return default_state
+
+    walk_progress = (
+        choice_elapsed - CLASS_SELECTION_WALK_START_MS
+    ) / (
+        CLASS_SELECTION_WALK_END_MS
+        - CLASS_SELECTION_WALK_START_MS
+    )
+    segment_count = len(_AWAKENING_WALK_PATH) - 1
+    path_progress = walk_progress * segment_count
+    segment_index = min(
+        segment_count - 1,
+        int(path_progress),
+    )
+    segment_progress = path_progress - segment_index
+
+    origin = _AWAKENING_WALK_PATH[segment_index]
+    destination = _AWAKENING_WALK_PATH[segment_index + 1]
+    sampled_elapsed = min(
+        movement_duration - 1,
+        round(segment_progress * movement_duration),
+    )
+    movement_started_at = current_time - sampled_elapsed
+    movement_pose = movement_sampler(
+        destination[0],
+        destination[1],
+        origin,
+        current_time,
+        movement_started_at,
+    )
+    focus_column = (
+        movement_pose.ground_position[0] - MAP_OFFSET_X
+    ) / TILE_SIZE
+    focus_row = (
+        movement_pose.ground_position[1] - MAP_OFFSET_Y
+    ) / TILE_SIZE
+
+    return (
+        destination[0],
+        destination[1],
+        movement_started_at,
+        origin,
+        (
+            destination[0] - origin[0],
+            destination[1] - origin[1],
+        ),
+        focus_column,
+        focus_row,
+    )
+
+
+def _awakening_player_visual_position(
+    game_state,
+    current_time,
+):
+    movement_state = _awakening_player_movement(
+        game_state,
+        current_time,
+    )
+    return movement_state[-2], movement_state[-1]
+
+
+def _draw_awakening_transformation(
+    target,
+    sprites,
+    player_class,
+    column,
+    row,
+    choice_elapsed,
+):
+    if (
+        player_class not in _CLASS_TRANSFORMATION_COLORS
+        or choice_elapsed >= CLASS_SELECTION_TRANSFORM_END_MS
+    ):
+        return
+
+    progress = max(
+        0.0,
+        min(
+            1.0,
+            choice_elapsed
+            / CLASS_SELECTION_TRANSFORM_END_MS,
+        ),
+    )
+    position = (
+        round(MAP_OFFSET_X + column * TILE_SIZE),
+        round(MAP_OFFSET_Y + row * TILE_SIZE),
+    )
+
+    unawakened = sprites["player_unawakened"].copy()
+    unawakened.set_alpha(
+        round(255 * (1.0 - progress)),
+    )
+    target.blit(
+        unawakened,
+        position,
+    )
+
+    color = _CLASS_TRANSFORMATION_COLORS[player_class]
+    effect = pygame.Surface(
+        (TILE_SIZE + 16, TILE_SIZE + 16),
+        pygame.SRCALPHA,
+    )
+    visibility = 1.0 - abs(progress * 2.0 - 1.0)
+
+    pygame.draw.circle(
+        effect,
+        (
+            color[0],
+            color[1],
+            color[2],
+            round(120 * visibility),
+        ),
+        (
+            effect.get_width() // 2,
+            effect.get_height() // 2,
+        ),
+        round(10 + progress * 12),
+        width=2,
+    )
+
+    for particle_index in range(12):
+        particle_x = (
+            5
+            + (
+                particle_index * 11
+                + round(progress * 19)
+            )
+            % (TILE_SIZE + 6)
+        )
+        particle_y = (
+            5
+            + (
+                particle_index * 7
+                - round(progress * 24)
+            )
+            % (TILE_SIZE + 6)
+        )
+        pygame.draw.rect(
+            effect,
+            (
+                color[0],
+                color[1],
+                color[2],
+                round(210 * visibility),
+            ),
+            (
+                particle_x,
+                particle_y,
+                2,
+                2,
+            ),
+        )
+
+    target.blit(
+        effect,
+        (
+            position[0] - 8,
+            position[1] - 8,
+        ),
+    )
 
 
 class ActTwoRenderer:
@@ -184,12 +441,18 @@ class ActTwoRenderer:
         act_floor,
     ):
         floor = game_state.floor
+        focus_column, focus_row = (
+            _awakening_player_visual_position(
+                game_state,
+                current_time,
+            )
+        )
         if not oracle_cutscene_active(floor):
             update_act_two_camera(
                 camera,
                 floor.map,
-                floor.player_column,
-                floor.player_row,
+                focus_column,
+                focus_row,
                 game_state.floor_index,
                 current_time,
             )
@@ -198,8 +461,8 @@ class ActTwoRenderer:
         if not floor.has_oracle_gate:
             draw_atmosphere(
                 target,
-                floor.player_column,
-                floor.player_row,
+                focus_column,
+                focus_row,
                 floor.map,
                 act_floor,
                 floor.visual_seed,
@@ -478,10 +741,92 @@ class ActTwoRenderer:
     ):
         floor = game_state.floor
         player = game_state.player
+        awakening_active = (
+            game_state.class_selection_open
+            and game_state.class_transition_world_swapped
+        )
+
+        (
+            visual_column,
+            visual_row,
+            visual_movement_started_at,
+            visual_movement_origin,
+            visual_facing_direction,
+            _,
+            _,
+        ) = _awakening_player_movement(
+            game_state,
+            current_time,
+        )
+        choice_elapsed = None
+
+        if awakening_active:
+            elapsed = (
+                current_time
+                - game_state.class_transition_started_at
+            )
+            old_man_opacity = max(
+                0.0,
+                min(
+                    1.0,
+                    (
+                        elapsed
+                        - AWAKENING_WORLD_SWAP_MS
+                    )
+                    / 700,
+                ),
+            )
+
+            if game_state.class_selection_choice_started_at > 0:
+                choice_elapsed = (
+                    current_time
+                    - game_state.class_selection_choice_started_at
+                )
+                old_man_fade = max(
+                    0.0,
+                    min(
+                        1.0,
+                        (
+                            choice_elapsed
+                            - CLASS_SELECTION_OLD_MAN_FADE_START_MS
+                        )
+                        / (
+                            CLASS_SELECTION_OLD_MAN_FADE_END_MS
+                            - CLASS_SELECTION_OLD_MAN_FADE_START_MS
+                        ),
+                    ),
+                )
+                old_man_opacity *= 1.0 - old_man_fade
+
+                if choice_elapsed < CLASS_SELECTION_TURN_TO_OLD_MAN_MS:
+                    visual_facing_direction = (0, 1)
+                elif choice_elapsed < CLASS_SELECTION_WALK_START_MS:
+                    visual_facing_direction = (-1, 0)
+                else:
+                    visual_facing_direction = (0, -1)
+
+            if old_man_opacity > 0:
+                old_man = pygame.transform.flip(
+                    sprites["old_man_standing"],
+                    True,
+                    False,
+                )
+                old_man = old_man.copy()
+                old_man.set_alpha(
+                    round(255 * old_man_opacity),
+                )
+                target.blit(
+                    old_man,
+                    (
+                        MAP_OFFSET_X + 17 * TILE_SIZE,
+                        MAP_OFFSET_Y + 7 * TILE_SIZE,
+                    ),
+                )
+
         draw_player(
             target,
-            floor.player_column,
-            floor.player_row,
+            visual_column,
+            visual_row,
             player.health,
             player.max_health,
             player.player_class,
@@ -494,14 +839,14 @@ class ActTwoRenderer:
             player.hit_origin,
             player.attack_animation_started_at,
             player.act_one_attack_target,
-            player.act_two_movement_started_at,
-            player.act_two_movement_origin,
+            visual_movement_started_at,
+            visual_movement_origin,
             player.act_one_dodge_started_at,
             player.act_one_dodge_origin,
             player.death_animation_started_at,
             player.hit_damage,
             status_font,
-            player.act_two_facing_direction,
+            visual_facing_direction,
             player.act_two_blocked_movement_started_at,
             player.act_two_blocked_movement_direction,
             player.act_two.level_up_effect_started_at,
@@ -510,7 +855,17 @@ class ActTwoRenderer:
             player.act_two.dodge_effect_started_at,
             control_player=player,
         )
-        if player.health > 0:
+
+        if choice_elapsed is not None:
+            _draw_awakening_transformation(
+                target,
+                sprites,
+                player.player_class,
+                visual_column,
+                visual_row,
+                choice_elapsed,
+            )
+        if player.health > 0 and not awakening_active:
             draw_impact_block_effect(
                 target,
                 player,

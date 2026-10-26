@@ -27,7 +27,8 @@ def complete_class_selection(game_state):
         prepare_act_one_revisit_floors,
     )
 
-    prepare_act_one_revisit_floors(game_state)
+    if not game_state.act_one_revisit_prepared:
+        prepare_act_one_revisit_floors(game_state)
 
     if game_state.oracle_debug_mode:
         game_state.floor_index = next(
@@ -74,9 +75,13 @@ def complete_class_selection(game_state):
     initialize_act_two_consumable_belt(game_state.player)
     game_state.class_selection_open = False
     game_state.class_transition_started_at = 0
+    game_state.class_transition_world_swapped = False
     game_state.class_selection_choice = None
     game_state.class_selection_preview_ranks.clear()
     game_state.class_selection_choice_started_at = 0
+    game_state.player.act_two_facing_direction = (0, 1)
+    game_state.player.act_two_movement_origin = None
+    game_state.player.act_two_blocked_movement_started_at = -1
     game_state.player_attack_targets = []
     cancel_fire_bomb_aiming(game_state)
     cancel_scroll_aiming(game_state)

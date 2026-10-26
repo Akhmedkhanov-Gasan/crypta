@@ -741,11 +741,21 @@ def draw_act_two_player_actor(
         dodge_effect_started_at=-1,
         control_player=None,
 ):
-    sprite = sprites[f"player_{player_class}"]
+    sprite_key = (
+        "player_unawakened"
+        if player_class is None
+        else f"player_{player_class}"
+    )
+    sprite = sprites[sprite_key]
     destination_position = (
         MAP_OFFSET_X + column * TILE_SIZE,
         MAP_OFFSET_Y + row * TILE_SIZE,
     )
+
+    if player_class is None:
+        screen.blit(sprite, destination_position)
+        return
+
     if invisibility_turns > 0:
         sprite = sprite.copy()
         sprite.set_alpha(90)

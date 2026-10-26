@@ -291,6 +291,7 @@ def load_act_two_sprites():
     asset_directory = ASSET_ROOT / "act_2"
     ui_directory = ASSET_ROOT / "ui" / "act_2"
     sprite_paths = {
+        "player_unawakened": "player/unawakened.png",
         "player_warrior": "player/warrior/idle/idle_00.png",
         "player_warrior_hurt": "player/warrior/hurt/hurt_00.png",
         "player_warrior_walk_0": "player/warrior/walk/down/walk_00.png",
@@ -819,48 +820,6 @@ def load_act_two_sprites():
         )
 
     transition_directory = ui_directory / "awakening_v2"
-
-    def load_transition_background(filename):
-        source = resources.load_image(
-            str(transition_directory / filename)
-        ).convert()
-        source_width, source_height = source.get_size()
-        target_ratio = GAME_WIDTH / GAME_HEIGHT
-        source_ratio = source_width / source_height
-        if source_ratio > target_ratio:
-            crop_width = round(source_height * target_ratio)
-            crop = pygame.Rect(
-                (source_width - crop_width) // 2,
-                0,
-                crop_width,
-                source_height,
-            )
-        else:
-            crop_height = round(source_width / target_ratio)
-            crop = pygame.Rect(
-                0,
-                (source_height - crop_height) // 2,
-                source_width,
-                crop_height,
-            )
-        return pygame.transform.scale(
-            source.subsurface(crop),
-            (GAME_WIDTH, GAME_HEIGHT),
-        )
-
-    sprites["awakening_act_one"] = load_transition_background(
-        "act_one_corridor_source.png"
-    )
-    sprites["awakening_act_two"] = load_transition_background(
-        "act_two_corridor_source.png"
-    )
-    sprites["awakening_old_man_far"] = resources.load_image(
-        str(transition_directory / "old_man_far.png")
-    ).convert_alpha()
-
-    sprites["awakening_old_man_near"] = resources.load_image(
-        str(transition_directory / "old_man.png")
-    ).convert_alpha()
 
     for class_name in ("warrior", "rogue", "mage"):
         sprites[f"{class_name}_portrait"] = resources.load_image(

@@ -55,6 +55,9 @@ class ActTwoInterface:
         oracle_world_frame,
         continuous_movement_available,
     ):
+        if game_state.class_selection_open:
+            return
+
         player = game_state.player
         floor = game_state.floor
 

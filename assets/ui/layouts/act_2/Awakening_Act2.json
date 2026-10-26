@@ -1,64 +1,24 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "screen": "awakening",
   "act": 2,
   "coordinate_space": "frame",
   "frame": {
-    "name": "Awakening_Act2",
+    "name": "Awakening_Act2_new",
     "width": 1280,
     "height": 720
   },
-  "art": {
-    "corridor_background": {
-      "rect": {
-        "x": 0,
-        "y": 0,
-        "width": 1280,
-        "height": 720
-      },
-      "asset_key": "awakening_corridor",
-      "opacity": 1
-    },
-    "old_man_states": {
-      "rect": {
-        "x": 530,
-        "y": 183,
-        "width": 221,
-        "height": 280
-      },
-      "far": {
-        "rect": {
-          "x": 585,
-          "y": 257,
-          "width": 111,
-          "height": 206
-        },
-        "asset_key": "awakening_old_man_far",
-        "opacity": 1
-      },
-      "near": {
-        "rect": {
-          "x": 397,
-          "y": 72,
-          "width": 487,
-          "height": 487
-        },
-        "asset_key": "awakening_old_man_near",
-        "opacity": 1
-      }
-    }
-  },
   "screen_title": {
     "rect": {
-      "x": 536,
-      "y": 23,
+      "x": 539,
+      "y": 124,
       "width": 209,
       "height": 44
     },
     "text": {
       "rect": {
-        "x": 536,
-        "y": 23,
+        "x": 539,
+        "y": 124,
         "width": 209,
         "height": 44
       },

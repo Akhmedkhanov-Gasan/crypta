@@ -77,6 +77,7 @@ def handle_class_selection_key(
     )
     game_state.class_selection_choice = chosen_class
     game_state.class_selection_choice_started_at = current_time
+    game_state.player.act_two_facing_direction = (0, 1)
     transition_sounds.play("class_select")
     return True
 
