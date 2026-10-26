@@ -995,11 +995,175 @@ def _draw_soft_light(
     )
 
 
+@lru_cache(maxsize=1)
+def _warden_light_texture():
+    radius = round(TILE_SIZE * 1.35)
+    size = radius * 2
+    center = (radius, radius)
+    light = pygame.Surface((size, size))
+
+    for layer_index in range(24):
+        progress = layer_index / 23
+        current_radius = round(
+            radius
+            + (12 - radius) * progress
+        )
+        intensity = round(
+            1 + 15 * progress ** 1.7
+        )
+        pygame.draw.circle(
+            light,
+            (
+                intensity,
+                round(intensity * 0.28),
+                round(intensity * 0.48),
+            ),
+            center,
+            current_radius,
+        )
+
+    return pygame.transform.gaussian_blur(
+        light,
+        9,
+    )
+
+
+@lru_cache(maxsize=1)
+def _warden_reveal_texture():
+    radius = round(TILE_SIZE * 1.45)
+    size = radius * 2
+    center = (radius, radius)
+    reveal = pygame.Surface(
+        (size, size),
+        pygame.SRCALPHA,
+    )
+
+    for layer_index in range(32):
+        progress = layer_index / 31
+        current_radius = round(
+            radius
+            + (14 - radius) * progress
+        )
+        strength = round(
+            4 + 186 * progress ** 1.35
+        )
+        pygame.draw.circle(
+            reveal,
+            (0, 0, 0, strength),
+            center,
+            current_radius,
+        )
+
+    return pygame.transform.gaussian_blur(
+        reveal,
+        9,
+    )
+
+
+def _warden_light_data(floor):
+    if not floor.boss_fight_started:
+        return None
+
+    warden = next(
+        (
+            enemy
+            for enemy in floor.enemies
+            if enemy.type == "warden"
+            and enemy.health > 0
+        ),
+        None,
+    )
+
+    if warden is None:
+        return None
+
+    state = getattr(
+        floor,
+        "act_one_warden_intro",
+        None,
+    )
+    strength = 1.0
+
+    if (
+        state is not None
+        and state.started
+        and not state.finished
+    ):
+        strength = max(
+            0.0,
+            min(
+                1.0,
+                state.elapsed / 1600,
+            ),
+        )
+
+    center = (
+        warden.column * TILE_SIZE
+        + TILE_SIZE // 2,
+        warden.row * TILE_SIZE
+        + TILE_SIZE // 2,
+    )
+    return center, strength
+
+
+def _draw_warden_light(
+    screen,
+    floor,
+    current_time,
+):
+    light_data = _warden_light_data(floor)
+
+    if light_data is None:
+        return None
+
+    center, strength = light_data
+    light = _warden_light_texture()
+    pulse = (
+        0.92
+        + math.sin(current_time / 260) * 0.08
+    )
+    light.set_alpha(
+        round(255 * strength * pulse)
+    )
+    screen.blit(
+        light,
+        (
+            MAP_OFFSET_X
+            + center[0]
+            - light.get_width() // 2,
+            MAP_OFFSET_Y
+            + center[1]
+            - light.get_height() // 2,
+        ),
+        special_flags=pygame.BLEND_RGB_ADD,
+    )
+    return center, strength
+
+
 def _draw_visibility_gradient(
     fog,
     center,
 ):
     reveal = _visibility_reveal_texture()
+    fog.blit(
+        reveal,
+        (
+            center[0] - reveal.get_width() // 2,
+            center[1] - reveal.get_height() // 2,
+        ),
+        special_flags=pygame.BLEND_RGBA_SUB,
+    )
+
+
+def _draw_warden_visibility_gradient(
+    fog,
+    center,
+    strength,
+):
+    reveal = _warden_reveal_texture()
+    reveal.set_alpha(
+        round(255 * strength)
+    )
     fog.blit(
         reveal,
         (
@@ -1044,6 +1208,11 @@ def draw_act_one_fog_of_war(
         player_center,
         current_time,
     )
+    warden_light = _draw_warden_light(
+        screen,
+        floor,
+        current_time,
+    )
 
     fog = pygame.Surface(
         (map_width, map_height),
@@ -1067,6 +1236,17 @@ def draw_act_one_fog_of_war(
         fog,
         player_center,
     )
+
+    if warden_light is not None:
+        (
+            warden_light_center,
+            warden_light_strength,
+        ) = warden_light
+        _draw_warden_visibility_gradient(
+            fog,
+            warden_light_center,
+            warden_light_strength,
+        )
 
     for row in range(len(floor.map)):
         for column in range(len(floor.map[row])):

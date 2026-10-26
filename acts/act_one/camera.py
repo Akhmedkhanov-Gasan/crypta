@@ -14,14 +14,9 @@ from settings import BACKGROUND_COLOR, GAME_HEIGHT, GAME_WIDTH, TILE_SIZE
 
 ACT_ONE_CAMERA_SCALE = 2
 
-_CAMERA_RESPONSE_MS = 145
+_CAMERA_RESPONSE_MS = 190
 
-_DEAD_ZONE = (
-    TILE_SIZE * 2,
-    TILE_SIZE * 2,
-    TILE_SIZE * 3 // 2,
-    TILE_SIZE * 3 // 4,
-)
+_DEAD_ZONE = (0, 0)
 
 _VIEWPORT = pygame.Rect(
     0,
@@ -44,6 +39,7 @@ def update_act_one_camera(
     player_row,
     floor_index,
     current_time,
+    player_offset=(0, 0),
     focus_offset_y=None,
     focus_position=None,
 ):
@@ -65,9 +61,12 @@ def update_act_one_camera(
         focus_position
         if focus_position is not None
         else (
-            player_column * TILE_SIZE + TILE_SIZE / 2,
+            player_column * TILE_SIZE
+            + TILE_SIZE / 2
+            + player_offset[0],
             player_row * TILE_SIZE
             + TILE_SIZE / 2
+            + player_offset[1]
             + (
                 focus_offset_y
                 if focus_offset_y is not None

@@ -6,8 +6,6 @@ from acts.act_one.presentation.hud import draw_act_one_hud
 from acts.act_one.presentation.intro import (
     act_one_intro_head_lift,
     act_one_intro_hud_opacity,
-    act_one_intro_knife_pickup,
-    act_one_intro_player_has_knife,
     draw_act_one_intro_overlay,
     draw_act_one_intro_world,
 )
@@ -181,8 +179,6 @@ def _draw_player(screen, game_state, shared_sprites, status_font, current_time):
         hit_damage=player.hit_damage,
         damage_font=status_font,
         act_one_head_lift_progress=act_one_intro_head_lift(intro),
-        act_one_knife_visible=act_one_intro_player_has_knife(intro),
-        act_one_knife_pickup_progress=act_one_intro_knife_pickup(intro),
         act_one_hud_opacity=min(
             act_one_intro_hud_opacity(intro, current_time),
             warden_intro_hud_opacity(floor, current_time),

@@ -4,6 +4,9 @@ from acts.act_one.presentation.intro import (
     act_one_intro_camera_offset,
     update_act_one_intro,
 )
+from acts.act_one.presentation.player import (
+    act_one_player_movement_offset,
+)
 from acts.act_one.visibility import update_act_one_visibility
 from acts.act_one.warden_intro import (
     update_warden_intro,
@@ -36,6 +39,14 @@ def update_act_one_view(camera, game_state, current_time):
     if game_state.floor.presentation_act != 1:
         return
 
+    player_offset = act_one_player_movement_offset(
+        game_state.floor.player_column,
+        game_state.floor.player_row,
+        game_state.player.act_one_movement_origin,
+        current_time,
+        game_state.player.movement_animation_started_at,
+    )
+
     update_act_one_camera(
         camera,
         game_state.floor.map,
@@ -43,6 +54,7 @@ def update_act_one_view(camera, game_state, current_time):
         game_state.floor.player_row,
         game_state.floor_index,
         current_time,
+        player_offset=player_offset,
         focus_offset_y=act_one_intro_camera_offset(
             getattr(game_state, "act_one_intro", None)
         ),

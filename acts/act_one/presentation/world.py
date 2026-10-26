@@ -16,7 +16,7 @@ from acts.act_one.presentation.environment import (
 )
 from acts.act_one.presentation.player import (
     act_one_player_movement_offset,
-    draw_act_one_prisoner,
+    draw_act_one_player,
 )
 from acts.act_one.presentation.enemies import (
     archer_attack_pose,
@@ -82,9 +82,9 @@ ACT_ONE_IRON_LIGHT = (78, 76, 85)
 ACT_ONE_GOLD = (164, 124, 50)
 ACT_ONE_GOLD_LIGHT = (226, 184, 82)
 ACT_ONE_BLOOD = (112, 38, 45)
-ACT_ONE_PLAYER_CLOAK = (88, 78, 61)
-ACT_ONE_PLAYER_EDGE = (126, 111, 82)
-ACT_ONE_PLAYER_FACE = (139, 116, 93)
+ACT_ONE_PLAYER_CLOAK = (58, 65, 76)
+ACT_ONE_PLAYER_EDGE = (116, 132, 145)
+ACT_ONE_PLAYER_FACE = (174, 165, 151)
 ACT_ONE_HEALTH_HIGH = (72, 137, 94)
 ACT_ONE_HEALTH_MID = (219, 171, 66)
 ACT_ONE_HEALTH_LOW = (200, 57, 65)
@@ -470,8 +470,9 @@ def _act_one_attack_lunge(
     current_time,
     attack_started_at,
 ):
-    duration = 260
+    duration = 150
     elapsed = current_time - attack_started_at
+
     if (
         target is None
         or attack_started_at <= 0
@@ -481,15 +482,30 @@ def _act_one_attack_lunge(
 
     direction_x = target[0] - column
     direction_y = target[1] - row
-    if direction_x:
-        direction_x = 1 if direction_x > 0 else -1
-    if direction_y:
-        direction_y = 1 if direction_y > 0 else -1
 
-    lunge = math.sin(math.pi * elapsed / duration)
+    if direction_x:
+        direction_x = (
+            1
+            if direction_x > 0
+            else -1
+        )
+    if direction_y:
+        direction_y = (
+            1
+            if direction_y > 0
+            else -1
+        )
+
+    if elapsed < 40:
+        distance = 2
+    elif elapsed < 95:
+        distance = 5
+    else:
+        distance = 0
+
     return (
-        round(direction_x * 5 * lunge),
-        round(direction_y * 5 * lunge),
+        direction_x * distance,
+        direction_y * distance,
     )
 
 
@@ -672,8 +688,9 @@ def draw_act_one_player_attack_effect(
     attack_started_at,
     critical=False,
 ):
-    duration = 360 if critical else 280
+    duration = 170
     elapsed = current_time - attack_started_at
+
     if (
         act_number >= 2
         or target is None
@@ -682,125 +699,131 @@ def draw_act_one_player_attack_effect(
     ):
         return
 
-    progress = elapsed / duration
-    visibility = max(0.0, 1 - progress)
     direction_x = target[0] - column
     direction_y = target[1] - row
-    length = math.hypot(direction_x, direction_y)
+    length = math.hypot(
+        direction_x,
+        direction_y,
+    )
+
     if length == 0:
         return
+
     direction_x /= length
     direction_y /= length
     perpendicular_x = -direction_y
     perpendicular_y = direction_x
+    progress = elapsed / duration
+    visibility = 1.0 - progress
 
-    player_center_x = MAP_OFFSET_X + column * TILE_SIZE + TILE_SIZE // 2
-    player_center_y = MAP_OFFSET_Y + row * TILE_SIZE + TILE_SIZE // 2
-    target_center_x = MAP_OFFSET_X + target[0] * TILE_SIZE + TILE_SIZE // 2
-    target_center_y = MAP_OFFSET_Y + target[1] * TILE_SIZE + TILE_SIZE // 2
-    lunge = math.sin(math.pi * min(1.0, elapsed / 260))
-    hand_x = player_center_x + direction_x * (8 + 5 * lunge)
-    hand_y = player_center_y + direction_y * (8 + 5 * lunge)
-
-    effect_left = round(min(player_center_x, target_center_x) - 24)
-    effect_top = round(min(player_center_y, target_center_y) - 24)
-    effect_right = round(max(player_center_x, target_center_x) + 24)
-    effect_bottom = round(max(player_center_y, target_center_y) + 24)
-    effect_surface = pygame.Surface(
-        (effect_right - effect_left, effect_bottom - effect_top),
+    center_x = (
+        MAP_OFFSET_X
+        + column * TILE_SIZE
+        + TILE_SIZE // 2
+    )
+    center_y = (
+        MAP_OFFSET_Y
+        + row * TILE_SIZE
+        + TILE_SIZE // 2
+    )
+    effect = pygame.Surface(
+        (48, 48),
         pygame.SRCALPHA,
     )
-    hand_x -= effect_left
-    hand_y -= effect_top
-    target_center_x -= effect_left
-    target_center_y -= effect_top
-    blade_alpha = round((255 if critical else 220) * visibility)
-    pygame.draw.line(
-        effect_surface,
-        (91, 98, 108, round(165 * visibility)),
-        (round(hand_x), round(hand_y)),
-        (
-            round(hand_x + direction_x * 13),
-            round(hand_y + direction_y * 13),
+    effect_center = 24
+    start = (
+        round(
+            effect_center
+            + direction_x * 8
         ),
-        3,
+        round(
+            effect_center
+            + direction_y * 8
+        ),
     )
-    pygame.draw.line(
-        effect_surface,
-        (
-            255 if critical else 226,
-            242 if critical else 217,
-            205 if critical else 194,
-            blade_alpha,
+    end = (
+        round(
+            effect_center
+            + direction_x
+            * (
+                17 + progress * 5
+            )
         ),
-        (
-            round(target_center_x - perpendicular_x * 11 - direction_x * 4),
-            round(target_center_y - perpendicular_y * 11 - direction_y * 4),
+        round(
+            effect_center
+            + direction_y
+            * (
+                17 + progress * 5
+            )
         ),
-        (
-            round(target_center_x + perpendicular_x * 11 + direction_x * 3),
-            round(target_center_y + perpendicular_y * 11 + direction_y * 3),
-        ),
-        4 if critical else 3,
     )
-    pygame.draw.line(
-        effect_surface,
-        (164, 124, 50, round(145 * visibility)),
+    alpha = round(
         (
-            round(target_center_x - perpendicular_x * 9 - direction_x * 8),
-            round(target_center_y - perpendicular_y * 9 - direction_y * 8),
-        ),
-        (
-            round(target_center_x + perpendicular_x * 9 - direction_x * 1),
-            round(target_center_y + perpendicular_y * 9 - direction_y * 1),
-        ),
-        2,
-    )
-    if critical:
-        pygame.draw.line(
-            effect_surface,
-            (246, 199, 92, round(210 * visibility)),
-            (
-                round(target_center_x - perpendicular_x * 9 + direction_x * 7),
-                round(target_center_y - perpendicular_y * 9 + direction_y * 7),
-            ),
-            (
-                round(target_center_x + perpendicular_x * 9 - direction_x * 7),
-                round(target_center_y + perpendicular_y * 9 - direction_y * 7),
-            ),
-            3,
+            245
+            if critical
+            else 185
         )
-        pygame.draw.circle(
-            effect_surface,
-            (255, 231, 167, round(155 * visibility)),
-            (round(target_center_x), round(target_center_y)),
-            round(5 + progress * 10),
-            width=2,
-        )
+        * visibility
+    )
+    mark_color = (
+        211 if critical else 137,
+        191 if critical else 132,
+        150 if critical else 119,
+        alpha,
+    )
 
-    spark_alpha = round(235 * max(0.0, 1 - progress * 1.7))
-    spark_center = (
-        round(target_center_x - direction_x * 5),
-        round(target_center_y - direction_y * 5),
+    pygame.draw.line(
+        effect,
+        (
+            8,
+            9,
+            12,
+            round(alpha * 0.75),
+        ),
+        start,
+        end,
+        5,
     )
-    spark_length = round(4 + progress * 7)
-    for spark_x, spark_y in (
-        (perpendicular_x, perpendicular_y),
-        (-perpendicular_x, -perpendicular_y),
-        (direction_x, direction_y),
-    ):
-        pygame.draw.line(
-            effect_surface,
-            (239, 197, 102, spark_alpha),
-            spark_center,
-            (
-                round(spark_center[0] + spark_x * spark_length),
-                round(spark_center[1] + spark_y * spark_length),
+    pygame.draw.line(
+        effect,
+        mark_color,
+        start,
+        end,
+        2 if not critical else 3,
+    )
+
+    for side in (-1, 1):
+        wing = (
+            round(
+                end[0]
+                - direction_x * 5
+                + perpendicular_x
+                * 3
+                * side
             ),
+            round(
+                end[1]
+                - direction_y * 5
+                + perpendicular_y
+                * 3
+                * side
+            ),
+        )
+        pygame.draw.line(
+            effect,
+            mark_color,
+            end,
+            wing,
             2,
         )
 
-    screen.blit(effect_surface, (effect_left, effect_top))
+    screen.blit(
+        effect,
+        (
+            round(center_x - effect_center),
+            round(center_y - effect_center),
+        ),
+    )
 
 
 def draw_act_one_pickup_effect(
@@ -2364,8 +2387,6 @@ def draw_player(
         act_two_stoneflesh_effect_started_at=-1,
         act_two_dodge_effect_started_at=-1,
         act_one_head_lift_progress=1.0,
-        act_one_knife_visible=True,
-        act_one_knife_pickup_progress=0.0,
         act_one_hud_opacity=255,
         control_player=None,
 ):
@@ -2581,18 +2602,7 @@ def draw_player(
                 dodge_offset_x,
                 dodge_offset_y,
             )
-        _draw_act_one_movement_accent(
-            screen,
-            center_x,
-            center_y,
-            column,
-            row,
-            movement_origin,
-            current_time,
-            movement_animation_started_at,
-            "hero",
-        )
-        draw_act_one_prisoner(
+        draw_act_one_player(
             screen,
             center_x,
             center_y,
@@ -2607,8 +2617,6 @@ def draw_player(
             attack_progress,
             attack_direction,
             act_one_head_lift_progress,
-            act_one_knife_visible,
-            act_one_knife_pickup_progress,
         )
         if act_number < 2:
             _draw_act_one_healing_effect(

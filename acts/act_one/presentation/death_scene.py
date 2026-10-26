@@ -5,7 +5,7 @@ import pygame
 import resource_store as resources
 
 from acts.act_one.presentation.player import (
-    draw_act_one_prisoner,
+    draw_act_one_player,
 )
 from enemies import ENEMY_TYPES
 from levels import FLOOR_CONFIGS
@@ -654,7 +654,7 @@ def draw_act_one_player_death(
         (48, 56),
         pygame.SRCALPHA,
     )
-    draw_act_one_prisoner(
+    draw_act_one_player(
         base_actor,
         24,
         31,
@@ -664,7 +664,6 @@ def draw_act_one_player_death(
         current_time=current_time,
         movement_direction=(0, 1),
         head_lift_progress=0.0,
-        knife_visible=False,
         pain_pose=False,
     )
 
@@ -672,7 +671,7 @@ def draw_act_one_player_death(
         (48, 56),
         pygame.SRCALPHA,
     )
-    draw_act_one_prisoner(
+    draw_act_one_player(
         agony_actor,
         24,
         31,
@@ -682,7 +681,6 @@ def draw_act_one_player_death(
         current_time=current_time,
         movement_direction=(0, 1),
         head_lift_progress=0.0,
-        knife_visible=False,
         pain_pose=True,
     )
 

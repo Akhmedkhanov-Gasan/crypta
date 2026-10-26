@@ -8,41 +8,41 @@ from presentation.layout import MAP_OFFSET_X, MAP_OFFSET_Y
 from settings import TILE_SIZE
 
 
-CAMERA_HOLD_END_MS = 1000
-CAMERA_RISE_END_MS = 3000
+CAMERA_HOLD_END_MS = 900
+CAMERA_RISE_END_MS = 2500
 ELDER_APPEAR_START_MS = 3200
 ELDER_APPEAR_END_MS = 4800
-HEAD_LIFT_START_MS = 4700
-HEAD_LIFT_END_MS = 5500
+HEAD_LIFT_START_MS = 3800
+HEAD_LIFT_END_MS = 4700
 ELDER_KNIFE_DRAW_START_MS = 16800
 ELDER_KNIFE_DRAW_END_MS = 17600
 ELDER_KNIFE_PLACE_END_MS = 18900
 ELDER_RETURN_END_MS = 20200
-CHAIN_BREAK_MS = 20500
+CHAIN_BREAK_MS = 10900
 ELDER_FADE_START_MS = 20900
 ELDER_FADE_END_MS = 21900
 KNIFE_PICKUP_START_MS = 22600
 KNIFE_PICKUP_GRAB_MS = 23300
 KNIFE_PICKUP_END_MS = 24000
-INTRO_END_MS = 24800
+INTRO_END_MS = 12600
 SKIP_HOLD_MS = 1200
 HUD_FADE_IN_MS = 900
 
 DIALOGUE = (
     (
-        6000,
-        8800,
-        "Awaken, prisoner.",
+        3200,
+        5100,
+        "Wake.",
     ),
     (
-        9100,
-        13100,
-        "Your chains have held you long enough.",
+        5400,
+        7900,
+        "These chains cannot hold you.",
     ),
     (
-        13400,
-        16500,
-        "Rise. The dark below is waiting.",
+        8200,
+        10400,
+        "Rise. Descend. Remember.",
     ),
 )
 
@@ -2365,58 +2365,42 @@ def draw_act_one_intro_world(
             center_y,
             state.elapsed,
         )
-    else:
-        left_anchor = (
-            center_x - 14,
-            center_y - 27,
-        )
-        right_anchor = (
-            center_x + 14,
-            center_y - 27,
-        )
-        left_wrist = (
-            center_x - 7,
-            center_y + 1,
-        )
-        right_wrist = (
-            center_x + 7,
-            center_y + 1,
-        )
-
-        _draw_wall_anchor(
-            screen,
-            left_anchor,
-        )
-        _draw_wall_anchor(
-            screen,
-            right_anchor,
-        )
-        _draw_chain(
-            screen,
-            left_anchor,
-            left_wrist,
-        )
-        _draw_chain(
-            screen,
-            right_anchor,
-            right_wrist,
-        )
-
-    _draw_intro_knife(
-        screen,
-        center_x,
-        center_y,
-        state.elapsed,
-    )
-
-    if state.finished:
         return
 
-    _draw_elder(
+    left_anchor = (
+        center_x - 14,
+        center_y - 27,
+    )
+    right_anchor = (
+        center_x + 14,
+        center_y - 27,
+    )
+    left_wrist = (
+        center_x - 7,
+        center_y + 1,
+    )
+    right_wrist = (
+        center_x + 7,
+        center_y + 1,
+    )
+
+    _draw_wall_anchor(
         screen,
-        center_x + TILE_SIZE,
-        center_y,
-        state.elapsed,
+        left_anchor,
+    )
+    _draw_wall_anchor(
+        screen,
+        right_anchor,
+    )
+    _draw_chain(
+        screen,
+        left_anchor,
+        left_wrist,
+    )
+    _draw_chain(
+        screen,
+        right_anchor,
+        right_wrist,
     )
 
 
@@ -2480,66 +2464,66 @@ def _draw_dialogue(
     fade_in = _progress(
         state.elapsed,
         start,
-        start + 320,
+        start + 380,
     )
     fade_out = 1.0 - _progress(
         state.elapsed,
-        end - 320,
+        end - 380,
         end,
     )
     opacity = fade_in * fade_out
     visible_characters = max(
         0,
-        (state.elapsed - start) // 72,
+        (state.elapsed - start) // 78,
     )
     visible_line = line[:visible_characters]
 
     panel = pygame.Surface(
-        (620, 82),
+        (560, 74),
         pygame.SRCALPHA,
     )
     pygame.draw.rect(
         panel,
-        (3, 5, 9, round(154 * opacity)),
+        (2, 4, 8, round(132 * opacity)),
         panel.get_rect(),
         border_radius=3,
     )
     pygame.draw.line(
         panel,
-        (65, 70, 76, round(150 * opacity)),
-        (42, 1),
-        (panel.get_width() - 42, 1),
+        (57, 63, 70, round(125 * opacity)),
+        (54, 1),
+        (panel.get_width() - 54, 1),
     )
     pygame.draw.line(
         panel,
-        (29, 33, 39, round(130 * opacity)),
-        (72, panel.get_height() - 1),
-        (panel.get_width() - 72, panel.get_height() - 1),
+        (23, 28, 34, round(110 * opacity)),
+        (88, panel.get_height() - 1),
+        (panel.get_width() - 88, panel.get_height() - 1),
     )
 
     title = title_font.render(
-        "THE OLD MAN",
+        "A VOICE",
         True,
-        (104, 108, 112),
+        (91, 98, 106),
     )
     text = text_font.render(
         visible_line,
         True,
-        (187, 191, 194),
+        (176, 183, 189),
     )
-    title.set_alpha(round(255 * opacity))
+    title.set_alpha(round(230 * opacity))
     text.set_alpha(round(255 * opacity))
 
     panel.blit(
         title,
         title.get_rect(
-            midtop=(panel.get_width() // 2, 9),
+            midtop=(panel.get_width() // 2, 7),
         ),
     )
     panel.blit(
         text,
         text.get_rect(
-            center=(panel.get_width() // 2, 55),
+            center=(panel.get_width() // 2, 50),
         ),
     )
 
@@ -2647,8 +2631,6 @@ __all__ = [
     "act_one_intro_camera_offset",
     "act_one_intro_head_lift",
     "act_one_intro_hud_opacity",
-    "act_one_intro_knife_pickup",
-    "act_one_intro_player_has_knife",
     "draw_act_one_intro_overlay",
     "draw_act_one_intro_world",
     "update_act_one_intro",
