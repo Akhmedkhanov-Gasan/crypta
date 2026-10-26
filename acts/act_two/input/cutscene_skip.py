@@ -1,6 +1,7 @@
 import pygame
 
 from acts.act_two.presentation.awakening_timing import (
+    CLASS_SELECTION_CHOICE_END_MS,
     CLASS_SELECTION_READY_MS,
 )
 from acts.act_two.presentation.bosses.oracle_intro import (
@@ -56,22 +57,39 @@ class ActTwoCutsceneSkip:
         if not enabled:
             return None, None, 0, 0
 
-        if (
-            game_state.class_selection_open
-            and game_state.class_selection_choice is None
-            and current_time - game_state.class_transition_started_at
-            < CLASS_SELECTION_READY_MS
-        ):
-            return (
-                (
-                    "awakening",
-                    id(game_state),
-                    game_state.class_transition_started_at,
-                ),
-                None,
-                0,
-                0,
-            )
+        if game_state.class_selection_open:
+            if (
+                game_state.class_selection_choice is None
+                and current_time - game_state.class_transition_started_at
+                < CLASS_SELECTION_READY_MS
+            ):
+                return (
+                    (
+                        "awakening",
+                        id(game_state),
+                        game_state.class_transition_started_at,
+                    ),
+                    None,
+                    0,
+                    0,
+                )
+
+            if (
+                game_state.class_selection_choice is not None
+                and current_time
+                - game_state.class_selection_choice_started_at
+                < CLASS_SELECTION_CHOICE_END_MS
+            ):
+                return (
+                    (
+                        "awakening_choice",
+                        id(game_state),
+                        game_state.class_selection_choice_started_at,
+                    ),
+                    None,
+                    0,
+                    0,
+                )
 
         floor = game_state.floor
 
@@ -218,6 +236,10 @@ class ActTwoCutsceneSkip:
         if self.target[0] == "awakening":
             game_state.class_transition_started_at = (
                 current_time - CLASS_SELECTION_READY_MS - 500
+            )
+        elif self.target[0] == "awakening_choice":
+            game_state.class_selection_choice_started_at = (
+                current_time - CLASS_SELECTION_CHOICE_END_MS
             )
         else:
             scene.skip_frame = frame.copy()

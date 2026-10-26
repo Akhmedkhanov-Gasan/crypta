@@ -2403,7 +2403,7 @@ def draw_player(
         )
         return
 
-    if act_number == 2 and player_class is not None:
+    if act_number == 2:
         draw_act_two_player_actor(
             screen,
             sprites,

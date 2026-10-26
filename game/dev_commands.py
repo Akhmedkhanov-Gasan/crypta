@@ -1,3 +1,7 @@
+from acts.act_one.dev_commands import (
+    ACT_ONE_CONSOLE_HELP,
+    execute_act_one_console_command,
+)
 from acts.act_two.dev_commands import (
     ACT_TWO_CONSOLE_HELP,
     execute_act_two_console_command,
@@ -8,20 +12,41 @@ from acts.act_three.dev_commands import (
 )
 
 
+CONSOLE_COMMANDS = (
+    "help",
+    "clear",
+    "level",
+    "gold",
+    "wake",
+    "seal",
+    "rune",
+    "altar",
+    "trade",
+    "skills",
+)
+
 CONSOLE_HELP = (
     "help     - list commands",
     "clear    - clear console output",
     "level [X] - add X levels and attribute points (default: 1)",
     "gold     - add 10 gold",
     "gold X   - add X gold",
+    *ACT_ONE_CONSOLE_HELP,
     *ACT_TWO_CONSOLE_HELP,
     *ACT_THREE_CONSOLE_HELP,
-    "Up / Down - command history",
+    "Tab      - complete command",
+    "Up / Down - suggestions or command history",
+    "W / S    - previous or next active suggestion",
     "Esc / ~  - close console",
 )
 
 
-def execute_console_command(game_state, command, close_console):
+def execute_console_command(
+    game_state,
+    command,
+    close_console,
+    request_debug_jump,
+):
     parts = command.lower().split()
 
     if not parts:
@@ -71,6 +96,14 @@ def execute_console_command(game_state, command, close_console):
         player.gold_count += amount
 
         return f"Gold: {player.gold_count} (+{amount})."
+
+    result = execute_act_one_console_command(
+        parts,
+        close_console,
+        request_debug_jump,
+    )
+    if result is not None:
+        return result
 
     result = execute_act_two_console_command(
         game_state,

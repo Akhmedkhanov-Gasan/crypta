@@ -1,5 +1,4 @@
 import json
-import math
 from copy import deepcopy
 from functools import lru_cache
 from types import SimpleNamespace
@@ -18,20 +17,16 @@ from presentation.figma_ui import (
 )
 
 from presentation.layout import (
-    AWAKENING_OLD_MAN_APPROACH_START_MS,
-    AWAKENING_RECOVERY_BLINK_END_MS,
-    AWAKENING_RECOVERY_BLINK_START_MS,
-    AWAKENING_SECOND_OPEN_START_MS,
     CLASS_SELECTION_READY_MS,
     PROJECT_ROOT,
 )
 from settings import GAME_HEIGHT, GAME_WIDTH, MAX_ATTRIBUTE_RANK
 
 
-OLD_MAN_RESPONSES = {
-    "warrior": "Then stand, and let the Crypta break against you.",
-    "rogue": "Then walk where even the Crypta cannot see.",
-    "mage": "Then look deeper. But beware what looks back.",
+AWAKENING_CLASS_IDS = {
+    "warrior",
+    "rogue",
+    "mage",
 }
 
 ATTRIBUTE_LABELS = {
@@ -59,7 +54,7 @@ def load_awakening_layout():
         layout = json.load(source)
 
     if (
-        layout.get("schema_version") != 1
+        layout.get("schema_version") != 2
         or layout.get("screen") != "awakening"
         or layout.get("act") != 2
         or layout.get("coordinate_space") != "frame"
@@ -75,7 +70,7 @@ def load_awakening_layout():
 
     choices = layout["class_choices"]
     order = choices["order"]
-    if len(order) != 3 or set(order) != set(OLD_MAN_RESPONSES):
+    if len(order) != 3 or set(order) != AWAKENING_CLASS_IDS:
         raise ValueError("Awakening must contain mage, warrior and rogue")
 
     for class_name in order:
@@ -305,62 +300,6 @@ def _draw_attributes(screen, attributes, class_name, current_ranks):
         x += rendered.get_width() + gap
 
 
-def draw_awakening_old_man(
-    screen,
-    sprites,
-    elapsed_ms,
-    choice_elapsed_ms,
-):
-    if elapsed_ms < AWAKENING_SECOND_OPEN_START_MS:
-        return
-
-    states = load_awakening_layout()["art"]["old_man_states"]
-    midpoint = (
-        AWAKENING_RECOVERY_BLINK_START_MS
-        + AWAKENING_RECOVERY_BLINK_END_MS
-    ) // 2
-
-    near = elapsed_ms >= midpoint
-    spec = states["near" if near else "far"]
-    original = figma_rect(spec["rect"])
-    scale = 1.0
-    opacity = 1.0
-
-    if not near:
-        approach = _progress(
-            elapsed_ms,
-            AWAKENING_OLD_MAN_APPROACH_START_MS,
-            midpoint,
-        )
-        scale = 0.88 + 0.12 * approach
-
-    retreat = 0.0
-    if choice_elapsed_ms is not None:
-        retreat = _progress(choice_elapsed_ms, 300, 1700)
-        scale *= 1.0 - 0.18 * retreat
-        opacity *= 1.0 - retreat
-
-    rect = pygame.Rect(
-        0,
-        0,
-        max(1, round(original.width * scale)),
-        max(1, round(original.height * scale)),
-    )
-    rect.midbottom = (
-        original.centerx,
-        original.bottom
-        + round(math.sin(elapsed_ms / 850) * 1.2)
-        - round(12 * retreat),
-    )
-    _draw_image(
-        screen,
-        sprites,
-        spec,
-        rect=rect,
-        opacity=opacity,
-    )
-
-
 def draw_awakening_choices(
     screen,
     sprites,
@@ -429,35 +368,5 @@ def draw_awakening_choices(
 
         layer.set_alpha(round(255 * opacity))
         screen.blit(layer, (0, 0))
-
-    if selected_class is not None:
-        spec = choices["options"][selected_class]["portrait"]
-        original = figma_rect(spec["rect"])
-        progress = _progress(choice_elapsed_ms, 180, 1550)
-        scale = 1.0 + 2.2 * progress
-
-        rect = pygame.Rect(
-            0,
-            0,
-            round(original.width * scale),
-            round(original.height * scale),
-        )
-        rect.center = (
-            round(
-                original.centerx
-                + (GAME_WIDTH / 2 - original.centerx) * progress
-            ),
-            round(
-                original.centery
-                + (GAME_HEIGHT * 0.62 - original.centery) * progress
-            ),
-        )
-        _draw_image(
-            screen,
-            sprites,
-            spec,
-            rect=rect,
-            opacity=1.0 - _progress(choice_elapsed_ms, 1200, 1950),
-        )
 
     return hovered_class

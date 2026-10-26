@@ -337,15 +337,16 @@ def draw_act_one_gameplay(
         player.act_one_movement_origin,
     )
     draw_act_one_camera_view(game_surface, world_surface, camera)
-    draw_act_one_hud(
-        game_surface,
-        game_state,
-        fonts["hud"],
-        fonts["hud_small"],
-        status_font,
-        gameplay_assets,
-        current_time,
-    )
+    if not game_state.class_selection_open:
+        draw_act_one_hud(
+            game_surface,
+            game_state,
+            fonts["hud"],
+            fonts["hud_small"],
+            status_font,
+            gameplay_assets,
+            current_time,
+        )
 
     if game_state.upgrade_screen_open:
         draw_act_one_upgrade_screen(

@@ -93,6 +93,7 @@ class ApplicationMenuRuntime:
         highest_act_reached,
         current_time,
         fullscreen,
+        dev_console,
     ):
         self.update_music(
             game_state,
@@ -129,6 +130,7 @@ class ApplicationMenuRuntime:
             menu_layouts=menu_layouts,
         )
         draw_run_save_error(game_surface, run_session.error)
+        dev_console.draw(game_surface)
         present_game(screen, game_surface)
         clock.tick(FPS)
 

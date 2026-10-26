@@ -415,6 +415,7 @@ def run():
                 menu_progress.highest_act_reached,
                 current_time,
                 window_state.fullscreen,
+                dev_console,
             )
             continue
 

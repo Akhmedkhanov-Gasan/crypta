@@ -3,6 +3,10 @@ from dataclasses import dataclass
 from acts.act_one.music import update_act_one_music
 from acts.act_one.runtime import advance_act_one_scenes, refresh_act_one_visibility
 from acts.act_three.runtime import advance_act_three_frame
+from acts.act_two.class_selection import (
+    advance_act_two_awakening,
+    begin_act_two_awakening,
+)
 from acts.act_two.presentation.bosses.oracle_audio import update_oracle_fire_audio
 from acts.act_two.runtime import advance_oracle_runtime
 from application.transitions import advance_floor_transition, complete_class_selection
@@ -115,6 +119,14 @@ class ApplicationFrameUpdater:
             current_act,
             current_time,
             self.act_three_sounds,
+        )
+        begin_act_two_awakening(
+            game_state,
+            current_time,
+        )
+        advance_act_two_awakening(
+            game_state,
+            current_time,
         )
         act_one_music_attempted = self.act_three_audio_runtime.ensure_music(
             game_state,
