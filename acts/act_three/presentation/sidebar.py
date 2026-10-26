@@ -4,7 +4,7 @@ import pygame
 
 from game.progression import experience_required_for_level
 from game.rune_catalog import RUNES_BY_ID
-from presentation.hud import get_event_color, wrap_text
+from presentation.text import get_event_color, wrap_text
 from presentation.layout import (
     ACT_THREE_BOTTOM_BAR_HEIGHT,
     ACT_THREE_BOTTOM_BAR_WIDTH,

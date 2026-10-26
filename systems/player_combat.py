@@ -32,7 +32,7 @@ from acts.act_two.bloody_altar import (
     try_apply_open_wound_bleed,
 )
 from game.attributes import attribute_stat_changes_for_rank
-from acts.act_two.presentation.bosses.oracle_health import (
+from acts.act_two.enemies.oracle.health import (
     limit_oracle_phase_one_damage,
 )
 from game.combat_log import add_log_message

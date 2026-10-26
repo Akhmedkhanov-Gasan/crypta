@@ -9,7 +9,7 @@ import resource_store as resources
 from acts.act_two.presentation.bosses.oracle_audio import (
     play_oracle_attack_sound,
 )
-from acts.act_two.presentation.bosses.oracle_balance import (
+from acts.act_two.enemies.oracle.balance import (
     PHASE_TWO_BLACKFIRE_CHANCE,
     PHASE_TWO_HAZARD_CELLS,
     PHASE_TWO_HAZARD_DAMAGE,

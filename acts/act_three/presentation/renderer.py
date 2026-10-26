@@ -35,7 +35,7 @@ from acts.act_three.presentation.world import _draw_act_three_world
 from presentation.floor_progress import (
     draw_floor_indicator,
 )
-from presentation.hud import wrap_text
+from presentation.text import wrap_text
 from presentation.layout import (
     ACT_THREE_TILE_SIZE,
     ACT_THREE_VIEW_HEIGHT,

@@ -1,4 +1,4 @@
-from acts.act_three.enemy_generation import (
+from acts.act_three.enemies.generation import (
     populate_act_three_enemies,
 )
 from acts.act_three.room_generation import (

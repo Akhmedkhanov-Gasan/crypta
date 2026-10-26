@@ -2,6 +2,7 @@ import random
 
 from acts.act_one.state import (
     ActOneIntroState,
+    ActOneSessionState,
     ActOneWardenIntroState,
 )
 from acts.act_one.settings import (
@@ -12,10 +13,10 @@ from acts.act_two.state import (
     ActOneRevisitCorpseState,
     ActOneRevisitState,
 )
-from acts.act_two.enemy_balance import act_two_enemy_config
+from acts.act_two.enemies.balance import act_two_enemy_config
 from game.attributes import ATTRIBUTE_ORDER
 from enemies import ENEMY_TYPES
-from generation import generate_floor
+from acts.floor_factory import generate_floor
 from levels import FLOOR_CONFIGS
 from game.state import (
     BreakableCrateState,
@@ -403,13 +404,15 @@ def create_game_state(
         floor=initial_floor,
         player=create_player_state(),
         combat_log=[opening_message],
-        act_one_intro=(
-            ActOneIntroState(
-                column=initial_floor.player_column,
-                row=initial_floor.player_row,
-            )
-            if floor_index == 0
-            else None
+        act_one=ActOneSessionState(
+            act_one_intro=(
+                ActOneIntroState(
+                    column=initial_floor.player_column,
+                    row=initial_floor.player_row,
+                )
+                if floor_index == 0
+                else None
+            ),
         ),
         act_two_trader_floor_index=(
             act_two_trader_floor_index

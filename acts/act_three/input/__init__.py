@@ -4,9 +4,15 @@ from acts.act_three.input.keyboard import (
 from acts.act_three.input.pointer import (
     handle_act_three_pointer_event,
 )
+from acts.act_three.input.flow import (
+    ActThreeFlowInputResult,
+    handle_act_three_flow_key,
+)
 
 
 __all__ = [
     "handle_act_three_key_event",
     "handle_act_three_pointer_event",
+    "ActThreeFlowInputResult",
+    "handle_act_three_flow_key",
 ]

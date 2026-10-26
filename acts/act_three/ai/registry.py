@@ -1,7 +1,7 @@
 from acts.act_three.ai.lantern_warden import (
     take_lantern_warden_turn,
 )
-from acts.act_three.enemies import LANTERN_WARDEN_TYPE
+from acts.act_three.enemies.catalog import LANTERN_WARDEN_TYPE
 
 
 ACT_THREE_ENEMY_TURN_HANDLERS = {

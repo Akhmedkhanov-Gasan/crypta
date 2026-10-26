@@ -1,0 +1,1226 @@
+import pygame
+from acts.act_three.presentation.awakening_assets import (
+    load_act_three_transition_assets,
+)
+from acts.act_three.presentation.hud import (
+    load_act_three_hud_assets,
+)
+from acts.act_three.presentation.tmx_tiles import load_tmx_tiles
+from acts.act_two.assets import (
+    load_item_pile_sprite,
+    load_pickup_hint_font,
+)
+from acts.act_three.presentation.archer.animation import (
+    load_archer_animation_assets,
+)
+from acts.act_three.presentation.archer.projectile import (
+    make_archer_arrow_sprite,
+)
+from acts.act_three.presentation.player_assets import (
+    load_assassin_animation_assets,
+    load_berserker_animation_assets,
+    load_warlock_animation_assets,
+)
+from acts.act_three.presentation.paladin.animation import (
+    load_paladin_animation_assets,
+)
+from acts.act_three.presentation.summoner.animation import (
+    load_summoner_animation_assets,
+)
+from acts.act_three.presentation.summoner.familiar import (
+    load_summoner_familiar_assets,
+)
+from acts.act_three.presentation.summoner.true_form import (
+    load_summoner_true_form_assets,
+)
+from acts.act_three.presentation.enemies import (
+    load_enemy_animation_assets,
+)
+from acts.act_three.presentation.ability_assets import (
+    load_act_three_ability_assets,
+)
+from acts.act_three.presentation.consumable_assets import (
+    load_act_three_consumable_assets,
+)
+import resource_store as resources
+import xml.etree.ElementTree as ET
+
+import json
+
+from game.rune_catalog import RUNE_DEFINITIONS
+from levels import FLOOR_CONFIGS
+from presentation.layout import (
+    ACT_THREE_TILE_SIZE,
+    ASSET_ROOT,
+    FONT_ROOT,
+    PROJECT_ROOT,
+)
+from settings import GAME_HEIGHT, GAME_WIDTH, TILE_SIZE
+
+
+def load_menu_assets() -> dict:
+    menu_directory = ASSET_ROOT / "ui" / "menu"
+
+    act_one_directory = menu_directory / "act_1"
+    act_two_directory = menu_directory / "act_2"
+    act_three_directory = menu_directory / "act_3"
+
+    return {
+        "act_two_background": resources.load_image(
+            str(act_two_directory / "act_2_background.png")
+        ).convert(),
+
+        "act_three_background": resources.load_image(
+            str(act_three_directory / "act_3_background.png")
+        ).convert(),
+
+        "act_one_menu_frame": resources.load_image(
+            str(act_one_directory / "menu_frame.png")
+        ).convert_alpha(),
+
+        "act_two_menu_frame": resources.load_image(
+            str(act_two_directory / "menu_frame.png")
+        ).convert_alpha(),
+
+        "act_two_menu_title": resources.load_image(
+            str(act_two_directory / "title.png")
+        ).convert_alpha(),
+
+        "act_three_menu_frame": resources.load_image(
+            str(act_three_directory / "menu_frame.png")
+        ).convert_alpha(),
+
+        "act_three_menu_title": resources.load_image(
+            str(act_three_directory / "menu_title.png")
+        ).convert_alpha(),
+    }
+
+
+def load_menu_layouts():
+    layout_path = (
+        PROJECT_ROOT
+        / "assets"
+        / "ui"
+        / "layouts"
+        / "menu.json"
+    )
+
+    with resources.open_text(layout_path, encoding="utf-8") as file:
+        bundle = json.load(file)
+
+    if (
+        not isinstance(bundle, dict)
+        or bundle.get("schema_version") != 1
+        or bundle.get("screen") != "menu_bundle"
+    ):
+        raise ValueError(
+            f"Menu bundle {layout_path} must use "
+            "screen: menu_bundle and schema_version: 1."
+        )
+
+    acts = bundle.get("acts")
+
+    if not isinstance(acts, dict):
+        raise ValueError(
+            f"Menu bundle {layout_path} must contain acts."
+        )
+
+    expected_screens = {
+        "main": "menu",
+        "settings": "menu_settings",
+        "confirm": "menu_confirm",
+        "pause": "menu_pause",
+    }
+    layouts = {}
+
+    for act in (1, 2, 3):
+        pages = acts.get(str(act))
+
+        if not isinstance(pages, dict):
+            raise ValueError(
+                f"Menu bundle {layout_path} is missing act {act}."
+            )
+
+        layouts[act] = {}
+
+        for page, screen in expected_screens.items():
+            layout = pages.get(page)
+
+            if (
+                not isinstance(layout, dict)
+                or layout.get("schema_version") != 2
+                or layout.get("act") != act
+                or layout.get("screen") != screen
+            ):
+                raise ValueError(
+                    f"Invalid menu layout: act {act}, page {page}."
+                )
+
+            frame = layout.get("frame")
+
+            if (
+                not isinstance(frame, dict)
+                or frame.get("width") != 1280
+                or frame.get("height") != 720
+            ):
+                raise ValueError(
+                    f"Menu layout act {act}, page {page} "
+                    "must be 1280x720."
+                )
+
+            layouts[act][page] = layout
+
+    return layouts
+
+
+def load_act_two_fonts():
+    pixelify_directory = FONT_ROOT / "Pixelify_Sans"
+    regular_path = pixelify_directory / "PixelifySans-Regular.ttf"
+    medium_path = pixelify_directory / "PixelifySans-Medium.ttf"
+    semibold_path = pixelify_directory / "PixelifySans-SemiBold.ttf"
+    bold_path = pixelify_directory / "PixelifySans-Bold.ttf"
+    alagard_path = FONT_ROOT / "alagard" / "alagard.ttf"
+
+    return {
+        "title": resources.load_font(str(alagard_path), 42),
+        "heading": resources.load_font(str(alagard_path), 20),
+        "status": resources.load_font(str(alagard_path), 22),
+        "text": resources.load_font(str(regular_path), 17),
+        "log": resources.load_font(str(regular_path), 15),
+        "ability_text": resources.load_font(str(medium_path), 16),
+        "controls": resources.load_font(str(medium_path), 17),
+        "sidebar_heading": resources.load_font(str(semibold_path), 16),
+        "sidebar_text": resources.load_font(str(regular_path), 16),
+        "sidebar_controls": resources.load_font(str(medium_path), 15),
+        "trade_name": resources.load_font(str(semibold_path), 16),
+        "trade_description": resources.load_font(str(regular_path), 15),
+        "trade_price": resources.load_font(str(bold_path), 16),
+        "pickup_hint": load_pickup_hint_font(),
+    }
+
+def load_act_two_hud_layout():
+    layout_path = (
+        PROJECT_ROOT
+        / "assets"
+        / "ui"
+        / "layouts"
+        / "act_2"
+        / "HUD_Act2.json"
+    )
+
+    with resources.open_text(layout_path, encoding="utf-8") as file:
+        layout = json.load(file)
+
+    if layout.get("screen") != "hud":
+        raise ValueError(
+            'Act II HUD layout must have screen: "hud".'
+        )
+
+    if layout.get("act") != 2:
+        raise ValueError(
+            "Act II HUD layout must have act: 2."
+        )
+
+    return layout
+
+
+def load_act_two_trade_layout():
+    layout_path = (
+        PROJECT_ROOT
+        / "assets"
+        / "ui"
+        / "layouts"
+        / "act_2"
+        / "trade.json"
+    )
+
+    with resources.open_text(layout_path, encoding="utf-8") as file:
+        return json.load(file)
+
+
+def load_act_three_fonts():
+    display_path = FONT_ROOT / "Sandey Molse DEMO.ttf"
+    hud_path = FONT_ROOT / "Almendra-Regular.ttf"
+    hud_bold_path = FONT_ROOT / "Almendra-Bold.ttf"
+    interface_path = FONT_ROOT / "AtkinsonHyperlegible-Regular.ttf"
+    interface_bold_path = FONT_ROOT / "AtkinsonHyperlegible-Bold.ttf"
+
+    hud_value_font = resources.load_font(str(hud_path), 17)
+    hud_value_font.set_bold(True)
+    hud_value_font.set_italic(True)
+
+    return {
+        "title": resources.load_font(str(display_path), 46),
+        "heading": resources.load_font(str(display_path), 28),
+        "narrative": resources.load_font(str(display_path), 27),
+        "text": resources.load_font(str(interface_path), 20),
+        "sidebar_display": resources.load_font(
+            str(display_path),
+            23,
+        ),
+        "sidebar_heading": resources.load_font(
+            str(interface_bold_path),
+            22,
+        ),
+        "sidebar_text": resources.load_font(
+            str(interface_path),
+            19,
+        ),
+        "sidebar_log": resources.load_font(
+            str(interface_path),
+            16,
+        ),
+        "sidebar_hud": resources.load_font(
+            str(interface_path),
+            13,
+        ),
+        "hud_value": hud_value_font,
+        "hud_level": resources.load_font(str(hud_bold_path), 18),
+        "sidebar_class": resources.load_font(
+            str(display_path),
+            19,
+        ),
+        "sidebar_numbers": resources.load_font(
+            str(interface_bold_path),
+            18,
+        ),
+    }
+
+
+def load_act_two_sprites():
+    asset_directory = ASSET_ROOT / "act_2"
+    ui_directory = ASSET_ROOT / "ui" / "act_2"
+    sprite_paths = {
+        "player_warrior": "player/warrior/idle/idle_00.png",
+        "player_warrior_hurt": "player/warrior/hurt/hurt_00.png",
+        "player_warrior_walk_0": "player/warrior/walk/down/walk_00.png",
+        "player_warrior_walk_1": "player/warrior/walk/down/walk_01.png",
+        "player_warrior_walk_2": "player/warrior/walk/down/walk_02.png",
+        "player_warrior_walk_side_right_0": (
+            "player/warrior/walk/side/walk_00.png"
+        ),
+        "player_warrior_walk_side_right_1": (
+            "player/warrior/walk/side/walk_01.png"
+        ),
+        "player_warrior_walk_side_right_2": (
+            "player/warrior/walk/side/walk_02.png"
+        ),
+        "player_warrior_walk_up_0": "player/warrior/walk/up/walk_00.png",
+        "player_warrior_walk_up_1": "player/warrior/walk/up/walk_01.png",
+        "player_warrior_walk_up_2": "player/warrior/walk/up/walk_02.png",
+        "player_warrior_attack_side_right_0": (
+            "player/warrior/attack/side/attack_00.png"
+        ),
+        "player_warrior_attack_side_right_1": (
+            "player/warrior/attack/side/attack_01.png"
+        ),
+        "player_warrior_attack_side_right_2": (
+            "player/warrior/attack/side/attack_02.png"
+        ),
+        "player_warrior_attack_up_0": (
+            "player/warrior/attack/up/attack_00.png"
+        ),
+        "player_warrior_attack_up_1": (
+            "player/warrior/attack/up/attack_01.png"
+        ),
+        "player_warrior_attack_up_2": (
+            "player/warrior/attack/up/attack_02.png"
+        ),
+        "player_warrior_attack_down_0": (
+            "player/warrior/attack/down/attack_00.png"
+        ),
+        "player_warrior_attack_down_1": (
+            "player/warrior/attack/down/attack_01.png"
+        ),
+        "player_warrior_attack_down_2": (
+            "player/warrior/attack/down/attack_02.png"
+        ),
+        "player_warrior_death_0": "player/warrior/death/death_00.png",
+        "player_warrior_death_1": "player/warrior/death/death_01.png",
+        "player_rogue": "player/rogue/idle/idle_00.png",
+        "player_rogue_walk_0": "player/rogue/walk/down/walk_00.png",
+        "player_rogue_walk_1": "player/rogue/walk/down/walk_01.png",
+        "player_rogue_walk_2": "player/rogue/walk/down/walk_02.png",
+        "player_rogue_walk_side_right_0": (
+            "player/rogue/walk/side/walk_00.png"
+        ),
+        "player_rogue_walk_side_right_1": (
+            "player/rogue/walk/side/walk_01.png"
+        ),
+        "player_rogue_walk_side_right_2": (
+            "player/rogue/walk/side/walk_02.png"
+        ),
+        "player_rogue_walk_up_0": "player/rogue/walk/up/walk_00.png",
+        "player_rogue_walk_up_1": "player/rogue/walk/up/walk_01.png",
+        "player_rogue_walk_up_2": "player/rogue/walk/up/walk_02.png",
+        "player_rogue_attack_side_right": (
+            "player/rogue/attack/side/attack_00.png"
+        ),
+        "player_rogue_attack_side_left": (
+            "player/rogue/attack/side/attack_left_00.png"
+        ),
+        "player_rogue_attack_down": (
+            "player/rogue/attack/down/attack_00.png"
+        ),
+        "player_rogue_attack_up": (
+            "player/rogue/attack/up/attack_00.png"
+        ),
+        "player_rogue_death_0": "player/rogue/death/death_00.png",
+        "player_rogue_death_1": "player/rogue/death/death_01.png",
+        "player_mage": "player/mage/idle/idle_00.png",
+        "player_mage_walk_0": "player/mage/walk/down/walk_00.png",
+        "player_mage_walk_1": "player/mage/walk/down/walk_01.png",
+        "player_mage_walk_2": "player/mage/walk/down/walk_02.png",
+        "player_mage_walk_side_right_0": (
+            "player/mage/walk/side/walk_00.png"
+        ),
+        "player_mage_walk_side_right_1": (
+            "player/mage/walk/side/walk_01.png"
+        ),
+        "player_mage_walk_side_right_2": (
+            "player/mage/walk/side/walk_02.png"
+        ),
+        "player_mage_walk_up_0": "player/mage/walk/up/walk_00.png",
+        "player_mage_walk_up_1": "player/mage/walk/up/walk_01.png",
+        "player_mage_walk_up_2": "player/mage/walk/up/walk_02.png",
+        "player_mage_attack_side_right": (
+            "player/mage/attack/side/attack_00.png"
+        ),
+        "player_mage_attack_side_left": (
+            "player/mage/attack/side/attack_left_00.png"
+        ),
+        "player_mage_death_0": "player/mage/death/death_00.png",
+        "player_mage_death_1": "player/mage/death/death_01.png",
+        "old_man_standing": "npcs/old_man/standing/standing_00.png",
+        "old_man_kneeling": "npcs/old_man/kneeling/kneeling_00.png",
+        "trader_idle_0": "npcs/trader/trader_1.png",
+        "trader_idle_1": "npcs/trader/trader_2.png",
+        "trader_idle_2": "npcs/trader/trader_3.png",
+        "trader_idle_3": "npcs/trader/trader_4.png",
+        "goblin": "enemies/goblin/idle/idle_00.png",
+        "goblin_attack": "enemies/goblin/attack/attack_00.png",
+        "goblin_death": "enemies/goblin/death/death_00.png",
+        "mimic": "enemies/mimic/idle/idle_00.png",
+        "mimic_attack": "enemies/mimic/attack/attack_00.png",
+        "mimic_death": "enemies/mimic/death/death_00.png",
+        "brute": "enemies/brute/idle/idle_00.png",
+        "brute_attack": "enemies/brute/attack/attack_00.png",
+        "brute_death": "enemies/brute/death/death_00.png",
+        "archer": "enemies/archer/idle/idle_00.png",
+        "archer_attack": "enemies/archer/attack/attack_00.png",
+        "archer_death": "enemies/archer/death/death_00.png",
+        "sentinel_idle": "enemies/sentinel/idle/idle_00.png",
+        "sentinel_attack": "enemies/sentinel/attack/attack_00.png",
+        "sentinel_guard": "enemies/sentinel/guard/guard_00.png",
+        "sentinel_death": "enemies/sentinel/death/death_00.png",
+        "priest_idle": "enemies/priest/idle/idle_00.png",
+        "priest_attack": "enemies/priest/attack/attack_00.png",
+        "priest_cast": "enemies/priest/cast/cast_00.png",
+        "priest_death": "enemies/priest/death/death_00.png",
+        "priest_ghost_idle": (
+            "enemies/priest_ghost/idle/idle_00.png"
+        ),
+        "priest_ghost_attack": (
+            "enemies/priest_ghost/attack/attack_00.png"
+        ),
+        "priest_ghost_cast": (
+            "enemies/priest_ghost/cast/cast_00.png"
+        ),
+        "priest_ghost_death": (
+            "enemies/priest_ghost/death/death_00.png"
+        ),
+        "oracle_base": "bosses/oracle/idle/oracle_base.png",
+        "oracle_head": "bosses/oracle/idle/oracle_head.png",
+        "oracle_eye_idle": "bosses/oracle/idle/oracle_eye_idle.png",
+        "oracle_eye_cast": "bosses/oracle/idle/oracle_eye_cast.png",
+        "oracle_eye_shockwave": (
+            "bosses/oracle/idle/oracle_eye_shockwave.png"
+        ),
+        "oracle_projectile": (
+            "bosses/oracle/projectiles/projectiles_00.png"
+        ),
+        "oracle_projectile_homing": (
+            "bosses/oracle/projectiles/projectiles_01.png"
+        ),
+        "pillar": "bosses/oracle/arena/pillar.png",
+        "floor": "environment/tiles/floor.png",
+        "floor_layout_b": (
+            "environment/tiles/floor_variants/floor_layout_b.png"
+        ),
+        "floor_fissure": (
+            "environment/tiles/floor_variants/floor_fissure.png"
+        ),
+        "floor_fissure_cross": (
+            "environment/tiles/floor_variants/floor_fissure_cross.png"
+        ),
+        "floor_puddle": (
+            "environment/tiles/floor_variants/floor_puddle.png"
+        ),
+        "floor_rubble_heavy": (
+            "environment/tiles/floor_variants/floor_rubble_heavy.png"
+        ),
+        "floor_drain": (
+            "environment/tiles/floor_variants/floor_drain.png"
+        ),
+        "floor_burial_seal": (
+            "environment/tiles/floor_variants/floor_burial_seal.png"
+        ),
+        "spike_trap_hole": "environment/traps/spike_trap_hole.png",
+        "spike_trap_warning": "environment/traps/spike_trap_warning.png",
+        "spike_trap_active": "environment/traps/spike_trap_active.png",
+        "wall": "environment/tiles/wall.png",
+        "wall_torch": (
+            "environment/tiles/wall_variants/wall_torch.png"
+        ),
+        "wall_chains": (
+            "environment/tiles/wall_variants/wall_chains.png"
+        ),
+        "wall_broken": (
+            "environment/tiles/wall_variants/wall_broken.png"
+        ),
+        "wall_iron_shackle": (
+            "environment/tiles/wall_variants/wall_iron_shackle.png"
+        ),
+        "wall_secret": (
+            "environment/tiles/wall_variants/wall_secret.png"
+        ),
+        "wall_secret_2": (
+            "environment/tiles/wall_variants/wall_secret_2.png"
+        ),
+        "wall_damp": (
+            "environment/tiles/wall_variants/wall_damp.png"
+        ),
+        "wall_skull_niche": (
+            "environment/tiles/wall_variants/wall_skull_niche.png"
+        ),
+        "decor_floor_broken_barrel": (
+            "environment/decor/floor/broken_barrel.png"
+        ),
+        "decor_floor_skeleton_sprawled": (
+            "environment/decor/floor/skeleton_sprawled.png"
+        ),
+        "decor_floor_skeleton_curled": (
+            "environment/decor/floor/skeleton_curled.png"
+        ),
+        "decor_floor_bone_pile": (
+            "environment/decor/floor/bone_pile.png"
+        ),
+        "decor_floor_broken_crate": (
+            "environment/decor/floor/broken_crate.png"
+        ),
+        "decor_floor_urn_shards": (
+            "environment/decor/floor/urn_shards.png"
+        ),
+        "decor_floor_boss_brazier": (
+            "environment/decor/floor/boss_brazier.png"
+        ),
+        "decor_wall_cobweb": "environment/decor/wall/cobweb.png",
+        "decor_wall_torn_banner": (
+            "environment/decor/wall/torn_banner.png"
+        ),
+        "decor_wall_guardian_statue": (
+            "environment/decor/wall/guardian_statue.png"
+        ),
+        "decor_wall_mourner_statue": (
+            "environment/decor/wall/mourner_statue.png"
+        ),
+        "passage_gate_open": "environment/passages/gate.png",
+        "passage_gate_closed": "environment/passages/gate.png",
+        "passage_gate_return_open": (
+            "environment/passages/gate_out.png"
+        ),
+        "passage_gate_return_closed": (
+            "environment/passages/gate_out.png"
+        ),
+        "act_one_dead_boss": (
+            "environment/objects/act1_dead_boss.png"
+        ),
+        "guild_seal": (
+            "environment/objects/guild_seal.png"
+        ),
+        "trader_corpse_1": (
+            "npcs/trader_corpse/trader_corpse_1.png"
+        ),
+        "trader_corpse_2": (
+            "npcs/trader_corpse/trader_corpse_2.png"
+        ),
+        "trader_corpse_3": (
+            "npcs/trader_corpse/trader_corpse_3.png"
+        ),
+        "trader_corpse_4": (
+            "npcs/trader_corpse/trader_corpse_4.png"
+        ),
+        "potion": "items/consumables/potion.png",
+        "potion_belt": "items/consumables/potion_belt.png",
+        "fire_bomb": "items/consumables/fire_bomb.png",
+        "fire_bomb_belt": "items/consumables/fire_bomb_belt.png",
+        "scroll_of_stoneflesh": (
+            "items/consumables/scroll_of_stoneflesh.png"
+        ),
+        "scroll_of_binding": (
+            "items/consumables/scroll_of_binding.png"
+        ),
+        "healing_scroll": "items/consumables/healing_scroll.png",
+        "scroll_of_arcane_impulse": (
+            "items/consumables/scroll_of_impulse.png"
+        ),
+        "binding_chains": "items/consumables/effects/chains.png",
+        "oracle_binding_chains": (
+            "items/consumables/effects/chains_oracle.png"
+        ),
+        "fire_0": "environment/effects/fire/fire_00.png",
+        "fire_1": "environment/effects/fire/fire_01.png",
+        "fire_2": "environment/effects/fire/fire_02.png",
+        "fire_3": "environment/effects/fire/fire_03.png",
+        "key": "items/loot/key.png",
+        "key_belt": "items/loot/key_belt.png",
+        "coin": "items/loot/coin.png",
+        "coin_pile": "items/loot/coin_pile.png",
+        "chest_closed": "items/chests/closed.png",
+        "chest_open": "items/chests/open.png",
+        "stash_closed": "items/chests/closed_stash.png",
+        "stash_open": "items/chests/open_stash.png",
+        "treasury_chest": "items/chests/treasury_closed.png",
+        "breakable_crate_1": (
+            "environment/objects/breakable_crates/crate_01.png"
+        ),
+        "breakable_crate_1_broken": (
+            "environment/objects/breakable_crates/crate_01_broken.png"
+        ),
+        "breakable_crate_2": (
+            "environment/objects/breakable_crates/crate_02.png"
+        ),
+        "breakable_crate_2_broken": (
+            "environment/objects/breakable_crates/crate_02_broken.png"
+        ),
+        "breakable_crate_3": (
+            "environment/objects/breakable_crates/crate_03.png"
+        ),
+        "breakable_crate_3_broken": (
+            "environment/objects/breakable_crates/crate_03_broken.png"
+        ),
+        "treasury_guardian_knight": (
+            "environment/objects/treasury_guardian_knight.png"
+        ),
+        "treasury_guardian_knight_red": (
+            "environment/objects/treasury_guardian_knight_red.png"
+        ),
+        "treasury_guardian_hooded": (
+            "environment/objects/treasury_guardian_hooded.png"
+        ),
+        "treasury_guardian_hooded_red": (
+            "environment/objects/treasury_guardian_hooded_red.png"
+        ),
+        "treasury_gate_horizontal": (
+            "environment/tiles/doorways/treasury_gate.png"
+        ),
+        "rune_pedestal": "environment/objects/rune_pedestal.png",
+        "rune_pedestal_reward": (
+            "environment/objects/rune_pedestal_reward.png"
+        ),
+        "bloody_altar_base": (
+            "environment/objects/bloody_altar/bloody_altar.png"
+        ),
+        "bloody_altar_blood_0": (
+            "environment/objects/bloody_altar/blood_1.png"
+        ),
+        "bloody_altar_blood_1": (
+            "environment/objects/bloody_altar/blood_2.png"
+        ),
+        "bloody_altar_blood_2": (
+            "environment/objects/bloody_altar/blood_3.png"
+        ),
+        "bloody_altar_blood_3": (
+            "environment/objects/bloody_altar/blood_4.png"
+        ),
+        "rune_trident": "environment/runes/rune_trident.png",
+        "rune_eye": "environment/runes/rune_eye.png",
+        "rune_spiral": "environment/runes/rune_spiral.png",
+    }
+
+    sprites = {
+        "item_pile": load_item_pile_sprite(),
+    }
+    oversized_sprite_names = {
+        "oracle_base",
+        "oracle_head",
+        "oracle_eye_idle",
+        "oracle_eye_cast",
+        "oracle_eye_shockwave",
+    }
+
+    for name, relative_path in sprite_paths.items():
+        source_path = asset_directory / relative_path
+        source = resources.load_image(str(source_path)).convert_alpha()
+
+        if name in oversized_sprite_names:
+            sprites[name] = pygame.transform.scale(
+                source,
+                (TILE_SIZE * 3, TILE_SIZE * 3),
+            )
+            continue
+
+        if name == "binding_chains":
+            sprites[name] = pygame.transform.scale(
+                source,
+                (TILE_SIZE, TILE_SIZE),
+            )
+            continue
+
+        if name == "oracle_binding_chains":
+            sprites[name] = pygame.transform.scale(
+                source,
+                (96, 96),
+            )
+            continue
+
+        if name in (
+                "act_one_dead_boss",
+                "guild_seal",
+                "trader_corpse_1",
+                "trader_corpse_2",
+                "trader_corpse_3",
+                "trader_corpse_4",
+        ):
+            sprites[name] = pygame.transform.scale(
+                source,
+                (TILE_SIZE, TILE_SIZE),
+            )
+            continue
+
+        if source.get_size() != (TILE_SIZE, TILE_SIZE):
+            raise ValueError(
+                "Act Two gameplay asset must be "
+                f"{TILE_SIZE}x{TILE_SIZE}, got "
+                f"{source.get_width()}x{source.get_height()}: "
+                f"{source_path}"
+            )
+
+        sprites[name] = source
+
+    for eye_state in ("idle", "cast", "shockwave"):
+        head_group = sprites[f"oracle_eye_{eye_state}"].copy()
+        head_group.blit(
+            sprites["oracle_head"],
+            (0, 0),
+        )
+        sprites[f"oracle_head_{eye_state}"] = head_group
+
+    sprites["treasury_gate_vertical"] = pygame.transform.rotate(
+        sprites["treasury_gate_horizontal"],
+        90,
+    )
+
+    trade_item_directory = asset_directory / "items" / "consumables"
+
+    sprites.update(
+        {
+            "trader_potion": resources.load_image(
+                str(trade_item_directory / "potion_original.png")
+            ).convert_alpha(),
+
+            "trader_fire_bomb": resources.load_image(
+                str(trade_item_directory / "fire_bomb_original.png")
+            ).convert_alpha(),
+
+            "trader_scroll_of_binding": resources.load_image(
+                str(
+                    trade_item_directory
+                    / "scroll_of_binding_original.png"
+                )
+            ).convert_alpha(),
+
+            "trader_scroll_of_arcane_impulse": resources.load_image(
+                str(
+                    trade_item_directory
+                    / "scroll_of_impulse_original.png"
+                )
+            ).convert_alpha(),
+
+            "trader_healing_scroll": resources.load_image(
+                str(
+                    trade_item_directory
+                    / "healing_scroll_original.png"
+                )
+            ).convert_alpha(),
+
+            "trader_scroll_of_stoneflesh": resources.load_image(
+                str(
+                    trade_item_directory
+                    / "scroll_of_stoneflesh_original.png"
+                )
+            ).convert_alpha(),
+        }
+    )
+
+    for frame_index in range(3):
+        sprites[f"player_warrior_walk_side_left_{frame_index}"] = (
+            pygame.transform.flip(
+                sprites[
+                    f"player_warrior_walk_side_right_{frame_index}"
+                ],
+                True,
+                False,
+            )
+        )
+        sprites[f"player_warrior_attack_side_left_{frame_index}"] = (
+            pygame.transform.flip(
+                sprites[
+                    f"player_warrior_attack_side_right_{frame_index}"
+                ],
+                True,
+                False,
+            )
+        )
+        sprites[f"player_rogue_walk_side_left_{frame_index}"] = (
+            pygame.transform.flip(
+                sprites[
+                    f"player_rogue_walk_side_right_{frame_index}"
+                ],
+                True,
+                False,
+            )
+        )
+        sprites[f"player_mage_walk_side_left_{frame_index}"] = (
+            pygame.transform.flip(
+                sprites[
+                    f"player_mage_walk_side_right_{frame_index}"
+                ],
+                True,
+                False,
+            )
+        )
+    for floor_sprite_name in (
+        "floor",
+        "floor_layout_b",
+        "floor_fissure",
+        "floor_fissure_cross",
+        "floor_puddle",
+        "floor_rubble_heavy",
+        "floor_drain",
+        "floor_burial_seal",
+    ):
+        sprites[floor_sprite_name].fill(
+            (150, 145, 160),
+            special_flags=pygame.BLEND_RGB_MULT,
+        )
+    for wall_sprite_name in (
+        "wall",
+        "wall_torch",
+        "wall_chains",
+        "wall_broken",
+        "wall_iron_shackle",
+        "wall_damp",
+        "wall_skull_niche",
+    ):
+        sprites[wall_sprite_name].fill(
+            (10, 12, 16),
+            special_flags=pygame.BLEND_RGB_ADD,
+        )
+
+    transition_directory = ui_directory / "awakening_v2"
+
+    def load_transition_background(filename):
+        source = resources.load_image(
+            str(transition_directory / filename)
+        ).convert()
+        source_width, source_height = source.get_size()
+        target_ratio = GAME_WIDTH / GAME_HEIGHT
+        source_ratio = source_width / source_height
+        if source_ratio > target_ratio:
+            crop_width = round(source_height * target_ratio)
+            crop = pygame.Rect(
+                (source_width - crop_width) // 2,
+                0,
+                crop_width,
+                source_height,
+            )
+        else:
+            crop_height = round(source_width / target_ratio)
+            crop = pygame.Rect(
+                0,
+                (source_height - crop_height) // 2,
+                source_width,
+                crop_height,
+            )
+        return pygame.transform.scale(
+            source.subsurface(crop),
+            (GAME_WIDTH, GAME_HEIGHT),
+        )
+
+    sprites["awakening_act_one"] = load_transition_background(
+        "act_one_corridor_source.png"
+    )
+    sprites["awakening_act_two"] = load_transition_background(
+        "act_two_corridor_source.png"
+    )
+    sprites["awakening_old_man_far"] = resources.load_image(
+        str(transition_directory / "old_man_far.png")
+    ).convert_alpha()
+
+    sprites["awakening_old_man_near"] = resources.load_image(
+        str(transition_directory / "old_man.png")
+    ).convert_alpha()
+
+    for class_name in ("warrior", "rogue", "mage"):
+        sprites[f"{class_name}_portrait"] = resources.load_image(
+            str(transition_directory / f"{class_name}_portrait.png")
+        ).convert_alpha()
+
+    ability_directory = ui_directory / "abilities"
+    for asset_name, file_name in (
+        ("warrior_power_cleave_icon", "power_cleave.png"),
+        ("rogue_invisibility_icon", "invisibility.png"),
+        ("mage_arcane_burst_icon", "blast.png"),
+    ):
+        sprites[asset_name] = resources.load_image(
+            str(ability_directory / file_name)
+        ).convert_alpha()
+
+    for class_name, source_key in (
+            ("warrior", "warrior_power_cleave_icon"),
+            ("rogue", "rogue_invisibility_icon"),
+            ("mage", "mage_arcane_burst_icon"),
+    ):
+        sprites[f"{class_name}_ability_icon"] = sprites[source_key]
+
+    rune_ui_directory = ui_directory / "rune"
+    rune_directory = rune_ui_directory / "runes"
+
+    sprites["rune_selection_background"] = resources.load_image(
+        str(rune_ui_directory / "background.png")
+    ).convert_alpha()
+
+    sprites["rune_selection_confirm_button"] = resources.load_image(
+        str(rune_ui_directory / "button.png")
+    ).convert_alpha()
+
+    for rune in RUNE_DEFINITIONS:
+        sprites[f"{rune.id}_icon"] = resources.load_image(
+            str(rune_directory / rune.icon_filename)
+        ).convert_alpha()
+
+        sprites[f"{rune.id}_selection"] = resources.load_image(
+            str(
+                rune_directory
+                / f"{rune.id}_selection.png"
+            )
+        ).convert_alpha()
+    bloody_altar_directory = ui_directory / "bloody_altar"
+    sprites["bloody_altar_window"] = resources.load_image(
+        str(bloody_altar_directory / "window.png")
+    ).convert_alpha()
+    sprites["bloody_altar_confirm_button"] = resources.load_image(
+        str(bloody_altar_directory / "confirm_button.png")
+    ).convert_alpha()
+    for pact_id in (
+        "open_wound",
+        "broken_seal",
+        "glass_heart",
+        "blood_hunger",
+    ):
+        sprites[f"bloody_pact_{pact_id}"] = resources.load_image(
+            str(
+                bloody_altar_directory
+                / "icons"
+                / f"{pact_id}_original.png"
+            )
+        ).convert_alpha()
+
+    act_two_hud_directory = ui_directory / "ui_v.0.2"
+    sprites.update(
+        {
+            "act_two_trade_background": resources.load_image(
+                str(act_two_hud_directory / "trade_background.png")
+            ).convert_alpha(),
+            "act_two_hud_frame": _load_scaled_image(
+                act_two_hud_directory / "hud_frame_act2(32).png",
+                (315, 89),
+            ),
+            "act_two_hud_hp": _load_scaled_image(
+                act_two_hud_directory / "hp_bar_act2.png",
+                (258, 17),
+            ),
+            "act_two_hud_xp": _load_scaled_image(
+                act_two_hud_directory / "xp_bar_act2.png",
+                (246, 16),
+            ),
+            "act_two_bottom_bar": _load_scaled_image(
+                act_two_hud_directory
+                / "skill+belt_bar_act2_v2.png",
+                (367, 122),
+            ),
+            "act_two_stats_panel": _load_scaled_image(
+                act_two_hud_directory / "character_list.png",
+                (236, 354),
+            ),
+            "act_two_side_buttons": _load_scaled_image(
+                act_two_hud_directory / "sidebar_act2(32).png",
+                (67, 175),
+            ),
+            "act_two_level_up_indicator": _load_scaled_image(
+                act_two_hud_directory / "lvl_up.png",
+                (68, 65),
+            ),
+            "act_two_confirm_button": _load_scaled_image(
+                act_two_hud_directory / "confirm_button.png",
+                (121, 40),
+            ),
+            "act_two_gold_counter": _load_scaled_image(
+                act_two_hud_directory / "gold.png",
+                (76, 76),
+            ),
+            "act_two_combat_log_frame": resources.load_image(
+                str(
+                    act_two_hud_directory
+                    / "combat_log_frame.png"
+                )
+            ).convert_alpha(),
+
+            "act_two_journal_panel": resources.load_image(
+                str(act_two_hud_directory / "frame.png")
+            ).convert_alpha(),
+
+            "act_two_journal_thumb": resources.load_image(
+                str(act_two_hud_directory / "thumb.png")
+            ).convert_alpha(),
+        }
+    )
+    chat_log_backing = pygame.Surface((276, 82), pygame.SRCALPHA)
+    pygame.draw.rect(
+        chat_log_backing,
+        (42, 39, 39, 191),
+        pygame.Rect(4, 4, 268, 74),
+        border_radius=11,
+    )
+    sprites["act_two_chat_log_backing"] = (
+        pygame.transform.gaussian_blur(chat_log_backing, 2)
+    )
+    ability_text_backing = pygame.Surface((146, 66), pygame.SRCALPHA)
+    pygame.draw.rect(
+        ability_text_backing,
+        (42, 39, 39, 191),
+        pygame.Rect(4, 4, 138, 58),
+        border_radius=11,
+    )
+    sprites["act_two_ability_text_backing"] = (
+        pygame.transform.gaussian_blur(ability_text_backing, 2)
+    )
+    ability_name_backing = pygame.Surface((86, 23), pygame.SRCALPHA)
+    pygame.draw.rect(
+        ability_name_backing,
+        (10, 8, 9, 220),
+        pygame.Rect(4, 4, 78, 15),
+        border_radius=4,
+    )
+    sprites["act_two_ability_name_backing"] = (
+        pygame.transform.gaussian_blur(ability_name_backing, 1)
+    )
+
+    return sprites
+
+
+def _load_scaled_image(path, size, use_alpha=True):
+    source = resources.load_image(str(path))
+    source = (
+        source.convert_alpha()
+        if use_alpha
+        else source.convert()
+    )
+    return pygame.transform.smoothscale(source, size)
+
+
+def _load_pixel_scaled_image(path, size):
+    source = resources.load_image(str(path)).convert_alpha()
+    return pygame.transform.scale(source, size)
+
+
+def _load_cropped_ui_image(path, size):
+    source = resources.load_image(str(path)).convert_alpha()
+    content_rectangle = source.get_bounding_rect(min_alpha=1)
+    cropped_source = source.subsurface(
+        content_rectangle
+    ).copy()
+    return pygame.transform.smoothscale(cropped_source, size)
+
+
+def _load_pixel_cropped_ui_image(path, size):
+    source = resources.load_image(str(path)).convert_alpha()
+    content_rectangle = source.get_bounding_rect(min_alpha=1)
+    cropped_source = source.subsurface(content_rectangle).copy()
+    return pygame.transform.scale(cropped_source, size)
+
+
+def load_act_three_gameplay_assets():
+
+    act_directory = ASSET_ROOT / "act_3"
+    act_three_configs = [
+        (floor_index, config)
+        for floor_index, config in enumerate(FLOOR_CONFIGS)
+        if config["act"] == 3
+    ]
+    first_act_three_index, act_three_config = act_three_configs[0]
+    project_root = ASSET_ROOT.parent.parent
+    map_directory = (
+        project_root
+        / "assets"
+        / "maps"
+        / "act_3"
+    )
+    map_path = project_root / act_three_config["map_path"]
+    tile_size = ACT_THREE_TILE_SIZE
+    assets = {
+
+        "torch_base": _load_scaled_image(
+            map_directory
+            / "torches"
+            / "torches_v1_base.png",
+            (tile_size, tile_size),
+        ),
+        "sidebar_potion": _load_scaled_image(
+            act_directory
+            / "items"
+            / "consumables"
+            / "potion_original.png",
+            (34, 34),
+        ),
+    }
+    assets.update(load_act_three_hud_assets())
+    assets.update(
+        load_act_three_ability_assets()
+    )
+    assets.update(
+        load_act_three_consumable_assets()
+    )
+    assets["tmx_tiles_by_floor"] = {}
+
+    for floor_index, config in act_three_configs:
+        floor_map_path = config.get("map_path")
+
+        if floor_map_path is None:
+            room_sequence = config.get(
+                "tmx_room_sequence",
+                (),
+            )
+            floor_map_path = (
+                room_sequence[0]
+                if room_sequence
+                else None
+            )
+
+        if floor_map_path is None:
+            continue
+
+        assets["tmx_tiles_by_floor"][floor_index] = (
+            load_tmx_tiles(
+                project_root / floor_map_path,
+                tile_size,
+            )
+        )
+
+    assets["tmx_tiles"] = assets[
+        "tmx_tiles_by_floor"
+    ][first_act_three_index]
+
+    for frame_index in range(4):
+        assets[f"torch_flame_{frame_index}"] = (
+            _load_scaled_image(
+                map_directory
+                / "torches"
+                / f"torches_v1_flame_0{frame_index + 1}.png",
+                (tile_size, tile_size),
+            )
+        )
+
+    load_summoner_animation_assets(
+        assets,
+        act_directory,
+        tile_size,
+        _load_pixel_scaled_image,
+    )
+    load_summoner_familiar_assets(
+        assets,
+        act_directory,
+        tile_size,
+        _load_pixel_scaled_image,
+    )
+    load_summoner_true_form_assets(
+        assets,
+        act_directory,
+        tile_size,
+        _load_pixel_scaled_image,
+    )
+    load_archer_animation_assets(
+        assets,
+        act_directory,
+        tile_size,
+        _load_pixel_scaled_image,
+    )
+    load_assassin_animation_assets(
+        assets,
+        act_directory,
+        tile_size,
+        _load_pixel_scaled_image,
+    )
+    load_berserker_animation_assets(
+        assets,
+        act_directory,
+        tile_size,
+        _load_pixel_scaled_image,
+    )
+    load_warlock_animation_assets(
+        assets,
+        act_directory,
+        tile_size,
+        _load_pixel_scaled_image,
+    )
+    load_paladin_animation_assets(
+        assets,
+        act_directory,
+        tile_size,
+        _load_pixel_scaled_image,
+    )
+
+    old_man_appearance_directory = (
+        act_directory / "npcs" / "old_man" / "appearance"
+    )
+    for frame_index in range(6):
+        assets[f"old_man_appearance_{frame_index}"] = (
+            _load_pixel_scaled_image(
+                old_man_appearance_directory
+                / f"appearance_{frame_index:02d}.png",
+                (tile_size, tile_size),
+            )
+        )
+
+    assets["player_archer_attack"] = assets[
+        "player_archer_attack_right_0"
+    ]
+    assets["archer_empowered_shot_arrow"] = (
+        make_archer_arrow_sprite()
+    )
+    assets["player_archer_leap"] = assets[
+        "player_archer_attack_down_0"
+    ]
+    assets["archer_barrage_zone_cell"] = pygame.Surface(
+        (tile_size, tile_size),
+        pygame.SRCALPHA,
+    )
+
+    load_enemy_animation_assets(
+        assets,
+        act_directory,
+        tile_size,
+        _load_pixel_scaled_image,
+    )
+
+    rune_directory = (
+        ASSET_ROOT / "ui" / "act_2" / "rune" / "runes"
+    )
+
+    for rune in RUNE_DEFINITIONS:
+        assets[f"{rune.id}_icon"] = resources.load_image(
+            str(rune_directory / rune.icon_filename)
+        ).convert_alpha()
+
+    return assets

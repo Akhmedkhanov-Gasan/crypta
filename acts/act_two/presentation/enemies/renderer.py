@@ -8,14 +8,14 @@ from acts.act_two.presentation.bosses.oracle_statue import (
 from acts.act_two.combat_pacing import (
     ENEMY_ATTACK_DURATION_MS,
 )
-from acts.act_two.presentation.enemy_effects import (
+from acts.act_two.presentation.enemies.effects import (
     draw_act_two_dodge_feedback,
     draw_act_two_enemy_death,
 )
 from acts.act_two.presentation.enemies.archer import (
     _draw_act_two_archer_hit_feedback,
 )
-from acts.act_two.presentation.enemies.brute import (
+from acts.act_two.presentation.enemies.brute.renderer import (
     _draw_act_two_brute_hit_feedback,
 )
 from acts.act_two.presentation.enemies.goblin import (

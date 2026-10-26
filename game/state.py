@@ -2,6 +2,12 @@ from dataclasses import dataclass, field, fields
 from enum import Enum, auto
 from typing import Any, Iterator
 
+from acts.act_one.state import (
+    ACT_ONE_PLAYER_FIELD_NAMES,
+    ACT_ONE_SESSION_FIELD_NAMES,
+    ActOnePlayerState,
+    ActOneSessionState,
+)
 from acts.act_two.state import (
     ActOneRevisitState,
     ActTwoEnemyPresentationState,
@@ -408,25 +414,19 @@ class PlayerState:
     veil_triggered_this_turn: bool = False
     directional_ability_aiming: bool = False
     potion_effect_started_at: int = 0
-    act_one_attack_target: tuple[int, int] | None = None
-    act_one_attack_was_critical: bool = False
-    act_one_movement_origin: tuple[int, int] | None = None
-    act_one_wait_effect_started_at: int = -1
     act_two_movement_started_at: int = 0
     act_two_movement_origin: tuple[int, int] | None = None
     act_two_facing_direction: tuple[int, int] = (0, 1)
     act_two_blocked_movement_started_at: int = -1
     act_two_blocked_movement_direction: tuple[int, int] = (0, 1)
-    act_one_dodge_started_at: int = -1
-    act_one_dodge_origin: tuple[int, int] | None = None
-    act_one_pickup_kind: str | None = None
-    act_one_pickup_origin: tuple[int, int] | None = None
-    act_one_pickup_started_at: int = -1
     act_two_pickup_kind: str | None = None
     act_two_pickup_origin: tuple[int, int] | None = None
     act_two_pickup_started_at: int = -1
     act_two: ActTwoPlayerState = field(
         default_factory=ActTwoPlayerState,
+    )
+    act_one: ActOnePlayerState = field(
+        default_factory=ActOnePlayerState,
     )
     act_three: ActThreePlayerState = field(
         default_factory=ActThreePlayerState,
@@ -434,11 +434,20 @@ class PlayerState:
 
 
     def __getattr__(self, name: str) -> Any:
+        if name in ACT_ONE_PLAYER_FIELD_NAMES:
+            return getattr(self.act_one, name)
         if name in ACT_THREE_PLAYER_FIELD_NAMES:
             return getattr(self.act_three, name)
         raise AttributeError(name)
 
     def __setattr__(self, name: str, value: Any) -> None:
+        act_one_state = self.__dict__.get("act_one")
+        if (
+            act_one_state is not None
+            and name in ACT_ONE_PLAYER_FIELD_NAMES
+        ):
+            setattr(act_one_state, name, value)
+            return
         act_three_state = self.__dict__.get("act_three")
         if (
             act_three_state is not None
@@ -471,17 +480,14 @@ class GameState:
     run_stats: RunStatistics = field(
         default_factory=RunStatistics,
     )
-    act_one_intro: Any | None = None
     visited_floors: dict[int, FloorState] = field(default_factory=dict)
     act_two_quests: ActTwoQuestState = field(
         default_factory=ActTwoQuestState,
     )
     act_two_trader_floor_index: int | None = None
     act_one_revisit_prepared: bool = False
-    act_one_death_scene: Any | None = None
     game_won: bool = False
     upgrade_screen_open: bool = False
-    act_one_upgrades_remaining: int = 0
     class_selection_open: bool = False
     class_transition_started_at: int = 0
     class_selection_choice: str | None = None
@@ -509,16 +515,28 @@ class GameState:
         default_factory=list
     )
     events: list[GameEvent] = field(default_factory=list)
+    act_one: ActOneSessionState = field(
+        default_factory=ActOneSessionState,
+    )
     act_three: ActThreeSessionState = field(
         default_factory=ActThreeSessionState,
     )
 
     def __getattr__(self, name: str) -> Any:
+        if name in ACT_ONE_SESSION_FIELD_NAMES:
+            return getattr(self.act_one, name)
         if name in ACT_THREE_SESSION_FIELD_NAMES:
             return getattr(self.act_three, name)
         raise AttributeError(name)
 
     def __setattr__(self, name: str, value: Any) -> None:
+        act_one_state = self.__dict__.get("act_one")
+        if (
+            act_one_state is not None
+            and name in ACT_ONE_SESSION_FIELD_NAMES
+        ):
+            setattr(act_one_state, name, value)
+            return
         act_three_state = self.__dict__.get("act_three")
         if (
             act_three_state is not None

@@ -1,5 +1,5 @@
 from acts.act_two.state import TreasuryTrialPhase
-from acts.act_two.enemy_balance import act_two_enemy_config
+from acts.act_two.enemies.balance import act_two_enemy_config
 from enemies import ENEMY_TYPES
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
