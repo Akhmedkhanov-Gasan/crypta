@@ -23,6 +23,10 @@ from acts.act_three.presentation.enemies.priest_ghost import (
     priest_ghost_world_position,
     record_priest_ghost_rebirth_feedback,
 )
+from acts.act_three.presentation.enemies.sentinel import (
+    sentinel_sprite,
+    sentinel_world_position,
+)
 
 
 __all__ = [
@@ -39,4 +43,6 @@ __all__ = [
     "priest_sprite",
     "priest_world_position",
     "record_priest_ghost_rebirth_feedback",
+    "sentinel_sprite",
+    "sentinel_world_position",
 ]

@@ -237,44 +237,31 @@ def _load_priest_ghost_assets(
         )
 
 
-def _load_legacy_enemy_assets(
+def _load_sentinel_assets(
     assets,
     enemies_directory,
-    enemy_type,
     tile_size,
     image_loader,
 ):
-    enemy_directory = (
-        enemies_directory / enemy_type
-    )
+    enemy_directory = enemies_directory / "sentinel"
 
-    for frame_index in range(3):
-        assets[
-            f"enemy_{enemy_type}_idle_{frame_index}"
-        ] = image_loader(
-            enemy_directory
-            / "idle"
-            / f"idle_{frame_index:02d}.png",
-            (tile_size, tile_size),
-        )
-
-    for frame_index in range(2):
-        assets[
-            f"enemy_{enemy_type}_walk_{frame_index}"
-        ] = image_loader(
-            enemy_directory
-            / "walk"
-            / f"walk_{frame_index:02d}.png",
-            (tile_size, tile_size),
-        )
-
-        assets[
-            f"enemy_{enemy_type}_death_{frame_index}"
-        ] = image_loader(
-            enemy_directory
-            / "death"
-            / f"death_{frame_index:02d}.png",
-            (tile_size, tile_size),
+    for action in (
+        "idle",
+        "walk",
+        "attack",
+        "block",
+        "hurt",
+        "death",
+    ):
+        _load_directional_animation(
+            assets,
+            enemy_directory,
+            "sentinel",
+            action,
+            DIRECTIONAL_DIRECTIONS,
+            DIRECTIONAL_FRAME_COUNT,
+            tile_size,
+            image_loader,
         )
 
 
@@ -335,28 +322,9 @@ def load_enemy_animation_assets(
             image_loader,
         )
 
-    for enemy_type in (
-        "sentinel",
-    ):
-        _load_legacy_enemy_assets(
-            assets,
-            enemies_directory,
-            enemy_type,
-            tile_size,
-            image_loader,
-        )
-
-    assets["enemy_sentinel_attack"] = image_loader(
-        enemies_directory
-        / "sentinel"
-        / "attack"
-        / "attack_00.png",
-        (tile_size, tile_size),
-    )
-
-    assets["sentinel_guard"] = image_loader(
-        enemies_directory
-        / "sentinel"
-        / "guard.png",
-        (tile_size, tile_size),
+    _load_sentinel_assets(
+        assets,
+        enemies_directory,
+        tile_size,
+        image_loader,
     )

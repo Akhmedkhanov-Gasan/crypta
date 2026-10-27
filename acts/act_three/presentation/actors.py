@@ -42,6 +42,8 @@ from acts.act_three.presentation.enemies import (
     priest_ghost_world_position,
     priest_sprite,
     priest_world_position,
+    sentinel_sprite,
+    sentinel_world_position,
 )
 
 def _enemy_sprite(
@@ -83,6 +85,14 @@ def _enemy_sprite(
 
     if enemy.type == "priest_ghost":
         return priest_ghost_sprite(
+            assets,
+            enemy,
+            current_time,
+            visual_seed,
+        )
+
+    if enemy.type == "sentinel":
+        return sentinel_sprite(
             assets,
             enemy,
             current_time,
@@ -224,6 +234,13 @@ def _enemy_world_position(
 
     if enemy.type == "priest_ghost":
         return priest_ghost_world_position(
+            enemy,
+            current_time,
+            tile_size,
+        )
+
+    if enemy.type == "sentinel":
+        return sentinel_world_position(
             enemy,
             current_time,
             tile_size,
