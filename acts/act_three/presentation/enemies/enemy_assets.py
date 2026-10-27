@@ -192,6 +192,51 @@ def _load_priest_assets(
         )
 
 
+def _load_priest_ghost_assets(
+    assets,
+    enemies_directory,
+    tile_size,
+    image_loader,
+):
+    enemy_directory = (
+        enemies_directory / "priest_ghost"
+    )
+
+    for action in (
+        "idle",
+        "walk",
+        "attack",
+        "hurt",
+        "death",
+    ):
+        _load_directional_animation(
+            assets,
+            enemy_directory,
+            "priest_ghost",
+            action,
+            DIRECTIONAL_DIRECTIONS,
+            DIRECTIONAL_FRAME_COUNT,
+            tile_size,
+            image_loader,
+        )
+
+    for frame_index in range(
+        DIRECTIONAL_FRAME_COUNT
+    ):
+        source_index = frame_index + 1
+        assets[
+            (
+                "enemy_priest_ghost_"
+                f"transform_down_{frame_index}"
+            )
+        ] = image_loader(
+            enemy_directory
+            / "transform_down"
+            / f"transform_down_{source_index:02d}.png",
+            (tile_size, tile_size),
+        )
+
+
 def _load_legacy_enemy_assets(
     assets,
     enemies_directory,
@@ -265,6 +310,13 @@ def load_enemy_animation_assets(
     )
 
     _load_priest_assets(
+        assets,
+        enemies_directory,
+        tile_size,
+        image_loader,
+    )
+
+    _load_priest_ghost_assets(
         assets,
         enemies_directory,
         tile_size,

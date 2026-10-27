@@ -239,6 +239,9 @@ class ActThreeSessionState:
     enemy_stun_visuals: dict[int, int] = field(
         default_factory=dict,
     )
+    priest_rebirth_consumed_corpses: set[int] = field(
+        default_factory=set,
+    )
     upgrade_altar_hovered: bool = False
     upgrade_altar_menu_open: bool = False
     upgrade_altar_menu_tab: str = "attributes"

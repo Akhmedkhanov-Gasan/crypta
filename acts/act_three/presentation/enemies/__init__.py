@@ -18,6 +18,11 @@ from acts.act_three.presentation.enemies.priest import (
     priest_sprite,
     priest_world_position,
 )
+from acts.act_three.presentation.enemies.priest_ghost import (
+    priest_ghost_sprite,
+    priest_ghost_world_position,
+    record_priest_ghost_rebirth_feedback,
+)
 
 
 __all__ = [
@@ -29,6 +34,9 @@ __all__ = [
     "goblin_sprite",
     "goblin_world_position",
     "load_enemy_animation_assets",
+    "priest_ghost_sprite",
+    "priest_ghost_world_position",
     "priest_sprite",
     "priest_world_position",
+    "record_priest_ghost_rebirth_feedback",
 ]

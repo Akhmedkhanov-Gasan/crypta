@@ -38,6 +38,8 @@ from acts.act_three.presentation.enemies import (
     draw_archer_backhop_afterimages,
     goblin_sprite,
     goblin_world_position,
+    priest_ghost_sprite,
+    priest_ghost_world_position,
     priest_sprite,
     priest_world_position,
 )
@@ -71,11 +73,16 @@ def _enemy_sprite(
             visual_seed,
         )
 
-    if enemy.type in (
-        "priest",
-        "priest_ghost",
-    ):
+    if enemy.type == "priest":
         return priest_sprite(
+            assets,
+            enemy,
+            current_time,
+            visual_seed,
+        )
+
+    if enemy.type == "priest_ghost":
+        return priest_ghost_sprite(
             assets,
             enemy,
             current_time,
@@ -208,11 +215,15 @@ def _enemy_world_position(
             tile_size,
         )
 
-    if enemy.type in (
-        "priest",
-        "priest_ghost",
-    ):
+    if enemy.type == "priest":
         return priest_world_position(
+            enemy,
+            current_time,
+            tile_size,
+        )
+
+    if enemy.type == "priest_ghost":
+        return priest_ghost_world_position(
             enemy,
             current_time,
             tile_size,

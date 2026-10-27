@@ -7,6 +7,9 @@ from acts.act_three.presentation.dodge_feedback import (
     draw_player_dodge_feedback,
     record_dodge_feedback,
 )
+from acts.act_three.presentation.enemies.priest_ghost import (
+    record_priest_ghost_rebirth_feedback,
+)
 from acts.act_three.presentation.archer.animation import (
     archer_hurt_sprite,
 )
@@ -153,6 +156,11 @@ def record_enemy_death_feedback(game_state, started_at):
                 else 0
             )
             enemy.death_animation_started_at = started_at + delay
+
+    record_priest_ghost_rebirth_feedback(
+        game_state,
+        started_at,
+    )
 
 
 def record_player_hit_feedback(game_state, started_at):

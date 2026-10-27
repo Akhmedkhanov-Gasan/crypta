@@ -4,6 +4,10 @@ from acts.act_three.enemies.catalog import LANTERN_WARDEN_TYPE
 from acts.act_three.presentation.enemies.lantern_warden import (
     draw_lantern_warden,
 )
+from acts.act_three.presentation.enemies.priest_ghost import (
+    draw_priest_ghost_attack_effects,
+    draw_priest_ghost_rebirth_effect,
+)
 from acts.act_three.presentation.stun_effect import (
     draw_act_three_enemy_stun,
 )
@@ -46,6 +50,16 @@ def draw_world_enemies(
 ):
     floor = context.floor
     stun_visuals = game_state.act_three.enemy_stun_visuals
+    consumed_corpses = (
+        game_state.act_three.priest_rebirth_consumed_corpses
+    )
+    current_enemy_ids = {
+        id(enemy)
+        for enemy in floor.enemies
+    }
+    consumed_corpses.intersection_update(
+        current_enemy_ids
+    )
     living_enemy_ids = {
         id(enemy)
         for enemy in floor.enemies
@@ -57,7 +71,11 @@ def draw_world_enemies(
     visible_enemies = [
         enemy
         for enemy in floor.enemies
-        if get_enemy_occupied_positions(enemy) & floor.visible_cells
+        if (
+            id(enemy) not in consumed_corpses
+            and get_enemy_occupied_positions(enemy)
+            & floor.visible_cells
+        )
     ]
     living_enemies = [
         enemy
@@ -141,13 +159,26 @@ def draw_world_enemies(
             aura_seed,
         )
 
+    for enemy in living_enemies:
+        if enemy.type != "priest_ghost":
+            continue
+
+        draw_priest_ghost_attack_effects(
+            context.view_surface,
+            enemy,
+            current_time,
+            ACT_THREE_TILE_SIZE,
+            context.camera_x,
+            context.camera_y,
+        )
+
     for enemy in sorted(
-        rendered_enemies,
-        key=lambda living_enemy: (
-            living_enemy.row
-            + living_enemy.footprint_height
-            - 1
-        ),
+            rendered_enemies,
+            key=lambda living_enemy: (
+                    living_enemy.row
+                    + living_enemy.footprint_height
+                    - 1
+            ),
     ):
         if enemy.type == LANTERN_WARDEN_TYPE:
             draw_lantern_warden(
@@ -183,6 +214,15 @@ def draw_world_enemies(
             context.camera_x,
             context.camera_y,
         )
+
+        if enemy.type == "priest_ghost":
+            draw_priest_ghost_rebirth_effect(
+                context.view_surface,
+                enemy,
+                enemy_position,
+                current_time,
+                ACT_THREE_TILE_SIZE,
+            )
 
         if enemy.health > 0:
             draw_actor_shadow(
