@@ -79,6 +79,14 @@ def create_auto_move_event(
     if state.auto_move_target is None:
         return None
 
+    trial = game_state.floor.shadow_step_trial
+    if trial is not None and trial["phase"] != "complete":
+        if trial.get("action_stage") == "caught" or trial["cooldown_ms"] > 0:
+            state.cancel_auto_move()
+            return None
+        if trial["phase"] == "opening" or trial.get("action_stage") is not None:
+            return None
+
     if (
         not movement_available
         or state.held_movement_keys

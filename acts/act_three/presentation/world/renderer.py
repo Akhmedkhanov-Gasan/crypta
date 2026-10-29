@@ -2,6 +2,8 @@ import math
 
 import pygame
 
+from acts.act_three.presentation.shadow_step_effects import draw_trial_seal_effects
+
 from acts.act_three.presentation.shadow_step_trial import (
     draw_trial_detection,
     draw_trial_layer,
@@ -1622,6 +1624,7 @@ def _draw_act_three_world(
     )
 
     draw_trial_detection(context)
+    draw_trial_seal_effects(context)
 
     if player_subclass == "assassin":
         draw_shadow_reflex_feedback(

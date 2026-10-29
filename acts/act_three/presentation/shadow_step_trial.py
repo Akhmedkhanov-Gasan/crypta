@@ -56,8 +56,8 @@ def trial_assets(tile_size):
     for variant in ("01", "02", "03", "final"):
         directory = f"assassin_shadow_step_seal_{variant}"
         prefix = f"shadow_step_seal_{variant}"
-        frame_count = 8 if variant == "01" else 7
-        inactive_state = "pressed" if variant == "01" else "extinguished"
+        frame_count = 7 if variant == "final" else 8
+        inactive_state = "extinguished" if variant == "final" else "pressed"
         result["seals"][variant] = {
             "active": [
                 load(directory, f"{prefix}_shimmer_{index:02d}.png")
@@ -245,11 +245,7 @@ def draw_trial_layer(context, layer):
             images = assets["seals"][f"{seal['id']:02d}"]
             active = (
                 trial["phase"] == "active"
-                and (
-                    seal["id"] not in trial["activated"]
-                    if seal["id"] == 1
-                    else seal["id"] in trial["activated"]
-                )
+                and seal["id"] not in trial["activated"]
             )
             image = (
                 images["active"][animation_tick % len(images["active"])]

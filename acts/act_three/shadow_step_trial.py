@@ -14,8 +14,9 @@ DIRECTIONS = {
 DOOR_DURATION_MS = 640
 LIGHT_DELAY_MS = 180
 LIGHT_ROTATION_MS = 360
+AWAKENING_DURATION_MS = 1800
 DETECTION_PAUSE_MS = 1100
-LIGHT_RANGE = 4.0
+LIGHT_RANGE = 3.0
 LIGHT_HALF_ANGLE = math.radians(30)
 
 
@@ -296,12 +297,22 @@ def advance_trial_frame(game_state, current_time):
 
     trial["animation_ms"] += elapsed
 
+    if trial["phase"] in ("active", "complete"):
+        _open_trial_passage(game_state.floor, trial)
+
+    if trial["phase"] == "complete":
+        started = trial.get("completion_fx_ms")
+        if started is not None and trial["animation_ms"] - started >= AWAKENING_DURATION_MS:
+            trial["action_stage"] = None
+        return
+
     if trial["phase"] == "opening":
         trial["opening_ms"] += elapsed
 
         if trial["opening_ms"] >= DOOR_DURATION_MS:
             trial["opening_ms"] = DOOR_DURATION_MS
             trial["phase"] = "active"
+            _open_trial_passage(game_state.floor, trial)
 
     if trial["phase"] != "active":
         return
@@ -392,7 +403,7 @@ def block_trial_key(event, game_state):
 
     trial = game_state.floor.shadow_step_trial
 
-    if trial is None:
+    if trial is None or trial["phase"] == "complete":
         return False
 
     if (
@@ -444,6 +455,8 @@ def _reset_attempt(game_state, trial, current_time):
     player.teleport_camera_origin = origin
     player.teleport_transition_started_at = current_time
     trial["activated"].clear()
+    trial["seal_fx"] = []
+    trial.pop("completion_fx_ms", None)
     trial["turn"] = 0
     trial["rotation_progress"] = 0.0
     trial["action_stage"] = None
@@ -458,6 +471,14 @@ def _reset_attempt(game_state, trial, current_time):
     )
 
 
+def _open_trial_passage(floor, trial):
+    column, row = trial["door"]
+    if floor.map[row][column] == "#":
+        cells = list(floor.map[row])
+        cells[column] = "."
+        floor.map[row] = "".join(cells)
+
+
 def handle_trial_action(game_state, event, direction):
     from application.directional_input import WAIT_KEYS
     from game.combat_log import add_log_message
@@ -468,6 +489,10 @@ def handle_trial_action(game_state, event, direction):
     trial = floor.shadow_step_trial
 
     if trial is None:
+        return None
+
+    if trial["phase"] == "complete":
+        _open_trial_passage(floor, trial)
         return None
 
     origin = (floor.player_column, floor.player_row)
@@ -481,9 +506,6 @@ def handle_trial_action(game_state, event, direction):
 
     if not near_trial:
         return None
-
-    if hasattr(event, "auto_move_revision"):
-        return False
 
     if (
         trial["phase"] == "opening"
@@ -568,9 +590,6 @@ def handle_trial_action(game_state, event, direction):
 
     position = (floor.player_column, floor.player_row)
 
-    if trial["phase"] == "complete":
-        return True
-
     if not inside_trial(trial, position):
         return True
 
@@ -593,6 +612,11 @@ def _activate_seals(game_state, trial):
             and seal["id"] not in trial["activated"]
         ):
             trial["activated"].add(seal["id"])
+            trial.setdefault("seal_fx", []).append({
+                "id": seal["id"],
+                "position": seal["position"],
+                "started_ms": trial["animation_ms"],
+            })
             add_log_message(
                 game_state.combat_log,
                 f"Shadow seal awakened: {len(trial['activated'])}/3.",
@@ -605,6 +629,8 @@ def _activate_seals(game_state, trial):
         unlock_ability_slot(game_state.player, "q")
         game_state.player.teleport_charge = ASSASSIN_TELEPORT_CHARGES
         trial["phase"] = "complete"
+        trial["completion_fx_ms"] = trial["animation_ms"]
+        trial["action_stage"] = None
         add_log_message(
             game_state.combat_log,
             "Trial complete. SHADOW STEP unlocked.",

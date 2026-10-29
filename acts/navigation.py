@@ -95,8 +95,15 @@ def navigation_target_info(game_state, target):
         floor.presentation_act == 3
         and target in get_upgrade_altar_cells(floor)
     )
+    trial = floor.shadow_step_trial
+    trial_door = (
+        floor.presentation_act == 3
+        and trial is not None
+        and trial["phase"] == "closed"
+        and target == trial["door"]
+    )
     return enemy, (
-        enemy is not None or chest or crate or secret_wall or altar
+        enemy is not None or chest or crate or secret_wall or altar or trial_door
     )
 
 
@@ -114,6 +121,10 @@ def navigation_action(game_state, origin, target, has_enemy):
         return None
 
     if floor.presentation_act == 3:
+        trial = floor.shadow_step_trial
+        if trial is not None and trial["phase"] == "closed" and target == trial["door"]:
+            if abs(target[0] - origin[0]) + abs(target[1] - origin[1]) != 1:
+                return None
         if target in get_upgrade_altar_cells(floor):
             if any(
                 abs(origin[0] - cell[0])

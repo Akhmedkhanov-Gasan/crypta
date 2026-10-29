@@ -124,7 +124,8 @@ def _complete_non_act_two_turn(
             act_two_sounds,
             act_three_sounds,
         )
-        movement_state.cancel_auto_move()
+        if not hasattr(event, "auto_move_revision"):
+            movement_state.cancel_auto_move()
         movement_state.reset_held_movement()
         return
 
