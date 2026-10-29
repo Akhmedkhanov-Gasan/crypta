@@ -415,9 +415,18 @@ def load_tmx_floor(path):
                     "boss_group": False,
                 }
             )
+    from acts.act_three.shadow_step_trial import build_trial
+
+    shadow_step_trial = build_trial(
+        by_name,
+        width,
+        height,
+        dungeon_map,
+    )
     potions = [position for position, _ in by_name.get("potion", [])]
     return {
         "map": ["".join(row) for row in dungeon_map],
+        "shadow_step_trial": shadow_step_trial,
         "player_start": player_start,
         "enemies": enemies,
         "chests": chests,

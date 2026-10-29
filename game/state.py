@@ -322,6 +322,7 @@ class FloorState(AttributeMapping):
     act_three_npcs: list[dict[str, Any]] = field(
         default_factory=list
     )
+    shadow_step_trial: dict[str, Any] | None = None
     bloody_altar: BloodyAltarState | None = None
     trader: TraderState | None = None
     quest_trader: TraderState | None = None

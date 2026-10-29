@@ -5,6 +5,7 @@ import pygame
 from acts.crates import break_crate
 from acts.player_abilities import resolve_targeted_player_ability
 from acts.act_three.npcs import get_npc_at, open_npc_dialog
+from acts.act_three.shadow_step_trial import handle_trial_action
 from application.directional_input import WAIT_KEYS
 from logic import get_enemy_occupied_positions
 from systems.grid_geometry import can_reach_adjacent_cell
@@ -74,6 +75,18 @@ def resolve_act_three_player_action(
     final_floor_index,
     hit_reaction,
 ) -> ActThreePlayerActionResult:
+    trial_result = handle_trial_action(
+        game_state,
+        event,
+        direction,
+    )
+
+    if trial_result is not None:
+        return ActThreePlayerActionResult(
+            player_acted=trial_result,
+            movement_blocked=not trial_result,
+        )
+
     ability_result = resolve_targeted_player_ability(
         game_state,
         event,

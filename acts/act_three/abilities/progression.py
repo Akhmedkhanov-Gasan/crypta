@@ -37,6 +37,9 @@ def initialize_act_three_progression(
         if unlock_all
         else DEFAULT_UNLOCKED_ABILITY_SLOTS
     )
+    if player.subclass == "assassin" and not unlock_all:
+        player.unlocked_ability_slots.clear()
+
     player.ability_slot_charges = {
         slot: 0.0
         for slot in ABILITY_SLOTS

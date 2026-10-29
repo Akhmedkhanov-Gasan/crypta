@@ -241,9 +241,16 @@ def _get_act_three_visibility(floor):
     map_height = len(floor.map)
     map_width = len(floor.map[0])
     altar_cells = get_upgrade_altar_cells(floor)
+    transparent_cells = set(altar_cells)
     closed_doors = set()
+
     if floor.boss_door is not None and not floor.boss_fight_started:
         closed_doors.add(floor.boss_door)
+
+    trial = floor.shadow_step_trial
+
+    if trial is not None and trial["phase"] not in ("closed", "opening"):
+        transparent_cells.add(trial["door"])
 
     for row in range(map_height):
         for column in range(map_width):
@@ -261,12 +268,20 @@ def _get_act_three_visibility(floor):
                 origin,
                 (column, row),
                 closed_doors,
-                altar_cells,
+                transparent_cells,
             ):
                 visible.add((column, row))
 
     if visible.intersection(altar_cells):
         visible.update(altar_cells)
+
+    trial = floor.shadow_step_trial
+
+    if trial is not None:
+        from acts.act_three.shadow_step_trial import trial_cells
+
+        if trial["phase"] in ("closed", "opening"):
+            visible.difference_update(trial_cells(trial))
 
     floor.explored_cells.update(visible)
     floor.visible_cells = visible
@@ -473,5 +488,51 @@ def _draw_fog_of_war(
         ),
         special_flags=pygame.BLEND_RGBA_SUB,
     )
+
+    trial = floor.shadow_step_trial
+
+    if trial is not None:
+        left, top, right, bottom = trial["bounds"]
+        rectangle = pygame.Rect(
+            round(left * ACT_THREE_TILE_SIZE - camera_x),
+            round(top * ACT_THREE_TILE_SIZE - camera_y),
+            (right - left) * ACT_THREE_TILE_SIZE,
+            (bottom - top) * ACT_THREE_TILE_SIZE,
+        )
+        if trial["phase"] in ("closed", "opening"):
+            fog.fill((0, 0, 0, 255), rectangle)
+        else:
+            minimum_darkness = pygame.Surface(
+                (ACT_THREE_TILE_SIZE, ACT_THREE_TILE_SIZE),
+                pygame.SRCALPHA,
+            )
+            minimum_darkness.fill((0, 0, 0, 86))
+
+            for row in range(top, bottom):
+                for column in range(left, right):
+                    cell = (column, row)
+                    cell_rectangle = pygame.Rect(
+                        round(column * ACT_THREE_TILE_SIZE - camera_x),
+                        round(row * ACT_THREE_TILE_SIZE - camera_y),
+                        ACT_THREE_TILE_SIZE,
+                        ACT_THREE_TILE_SIZE,
+                    )
+
+                    if not cell_rectangle.colliderect(fog.get_rect()):
+                        continue
+
+                    if cell not in floor.explored_cells:
+                        fog.fill((0, 0, 0, 255), cell_rectangle)
+                    elif cell not in floor.visible_cells:
+                        fog.fill(
+                            (0, 0, 0, ACT_THREE_EXPLORED_FOG_ALPHA),
+                            cell_rectangle,
+                        )
+                    else:
+                        fog.blit(
+                            minimum_darkness,
+                            cell_rectangle.topleft,
+                            special_flags=pygame.BLEND_RGBA_MAX,
+                        )
 
     view_surface.blit(fog, (0, 0))

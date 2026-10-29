@@ -113,6 +113,21 @@ def _complete_non_act_two_turn(
     act_two_sounds,
     act_three_sounds,
 ):
+    if getattr(event, "shadow_step_trial_turn", False):
+        present_turn_feedback(
+            game_state,
+            current_act,
+            pygame.time.get_ticks(),
+            movement_state,
+            movement_profile,
+            act_one_sounds,
+            act_two_sounds,
+            act_three_sounds,
+        )
+        movement_state.cancel_auto_move()
+        movement_state.reset_held_movement()
+        return
+
     if not barrage_resume:
         game_state.player.familiar_turn_started_at = pygame.time.get_ticks()
         advance_spike_traps(game_state)

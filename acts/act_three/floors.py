@@ -13,7 +13,7 @@ ACT_THREE_FLOORS = (
             "assets/maps/act_3/corridor_straight_ns_01.tmx",
             "assets/maps/act_3/room_regular_01.tmx",
             "assets/maps/act_3/corridor_straight_ns_01.tmx",
-            "assets/maps/act_3/room_exit_01.tmx",
+            "assets/maps/act_3/assassin_shadow_step/assassin_shadow_step.tmx",
         ),
     },
 )

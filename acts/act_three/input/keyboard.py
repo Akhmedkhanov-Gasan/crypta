@@ -1,5 +1,8 @@
 import pygame
 
+from acts.act_three.abilities.progression import (
+    is_ability_slot_unlocked,
+)
 from application.directional_input import (
     CHORD_MOVEMENT_KEYS,
     IMMEDIATE_MOVEMENT_KEYS,
@@ -147,6 +150,38 @@ def _commit_summoner_turn():
 
 
 def handle_act_three_key_event(event, game_state):
+    from acts.act_three.shadow_step_trial import block_trial_key
+
+    if (
+        game_state.floor.presentation_act == 3
+        and block_trial_key(event, game_state)
+    ):
+        return True
+
+    if (
+        game_state.floor.presentation_act == 3
+        and game_state.player.subclass == "assassin"
+    ):
+        ability_slot = {
+            pygame.K_q: "q",
+            pygame.K_e: "e",
+            pygame.K_f: "f",
+            pygame.K_1: "e",
+        }.get(event.key)
+
+        if (
+            ability_slot is not None
+            and not is_ability_slot_unlocked(
+                game_state.player,
+                ability_slot,
+            )
+        ):
+            add_log_message(
+                game_state.combat_log,
+                "This ability has not been unlocked.",
+            )
+            return True
+
     if (
         getattr(event, "archer_barrage_commit", False)
         or getattr(event, "archer_barrage_resume", False)

@@ -2,6 +2,12 @@ import math
 
 import pygame
 
+from acts.act_three.presentation.shadow_step_trial import (
+    draw_trial_detection,
+    draw_trial_layer,
+    draw_trial_lighting,
+)
+
 from acts.act_three.presentation.paladin.attack_effects import (
     draw_paladin_attack_effects,
 )
@@ -244,6 +250,8 @@ def _draw_act_three_world(
     transition_started_at = context.transition_started_at
 
     draw_world_terrain(context)
+    draw_trial_layer(context, "ground")
+    draw_trial_layer(context, "back")
     draw_world_targeting(
         context,
         game_state,
@@ -1535,6 +1543,8 @@ def _draw_act_three_world(
             ),
         )
 
+    draw_trial_layer(context, "front")
+
     if floor.tile_layers and tile_assets.get("tmx_tiles"):
         draw_fading_foreground_layers(
             view_surface,
@@ -1595,6 +1605,7 @@ def _draw_act_three_world(
             current_time,
             torch_index,
         )
+    draw_trial_lighting(context)
     _draw_fog_of_war(
         view_surface,
         floor,
@@ -1609,6 +1620,8 @@ def _draw_act_three_world(
         camera_y,
         ACT_THREE_TILE_SIZE,
     )
+
+    draw_trial_detection(context)
 
     if player_subclass == "assassin":
         draw_shadow_reflex_feedback(
