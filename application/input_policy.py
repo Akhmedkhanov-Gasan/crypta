@@ -62,6 +62,7 @@ def continuous_movement_input_available(
         and not game_state.act_three_transition_open
         and not game_state.act_three_debug_class_selection_open
         and not game_state.upgrade_altar_menu_open
+        and game_state.act_three.npc_dialog_position is None
         and not player.directional_ability_aiming
         and not player.act_two.fire_bomb_aiming
         and player.act_two.scroll_aiming_kind is None

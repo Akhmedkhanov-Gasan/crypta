@@ -316,6 +316,7 @@ def create_floor_state(
         passages=passages,
         act_one_revisit=act_one_revisit,
         upgrade_altar=floor.get("upgrade_altar"),
+        act_three_npcs=floor.get("npcs", []),
         bloody_altar=bloody_altar,
         trader=trader,
         quest_trader=quest_trader,

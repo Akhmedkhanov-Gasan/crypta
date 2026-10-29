@@ -34,6 +34,7 @@ from acts.act_three.presentation.world.context import (
 from acts.act_three.presentation.world.enemies import (
     draw_world_enemies,
 )
+from acts.act_three.presentation.npcs import draw_world_npcs
 from acts.act_three.presentation.summoner.true_form import (
     summoner_true_form_visual_active,
 )
@@ -282,6 +283,12 @@ def _draw_act_three_world(
         context,
         game_state,
         fonts,
+        assets,
+        current_time,
+    )
+    draw_world_npcs(
+        context,
+        game_state,
         assets,
         current_time,
     )

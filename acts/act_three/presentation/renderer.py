@@ -26,6 +26,7 @@ from acts.act_three.presentation.view import (
 from acts.act_three.presentation.altar_menu import (
     draw_upgrade_altar_menu,
 )
+from acts.act_three.presentation.npcs import draw_npc_dialog
 from acts.act_three.presentation.sidebar import (
     _draw_act_three_sidebar,
     _draw_label,
@@ -556,6 +557,8 @@ def draw_act_three_gameplay(
             fonts,
             assets,
         )
+
+    draw_npc_dialog(screen, game_state, fonts)
 
     if game_state.player.health <= 0:
         if _draw_defeat_sequence(

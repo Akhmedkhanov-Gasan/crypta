@@ -1,4 +1,5 @@
 from acts.act_two.enemies.oracle.behavior import resolve_oracle_hit_reaction
+from acts.act_three.npcs import advance_npc_dialog
 from acts.act_three.settings import (
     ASSASSIN_ULTIMATE_OUTRO_MS,
     ASSASSIN_ULTIMATE_PRELUDE_MS,
@@ -10,6 +11,7 @@ from systems.player_abilities import resolve_assassin_ultimate
 
 def advance_act_three_frame(game_state, current_act, current_time, sounds):
     if current_act == 3:
+        advance_npc_dialog(game_state, current_time)
         sounds.update(game_state.player, current_time)
 
     if game_state.player.ultimate_animation_active:

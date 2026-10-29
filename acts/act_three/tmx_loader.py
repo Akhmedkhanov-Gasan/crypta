@@ -8,6 +8,7 @@ from pathlib import Path
 import resource_store as resources
 
 from enemies import ENEMY_TYPES
+from acts.act_three.npcs import get_npc_cells
 
 
 def _csv_layer(layer, width, height):
@@ -246,7 +247,7 @@ def load_tmx_floor(path):
 
                 if zone is not None:
                     encounter_zones.append(zone)
-            elif group_name in ("entities", "enemies"):
+            elif group_name in ("entities", "enemies", "npcs"):
                 entities.append(
                     (
                         _entity_name(obj),
@@ -320,6 +321,26 @@ def load_tmx_floor(path):
     by_name = {}
     for name, position, properties in entities:
         by_name.setdefault(name, []).append((position, properties))
+
+    npcs = [
+        {
+            "type": "blacksmith",
+            "position": position,
+        }
+        for position, _ in by_name.get("blacksmith", [])
+    ]
+    for npc in npcs:
+        for column, row in get_npc_cells(npc):
+            if not (
+                0 <= row < height
+                and 0 <= column < width
+                and dungeon_map[row][column] == "."
+            ):
+                raise ValueError(
+                    f"NPC requires free floor cells: {npc!r}"
+                )
+        for column, row in get_npc_cells(npc):
+            dungeon_map[row][column] = "#"
 
     upgrade_altar_markers = by_name.get("upgrade_altar", [])
     upgrade_altar = (
@@ -403,6 +424,7 @@ def load_tmx_floor(path):
         "potions": potions,
         "torches": torches,
         "upgrade_altar": upgrade_altar,
+        "npcs": npcs,
         "tile_layers": layers,
         "barriers": barriers,
         "connectors": connectors,

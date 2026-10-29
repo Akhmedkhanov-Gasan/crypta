@@ -125,6 +125,7 @@ def _compose(placements, connections):
     barriers = set()
     torches = []
     enemies = []
+    npcs = []
     encounter_zones = []
     chests = []
     potions = []
@@ -155,6 +156,7 @@ def _compose(placements, connections):
             for position in template["torches"]
         )
         enemies.extend(_shift_entities(template["enemies"], offset))
+        npcs.extend(_shift_entities(template.get("npcs", []), offset))
         encounter_zones.extend(
             _shift_encounter_zones(
                 template.get("encounter_zones", []),
@@ -233,6 +235,7 @@ def _compose(placements, connections):
         "map": ["".join(row) for row in dungeon_map],
         "player_start": player_start,
         "enemies": enemies,
+        "npcs": npcs,
         "encounter_zones": encounter_zones,
         "chests": chests,
         "potions": potions,

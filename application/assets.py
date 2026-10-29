@@ -42,6 +42,9 @@ from acts.act_three.presentation.ability_assets import (
 from acts.act_three.presentation.consumable_assets import (
     load_act_three_consumable_assets,
 )
+from acts.act_three.presentation.npcs import (
+    load_act_three_npc_assets,
+)
 import resource_store as resources
 import xml.etree.ElementTree as ET
 
@@ -1051,6 +1054,7 @@ def load_act_three_gameplay_assets():
     assets.update(
         load_act_three_consumable_assets()
     )
+    assets.update(load_act_three_npc_assets())
     assets["tmx_tiles_by_floor"] = {}
 
     for floor_index, config in act_three_configs:

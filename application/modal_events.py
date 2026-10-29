@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import pygame
 
 from acts.act_one.presentation.death_scene import handle_act_one_death_event
+from acts.act_three.presentation.npcs import handle_npc_dialog_event
 from acts.act_two.presentation.bosses.oracle_phase_transition import (
     handle_oracle_cutscene_event,
     oracle_cutscene_active,
@@ -90,6 +91,19 @@ class ApplicationModalController:
             return ModalEventResult(True, state)
         if event.type == pygame.KEYUP and event.key in MOVEMENT_KEYS:
             release_held_movement(self.movement_state, event.key)
+            return ModalEventResult(True, state)
+
+        if (
+            current_act == 3
+            and not app_runtime.menu_open
+            and event.type not in (pygame.QUIT, pygame.VIDEORESIZE)
+            and handle_npc_dialog_event(
+                event,
+                game_state,
+                self._event_position(event),
+            )
+        ):
+            self._stop_movement()
             return ModalEventResult(True, state)
 
         death_menu_requested = False

@@ -4,6 +4,7 @@ import pygame
 
 from acts.crates import break_crate
 from acts.player_abilities import resolve_targeted_player_ability
+from acts.act_three.npcs import get_npc_at, open_npc_dialog
 from application.directional_input import WAIT_KEYS
 from logic import get_enemy_occupied_positions
 from systems.grid_geometry import can_reach_adjacent_cell
@@ -114,6 +115,11 @@ def resolve_act_three_player_action(
         floor.barriers,
         target_must_be_walkable=False,
     ):
+        return ActThreePlayerActionResult(movement_blocked=True)
+
+    npc = get_npc_at(floor, target)
+    if npc is not None:
+        open_npc_dialog(game_state, npc, started_at)
         return ActThreePlayerActionResult(movement_blocked=True)
 
     enemy, chest, crate, secret_wall = _cell_targets(game_state, target)

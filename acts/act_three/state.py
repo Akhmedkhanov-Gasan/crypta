@@ -228,6 +228,10 @@ class ArcherBarrageTurnState:
 @dataclass
 class ActThreeSessionState:
     barrage_turn: ArcherBarrageTurnState | None = None
+    npc_dialog_position: tuple[int, int] | None = None
+    npc_dialog_floor_index: int = -1
+    npc_dialog_phase: str = "closed"
+    npc_dialog_started_at: int = 0
     act_three_transition_open: bool = False
     act_three_transition_started_at: int = 0
     act_three_visual_started_at: int = 0

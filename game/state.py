@@ -319,6 +319,9 @@ class FloorState(AttributeMapping):
     passages: list[PassageState] = field(default_factory=list)
     act_one_revisit: ActOneRevisitState | None = None
     upgrade_altar: tuple[int, int] | None = None
+    act_three_npcs: list[dict[str, Any]] = field(
+        default_factory=list
+    )
     bloody_altar: BloodyAltarState | None = None
     trader: TraderState | None = None
     quest_trader: TraderState | None = None

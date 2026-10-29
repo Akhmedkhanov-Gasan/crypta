@@ -1,6 +1,7 @@
 import pygame
 
 from application.auto_movement import start_auto_move
+from acts.act_three.npcs import get_npc_at, open_npc_dialog
 from game.combat_log import add_log_message
 from game.progression import upgrade_attribute
 from acts.act_three.altar import (
@@ -783,6 +784,17 @@ def handle_act_three_pointer_event(
                     game_state,
                     game_mouse_position,
                 )
+                npc = get_npc_at(game_state.floor, target_cell)
+                if npc is not None:
+                    movement_state.reset_held_movement()
+                    movement_state.cancel_auto_move()
+                    open_npc_dialog(
+                        game_state,
+                        npc,
+                        pygame.time.get_ticks(),
+                    )
+                    return True
+
                 start_auto_move(
                     movement_state,
                     game_state,
