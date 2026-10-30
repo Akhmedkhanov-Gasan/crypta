@@ -18,6 +18,7 @@ CONSOLE_COMMANDS = (
     "level",
     "gold",
     "wake",
+    "wake3",
     "seal",
     "rune",
     "altar",
@@ -116,6 +117,8 @@ def execute_console_command(
     result = execute_act_three_console_command(
         game_state,
         parts,
+        close_console,
+        request_debug_jump,
     )
     if result is not None:
         return result

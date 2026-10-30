@@ -22,6 +22,12 @@ def advance_oracle_runtime(
     music_volume,
     input_state,
 ):
+    if game_state.act_three_transition_open:
+        from acts.act_three.awakening.runtime import reveal_awakening_arena
+
+        update_act_two_visibility(game_state.floor)
+        reveal_awakening_arena(game_state)
+        return False
     update_oracle_intro(game_state, camera, current_time)
     update_oracle_phase_transition(
         game_state,
@@ -51,6 +57,10 @@ def advance_oracle_runtime(
 
     update_oracle_gate(game_state.floor, current_time)
     update_act_two_visibility(game_state.floor)
+    if game_state.act_three_transition_open:
+        from acts.act_three.awakening.runtime import reveal_awakening_arena
+
+        reveal_awakening_arena(game_state)
     return interrupted_player
 
 

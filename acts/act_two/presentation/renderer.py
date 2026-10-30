@@ -652,6 +652,7 @@ class ActTwoRenderer:
                 draw_loot(target, remembered["column"], remembered["row"], 2, sprites)
 
         corpse_types = {
+            "oracle",
             "goblin",
             "mimic",
             "archer",
@@ -954,11 +955,19 @@ class ActTwoRenderer:
         )
         draw_fire_bomb_flight(target, game_state, sprites, current_time)
         draw_fire_bomb_targeting(target, game_state, fire_bomb_target)
-        draw_oracle_lighting(target, floor, current_time)
+        awakening_scene = game_state.act_three.awakening
+        debug_reveal = (
+            awakening_scene is not None
+            and awakening_scene.debug_reveal
+            and not awakening_scene.world_swapped
+        )
+        if not debug_reveal:
+            draw_oracle_lighting(target, floor, current_time)
         draw_oracle_attack_fx(target, floor, current_time)
         draw_oracle_phase_two_fx(target, floor, current_time)
         draw_oracle_death_fx(target, floor, current_time)
-        draw_act_two_fog_of_war(target, 2, floor)
+        if not debug_reveal:
+            draw_act_two_fog_of_war(target, 2, floor)
         draw_oracle_gate(target, floor, current_time)
 
     def draw_world(

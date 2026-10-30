@@ -1710,25 +1710,9 @@ def _subclass_card_rectangles():
 def get_subclass_selection_rectangles(
     player_class="warrior",
 ):
-    first_rectangle, second_rectangle = (
-        _subclass_card_rectangles()
-    )
+    from acts.act_three.awakening.selection import selection_rectangles
 
-    if player_class == "rogue":
-        return {
-            "assassin": first_rectangle,
-            "archer": second_rectangle,
-        }
-    if player_class == "mage":
-        return {
-            "warlock": first_rectangle,
-            "summoner": second_rectangle,
-        }
-
-    return {
-        "berserker": first_rectangle,
-        "paladin": second_rectangle,
-    }
+    return selection_rectangles(player_class)
 
 
 def draw_subclass_selection_screen(

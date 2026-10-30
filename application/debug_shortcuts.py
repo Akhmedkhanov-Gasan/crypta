@@ -27,6 +27,11 @@ def create_debug_game_state(
         None,
     )
     if debug_target is not None:
+        if debug_target.startswith("act_three_awakening:"):
+            from acts.act_three.runtime.flow import create_act_three_debug_transition
+
+            parent = debug_target.split(":", 1)[1]
+            return create_act_three_debug_transition(parent, current_time)
         if debug_target != "act_one_awakening":
             return None
 

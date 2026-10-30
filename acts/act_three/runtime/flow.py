@@ -56,6 +56,8 @@ def create_oracle_debug_state(
 
 
 def advance_act_three_transition(game_state, current_time):
+    if game_state.act_three.awakening is not None:
+        return
     narrative_elapsed = (
         current_time
         - game_state.act_three_transition_started_at
@@ -91,13 +93,47 @@ def create_act_three_debug_transition(
         enemy.health = 0
 
     debug_state.floor.projectiles.clear()
-    debug_state.act_three_transition_open = True
-    debug_state.act_three_transition_started_at = current_time
+    from acts.act_three.awakening.runtime import begin_awakening, _nearby_cell
+    from acts.act_two.presentation.bosses.oracle_death import OracleDeathState
+    from acts.act_two.presentation.bosses.oracle_phase_two import OraclePhaseTwoState
+    from acts.act_two.visibility import update_act_two_visibility
+
+    floor = debug_state.floor
+    oracle = next(enemy for enemy in floor.enemies if enemy.type == "oracle")
+    oracle.oracle_phase = 2
+    oracle.phase_transition_pending = False
+    oracle.oracle_death_started_at = max(1, current_time)
+    oracle.oracle_death_elapsed = 5800
+    floor.oracle_phase_two = OraclePhaseTwoState(caster=oracle, defeated_pending=True)
+    floor.oracle_death = OracleDeathState(
+        caster=oracle,
+        position=(oracle.column, oracle.row),
+        updated_at=current_time,
+        camera_origin=(0, 0),
+        elapsed=5800,
+        finished=True,
+    )
+    floor.boss_fight_started = True
+    floor.oracle_gate_opened = True
+    if floor.oracle_intro is not None:
+        floor.oracle_intro.finished = True
+    floor.player_column, floor.player_row = _nearby_cell(floor, (oracle.column + 4, oracle.row + 3))
+    update_act_two_visibility(floor)
+
+    begin_awakening(debug_state, current_time)
+    debug_state.act_three.awakening.debug_reveal = True
 
     return debug_state
 
 
 def choose_subclass(game_state, subclass):
+    from acts.act_three.abilities import get_subclass_definition
+
+    definition = get_subclass_definition(subclass)
+    if definition is None or definition.parent_class != game_state.player.player_class:
+        return
+    if game_state.player.subclass is not None:
+        return
     game_state.player.subclass = subclass
     initialize_act_three_progression(
         game_state.player,
@@ -107,7 +143,8 @@ def choose_subclass(game_state, subclass):
         CLASS_BASE_STATS[game_state.player.player_class],
         SUBCLASS_BASE_STATS[subclass],
     )
-    if not game_state.act_three_test_mode:
+    scene = game_state.act_three.awakening
+    if not game_state.act_three_test_mode and scene is None:
         game_state.floor_index += 1
         game_state.floor = create_floor_state(game_state.floor_index)
         clear_archer_barrage_zone(game_state)
@@ -132,10 +169,14 @@ def choose_subclass(game_state, subclass):
             f"of the {display_name}."
         ),
     )
-    add_log_message(
-        game_state.combat_log,
-        "Act III begins. The world is alive.",
-    )
+    if scene is not None:
+        import pygame
+        from acts.act_three.awakening.runtime import _set_phase
+
+        _set_phase(scene, "transformation", pygame.time.get_ticks())
+        game_state.act_three_transition_open = True
+    else:
+        add_log_message(game_state.combat_log, "Act III begins. The world is alive.")
 
 
 def clear_archer_barrage_zone(game_state):

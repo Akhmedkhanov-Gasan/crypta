@@ -1,0 +1,2619 @@
+{
+  "schema_version": 1,
+  "screen": "subclass_selection_bundle",
+  "act": 3,
+  "coordinate_space": "frame",
+  "screens": {
+    "rogue": {
+      "schema_version": 1,
+      "screen": "subclass_selection",
+      "act": 3,
+      "player_class": "rogue",
+      "coordinate_space": "frame",
+      "frame": {
+        "name": "awakening_act3_rogue",
+        "width": 1280,
+        "height": 720
+      },
+      "background": {
+        "color": {
+          "r": 0,
+          "g": 0,
+          "b": 0,
+          "a": 255
+        }
+      },
+      "screen_title": {
+        "rect": {
+          "x": 416,
+          "y": 50,
+          "width": 448,
+          "height": 44
+        },
+        "text": {
+          "rect": {
+            "x": 416,
+            "y": 50,
+            "width": 448,
+            "height": 45
+          },
+          "text": "Choose your subclass",
+          "font": {
+            "family": "Ubuntu Mono",
+            "style": "Medium",
+            "size": 40
+          },
+          "line_height": {
+            "unit": "AUTO"
+          },
+          "letter_spacing": {
+            "unit": "PERCENT",
+            "value": 0
+          },
+          "horizontal_align": "LEFT",
+          "vertical_align": "TOP",
+          "text_case": "ORIGINAL",
+          "color": {
+            "r": 167,
+            "g": 167,
+            "b": 167,
+            "a": 255
+          },
+          "auto_resize": "WIDTH_AND_HEIGHT"
+        }
+      },
+      "subclass_choices": {
+        "rect": {
+          "x": 140,
+          "y": 158,
+          "width": 1000,
+          "height": 562
+        },
+        "order": [
+          "assassin",
+          "archer"
+        ],
+        "options": {
+          "assassin": {
+            "subclass_id": "assassin",
+            "rect": {
+              "x": 140,
+              "y": 158,
+              "width": 450,
+              "height": 562
+            },
+            "hitbox": {
+              "x": 140,
+              "y": 158,
+              "width": 450,
+              "height": 562
+            },
+            "card_background": {
+              "rect": {
+                "x": 165,
+                "y": 166,
+                "width": 400,
+                "height": 546
+              },
+              "asset_key": "act_three_subclass_card",
+              "opacity": 1
+            },
+            "portrait_section": {
+              "rect": {
+                "x": 271,
+                "y": 198,
+                "width": 188,
+                "height": 214
+              },
+              "background": {
+                "rect": {
+                  "x": 271,
+                  "y": 198,
+                  "width": 188,
+                  "height": 188
+                },
+                "fill": {
+                  "r": 0,
+                  "g": 0,
+                  "b": 0,
+                  "a": 110
+                },
+                "stroke": null,
+                "stroke_weight": 1,
+                "corner_radius": 23,
+                "blur_radius": 0
+              },
+              "portrait": {
+                "rect": {
+                  "x": 276,
+                  "y": 203,
+                  "width": 178,
+                  "height": 178
+                },
+                "asset_key": "assassin_portrait",
+                "opacity": 1
+              }
+            },
+            "class_name": {
+              "rect": {
+                "x": 311,
+                "y": 392,
+                "width": 109,
+                "height": 20
+              },
+              "text": "Assassin",
+              "font": {
+                "family": "JMH Cthulhumbus Arcade",
+                "style": "Regular",
+                "size": 20
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 135,
+                "g": 16,
+                "b": 16,
+                "a": 255
+              },
+              "auto_resize": "NONE"
+            },
+            "class_description": {
+              "rect": {
+                "x": 190,
+                "y": 421,
+                "width": 350,
+                "height": 60
+              },
+              "text": "A mobile melee killer who slips \nthrough the shadows and turns \ndodges into deadly counters.",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 16
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 167,
+                "g": 167,
+                "b": 167,
+                "a": 255
+              },
+              "auto_resize": "NONE"
+            },
+            "passive": {
+              "rect": {
+                "x": 199,
+                "y": 489,
+                "width": 332,
+                "height": 59
+              },
+              "slot": null,
+              "background": {
+                "rect": {
+                  "x": 199,
+                  "y": 489,
+                  "width": 332,
+                  "height": 59
+                },
+                "asset_key": "act_three_skill_panel",
+                "opacity": 1
+              },
+              "icon": {
+                "rect": {
+                  "x": 206,
+                  "y": 498,
+                  "width": 40,
+                  "height": 40
+                },
+                "asset_key": "act_three_assassin_passive",
+                "opacity": 1
+              },
+              "name": {
+                "rect": {
+                  "x": 309,
+                  "y": 494,
+                  "width": 148,
+                  "height": 13
+                },
+                "text": "Passive: Shadow Reflex",
+                "font": {
+                  "family": "Ubuntu Mono",
+                  "style": "Medium",
+                  "size": 12
+                },
+                "line_height": {
+                  "unit": "AUTO"
+                },
+                "letter_spacing": {
+                  "unit": "PERCENT",
+                  "value": 0
+                },
+                "horizontal_align": "CENTER",
+                "vertical_align": "CENTER",
+                "text_case": "ORIGINAL",
+                "color": {
+                  "r": 167,
+                  "g": 167,
+                  "b": 167,
+                  "a": 255
+                },
+                "auto_resize": "WIDTH_AND_HEIGHT"
+              },
+              "description": {
+                "rect": {
+                  "x": 254,
+                  "y": 508,
+                  "width": 264,
+                  "height": 34
+                },
+                "text": "Dodging a direct attack \ntriggers a counterattack",
+                "font": {
+                  "family": "Ubuntu Mono",
+                  "style": "Medium",
+                  "size": 14
+                },
+                "line_height": {
+                  "unit": "AUTO"
+                },
+                "letter_spacing": {
+                  "unit": "PERCENT",
+                  "value": 0
+                },
+                "horizontal_align": "CENTER",
+                "vertical_align": "CENTER",
+                "text_case": "ORIGINAL",
+                "color": {
+                  "r": 167,
+                  "g": 167,
+                  "b": 167,
+                  "a": 255
+                },
+                "auto_resize": "NONE"
+              }
+            },
+            "abilities": {
+              "q": {
+                "rect": {
+                  "x": 199,
+                  "y": 551,
+                  "width": 332,
+                  "height": 59
+                },
+                "slot": "q",
+                "background": {
+                  "rect": {
+                    "x": 199,
+                    "y": 551,
+                    "width": 332,
+                    "height": 59
+                  },
+                  "asset_key": "act_three_skill_panel",
+                  "opacity": 1
+                },
+                "icon": {
+                  "rect": {
+                    "x": 207,
+                    "y": 559,
+                    "width": 40,
+                    "height": 40
+                  },
+                  "asset_key": "act_three_assassin_shadow_step",
+                  "opacity": 1
+                },
+                "name": {
+                  "rect": {
+                    "x": 348,
+                    "y": 556,
+                    "width": 74,
+                    "height": 13
+                  },
+                  "text": "Shadow step",
+                  "font": {
+                    "family": "Ubuntu Mono",
+                    "style": "Medium",
+                    "size": 12
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "LEFT",
+                  "vertical_align": "TOP",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 167,
+                    "g": 167,
+                    "b": 167,
+                    "a": 255
+                  },
+                  "auto_resize": "WIDTH_AND_HEIGHT"
+                },
+                "description": {
+                  "rect": {
+                    "x": 255,
+                    "y": 569,
+                    "width": 272,
+                    "height": 34
+                  },
+                  "text": "Teleport to a visible \nunoccupied cell.",
+                  "font": {
+                    "family": "Ubuntu Mono",
+                    "style": "Medium",
+                    "size": 14
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "CENTER",
+                  "vertical_align": "CENTER",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 167,
+                    "g": 167,
+                    "b": 167,
+                    "a": 255
+                  },
+                  "auto_resize": "NONE"
+                }
+              },
+              "f": {
+                "rect": {
+                  "x": 199,
+                  "y": 613,
+                  "width": 332,
+                  "height": 59
+                },
+                "slot": "f",
+                "background": {
+                  "rect": {
+                    "x": 199,
+                    "y": 613,
+                    "width": 332,
+                    "height": 59
+                  },
+                  "asset_key": "act_three_skill_panel",
+                  "opacity": 1
+                },
+                "icon": {
+                  "rect": {
+                    "x": 207,
+                    "y": 623,
+                    "width": 40,
+                    "height": 40
+                  },
+                  "asset_key": "act_three_assassin_killing_spree",
+                  "opacity": 1
+                },
+                "name": {
+                  "rect": {
+                    "x": 348,
+                    "y": 618,
+                    "width": 88,
+                    "height": 13
+                  },
+                  "text": "Killing spree",
+                  "font": {
+                    "family": "Ubuntu Mono",
+                    "style": "Medium",
+                    "size": 12
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "LEFT",
+                  "vertical_align": "TOP",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 167,
+                    "g": 167,
+                    "b": 167,
+                    "a": 255
+                  },
+                  "auto_resize": "WIDTH_AND_HEIGHT"
+                },
+                "description": {
+                  "rect": {
+                    "x": 251,
+                    "y": 633,
+                    "width": 275,
+                    "height": 33
+                  },
+                  "text": "Strike up to three visible\nenemies in rapid succession",
+                  "font": {
+                    "family": "Ubuntu Mono",
+                    "style": "Medium",
+                    "size": 14
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "CENTER",
+                  "vertical_align": "CENTER",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 167,
+                    "g": 167,
+                    "b": 167,
+                    "a": 255
+                  },
+                  "auto_resize": "NONE"
+                }
+              }
+            }
+          },
+          "archer": {
+            "subclass_id": "archer",
+            "rect": {
+              "x": 690,
+              "y": 158,
+              "width": 450,
+              "height": 562
+            },
+            "hitbox": {
+              "x": 690,
+              "y": 158,
+              "width": 450,
+              "height": 562
+            },
+            "card_background": {
+              "rect": {
+                "x": 715,
+                "y": 166,
+                "width": 400,
+                "height": 546
+              },
+              "asset_key": "act_three_subclass_card",
+              "opacity": 1
+            },
+            "portrait_section": {
+              "rect": {
+                "x": 821,
+                "y": 198,
+                "width": 188,
+                "height": 214
+              },
+              "background": {
+                "rect": {
+                  "x": 821,
+                  "y": 198,
+                  "width": 188,
+                  "height": 188
+                },
+                "fill": {
+                  "r": 0,
+                  "g": 0,
+                  "b": 0,
+                  "a": 110
+                },
+                "stroke": null,
+                "stroke_weight": 1,
+                "corner_radius": 23,
+                "blur_radius": 0
+              },
+              "portrait": {
+                "rect": {
+                  "x": 830,
+                  "y": 204,
+                  "width": 170,
+                  "height": 170
+                },
+                "asset_key": "archer_portrait",
+                "opacity": 1
+              }
+            },
+            "class_name": {
+              "rect": {
+                "x": 861,
+                "y": 392,
+                "width": 109,
+                "height": 20
+              },
+              "text": "Archer",
+              "font": {
+                "family": "JMH Cthulhumbus Arcade",
+                "style": "Regular",
+                "size": 20
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 57,
+                "g": 114,
+                "b": 42,
+                "a": 255
+              },
+              "auto_resize": "NONE"
+            },
+            "class_description": {
+              "rect": {
+                "x": 740,
+                "y": 421,
+                "width": 350,
+                "height": 55
+              },
+              "text": "A ranged hunter who pierces enemy lines and controls the battlefield with spectral traps.",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 16
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 167,
+                "g": 167,
+                "b": 167,
+                "a": 255
+              },
+              "auto_resize": "NONE"
+            },
+            "passive": {
+              "rect": {
+                "x": 749,
+                "y": 489,
+                "width": 332,
+                "height": 59
+              },
+              "slot": null,
+              "background": {
+                "rect": {
+                  "x": 749,
+                  "y": 489,
+                  "width": 332,
+                  "height": 59
+                },
+                "asset_key": "act_three_skill_panel",
+                "opacity": 1
+              },
+              "icon": {
+                "rect": {
+                  "x": 757,
+                  "y": 498,
+                  "width": 40,
+                  "height": 40
+                },
+                "asset_key": "act_three_archer_passive",
+                "opacity": 1
+              },
+              "name": {
+                "rect": {
+                  "x": 876,
+                  "y": 494,
+                  "width": 115,
+                  "height": 13
+                },
+                "text": "Passive: Marksman",
+                "font": {
+                  "family": "Ubuntu Mono",
+                  "style": "Medium",
+                  "size": 12
+                },
+                "line_height": {
+                  "unit": "AUTO"
+                },
+                "letter_spacing": {
+                  "unit": "PERCENT",
+                  "value": 0
+                },
+                "horizontal_align": "CENTER",
+                "vertical_align": "CENTER",
+                "text_case": "ORIGINAL",
+                "color": {
+                  "r": 167,
+                  "g": 167,
+                  "b": 167,
+                  "a": 255
+                },
+                "auto_resize": "WIDTH_AND_HEIGHT"
+              },
+              "description": {
+                "rect": {
+                  "x": 812,
+                  "y": 508,
+                  "width": 264,
+                  "height": 34
+                },
+                "text": "Basic attacks can strike \nvisible enemies from range",
+                "font": {
+                  "family": "Ubuntu Mono",
+                  "style": "Medium",
+                  "size": 14
+                },
+                "line_height": {
+                  "unit": "AUTO"
+                },
+                "letter_spacing": {
+                  "unit": "PERCENT",
+                  "value": 0
+                },
+                "horizontal_align": "CENTER",
+                "vertical_align": "CENTER",
+                "text_case": "ORIGINAL",
+                "color": {
+                  "r": 167,
+                  "g": 167,
+                  "b": 167,
+                  "a": 255
+                },
+                "auto_resize": "NONE"
+              }
+            },
+            "abilities": {
+              "q": {
+                "rect": {
+                  "x": 749,
+                  "y": 551,
+                  "width": 332,
+                  "height": 59
+                },
+                "slot": "q",
+                "background": {
+                  "rect": {
+                    "x": 749,
+                    "y": 551,
+                    "width": 332,
+                    "height": 59
+                  },
+                  "asset_key": "act_three_skill_panel",
+                  "opacity": 1
+                },
+                "icon": {
+                  "rect": {
+                    "x": 757,
+                    "y": 560,
+                    "width": 40,
+                    "height": 40
+                  },
+                  "asset_key": "act_three_archer_piercing_shot",
+                  "opacity": 1
+                },
+                "name": {
+                  "rect": {
+                    "x": 893,
+                    "y": 556,
+                    "width": 88,
+                    "height": 13
+                  },
+                  "text": "Piercing shot",
+                  "font": {
+                    "family": "Ubuntu Mono",
+                    "style": "Medium",
+                    "size": 12
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "LEFT",
+                  "vertical_align": "TOP",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 167,
+                    "g": 167,
+                    "b": 167,
+                    "a": 255
+                  },
+                  "auto_resize": "WIDTH_AND_HEIGHT"
+                },
+                "description": {
+                  "rect": {
+                    "x": 805,
+                    "y": 569,
+                    "width": 272,
+                    "height": 34
+                  },
+                  "text": "Pierce one enemy and \nhit another behind it.",
+                  "font": {
+                    "family": "Ubuntu Mono",
+                    "style": "Medium",
+                    "size": 14
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "CENTER",
+                  "vertical_align": "CENTER",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 167,
+                    "g": 167,
+                    "b": 167,
+                    "a": 255
+                  },
+                  "auto_resize": "NONE"
+                }
+              },
+              "f": {
+                "rect": {
+                  "x": 749,
+                  "y": 613,
+                  "width": 332,
+                  "height": 59
+                },
+                "slot": "f",
+                "background": {
+                  "rect": {
+                    "x": 749,
+                    "y": 613,
+                    "width": 332,
+                    "height": 59
+                  },
+                  "asset_key": "act_three_skill_panel",
+                  "opacity": 1
+                },
+                "icon": {
+                  "rect": {
+                    "x": 757,
+                    "y": 623,
+                    "width": 40,
+                    "height": 40
+                  },
+                  "asset_key": "act_three_archer_barrage_zone",
+                  "opacity": 1
+                },
+                "name": {
+                  "rect": {
+                    "x": 898,
+                    "y": 618,
+                    "width": 81,
+                    "height": 13
+                  },
+                  "text": "Barrage zone",
+                  "font": {
+                    "family": "Ubuntu Mono",
+                    "style": "Medium",
+                    "size": 12
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "LEFT",
+                  "vertical_align": "TOP",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 167,
+                    "g": 167,
+                    "b": 167,
+                    "a": 255
+                  },
+                  "auto_resize": "WIDTH_AND_HEIGHT"
+                },
+                "description": {
+                  "rect": {
+                    "x": 801,
+                    "y": 633,
+                    "width": 275,
+                    "height": 33
+                  },
+                  "text": "Place a lasting trap that calls phantom\narchers upon entering enemies.",
+                  "font": {
+                    "family": "Ubuntu Mono",
+                    "style": "Medium",
+                    "size": 12
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "CENTER",
+                  "vertical_align": "CENTER",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 167,
+                    "g": 167,
+                    "b": 167,
+                    "a": 255
+                  },
+                  "auto_resize": "NONE"
+                }
+              }
+            }
+          }
+        }
+      },
+      "warnings": []
+    },
+    "warrior": {
+      "schema_version": 1,
+      "screen": "subclass_selection",
+      "act": 3,
+      "player_class": "warrior",
+      "coordinate_space": "frame",
+      "frame": {
+        "name": "awakening_act3_warrior",
+        "width": 1280,
+        "height": 720
+      },
+      "background": {
+        "color": {
+          "r": 0,
+          "g": 0,
+          "b": 0,
+          "a": 255
+        }
+      },
+      "screen_title": {
+        "rect": {
+          "x": 416,
+          "y": 50,
+          "width": 448,
+          "height": 44
+        },
+        "text": {
+          "rect": {
+            "x": 416,
+            "y": 50,
+            "width": 448,
+            "height": 45
+          },
+          "text": "Choose your subclass",
+          "font": {
+            "family": "Ubuntu Mono",
+            "style": "Medium",
+            "size": 40
+          },
+          "line_height": {
+            "unit": "AUTO"
+          },
+          "letter_spacing": {
+            "unit": "PERCENT",
+            "value": 0
+          },
+          "horizontal_align": "LEFT",
+          "vertical_align": "TOP",
+          "text_case": "ORIGINAL",
+          "color": {
+            "r": 167,
+            "g": 167,
+            "b": 167,
+            "a": 255
+          },
+          "auto_resize": "WIDTH_AND_HEIGHT"
+        }
+      },
+      "subclass_choices": {
+        "rect": {
+          "x": 140,
+          "y": 158,
+          "width": 1000,
+          "height": 562
+        },
+        "order": [
+          "berserker",
+          "paladin"
+        ],
+        "options": {
+          "berserker": {
+            "subclass_id": "berserker",
+            "rect": {
+              "x": 140,
+              "y": 158,
+              "width": 450,
+              "height": 562
+            },
+            "hitbox": {
+              "x": 140,
+              "y": 158,
+              "width": 450,
+              "height": 562
+            },
+            "card_background": {
+              "rect": {
+                "x": 165,
+                "y": 166,
+                "width": 400,
+                "height": 546
+              },
+              "asset_key": "act_three_subclass_card",
+              "opacity": 1
+            },
+            "portrait_section": {
+              "rect": {
+                "x": 271,
+                "y": 198,
+                "width": 188,
+                "height": 214
+              },
+              "background": {
+                "rect": {
+                  "x": 271,
+                  "y": 198,
+                  "width": 188,
+                  "height": 188
+                },
+                "fill": {
+                  "r": 0,
+                  "g": 0,
+                  "b": 0,
+                  "a": 110
+                },
+                "stroke": null,
+                "stroke_weight": 1,
+                "corner_radius": 23,
+                "blur_radius": 0
+              },
+              "portrait": {
+                "rect": {
+                  "x": 280,
+                  "y": 207,
+                  "width": 170,
+                  "height": 170
+                },
+                "asset_key": "berserker_portrait",
+                "opacity": 1
+              }
+            },
+            "class_name": {
+              "rect": {
+                "x": 311,
+                "y": 392,
+                "width": 109,
+                "height": 20
+              },
+              "text": "Berserker",
+              "font": {
+                "family": "JMH Cthulhumbus Arcade",
+                "style": "Regular",
+                "size": 20
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 161,
+                "g": 28,
+                "b": 28,
+                "a": 255
+              },
+              "auto_resize": "NONE"
+            },
+            "class_description": {
+              "rect": {
+                "x": 190,
+                "y": 421,
+                "width": 350,
+                "height": 55
+              },
+              "text": "A relentless melee fighter who grows\n stronger as health falls and leaps into battle.",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 16
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "TOP",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 167,
+                "g": 167,
+                "b": 167,
+                "a": 255
+              },
+              "auto_resize": "NONE"
+            },
+            "passive": {
+              "rect": {
+                "x": 199,
+                "y": 489,
+                "width": 332,
+                "height": 59
+              },
+              "slot": null,
+              "background": {
+                "rect": {
+                  "x": 199,
+                  "y": 489,
+                  "width": 332,
+                  "height": 59
+                },
+                "asset_key": "act_three_skill_panel",
+                "opacity": 1
+              },
+              "icon": {
+                "rect": {
+                  "x": 206,
+                  "y": 498,
+                  "width": 40,
+                  "height": 40
+                },
+                "asset_key": "act_three_berserker_passive",
+                "opacity": 1
+              },
+              "name": {
+                "rect": {
+                  "x": 339,
+                  "y": 494,
+                  "width": 88,
+                  "height": 13
+                },
+                "text": "Passive: Rage",
+                "font": {
+                  "family": "Ubuntu Mono",
+                  "style": "Medium",
+                  "size": 12
+                },
+                "line_height": {
+                  "unit": "AUTO"
+                },
+                "letter_spacing": {
+                  "unit": "PERCENT",
+                  "value": 0
+                },
+                "horizontal_align": "CENTER",
+                "vertical_align": "CENTER",
+                "text_case": "ORIGINAL",
+                "color": {
+                  "r": 167,
+                  "g": 167,
+                  "b": 167,
+                  "a": 255
+                },
+                "auto_resize": "WIDTH_AND_HEIGHT"
+              },
+              "description": {
+                "rect": {
+                  "x": 255,
+                  "y": 508,
+                  "width": 264,
+                  "height": 34
+                },
+                "text": "Physical damage \nrises as health falls.",
+                "font": {
+                  "family": "Ubuntu Mono",
+                  "style": "Medium",
+                  "size": 14
+                },
+                "line_height": {
+                  "unit": "AUTO"
+                },
+                "letter_spacing": {
+                  "unit": "PERCENT",
+                  "value": 0
+                },
+                "horizontal_align": "CENTER",
+                "vertical_align": "CENTER",
+                "text_case": "ORIGINAL",
+                "color": {
+                  "r": 167,
+                  "g": 167,
+                  "b": 167,
+                  "a": 255
+                },
+                "auto_resize": "NONE"
+              }
+            },
+            "abilities": {
+              "q": {
+                "rect": {
+                  "x": 199,
+                  "y": 551,
+                  "width": 332,
+                  "height": 59
+                },
+                "slot": "q",
+                "background": {
+                  "rect": {
+                    "x": 199,
+                    "y": 551,
+                    "width": 332,
+                    "height": 59
+                  },
+                  "asset_key": "act_three_skill_panel",
+                  "opacity": 1
+                },
+                "icon": {
+                  "rect": {
+                    "x": 207,
+                    "y": 560,
+                    "width": 40,
+                    "height": 40
+                  },
+                  "asset_key": "act_three_berserker_crushing_leap",
+                  "opacity": 1
+                },
+                "name": {
+                  "rect": {
+                    "x": 334,
+                    "y": 556,
+                    "width": 88,
+                    "height": 13
+                  },
+                  "text": "Crushing leap",
+                  "font": {
+                    "family": "Ubuntu Mono",
+                    "style": "Medium",
+                    "size": 12
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "LEFT",
+                  "vertical_align": "TOP",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 167,
+                    "g": 167,
+                    "b": 167,
+                    "a": 255
+                  },
+                  "auto_resize": "WIDTH_AND_HEIGHT"
+                },
+                "description": {
+                  "rect": {
+                    "x": 255,
+                    "y": 569,
+                    "width": 272,
+                    "height": 34
+                  },
+                  "text": "Leap to a visible cell and damage\nadjacent enemies on landing.",
+                  "font": {
+                    "family": "Ubuntu Mono",
+                    "style": "Medium",
+                    "size": 14
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "CENTER",
+                  "vertical_align": "CENTER",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 167,
+                    "g": 167,
+                    "b": 167,
+                    "a": 255
+                  },
+                  "auto_resize": "NONE"
+                }
+              },
+              "f": {
+                "rect": {
+                  "x": 199,
+                  "y": 613,
+                  "width": 332,
+                  "height": 59
+                },
+                "slot": "f",
+                "background": {
+                  "rect": {
+                    "x": 199,
+                    "y": 613,
+                    "width": 332,
+                    "height": 59
+                  },
+                  "asset_key": "act_three_skill_panel",
+                  "opacity": 1
+                },
+                "icon": {
+                  "rect": {
+                    "x": 206,
+                    "y": 623,
+                    "width": 40,
+                    "height": 40
+                  },
+                  "asset_key": "act_three_berserker_last_rage",
+                  "opacity": 1
+                },
+                "name": {
+                  "rect": {
+                    "x": 340,
+                    "y": 618,
+                    "width": 61,
+                    "height": 13
+                  },
+                  "text": "Last rage",
+                  "font": {
+                    "family": "Ubuntu Mono",
+                    "style": "Medium",
+                    "size": 12
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "LEFT",
+                  "vertical_align": "TOP",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 167,
+                    "g": 167,
+                    "b": 167,
+                    "a": 255
+                  },
+                  "auto_resize": "WIDTH_AND_HEIGHT"
+                },
+                "description": {
+                  "rect": {
+                    "x": 251,
+                    "y": 633,
+                    "width": 275,
+                    "height": 33
+                  },
+                  "text": "Refuse death for five turns and\ngain the maximum Rage bonus",
+                  "font": {
+                    "family": "Ubuntu Mono",
+                    "style": "Medium",
+                    "size": 14
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "CENTER",
+                  "vertical_align": "CENTER",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 167,
+                    "g": 167,
+                    "b": 167,
+                    "a": 255
+                  },
+                  "auto_resize": "NONE"
+                }
+              }
+            }
+          },
+          "paladin": {
+            "subclass_id": "paladin",
+            "rect": {
+              "x": 690,
+              "y": 158,
+              "width": 450,
+              "height": 562
+            },
+            "hitbox": {
+              "x": 690,
+              "y": 158,
+              "width": 450,
+              "height": 562
+            },
+            "card_background": {
+              "rect": {
+                "x": 715,
+                "y": 166,
+                "width": 400,
+                "height": 546
+              },
+              "asset_key": "act_three_subclass_card",
+              "opacity": 1
+            },
+            "portrait_section": {
+              "rect": {
+                "x": 821,
+                "y": 198,
+                "width": 188,
+                "height": 214
+              },
+              "background": {
+                "rect": {
+                  "x": 821,
+                  "y": 198,
+                  "width": 188,
+                  "height": 188
+                },
+                "fill": {
+                  "r": 0,
+                  "g": 0,
+                  "b": 0,
+                  "a": 110
+                },
+                "stroke": null,
+                "stroke_weight": 1,
+                "corner_radius": 23,
+                "blur_radius": 0
+              },
+              "portrait": {
+                "rect": {
+                  "x": 826,
+                  "y": 203,
+                  "width": 178,
+                  "height": 178
+                },
+                "asset_key": "paladin_portrait",
+                "opacity": 1
+              }
+            },
+            "class_name": {
+              "rect": {
+                "x": 861,
+                "y": 392,
+                "width": 109,
+                "height": 20
+              },
+              "text": "Paladin",
+              "font": {
+                "family": "JMH Cthulhumbus Arcade",
+                "style": "Regular",
+                "size": 20
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 169,
+                "g": 149,
+                "b": 120,
+                "a": 255
+              },
+              "auto_resize": "NONE"
+            },
+            "class_description": {
+              "rect": {
+                "x": 740,
+                "y": 421,
+                "width": 350,
+                "height": 60
+              },
+              "text": "An armored warrior who blocks attacks, \nstuns enemies and calls black lightning\n upon corrupted ground.",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 16
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 167,
+                "g": 167,
+                "b": 167,
+                "a": 255
+              },
+              "auto_resize": "NONE"
+            },
+            "passive": {
+              "rect": {
+                "x": 749,
+                "y": 489,
+                "width": 332,
+                "height": 59
+              },
+              "slot": null,
+              "background": {
+                "rect": {
+                  "x": 749,
+                  "y": 489,
+                  "width": 332,
+                  "height": 59
+                },
+                "asset_key": "act_three_skill_panel",
+                "opacity": 1
+              },
+              "icon": {
+                "rect": {
+                  "x": 757,
+                  "y": 497,
+                  "width": 40,
+                  "height": 40
+                },
+                "asset_key": "act_three_paladin_passive",
+                "opacity": 1
+              },
+              "name": {
+                "rect": {
+                  "x": 859,
+                  "y": 494,
+                  "width": 148,
+                  "height": 13
+                },
+                "text": "Passive: Paladin guard",
+                "font": {
+                  "family": "Ubuntu Mono",
+                  "style": "Medium",
+                  "size": 12
+                },
+                "line_height": {
+                  "unit": "AUTO"
+                },
+                "letter_spacing": {
+                  "unit": "PERCENT",
+                  "value": 0
+                },
+                "horizontal_align": "CENTER",
+                "vertical_align": "CENTER",
+                "text_case": "ORIGINAL",
+                "color": {
+                  "r": 167,
+                  "g": 167,
+                  "b": 167,
+                  "a": 255
+                },
+                "auto_resize": "WIDTH_AND_HEIGHT"
+              },
+              "description": {
+                "rect": {
+                  "x": 807,
+                  "y": 507,
+                  "width": 264,
+                  "height": 34
+                },
+                "text": "25% chance to fully block attacks",
+                "font": {
+                  "family": "Ubuntu Mono",
+                  "style": "Medium",
+                  "size": 14
+                },
+                "line_height": {
+                  "unit": "AUTO"
+                },
+                "letter_spacing": {
+                  "unit": "PERCENT",
+                  "value": 0
+                },
+                "horizontal_align": "CENTER",
+                "vertical_align": "CENTER",
+                "text_case": "ORIGINAL",
+                "color": {
+                  "r": 167,
+                  "g": 167,
+                  "b": 167,
+                  "a": 255
+                },
+                "auto_resize": "NONE"
+              }
+            },
+            "abilities": {
+              "q": {
+                "rect": {
+                  "x": 749,
+                  "y": 551,
+                  "width": 332,
+                  "height": 59
+                },
+                "slot": "q",
+                "background": {
+                  "rect": {
+                    "x": 749,
+                    "y": 551,
+                    "width": 332,
+                    "height": 59
+                  },
+                  "asset_key": "act_three_skill_panel",
+                  "opacity": 1
+                },
+                "icon": {
+                  "rect": {
+                    "x": 756,
+                    "y": 560,
+                    "width": 40,
+                    "height": 40
+                  },
+                  "asset_key": "act_three_paladin_shield_charge",
+                  "opacity": 1
+                },
+                "name": {
+                  "rect": {
+                    "x": 893,
+                    "y": 556,
+                    "width": 88,
+                    "height": 13
+                  },
+                  "text": "Shield charge",
+                  "font": {
+                    "family": "Ubuntu Mono",
+                    "style": "Medium",
+                    "size": 12
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "LEFT",
+                  "vertical_align": "TOP",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 167,
+                    "g": 167,
+                    "b": 167,
+                    "a": 255
+                  },
+                  "auto_resize": "WIDTH_AND_HEIGHT"
+                },
+                "description": {
+                  "rect": {
+                    "x": 805,
+                    "y": 569,
+                    "width": 272,
+                    "height": 34
+                  },
+                  "text": "Rush in a chosen direction, damaging and stunning enemies",
+                  "font": {
+                    "family": "Ubuntu Mono",
+                    "style": "Medium",
+                    "size": 14
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "CENTER",
+                  "vertical_align": "CENTER",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 167,
+                    "g": 167,
+                    "b": 167,
+                    "a": 255
+                  },
+                  "auto_resize": "NONE"
+                }
+              },
+              "f": {
+                "rect": {
+                  "x": 749,
+                  "y": 613,
+                  "width": 332,
+                  "height": 59
+                },
+                "slot": "f",
+                "background": {
+                  "rect": {
+                    "x": 749,
+                    "y": 613,
+                    "width": 332,
+                    "height": 59
+                  },
+                  "asset_key": "act_three_skill_panel",
+                  "opacity": 1
+                },
+                "icon": {
+                  "rect": {
+                    "x": 756,
+                    "y": 623,
+                    "width": 40,
+                    "height": 40
+                  },
+                  "asset_key": "act_three_paladin_sacred_ground",
+                  "opacity": 1
+                },
+                "name": {
+                  "rect": {
+                    "x": 898,
+                    "y": 618,
+                    "width": 88,
+                    "height": 13
+                  },
+                  "text": "Sacred ground",
+                  "font": {
+                    "family": "Ubuntu Mono",
+                    "style": "Medium",
+                    "size": 12
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "LEFT",
+                  "vertical_align": "TOP",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 167,
+                    "g": 167,
+                    "b": 167,
+                    "a": 255
+                  },
+                  "auto_resize": "WIDTH_AND_HEIGHT"
+                },
+                "description": {
+                  "rect": {
+                    "x": 801,
+                    "y": 633,
+                    "width": 275,
+                    "height": 33
+                  },
+                  "text": "Drive the blade into the earth and\ncorrupt the surrounding ground",
+                  "font": {
+                    "family": "Ubuntu Mono",
+                    "style": "Medium",
+                    "size": 12
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "CENTER",
+                  "vertical_align": "CENTER",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 167,
+                    "g": 167,
+                    "b": 167,
+                    "a": 255
+                  },
+                  "auto_resize": "NONE"
+                }
+              }
+            }
+          }
+        }
+      },
+      "warnings": []
+    },
+    "mage": {
+      "schema_version": 1,
+      "screen": "subclass_selection",
+      "act": 3,
+      "player_class": "mage",
+      "coordinate_space": "frame",
+      "frame": {
+        "name": "awakening_act3_mage",
+        "width": 1280,
+        "height": 720
+      },
+      "background": {
+        "color": {
+          "r": 0,
+          "g": 0,
+          "b": 0,
+          "a": 255
+        }
+      },
+      "screen_title": {
+        "rect": {
+          "x": 416,
+          "y": 50,
+          "width": 448,
+          "height": 44
+        },
+        "text": {
+          "rect": {
+            "x": 416,
+            "y": 50,
+            "width": 448,
+            "height": 45
+          },
+          "text": "Choose your subclass",
+          "font": {
+            "family": "Ubuntu Mono",
+            "style": "Medium",
+            "size": 40
+          },
+          "line_height": {
+            "unit": "AUTO"
+          },
+          "letter_spacing": {
+            "unit": "PERCENT",
+            "value": 0
+          },
+          "horizontal_align": "LEFT",
+          "vertical_align": "TOP",
+          "text_case": "ORIGINAL",
+          "color": {
+            "r": 167,
+            "g": 167,
+            "b": 167,
+            "a": 255
+          },
+          "auto_resize": "WIDTH_AND_HEIGHT"
+        }
+      },
+      "subclass_choices": {
+        "rect": {
+          "x": 140,
+          "y": 158,
+          "width": 1000,
+          "height": 562
+        },
+        "order": [
+          "warlock",
+          "summoner"
+        ],
+        "options": {
+          "warlock": {
+            "subclass_id": "warlock",
+            "rect": {
+              "x": 140,
+              "y": 158,
+              "width": 450,
+              "height": 562
+            },
+            "hitbox": {
+              "x": 140,
+              "y": 158,
+              "width": 450,
+              "height": 562
+            },
+            "card_background": {
+              "rect": {
+                "x": 165,
+                "y": 166,
+                "width": 400,
+                "height": 546
+              },
+              "asset_key": "act_three_subclass_card",
+              "opacity": 1
+            },
+            "portrait_section": {
+              "rect": {
+                "x": 271,
+                "y": 198,
+                "width": 188,
+                "height": 214
+              },
+              "background": {
+                "rect": {
+                  "x": 271,
+                  "y": 198,
+                  "width": 188,
+                  "height": 188
+                },
+                "fill": {
+                  "r": 0,
+                  "g": 0,
+                  "b": 0,
+                  "a": 110
+                },
+                "stroke": null,
+                "stroke_weight": 1,
+                "corner_radius": 23,
+                "blur_radius": 0
+              },
+              "portrait": {
+                "rect": {
+                  "x": 280,
+                  "y": 207,
+                  "width": 170,
+                  "height": 170
+                },
+                "asset_key": "warlock_portrait",
+                "opacity": 1
+              }
+            },
+            "class_name": {
+              "rect": {
+                "x": 311,
+                "y": 392,
+                "width": 109,
+                "height": 20
+              },
+              "text": "Warlock",
+              "font": {
+                "family": "JMH Cthulhumbus Arcade",
+                "style": "Regular",
+                "size": 20
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 123,
+                "g": 30,
+                "b": 152,
+                "a": 255
+              },
+              "auto_resize": "NONE"
+            },
+            "class_description": {
+              "rect": {
+                "x": 190,
+                "y": 421,
+                "width": 350,
+                "height": 55
+              },
+              "text": "A dark spellcaster who curses enemies and\n trades health for the power of a demonic form.",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 16
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 167,
+                "g": 167,
+                "b": 167,
+                "a": 255
+              },
+              "auto_resize": "NONE"
+            },
+            "passive": {
+              "rect": {
+                "x": 199,
+                "y": 489,
+                "width": 332,
+                "height": 59
+              },
+              "slot": null,
+              "background": {
+                "rect": {
+                  "x": 199,
+                  "y": 489,
+                  "width": 332,
+                  "height": 59
+                },
+                "asset_key": "act_three_skill_panel",
+                "opacity": 1
+              },
+              "icon": {
+                "rect": {
+                  "x": 206,
+                  "y": 496,
+                  "width": 40,
+                  "height": 43
+                },
+                "asset_key": "act_three_warlock_passive",
+                "opacity": 1
+              },
+              "name": {
+                "rect": {
+                  "x": 316,
+                  "y": 494,
+                  "width": 135,
+                  "height": 13
+                },
+                "text": "Passive: Blood magic",
+                "font": {
+                  "family": "Ubuntu Mono",
+                  "style": "Medium",
+                  "size": 12
+                },
+                "line_height": {
+                  "unit": "AUTO"
+                },
+                "letter_spacing": {
+                  "unit": "PERCENT",
+                  "value": 0
+                },
+                "horizontal_align": "CENTER",
+                "vertical_align": "CENTER",
+                "text_case": "ORIGINAL",
+                "color": {
+                  "r": 167,
+                  "g": 167,
+                  "b": 167,
+                  "a": 255
+                },
+                "auto_resize": "WIDTH_AND_HEIGHT"
+              },
+              "description": {
+                "rect": {
+                  "x": 257,
+                  "y": 507,
+                  "width": 264,
+                  "height": 34
+                },
+                "text": "Spend health to cast abilities\nbefore they are charged.",
+                "font": {
+                  "family": "Ubuntu Mono",
+                  "style": "Medium",
+                  "size": 14
+                },
+                "line_height": {
+                  "unit": "AUTO"
+                },
+                "letter_spacing": {
+                  "unit": "PERCENT",
+                  "value": 0
+                },
+                "horizontal_align": "CENTER",
+                "vertical_align": "CENTER",
+                "text_case": "ORIGINAL",
+                "color": {
+                  "r": 167,
+                  "g": 167,
+                  "b": 167,
+                  "a": 255
+                },
+                "auto_resize": "NONE"
+              }
+            },
+            "abilities": {
+              "q": {
+                "rect": {
+                  "x": 199,
+                  "y": 551,
+                  "width": 332,
+                  "height": 59
+                },
+                "slot": "q",
+                "background": {
+                  "rect": {
+                    "x": 199,
+                    "y": 551,
+                    "width": 332,
+                    "height": 59
+                  },
+                  "asset_key": "act_three_skill_panel",
+                  "opacity": 1
+                },
+                "icon": {
+                  "rect": {
+                    "x": 206,
+                    "y": 560,
+                    "width": 40,
+                    "height": 40
+                  },
+                  "asset_key": "act_three_warlock_curse",
+                  "opacity": 1
+                },
+                "name": {
+                  "rect": {
+                    "x": 362,
+                    "y": 556,
+                    "width": 34,
+                    "height": 13
+                  },
+                  "text": "Curse",
+                  "font": {
+                    "family": "Ubuntu Mono",
+                    "style": "Medium",
+                    "size": 12
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "LEFT",
+                  "vertical_align": "TOP",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 167,
+                    "g": 167,
+                    "b": 167,
+                    "a": 255
+                  },
+                  "auto_resize": "WIDTH_AND_HEIGHT"
+                },
+                "description": {
+                  "rect": {
+                    "x": 255,
+                    "y": 569,
+                    "width": 272,
+                    "height": 34
+                  },
+                  "text": "Curse an enemy, increasing the damage it receives",
+                  "font": {
+                    "family": "Ubuntu Mono",
+                    "style": "Medium",
+                    "size": 14
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "CENTER",
+                  "vertical_align": "CENTER",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 167,
+                    "g": 167,
+                    "b": 167,
+                    "a": 255
+                  },
+                  "auto_resize": "NONE"
+                }
+              },
+              "f": {
+                "rect": {
+                  "x": 199,
+                  "y": 613,
+                  "width": 332,
+                  "height": 59
+                },
+                "slot": "f",
+                "background": {
+                  "rect": {
+                    "x": 199,
+                    "y": 613,
+                    "width": 332,
+                    "height": 59
+                  },
+                  "asset_key": "act_three_skill_panel",
+                  "opacity": 1
+                },
+                "icon": {
+                  "rect": {
+                    "x": 207,
+                    "y": 622,
+                    "width": 40,
+                    "height": 40
+                  },
+                  "asset_key": "act_three_warlock_demon_form",
+                  "opacity": 1
+                },
+                "name": {
+                  "rect": {
+                    "x": 340,
+                    "y": 618,
+                    "width": 68,
+                    "height": 13
+                  },
+                  "text": "Demon form",
+                  "font": {
+                    "family": "Ubuntu Mono",
+                    "style": "Medium",
+                    "size": 12
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "LEFT",
+                  "vertical_align": "TOP",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 167,
+                    "g": 167,
+                    "b": 167,
+                    "a": 255
+                  },
+                  "auto_resize": "WIDTH_AND_HEIGHT"
+                },
+                "description": {
+                  "rect": {
+                    "x": 251,
+                    "y": 633,
+                    "width": 275,
+                    "height": 33
+                  },
+                  "text": "Transform into a demon, draining health each turn.",
+                  "font": {
+                    "family": "Ubuntu Mono",
+                    "style": "Medium",
+                    "size": 14
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "CENTER",
+                  "vertical_align": "CENTER",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 167,
+                    "g": 167,
+                    "b": 167,
+                    "a": 255
+                  },
+                  "auto_resize": "NONE"
+                }
+              }
+            }
+          },
+          "summoner": {
+            "subclass_id": "summoner",
+            "rect": {
+              "x": 690,
+              "y": 158,
+              "width": 450,
+              "height": 562
+            },
+            "hitbox": {
+              "x": 690,
+              "y": 158,
+              "width": 450,
+              "height": 562
+            },
+            "card_background": {
+              "rect": {
+                "x": 715,
+                "y": 166,
+                "width": 400,
+                "height": 546
+              },
+              "asset_key": "act_three_subclass_card",
+              "opacity": 1
+            },
+            "portrait_section": {
+              "rect": {
+                "x": 821,
+                "y": 198,
+                "width": 188,
+                "height": 214
+              },
+              "background": {
+                "rect": {
+                  "x": 821,
+                  "y": 198,
+                  "width": 188,
+                  "height": 188
+                },
+                "fill": {
+                  "r": 0,
+                  "g": 0,
+                  "b": 0,
+                  "a": 110
+                },
+                "stroke": null,
+                "stroke_weight": 1,
+                "corner_radius": 23,
+                "blur_radius": 0
+              },
+              "portrait": {
+                "rect": {
+                  "x": 826,
+                  "y": 203,
+                  "width": 178,
+                  "height": 178
+                },
+                "asset_key": "summoner_portrait",
+                "opacity": 1
+              }
+            },
+            "class_name": {
+              "rect": {
+                "x": 861,
+                "y": 392,
+                "width": 109,
+                "height": 20
+              },
+              "text": "Summoner",
+              "font": {
+                "family": "JMH Cthulhumbus Arcade",
+                "style": "Regular",
+                "size": 20
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 57,
+                "g": 199,
+                "b": 203,
+                "a": 255
+              },
+              "auto_resize": "NONE"
+            },
+            "class_description": {
+              "rect": {
+                "x": 740,
+                "y": 421,
+                "width": 350,
+                "height": 60
+              },
+              "text": "A spellcaster who fights alongside \nan independent familiar and \nunleashes its powerful true form.",
+              "font": {
+                "family": "Asul",
+                "style": "Regular",
+                "size": 16
+              },
+              "line_height": {
+                "unit": "AUTO"
+              },
+              "letter_spacing": {
+                "unit": "PERCENT",
+                "value": 0
+              },
+              "horizontal_align": "CENTER",
+              "vertical_align": "CENTER",
+              "text_case": "ORIGINAL",
+              "color": {
+                "r": 167,
+                "g": 167,
+                "b": 167,
+                "a": 255
+              },
+              "auto_resize": "NONE"
+            },
+            "passive": {
+              "rect": {
+                "x": 749,
+                "y": 489,
+                "width": 332,
+                "height": 59
+              },
+              "slot": null,
+              "background": {
+                "rect": {
+                  "x": 749,
+                  "y": 489,
+                  "width": 332,
+                  "height": 59
+                },
+                "asset_key": "act_three_skill_panel",
+                "opacity": 1
+              },
+              "icon": {
+                "rect": {
+                  "x": 756,
+                  "y": 498,
+                  "width": 40,
+                  "height": 40
+                },
+                "asset_key": "act_three_summoner_passive",
+                "opacity": 1
+              },
+              "name": {
+                "rect": {
+                  "x": 852,
+                  "y": 494,
+                  "width": 162,
+                  "height": 13
+                },
+                "text": "Passive: Astral Familiar",
+                "font": {
+                  "family": "Ubuntu Mono",
+                  "style": "Medium",
+                  "size": 12
+                },
+                "line_height": {
+                  "unit": "AUTO"
+                },
+                "letter_spacing": {
+                  "unit": "PERCENT",
+                  "value": 0
+                },
+                "horizontal_align": "CENTER",
+                "vertical_align": "CENTER",
+                "text_case": "ORIGINAL",
+                "color": {
+                  "r": 167,
+                  "g": 167,
+                  "b": 167,
+                  "a": 255
+                },
+                "auto_resize": "WIDTH_AND_HEIGHT"
+              },
+              "description": {
+                "rect": {
+                  "x": 804,
+                  "y": 507,
+                  "width": 264,
+                  "height": 34
+                },
+                "text": "Release a bonded familiar to fight independently.",
+                "font": {
+                  "family": "Ubuntu Mono",
+                  "style": "Medium",
+                  "size": 14
+                },
+                "line_height": {
+                  "unit": "AUTO"
+                },
+                "letter_spacing": {
+                  "unit": "PERCENT",
+                  "value": 0
+                },
+                "horizontal_align": "CENTER",
+                "vertical_align": "CENTER",
+                "text_case": "ORIGINAL",
+                "color": {
+                  "r": 167,
+                  "g": 167,
+                  "b": 167,
+                  "a": 255
+                },
+                "auto_resize": "NONE"
+              }
+            },
+            "abilities": {
+              "q": {
+                "rect": {
+                  "x": 749,
+                  "y": 551,
+                  "width": 332,
+                  "height": 59
+                },
+                "slot": "q",
+                "background": {
+                  "rect": {
+                    "x": 749,
+                    "y": 551,
+                    "width": 332,
+                    "height": 59
+                  },
+                  "asset_key": "act_three_skill_panel",
+                  "opacity": 1
+                },
+                "icon": {
+                  "rect": {
+                    "x": 756,
+                    "y": 560,
+                    "width": 40,
+                    "height": 40
+                  },
+                  "asset_key": "act_three_summoner_release_familiar",
+                  "opacity": 1
+                },
+                "name": {
+                  "rect": {
+                    "x": 893,
+                    "y": 556,
+                    "width": 108,
+                    "height": 13
+                  },
+                  "text": "Release familiar",
+                  "font": {
+                    "family": "Ubuntu Mono",
+                    "style": "Medium",
+                    "size": 12
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "LEFT",
+                  "vertical_align": "TOP",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 167,
+                    "g": 167,
+                    "b": 167,
+                    "a": 255
+                  },
+                  "auto_resize": "WIDTH_AND_HEIGHT"
+                },
+                "description": {
+                  "rect": {
+                    "x": 805,
+                    "y": 569,
+                    "width": 272,
+                    "height": 34
+                  },
+                  "text": "Release the bonded familiar onto the battlefield or recall it.",
+                  "font": {
+                    "family": "Ubuntu Mono",
+                    "style": "Medium",
+                    "size": 14
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "CENTER",
+                  "vertical_align": "CENTER",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 167,
+                    "g": 167,
+                    "b": 167,
+                    "a": 255
+                  },
+                  "auto_resize": "NONE"
+                }
+              },
+              "f": {
+                "rect": {
+                  "x": 749,
+                  "y": 613,
+                  "width": 332,
+                  "height": 59
+                },
+                "slot": "f",
+                "background": {
+                  "rect": {
+                    "x": 749,
+                    "y": 613,
+                    "width": 332,
+                    "height": 59
+                  },
+                  "asset_key": "act_three_skill_panel",
+                  "opacity": 1
+                },
+                "icon": {
+                  "rect": {
+                    "x": 756,
+                    "y": 622,
+                    "width": 40,
+                    "height": 40
+                  },
+                  "asset_key": "act_three_summoner_true_form",
+                  "opacity": 1
+                },
+                "name": {
+                  "rect": {
+                    "x": 898,
+                    "y": 618,
+                    "width": 61,
+                    "height": 13
+                  },
+                  "text": "True form",
+                  "font": {
+                    "family": "Ubuntu Mono",
+                    "style": "Medium",
+                    "size": 12
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "LEFT",
+                  "vertical_align": "TOP",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 167,
+                    "g": 167,
+                    "b": 167,
+                    "a": 255
+                  },
+                  "auto_resize": "WIDTH_AND_HEIGHT"
+                },
+                "description": {
+                  "rect": {
+                    "x": 801,
+                    "y": 633,
+                    "width": 275,
+                    "height": 33
+                  },
+                  "text": "Empower the released familiar for five of its actions.",
+                  "font": {
+                    "family": "Ubuntu Mono",
+                    "style": "Medium",
+                    "size": 12
+                  },
+                  "line_height": {
+                    "unit": "AUTO"
+                  },
+                  "letter_spacing": {
+                    "unit": "PERCENT",
+                    "value": 0
+                  },
+                  "horizontal_align": "CENTER",
+                  "vertical_align": "CENTER",
+                  "text_case": "ORIGINAL",
+                  "color": {
+                    "r": 167,
+                    "g": 167,
+                    "b": 167,
+                    "a": 255
+                  },
+                  "auto_resize": "NONE"
+                }
+              }
+            }
+          }
+        }
+      },
+      "warnings": []
+    }
+  },
+  "warnings": []
+}

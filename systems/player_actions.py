@@ -299,7 +299,7 @@ def _resolve_floor_exit(
     if reached_end_of_act_two:
         if (
             game_state.player.player_class
-            in ("warrior", "rogue")
+            in ("warrior", "rogue", "mage")
             and game_state.player.subclass is None
         ):
             game_state.act_three_transition_open = True

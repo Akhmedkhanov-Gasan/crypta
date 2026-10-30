@@ -370,6 +370,13 @@ def _draw_act_three_world(
         current_time,
         _ATTACK_FRAME_DURATION_MS,
     )
+    if game_state.act_three.awakening is not None:
+        from acts.act_three.awakening.presentation import awakening_player_sprite
+
+        scene_sprite = awakening_player_sprite(game_state)
+        if scene_sprite is not None:
+            player_sprite = scene_sprite
+            walking_sprite_active = False
     player_placement = calculate_player_placement(
         context,
         player_state,

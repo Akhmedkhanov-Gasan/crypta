@@ -210,6 +210,12 @@ def update_oracle_death(
 
     scene.caster.oracle_death_elapsed = scene.elapsed
 
+    if scene.elapsed >= DIALOGUE_START_MS:
+        from acts.act_three.awakening.runtime import begin_awakening
+
+        begin_awakening(game_state, current_time)
+        return
+
     view_width = GAME_WIDTH / camera.zoom
     view_height = GAME_HEIGHT / camera.zoom
 

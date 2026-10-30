@@ -29,7 +29,8 @@ def console_input_available(app_runtime, game_state):
 
 def gameplay_cutscene_active(game_state):
     return (
-        oracle_cutscene_active(game_state.floor)
+        game_state.act_three_transition_open
+        or oracle_cutscene_active(game_state.floor)
         or act_one_intro_active(game_state)
         or warden_intro_active(game_state.floor)
     )

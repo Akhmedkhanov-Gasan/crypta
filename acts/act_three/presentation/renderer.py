@@ -534,6 +534,8 @@ def draw_act_three_gameplay(
         assets,
         current_time,
     )
+    if game_state.act_three_transition_open:
+        return
     draw_floor_indicator(
         screen,
         fonts["text"],

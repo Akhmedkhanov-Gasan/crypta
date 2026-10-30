@@ -57,6 +57,10 @@ class ActTwoCutsceneSkip:
         if not enabled:
             return None, None, 0, 0
 
+        awakening = game_state.act_three.awakening
+        if awakening is not None and game_state.act_three_transition_open:
+            return (("act_three_awakening", id(awakening), awakening.phase), None, 0, 0)
+
         if game_state.class_selection_open:
             if (
                 game_state.class_selection_choice is None
@@ -148,6 +152,11 @@ class ActTwoCutsceneSkip:
         current_time = pygame.time.get_ticks()
         self._sync(game_state, current_time, enabled)
 
+        awakening = game_state.act_three.awakening
+        if awakening is not None and event.type in (pygame.WINDOWFOCUSLOST, pygame.WINDOWFOCUSGAINED):
+            awakening.paused = event.type == pygame.WINDOWFOCUSLOST
+            awakening.updated_at = current_time
+
         if event.type == pygame.WINDOWFOCUSLOST:
             self.holding = False
             self.consume_space = False
@@ -233,7 +242,16 @@ class ActTwoCutsceneSkip:
         if self.held_ms < HOLD_DURATION_MS:
             return
 
-        if self.target[0] == "awakening":
+        if self.target[0] == "act_three_awakening":
+            from acts.act_three.awakening.runtime import skip_awakening
+
+            skip_awakening(game_state, current_time)
+        elif self.target[0] == "death":
+            from acts.act_three.awakening.runtime import begin_awakening, skip_awakening
+
+            begin_awakening(game_state, current_time)
+            skip_awakening(game_state, current_time)
+        elif self.target[0] == "awakening":
             game_state.class_transition_started_at = (
                 current_time - CLASS_SELECTION_READY_MS - 500
             )

@@ -358,6 +358,7 @@ def load_tmx_floor(path):
     player_markers = (
         by_name.get("player_spawn")
         or by_name.get("spawn")
+        or by_name.get("awakening_player")
     )
     player_start = (
         player_markers[0][0]

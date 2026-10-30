@@ -11,6 +11,14 @@ from systems.player_abilities import resolve_assassin_ultimate
 
 
 def advance_act_three_frame(game_state, current_act, current_time, sounds):
+    from acts.act_three.awakening.runtime import advance_awakening, begin_awakening
+
+    if game_state.act_three_transition_open and game_state.act_three.awakening is None:
+        begin_awakening(game_state, current_time)
+    if game_state.act_three.awakening is not None:
+        advance_awakening(game_state, current_time)
+        if game_state.act_three.awakening.phase != "complete":
+            return
     if current_act == 3:
         advance_trial_frame(game_state, current_time)
         advance_npc_dialog(game_state, current_time)
@@ -40,7 +48,7 @@ def advance_act_three_frame(game_state, current_act, current_time, sounds):
     ):
         game_state.act_three_transition_started_at = current_time
 
-    if not game_state.act_three_transition_open:
+    if game_state.act_three.awakening is not None or not game_state.act_three_transition_open:
         return
 
     if game_state.act_three_visual_started_at == 0:

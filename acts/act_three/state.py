@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field, fields
+from acts.act_three.awakening.state import AwakeningScene
 
 
 @dataclass(eq=False)
@@ -227,6 +228,7 @@ class ArcherBarrageTurnState:
 
 @dataclass
 class ActThreeSessionState:
+    awakening: AwakeningScene | None = None
     barrage_turn: ArcherBarrageTurnState | None = None
     npc_dialog_position: tuple[int, int] | None = None
     npc_dialog_floor_index: int = -1

@@ -104,18 +104,19 @@ class GameplayRenderer:
                 act_two_input_state,
                 ground_item_window,
             )
-            self.act_two_interface.draw(
-                game_surface,
-                game_state,
-                act_two_camera,
-                self.map_navigation,
-                ground_item_window,
-                act_two_input_state,
-                current_time,
-                mouse_position,
-                oracle_world_frame,
-                continuous_movement_available,
-            )
+            if not game_state.act_three_transition_open:
+                self.act_two_interface.draw(
+                    game_surface,
+                    game_state,
+                    act_two_camera,
+                    self.map_navigation,
+                    ground_item_window,
+                    act_two_input_state,
+                    current_time,
+                    mouse_position,
+                    oracle_world_frame,
+                    continuous_movement_available,
+                )
 
         draw_frame_overlays(
             game_surface,
@@ -130,6 +131,7 @@ class GameplayRenderer:
             self.cutscene_skip,
             self.dev_console,
             mouse_position,
+            act_two_camera,
         )
         present_game(screen, game_surface)
         clock.tick(FPS)

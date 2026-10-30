@@ -96,6 +96,7 @@ class ActTwoAudioRuntime:
     ):
         if (
             current_act != 2
+            or game_state.act_three_transition_open
             or game_state.class_selection_open
             or (
                 game_state.floor.has_oracle_gate

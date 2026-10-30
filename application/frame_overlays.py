@@ -3,12 +3,13 @@ from acts.act_one.settings import FLOOR_INTRO_SUBTITLES
 from acts.act_two.presentation.cutscene_skip import draw_cutscene_skip
 from levels import FLOOR_CONFIGS
 from presentation.floor_progress import roman_number, tower_floor_number
+from acts.act_three.awakening.presentation import draw_awakening_scene
+from acts.act_three.awakening.selection import draw_selection
 from presentation.screens import (
     draw_act_three_awakening,
     draw_act_three_debug_class_selection,
     draw_class_selection_screen,
     draw_floor_transition,
-    draw_subclass_selection_screen,
 )
 
 
@@ -25,6 +26,7 @@ def draw_frame_overlays(
     cutscene_skip,
     dev_console,
     mouse_position,
+    act_two_camera=None,
 ):
     if game_state.class_selection_open:
         draw_class_selection_screen(
@@ -61,20 +63,23 @@ def draw_frame_overlays(
             mouse_position,
         )
     elif game_state.act_three_transition_open:
-        draw_act_three_awakening(
-            screen,
-            act_three_transition_assets,
-            act_three_fonts["narrative"],
-            current_time - game_state.act_three_transition_started_at,
-            (
-                None
-                if game_state.act_three_visual_started_at == 0
-                else current_time - game_state.act_three_visual_started_at
-            ),
-            game_state.player.player_class,
-        )
+        if game_state.act_three.awakening is not None:
+            draw_awakening_scene(screen, game_state, act_three_fonts, act_two_fonts, act_two_camera)
+        else:
+            draw_act_three_awakening(
+                screen,
+                act_three_transition_assets,
+                act_three_fonts["narrative"],
+                current_time - game_state.act_three_transition_started_at,
+                (
+                    None
+                    if game_state.act_three_visual_started_at == 0
+                    else current_time - game_state.act_three_visual_started_at
+                ),
+                game_state.player.player_class,
+            )
     elif game_state.subclass_selection_open:
-        draw_subclass_selection_screen(
+        draw_selection(
             screen,
             act_three_fonts["title"],
             act_three_fonts["heading"],
