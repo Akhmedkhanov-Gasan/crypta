@@ -49,9 +49,7 @@ class ActTwoCutsceneSkip:
         return min(1.0, self.held_ms / HOLD_DURATION_MS)
 
     def is_visible(self, current_time):
-        return self.target is not None and (
-            self.holding or current_time < self.visible_until
-        )
+        return self.target is not None
 
     def _select(self, game_state, current_time, enabled):
         if not enabled:
@@ -71,7 +69,6 @@ class ActTwoCutsceneSkip:
                     (
                         "awakening",
                         id(game_state),
-                        game_state.class_transition_started_at,
                     ),
                     None,
                     0,
@@ -88,7 +85,6 @@ class ActTwoCutsceneSkip:
                     (
                         "awakening_choice",
                         id(game_state),
-                        game_state.class_selection_choice_started_at,
                     ),
                     None,
                     0,
@@ -140,9 +136,11 @@ class ActTwoCutsceneSkip:
         )
 
         if target != self.target:
+            same_scene = target is not None and self.target is not None and target[:2] == self.target[:2]
             self.target = target
-            self.holding = False
-            self.held_ms = 0
+            if not same_scene:
+                self.holding = False
+                self.held_ms = 0
             self.updated_at = current_time
             self.visible_until = 0
 
@@ -252,10 +250,14 @@ class ActTwoCutsceneSkip:
             begin_awakening(game_state, current_time)
             skip_awakening(game_state, current_time)
         elif self.target[0] == "awakening":
+            game_state.dialogue.track = "act_two_awakening"
+            game_state.dialogue.completed_until = CLASS_SELECTION_READY_MS
             game_state.class_transition_started_at = (
                 current_time - CLASS_SELECTION_READY_MS - 500
             )
         elif self.target[0] == "awakening_choice":
+            game_state.dialogue.track = "act_two_choice"
+            game_state.dialogue.completed_until = CLASS_SELECTION_CHOICE_END_MS
             game_state.class_selection_choice_started_at = (
                 current_time - CLASS_SELECTION_CHOICE_END_MS
             )
@@ -264,6 +266,9 @@ class ActTwoCutsceneSkip:
             scene.elapsed = max(scene.elapsed, end_ms - fade_ms)
             scene.skip_started_elapsed = scene.elapsed
 
+        game_state.dialogue.start = -1
+        game_state.dialogue.end = -1
+        game_state.dialogue.ready_at = -1
         self.target = None
         self.holding = False
         self.held_ms = 0

@@ -20,6 +20,18 @@ def advance_act_three_frame(game_state, current_act, current_time, sounds):
         if game_state.act_three.awakening.phase != "complete":
             return
     if current_act == 3:
+        if game_state.player.health <= 0 and game_state.player.death_animation_started_at >= 0:
+            from game.dialogue import hold_dialogue
+            from acts.act_three.presentation.renderer import (
+                _OLD_MAN_DIALOGUE_START_MS, _OLD_MAN_DEFEAT_MESSAGE_START_MS, _OLD_MAN_LINES,
+            )
+
+            if game_state.player.subclass in _OLD_MAN_LINES:
+                elapsed = max(0, current_time - game_state.player.death_animation_started_at)
+                held = hold_dialogue(game_state, "act_three_death", elapsed, (
+                    (_OLD_MAN_DIALOGUE_START_MS, _OLD_MAN_DEFEAT_MESSAGE_START_MS, _OLD_MAN_LINES[game_state.player.subclass]),
+                ))
+                game_state.player.death_animation_started_at += elapsed - held
         advance_trial_frame(game_state, current_time)
         advance_npc_dialog(game_state, current_time)
         sounds.update(game_state.player, current_time)

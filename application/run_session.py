@@ -22,6 +22,7 @@ from game.state import GameState
 
 _STATE_MODULES = (
     "game.state",
+    "game.dialogue",
     "game.control_state",
     "game.events",
     "acts.act_one.state",

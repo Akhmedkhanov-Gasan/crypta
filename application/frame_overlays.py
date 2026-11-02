@@ -52,6 +52,7 @@ def draw_frame_overlays(
                 if game_state.class_selection_choice is not None
                 else game_state.player.attribute_ranks
             ),
+            dialogue_state=game_state.dialogue,
         )
 
     if game_state.act_three_debug_class_selection_open:
@@ -130,7 +131,14 @@ def draw_frame_overlays(
             ),
         )
 
-    draw_cutscene_skip(screen, cutscene_skip, current_time)
+    skip_font = (
+        act_one_fonts["controls"]
+        if game_state.floor.presentation_act == 1
+        else act_two_fonts["heading"]
+        if game_state.floor.presentation_act == 2
+        else act_three_fonts["text"]
+    )
+    draw_cutscene_skip(screen, cutscene_skip, current_time, skip_font)
     dev_console.draw(screen)
 
     if current_act == 1 and game_state.player.health <= 0:

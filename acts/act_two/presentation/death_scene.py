@@ -1,7 +1,7 @@
 import pygame
 
 from presentation.camera import camera_render_rectangle
-from presentation.text import wrap_text
+from presentation.dialogue_panel import draw_fixed_dialogue
 from presentation.layout import (
     ACT_TWO_VIEW_HEIGHT,
     ACT_TWO_VIEW_WIDTH,
@@ -58,114 +58,14 @@ def draw_act_two_death_dialogue_overlay(
     if elapsed < ACT_TWO_OLD_MAN_DIALOGUE_MS:
         return
 
-    view_rectangle = camera_render_rectangle(
-        pygame.Rect(
-            ACT_TWO_VIEW_X,
-            ACT_TWO_VIEW_Y,
-            ACT_TWO_VIEW_WIDTH,
-            ACT_TWO_VIEW_HEIGHT,
-        ),
-        camera.zoom,
-    )
-
     dialogue_progress = _smoothstep(
         (elapsed - ACT_TWO_OLD_MAN_DIALOGUE_MS) / 420
     )
 
-    dialogue_font = fonts["heading"]
-    dialogue_text = _OLD_MAN_LINES[player.player_class]
-
-    horizontal_padding = 32
-    vertical_padding = 22
-    maximum_text_width = view_rectangle.width - 220
-
-    lines = wrap_text(
-        dialogue_font,
-        dialogue_text,
-        maximum_text_width,
+    draw_fixed_dialogue(
+        screen, fonts["title"], fonts["heading"], "OLD MAN",
+        _OLD_MAN_LINES[player.player_class], dialogue_progress,
     )
-
-    line_height = dialogue_font.get_linesize()
-    rendered_lines = [
-        dialogue_font.render(
-            line,
-            True,
-            (232, 225, 207),
-        )
-        for line in lines
-    ]
-
-    text_width = max(
-        line_surface.get_width()
-        for line_surface in rendered_lines
-    )
-    text_height = line_height * len(rendered_lines)
-
-    panel_width = text_width + horizontal_padding * 2
-    panel_height = text_height + vertical_padding * 2
-
-    panel = pygame.Surface(
-        (panel_width, panel_height),
-        pygame.SRCALPHA,
-    )
-    panel.fill((5, 7, 10, 232))
-
-    pygame.draw.rect(
-        panel,
-        (112, 101, 82, 230),
-        panel.get_rect(),
-        width=2,
-        border_radius=5,
-    )
-    pygame.draw.rect(
-        panel,
-        (32, 29, 25, 230),
-        panel.get_rect().inflate(-8, -8),
-        width=1,
-        border_radius=3,
-    )
-
-    panel_rectangle = panel.get_rect(
-        midbottom=(
-            view_rectangle.centerx,
-            view_rectangle.bottom - 160,
-        )
-    )
-
-    text_y = vertical_padding
-
-    for line, line_surface in zip(lines, rendered_lines):
-        shadow = dialogue_font.render(
-            line,
-            True,
-            (0, 0, 0),
-        )
-
-        line_rectangle = line_surface.get_rect(
-            centerx=panel_width // 2,
-            y=text_y,
-        )
-
-        panel.blit(
-            shadow,
-            line_rectangle.move(2, 3),
-        )
-        panel.blit(
-            line_surface,
-            line_rectangle,
-        )
-
-        text_y += line_height
-
-    panel.set_alpha(
-        round(255 * dialogue_progress)
-    )
-
-    previous_clip = screen.get_clip()
-    screen.set_clip(view_rectangle)
-    screen.blit(panel, panel_rectangle)
-    screen.set_clip(previous_clip)
-    screen.set_clip(previous_clip)
 
 
 def _draw_old_man(

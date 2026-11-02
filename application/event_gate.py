@@ -6,6 +6,7 @@ from acts.act_three.movement import ACT_THREE_MOVEMENT_PROFILE
 from application.auto_movement import accept_auto_move_event
 from application.directional_input import MOVEMENT_KEYS
 from application.input_policy import act_one_cutscene_active
+from application.dialogue_input import handle_dialogue_event
 from application.movement_input import (
     DEFAULT_MOVEMENT_PROFILE,
     movement_event_is_current,
@@ -39,6 +40,31 @@ class ApplicationEventGate:
             if game_state.floor.presentation_act == 3
             else DEFAULT_MOVEMENT_PROFILE
         )
+        if app_runtime.game_started and not app_runtime.menu_open and not self.dev_console.is_open:
+            if handle_dialogue_event(game_state, event, pygame.time.get_ticks()):
+                if event.type == pygame.KEYDOWN:
+                    self.cutscene_skip.handle_event(game_state, event, enabled=True)
+                self.movement_state.reset_held_movement()
+                self.movement_state.cancel_auto_move()
+                return EventGateResult(True, movement_profile)
+            if (
+                game_state.dialogue.active
+                and event.type in (pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEWHEEL)
+                and not (
+                    event.type == pygame.KEYDOWN
+                    and (event.key in (pygame.K_ESCAPE, pygame.K_BACKQUOTE) or getattr(event, "scancode", None) == 53)
+                )
+            ):
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                    self.cutscene_skip.handle_event(game_state, event, enabled=True)
+                self.movement_state.reset_held_movement()
+                self.movement_state.cancel_auto_move()
+                return EventGateResult(True, movement_profile)
+        if self.cutscene_skip.handle_event(
+            game_state, event,
+            enabled=app_runtime.game_started and not app_runtime.menu_open,
+        ):
+            return EventGateResult(True, movement_profile)
         if (
             current_act == 3
             and game_state.act_three.barrage_turn is not None
@@ -65,13 +91,6 @@ class ApplicationEventGate:
             self.movement_state.reset_held_movement()
             self.movement_state.cancel_auto_move()
             self.movement_state.cancel_consumable_drag()
-            return EventGateResult(True, movement_profile)
-
-        if self.cutscene_skip.handle_event(
-            game_state,
-            event,
-            enabled=app_runtime.game_started and not app_runtime.menu_open,
-        ):
             return EventGateResult(True, movement_profile)
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button in (1, 3):

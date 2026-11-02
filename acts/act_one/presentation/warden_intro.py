@@ -196,85 +196,10 @@ def draw_warden_intro_overlay(
             DIALOGUE_START_MS,
             DIALOGUE_START_MS + 320,
         )
-        fade_out = 1.0 - _progress(
-            state.elapsed,
-            DIALOGUE_END_MS - 420,
-            DIALOGUE_END_MS,
-        )
-        alpha = round(
-            255 * min(fade_in, fade_out)
-        )
+        from presentation.dialogue_panel import draw_fixed_dialogue
 
-        title = title_font.render(
-            "CRYPT WARDEN",
-            True,
-            (159, 111, 169),
-        )
-        line = text_font.render(
-            WARDEN_LINE,
-            True,
-            (223, 214, 218),
-        )
-        title.set_alpha(alpha)
-        line.set_alpha(alpha)
+        draw_fixed_dialogue(screen, title_font, text_font, "CRYPT WARDEN", WARDEN_LINE, fade_in, act=1)
 
-        screen.blit(
-            title,
-            title.get_rect(
-                center=(
-                    screen.get_width() // 2,
-                    screen.get_height() - 51,
-                ),
-            ),
-        )
-        screen.blit(
-            line,
-            line.get_rect(
-                center=(
-                    screen.get_width() // 2,
-                    screen.get_height() - 25,
-                ),
-            ),
-        )
+    from presentation.cutscene_skip import draw_skip_hint
 
-    skip = text_font.render(
-        "HOLD SPACE TO SKIP",
-        True,
-        (115, 108, 116),
-    )
-    skip.set_alpha(155)
-    skip_rectangle = skip.get_rect(
-        top=12,
-        right=screen.get_width() - 18,
-    )
-    screen.blit(
-        skip,
-        skip_rectangle,
-    )
-
-    if state.skip_held_ms > 0:
-        progress = min(
-            1.0,
-            state.skip_held_ms / SKIP_HOLD_MS,
-        )
-        bar = pygame.Rect(
-            skip_rectangle.left,
-            skip_rectangle.bottom + 4,
-            skip_rectangle.width,
-            2,
-        )
-        pygame.draw.rect(
-            screen,
-            (44, 40, 47),
-            bar,
-        )
-        pygame.draw.rect(
-            screen,
-            (145, 91, 154),
-            (
-                bar.x,
-                bar.y,
-                round(bar.width * progress),
-                bar.height,
-            ),
-        )
+    draw_skip_hint(screen, min(1.0, state.skip_held_ms / SKIP_HOLD_MS), text_font)

@@ -16,9 +16,14 @@ CONSOLE_COMMANDS = (
     "help",
     "clear",
     "level",
+    "level_1",
     "gold",
+    "gold_10",
     "wake",
     "wake3",
+    "wake3_warrior",
+    "wake3_rogue",
+    "wake3_mage",
     "seal",
     "rune",
     "altar",
@@ -29,9 +34,9 @@ CONSOLE_COMMANDS = (
 CONSOLE_HELP = (
     "help     - list commands",
     "clear    - clear console output",
-    "level [X] - add X levels and attribute points (default: 1)",
+    "level[_X] - add X levels and attribute points (default: 1)",
     "gold     - add 10 gold",
-    "gold X   - add X gold",
+    "gold_X   - add X gold",
     *ACT_ONE_CONSOLE_HELP,
     *ACT_TWO_CONSOLE_HELP,
     *ACT_THREE_CONSOLE_HELP,
@@ -48,7 +53,7 @@ def execute_console_command(
     close_console,
     request_debug_jump,
 ):
-    parts = command.lower().split()
+    parts = command.lower().replace("_", " ").split()
 
     if not parts:
         return ""
@@ -58,7 +63,7 @@ def execute_console_command(
 
     if name == "level":
         if len(parts) > 2:
-            return "Usage: level or level X"
+            return "Usage: level or level_X"
 
         amount = 1
 
@@ -81,7 +86,7 @@ def execute_console_command(
 
     if name == "gold":
         if len(parts) > 2:
-            return "Usage: gold or gold X"
+            return "Usage: gold or gold_X"
 
         amount = 10
 

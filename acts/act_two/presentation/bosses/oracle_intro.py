@@ -214,6 +214,14 @@ def update_oracle_intro(game_state, camera, current_time):
     if not scene.paused:
         scene.elapsed = min(INTRO_END_MS, scene.elapsed + delta)
 
+    if scene.skip_frame is None:
+        from game.dialogue import hold_dialogue
+
+        timeline = tuple(
+            (DIALOGUE_START_MS + index * DIALOGUE_LINE_MS, DIALOGUE_START_MS + (index + 1) * DIALOGUE_LINE_MS, DIALOGUE[index])
+            for index in range(len(DIALOGUE))
+        )
+        scene.elapsed = hold_dialogue(game_state, "oracle_intro", scene.elapsed, timeline)
     elapsed = scene.elapsed
     player = game_state.player
 
@@ -504,20 +512,6 @@ def draw_oracle_intro(screen, world_frame, floor, layout, assets):
     if 0 <= dialogue_elapsed < len(DIALOGUE) * DIALOGUE_LINE_MS:
         index = dialogue_elapsed // DIALOGUE_LINE_MS
         local_time = dialogue_elapsed % DIALOGUE_LINE_MS
-        alpha = min(
-            _smooth(local_time / 350),
-            _smooth((DIALOGUE_LINE_MS - local_time) / 550),
-        )
+        from presentation.dialogue_panel import draw_fixed_dialogue
 
-        text = _text_surface(
-            DIALOGUE[index],
-            _dialogue_font(),
-            GAME_WIDTH - 180,
-        )
-        text.set_alpha(round(255 * alpha))
-        screen.blit(
-            text,
-            text.get_rect(
-                midbottom=(GAME_WIDTH // 2, GAME_HEIGHT - 88),
-            ),
-        )
+        draw_fixed_dialogue(screen, _dialogue_font(), _dialogue_font(), "ORACLE", DIALOGUE[index], _smooth(local_time / 350))

@@ -100,6 +100,9 @@ def _finish_warden_intro(
 
     state.elapsed = INTRO_END_MS
     state.finished = True
+    game_state.dialogue.start = -1
+    game_state.dialogue.end = -1
+    game_state.dialogue.ready_at = -1
     state.skip_held_ms = 0
     state.updated_at = current_time
 
@@ -159,6 +162,12 @@ def update_warden_intro(
         state.elapsed + delta,
     )
 
+    from game.dialogue import hold_dialogue
+
+    state.elapsed = hold_dialogue(
+        game_state, "warden_intro", state.elapsed,
+        ((DIALOGUE_START_MS, DIALOGUE_END_MS, WARDEN_LINE),),
+    )
     holding_space = (
         pygame.key.get_focused()
         and pygame.key.get_pressed()[pygame.K_SPACE]

@@ -962,7 +962,12 @@ class ActTwoRenderer:
             and not awakening_scene.world_swapped
         )
         if not debug_reveal:
-            draw_oracle_lighting(target, floor, current_time)
+            lighting_state = (
+                awakening_scene.oracle_lighting
+                if awakening_scene is not None and not awakening_scene.world_swapped
+                else None
+            )
+            draw_oracle_lighting(target, floor, current_time, lighting_state)
         draw_oracle_attack_fx(target, floor, current_time)
         draw_oracle_phase_two_fx(target, floor, current_time)
         draw_oracle_death_fx(target, floor, current_time)

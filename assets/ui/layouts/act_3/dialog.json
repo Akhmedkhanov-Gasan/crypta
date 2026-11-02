@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "screen": "dialogue",
+  "act": 3,
+  "coordinate_space": "frame",
+  "frame": {
+    "name": "act3_dialog",
+    "width": 1280,
+    "height": 720
+  },
+  "dialog_background": {
+    "rect": {
+      "x": 240,
+      "y": 485,
+      "width": 800,
+      "height": 212
+    },
+    "asset_key": "act_three_dialog_background",
+    "opacity": 1
+  },
+  "portrait_section": {
+    "rect": {
+      "x": 297,
+      "y": 524,
+      "width": 130,
+      "height": 130
+    },
+    "portrait": {
+      "rect": {
+        "x": 297,
+        "y": 524,
+        "width": 130,
+        "height": 130
+      },
+      "opacity": 1
+    }
+  },
+  "speaker_name": {
+    "rect": {
+      "x": 480,
+      "y": 505,
+      "width": 141,
+      "height": 25
+    },
+    "text": "name",
+    "font": {
+      "family": "Alagard",
+      "style": "Medium",
+      "size": 24
+    },
+    "line_height": {
+      "unit": "AUTO"
+    },
+    "letter_spacing": {
+      "unit": "PERCENT",
+      "value": 0
+    },
+    "horizontal_align": "CENTER",
+    "vertical_align": "CENTER",
+    "text_case": "ORIGINAL",
+    "color": {
+      "r": 167,
+      "g": 167,
+      "b": 167,
+      "a": 255
+    },
+    "auto_resize": "HEIGHT"
+  },
+  "dialogue_text": {
+    "rect": {
+      "x": 476,
+      "y": 552,
+      "width": 527,
+      "height": 109
+    },
+    "text": "test test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test",
+    "font": {
+      "family": "Alagard",
+      "style": "Medium",
+      "size": 20
+    },
+    "line_height": {
+      "unit": "AUTO"
+    },
+    "letter_spacing": {
+      "unit": "PERCENT",
+      "value": 0
+    },
+    "horizontal_align": "CENTER",
+    "vertical_align": "CENTER",
+    "text_case": "ORIGINAL",
+    "color": {
+      "r": 167,
+      "g": 167,
+      "b": 167,
+      "a": 255
+    },
+    "auto_resize": "NONE"
+  },
+  "skip_text": {
+    "rect": {
+      "x": 509,
+      "y": 689,
+      "width": 263,
+      "height": 25
+    },
+    "text": "Press Space to continue",
+    "font": {
+      "family": "Alagard",
+      "style": "Medium",
+      "size": 24
+    },
+    "line_height": {
+      "unit": "AUTO"
+    },
+    "letter_spacing": {
+      "unit": "PERCENT",
+      "value": 0
+    },
+    "horizontal_align": "CENTER",
+    "vertical_align": "CENTER",
+    "text_case": "ORIGINAL",
+    "color": {
+      "r": 167,
+      "g": 167,
+      "b": 167,
+      "a": 255
+    },
+    "auto_resize": "WIDTH_AND_HEIGHT"
+  },
+  "warnings": [
+    "act3_dialog: \"skip_text\" uses WIDTH_AND_HEIGHT; exporting its current bounds. Use Fixed size to reserve space for longer dialogue.",
+    "act3_dialog: \"speaker_name\" uses HEIGHT; exporting its current bounds. Use Fixed size to reserve space for longer dialogue."
+  ]
+}

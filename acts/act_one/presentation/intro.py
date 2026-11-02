@@ -4,6 +4,7 @@ import math
 import pygame
 
 from acts.act_one.state import ActOneIntroState
+from game.dialogue import dialogue_visible_characters
 from presentation.layout import MAP_OFFSET_X, MAP_OFFSET_Y
 from settings import TILE_SIZE
 
@@ -151,6 +152,9 @@ def update_act_one_intro(
         state.elapsed + delta,
     )
 
+    from game.dialogue import hold_dialogue
+
+    state.elapsed = hold_dialogue(game_state, "act_one_intro", state.elapsed, DIALOGUE)
     holding_space = (
         pygame.key.get_focused()
         and pygame.key.get_pressed()[pygame.K_SPACE]
@@ -165,6 +169,9 @@ def update_act_one_intro(
         state.skip_held_ms = 0
 
     if state.skip_held_ms >= SKIP_HOLD_MS:
+        game_state.dialogue.start = -1
+        game_state.dialogue.end = -1
+        game_state.dialogue.ready_at = -1
         state.elapsed = INTRO_END_MS
         state.finished = True
         state.skip_held_ms = 0
@@ -2447,6 +2454,7 @@ def _draw_dialogue(
     state,
     title_font,
     text_font,
+    dialogue_state=None,
 ):
     active_line = next(
         (
@@ -2466,76 +2474,15 @@ def _draw_dialogue(
         start,
         start + 380,
     )
-    fade_out = 1.0 - _progress(
-        state.elapsed,
-        end - 380,
-        end,
-    )
-    opacity = fade_in * fade_out
+    opacity = fade_in
     visible_characters = max(
         0,
         (state.elapsed - start) // 78,
     )
-    visible_line = line[:visible_characters]
 
-    panel = pygame.Surface(
-        (560, 74),
-        pygame.SRCALPHA,
-    )
-    pygame.draw.rect(
-        panel,
-        (2, 4, 8, round(132 * opacity)),
-        panel.get_rect(),
-        border_radius=3,
-    )
-    pygame.draw.line(
-        panel,
-        (57, 63, 70, round(125 * opacity)),
-        (54, 1),
-        (panel.get_width() - 54, 1),
-    )
-    pygame.draw.line(
-        panel,
-        (23, 28, 34, round(110 * opacity)),
-        (88, panel.get_height() - 1),
-        (panel.get_width() - 88, panel.get_height() - 1),
-    )
+    from presentation.dialogue_panel import draw_fixed_dialogue
 
-    title = title_font.render(
-        "A VOICE",
-        True,
-        (91, 98, 106),
-    )
-    text = text_font.render(
-        visible_line,
-        True,
-        (176, 183, 189),
-    )
-    title.set_alpha(round(230 * opacity))
-    text.set_alpha(round(255 * opacity))
-
-    panel.blit(
-        title,
-        title.get_rect(
-            midtop=(panel.get_width() // 2, 7),
-        ),
-    )
-    panel.blit(
-        text,
-        text.get_rect(
-            center=(panel.get_width() // 2, 50),
-        ),
-    )
-
-    screen.blit(
-        panel,
-        panel.get_rect(
-            midbottom=(
-                screen.get_width() // 2,
-                screen.get_height() - 57,
-            ),
-        ),
-    )
+    draw_fixed_dialogue(screen, title_font, text_font, "A VOICE", line, opacity, act=1, visible_characters=dialogue_visible_characters(dialogue_state, visible_characters))
 
 
 def _draw_skip_hint(
@@ -2543,60 +2490,9 @@ def _draw_skip_hint(
     state,
     text_font,
 ):
-    progress = min(
-        1.0,
-        state.skip_held_ms / SKIP_HOLD_MS,
-    )
-    panel = pygame.Surface(
-        (242, 42),
-        pygame.SRCALPHA,
-    )
+    from presentation.cutscene_skip import draw_skip_hint
 
-    pygame.draw.rect(
-        panel,
-        (5, 6, 9, 185),
-        panel.get_rect(),
-        border_radius=4,
-    )
-    pygame.draw.rect(
-        panel,
-        (54, 55, 59, 210),
-        (12, 31, 218, 3),
-    )
-
-    if progress > 0:
-        pygame.draw.rect(
-            panel,
-            (157, 163, 166, 235),
-            (
-                12,
-                31,
-                round(218 * progress),
-                3,
-            ),
-        )
-
-    label = text_font.render(
-        "HOLD SPACE TO SKIP",
-        True,
-        (173, 174, 176),
-    )
-    panel.blit(
-        label,
-        label.get_rect(
-            center=(121, 17),
-        ),
-    )
-
-    screen.blit(
-        panel,
-        panel.get_rect(
-            bottomright=(
-                screen.get_width() - 20,
-                screen.get_height() - 48,
-            ),
-        ),
-    )
+    draw_skip_hint(screen, min(1.0, state.skip_held_ms / SKIP_HOLD_MS), text_font)
 
 
 def draw_act_one_intro_overlay(
@@ -2604,6 +2500,7 @@ def draw_act_one_intro_overlay(
     state,
     title_font,
     text_font,
+    dialogue_state=None,
 ):
     if state is None or state.finished:
         return
@@ -2617,12 +2514,9 @@ def draw_act_one_intro_overlay(
         state,
         title_font,
         text_font,
+        dialogue_state,
     )
-    _draw_skip_hint(
-        screen,
-        state,
-        text_font,
-    )
+    _draw_skip_hint(screen, state, text_font)
 
 
 __all__ = [

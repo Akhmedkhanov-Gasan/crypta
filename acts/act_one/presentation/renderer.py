@@ -364,6 +364,7 @@ def draw_act_one_gameplay(
         getattr(game_state, "act_one_intro", None),
         fonts["interface"],
         fonts["text"],
+        game_state.dialogue,
     )
     draw_warden_intro_overlay(
         game_surface,

@@ -482,6 +482,14 @@ def update_oracle_phase_transition(
             scene.elapsed + delta,
         )
 
+    if scene.skip_frame is None:
+        from game.dialogue import hold_dialogue
+
+        timeline = tuple(
+            (DIALOGUE_START_MS + index * DIALOGUE_LINE_MS, DIALOGUE_START_MS + (index + 1) * DIALOGUE_LINE_MS, DIALOGUE[index])
+            for index in range(len(DIALOGUE))
+        )
+        scene.elapsed = hold_dialogue(game_state, "oracle_phase", scene.elapsed, timeline)
     elapsed = scene.elapsed
     if (
         elapsed >= DETACH_START_MS
@@ -662,7 +670,7 @@ def handle_oracle_cutscene_event(
 def _dialogue_font():
     return resources.load_font(
         str(FONT_ROOT / "IsWasted.ttf"),
-        38,
+        24,
     )
 
 
@@ -776,30 +784,6 @@ def draw_oracle_phase_transition(
     if 0 <= dialogue_elapsed < duration:
         index = dialogue_elapsed // DIALOGUE_LINE_MS
         local_time = dialogue_elapsed % DIALOGUE_LINE_MS
-        alpha = min(
-            _smooth(local_time / 180),
-            _smooth(
-                (DIALOGUE_LINE_MS - local_time) / 320
-            ),
-        )
-        intensity = math.sin(
-            math.pi * local_time / DIALOGUE_LINE_MS
-        )
-        offset_x = round(
-            math.sin(elapsed / 31) * 2 * intensity
-        )
-        offset_y = round(
-            math.sin(elapsed / 47) * intensity
-        )
+        from presentation.dialogue_panel import draw_fixed_dialogue
 
-        text = _text_surface(DIALOGUE[index])
-        text.set_alpha(round(255 * alpha))
-        screen.blit(
-            text,
-            text.get_rect(
-                midbottom=(
-                    GAME_WIDTH // 2 + offset_x,
-                    GAME_HEIGHT - 86 + offset_y,
-                ),
-            ),
-        )
+        draw_fixed_dialogue(screen, _dialogue_font(), _dialogue_font(), "ORACLE", DIALOGUE[index], _smooth(local_time / 180))

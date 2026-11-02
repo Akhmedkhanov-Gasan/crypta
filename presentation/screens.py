@@ -1,6 +1,7 @@
 import math
 
 import pygame
+from game.dialogue import dialogue_visible_characters
 
 from acts.act_three.settings import SUBCLASS_BASE_STATS
 from acts.act_two.settings import CLASS_BASE_STATS
@@ -13,6 +14,7 @@ from acts.act_two.presentation.awakening import (
     draw_awakening_choices,
 )
 from acts.act_two.presentation.awakening_timing import (
+    AWAKENING_DIALOGUE,
     AWAKENING_BLACKOUT_END_MS,
     AWAKENING_BLACKOUT_START_MS,
     AWAKENING_WORLD_SWAP_MS,
@@ -940,103 +942,12 @@ def _draw_awakening_text_panel(
     speaker,
     line,
     opacity,
+    visible_characters=None,
+    act=2,
 ):
-    speaker_surface = intro_text_font.render(
-        speaker,
-        True,
-        (174, 137, 82),
-    )
-    text_surface = intro_text_font.render(
-        line,
-        True,
-        (224, 218, 205),
-    )
-    shadow = intro_text_font.render(
-        line,
-        True,
-        (1, 1, 2),
-    )
+    from presentation.dialogue_panel import draw_fixed_dialogue
 
-    content_width = max(
-        speaker_surface.get_width(),
-        text_surface.get_width(),
-    )
-    panel_width = max(
-        340,
-        min(
-            GAME_WIDTH - 140,
-            content_width + 84,
-        ),
-    )
-    panel_rectangle = pygame.Rect(
-        0,
-        0,
-        panel_width,
-        98,
-    )
-    panel_rectangle.midbottom = (
-        GAME_WIDTH // 2,
-        GAME_HEIGHT - 22,
-    )
-
-    panel = pygame.Surface(
-        panel_rectangle.size,
-        pygame.SRCALPHA,
-    )
-    pygame.draw.rect(
-        panel,
-        (3, 5, 8, round(224 * opacity)),
-        panel.get_rect(),
-        border_radius=9,
-    )
-    pygame.draw.rect(
-        panel,
-        (100, 84, 62, round(180 * opacity)),
-        panel.get_rect(),
-        width=2,
-        border_radius=9,
-    )
-    pygame.draw.line(
-        panel,
-        (165, 126, 70, round(210 * opacity)),
-        (28, 45),
-        (panel_width - 28, 45),
-        width=1,
-    )
-    screen.blit(
-        panel,
-        panel_rectangle,
-    )
-
-    speaker_surface.set_alpha(round(235 * opacity))
-    speaker_rectangle = speaker_surface.get_rect(
-        center=(
-            panel_rectangle.centerx,
-            panel_rectangle.top + 25,
-        ),
-    )
-
-    text_surface.set_alpha(round(255 * opacity))
-    text_rectangle = text_surface.get_rect(
-        center=(
-            panel_rectangle.centerx,
-            panel_rectangle.top + 70,
-        ),
-    )
-    shadow.set_alpha(round(235 * opacity))
-
-    screen.blit(
-        speaker_surface,
-        speaker_rectangle,
-    )
-    screen.blit(
-        shadow,
-        text_rectangle.move(2, 2),
-    )
-    screen.blit(
-        text_surface,
-        text_rectangle,
-    )
+    draw_fixed_dialogue(screen, intro_title_font, intro_text_font, speaker, line, opacity, act=act, visible_characters=visible_characters)
 
 
 def _draw_awakening_dialogue(
@@ -1044,45 +955,9 @@ def _draw_awakening_dialogue(
     intro_title_font,
     intro_text_font,
     elapsed_ms,
+    dialogue_state=None,
 ):
-    dialogue = (
-        (
-            1200,
-            5000,
-            "A VOICE",
-            "You have defeated one who towered over the rest.",
-        ),
-        (
-            5500,
-            8300,
-            "A VOICE",
-            "The first veil has yielded.",
-        ),
-        (
-            8800,
-            10300,
-            "A VOICE",
-            "Now... see.",
-        ),
-        (
-            13600,
-            16400,
-            "OLD MAN",
-            "Can you see me now?",
-        ),
-        (
-            16900,
-            21100,
-            "OLD MAN",
-            "Good. The world has begun to reveal what it hides.",
-        ),
-        (
-            21600,
-            26100,
-            "OLD MAN",
-            "Before you climb any higher, tell me... who are you?",
-        ),
-    )
+    dialogue = AWAKENING_DIALOGUE
 
     for start_ms, end_ms, speaker, line in dialogue:
         if not start_ms <= elapsed_ms < end_ms:
@@ -1093,28 +968,21 @@ def _draw_awakening_dialogue(
             start_ms,
             start_ms + 260,
         )
-        fade_out = 1.0
-        if elapsed_ms > end_ms - 350:
-            fade_out = 1.0 - _smooth_progress(
-                elapsed_ms,
-                end_ms - 350,
-                end_ms,
-            )
-
-        opacity = fade_in * fade_out
+        opacity = fade_in
         character_count = max(
             0,
             (elapsed_ms - start_ms) // 34,
         )
-        visible_line = line[:character_count]
 
         _draw_awakening_text_panel(
             screen,
             intro_title_font,
             intro_text_font,
             speaker,
-            visible_line,
+            line,
             opacity,
+            dialogue_visible_characters(dialogue_state, character_count),
+            act=1 if elapsed_ms < AWAKENING_WORLD_SWAP_MS else 2,
         )
         return
 
@@ -1125,6 +993,7 @@ def _draw_awakening_choice_dialogue(
         intro_text_font,
         selected_class,
         choice_elapsed_ms,
+        dialogue_state=None,
 ):
     dialogue = class_selection_dialogue_timing(
         selected_class,
@@ -1139,27 +1008,19 @@ def _draw_awakening_choice_dialogue(
             start_ms,
             start_ms + 240,
         )
-        fade_out = 1.0
-        if choice_elapsed_ms > end_ms - 420:
-            fade_out = 1.0 - _smooth_progress(
-                choice_elapsed_ms,
-                end_ms - 420,
-                end_ms,
-            )
-
         character_count = max(
             0,
             (choice_elapsed_ms - start_ms) // 32,
         )
-        visible_line = line[:character_count]
 
         _draw_awakening_text_panel(
             screen,
             intro_title_font,
             intro_text_font,
             "OLD MAN",
-            visible_line,
-            fade_in * fade_out,
+            line,
+            fade_in,
+            dialogue_visible_characters(dialogue_state, character_count),
         )
         return
 
@@ -1177,6 +1038,7 @@ def draw_class_selection_screen(
     choice_elapsed_ms=None,
     *,
     attribute_ranks,
+    dialogue_state=None,
 ):
     if (
         AWAKENING_BLACKOUT_START_MS
@@ -1231,6 +1093,7 @@ def draw_class_selection_screen(
             intro_title_font,
             intro_text_font,
             elapsed_ms,
+            dialogue_state,
         )
     else:
         draw_awakening_choices(
@@ -1250,6 +1113,7 @@ def draw_class_selection_screen(
             intro_text_font,
             selected_class,
             choice_elapsed_ms,
+            dialogue_state,
         )
 
     if blackout > 0:

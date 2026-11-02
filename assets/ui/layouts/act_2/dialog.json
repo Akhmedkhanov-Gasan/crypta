@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "screen": "dialogue",
+  "act": 2,
+  "coordinate_space": "frame",
+  "frame": {
+    "name": "act2_dialog",
+    "width": 1280,
+    "height": 720
+  },
+  "dialog_background": {
+    "rect": {
+      "x": 425,
+      "y": 506,
+      "width": 430,
+      "height": 176
+    },
+    "asset_key": "act_two_dialog_background",
+    "opacity": 1
+  },
+  "speaker_name": {
+    "rect": {
+      "x": 467,
+      "y": 523,
+      "width": 128,
+      "height": 21
+    },
+    "text": "NAME_test",
+    "font": {
+      "family": "Alagard",
+      "style": "Medium",
+      "size": 24
+    },
+    "line_height": {
+      "unit": "AUTO"
+    },
+    "letter_spacing": {
+      "unit": "PERCENT",
+      "value": 0
+    },
+    "horizontal_align": "CENTER",
+    "vertical_align": "CENTER",
+    "text_case": "ORIGINAL",
+    "color": {
+      "r": 167,
+      "g": 167,
+      "b": 167,
+      "a": 255
+    },
+    "auto_resize": "NONE"
+  },
+  "dialogue_text": {
+    "rect": {
+      "x": 449,
+      "y": 560,
+      "width": 381,
+      "height": 86
+    },
+    "text": "test test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test ",
+    "font": {
+      "family": "Alagard",
+      "style": "Medium",
+      "size": 20
+    },
+    "line_height": {
+      "unit": "AUTO"
+    },
+    "letter_spacing": {
+      "unit": "PERCENT",
+      "value": 0
+    },
+    "horizontal_align": "CENTER",
+    "vertical_align": "CENTER",
+    "text_case": "ORIGINAL",
+    "color": {
+      "r": 167,
+      "g": 167,
+      "b": 167,
+      "a": 255
+    },
+    "auto_resize": "NONE"
+  },
+  "skip_text": {
+    "rect": {
+      "x": 509,
+      "y": 682,
+      "width": 263,
+      "height": 25
+    },
+    "text": "Press Space to continue",
+    "font": {
+      "family": "Alagard",
+      "style": "Medium",
+      "size": 24
+    },
+    "line_height": {
+      "unit": "AUTO"
+    },
+    "letter_spacing": {
+      "unit": "PERCENT",
+      "value": 0
+    },
+    "horizontal_align": "CENTER",
+    "vertical_align": "CENTER",
+    "text_case": "ORIGINAL",
+    "color": {
+      "r": 167,
+      "g": 167,
+      "b": 167,
+      "a": 255
+    },
+    "auto_resize": "WIDTH_AND_HEIGHT"
+  },
+  "warnings": [
+    "act2_dialog: \"skip_text\" uses WIDTH_AND_HEIGHT; exporting its current bounds. Use Fixed size to reserve space for longer dialogue."
+  ]
+}

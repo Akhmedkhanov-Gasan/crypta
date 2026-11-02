@@ -32,6 +32,7 @@ from acts.act_three.state import (
     ArcherBarrageShotState,
 )
 from game.events import GameEvent, GameEventType
+from game.dialogue import DialogueState
 from game.control_state import ForcedMovementState, SentinelState
 
 
@@ -481,6 +482,7 @@ class GameState:
     floor: FloorState
     player: PlayerState
     combat_log: list[str]
+    dialogue: DialogueState = field(default_factory=DialogueState)
     run_stats: RunStatistics = field(
         default_factory=RunStatistics,
     )

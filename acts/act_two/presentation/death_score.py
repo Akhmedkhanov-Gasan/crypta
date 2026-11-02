@@ -17,7 +17,6 @@ from presentation.text import fit_text_to_width
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
-_DIALOGUE_READ_MS = 3000
 _INPUT_GUARD_MS = 250
 
 _ENEMY_SPRITES = {
@@ -108,12 +107,13 @@ def handle_act_two_death_event(
 
     keyboard_press = (
         event.type == pygame.KEYDOWN
+        and event.key in (pygame.K_SPACE, pygame.K_RETURN, pygame.K_KP_ENTER)
         and not getattr(event, "repeat", False)
         and not getattr(event, "automatic_movement", False)
     )
     mouse_press = (
         event.type == pygame.MOUSEBUTTONDOWN
-        and event.button in (1, 2, 3)
+        and event.button == 1
     )
 
     if not keyboard_press and not mouse_press:
@@ -146,6 +146,9 @@ def handle_act_two_death_event(
 
         return None
 
+    if keyboard_press and event.key != pygame.K_SPACE:
+        return None
+
     started_at = game_state.player.death_animation_started_at
     if started_at < 0:
         return None
@@ -156,17 +159,7 @@ def handle_act_two_death_event(
     if elapsed < ACT_TWO_OLD_MAN_DIALOGUE_MS:
         return None
 
-    dialogue_finished = (
-        state.death_dialogue_skipped
-        or elapsed >= (
-            ACT_TWO_OLD_MAN_DIALOGUE_MS + _DIALOGUE_READ_MS
-        )
-    )
-
-    if dialogue_finished:
-        state.death_score_open = True
-    else:
-        state.death_dialogue_skipped = True
+    state.death_score_open = True
 
     state.death_input_unlock_at = (
         current_time + _INPUT_GUARD_MS

@@ -5,7 +5,7 @@ from acts.act_three.abilities import (
 
 
 ACT_THREE_CONSOLE_HELP = (
-    "wake3 [warrior|rogue|mage] - jump to the post-Oracle awakening scene",
+    "wake3[_warrior|_rogue|_mage] - jump to the post-Oracle awakening scene",
     "skills - unlock all abilities and disable charges (Act III)",
 )
 
@@ -20,7 +20,7 @@ def execute_act_three_console_command(
 
     if name == "wake3":
         if len(parts) > 2 or (len(parts) == 2 and parts[1] not in ("warrior", "rogue", "mage")):
-            return "Usage: wake3 [warrior|rogue|mage]"
+            return "Usage: wake3, wake3_warrior, wake3_rogue or wake3_mage"
         parent = parts[1] if len(parts) == 2 else game_state.player.player_class
         if parent not in ("warrior", "rogue", "mage"):
             parent = "rogue"

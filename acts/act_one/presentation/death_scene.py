@@ -77,6 +77,18 @@ def _menu_button(size):
 
 
 def begin_act_one_death(game_state, current_time):
+    scene = game_state.act_one_death_scene
+    if game_state.floor.presentation_act == 1 and scene is not None:
+        from game.dialogue import hold_dialogue
+
+        elapsed = max(0, current_time - scene.started_at)
+        held = hold_dialogue(game_state, "act_one_death", elapsed, (
+            (DIALOGUE_START_MS, 5200, OLD_MAN_LINES[0]),
+            (5500, DIALOGUE_FADE_OUT_MS, OLD_MAN_LINES[1]),
+        ))
+        scene.started_at += elapsed - held
+        game_state.player.death_animation_started_at += elapsed - held
+        return
     if (
         game_state.floor.presentation_act != 1
         or game_state.player.health > 0
@@ -907,11 +919,12 @@ def handle_act_one_death_event(
 
     key_pressed = (
         event.type == pygame.KEYDOWN
+        and event.key == pygame.K_SPACE
         and not getattr(event, "repeat", False)
     )
     mouse_clicked = (
         event.type == pygame.MOUSEBUTTONDOWN
-        and event.button in (1, 2, 3)
+        and event.button == 1
     )
 
     if not (key_pressed or mouse_clicked):
@@ -1150,19 +1163,12 @@ def draw_act_one_death_overlay(
             (220, 220, 227),
         )
 
-        for index, line in enumerate(OLD_MAN_LINES):
-            _center_text(
-                overlay,
-                fonts["text"],
-                line,
-                (center_x, center_y + index * 32),
-                (178, 178, 190),
-            )
+        from presentation.dialogue_panel import draw_fixed_dialogue
 
-        opacity = (
-            _fade(elapsed, DIALOGUE_START_MS, 800)
-            * (1.0 - _fade(elapsed, DIALOGUE_FADE_OUT_MS, 200))
-        )
+        for index, (start, end) in enumerate(((DIALOGUE_START_MS, 5200), (5500, DIALOGUE_FADE_OUT_MS))):
+            if start <= elapsed < end:
+                draw_fixed_dialogue(overlay, fonts["heading"], fonts["text"], "OLD MAN", OLD_MAN_LINES[index], act=1)
+        opacity = _fade(elapsed, DIALOGUE_START_MS, 800)
     else:
         _draw_score(
             overlay,

@@ -65,7 +65,7 @@
       "subclass_choices": {
         "rect": {
           "x": 140,
-          "y": 158,
+          "y": 100,
           "width": 1000,
           "height": 562
         },
@@ -78,20 +78,20 @@
             "subclass_id": "assassin",
             "rect": {
               "x": 140,
-              "y": 158,
+              "y": 100,
               "width": 450,
               "height": 562
             },
             "hitbox": {
               "x": 140,
-              "y": 158,
+              "y": 100,
               "width": 450,
               "height": 562
             },
             "card_background": {
               "rect": {
                 "x": 165,
-                "y": 166,
+                "y": 108,
                 "width": 400,
                 "height": 546
               },
@@ -101,14 +101,14 @@
             "portrait_section": {
               "rect": {
                 "x": 271,
-                "y": 198,
+                "y": 140,
                 "width": 188,
                 "height": 214
               },
               "background": {
                 "rect": {
                   "x": 271,
-                  "y": 198,
+                  "y": 140,
                   "width": 188,
                   "height": 188
                 },
@@ -126,7 +126,7 @@
               "portrait": {
                 "rect": {
                   "x": 276,
-                  "y": 203,
+                  "y": 145,
                   "width": 178,
                   "height": 178
                 },
@@ -137,7 +137,7 @@
             "class_name": {
               "rect": {
                 "x": 311,
-                "y": 392,
+                "y": 334,
                 "width": 109,
                 "height": 20
               },
@@ -168,7 +168,7 @@
             "class_description": {
               "rect": {
                 "x": 190,
-                "y": 421,
+                "y": 363,
                 "width": 350,
                 "height": 60
               },
@@ -199,7 +199,7 @@
             "passive": {
               "rect": {
                 "x": 199,
-                "y": 489,
+                "y": 431,
                 "width": 332,
                 "height": 59
               },
@@ -207,7 +207,7 @@
               "background": {
                 "rect": {
                   "x": 199,
-                  "y": 489,
+                  "y": 431,
                   "width": 332,
                   "height": 59
                 },
@@ -217,7 +217,7 @@
               "icon": {
                 "rect": {
                   "x": 206,
-                  "y": 498,
+                  "y": 440,
                   "width": 40,
                   "height": 40
                 },
@@ -227,7 +227,7 @@
               "name": {
                 "rect": {
                   "x": 309,
-                  "y": 494,
+                  "y": 436,
                   "width": 148,
                   "height": 13
                 },
@@ -258,7 +258,7 @@
               "description": {
                 "rect": {
                   "x": 254,
-                  "y": 508,
+                  "y": 450,
                   "width": 264,
                   "height": 34
                 },
@@ -291,7 +291,7 @@
               "q": {
                 "rect": {
                   "x": 199,
-                  "y": 551,
+                  "y": 493,
                   "width": 332,
                   "height": 59
                 },
@@ -299,7 +299,7 @@
                 "background": {
                   "rect": {
                     "x": 199,
-                    "y": 551,
+                    "y": 493,
                     "width": 332,
                     "height": 59
                   },
@@ -309,7 +309,7 @@
                 "icon": {
                   "rect": {
                     "x": 207,
-                    "y": 559,
+                    "y": 501,
                     "width": 40,
                     "height": 40
                   },
@@ -319,7 +319,7 @@
                 "name": {
                   "rect": {
                     "x": 348,
-                    "y": 556,
+                    "y": 498,
                     "width": 74,
                     "height": 13
                   },
@@ -350,7 +350,7 @@
                 "description": {
                   "rect": {
                     "x": 255,
-                    "y": 569,
+                    "y": 511,
                     "width": 272,
                     "height": 34
                   },
@@ -382,7 +382,7 @@
               "f": {
                 "rect": {
                   "x": 199,
-                  "y": 613,
+                  "y": 555,
                   "width": 332,
                   "height": 59
                 },
@@ -390,7 +390,7 @@
                 "background": {
                   "rect": {
                     "x": 199,
-                    "y": 613,
+                    "y": 555,
                     "width": 332,
                     "height": 59
                   },
@@ -400,7 +400,7 @@
                 "icon": {
                   "rect": {
                     "x": 207,
-                    "y": 623,
+                    "y": 565,
                     "width": 40,
                     "height": 40
                   },
@@ -410,7 +410,7 @@
                 "name": {
                   "rect": {
                     "x": 348,
-                    "y": 618,
+                    "y": 560,
                     "width": 88,
                     "height": 13
                   },
@@ -441,7 +441,7 @@
                 "description": {
                   "rect": {
                     "x": 251,
-                    "y": 633,
+                    "y": 575,
                     "width": 275,
                     "height": 33
                   },
@@ -476,20 +476,20 @@
             "subclass_id": "archer",
             "rect": {
               "x": 690,
-              "y": 158,
+              "y": 100,
               "width": 450,
               "height": 562
             },
             "hitbox": {
               "x": 690,
-              "y": 158,
+              "y": 100,
               "width": 450,
               "height": 562
             },
             "card_background": {
               "rect": {
                 "x": 715,
-                "y": 166,
+                "y": 108,
                 "width": 400,
                 "height": 546
               },
@@ -499,14 +499,14 @@
             "portrait_section": {
               "rect": {
                 "x": 821,
-                "y": 198,
+                "y": 140,
                 "width": 188,
                 "height": 214
               },
               "background": {
                 "rect": {
                   "x": 821,
-                  "y": 198,
+                  "y": 140,
                   "width": 188,
                   "height": 188
                 },
@@ -524,7 +524,7 @@
               "portrait": {
                 "rect": {
                   "x": 830,
-                  "y": 204,
+                  "y": 146,
                   "width": 170,
                   "height": 170
                 },
@@ -535,7 +535,7 @@
             "class_name": {
               "rect": {
                 "x": 861,
-                "y": 392,
+                "y": 334,
                 "width": 109,
                 "height": 20
               },
@@ -566,7 +566,7 @@
             "class_description": {
               "rect": {
                 "x": 740,
-                "y": 421,
+                "y": 363,
                 "width": 350,
                 "height": 55
               },
@@ -597,7 +597,7 @@
             "passive": {
               "rect": {
                 "x": 749,
-                "y": 489,
+                "y": 431,
                 "width": 332,
                 "height": 59
               },
@@ -605,7 +605,7 @@
               "background": {
                 "rect": {
                   "x": 749,
-                  "y": 489,
+                  "y": 431,
                   "width": 332,
                   "height": 59
                 },
@@ -615,7 +615,7 @@
               "icon": {
                 "rect": {
                   "x": 757,
-                  "y": 498,
+                  "y": 440,
                   "width": 40,
                   "height": 40
                 },
@@ -625,7 +625,7 @@
               "name": {
                 "rect": {
                   "x": 876,
-                  "y": 494,
+                  "y": 436,
                   "width": 115,
                   "height": 13
                 },
@@ -656,7 +656,7 @@
               "description": {
                 "rect": {
                   "x": 812,
-                  "y": 508,
+                  "y": 450,
                   "width": 264,
                   "height": 34
                 },
@@ -689,7 +689,7 @@
               "q": {
                 "rect": {
                   "x": 749,
-                  "y": 551,
+                  "y": 493,
                   "width": 332,
                   "height": 59
                 },
@@ -697,7 +697,7 @@
                 "background": {
                   "rect": {
                     "x": 749,
-                    "y": 551,
+                    "y": 493,
                     "width": 332,
                     "height": 59
                   },
@@ -707,7 +707,7 @@
                 "icon": {
                   "rect": {
                     "x": 757,
-                    "y": 560,
+                    "y": 502,
                     "width": 40,
                     "height": 40
                   },
@@ -717,7 +717,7 @@
                 "name": {
                   "rect": {
                     "x": 893,
-                    "y": 556,
+                    "y": 498,
                     "width": 88,
                     "height": 13
                   },
@@ -748,7 +748,7 @@
                 "description": {
                   "rect": {
                     "x": 805,
-                    "y": 569,
+                    "y": 511,
                     "width": 272,
                     "height": 34
                   },
@@ -780,7 +780,7 @@
               "f": {
                 "rect": {
                   "x": 749,
-                  "y": 613,
+                  "y": 555,
                   "width": 332,
                   "height": 59
                 },
@@ -788,7 +788,7 @@
                 "background": {
                   "rect": {
                     "x": 749,
-                    "y": 613,
+                    "y": 555,
                     "width": 332,
                     "height": 59
                   },
@@ -798,7 +798,7 @@
                 "icon": {
                   "rect": {
                     "x": 757,
-                    "y": 623,
+                    "y": 565,
                     "width": 40,
                     "height": 40
                   },
@@ -808,7 +808,7 @@
                 "name": {
                   "rect": {
                     "x": 898,
-                    "y": 618,
+                    "y": 560,
                     "width": 81,
                     "height": 13
                   },
@@ -839,7 +839,7 @@
                 "description": {
                   "rect": {
                     "x": 801,
-                    "y": 633,
+                    "y": 575,
                     "width": 275,
                     "height": 33
                   },
@@ -935,7 +935,7 @@
       "subclass_choices": {
         "rect": {
           "x": 140,
-          "y": 158,
+          "y": 100,
           "width": 1000,
           "height": 562
         },
@@ -948,20 +948,20 @@
             "subclass_id": "berserker",
             "rect": {
               "x": 140,
-              "y": 158,
+              "y": 100,
               "width": 450,
               "height": 562
             },
             "hitbox": {
               "x": 140,
-              "y": 158,
+              "y": 100,
               "width": 450,
               "height": 562
             },
             "card_background": {
               "rect": {
                 "x": 165,
-                "y": 166,
+                "y": 108,
                 "width": 400,
                 "height": 546
               },
@@ -971,14 +971,14 @@
             "portrait_section": {
               "rect": {
                 "x": 271,
-                "y": 198,
+                "y": 140,
                 "width": 188,
                 "height": 214
               },
               "background": {
                 "rect": {
                   "x": 271,
-                  "y": 198,
+                  "y": 140,
                   "width": 188,
                   "height": 188
                 },
@@ -996,7 +996,7 @@
               "portrait": {
                 "rect": {
                   "x": 280,
-                  "y": 207,
+                  "y": 149,
                   "width": 170,
                   "height": 170
                 },
@@ -1007,7 +1007,7 @@
             "class_name": {
               "rect": {
                 "x": 311,
-                "y": 392,
+                "y": 334,
                 "width": 109,
                 "height": 20
               },
@@ -1038,7 +1038,7 @@
             "class_description": {
               "rect": {
                 "x": 190,
-                "y": 421,
+                "y": 363,
                 "width": 350,
                 "height": 55
               },
@@ -1069,7 +1069,7 @@
             "passive": {
               "rect": {
                 "x": 199,
-                "y": 489,
+                "y": 431,
                 "width": 332,
                 "height": 59
               },
@@ -1077,7 +1077,7 @@
               "background": {
                 "rect": {
                   "x": 199,
-                  "y": 489,
+                  "y": 431,
                   "width": 332,
                   "height": 59
                 },
@@ -1087,7 +1087,7 @@
               "icon": {
                 "rect": {
                   "x": 206,
-                  "y": 498,
+                  "y": 440,
                   "width": 40,
                   "height": 40
                 },
@@ -1097,7 +1097,7 @@
               "name": {
                 "rect": {
                   "x": 339,
-                  "y": 494,
+                  "y": 436,
                   "width": 88,
                   "height": 13
                 },
@@ -1128,7 +1128,7 @@
               "description": {
                 "rect": {
                   "x": 255,
-                  "y": 508,
+                  "y": 450,
                   "width": 264,
                   "height": 34
                 },
@@ -1161,7 +1161,7 @@
               "q": {
                 "rect": {
                   "x": 199,
-                  "y": 551,
+                  "y": 493,
                   "width": 332,
                   "height": 59
                 },
@@ -1169,7 +1169,7 @@
                 "background": {
                   "rect": {
                     "x": 199,
-                    "y": 551,
+                    "y": 493,
                     "width": 332,
                     "height": 59
                   },
@@ -1179,7 +1179,7 @@
                 "icon": {
                   "rect": {
                     "x": 207,
-                    "y": 560,
+                    "y": 502,
                     "width": 40,
                     "height": 40
                   },
@@ -1189,7 +1189,7 @@
                 "name": {
                   "rect": {
                     "x": 334,
-                    "y": 556,
+                    "y": 498,
                     "width": 88,
                     "height": 13
                   },
@@ -1220,7 +1220,7 @@
                 "description": {
                   "rect": {
                     "x": 255,
-                    "y": 569,
+                    "y": 511,
                     "width": 272,
                     "height": 34
                   },
@@ -1252,7 +1252,7 @@
               "f": {
                 "rect": {
                   "x": 199,
-                  "y": 613,
+                  "y": 555,
                   "width": 332,
                   "height": 59
                 },
@@ -1260,7 +1260,7 @@
                 "background": {
                   "rect": {
                     "x": 199,
-                    "y": 613,
+                    "y": 555,
                     "width": 332,
                     "height": 59
                   },
@@ -1270,7 +1270,7 @@
                 "icon": {
                   "rect": {
                     "x": 206,
-                    "y": 623,
+                    "y": 565,
                     "width": 40,
                     "height": 40
                   },
@@ -1280,7 +1280,7 @@
                 "name": {
                   "rect": {
                     "x": 340,
-                    "y": 618,
+                    "y": 560,
                     "width": 61,
                     "height": 13
                   },
@@ -1311,7 +1311,7 @@
                 "description": {
                   "rect": {
                     "x": 251,
-                    "y": 633,
+                    "y": 575,
                     "width": 275,
                     "height": 33
                   },
@@ -1346,20 +1346,20 @@
             "subclass_id": "paladin",
             "rect": {
               "x": 690,
-              "y": 158,
+              "y": 100,
               "width": 450,
               "height": 562
             },
             "hitbox": {
               "x": 690,
-              "y": 158,
+              "y": 100,
               "width": 450,
               "height": 562
             },
             "card_background": {
               "rect": {
                 "x": 715,
-                "y": 166,
+                "y": 108,
                 "width": 400,
                 "height": 546
               },
@@ -1369,14 +1369,14 @@
             "portrait_section": {
               "rect": {
                 "x": 821,
-                "y": 198,
+                "y": 140,
                 "width": 188,
                 "height": 214
               },
               "background": {
                 "rect": {
                   "x": 821,
-                  "y": 198,
+                  "y": 140,
                   "width": 188,
                   "height": 188
                 },
@@ -1394,7 +1394,7 @@
               "portrait": {
                 "rect": {
                   "x": 826,
-                  "y": 203,
+                  "y": 145,
                   "width": 178,
                   "height": 178
                 },
@@ -1405,7 +1405,7 @@
             "class_name": {
               "rect": {
                 "x": 861,
-                "y": 392,
+                "y": 334,
                 "width": 109,
                 "height": 20
               },
@@ -1436,7 +1436,7 @@
             "class_description": {
               "rect": {
                 "x": 740,
-                "y": 421,
+                "y": 363,
                 "width": 350,
                 "height": 60
               },
@@ -1467,7 +1467,7 @@
             "passive": {
               "rect": {
                 "x": 749,
-                "y": 489,
+                "y": 431,
                 "width": 332,
                 "height": 59
               },
@@ -1475,7 +1475,7 @@
               "background": {
                 "rect": {
                   "x": 749,
-                  "y": 489,
+                  "y": 431,
                   "width": 332,
                   "height": 59
                 },
@@ -1485,7 +1485,7 @@
               "icon": {
                 "rect": {
                   "x": 757,
-                  "y": 497,
+                  "y": 439,
                   "width": 40,
                   "height": 40
                 },
@@ -1495,7 +1495,7 @@
               "name": {
                 "rect": {
                   "x": 859,
-                  "y": 494,
+                  "y": 436,
                   "width": 148,
                   "height": 13
                 },
@@ -1526,7 +1526,7 @@
               "description": {
                 "rect": {
                   "x": 807,
-                  "y": 507,
+                  "y": 449,
                   "width": 264,
                   "height": 34
                 },
@@ -1559,7 +1559,7 @@
               "q": {
                 "rect": {
                   "x": 749,
-                  "y": 551,
+                  "y": 493,
                   "width": 332,
                   "height": 59
                 },
@@ -1567,7 +1567,7 @@
                 "background": {
                   "rect": {
                     "x": 749,
-                    "y": 551,
+                    "y": 493,
                     "width": 332,
                     "height": 59
                   },
@@ -1577,7 +1577,7 @@
                 "icon": {
                   "rect": {
                     "x": 756,
-                    "y": 560,
+                    "y": 502,
                     "width": 40,
                     "height": 40
                   },
@@ -1587,7 +1587,7 @@
                 "name": {
                   "rect": {
                     "x": 893,
-                    "y": 556,
+                    "y": 498,
                     "width": 88,
                     "height": 13
                   },
@@ -1618,7 +1618,7 @@
                 "description": {
                   "rect": {
                     "x": 805,
-                    "y": 569,
+                    "y": 511,
                     "width": 272,
                     "height": 34
                   },
@@ -1650,7 +1650,7 @@
               "f": {
                 "rect": {
                   "x": 749,
-                  "y": 613,
+                  "y": 555,
                   "width": 332,
                   "height": 59
                 },
@@ -1658,7 +1658,7 @@
                 "background": {
                   "rect": {
                     "x": 749,
-                    "y": 613,
+                    "y": 555,
                     "width": 332,
                     "height": 59
                   },
@@ -1668,7 +1668,7 @@
                 "icon": {
                   "rect": {
                     "x": 756,
-                    "y": 623,
+                    "y": 565,
                     "width": 40,
                     "height": 40
                   },
@@ -1678,7 +1678,7 @@
                 "name": {
                   "rect": {
                     "x": 898,
-                    "y": 618,
+                    "y": 560,
                     "width": 88,
                     "height": 13
                   },
@@ -1709,7 +1709,7 @@
                 "description": {
                   "rect": {
                     "x": 801,
-                    "y": 633,
+                    "y": 575,
                     "width": 275,
                     "height": 33
                   },
@@ -1805,7 +1805,7 @@
       "subclass_choices": {
         "rect": {
           "x": 140,
-          "y": 158,
+          "y": 100,
           "width": 1000,
           "height": 562
         },
@@ -1818,20 +1818,20 @@
             "subclass_id": "warlock",
             "rect": {
               "x": 140,
-              "y": 158,
+              "y": 100,
               "width": 450,
               "height": 562
             },
             "hitbox": {
               "x": 140,
-              "y": 158,
+              "y": 100,
               "width": 450,
               "height": 562
             },
             "card_background": {
               "rect": {
                 "x": 165,
-                "y": 166,
+                "y": 108,
                 "width": 400,
                 "height": 546
               },
@@ -1841,14 +1841,14 @@
             "portrait_section": {
               "rect": {
                 "x": 271,
-                "y": 198,
+                "y": 140,
                 "width": 188,
                 "height": 214
               },
               "background": {
                 "rect": {
                   "x": 271,
-                  "y": 198,
+                  "y": 140,
                   "width": 188,
                   "height": 188
                 },
@@ -1866,7 +1866,7 @@
               "portrait": {
                 "rect": {
                   "x": 280,
-                  "y": 207,
+                  "y": 149,
                   "width": 170,
                   "height": 170
                 },
@@ -1877,7 +1877,7 @@
             "class_name": {
               "rect": {
                 "x": 311,
-                "y": 392,
+                "y": 334,
                 "width": 109,
                 "height": 20
               },
@@ -1908,7 +1908,7 @@
             "class_description": {
               "rect": {
                 "x": 190,
-                "y": 421,
+                "y": 363,
                 "width": 350,
                 "height": 55
               },
@@ -1939,7 +1939,7 @@
             "passive": {
               "rect": {
                 "x": 199,
-                "y": 489,
+                "y": 431,
                 "width": 332,
                 "height": 59
               },
@@ -1947,7 +1947,7 @@
               "background": {
                 "rect": {
                   "x": 199,
-                  "y": 489,
+                  "y": 431,
                   "width": 332,
                   "height": 59
                 },
@@ -1957,7 +1957,7 @@
               "icon": {
                 "rect": {
                   "x": 206,
-                  "y": 496,
+                  "y": 438,
                   "width": 40,
                   "height": 43
                 },
@@ -1967,7 +1967,7 @@
               "name": {
                 "rect": {
                   "x": 316,
-                  "y": 494,
+                  "y": 436,
                   "width": 135,
                   "height": 13
                 },
@@ -1998,7 +1998,7 @@
               "description": {
                 "rect": {
                   "x": 257,
-                  "y": 507,
+                  "y": 449,
                   "width": 264,
                   "height": 34
                 },
@@ -2031,7 +2031,7 @@
               "q": {
                 "rect": {
                   "x": 199,
-                  "y": 551,
+                  "y": 493,
                   "width": 332,
                   "height": 59
                 },
@@ -2039,7 +2039,7 @@
                 "background": {
                   "rect": {
                     "x": 199,
-                    "y": 551,
+                    "y": 493,
                     "width": 332,
                     "height": 59
                   },
@@ -2049,7 +2049,7 @@
                 "icon": {
                   "rect": {
                     "x": 206,
-                    "y": 560,
+                    "y": 502,
                     "width": 40,
                     "height": 40
                   },
@@ -2059,7 +2059,7 @@
                 "name": {
                   "rect": {
                     "x": 362,
-                    "y": 556,
+                    "y": 498,
                     "width": 34,
                     "height": 13
                   },
@@ -2090,7 +2090,7 @@
                 "description": {
                   "rect": {
                     "x": 255,
-                    "y": 569,
+                    "y": 511,
                     "width": 272,
                     "height": 34
                   },
@@ -2122,7 +2122,7 @@
               "f": {
                 "rect": {
                   "x": 199,
-                  "y": 613,
+                  "y": 555,
                   "width": 332,
                   "height": 59
                 },
@@ -2130,7 +2130,7 @@
                 "background": {
                   "rect": {
                     "x": 199,
-                    "y": 613,
+                    "y": 555,
                     "width": 332,
                     "height": 59
                   },
@@ -2140,7 +2140,7 @@
                 "icon": {
                   "rect": {
                     "x": 207,
-                    "y": 622,
+                    "y": 564,
                     "width": 40,
                     "height": 40
                   },
@@ -2150,7 +2150,7 @@
                 "name": {
                   "rect": {
                     "x": 340,
-                    "y": 618,
+                    "y": 560,
                     "width": 68,
                     "height": 13
                   },
@@ -2181,7 +2181,7 @@
                 "description": {
                   "rect": {
                     "x": 251,
-                    "y": 633,
+                    "y": 575,
                     "width": 275,
                     "height": 33
                   },
@@ -2216,20 +2216,20 @@
             "subclass_id": "summoner",
             "rect": {
               "x": 690,
-              "y": 158,
+              "y": 100,
               "width": 450,
               "height": 562
             },
             "hitbox": {
               "x": 690,
-              "y": 158,
+              "y": 100,
               "width": 450,
               "height": 562
             },
             "card_background": {
               "rect": {
                 "x": 715,
-                "y": 166,
+                "y": 108,
                 "width": 400,
                 "height": 546
               },
@@ -2239,14 +2239,14 @@
             "portrait_section": {
               "rect": {
                 "x": 821,
-                "y": 198,
+                "y": 140,
                 "width": 188,
                 "height": 214
               },
               "background": {
                 "rect": {
                   "x": 821,
-                  "y": 198,
+                  "y": 140,
                   "width": 188,
                   "height": 188
                 },
@@ -2264,7 +2264,7 @@
               "portrait": {
                 "rect": {
                   "x": 826,
-                  "y": 203,
+                  "y": 145,
                   "width": 178,
                   "height": 178
                 },
@@ -2275,7 +2275,7 @@
             "class_name": {
               "rect": {
                 "x": 861,
-                "y": 392,
+                "y": 334,
                 "width": 109,
                 "height": 20
               },
@@ -2306,7 +2306,7 @@
             "class_description": {
               "rect": {
                 "x": 740,
-                "y": 421,
+                "y": 363,
                 "width": 350,
                 "height": 60
               },
@@ -2337,7 +2337,7 @@
             "passive": {
               "rect": {
                 "x": 749,
-                "y": 489,
+                "y": 431,
                 "width": 332,
                 "height": 59
               },
@@ -2345,7 +2345,7 @@
               "background": {
                 "rect": {
                   "x": 749,
-                  "y": 489,
+                  "y": 431,
                   "width": 332,
                   "height": 59
                 },
@@ -2355,7 +2355,7 @@
               "icon": {
                 "rect": {
                   "x": 756,
-                  "y": 498,
+                  "y": 440,
                   "width": 40,
                   "height": 40
                 },
@@ -2365,7 +2365,7 @@
               "name": {
                 "rect": {
                   "x": 852,
-                  "y": 494,
+                  "y": 436,
                   "width": 162,
                   "height": 13
                 },
@@ -2396,7 +2396,7 @@
               "description": {
                 "rect": {
                   "x": 804,
-                  "y": 507,
+                  "y": 449,
                   "width": 264,
                   "height": 34
                 },
@@ -2429,7 +2429,7 @@
               "q": {
                 "rect": {
                   "x": 749,
-                  "y": 551,
+                  "y": 493,
                   "width": 332,
                   "height": 59
                 },
@@ -2437,7 +2437,7 @@
                 "background": {
                   "rect": {
                     "x": 749,
-                    "y": 551,
+                    "y": 493,
                     "width": 332,
                     "height": 59
                   },
@@ -2447,7 +2447,7 @@
                 "icon": {
                   "rect": {
                     "x": 756,
-                    "y": 560,
+                    "y": 502,
                     "width": 40,
                     "height": 40
                   },
@@ -2457,7 +2457,7 @@
                 "name": {
                   "rect": {
                     "x": 893,
-                    "y": 556,
+                    "y": 498,
                     "width": 108,
                     "height": 13
                   },
@@ -2488,7 +2488,7 @@
                 "description": {
                   "rect": {
                     "x": 805,
-                    "y": 569,
+                    "y": 511,
                     "width": 272,
                     "height": 34
                   },
@@ -2520,7 +2520,7 @@
               "f": {
                 "rect": {
                   "x": 749,
-                  "y": 613,
+                  "y": 555,
                   "width": 332,
                   "height": 59
                 },
@@ -2528,7 +2528,7 @@
                 "background": {
                   "rect": {
                     "x": 749,
-                    "y": 613,
+                    "y": 555,
                     "width": 332,
                     "height": 59
                   },
@@ -2538,7 +2538,7 @@
                 "icon": {
                   "rect": {
                     "x": 756,
-                    "y": 622,
+                    "y": 564,
                     "width": 40,
                     "height": 40
                   },
@@ -2548,7 +2548,7 @@
                 "name": {
                   "rect": {
                     "x": 898,
-                    "y": 618,
+                    "y": 560,
                     "width": 61,
                     "height": 13
                   },
@@ -2579,7 +2579,7 @@
                 "description": {
                   "rect": {
                     "x": 801,
-                    "y": 633,
+                    "y": 575,
                     "width": 275,
                     "height": 33
                   },

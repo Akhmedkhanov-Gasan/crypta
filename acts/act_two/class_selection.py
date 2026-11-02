@@ -3,8 +3,11 @@ from acts.act_one.settings import (
     PLAYER_STARTING_STATS,
 )
 from acts.act_two.presentation.awakening_timing import (
+    AWAKENING_DIALOGUE,
     AWAKENING_WORLD_SWAP_MS,
+    class_selection_dialogue_timing,
 )
+from game.dialogue import hold_dialogue
 from acts.act_two.progression import (
     transfer_mage_valor_investment,
 )
@@ -49,6 +52,16 @@ def begin_act_two_awakening(game_state, current_time) -> bool:
 
 
 def advance_act_two_awakening(game_state, current_time) -> None:
+    if game_state.class_selection_open:
+        chosen = game_state.class_selection_choice
+        if chosen is None:
+            elapsed = current_time - game_state.class_transition_started_at
+            held = hold_dialogue(game_state, "act_two_awakening", elapsed, AWAKENING_DIALOGUE)
+            game_state.class_transition_started_at += elapsed - held
+        else:
+            elapsed = current_time - game_state.class_selection_choice_started_at
+            held = hold_dialogue(game_state, "act_two_choice", elapsed, class_selection_dialogue_timing(chosen))
+            game_state.class_selection_choice_started_at += elapsed - held
     if (
         not game_state.class_selection_open
         or game_state.class_transition_world_swapped

@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -12,4 +12,6 @@ class AwakeningScene:
     world_swapped: bool = False
     paused: bool = False
     debug_reveal: bool = False
+    visible_cells: set[tuple[int, int]] = field(default_factory=set)
+    oracle_lighting: tuple | None = None
 

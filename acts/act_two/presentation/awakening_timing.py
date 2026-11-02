@@ -17,6 +17,14 @@ AWAKENING_BLACKOUT_END_MS = 12800
 AWAKENING_OLD_MAN_DIALOGUE_START_MS = 13600
 
 CLASS_SELECTION_READY_MS = 26800
+AWAKENING_DIALOGUE = (
+    (1200, 5000, "A VOICE", "You have defeated one who towered over the rest."),
+    (5500, 8300, "A VOICE", "The first veil has yielded."),
+    (8800, 10300, "A VOICE", "Now... see."),
+    (13600, 16400, "OLD MAN", "Can you see me now?"),
+    (16900, 21100, "OLD MAN", "Good. The world has begun to reveal what it hides."),
+    (21600, 26100, "OLD MAN", "Before you climb any higher, tell me... who are you?"),
+)
 CLASS_SELECTION_TRANSFORM_END_MS = 1200
 CLASS_SELECTION_TURN_TO_OLD_MAN_MS = 1700
 

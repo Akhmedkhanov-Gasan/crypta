@@ -7,30 +7,14 @@ from acts.act_three.npcs import (
     NPC_FRAME_COUNT,
     close_npc_dialog,
     get_npc_animation,
+    get_npc_at,
     get_npc_cells,
 )
 from presentation.layout import (
     ACT_THREE_TILE_SIZE,
-    ACT_THREE_VIEW_HEIGHT,
-    ACT_THREE_VIEW_WIDTH,
-    ACT_THREE_VIEW_X,
-    ACT_THREE_VIEW_Y,
     ASSET_ROOT,
 )
-
-
-NPC_DIALOG_RECT = pygame.Rect(
-    ACT_THREE_VIEW_X + (ACT_THREE_VIEW_WIDTH - 480) // 2,
-    ACT_THREE_VIEW_Y + ACT_THREE_VIEW_HEIGHT - 184,
-    480,
-    172,
-)
-NPC_DIALOG_CLOSE_RECT = pygame.Rect(
-    NPC_DIALOG_RECT.right - 158,
-    NPC_DIALOG_RECT.bottom - 48,
-    138,
-    32,
-)
+from acts.act_three.presentation.dialogue_panel import draw_dialogue_panel
 
 
 def load_act_three_npc_assets():
@@ -93,44 +77,15 @@ def draw_npc_dialog(screen, game_state, fonts):
     ):
         return
 
-    pygame.draw.rect(screen, (24, 21, 23), NPC_DIALOG_RECT)
-    pygame.draw.rect(
-        screen,
-        (131, 104, 72),
-        NPC_DIALOG_RECT,
-        width=2,
-    )
-    title = fonts["sidebar_heading"].render(
-        "Blacksmith",
-        True,
-        (231, 210, 177),
-    )
-    screen.blit(
-        title,
-        (NPC_DIALOG_RECT.x + 20, NPC_DIALOG_RECT.y + 16),
-    )
-    message = fonts["text"].render(
-        "The forge will be available soon.",
-        True,
-        (208, 204, 197),
-    )
-    screen.blit(
-        message,
-        (NPC_DIALOG_RECT.x + 20, NPC_DIALOG_RECT.y + 58),
-    )
-    pygame.draw.rect(
-        screen,
-        (67, 52, 43),
-        NPC_DIALOG_CLOSE_RECT,
-    )
-    label = fonts["sidebar_numbers"].render(
-        "Close [Esc]",
-        True,
-        (231, 210, 177),
-    )
-    screen.blit(
-        label,
-        label.get_rect(center=NPC_DIALOG_CLOSE_RECT.center),
+    npc = get_npc_at(game_state.floor, state.npc_dialog_position)
+    if npc is None:
+        return
+    message = {
+        "blacksmith": "The forge will be available soon.",
+    }.get(npc["type"], "...")
+    draw_dialogue_panel(
+        screen, fonts, npc["type"], npc["type"].replace("_", " ").title(),
+        message, close_label="SPACE / CLICK - CONTINUE",
     )
 
 
@@ -140,13 +95,12 @@ def handle_npc_dialog_event(event, game_state, mouse_position):
 
     close_requested = (
         event.type == pygame.KEYDOWN
-        and event.key == pygame.K_ESCAPE
+        and event.key in (pygame.K_ESCAPE, pygame.K_SPACE)
+        and not getattr(event, "repeat", False)
     )
     if (
         event.type == pygame.MOUSEBUTTONDOWN
         and event.button == 1
-        and mouse_position is not None
-        and NPC_DIALOG_CLOSE_RECT.collidepoint(mouse_position)
     ):
         close_requested = True
 

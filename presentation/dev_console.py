@@ -52,7 +52,7 @@ class DevConsole:
         self.completion_index = 0
 
     def _matching_commands(self):
-        prefix = self.input_text.strip().split(" ", 1)[0].lower()
+        prefix = "_".join(self.input_text.lower().split())
         if not prefix:
             return ()
 
@@ -67,12 +67,7 @@ class DevConsole:
             return
 
         command = self.completion_matches[self.completion_index]
-        _, separator, arguments = self.input_text.partition(" ")
-        self.input_text = (
-            command
-            if not separator
-            else f"{command} {arguments}"
-        )
+        self.input_text = command
         self.history_index = len(self.history)
         self.history_draft = self.input_text
 
@@ -112,7 +107,7 @@ class DevConsole:
         self._reset_completion()
 
     def submit(self, game_state):
-        command = self.input_text.strip()
+        command = "_".join(self.input_text.lower().split())
         self.input_text = ""
         self.history_draft = ""
         self._reset_completion()

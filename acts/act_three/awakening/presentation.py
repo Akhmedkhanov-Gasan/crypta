@@ -2,7 +2,9 @@ import math
 
 import pygame
 
-from acts.act_three.awakening.assets import old_man_frames, old_man_sprite, scene_frames
+from acts.act_three.awakening.assets import old_man_facing, old_man_frames, scene_frames
+from logic import direction_toward
+from game.dialogue import dialogue_visible_characters
 from acts.act_three.presentation.dialogue_panel import draw_dialogue_panel
 from acts.act_three.awakening.dialogue import (
     APPEAR_MS, ARRIVAL, BLACKOUT_MS, FAREWELL, TRANSFORM_MS,
@@ -17,7 +19,7 @@ def _smooth(value):
     return value * value * (3 - 2 * value)
 
 
-def awakening_player_sprite(game_state):
+def awakening_player_sprite(game_state, assets):
     scene = game_state.act_three.awakening
     if scene is None or not scene.world_swapped or scene.phase == "complete":
         return None
@@ -28,9 +30,14 @@ def awakening_player_sprite(game_state):
         frames = scene_frames(parent, f"transform_{game_state.player.subclass}")
         sprite = frames[min(7, scene.elapsed * 8 // TRANSFORM_MS)]
     elif scene.phase == "answer":
-        return None
+        subclass = game_state.player.subclass
+        frame = (scene.elapsed // 180) % 8
+        sprite = assets.get(f"player_{subclass}_idle_left_{frame}")
+        if sprite is None:
+            sprite = assets[f"player_{subclass}_idle_{frame}"]
     elif scene.phase == "arrival":
-        frames = scene_frames(parent, "awakening_left")
+        direction = "awakening_right" if parent == "rogue" else "awakening_left"
+        frames = scene_frames(parent, direction)
         sprite = frames[min(7, max(0, scene.elapsed - 700) * 8 // 2300)]
     else:
         sprite = scene_frames(parent, "idle_left")[(scene.elapsed // 180) % 8]
@@ -60,12 +67,13 @@ def _draw_old_man(screen, game_state, camera):
     anchor, scale = _screen_anchor(game_state, scene.old_man_position, camera)
     player_position = (game_state.floor.player_column, game_state.floor.player_row)
     if act == 2:
-        source = old_man_sprite(2)
+        boss_direction = direction_toward(*scene.old_man_position, *scene.boss_position)
+        player_direction = direction_toward(*scene.old_man_position, *player_position)
         alpha = _smooth(scene.elapsed / APPEAR_MS)
         turn = _smooth((scene.elapsed - TURN_START_MS) / (TURN_END_MS - TURN_START_MS))
         poses = (
-            (source, alpha * (1 - turn), scene.boss_position[0] > scene.old_man_position[0]),
-            (source, alpha * turn, player_position[0] > scene.old_man_position[0]),
+            (old_man_facing(boss_direction), alpha * (1 - turn), False),
+            (old_man_facing(player_direction), alpha * turn, False),
         )
     else:
         frame = (scene.elapsed // 180) % 8
@@ -134,15 +142,17 @@ def draw_awakening_scene(screen, game_state, fonts, act_two_fonts, camera):
         timeline = answer_timeline(game_state.player.subclass)
     for start, end, speaker, line in timeline:
         if start <= scene.elapsed < end:
-            opacity = _smooth((scene.elapsed - start) / 220) * (1 - _smooth((scene.elapsed - end + 250) / 250))
-            visible_characters = max(0, (scene.elapsed - start) // 34)
+            opacity = _smooth((scene.elapsed - start) / 220)
+            if speaker == "PLAYER":
+                speaker = (game_state.player.subclass or game_state.player.player_class).upper()
+            visible_characters = dialogue_visible_characters(game_state.dialogue, max(0, (scene.elapsed - start) // 34))
             if scene.world_swapped:
                 speaker_id = "old_man" if speaker == "OLD MAN" else game_state.player.subclass
                 draw_dialogue_panel(screen, fonts, speaker_id, speaker, line, visible_characters, opacity)
             else:
                 from presentation.screens import _draw_awakening_text_panel
 
-                _draw_awakening_text_panel(screen, act_two_fonts["title"], act_two_fonts["text"], speaker, line[:visible_characters], opacity)
+                _draw_awakening_text_panel(screen, act_two_fonts["title"], act_two_fonts["text"], speaker, line, opacity, visible_characters)
             break
     if scene.phase == "blackout":
         anchor, _ = _screen_anchor(game_state, (game_state.floor.player_column, game_state.floor.player_row), camera)

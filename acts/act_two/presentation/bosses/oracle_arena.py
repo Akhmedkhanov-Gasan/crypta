@@ -378,24 +378,13 @@ def _light_surfaces(radius, strength, color):
     return light, glow
 
 
-def draw_oracle_lighting(screen, floor, current_time):
-    if not floor.has_oracle_gate:
-        return
-
-    map_size = (
-        len(floor.map[0]) * TILE_SIZE,
-        len(floor.map) * TILE_SIZE,
-    )
-    darkness = pygame.Surface(map_size, pygame.SRCALPHA)
-
+def oracle_lighting_state(floor, current_time):
     scene = floor.oracle_intro
     ambient = (
         AMBIENT_DARKNESS
         if scene is not None and scene.finished
         else 255
     )
-    darkness.fill((0, 0, 0, ambient))
-
     player_column, player_row = oracle_player_position(floor)
     sources = [
         (
@@ -502,6 +491,24 @@ def draw_oracle_lighting(screen, floor, current_time):
         )
 
     sources.extend(oracle_attack_lights(floor, current_time))
+
+    return ambient, tuple(sources)
+
+
+def draw_oracle_lighting(screen, floor, current_time, lighting_state=None):
+    if not floor.has_oracle_gate:
+        return
+
+    map_size = (
+        len(floor.map[0]) * TILE_SIZE,
+        len(floor.map) * TILE_SIZE,
+    )
+    darkness = pygame.Surface(map_size, pygame.SRCALPHA)
+    ambient, sources = (
+        oracle_lighting_state(floor, current_time)
+        if lighting_state is None else lighting_state
+    )
+    darkness.fill((0, 0, 0, ambient))
 
     for column, row, radius_tiles, strength, color in sources:
         radius = max(1, round(radius_tiles * TILE_SIZE))

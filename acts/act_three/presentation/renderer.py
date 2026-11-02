@@ -27,6 +27,7 @@ from acts.act_three.presentation.altar_menu import (
     draw_upgrade_altar_menu,
 )
 from acts.act_three.presentation.npcs import draw_npc_dialog
+from acts.act_three.presentation.dialogue_panel import draw_dialogue_panel
 from acts.act_three.presentation.sidebar import (
     _draw_act_three_sidebar,
     _draw_label,
@@ -36,7 +37,6 @@ from acts.act_three.presentation.world import _draw_act_three_world
 from presentation.floor_progress import (
     draw_floor_indicator,
 )
-from presentation.text import wrap_text
 from presentation.layout import (
     ACT_THREE_TILE_SIZE,
     ACT_THREE_VIEW_HEIGHT,
@@ -207,37 +207,15 @@ def _draw_old_man_death_scene(
     visible_sprite.set_alpha(sprite_alpha)
     screen.blit(visible_sprite, old_man_position)
 
-    if elapsed < _OLD_MAN_DIALOGUE_START_MS:
+    if not _OLD_MAN_DIALOGUE_START_MS <= elapsed < _OLD_MAN_DEFEAT_MESSAGE_START_MS:
         return
 
     dialogue_elapsed = elapsed - _OLD_MAN_DIALOGUE_START_MS
     fade_in = min(1, dialogue_elapsed / 550)
-    dialogue_alpha = round(255 * fade_in)
-    center_x = ACT_THREE_VIEW_X + ACT_THREE_VIEW_WIDTH // 2
-    line_y = ACT_THREE_VIEW_Y + ACT_THREE_VIEW_HEIGHT - 58
-    for line in wrap_text(
-        fonts["narrative"],
-        _OLD_MAN_LINES[player_subclass],
-        ACT_THREE_VIEW_WIDTH - 110,
-    ):
-        line_surface = fonts["narrative"].render(
-            line,
-            True,
-            (220, 210, 193),
-        )
-        line_surface.set_alpha(dialogue_alpha)
-        line_rectangle = line_surface.get_rect(
-            center=(center_x, line_y),
-        )
-        shadow_surface = fonts["narrative"].render(
-            line,
-            True,
-            (5, 4, 6),
-        )
-        shadow_surface.set_alpha(dialogue_alpha)
-        screen.blit(shadow_surface, line_rectangle.move(2, 2))
-        screen.blit(line_surface, line_rectangle)
-        line_y += 30
+    draw_dialogue_panel(
+        screen, fonts, "old_man", "OLD MAN", _OLD_MAN_LINES[player_subclass],
+        opacity=fade_in,
+    )
 
 
 def _draw_defeat_sequence(

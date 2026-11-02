@@ -4,12 +4,19 @@ from acts.act_three.awakening.dialogue import (
 )
 from acts.act_three.awakening.state import AwakeningScene
 from game.combat_log import add_log_message
+from game.dialogue import hold_dialogue
 from levels import FLOOR_CONFIGS
 from acts.act_three.awakening.staging import read_awakening_markers
 
 
 def _nearby_cell(floor, origin):
-    occupied = {(e.column, e.row) for e in floor.enemies if e.health > 0}
+    from logic import get_enemy_occupied_positions
+
+    occupied = {
+        cell for enemy in floor.enemies
+        if enemy.health > 0 or enemy.type == "oracle"
+        for cell in get_enemy_occupied_positions(enemy)
+    }
     candidates = [
         (column, row)
         for row, line in enumerate(floor.map)
@@ -19,7 +26,10 @@ def _nearby_cell(floor, origin):
     ]
     return min(
         candidates,
-        key=lambda cell: abs(cell[0] - (origin[0] - 2)) + abs(cell[1] - origin[1]),
+        key=lambda cell: (
+            abs(cell[0] - origin[0]) + abs(cell[1] - origin[1]),
+            abs(cell[0] - (origin[0] - 1)) + abs(cell[1] - origin[1]),
+        ),
         default=origin,
     )
 
@@ -27,7 +37,12 @@ def _nearby_cell(floor, origin):
 def reveal_awakening_arena(game_state):
     floor = game_state.floor
     scene = game_state.act_three.awakening
-    if scene is None or scene.world_swapped or floor.boss_room is None:
+    if scene is None or scene.world_swapped:
+        return
+    if not scene.debug_reveal:
+        floor.visible_cells = set(scene.visible_cells)
+        return
+    if floor.boss_room is None:
         return
     room = floor.boss_room
     cells = {
@@ -47,6 +62,11 @@ def begin_awakening(game_state, current_time):
     boss = death.position if death is not None else (
         floor.player_column - 2, floor.player_row,
     )
+    lighting = None
+    if floor.has_oracle_gate:
+        from acts.act_two.presentation.bosses.oracle_arena import oracle_lighting_state
+
+        lighting = oracle_lighting_state(floor, current_time)
     if death is not None:
         death.finished = True
         death.caster.health = 0
@@ -55,6 +75,8 @@ def begin_awakening(game_state, current_time):
         updated_at=current_time,
         old_man_position=_nearby_cell(floor, (floor.player_column, floor.player_row)),
         boss_position=boss,
+        visible_cells=set(floor.visible_cells),
+        oracle_lighting=lighting,
     )
     game_state.act_three_transition_open = True
     game_state.act_three_transition_started_at = current_time
@@ -150,8 +172,16 @@ def advance_awakening(game_state, current_time):
     }.get(scene.phase, ())
     if scene.phase == "answer":
         timeline = answer_timeline(game_state.player.subclass)
+    if timeline:
+        scene.elapsed = hold_dialogue(game_state, f"act_three_awakening:{scene.phase}", scene.elapsed, timeline)
+    if scene.world_swapped:
+        game_state.player.facing_direction = (
+            (1, 0) if scene.old_man_position[0] > game_state.floor.player_column else (-1, 0)
+        )
     while scene.logged_lines < len(timeline) and scene.elapsed >= timeline[scene.logged_lines][0]:
         _, _, speaker, text = timeline[scene.logged_lines]
+        if speaker == "PLAYER":
+            speaker = (game_state.player.subclass or game_state.player.player_class).upper()
         add_log_message(game_state.combat_log, f"{speaker}: {text}", category="dialogue")
         scene.logged_lines += 1
     if scene.phase == "farewell" and scene.elapsed >= FAREWELL_END_MS:

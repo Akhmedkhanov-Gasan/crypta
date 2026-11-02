@@ -373,7 +373,7 @@ def _draw_act_three_world(
     if game_state.act_three.awakening is not None:
         from acts.act_three.awakening.presentation import awakening_player_sprite
 
-        scene_sprite = awakening_player_sprite(game_state)
+        scene_sprite = awakening_player_sprite(game_state, assets)
         if scene_sprite is not None:
             player_sprite = scene_sprite
             walking_sprite_active = False

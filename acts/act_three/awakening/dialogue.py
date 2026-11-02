@@ -2,7 +2,7 @@ FAREWELL_LINES = (
     ("OLD MAN", "Even now... he thought he could keep the dark from you."),
     ("OLD MAN", "There is no kindness in what remains. Only another veil."),
     ("OLD MAN", "You must see more clearly now. Even what you would rather leave unseen."),
-    ("YOU", "Wait! Explain--"),
+    ("PLAYER", "Wait! Explain--"),
 )
 
 ARRIVAL_LINES = (
@@ -61,7 +61,7 @@ def dialogue_timeline(lines, start):
 
 FAREWELL = dialogue_timeline(FAREWELL_LINES, 2900)
 ARRIVAL = dialogue_timeline(ARRIVAL_LINES, ARRIVAL_DIALOGUE_MS)
-FAREWELL_END_MS = FAREWELL[-1][0] + 620
+FAREWELL_END_MS = FAREWELL[-1][1] + 250
 ARRIVAL_END_MS = ARRIVAL[-1][1] + 500
 
 
