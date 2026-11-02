@@ -643,6 +643,9 @@ class ActTwoSoundBank:
                 )
             )
 
+    def play_footstep(self):
+        self._play("footstep")
+
     def play_events(
         self,
         events: Iterable[GameEvent],
@@ -686,7 +689,7 @@ class ActTwoSoundBank:
             None,
         )
         if hero_move is not None:
-            self._play("footstep")
+            self.play_footstep()
 
         if any(
             event.type is GameEventType.HEAL

@@ -128,6 +128,9 @@ class ApplicationFrameUpdater:
             game_state,
             current_time,
         )
+        self.act_two_audio_runtime.update_awakening_walk(
+            game_state, current_time, self.act_two_sounds,
+        )
         act_one_music_attempted = self.act_three_audio_runtime.ensure_music(
             game_state,
             current_act,

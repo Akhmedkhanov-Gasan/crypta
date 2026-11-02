@@ -18,7 +18,9 @@ from acts.act_one.presentation.world import (
     draw_scroll,
 )
 from acts.act_two.consumables import FIRE_BOMB, SCROLLS
+from acts.act_two.presentation.awakening_player import awakening_recovery_sprite
 from acts.act_two.presentation.awakening_timing import (
+    AWAKENING_WALK_PATH as _AWAKENING_WALK_PATH,
     AWAKENING_WORLD_SWAP_MS,
     CLASS_SELECTION_OLD_MAN_FADE_END_MS,
     CLASS_SELECTION_OLD_MAN_FADE_START_MS,
@@ -110,15 +112,6 @@ _CLASS_TRANSFORMATION_COLORS = {
     "rogue": (126, 48, 166),
     "mage": (55, 108, 183),
 }
-
-_AWAKENING_WALK_PATH = (
-    (18, 7),
-    (18, 6),
-    (18, 5),
-    (18, 4),
-    (18, 3),
-    (19, 3),
-)
 
 _CLASS_MOVEMENT_SAMPLERS = {
     "warrior": sample_warrior_movement,
@@ -271,7 +264,7 @@ def _draw_awakening_transformation(
         round(MAP_OFFSET_Y + row * TILE_SIZE),
     )
 
-    unawakened = sprites["player_unawakened"].copy()
+    unawakened = sprites["player_unawakened_standing"].copy()
     unawakened.set_alpha(
         round(255 * (1.0 - progress)),
     )
@@ -760,12 +753,18 @@ class ActTwoRenderer:
             current_time,
         )
         choice_elapsed = None
+        player_sprites = sprites
 
         if awakening_active:
             elapsed = (
                 current_time
                 - game_state.class_transition_started_at
             )
+            if player.player_class is None:
+                player_sprites = {
+                    **sprites,
+                    "player_unawakened": awakening_recovery_sprite(sprites, elapsed),
+                }
             old_man_opacity = max(
                 0.0,
                 min(
@@ -832,7 +831,7 @@ class ActTwoRenderer:
             player.max_health,
             player.player_class,
             2,
-            sprites,
+            player_sprites,
             player.invisibility_turns,
             current_time,
             player.potion_effect_started_at,

@@ -294,7 +294,9 @@ def load_act_two_sprites():
     asset_directory = ASSET_ROOT / "act_2"
     ui_directory = ASSET_ROOT / "ui" / "act_2"
     sprite_paths = {
-        "player_unawakened": "player/unawakened.png",
+        "player_unawakened": "player/unawakened/at_full_height.png",
+        "player_unawakened_kneeling": "player/unawakened/on_one_knee.png",
+        "player_unawakened_standing": "player/unawakened/at_full_height.png",
         "player_warrior": "player/warrior/idle/idle_00.png",
         "player_warrior_hurt": "player/warrior/hurt/hurt_00.png",
         "player_warrior_walk_0": "player/warrior/walk/down/walk_00.png",

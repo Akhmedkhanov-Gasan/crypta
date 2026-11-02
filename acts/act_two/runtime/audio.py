@@ -9,6 +9,9 @@ from game.combat_log import add_log_message
 from acts.act_two.presentation.awakening_timing import (
     AWAKENING_BLACKOUT_END_MS,
     AWAKENING_BLACKOUT_START_MS,
+    AWAKENING_WALK_PATH,
+    CLASS_SELECTION_WALK_START_MS,
+    CLASS_SELECTION_WALK_END_MS,
 )
 from presentation.layout import ACT_TWO_MUSIC_PATH
 
@@ -19,12 +22,34 @@ class ActTwoAudioRuntime:
     eyes_close_played: bool = False
     eyes_open_played: bool = False
     music_attempted: bool = False
+    awakening_walk_step: int = -1
 
     def reset(self):
         self.transition_started = False
         self.eyes_close_played = False
         self.eyes_open_played = False
         self.music_attempted = False
+        self.awakening_walk_step = -1
+
+    def update_awakening_walk(self, game_state, current_time, sounds):
+        if (
+            not game_state.class_selection_open
+            or not game_state.class_transition_world_swapped
+            or game_state.class_selection_choice is None
+        ):
+            self.awakening_walk_step = -1
+            return
+        elapsed = current_time - game_state.class_selection_choice_started_at
+        if not CLASS_SELECTION_WALK_START_MS <= elapsed < CLASS_SELECTION_WALK_END_MS:
+            self.awakening_walk_step = -1
+            return
+        step = (
+            (elapsed - CLASS_SELECTION_WALK_START_MS) * (len(AWAKENING_WALK_PATH) - 1)
+            // (CLASS_SELECTION_WALK_END_MS - CLASS_SELECTION_WALK_START_MS)
+        )
+        if step != self.awakening_walk_step:
+            self.awakening_walk_step = step
+            sounds.play_footstep()
 
     @staticmethod
     def _play_music(game_state, music_volume, fade_ms):
