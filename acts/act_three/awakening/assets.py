@@ -82,21 +82,7 @@ def old_man_sprite(act):
 @lru_cache(maxsize=4)
 def old_man_facing(direction):
     sprite = old_man_sprite(2).copy()
-    column, row = direction
-    if column:
-        return pygame.transform.flip(sprite, column < 0, False)
-    pygame.draw.polygon(sprite, (64, 49, 33), ((13, 1), (18, 1), (21, 5), (21, 11), (11, 11), (10, 6)))
-    if row < 0:
-        pygame.draw.polygon(sprite, (88, 68, 45), ((13, 2), (17, 2), (19, 6), (18, 10), (12, 10), (11, 6)))
-        pygame.draw.line(sprite, (51, 39, 28), (15, 3), (15, 10))
-        pygame.draw.line(sprite, (111, 87, 58), (12, 5), (13, 9))
-    else:
-        pygame.draw.polygon(sprite, (172, 135, 87), ((13, 3), (17, 3), (19, 6), (17, 10), (13, 10), (11, 6)))
-        pygame.draw.line(sprite, (225, 206, 165), (12, 3), (17, 3), 2)
-        pygame.draw.line(sprite, (54, 40, 26), (12, 6), (13, 6))
-        pygame.draw.line(sprite, (54, 40, 26), (16, 6), (17, 6))
-        pygame.draw.polygon(sprite, (196, 182, 144), ((12, 8), (18, 8), (16, 12), (14, 12)))
-    return sprite
+    return pygame.transform.flip(sprite, direction[0] > 0, False)
 
 
 @lru_cache(maxsize=3)

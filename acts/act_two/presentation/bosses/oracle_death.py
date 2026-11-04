@@ -35,6 +35,8 @@ DIALOGUE_LINE_MS = 2300
 DEATH_CROSSFADE_MS = 700
 DEATH_SOUND_VOLUME = 0.90
 SKIP_FADE_MS = 800
+CORPSE_OFFSET_X = 3.0
+CORPSE_HEAD_ANCHOR = (0.33, 0.72)
 
 DIALOGUE = (
     "Go then, child...",
@@ -350,6 +352,14 @@ def _load_death_frames():
     return tuple(frames)
 
 
+def oracle_corpse_head_position(position):
+    frame = _load_death_frames()[-1]
+    return (
+        position[0] + (TILE_SIZE + CORPSE_OFFSET_X + frame.get_width() * (CORPSE_HEAD_ANCHOR[0] - 0.5)) / TILE_SIZE,
+        position[1] + (TILE_SIZE * 2 + frame.get_height() * (CORPSE_HEAD_ANCHOR[1] - 1.0)) / TILE_SIZE,
+    )
+
+
 def _draw_death_frame(
     surface,
     frame,
@@ -463,7 +473,7 @@ def draw_oracle_death_sprite(
             (frames[2], fade_progress),
         )
     else:
-        offset_x = 3.0
+        offset_x = CORPSE_OFFSET_X
         offset_y = 0.0
         angle = 0.0
         visible_frames = (

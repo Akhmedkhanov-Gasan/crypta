@@ -3,15 +3,16 @@ import math
 import pygame
 
 from acts.act_three.awakening.assets import old_man_facing, old_man_frames, scene_frames
-from logic import direction_toward
+from acts.act_two.presentation.bosses.oracle_death import oracle_corpse_head_position
 from game.dialogue import dialogue_visible_characters
 from acts.act_three.presentation.dialogue_panel import draw_dialogue_panel
+from acts.act_three.awakening.transition import draw_world_transition
 from acts.act_three.awakening.dialogue import (
-    APPEAR_MS, ARRIVAL, BLACKOUT_MS, FAREWELL, TRANSFORM_MS,
+    APPEAR_MS, ARRIVAL, ARRIVAL_REVEAL_MS, FAREWELL, FAREWELL_END_MS, TRANSFORM_MS,
     TURN_END_MS, TURN_START_MS, answer_timeline,
 )
 from presentation.layout import ACT_THREE_TILE_SIZE, ACT_TWO_VIEW_X, ACT_TWO_VIEW_Y
-from settings import GAME_HEIGHT, GAME_WIDTH, TILE_SIZE
+from settings import TILE_SIZE
 
 
 def _smooth(value):
@@ -29,6 +30,8 @@ def awakening_player_sprite(game_state, assets):
     if scene.phase == "transformation":
         frames = scene_frames(parent, f"transform_{game_state.player.subclass}")
         sprite = frames[min(7, scene.elapsed * 8 // TRANSFORM_MS)]
+        if game_state.player.subclass == "summoner":
+            return sprite
     elif scene.phase == "answer":
         subclass = game_state.player.subclass
         frame = (scene.elapsed // 180) % 8
@@ -67,10 +70,18 @@ def _draw_old_man(screen, game_state, camera):
     anchor, scale = _screen_anchor(game_state, scene.old_man_position, camera)
     player_position = (game_state.floor.player_column, game_state.floor.player_row)
     if act == 2:
-        boss_direction = direction_toward(*scene.old_man_position, *scene.boss_position)
-        player_direction = direction_toward(*scene.old_man_position, *player_position)
-        alpha = _smooth(scene.elapsed / APPEAR_MS)
-        turn = _smooth((scene.elapsed - TURN_START_MS) / (TURN_END_MS - TURN_START_MS))
+        elapsed = FAREWELL_END_MS if scene.phase == "blackout" else scene.elapsed
+        head_position = oracle_corpse_head_position(scene.boss_position)
+        boss_direction = (
+            -1 if head_position[0] < scene.old_man_position[0] + 0.5 else 1,
+            0,
+        )
+        player_direction = (
+            -1 if player_position[0] < scene.old_man_position[0] else 1,
+            0,
+        )
+        alpha = _smooth(elapsed / APPEAR_MS)
+        turn = _smooth((elapsed - TURN_START_MS) / (TURN_END_MS - TURN_START_MS))
         poses = (
             (old_man_facing(boss_direction), alpha * (1 - turn), False),
             (old_man_facing(player_direction), alpha * turn, False),
@@ -104,29 +115,11 @@ def _draw_old_man(screen, game_state, camera):
         screen.blit(sprite, sprite.get_rect(midbottom=(round(anchor[0]), round(anchor[1]))))
 
 
-def _draw_veil(screen, progress, center):
-    progress = _smooth(progress)
-    layer = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
-    layer.fill((1, 2, 6, round(255 * progress)))
-    if 0 < progress < 1:
-        for index in range(22):
-            angle = index * math.tau / 22 + progress * 0.22
-            radius = (1 - progress) * 1100
-            tip = (round(center[0] + math.cos(angle) * radius), round(center[1] + math.sin(angle) * radius))
-            left = (round(center[0] + math.cos(angle - 0.07) * 1700), round(center[1] + math.sin(angle - 0.07) * 1700))
-            right = (round(center[0] + math.cos(angle + 0.07) * 1700), round(center[1] + math.sin(angle + 0.07) * 1700))
-            pygame.draw.polygon(layer, (2, 3, 9, round(230 * progress)), (tip, left, right))
-            pygame.draw.line(layer, (85, 74, 117, round(120 * math.sin(progress * math.pi))), tip, left, 1)
-        pygame.draw.ellipse(layer, (145, 137, 170, round(100 * math.sin(progress * math.pi))), (center[0] - 600 * (1 - progress), center[1] - 5, 1200 * (1 - progress) + 1, 10), 2)
-    screen.blit(layer, (0, 0))
-
-
 def draw_awakening_scene(screen, game_state, fonts, act_two_fonts, camera):
     scene = game_state.act_three.awakening
     if scene is None or scene.phase in ("complete", "choice"):
         return
-    if scene.phase != "blackout":
-        _draw_old_man(screen, game_state, camera)
+    _draw_old_man(screen, game_state, camera)
     if scene.phase == "transformation":
         anchor, _ = _screen_anchor(game_state, (game_state.floor.player_column, game_state.floor.player_row), camera)
         progress = scene.elapsed / TRANSFORM_MS
@@ -154,8 +147,8 @@ def draw_awakening_scene(screen, game_state, fonts, act_two_fonts, camera):
 
                 _draw_awakening_text_panel(screen, act_two_fonts["title"], act_two_fonts["text"], speaker, line, opacity, visible_characters)
             break
-    if scene.phase == "blackout":
-        anchor, _ = _screen_anchor(game_state, (game_state.floor.player_column, game_state.floor.player_row), camera)
-        _draw_veil(screen, min(1, scene.elapsed / (BLACKOUT_MS - 650)), (anchor[0], anchor[1] - 20))
-    elif scene.phase == "arrival" and scene.elapsed < 1800:
-        _draw_veil(screen, 1 - scene.elapsed / 1800, (GAME_WIDTH // 2, GAME_HEIGHT // 2))
+    if scene.phase == "blackout" or (scene.phase == "arrival" and scene.elapsed < ARRIVAL_REVEAL_MS):
+        anchor, scale = _screen_anchor(game_state, (game_state.floor.player_column, game_state.floor.player_row), camera)
+        tile_size = TILE_SIZE if game_state.floor.presentation_act == 2 else ACT_THREE_TILE_SIZE
+        center = (anchor[0], anchor[1] - tile_size * scale * 0.55)
+        draw_world_transition(screen, scene.elapsed, center, revealing=scene.phase == "arrival")

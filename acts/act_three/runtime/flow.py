@@ -95,12 +95,30 @@ def create_act_three_debug_transition(
     debug_state.floor.projectiles.clear()
     from acts.act_three.awakening.runtime import begin_awakening, _nearby_cell
     from acts.act_two.presentation.bosses.oracle_death import OracleDeathState
+    from acts.act_two.presentation.bosses.oracle_phase_transition import (
+        _block_oracle_base, _choose_head_target, _clear_first_phase,
+    )
     from acts.act_two.presentation.bosses.oracle_phase_two import OraclePhaseTwoState
     from acts.act_two.visibility import update_act_two_visibility
 
     floor = debug_state.floor
     oracle = next(enemy for enemy in floor.enemies if enemy.type == "oracle")
+    base_position = (oracle.column, oracle.row)
+    floor.player_column, floor.player_row = _nearby_cell(floor, (oracle.column + 4, oracle.row + 3))
+    head_position = _choose_head_target(floor, oracle)
+    oracle.oracle_base_column, oracle.oracle_base_row = base_position
+    _block_oracle_base(floor, base_position)
+    _clear_first_phase(floor)
+    oracle.column, oracle.row = head_position
+    oracle.footprint_width = 2
+    oracle.footprint_height = 2
     oracle.oracle_phase = 2
+    oracle.oracle_phase_detached = True
+    oracle.oracle_render_column = None
+    oracle.oracle_render_row = None
+    oracle.oracle_head_angle = 0.0
+    oracle.oracle_cast_amount = 0.0
+    oracle.oracle_phase_two_eye = "idle"
     oracle.phase_transition_pending = False
     oracle.oracle_death_started_at = max(1, current_time)
     oracle.oracle_death_elapsed = 5800
@@ -117,7 +135,7 @@ def create_act_three_debug_transition(
     floor.oracle_gate_opened = True
     if floor.oracle_intro is not None:
         floor.oracle_intro.finished = True
-    floor.player_column, floor.player_row = _nearby_cell(floor, (oracle.column + 4, oracle.row + 3))
+    floor.player_column, floor.player_row = _nearby_cell(floor, (oracle.column + 4, oracle.row + 1))
     update_act_two_visibility(floor)
 
     begin_awakening(debug_state, current_time)
