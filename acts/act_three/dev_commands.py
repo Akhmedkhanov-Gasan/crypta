@@ -5,6 +5,7 @@ from acts.act_three.abilities import (
 
 
 ACT_THREE_CONSOLE_HELP = (
+    "trial - teleport to your class trial entrance (Act III)",
     "wake3[_warrior|_rogue|_mage] - jump to the post-Oracle awakening scene",
     "skills - unlock all abilities and disable charges (Act III)",
 )
@@ -17,6 +18,16 @@ def execute_act_three_console_command(
     request_debug_jump=None,
 ):
     name = parts[0]
+
+    if name == "trial":
+        from acts.act_three.trials import teleport_to_trial
+
+        if len(parts) != 1:
+            return "Usage: trial"
+        result = teleport_to_trial(game_state)
+        if result == "Teleported to the trial entrance." and close_console is not None:
+            close_console()
+        return result
 
     if name == "wake3":
         if len(parts) > 2 or (len(parts) == 2 and parts[1] not in ("warrior", "rogue", "mage")):

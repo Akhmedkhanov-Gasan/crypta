@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="11" height="11" tilewidth="64" tileheight="64" infinite="0" nextlayerid="11" nextobjectid="27">
- <tileset firstgid="1" source="../act3_floor_64.tsx"/>
- <tileset firstgid="9" source="../my_tiles_textured_v9.tsx"/>
- <tileset firstgid="90" source="../items.tsx"/>
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="11" height="11" tilewidth="64" tileheight="64" infinite="0" nextlayerid="11" nextobjectid="39">
+ <tileset firstgid="1" source="../../act3_floor_64.tsx"/>
+ <tileset firstgid="9" source="../../my_tiles_textured_v9.tsx"/>
+ <tileset firstgid="90" source="../../items.tsx"/>
  <layer id="1" name="Ground" width="11" height="11">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,
@@ -107,59 +107,54 @@
  </objectgroup>
  <objectgroup id="9" name="Barriers"/>
  <objectgroup id="10" name="Entities">
-  <object id="12" name="shadow_step_trial_door" x="355.091" y="673.818">
+  <object id="12" name="trial_door" x="355.091" y="673.818">
    <point/>
   </object>
-  <object id="13" name="shadow_step_trial_return" x="352.432" y="611.727">
-   <point/>
-  </object>
-  <object id="14" name="shadow_step_trial_eye" x="223.333" y="418">
-   <properties>
-    <property name="direction" value="west"/>
-    <property name="eye_id" value="4"/>
-   </properties>
-   <point/>
-  </object>
-  <object id="15" name="shadow_step_trial_eye" x="542" y="490">
+  <object id="15" name="piercing_trial_launcher_03" x="548" y="232.667">
    <properties>
     <property name="direction" value="east"/>
-    <property name="eye_id" value="3"/>
+    <property name="id" value="3"/>
    </properties>
    <point/>
   </object>
-  <object id="16" name="shadow_step_trial_eye" x="484" y="230.667">
+  <object id="16" name="piercing_trial_launcher_02" x="353.333" y="236.001">
    <properties>
     <property name="direction" value="east"/>
-    <property name="eye_id" value="2"/>
+    <property name="id" value="2"/>
    </properties>
    <point/>
   </object>
-  <object id="18" name="shadow_step_trial_eye" x="160.667" y="226">
-   <properties>
-    <property name="direction" value="north"/>
-    <property name="eye_id" value="1"/>
-   </properties>
+  <object id="18" name="piercing_trial_launcher_01" x="154.667" y="493.334">
    <point/>
   </object>
-  <object id="23" name="shadow_step_trial_seal" x="164.667" y="357.333">
-   <properties>
-    <property name="seal_id" type="int" value="3"/>
-   </properties>
+  <object id="27" name="piercing_trial_fragile_column" x="353.334" y="298">
    <point/>
   </object>
-  <object id="24" name="shadow_step_trial_seal" x="351.333" y="164">
-   <properties>
-    <property name="seal_id" type="int" value="2"/>
-   </properties>
+  <object id="28" name="piercing_trial_fragile_column" x="547.333" y="490">
    <point/>
   </object>
-  <object id="25" name="shadow_step_trial_seal" x="610" y="293.333">
-   <properties>
-    <property name="seal_id" type="int" value="1"/>
-   </properties>
+  <object id="29" name="piercing_trial_movable_column" x="160" y="426">
    <point/>
   </object>
-  <object id="26" name="shadow_step_trial_final_seal" x="350.667" y="354.667">
+  <object id="30" name="piercing_trial_movable_column" x="545.334" y="425.334">
+   <point/>
+  </object>
+  <object id="31" name="piercing_trial_target_01" x="158.666" y="236">
+   <point/>
+  </object>
+  <object id="32" name="piercing_trial_target_02" x="349.333" y="489.333">
+   <point/>
+  </object>
+  <object id="33" name="piercing_trial_target_03" x="547.333" y="560.667">
+   <point/>
+  </object>
+  <object id="34" name="swivel assembly_A" x="291.333" y="358">
+   <point/>
+  </object>
+  <object id="35" name="swivel assembly_B" x="417.333" y="360.667">
+   <point/>
+  </object>
+  <object id="37" name="lever" x="350.667" y="352.667">
    <point/>
   </object>
  </objectgroup>

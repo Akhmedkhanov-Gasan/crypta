@@ -20,6 +20,7 @@ _ASSET_ROOT = (
     / "assets"
     / "maps"
     / "act_3"
+    / "trials"
     / "assassin_shadow_step"
 )
 
@@ -37,7 +38,7 @@ def trial_assets(tile_size):
     result = {
         "door": [
             load(
-                "assassin_shadow_step_door",
+                "../trial_door",
                 f"shadow_step_door_open_{index:02d}.png",
             )
             for index in range(1, 9)

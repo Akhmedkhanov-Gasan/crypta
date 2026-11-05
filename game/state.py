@@ -324,6 +324,7 @@ class FloorState(AttributeMapping):
         default_factory=list
     )
     shadow_step_trial: dict[str, Any] | None = None
+    trial_entrance: tuple[int, int] | None = None
     bloody_altar: BloodyAltarState | None = None
     trader: TraderState | None = None
     quest_trader: TraderState | None = None

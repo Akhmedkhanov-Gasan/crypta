@@ -15,8 +15,15 @@ def build_act_three_floor(
     floor_count,
 ):
     if config.get("tmx_room_sequence"):
+        from acts.act_three.trials import TRIAL_MAPS, trial_map_path
+
+        sequence = tuple(
+            trial_map_path(config.get("trial_subclass"))
+            if path == TRIAL_MAPS["assassin"] else path
+            for path in config["tmx_room_sequence"]
+        )
         floor = generate_tmx_sequence_floor(
-            config["tmx_room_sequence"]
+            sequence
         )
     elif config.get("room_template_directory"):
         floor = generate_tmx_room_floor(

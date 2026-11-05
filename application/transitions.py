@@ -141,6 +141,7 @@ def advance_floor_transition(game_state, current_time):
         if target_floor is None:
             target_floor = create_floor_state(
                 target_index,
+                trial_subclass=game_state.player.subclass,
                 spawn_quest_trader=(
                     target_index
                     == game_state.act_two_trader_floor_index

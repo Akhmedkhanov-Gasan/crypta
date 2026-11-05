@@ -29,6 +29,7 @@ CONSOLE_COMMANDS = (
     "altar",
     "trade",
     "skills",
+    "trial",
 )
 
 CONSOLE_HELP = (

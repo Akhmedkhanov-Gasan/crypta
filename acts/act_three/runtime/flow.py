@@ -164,7 +164,10 @@ def choose_subclass(game_state, subclass):
     scene = game_state.act_three.awakening
     if not game_state.act_three_test_mode and scene is None:
         game_state.floor_index += 1
-        game_state.floor = create_floor_state(game_state.floor_index)
+        game_state.floor = create_floor_state(
+            game_state.floor_index,
+            trial_subclass=game_state.player.subclass,
+        )
         clear_archer_barrage_zone(game_state)
         clear_berserker_crushing_leap(game_state)
         clear_paladin_sacred_ground(game_state)

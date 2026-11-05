@@ -40,6 +40,7 @@ def create_floor_state(
     floor_index: int,
     floor_data=None,
     spawn_quest_trader: bool = False,
+    trial_subclass: str | None = None,
 ) -> FloorState:
     if floor_data is not None:
         floor = floor_data
@@ -47,6 +48,7 @@ def create_floor_state(
         floor_config = {
             **FLOOR_CONFIGS[floor_index],
             "quest_trader": spawn_quest_trader,
+            "trial_subclass": trial_subclass,
         }
         floor = generate_floor(
             floor_index,
@@ -318,6 +320,7 @@ def create_floor_state(
         upgrade_altar=floor.get("upgrade_altar"),
         act_three_npcs=floor.get("npcs", []),
         shadow_step_trial=floor.get("shadow_step_trial"),
+        trial_entrance=floor.get("trial_entrance"),
         bloody_altar=bloody_altar,
         trader=trader,
         quest_trader=quest_trader,
