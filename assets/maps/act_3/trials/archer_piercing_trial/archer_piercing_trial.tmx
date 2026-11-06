@@ -110,42 +110,43 @@
   <object id="12" name="trial_door" x="355.091" y="673.818">
    <point/>
   </object>
-  <object id="15" name="piercing_trial_launcher_03" x="548" y="232.667">
+  <object id="15" name="piercing_trial_launcher_03" x="545.5" y="544.667">
    <properties>
-    <property name="direction" value="east"/>
-    <property name="id" value="3"/>
+    <property name="direction" value="south"/>
    </properties>
    <point/>
   </object>
-  <object id="16" name="piercing_trial_launcher_02" x="353.333" y="236.001">
+  <object id="16" name="piercing_trial_launcher_02" x="227.333" y="172.501">
    <properties>
-    <property name="direction" value="east"/>
-    <property name="id" value="2"/>
+    <property name="direction" value="west"/>
    </properties>
    <point/>
   </object>
   <object id="18" name="piercing_trial_launcher_01" x="154.667" y="493.334">
+   <properties>
+    <property name="direction" value="north"/>
+   </properties>
    <point/>
   </object>
-  <object id="27" name="piercing_trial_fragile_column" x="353.334" y="298">
+  <object id="27" name="piercing_trial_fragile_column" x="359.334" y="170">
    <point/>
   </object>
-  <object id="28" name="piercing_trial_fragile_column" x="547.333" y="490">
+  <object id="28" name="piercing_trial_fragile_column" x="543.333" y="489">
    <point/>
   </object>
   <object id="29" name="piercing_trial_movable_column" x="160" y="426">
    <point/>
   </object>
-  <object id="30" name="piercing_trial_movable_column" x="545.334" y="425.334">
+  <object id="30" name="piercing_trial_movable_column" x="540.834" y="359.334">
    <point/>
   </object>
   <object id="31" name="piercing_trial_target_01" x="158.666" y="236">
    <point/>
   </object>
-  <object id="32" name="piercing_trial_target_02" x="349.333" y="489.333">
+  <object id="32" name="piercing_trial_target_02" x="417.333" y="169.833">
    <point/>
   </object>
-  <object id="33" name="piercing_trial_target_03" x="547.333" y="560.667">
+  <object id="33" name="piercing_trial_target_03" x="541.333" y="239.167">
    <point/>
   </object>
   <object id="34" name="swivel assembly_A" x="291.333" y="358">

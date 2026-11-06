@@ -131,6 +131,7 @@ def _compose(placements, connections):
     potions = []
     upgrade_altar = None
     shadow_step_trial = None
+    piercing_trial = None
     trial_entrance = None
     open_connectors = []
 
@@ -142,6 +143,13 @@ def _compose(placements, connections):
 
         if template.get("trial_entrance") is not None:
             trial_entrance = _translated(template["trial_entrance"], offset)
+
+        if template.get("piercing_trial") is not None:
+            from acts.act_three.piercing_trial import shift_trial as shift_piercing_trial
+
+            if piercing_trial is not None:
+                raise ValueError("Only one Piercing Shot trial is supported per floor")
+            piercing_trial = shift_piercing_trial(template["piercing_trial"], offset)
 
         if template.get("shadow_step_trial") is not None:
             from acts.act_three.shadow_step_trial import shift_trial
@@ -256,6 +264,7 @@ def _compose(placements, connections):
         "enemies": enemies,
         "npcs": npcs,
         "shadow_step_trial": shadow_step_trial,
+        "piercing_trial": piercing_trial,
         "trial_entrance": trial_entrance,
         "encounter_zones": encounter_zones,
         "chests": chests,

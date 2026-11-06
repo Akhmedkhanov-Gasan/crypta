@@ -242,6 +242,12 @@ def _get_act_three_visibility(floor):
     map_width = len(floor.map[0])
     altar_cells = get_upgrade_altar_cells(floor)
     transparent_cells = set(altar_cells)
+    piercing_trial = floor.piercing_trial
+    if piercing_trial is not None:
+        transparent_cells.update(piercing_trial["levers"].values())
+        transparent_cells.update(piercing_trial["movable"])
+        transparent_cells.update(piercing_trial["fragile"])
+        transparent_cells.update(item["position"] for item in piercing_trial["launchers"])
     closed_doors = set()
 
     if floor.boss_door is not None and not floor.boss_fight_started:
@@ -282,6 +288,12 @@ def _get_act_three_visibility(floor):
 
         if trial["phase"] in ("closed", "opening"):
             visible.difference_update(trial_cells(trial))
+
+    piercing_trial = floor.piercing_trial
+    if piercing_trial is not None and piercing_trial["phase"] in ("closed", "opening"):
+        from acts.act_three.shadow_step_trial import trial_cells
+
+        visible.difference_update(trial_cells(piercing_trial))
 
     floor.explored_cells.update(visible)
     floor.visible_cells = visible
@@ -489,7 +501,7 @@ def _draw_fog_of_war(
         special_flags=pygame.BLEND_RGBA_SUB,
     )
 
-    trial = floor.shadow_step_trial
+    trial = floor.shadow_step_trial or floor.piercing_trial
 
     if trial is not None:
         left, top, right, bottom = trial["bounds"]

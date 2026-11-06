@@ -3,6 +3,7 @@ import math
 import pygame
 
 from acts.act_three.presentation.shadow_step_effects import draw_trial_seal_effects
+from acts.act_three.presentation.piercing_trial import draw_layer as draw_piercing_layer, draw_overlay as draw_piercing_overlay
 
 from acts.act_three.presentation.shadow_step_trial import (
     draw_trial_detection,
@@ -254,6 +255,8 @@ def _draw_act_three_world(
     draw_world_terrain(context)
     draw_trial_layer(context, "ground")
     draw_trial_layer(context, "back")
+    draw_piercing_layer(context, "ground")
+    draw_piercing_layer(context, "back")
     draw_world_targeting(
         context,
         game_state,
@@ -1553,6 +1556,7 @@ def _draw_act_three_world(
         )
 
     draw_trial_layer(context, "front")
+    draw_piercing_layer(context, "front")
 
     if floor.tile_layers and tile_assets.get("tmx_tiles"):
         draw_fading_foreground_layers(
@@ -1632,6 +1636,7 @@ def _draw_act_three_world(
 
     draw_trial_detection(context)
     draw_trial_seal_effects(context)
+    draw_piercing_overlay(context)
 
     if player_subclass == "assassin":
         draw_shadow_reflex_feedback(

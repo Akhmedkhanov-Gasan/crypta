@@ -704,6 +704,29 @@ def handle_act_three_pointer_event(
                         game_state.sidebar_tab
                 ).collidepoint(game_mouse_position):
                     return True
+            from acts.act_three.piercing_trial import interact, interaction_cells
+
+            piercing_trial = game_state.floor.piercing_trial
+            if piercing_trial is not None:
+                if piercing_trial["phase"] == "opening" or piercing_trial["stage"] is not None:
+                    return True
+                trial_cell = get_act_three_cell_from_position(game_state, game_mouse_position)
+                if trial_cell is not None and trial_cell in interaction_cells(piercing_trial):
+                    if interact(game_state, trial_cell):
+                        movement_state.cancel_auto_move()
+                        movement_state.reset_held_movement()
+                        return True
+                    from application.auto_movement import start_auto_move
+
+                    start_auto_move(movement_state, game_state, trial_cell)
+                    return True
+                if trial_cell is not None and piercing_trial["phase"] == "active":
+                    from acts.act_three.piercing_trial import inside
+                    from application.auto_movement import start_auto_move
+
+                    if inside(piercing_trial, trial_cell):
+                        start_auto_move(movement_state, game_state, trial_cell)
+                        return True
             if (
                 game_state.player.archer_basic_aiming
                 or game_state.player.archer_piercing_aiming

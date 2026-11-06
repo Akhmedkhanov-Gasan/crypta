@@ -79,6 +79,13 @@ def create_auto_move_event(
     if state.auto_move_target is None:
         return None
 
+    piercing_trial = game_state.floor.piercing_trial
+    if piercing_trial is not None:
+        if piercing_trial["stage"] == "reset":
+            state.cancel_auto_move()
+            return None
+        if piercing_trial["phase"] == "opening" or piercing_trial["stage"] is not None:
+            return None
     trial = game_state.floor.shadow_step_trial
     if trial is not None and trial["phase"] != "complete":
         if trial.get("action_stage") == "caught" or trial["cooldown_ms"] > 0:

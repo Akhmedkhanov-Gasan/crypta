@@ -113,7 +113,7 @@ def _complete_non_act_two_turn(
     act_two_sounds,
     act_three_sounds,
 ):
-    if getattr(event, "shadow_step_trial_turn", False):
+    if getattr(event, "shadow_step_trial_turn", False) or getattr(event, "piercing_trial_turn", False):
         present_turn_feedback(
             game_state,
             current_act,

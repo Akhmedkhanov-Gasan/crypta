@@ -1,6 +1,7 @@
 from acts.act_two.enemies.oracle.behavior import resolve_oracle_hit_reaction
 from acts.act_three.npcs import advance_npc_dialog
 from acts.act_three.shadow_step_trial import advance_trial_frame
+from acts.act_three.piercing_trial import advance_frame as advance_piercing_trial
 from acts.act_three.settings import (
     ASSASSIN_ULTIMATE_OUTRO_MS,
     ASSASSIN_ULTIMATE_PRELUDE_MS,
@@ -33,6 +34,7 @@ def advance_act_three_frame(game_state, current_act, current_time, sounds):
                 ))
                 game_state.player.death_animation_started_at += elapsed - held
         advance_trial_frame(game_state, current_time)
+        advance_piercing_trial(game_state, current_time)
         advance_npc_dialog(game_state, current_time)
         sounds.update(game_state.player, current_time)
 

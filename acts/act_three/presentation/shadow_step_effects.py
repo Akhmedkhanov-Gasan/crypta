@@ -6,6 +6,7 @@ import pygame
 from acts.act_three.presentation.shadow_step_trial import trial_assets
 from acts.act_three.shadow_step_trial import AWAKENING_DURATION_MS
 from presentation.layout import ACT_THREE_TILE_SIZE
+from acts.act_three.presentation.ability_unlock_banner import draw_unlock_banner
 
 
 @lru_cache(maxsize=8)
@@ -46,6 +47,8 @@ def draw_trial_seal_effects(context):
     final_age = now - started if started is not None else -1
     finishing = 0 <= final_age < AWAKENING_DURATION_MS
     if not pickups and not finishing:
+        if trial["phase"] == "complete":
+            draw_unlock_banner(context.view_surface, final_age, "SHADOW STEP", (213, 193, 235), (166, 140, 192), (15, 10, 22))
         return
 
     tile = ACT_THREE_TILE_SIZE
@@ -115,3 +118,5 @@ def draw_trial_seal_effects(context):
             )
 
     surface.blit(ink, (0, 0))
+    if trial["phase"] == "complete":
+        draw_unlock_banner(surface, final_age, "SHADOW STEP", (213, 193, 235), (166, 140, 192), (15, 10, 22))

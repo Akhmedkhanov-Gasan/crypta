@@ -22,6 +22,11 @@ def teleport_to_trial(game_state):
     ):
         return "Finish awakening and choose a subclass first."
     trial = game_state.floor.shadow_step_trial
+    piercing_trial = game_state.floor.piercing_trial
+    if piercing_trial is not None and (
+        piercing_trial["phase"] == "opening" or piercing_trial["stage"] is not None
+    ):
+        return "Wait for the trial animation to finish."
     if trial is not None and (
         trial["phase"] == "opening" or trial.get("action_stage") is not None
     ):
@@ -38,7 +43,8 @@ def teleport_to_trial(game_state):
         game_state.floor if game_state.floor_index == target_index
         else game_state.visited_floors.get(target_index)
     )
-    if floor is None:
+    expected_archer = game_state.player.subclass == "archer"
+    if floor is None or (floor.piercing_trial is not None) != expected_archer:
         floor = create_floor_state(
             target_index,
             trial_subclass=game_state.player.subclass,

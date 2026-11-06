@@ -96,6 +96,9 @@ def navigation_target_info(game_state, target):
         and target in get_upgrade_altar_cells(floor)
     )
     trial = floor.shadow_step_trial
+    from acts.act_three.piercing_trial import interaction_cells
+
+    piercing_interaction = floor.piercing_trial is not None and target in interaction_cells(floor.piercing_trial)
     trial_door = (
         floor.presentation_act == 3
         and trial is not None
@@ -103,7 +106,7 @@ def navigation_target_info(game_state, target):
         and target == trial["door"]
     )
     return enemy, (
-        enemy is not None or chest or crate or secret_wall or altar or trial_door
+        enemy is not None or chest or crate or secret_wall or altar or trial_door or piercing_interaction
     )
 
 
@@ -121,6 +124,14 @@ def navigation_action(game_state, origin, target, has_enemy):
         return None
 
     if floor.presentation_act == 3:
+        from acts.act_three.piercing_trial import interaction_cells
+
+        if floor.piercing_trial is not None and target in interaction_cells(floor.piercing_trial):
+            if abs(target[0] - origin[0]) + abs(target[1] - origin[1]) != 1:
+                return None
+            if not can_reach_adjacent_cell(floor.map, origin, target, floor.barriers, target_must_be_walkable=False):
+                return None
+            return {"movement_direction": (target[0] - origin[0], target[1] - origin[1])}
         trial = floor.shadow_step_trial
         if trial is not None and trial["phase"] == "closed" and target == trial["door"]:
             if abs(target[0] - origin[0]) + abs(target[1] - origin[1]) != 1:
