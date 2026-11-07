@@ -1071,6 +1071,10 @@ def perform_basic_attack(
             grant_ability_charge=(
                 not attack_was_from_invisibility
                 or selected_rune_id == "rune_of_the_veil"
+                or (
+                    floor.presentation_act == 3
+                    and player.subclass == "assassin"
+                )
             ),
             attacker_position=(
                 floor.player_column,

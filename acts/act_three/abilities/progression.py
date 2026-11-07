@@ -38,7 +38,7 @@ def initialize_act_three_progression(
         else DEFAULT_UNLOCKED_ABILITY_SLOTS
     )
     if player.subclass == "assassin" and not unlock_all:
-        player.unlocked_ability_slots.clear()
+        player.unlocked_ability_slots = {"e"}
     if player.subclass == "archer" and not unlock_all:
         player.unlocked_ability_slots.discard("q")
 
@@ -53,6 +53,9 @@ def is_ability_slot_unlocked(
     player,
     slot,
 ):
+    if player.subclass == "assassin" and slot == "e":
+        return True
+
     return (
         slot in ABILITY_SLOTS
         and slot in player.unlocked_ability_slots
