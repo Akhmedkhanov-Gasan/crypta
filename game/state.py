@@ -323,6 +323,9 @@ class FloorState(AttributeMapping):
     act_three_npcs: list[dict[str, Any]] = field(
         default_factory=list
     )
+    act_three_ores: list[dict[str, Any]] = field(
+        default_factory=list
+    )
     shadow_step_trial: dict[str, Any] | None = None
     piercing_trial: dict[str, Any] | None = None
     trial_entrance: tuple[int, int] | None = None

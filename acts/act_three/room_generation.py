@@ -126,6 +126,7 @@ def _compose(placements, connections):
     torches = []
     enemies = []
     npcs = []
+    ores = []
     encounter_zones = []
     chests = []
     potions = []
@@ -184,6 +185,7 @@ def _compose(placements, connections):
         )
         enemies.extend(_shift_entities(template["enemies"], offset))
         npcs.extend(_shift_entities(template.get("npcs", []), offset))
+        ores.extend(_shift_entities(template.get("ores", []), offset))
         encounter_zones.extend(
             _shift_encounter_zones(
                 template.get("encounter_zones", []),
@@ -263,6 +265,7 @@ def _compose(placements, connections):
         "player_start": player_start,
         "enemies": enemies,
         "npcs": npcs,
+        "ores": ores,
         "shadow_step_trial": shadow_step_trial,
         "piercing_trial": piercing_trial,
         "trial_entrance": trial_entrance,

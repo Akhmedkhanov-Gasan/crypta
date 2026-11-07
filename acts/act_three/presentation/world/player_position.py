@@ -160,6 +160,12 @@ def calculate_player_placement(
             ACT_THREE_TILE_SIZE,
         )
 
+    if player.act_three.mining is not None and player_state.death_elapsed is None:
+        player_position = (
+            player_position[0],
+            player_position[1] - (player_sprite.get_height() - ACT_THREE_TILE_SIZE),
+        )
+
     return PlayerPlacement(
         sprite=player_sprite,
         position=player_position,

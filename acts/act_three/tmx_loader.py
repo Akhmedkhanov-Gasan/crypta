@@ -9,6 +9,7 @@ import resource_store as resources
 
 from enemies import ENEMY_TYPES
 from acts.act_three.npcs import get_npc_cells
+from acts.act_three.mining.world import build_ores
 
 
 def _csv_layer(layer, width, height):
@@ -247,7 +248,7 @@ def load_tmx_floor(path):
 
                 if zone is not None:
                     encounter_zones.append(zone)
-            elif group_name in ("entities", "enemies", "npcs"):
+            elif group_name in ("entities", "enemies", "npcs", "ores"):
                 entities.append(
                     (
                         _entity_name(obj),
@@ -439,6 +440,7 @@ def load_tmx_floor(path):
     piercing_trial = build_piercing_trial(by_name, width, height, dungeon_map)
     trial_doors = by_name.get("trial_door", []) or by_name.get("shadow_step_trial_door", [])
     trial_entrance = trial_doors[0][0] if trial_doors else None
+    ores = build_ores(by_name, dungeon_map)
     return {
         "map": ["".join(row) for row in dungeon_map],
         "trial_entrance": trial_entrance,
@@ -451,6 +453,7 @@ def load_tmx_floor(path):
         "torches": torches,
         "upgrade_altar": upgrade_altar,
         "npcs": npcs,
+        "ores": ores,
         "tile_layers": layers,
         "barriers": barriers,
         "connectors": connectors,

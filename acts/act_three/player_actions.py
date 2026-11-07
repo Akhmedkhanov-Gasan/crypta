@@ -5,6 +5,8 @@ import pygame
 from acts.crates import break_crate
 from acts.player_abilities import resolve_targeted_player_ability
 from acts.act_three.npcs import get_npc_at, open_npc_dialog
+from acts.act_three.mining.runtime import start_mining
+from acts.act_three.mining.world import get_ore_at
 from acts.act_three.shadow_step_trial import handle_trial_action
 from application.directional_input import WAIT_KEYS
 from logic import get_enemy_occupied_positions
@@ -137,6 +139,14 @@ def resolve_act_three_player_action(
         target_must_be_walkable=False,
     ):
         return ActThreePlayerActionResult(movement_blocked=True)
+
+    ore = get_ore_at(floor, target)
+    if ore is not None and ore["stage"] < 3:
+        started = start_mining(game_state, target, started_at)
+        return ActThreePlayerActionResult(
+            player_acted=started,
+            movement_blocked=not started,
+        )
 
     npc = get_npc_at(floor, target)
     if npc is not None:

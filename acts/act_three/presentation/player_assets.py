@@ -270,6 +270,7 @@ def load_assassin_animation_assets(
         assassin_directory / "killing_spree"
     )
     idle_directions = (
+        "down",
         "left",
         "right",
         "up",
@@ -293,13 +294,6 @@ def load_assassin_animation_assets(
     for frame_index in range(8):
         source_index = frame_index + 1
 
-        assets[
-            f"player_assassin_idle_{frame_index}"
-        ] = image_loader(
-            idle_directory / f"idle_{source_index:02d}.png",
-            (tile_size, tile_size),
-        )
-
         for direction in idle_directions:
             assets[
                 f"player_assassin_idle_{direction}_{frame_index}"
@@ -309,6 +303,10 @@ def load_assassin_animation_assets(
                 / f"idle_{direction}_{source_index:02d}.png",
                 (tile_size, tile_size),
             )
+
+        assets[f"player_assassin_idle_{frame_index}"] = assets[
+            f"player_assassin_idle_down_{frame_index}"
+        ]
 
         for direction in walk_directions:
             assets[

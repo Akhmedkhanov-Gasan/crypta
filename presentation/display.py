@@ -62,7 +62,7 @@ def game_viewport(window_size):
     )
 
 
-def present_game(window, game_surface):
+def present_game(window, game_surface, *, flip=True):
     viewport, scale = game_viewport(window.get_size())
     window.fill((0, 0, 0))
 
@@ -80,7 +80,8 @@ def present_game(window, game_surface):
         )
 
     window.blit(presented_surface, viewport)
-    pygame.display.flip()
+    if flip:
+        pygame.display.flip()
 
 
 def window_to_game_position(window, window_position):

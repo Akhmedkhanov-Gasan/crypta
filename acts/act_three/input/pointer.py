@@ -716,13 +716,10 @@ def handle_act_three_pointer_event(
                         movement_state.cancel_auto_move()
                         movement_state.reset_held_movement()
                         return True
-                    from application.auto_movement import start_auto_move
-
                     start_auto_move(movement_state, game_state, trial_cell)
                     return True
                 if trial_cell is not None and piercing_trial["phase"] == "active":
                     from acts.act_three.piercing_trial import inside
-                    from application.auto_movement import start_auto_move
 
                     if inside(piercing_trial, trial_cell):
                         start_auto_move(movement_state, game_state, trial_cell)

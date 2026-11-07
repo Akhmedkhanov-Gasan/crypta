@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field, fields
 from acts.act_three.awakening.state import AwakeningScene
+from acts.act_three.items.inventory import INVENTORY_SLOT_COUNT
 
 
 @dataclass(eq=False)
@@ -31,6 +32,10 @@ class MageArcaneBurstState:
 
 @dataclass
 class ActThreePlayerState:
+    mining: dict | None = None
+    inventory_slots: list[str | None] = field(
+        default_factory=lambda: [None] * INVENTORY_SLOT_COUNT,
+    )
     mastery_rank: int = 0
     weapon_rank: int = 0
     armor_rank: int = 0
@@ -228,6 +233,8 @@ class ArcherBarrageTurnState:
 
 @dataclass
 class ActThreeSessionState:
+    mining_effects: list[dict] = field(default_factory=list)
+    mining_reward: dict | None = None
     awakening: AwakeningScene | None = None
     barrage_turn: ArcherBarrageTurnState | None = None
     npc_dialog_position: tuple[int, int] | None = None

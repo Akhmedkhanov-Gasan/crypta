@@ -2,6 +2,14 @@ import math
 
 import pygame
 
+from acts.act_three.presentation.hud.inventory import draw_inventory
+from acts.act_three.presentation.hud.panel_art import (
+    draw_panel_equipment,
+    draw_panel_image,
+    draw_panel_rank_track,
+    draw_panel_row_background,
+)
+
 from acts.act_three.presentation.hud.content import (
     ABILITY_SLOT_ORDER,
 )
@@ -528,19 +536,6 @@ def _draw_consumables(
             slot["hitbox"]
         )
 
-        key_surface = fonts["sidebar_hud"].render(
-            str(index + 1),
-            True,
-            _TEXT_COLOR,
-        )
-        screen.blit(
-            key_surface,
-            (
-                hitbox.x + 1,
-                hitbox.y - key_surface.get_height(),
-            ),
-        )
-
         item = (
             stored_items[index]
             if index < len(stored_items)
@@ -912,35 +907,7 @@ def _draw_rank_track(
     track,
     current_rank,
 ):
-    current_rank = max(
-        0,
-        min(5, int(current_rank)),
-    )
-    level_image = assets.get(
-        "hud_rank_level"
-    )
-
-    if level_image is None:
-        return
-
-    for level_index, level_name in enumerate(
-        sorted(track["levels"]),
-        start=1,
-    ):
-        if level_index > current_rank:
-            continue
-
-        rectangle = figma_rect(
-            track["levels"][level_name]
-        )
-
-        screen.blit(
-            pygame.transform.smoothscale(
-                level_image,
-                rectangle.size,
-            ),
-            rectangle,
-        )
+    draw_panel_rank_track(screen, assets, track, current_rank)
 
 
 def _draw_character_panel(
@@ -1018,6 +985,9 @@ def _draw_character_panel(
     ranks = preview_player.attribute_ranks
 
     for name, row in panel["attributes"]["rows"].items():
+        draw_panel_row_background(screen, row)
+        draw_panel_image(screen, assets, "minus_icon", row.get("minus_icon"))
+        draw_panel_image(screen, assets, "plus_icon", row.get("plus_icon"))
         draw_figma_text(
             screen,
             row["label"],
@@ -1030,6 +1000,7 @@ def _draw_character_panel(
         )
 
     equipment = panel["equipment"]
+    draw_panel_equipment(screen, assets, equipment)
 
     draw_figma_text(
         screen,
@@ -1107,6 +1078,7 @@ def _draw_character_panel(
     }
 
     for name, row in panel["combat_stats"]["rows"].items():
+        draw_panel_row_background(screen, row)
         draw_figma_text(
             screen,
             row["label"],
@@ -1157,12 +1129,22 @@ def _draw_character_panel(
         preview_player,
         combat_values,
     )
+    inventory_tooltip = draw_inventory(
+        screen,
+        player,
+        assets,
+        panel,
+        mouse_position,
+    )
+    if inventory_tooltip is not None:
+        tooltip_content = inventory_tooltip
 
     if tooltip_content is not None:
         draw_tooltip(
             screen,
             tooltip_content,
             mouse_position,
+            scale=assets.get("hud_render_scale", 1.0),
         )
 
 
@@ -1502,4 +1484,5 @@ def draw_act_three_hud(
             screen,
             hud_tooltip,
             mouse_position,
+            scale=assets.get("hud_render_scale", 1.0),
         )

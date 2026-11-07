@@ -224,6 +224,7 @@ def _draw_defeat_sequence(
     fonts,
     assets,
     current_time,
+    background=None,
 ):
     elapsed = _player_death_elapsed(
         game_state.player,
@@ -254,7 +255,7 @@ def _draw_defeat_sequence(
         ACT_THREE_VIEW_WIDTH,
         ACT_THREE_VIEW_HEIGHT,
     )
-    view_copy = screen.subsurface(view_rectangle).copy()
+    view_copy = (background if background is not None else screen).subsurface(view_rectangle).copy()
     grayscale = pygame.transform.grayscale(view_copy)
     grayscale.set_alpha(round(220 * fade_progress))
     screen.blit(grayscale, view_rectangle)
@@ -503,6 +504,8 @@ def draw_act_three_gameplay(
     assets,
     current_time,
     mouse_position=None,
+    *,
+    defer_interface=False,
 ):
     screen.fill((0, 0, 0))
     _draw_act_three_world(
@@ -522,6 +525,8 @@ def draw_act_three_gameplay(
         + ACT_THREE_VIEW_WIDTH // 2,
         top=2,
     )
+    if defer_interface:
+        return
     _draw_act_three_sidebar(
         screen,
         game_state,
@@ -530,6 +535,12 @@ def draw_act_three_gameplay(
         current_time,
         mouse_position,
     )
+    draw_act_three_foreground(screen, game_state, fonts, assets, current_time)
+
+
+def draw_act_three_foreground(screen, game_state, fonts, assets, current_time, background=None):
+    if game_state.act_three_transition_open:
+        return
     if game_state.upgrade_altar_menu_open:
         draw_upgrade_altar_menu(
             screen,
@@ -547,6 +558,7 @@ def draw_act_three_gameplay(
             fonts,
             assets,
             current_time,
+            background=background,
         ):
             return
 

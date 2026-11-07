@@ -44,6 +44,11 @@ from acts.act_three.presentation.world.enemies import (
     draw_world_enemies,
 )
 from acts.act_three.presentation.npcs import draw_world_npcs
+from acts.act_three.presentation.ore_ambient import draw_ore_ambient
+from acts.act_three.mining.presentation import (
+    draw_mining_feedback,
+    draw_world_ores,
+)
 from acts.act_three.presentation.summoner.true_form import (
     summoner_true_form_visual_active,
 )
@@ -292,6 +297,7 @@ def _draw_act_three_world(
         current_time,
     )
 
+    draw_world_ores(context, assets)
     draw_world_enemies(
         context,
         game_state,
@@ -305,6 +311,7 @@ def _draw_act_three_world(
         assets,
         current_time,
     )
+    draw_ore_ambient(context, current_time)
 
     draw_archer_aim_effect(
         view_surface,
@@ -466,10 +473,26 @@ def _draw_act_three_world(
         player_death_elapsed is None
         and not berserker_leap_travel_active
     ):
+        shadow_sprite = player_sprite
+        shadow_position = player_position
+        if game_state.player.act_three.mining is not None:
+            sprite_offset = player_sprite.get_height() - ACT_THREE_TILE_SIZE
+            shadow_sprite = player_sprite.subsurface(
+                pygame.Rect(
+                    0,
+                    sprite_offset,
+                    player_sprite.get_width(),
+                    ACT_THREE_TILE_SIZE,
+                )
+            )
+            shadow_position = (
+                player_position[0],
+                player_position[1] + sprite_offset,
+            )
         draw_actor_shadow(
             view_surface,
-            player_sprite,
-            player_position,
+            shadow_sprite,
+            shadow_position,
             ACT_THREE_TILE_SIZE,
             floor.torches,
             camera_x,
@@ -477,7 +500,7 @@ def _draw_act_three_world(
             (
                 "player",
                 player_subclass,
-                player_sprite.get_size(),
+                shadow_sprite.get_size(),
             ),
         )
     if (
@@ -510,6 +533,13 @@ def _draw_act_three_world(
         floor.player_row,
         current_time,
         fonts["sidebar_numbers"],
+    )
+    draw_mining_feedback(
+        context,
+        game_state,
+        assets,
+        fonts["sidebar_numbers"],
+        current_time,
     )
     draw_act_three_arcane_burst_effect(
         view_surface,
@@ -1648,12 +1678,22 @@ def _draw_act_three_world(
             torch_index,
         )
     draw_trial_lighting(context)
+    visibility_position = (
+        _view_position(
+            floor.player_column,
+            floor.player_row,
+            camera_x,
+            camera_y,
+        )
+        if game_state.player.act_three.mining is not None
+        else player_position
+    )
     _draw_fog_of_war(
         view_surface,
         floor,
         camera_x,
         camera_y,
-        player_position,
+        visibility_position,
     )
     draw_act_three_color_grading(
         view_surface,

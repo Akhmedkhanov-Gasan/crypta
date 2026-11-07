@@ -3,6 +3,7 @@ from acts.act_three.altar import (
     open_upgrade_altar,
 )
 from acts.act_three.combat.attacks import navigation_attack
+from acts.act_three.mining.world import get_ore_at
 from acts.act_two.input.auto_movement import (
     player_attack_warnings as act_two_attack_warnings,
 )
@@ -105,8 +106,20 @@ def navigation_target_info(game_state, target):
         and trial["phase"] == "closed"
         and target == trial["door"]
     )
+    ore = (
+        get_ore_at(floor, target)
+        if floor.presentation_act == 3
+        else None
+    )
     return enemy, (
-        enemy is not None or chest or crate or secret_wall or altar or trial_door or piercing_interaction
+        enemy is not None
+        or chest
+        or crate
+        or secret_wall
+        or altar
+        or trial_door
+        or piercing_interaction
+        or (ore is not None and ore["stage"] < 3)
     )
 
 

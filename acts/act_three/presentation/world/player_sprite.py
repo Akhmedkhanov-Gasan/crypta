@@ -2,6 +2,7 @@ from acts.act_three.presentation.animation import (
     _idle_frame,
     _stable_text_seed,
 )
+from acts.act_three.mining.presentation import mining_sprite
 from acts.act_three.presentation.paladin.animation import (
     paladin_death_frame,
     paladin_idle_frame,
@@ -90,6 +91,10 @@ def select_player_sprite(
             ),
             False,
         )
+
+    active_mining_sprite = mining_sprite(player, assets, current_time)
+    if active_mining_sprite is not None:
+        return active_mining_sprite, False
 
     sacred_ground_sprite = paladin_sacred_ground_sprite(
         player,
@@ -611,7 +616,7 @@ def _idle_sprite(
         ]
     if player_subclass in ("assassin", "berserker"):
         direction = assassin_walk_direction(player.facing_direction)
-        if direction == "down":
+        if player_subclass == "berserker" and direction == "down":
             return assets[
                 f"player_{player_subclass}_idle_{player_frame}"
             ]

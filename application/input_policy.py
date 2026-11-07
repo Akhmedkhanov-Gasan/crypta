@@ -22,6 +22,7 @@ def console_input_available(app_runtime, game_state):
         and not game_state.subclass_selection_open
         and not game_state.act_three_transition_open
         and not game_state.act_three_debug_class_selection_open
+        and game_state.player.act_three.mining is None
         and not oracle_cutscene_active(game_state.floor)
         and not warden_intro_active(game_state.floor)
     )
@@ -64,6 +65,7 @@ def continuous_movement_input_available(
         and not game_state.act_three_debug_class_selection_open
         and not game_state.upgrade_altar_menu_open
         and game_state.act_three.npc_dialog_position is None
+        and player.act_three.mining is None
         and not player.directional_ability_aiming
         and not player.act_two.fire_bomb_aiming
         and player.act_two.scroll_aiming_kind is None

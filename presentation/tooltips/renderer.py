@@ -49,7 +49,7 @@ def _wrap_text(font, text, maximum_width):
     return lines
 
 
-def _wrapped_lines(font, lines):
+def _wrapped_lines(font, lines, maximum_width=_TOOLTIP_MAX_TEXT_WIDTH):
     wrapped = []
 
     for line in lines:
@@ -57,7 +57,7 @@ def _wrapped_lines(font, lines):
             _wrap_text(
                 font,
                 line,
-                _TOOLTIP_MAX_TEXT_WIDTH,
+                maximum_width,
             )
         )
 
@@ -69,16 +69,19 @@ def _tooltip_rectangle(
     anchor,
     width,
     height,
+    scale=1.0,
 ):
     screen_rectangle = screen.get_rect()
-    left = anchor[0] + _TOOLTIP_OFFSET
-    top = anchor[1] + _TOOLTIP_OFFSET
+    offset = round(_TOOLTIP_OFFSET * scale)
+    margin = max(1, round(8 * scale))
+    left = anchor[0] + offset
+    top = anchor[1] + offset
 
-    if left + width > screen_rectangle.right - 8:
-        left = anchor[0] - width - _TOOLTIP_OFFSET
+    if left + width > screen_rectangle.right - margin:
+        left = anchor[0] - width - offset
 
-    if top + height > screen_rectangle.bottom - 8:
-        top = anchor[1] - height - _TOOLTIP_OFFSET
+    if top + height > screen_rectangle.bottom - margin:
+        top = anchor[1] - height - offset
 
     rectangle = pygame.Rect(
         left,
@@ -87,7 +90,7 @@ def _tooltip_rectangle(
         height,
     )
     rectangle.clamp_ip(
-        screen_rectangle.inflate(-16, -16)
+        screen_rectangle.inflate(-margin * 2, -margin * 2)
     )
     return rectangle
 
@@ -96,16 +99,26 @@ def draw_tooltip(
     screen,
     content,
     anchor,
+    *,
+    scale=1.0,
 ):
     if anchor is None:
         return
 
-    title_font = get_figma_font(_TITLE_FONT_SPEC)
-    body_font = get_figma_font(_BODY_FONT_SPEC)
+    padding = round(_TOOLTIP_PADDING * scale)
+    title_gap = round(_TOOLTIP_TITLE_GAP * scale)
+    line_gap = round(_TOOLTIP_LINE_GAP * scale)
+    title_font = get_figma_font({
+        "font": {**_TITLE_FONT_SPEC["font"], "size": max(1, round(15 * scale))},
+    })
+    body_font = get_figma_font({
+        "font": {**_BODY_FONT_SPEC["font"], "size": max(1, round(13 * scale))},
+    })
 
     body_lines = _wrapped_lines(
         body_font,
         content.lines,
+        max(1, round(_TOOLTIP_MAX_TEXT_WIDTH * scale)),
     )
 
     title_surface = title_font.render(
@@ -128,16 +141,16 @@ def draw_tooltip(
     )
     body_height = (
         len(body_surfaces) * body_font.get_linesize()
-        + max(0, len(body_surfaces) - 1) * _TOOLTIP_LINE_GAP
+        + max(0, len(body_surfaces) - 1) * line_gap
     )
 
-    width = content_width + _TOOLTIP_PADDING * 2
+    width = content_width + padding * 2
     height = (
-        _TOOLTIP_PADDING
+        padding
         + title_surface.get_height()
-        + _TOOLTIP_TITLE_GAP
+        + title_gap
         + body_height
-        + _TOOLTIP_PADDING
+        + padding
     )
 
     rectangle = _tooltip_rectangle(
@@ -145,6 +158,7 @@ def draw_tooltip(
         anchor,
         width,
         height,
+        scale,
     )
 
     shadow = pygame.Surface(
@@ -183,25 +197,25 @@ def draw_tooltip(
     panel.blit(
         title_surface,
         (
-            _TOOLTIP_PADDING,
-            _TOOLTIP_PADDING,
+            padding,
+            padding,
         ),
     )
 
     line_y = (
-        _TOOLTIP_PADDING
+        padding
         + title_surface.get_height()
-        + _TOOLTIP_TITLE_GAP
+        + title_gap
     )
 
     for surface in body_surfaces:
         panel.blit(
             surface,
-            (_TOOLTIP_PADDING, line_y),
+            (padding, line_y),
         )
         line_y += (
             body_font.get_linesize()
-            + _TOOLTIP_LINE_GAP
+            + line_gap
         )
 
     screen.blit(panel, rectangle)

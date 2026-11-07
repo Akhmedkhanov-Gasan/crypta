@@ -1,10 +1,12 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import pygame
 
 from acts.act_one.presentation.renderer import draw_act_one_gameplay
 from acts.act_one.runtime import update_act_one_view
 from acts.act_three.presentation import draw_act_three_gameplay
+from acts.act_three.presentation.renderer import draw_act_three_foreground
+from acts.act_three.presentation.hud.native import NativeActThreeHud
 from application.frame_overlays import draw_frame_overlays
 from application.ground_items import ground_item_input_available
 from presentation.display import present_game, window_to_game_position
@@ -27,6 +29,7 @@ class GameplayRenderer:
     map_navigation: object
     cutscene_skip: object
     dev_console: object
+    native_act_three_hud: NativeActThreeHud = field(default_factory=NativeActThreeHud)
 
     def draw(
         self,
@@ -47,6 +50,7 @@ class GameplayRenderer:
             screen,
             pygame.mouse.get_pos(),
         )
+        overlay_target = game_surface
 
         if current_act == 1:
             update_act_one_view(act_one_camera, game_state, current_time)
@@ -72,16 +76,26 @@ class GameplayRenderer:
                 self.act_three_gameplay_assets,
                 current_time,
                 mouse_position,
+                defer_interface=True,
+            )
+            overlay_target = self.native_act_three_hud.foreground(game_surface.get_size())
+            draw_act_three_foreground(
+                overlay_target,
+                game_state,
+                self.act_three_fonts,
+                self.act_three_gameplay_assets,
+                current_time,
+                background=game_surface,
             )
             self.map_navigation.draw(
-                game_surface,
+                overlay_target,
                 game_state,
                 mouse_position,
                 enabled=continuous_movement_available,
             )
             if ground_item_input_available(game_state):
                 draw_ground_item_window(
-                    game_surface,
+                    overlay_target,
                     game_state,
                     ground_item_window,
                     self.act_two_sprites,
@@ -119,7 +133,7 @@ class GameplayRenderer:
                 )
 
         draw_frame_overlays(
-            game_surface,
+            overlay_target,
             game_state,
             current_act,
             current_time,
@@ -133,5 +147,11 @@ class GameplayRenderer:
             mouse_position,
             act_two_camera,
         )
-        present_game(screen, game_surface)
+        if current_act >= 3:
+            self.native_act_three_hud.present(
+                screen, game_surface, overlay_target, game_state,
+                self.act_three_fonts, self.act_three_gameplay_assets, current_time,
+            )
+        else:
+            present_game(screen, game_surface)
         clock.tick(FPS)

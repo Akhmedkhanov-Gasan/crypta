@@ -45,6 +45,7 @@ from acts.act_three.presentation.consumable_assets import (
 from acts.act_three.presentation.npcs import (
     load_act_three_npc_assets,
 )
+from acts.act_three.mining.assets import load_mining_assets
 import resource_store as resources
 import xml.etree.ElementTree as ET
 
@@ -1057,6 +1058,7 @@ def load_act_three_gameplay_assets():
         load_act_three_consumable_assets()
     )
     assets.update(load_act_three_npc_assets())
+    assets.update(load_mining_assets())
     assets["tmx_tiles_by_floor"] = {}
     assets["tmx_animations_by_floor"] = {}
 

@@ -38,9 +38,6 @@ _ART_PATHS = {
     "hud_ability_chains": (
             _UI_DIRECTORY / "chains.png"
     ),
-    "hud_rank_level": (
-            _UI_DIRECTORY / "level.png"
-    ),
 }
 
 _ART_RECTS = {
@@ -83,13 +80,6 @@ _ART_RECTS = {
         "ability_q",
         "chains",
     ),
-    "hud_rank_level": (
-        "right_bar",
-        "character_panel",
-        "mastery",
-        "levels",
-        "level_01",
-    ),
 }
 
 _PLAYER_DIRECTORY = ASSET_ROOT / "act_3" / "player"
@@ -120,9 +110,13 @@ def load_act_three_hud_assets():
 
     assets = {
         "act_three_hud_layout": layout,
+        "hud_source_images": {},
     }
 
     for asset_name, path in _ART_PATHS.items():
+        assets["hud_source_images"][asset_name] = resources.load_image(
+            str(path)
+        ).convert_alpha()
         rectangle = get_layout_rect(
             layout,
             *_ART_RECTS[asset_name],
@@ -131,6 +125,21 @@ def load_act_three_hud_assets():
             path,
             rectangle,
         )
+
+    for name in (
+        "frame_mastery",
+        "frame_equipment",
+        "level_mastery",
+        "level_equipment",
+        "icon",
+        "sword",
+        "armor",
+        "minus_icon",
+        "plus_icon",
+    ):
+        assets[f"hud_panel_{name}"] = resources.load_image(
+            str(_UI_DIRECTORY / f"{name}.png")
+        ).convert_alpha()
 
     portrait_rectangle = get_layout_rect(
         layout,
@@ -146,11 +155,17 @@ def load_act_three_hud_assets():
         for subclass, path in _PORTRAIT_PATHS.items()
     }
 
+    assets["hud_portrait_sources"] = {
+        subclass: resources.load_image(str(path)).convert_alpha()
+        for subclass, path in _PORTRAIT_PATHS.items()
+    }
+
     candles_directory = (
         _UI_DIRECTORY / "candles"
     )
 
     assets["hud_candle_flames"] = {}
+    assets["hud_candle_sources"] = {}
 
     for candle_name in ("small", "large"):
         candle_layout = layout["top_bar"]["candles"][
@@ -161,6 +176,13 @@ def load_act_three_hud_assets():
             "top_bar",
             "candles",
             candle_name,
+        )
+
+        assets["hud_candle_sources"][candle_name] = tuple(
+            resources.load_image(
+                str(candles_directory / candle_name / frame_name)
+            ).convert_alpha()
+            for frame_name in candle_layout["frames"]
         )
 
         assets["hud_candle_flames"][candle_name] = tuple(
