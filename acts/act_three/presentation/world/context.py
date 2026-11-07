@@ -215,6 +215,9 @@ def create_world_render_context(
         tile_assets = {
             **assets,
             "tmx_tiles": floor_tiles,
+            "tmx_animations": assets.get(
+                "tmx_animations_by_floor", {}
+            ).get(game_state.floor_index, {}),
         }
 
     return WorldRenderContext(

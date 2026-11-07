@@ -387,6 +387,15 @@ def load_tmx_floor(path):
         position
         for position, _ in torch_markers
     ]
+    torches.extend(
+        (column, row)
+        for name, layer in layers.items()
+        if name == "Torches" or name.startswith("Torches_")
+        for row, row_data in enumerate(layer)
+        for column, gid in enumerate(row_data)
+        if gid & 0x0FFFFFFF
+    )
+    torches = list(dict.fromkeys(torches))
     enemies = []
 
     for name, markers in by_name.items():

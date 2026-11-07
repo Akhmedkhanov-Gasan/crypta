@@ -1578,7 +1578,21 @@ def _draw_act_three_world(
             player_sprite,
             player_position,
         )
-    for column, row in floor.torches:
+    torch_layer_names = layer_names_by_prefix(floor, "Torches")
+    torch_layers = [
+        floor.tile_layers[name] for name in torch_layer_names
+    ]
+    legacy_torches = [
+        (column, row)
+        for column, row in floor.torches
+        if not any(
+            0 <= row < len(layer)
+            and 0 <= column < len(layer[row])
+            and layer[row][column] & 0x0FFFFFFF
+            for layer in torch_layers
+        )
+    ]
+    for column, row in legacy_torches:
         view_surface.blit(
             assets["torch_base"],
             _view_position(
@@ -1588,6 +1602,19 @@ def _draw_act_three_world(
                 camera_y,
             ),
         )
+    draw_tile_layers(
+        view_surface,
+        floor,
+        tile_assets,
+        torch_layer_names,
+        first_column,
+        first_row,
+        last_column,
+        last_row,
+        camera_x,
+        camera_y,
+        current_time,
+    )
     draw_act_three_lighting(
         view_surface,
         floor.torches,
@@ -1606,6 +1633,8 @@ def _draw_act_three_world(
         ACT_THREE_TILE_SIZE,
     )
     for torch_index, (column, row) in enumerate(floor.torches):
+        if (column, row) not in legacy_torches:
+            continue
         draw_torch_flame(
             view_surface,
             assets,

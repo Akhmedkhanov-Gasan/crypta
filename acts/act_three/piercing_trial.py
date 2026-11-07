@@ -200,6 +200,8 @@ def handle_action(game_state, event, direction):
 
 
 def shoot(floor, trial, now):
+    trial["activated"].clear()
+    trial["destroyed_targets"] = set()
     paths = []
     for launcher in trial["launchers"]:
         origin = launcher["position"]
@@ -305,7 +307,7 @@ def advance_frame(game_state, now):
         if wrong:
             trial.update(stage="reset", started=now)
             add_log_message(game_state.combat_log, "A foreign seal rejects the arrow. The mechanisms recoil.")
-        elif len(trial["activated"]) == len(trial["targets"]):
+        elif trial["activated"] == {target["id"] for target in trial["targets"]}:
             from acts.act_three.abilities.progression import unlock_ability_slot
             from acts.act_three.abilities.catalog import get_subclass_definition
             unlock_ability_slot(game_state.player, "q")
@@ -314,7 +316,12 @@ def advance_frame(game_state, now):
             trial.update(phase="complete", stage=None, completed=now)
             add_log_message(game_state.combat_log, "Trial complete. PIERCING SHOT unlocked.", category="progress")
         else:
-            trial.update(stage="return", started=now)
+            trial.update(stage="restore_targets", started=now)
+    elif stage == "restore_targets" and elapsed >= 1100:
+        trial["activated"].clear()
+        trial["destroyed_targets"] = set()
+        trial["target_impacts"] = []
+        trial.update(stage="return", started=now)
     elif stage == "reset" and elapsed >= RESET_MS:
         reset_attempt(game_state, trial)
         trial.update(stage="recover", started=now)

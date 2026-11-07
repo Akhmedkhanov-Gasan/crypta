@@ -122,7 +122,7 @@ def draw_layer(context, layer):
         if trial.get("lever") == key:
             if trial["stage"] == "lever":
                 index = min(7, elapsed * 8 // TURN_MS)
-            elif trial["stage"] in ("shot", "reset"):
+            elif trial["stage"] in ("shot", "reset", "restore_targets"):
                 index = 7
             elif trial["stage"] == "return":
                 index = max(0, 7 - elapsed * 8 // 220)

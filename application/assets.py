@@ -1058,6 +1058,7 @@ def load_act_three_gameplay_assets():
     )
     assets.update(load_act_three_npc_assets())
     assets["tmx_tiles_by_floor"] = {}
+    assets["tmx_animations_by_floor"] = {}
 
     for floor_index, config in act_three_configs:
         floor_map_path = config.get("map_path")
@@ -1076,15 +1077,22 @@ def load_act_three_gameplay_assets():
         if floor_map_path is None:
             continue
 
+        animations = {}
         assets["tmx_tiles_by_floor"][floor_index] = (
             load_tmx_tiles(
                 project_root / floor_map_path,
                 tile_size,
+                animations,
             )
         )
+        assets["tmx_animations_by_floor"][floor_index] = animations
 
     assets["tmx_tiles"] = assets[
         "tmx_tiles_by_floor"
+    ][first_act_three_index]
+
+    assets["tmx_animations"] = assets[
+        "tmx_animations_by_floor"
     ][first_act_three_index]
 
     for frame_index in range(4):

@@ -93,7 +93,7 @@ def _load_collection_tiles(
         )
 
 
-def load_tmx_tiles(map_path, tile_size):
+def load_tmx_tiles(map_path, tile_size, animations=None):
     map_path = Path(map_path)
     map_root = resources.load_xml(map_path).getroot()
     tiles = {}
@@ -130,5 +130,20 @@ def load_tmx_tiles(map_path, tile_size):
             first_gid,
             tile_size,
         )
+
+        if animations is not None:
+            for tile_node in tileset_root.findall("tile"):
+                frames = []
+                elapsed = 0
+                for frame in tile_node.findall("./animation/frame"):
+                    duration = int(frame.get("duration", 0))
+                    frame_gid = first_gid + int(frame.get("tileid", 0))
+                    if duration <= 0 or frame_gid not in tiles:
+                        raise ValueError("Invalid TMX animation frame")
+                    elapsed += duration
+                    frames.append((elapsed, frame_gid))
+                if frames:
+                    gid = first_gid + int(tile_node.get("id", 0))
+                    animations[gid] = tuple(frames)
 
     return tiles

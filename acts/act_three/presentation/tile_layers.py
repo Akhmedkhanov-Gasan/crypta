@@ -12,9 +12,16 @@ _TILED_FLIP_MASK = (
 _TILE_VARIANTS = {}
 
 
-def _tile_for_gid(tiles, gid):
+def _tile_for_gid(tiles, gid, animations=None, current_time=0):
     flip_flags = gid & _TILED_FLIP_MASK
     base_gid = gid & ~_TILED_FLIP_MASK
+    frames = (animations or {}).get(base_gid)
+    if frames:
+        phase = current_time % frames[-1][0]
+        for end_time, frame_gid in frames:
+            if phase < end_time:
+                base_gid = frame_gid
+                break
     tile = tiles.get(base_gid)
 
     if tile is None or not flip_flags:
@@ -74,8 +81,12 @@ def draw_tile_layers(
     last_row,
     camera_x,
     camera_y,
+    current_time=None,
 ):
     tiles = assets.get("tmx_tiles", {})
+    animations = assets.get("tmx_animations", {})
+    if current_time is None:
+        current_time = pygame.time.get_ticks()
 
     for layer_name in layer_names:
         layer = floor.tile_layers.get(layer_name, [])
@@ -90,6 +101,8 @@ def draw_tile_layers(
                 tile = _tile_for_gid(
                     tiles,
                     row_data[column],
+                    animations,
+                    current_time,
                 )
                 if tile is None:
                     continue

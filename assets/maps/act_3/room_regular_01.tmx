@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="8" height="8" tilewidth="64" tileheight="64" infinite="0" nextlayerid="17" nextobjectid="15">
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="8" height="8" tilewidth="64" tileheight="64" infinite="0" nextlayerid="18" nextobjectid="15">
  <tileset firstgid="1" source="act3_floor_64.tsx"/>
  <tileset firstgid="9" source="items.tsx"/>
  <tileset firstgid="177" source="my_tiles_textured_v9.tsx"/>
+ <tileset firstgid="258" source="torches/torches.tsx"/>
  <layer id="1" name="Ground" width="8" height="8">
   <data encoding="csv">
 0,0,8,0,0,0,0,0,
@@ -99,11 +100,19 @@
 0,0,0,0,0,0,0,0
 </data>
  </layer>
- <objectgroup id="11" name="Entities">
-  <object id="1" name="torches_v1" x="230" y="98.6667">
-   <point/>
-  </object>
- </objectgroup>
+ <layer id="17" name="Torches" width="8" height="8">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,
+0,0,0,261,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <objectgroup id="11" name="Entities"/>
  <objectgroup id="12" name="Connectors">
   <object id="3" name="exit_north" x="159.999" y="27.333">
    <point/>
