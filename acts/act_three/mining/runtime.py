@@ -10,12 +10,12 @@ from game.combat_log import add_log_message
 from systems.grid_geometry import can_reach_adjacent_cell
 
 
-MINING_FRAME_MS = 100
+MINING_FRAME_MS = 160
 MINING_FRAME_SEQUENCE = (0, 1, 2, 3, 4, 5, 6, 7, 1, 0)
 MINING_IMPACT_MS = MINING_FRAME_MS * 7
 MINING_DURATION_MS = MINING_FRAME_MS * len(MINING_FRAME_SEQUENCE)
 MINING_RETURN_MS = MINING_FRAME_MS * 2
-MINING_EFFECT_MS = 450
+MINING_EFFECT_MS = 600
 MINING_REWARD_MS = 1400
 
 
@@ -27,7 +27,7 @@ def start_mining(game_state, target, current_time):
 
     if (
         floor.presentation_act != 3
-        or player.subclass != "assassin"
+        or player.subclass not in ("assassin", "archer", "berserker")
         or player.health <= 0
         or player.stun_turns > 0
         or game_state.game_won

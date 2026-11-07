@@ -2,6 +2,7 @@ import math
 
 import pygame
 
+from acts.act_three.mining.effects import draw_active_mining_particles
 from acts.act_three.mining.runtime import (
     MINING_EFFECT_MS,
     MINING_REWARD_MS,
@@ -16,7 +17,7 @@ def mining_sprite(player, assets, current_time):
         return None
 
     direction, index = frame
-    return assets["assassin_mining_frames"][direction][index]
+    return assets[f"{player.subclass}_mining_frames"][direction][index]
 
 
 def draw_world_ores(context, assets):
@@ -36,6 +37,7 @@ def draw_world_ores(context, assets):
 
 def draw_mining_feedback(context, game_state, assets, font, current_time):
     surface = context.view_surface
+    draw_active_mining_particles(context, game_state.player, current_time)
     particles = None
 
     for effect in game_state.act_three.mining_effects:
@@ -62,6 +64,19 @@ def draw_mining_feedback(context, game_state, assets, font, current_time):
         )
         alpha = round(220 * (1 - progress))
 
+        for index in range(5):
+            angle = index * 2.399 + effect["seed"] * 0.71
+            drift = progress * (8 + index * 3)
+            dust_x = center_x + math.cos(angle) * drift
+            dust_y = center_y + math.sin(angle) * drift * 0.4 - progress * 9
+            radius = round(3 + progress * (6 + index % 3))
+            pygame.draw.circle(
+                particles,
+                (99, 86, 108, round(34 * (1 - progress) ** 2)),
+                (round(dust_x), round(dust_y)),
+                radius,
+            )
+
         for index in range(9):
             angle = index * 2.399 + effect["seed"] * 0.71
             distance = progress * (13 + index % 4 * 6)
@@ -84,14 +99,28 @@ def draw_mining_feedback(context, game_state, assets, font, current_time):
                 1 + index % 2,
             )
 
-        if progress < 0.3:
-            pygame.draw.circle(
-                particles,
-                (224, 205, 244, round(alpha * 0.6)),
-                (round(center_x), round(center_y)),
-                round(3 + progress * 18),
-                width=1,
-            )
+        spark_progress = min(1.0, elapsed / 240)
+        if spark_progress < 1:
+            for index in range(5):
+                angle = index * 2.399 + effect["seed"] * 1.13
+                distance = 3 + spark_progress * (12 + index % 3 * 5)
+                spark_x = center_x + math.cos(angle) * distance
+                spark_y = (
+                    center_y
+                    + math.sin(angle) * distance * 0.7
+                    + spark_progress * spark_progress * 8
+                )
+                tail_length = 2 + (1 - spark_progress) * 4
+                pygame.draw.line(
+                    particles,
+                    (224, 187, 139, round(190 * (1 - spark_progress))),
+                    (round(spark_x), round(spark_y)),
+                    (
+                        round(spark_x - math.cos(angle) * tail_length),
+                        round(spark_y - math.sin(angle) * tail_length * 0.7),
+                    ),
+                    width=1,
+                )
 
     if particles is not None:
         surface.blit(particles, (0, 0))
