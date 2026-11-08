@@ -1,12 +1,20 @@
 import pygame
 
 from acts.act_three.items.inventory import BLACK_ORE_CHUNK, get_inventory_slots
+from acts.act_three.presentation.hud.panel_art import draw_panel_image
 from presentation.figma_ui import figma_rect
 from presentation.tooltips import TooltipContent
 
 
 def draw_inventory(screen, player, assets, panel, mouse_position):
-    slots = panel["inventory"]["slots"]
+    inventory = panel["inventory"]
+    slots = inventory["slots"]
+    draw_panel_image(
+        screen,
+        assets,
+        "inventory_baclground",
+        inventory.get("background"),
+    )
     stored_items = get_inventory_slots(player)
     sprites = {
         **assets.get("act_three_consumable_belt_sprites", {}),
@@ -15,11 +23,17 @@ def draw_inventory(screen, player, assets, panel, mouse_position):
     hovered_item = None
 
     for index, name in enumerate(sorted(slots)):
+        slot = slots[name]
+        draw_panel_image(
+            screen,
+            assets,
+            "slot_baclground",
+            slot.get("background"),
+        )
         item = stored_items[index] if index < len(stored_items) else None
         if item is None:
             continue
 
-        slot = slots[name]
         rectangle = figma_rect(slot["icon"])
         sprite = sprites.get(item)
         if sprite is not None:

@@ -4,12 +4,15 @@ import resource_store as resources
 
 from acts.act_three.npcs import (
     NPC_FOOTPRINTS,
+    NPC_ANIMATIONS,
     NPC_FRAME_COUNT,
     close_npc_dialog,
+    continue_npc_dialog,
     get_npc_animation,
     get_npc_at,
     get_npc_cells,
 )
+from acts.act_three.npc_dialogue import get_npc_dialogue
 from presentation.layout import (
     ACT_THREE_TILE_SIZE,
     ASSET_ROOT,
@@ -22,11 +25,7 @@ def load_act_three_npc_assets():
     for npc_type, (width, height) in NPC_FOOTPRINTS.items():
         root = ASSET_ROOT / "act_3" / "npcs" / npc_type
         frames[npc_type] = {}
-        for animation in (
-            "work_down",
-            "talk_start_down",
-            "talk_idle_down",
-        ):
+        for animation in NPC_ANIMATIONS[npc_type]:
             frames[npc_type][animation] = tuple(
                 pygame.transform.scale(
                     resources.load_image(
@@ -80,12 +79,16 @@ def draw_npc_dialog(screen, game_state, fonts):
     npc = get_npc_at(game_state.floor, state.npc_dialog_position)
     if npc is None:
         return
-    message = {
-        "blacksmith": "The forge will be available soon.",
-    }.get(npc["type"], "...")
+    lines = get_npc_dialogue(game_state, npc)
+    speaker_id, message = lines[state.npc_dialog_line_index]
+    close_label = (
+        "SPACE / CLICK - CONTINUE"
+        if state.npc_dialog_line_index + 1 < len(lines)
+        else "SPACE / CLICK - CLOSE"
+    )
     draw_dialogue_panel(
-        screen, fonts, npc["type"], npc["type"].replace("_", " ").title(),
-        message, close_label="SPACE / CLICK - CONTINUE",
+        screen, fonts, speaker_id, speaker_id.replace("_", " ").upper(),
+        message, close_label=close_label,
     )
 
 
@@ -93,17 +96,25 @@ def handle_npc_dialog_event(event, game_state, mouse_position):
     if game_state.act_three.npc_dialog_position is None:
         return False
 
-    close_requested = (
+    if (
         event.type == pygame.KEYDOWN
-        and event.key in (pygame.K_ESCAPE, pygame.K_SPACE)
+        and event.key == pygame.K_ESCAPE
+        and not getattr(event, "repeat", False)
+    ):
+        close_npc_dialog(game_state, pygame.time.get_ticks())
+        return True
+
+    continue_requested = (
+        event.type == pygame.KEYDOWN
+        and event.key == pygame.K_SPACE
         and not getattr(event, "repeat", False)
     )
     if (
         event.type == pygame.MOUSEBUTTONDOWN
         and event.button == 1
     ):
-        close_requested = True
+        continue_requested = True
 
-    if close_requested:
-        close_npc_dialog(game_state, pygame.time.get_ticks())
+    if continue_requested:
+        continue_npc_dialog(game_state, pygame.time.get_ticks())
     return True

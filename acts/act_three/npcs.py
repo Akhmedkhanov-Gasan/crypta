@@ -1,8 +1,14 @@
 from systems.grid_geometry import can_reach_adjacent_cell
+from acts.act_three.npc_dialogue import get_npc_dialogue
 
 
 NPC_FOOTPRINTS = {
     "blacksmith": (2, 1),
+    "trader": (2, 1),
+}
+NPC_ANIMATIONS = {
+    "blacksmith": ("work_down", "talk_start_down", "talk_idle_down"),
+    "trader": ("idle_down",),
 }
 NPC_FRAME_COUNT = 8
 NPC_TRANSITION_FRAME_MS = 90
@@ -61,6 +67,7 @@ def open_npc_dialog(game_state, npc, current_time):
     state.npc_dialog_floor_index = game_state.floor_index
     state.npc_dialog_phase = "opening"
     state.npc_dialog_started_at = current_time
+    state.npc_dialog_line_index = 0
     return True
 
 
@@ -82,6 +89,21 @@ def close_npc_dialog(game_state, current_time):
         current_time
         - (NPC_FRAME_COUNT - 1 - frame) * NPC_TRANSITION_FRAME_MS
     )
+
+
+def continue_npc_dialog(game_state, current_time):
+    state = game_state.act_three
+    if state.npc_dialog_phase not in ("opening", "talk"):
+        return
+    npc = get_npc_at(game_state.floor, state.npc_dialog_position)
+    if npc is None:
+        return
+    lines = get_npc_dialogue(game_state, npc)
+    if state.npc_dialog_line_index + 1 < len(lines):
+        state.npc_dialog_line_index += 1
+        return
+    state.npc_conversations_completed.add(npc["type"])
+    close_npc_dialog(game_state, current_time)
 
 
 def advance_npc_dialog(game_state, current_time):
@@ -117,6 +139,9 @@ def advance_npc_dialog(game_state, current_time):
 
 
 def get_npc_animation(game_state, npc, current_time):
+    if npc["type"] == "trader":
+        return "idle_down", current_time // NPC_LOOP_FRAME_MS % NPC_FRAME_COUNT
+
     state = game_state.act_three
     if (
         state.npc_dialog_floor_index != game_state.floor_index

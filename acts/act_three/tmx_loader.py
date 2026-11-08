@@ -8,7 +8,7 @@ from pathlib import Path
 import resource_store as resources
 
 from enemies import ENEMY_TYPES
-from acts.act_three.npcs import get_npc_cells
+from acts.act_three.npcs import NPC_FOOTPRINTS, get_npc_cells
 from acts.act_three.mining.world import build_ores
 
 
@@ -325,10 +325,11 @@ def load_tmx_floor(path):
 
     npcs = [
         {
-            "type": "blacksmith",
+            "type": npc_type,
             "position": position,
         }
-        for position, _ in by_name.get("blacksmith", [])
+        for npc_type in NPC_FOOTPRINTS
+        for position, _ in by_name.get(npc_type, [])
     ]
     for npc in npcs:
         for column, row in get_npc_cells(npc):

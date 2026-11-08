@@ -241,6 +241,8 @@ class ActThreeSessionState:
     npc_dialog_floor_index: int = -1
     npc_dialog_phase: str = "closed"
     npc_dialog_started_at: int = 0
+    npc_dialog_line_index: int = 0
+    npc_conversations_completed: set[str] = field(default_factory=set)
     act_three_transition_open: bool = False
     act_three_transition_started_at: int = 0
     act_three_visual_started_at: int = 0
