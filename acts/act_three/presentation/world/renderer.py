@@ -516,6 +516,10 @@ def _draw_act_three_world(
             player_position[0] + locomotion_pose.body_offset[0],
             player_position[1] + locomotion_pose.body_offset[1],
         )
+    player_effect_position = (
+        player_position[0],
+        player_position[1] + player_sprite.get_height() - ACT_THREE_TILE_SIZE,
+    )
     draw_paladin_sacred_ground_cast_effect(
         view_surface,
         game_state.player,
@@ -1125,8 +1129,8 @@ def _draw_act_three_world(
         if game_state.player.summoner_bond_active:
             _draw_summoner_bond_pentagram(
                 view_surface,
-                player_position[0],
-                player_position[1],
+                player_effect_position[0],
+                player_effect_position[1],
                 current_time,
             )
             _draw_summoner_bond_pentagram(
@@ -1574,8 +1578,8 @@ def _draw_act_three_world(
     elif player_subclass == "summoner" and player_death_elapsed is None:
         _draw_summoner_idle_lights(
             view_surface,
-            player_position[0],
-            player_position[1],
+            player_effect_position[0],
+            player_effect_position[1],
             current_time,
             (
                 floor.visual_seed

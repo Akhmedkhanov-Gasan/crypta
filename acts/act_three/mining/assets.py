@@ -5,6 +5,24 @@ from acts.act_three.items.inventory import BLACK_ORE_CHUNK
 from presentation.layout import ACT_THREE_TILE_SIZE, ASSET_ROOT
 
 
+def _load_player_mining_frames(root, mining_size):
+    return {
+        direction: tuple(
+            pygame.transform.scale(
+                resources.load_image(
+                    root
+                    / "mining"
+                    / f"mining_{direction}"
+                    / f"mining_{direction}_{index:02d}.png"
+                ).convert_alpha(),
+                mining_size,
+            )
+            for index in range(1, 9)
+        )
+        for direction in ("left", "right")
+    }
+
+
 def load_mining_assets():
     ore_root = (
         ASSET_ROOT / "act_3" / "npcs" / "blacksmith" / "ores" / "black_ore"
@@ -32,27 +50,20 @@ def load_mining_assets():
             BLACK_ORE_CHUNK: chunk,
         },
         **{
-            f"{subclass}_mining_frames": {
-                direction: tuple(
-                    pygame.transform.scale(
-                        resources.load_image(
-                            player_root
-                            / subclass
-                            / "mining"
-                            / f"mining_{direction}"
-                            / f"mining_{direction}_{index:02d}.png"
-                        ).convert_alpha(),
-                        mining_size,
-                    )
-                    for index in range(1, 9)
-                )
-                for direction in ("left", "right")
-            }
+            f"{subclass}_mining_frames": _load_player_mining_frames(
+                player_root / subclass,
+                mining_size,
+            )
             for subclass in (
                 "assassin",
                 "archer",
                 "berserker",
                 "paladin",
+                "summoner",
             )
         },
+        "summoner_no_familiar_mining_frames": _load_player_mining_frames(
+            player_root / "summoner" / "no_familiar",
+            mining_size,
+        ),
     }

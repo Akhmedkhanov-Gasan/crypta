@@ -32,6 +32,7 @@ def start_mining(game_state, target, current_time):
             "archer",
             "berserker",
             "paladin",
+            "summoner",
         )
         or player.health <= 0
         or player.stun_turns > 0

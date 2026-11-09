@@ -17,7 +17,14 @@ def mining_sprite(player, assets, current_time):
         return None
 
     direction, index = frame
-    return assets[f"{player.subclass}_mining_frames"][direction][index]
+    frames_key = f"{player.subclass}_mining_frames"
+    if (
+        player.subclass == "summoner"
+        and player.summoner_familiar_active
+    ):
+        frames_key = "summoner_no_familiar_mining_frames"
+
+    return assets[frames_key][direction][index]
 
 
 def draw_world_ores(context, assets):
