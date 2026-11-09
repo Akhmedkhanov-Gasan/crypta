@@ -27,7 +27,12 @@ def start_mining(game_state, target, current_time):
 
     if (
         floor.presentation_act != 3
-        or player.subclass not in ("assassin", "archer", "berserker")
+        or player.subclass not in (
+            "assassin",
+            "archer",
+            "berserker",
+            "paladin",
+        )
         or player.health <= 0
         or player.stun_turns > 0
         or game_state.game_won

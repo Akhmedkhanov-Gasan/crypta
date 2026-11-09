@@ -48,6 +48,11 @@ def load_mining_assets():
                 )
                 for direction in ("left", "right")
             }
-            for subclass in ("assassin", "archer", "berserker")
+            for subclass in (
+                "assassin",
+                "archer",
+                "berserker",
+                "paladin",
+            )
         },
     }
