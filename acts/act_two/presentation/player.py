@@ -29,9 +29,13 @@ from presentation.layout import (
 )
 from settings import TILE_SIZE
 from presentation.control_effects import draw_player_control_effects
+from presentation.wait_indicator import (
+    WAIT_EFFECT_DURATION_MS,
+    draw_wait_indicator,
+)
 
 
-ACT_TWO_WAIT_EFFECT_DURATION_MS = 900
+ACT_TWO_WAIT_EFFECT_DURATION_MS = WAIT_EFFECT_DURATION_MS
 
 
 def draw_act_two_wait_indicator(
@@ -41,33 +45,9 @@ def draw_act_two_wait_indicator(
     current_time,
     started_at,
 ):
-    elapsed = current_time - started_at
-    if elapsed < 0 or elapsed >= ACT_TWO_WAIT_EFFECT_DURATION_MS:
-        return
-
-    progress = elapsed / ACT_TWO_WAIT_EFFECT_DURATION_MS
-    fade = min(1.0, elapsed / 100) * min(1.0, (1 - progress) / 0.22)
-    effect = pygame.Surface((34, 22), pygame.SRCALPHA)
-    for dot_index in range(3):
-        dot_phase = max(0.0, min(1.0, (elapsed - dot_index * 90) / 310))
-        lift = round(math.sin(dot_phase * math.pi) * 4)
-        center = (9 + dot_index * 8, 14 - lift)
-        pygame.draw.circle(
-            effect,
-            (16, 13, 18, round(190 * fade)),
-            (center[0] + 1, center[1] + 1),
-            3,
-        )
-        pygame.draw.circle(
-            effect,
-            (220, 210, 190, round(245 * fade)),
-            center,
-            2,
-        )
-
     center_x = MAP_OFFSET_X + column * TILE_SIZE + TILE_SIZE // 2
     top = MAP_OFFSET_Y + row * TILE_SIZE
-    screen.blit(effect, (center_x - effect.get_width() // 2, top - 20))
+    draw_wait_indicator(screen, center_x, top - 20, current_time, started_at)
 
 
 ACT_TWO_PLAYER_HIT_FEEDBACK_MS = 650

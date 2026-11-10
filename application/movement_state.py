@@ -7,6 +7,7 @@ class MovementInputState:
     held_direction: tuple[int, int] = (0, 0)
     pending_movement_direction: tuple[int, int] | None = None
     pending_movement_at: int = 0
+    pending_movement_requires_hold: bool = False
     next_held_move_at: int = 0
     movement_input_locked_until: int = 0
     next_step_at: int = 0
@@ -24,6 +25,7 @@ class MovementInputState:
         self.held_direction = (0, 0)
         self.pending_movement_direction = None
         self.pending_movement_at = 0
+        self.pending_movement_requires_hold = False
         self.next_held_move_at = 0
         self.movement_revision += 1
 

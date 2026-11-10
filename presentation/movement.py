@@ -35,7 +35,7 @@ def sample_movement_travel(
         raise ValueError("travel_ms must be greater than zero")
 
     progress = max(0.0, min(1.0, elapsed / travel_ms))
-    eased_progress = easing(progress)
+    eased_progress = progress if easing is None else easing(progress)
 
     position = (
         round(

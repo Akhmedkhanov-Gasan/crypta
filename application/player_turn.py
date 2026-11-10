@@ -4,6 +4,7 @@ import pygame
 
 from acts.act_one.player_actions import resolve_act_one_player_action
 from acts.act_three.player_actions import resolve_act_three_player_action
+from acts.act_three.presentation.wait import clear_wait_feedback, record_wait_feedback
 from acts.act_three.turns import resume_barrage_turn
 from acts.act_two.enemies.oracle.behavior import resolve_oracle_hit_reaction
 from acts.act_two.player_actions import resolve_act_two_action_request
@@ -220,6 +221,23 @@ def resolve_player_turn(
     )
     if result.movement_blocked:
         return result
+
+    if current_act == 3 and result.player_acted and not barrage_resume:
+        if (
+            player_waited
+            and not stunned_action
+            and not any(
+                getattr(event, name, False)
+                for name in (
+                    "summoner_turn_commit",
+                    "paladin_sacred_ground_turn",
+                    "archer_barrage_commit",
+                )
+            )
+        ):
+            record_wait_feedback(game_state, pygame.time.get_ticks())
+        else:
+            clear_wait_feedback()
 
     if result.player_acted and not barrage_resume:
         game_state.run_stats.turns_taken += 1

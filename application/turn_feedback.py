@@ -99,6 +99,10 @@ def _record_player_feedback(
             movement_state,
             started_at,
             profile=movement_profile,
+            direction=(
+                game_state.floor.player_column - move_event.origin[0],
+                game_state.floor.player_row - move_event.origin[1],
+            ),
         )
 
 

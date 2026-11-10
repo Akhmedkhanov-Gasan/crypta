@@ -1,6 +1,7 @@
 import pygame
 
 from acts.act_one.upgrades import handle_upgrade_key_input
+from acts.act_three.combat.pacing import player_attack_recovery_active
 from acts.act_three.input import (
     handle_act_three_flow_key,
     handle_act_three_key_event,
@@ -71,6 +72,34 @@ class GameplayKeyboardController:
     ):
         barrage_resume = getattr(event, "archer_barrage_resume", False)
         automatic_movement = getattr(event, "automatic_movement", False)
+        if (
+            current_act == 3
+            and player_attack_recovery_active(
+                game_state.player,
+                pygame.time.get_ticks(),
+            )
+            and event.key not in (
+                pygame.K_ESCAPE,
+                pygame.K_F11,
+                pygame.K_F1,
+                pygame.K_F2,
+                pygame.K_F3,
+                pygame.K_F4,
+                pygame.K_BACKQUOTE,
+            )
+            and not any(
+                getattr(event, name, False)
+                for name in (
+                    "archer_barrage_commit",
+                    "archer_barrage_resume",
+                    "paladin_sacred_ground_turn",
+                    "summoner_turn_commit",
+                )
+            )
+        ):
+            self.movement_state.reset_held_movement()
+            return game_state
+
         if (
             (
                 event.key in MOVEMENT_KEYS

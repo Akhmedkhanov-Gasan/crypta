@@ -1,6 +1,7 @@
 import math
 
 import pygame
+from acts.act_three.combat.pacing import PLAYER_BASIC_ATTACK_DURATION_MS
 
 from acts.act_three.presentation.shadow_step_effects import draw_trial_seal_effects
 from acts.act_three.presentation.piercing_trial import draw_layer as draw_piercing_layer, draw_overlay as draw_piercing_overlay
@@ -91,6 +92,7 @@ from acts.act_three.presentation.world.player_sprite import (
 from acts.act_three.presentation.world.player_position import (
     calculate_player_placement,
 )
+from acts.act_three.presentation.wait import draw_wait_feedback
 from acts.act_three.presentation.warlock import (
     WARLOCK_CURSE_CAST_DURATION_MS,
     draw_warlock_curse_cast,
@@ -151,7 +153,7 @@ _IDLE_FRAME_SEQUENCE = (0, 1, 2, 1)
 _IDLE_TIMELINE_CYCLE_COUNT = 4
 _MOVE_FRAME_COUNT = 2
 _MOVE_FRAME_DURATION_MS = 90
-_ATTACK_FRAME_DURATION_MS = 240
+_ATTACK_FRAME_DURATION_MS = PLAYER_BASIC_ATTACK_DURATION_MS
 _TELEPORT_CAMERA_DURATION_MS = (
     ASSASSIN_SHADOW_STEP_DURATION_MS
 )
@@ -1720,6 +1722,14 @@ def _draw_act_three_world(
             camera_y,
             fonts["sidebar_numbers"],
         )
+
+    draw_wait_feedback(
+        view_surface,
+        game_state,
+        player_position,
+        player_sprite,
+        current_time,
+    )
 
     _draw_player_hit_vignette(
         view_surface,

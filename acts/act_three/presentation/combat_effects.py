@@ -1,6 +1,7 @@
 import math
 
 import pygame
+from acts.act_three.combat.pacing import PLAYER_BASIC_ATTACK_DURATION_MS
 
 from acts.act_three.presentation.dodge_feedback import (
     draw_enemy_dodge_feedback,
@@ -25,7 +26,7 @@ _IDLE_FRAME_SEQUENCE = (0, 1, 2, 1)
 _IDLE_TIMELINE_CYCLE_COUNT = 4
 _MOVE_FRAME_COUNT = 2
 _MOVE_FRAME_DURATION_MS = 90
-_ATTACK_FRAME_DURATION_MS = 240
+_ATTACK_FRAME_DURATION_MS = PLAYER_BASIC_ATTACK_DURATION_MS
 _FAMILIAR_MOVE_DURATION_MS = 180
 _TELEPORT_CAMERA_DURATION_MS = 480
 _TELEPORT_EFFECT_DURATION_MS = 600

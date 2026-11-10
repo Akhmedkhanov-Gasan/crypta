@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import math
 
 import pygame
 
@@ -20,6 +21,25 @@ class MovementInputProfile:
     start_delay_ms: int = HOLD_START_DELAY_MS
     repeat_interval_ms: int | None = None
     step_duration_ms: int = 0
+    continuous_steps: bool = False
+    travel_duration_ms: int | None = None
+
+    def _duration_for(self, duration, direction):
+        column_change, row_change = direction
+        diagonal_step = abs(column_change) == abs(row_change) == 1
+        distance = math.sqrt(2.0) if self.continuous_steps and diagonal_step else 1.0
+        return round(duration * distance)
+
+    def step_duration_for(self, direction):
+        return self._duration_for(self.step_duration_ms, direction)
+
+    def travel_duration_for(self, direction):
+        duration = (
+            self.step_duration_ms
+            if self.travel_duration_ms is None
+            else self.travel_duration_ms
+        )
+        return self._duration_for(duration, direction)
 
 
 DEFAULT_MOVEMENT_PROFILE = MovementInputProfile()
@@ -28,9 +48,10 @@ DEFAULT_MOVEMENT_PROFILE = MovementInputProfile()
 def _clear_pending_movement(state):
     state.pending_movement_direction = None
     state.pending_movement_at = 0
+    state.pending_movement_requires_hold = False
 
 
-def _create_movement_event(direction, state, profile):
+def _create_movement_event(direction, state, profile, *, requires_hold=False):
     attributes = {
         "key": pygame.K_UNKNOWN,
         "movement_direction": direction,
@@ -39,6 +60,9 @@ def _create_movement_event(direction, state, profile):
 
     if profile.step_duration_ms > 0:
         attributes["movement_revision"] = state.movement_revision
+
+    if profile.continuous_steps:
+        attributes["requires_held_movement"] = requires_hold
 
     return pygame.event.Event(
         pygame.KEYDOWN,
@@ -64,7 +88,15 @@ def sync_movement_scope(state, player, floor, profile):
 
 def movement_event_is_current(state, event):
     revision = getattr(event, "movement_revision", None)
-    return revision is None or revision == state.movement_revision
+    if revision is not None and revision != state.movement_revision:
+        return False
+
+    if getattr(event, "requires_held_movement", False):
+        return event.movement_direction == movement_direction_for_keys(
+            state.held_movement_keys
+        )
+
+    return True
 
 
 def begin_held_movement(
@@ -82,6 +114,30 @@ def begin_held_movement(
     )
 
     if key_was_already_held:
+        return None
+
+    if profile.continuous_steps:
+        _clear_pending_movement(state)
+        state.held_direction = direction
+        state.next_held_move_at = state.next_step_at
+
+        if direction == (0, 0):
+            return None
+
+        if started_at < state.next_step_at:
+            state.pending_movement_direction = direction
+            state.pending_movement_at = state.next_step_at
+            state.pending_movement_requires_hold = True
+            return None
+
+        if (
+            key in IMMEDIATE_MOVEMENT_KEYS
+            or len(state.held_movement_keys) > 1
+        ):
+            return direction
+
+        state.pending_movement_direction = direction
+        state.pending_movement_at = started_at + DIAGONAL_CHORD_WINDOW_MS
         return None
 
     if key in IMMEDIATE_MOVEMENT_KEYS:
@@ -167,12 +223,18 @@ def create_held_movement_event(
             return None
 
         pending_direction = state.pending_movement_direction
+        requires_hold = state.pending_movement_requires_hold
         _clear_pending_movement(state)
 
         held_direction = movement_direction_for_keys(
             state.held_movement_keys
         )
         state.held_direction = held_direction
+
+        if profile.continuous_steps and requires_hold:
+            pending_direction = held_direction
+            if pending_direction == (0, 0):
+                return None
 
         if held_direction == pending_direction:
             state.next_held_move_at = (
@@ -186,6 +248,7 @@ def create_held_movement_event(
             pending_direction,
             state,
             profile,
+            requires_hold=requires_hold,
         )
 
     direction = movement_direction_for_keys(
@@ -200,10 +263,13 @@ def create_held_movement_event(
 
     if direction != state.held_direction:
         state.held_direction = direction
-        state.next_held_move_at = (
-            current_time + profile.start_delay_ms
-        )
-        return None
+        if profile.continuous_steps:
+            state.next_held_move_at = state.next_step_at
+        else:
+            state.next_held_move_at = (
+                current_time + profile.start_delay_ms
+            )
+            return None
 
     if current_time < state.next_held_move_at:
         return None
@@ -223,6 +289,7 @@ def create_held_movement_event(
         direction,
         state,
         profile,
+        requires_hold=True,
     )
 
 
@@ -250,6 +317,7 @@ def accept_movement_direction(
         else:
             state.pending_movement_direction = direction
             state.pending_movement_at = state.next_step_at
+            state.pending_movement_requires_hold = profile.continuous_steps
         return False
 
     _clear_pending_movement(state)
@@ -261,11 +329,17 @@ def mark_movement_step(
     started_at,
     *,
     profile=DEFAULT_MOVEMENT_PROFILE,
+    direction=(0, 1),
 ):
     if profile.step_duration_ms <= 0:
         return
 
-    state.next_step_at = started_at + profile.step_duration_ms
+    state.next_step_at = started_at + profile.step_duration_for(direction)
+    if profile.continuous_steps:
+        state.next_held_move_at = state.next_step_at
+        state.next_auto_move_at = state.next_step_at
+        return
+
     state.next_held_move_at = max(
         state.next_held_move_at,
         state.next_step_at,

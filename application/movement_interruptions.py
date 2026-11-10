@@ -1,4 +1,5 @@
 from application.auto_movement import auto_move_has_new_warning
+from acts.act_three.combat.pacing import player_attack_recovery_until
 from game.events import GameEventType
 
 
@@ -64,6 +65,8 @@ def apply_movement_interruptions(state, game_state, current_time):
             player.attack_animation_started_at
             + PLAYER_ATTACK_PAUSE_MS,
         )
+        if floor.presentation_act == 3:
+            pause_until = max(pause_until, player_attack_recovery_until(player))
 
     if attack_feedback:
         feedback_names = {

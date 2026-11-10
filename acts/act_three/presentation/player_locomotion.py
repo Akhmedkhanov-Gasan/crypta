@@ -1,15 +1,11 @@
 from dataclasses import dataclass
 import math
 
-from presentation.movement import (
-    sample_movement_travel,
-    smoothstep,
-)
+from presentation.movement import sample_movement_travel
+from acts.act_three.movement import ACT_THREE_MOVEMENT_PROFILE
 from acts.act_three.movement_timing import (
     PLAYER_POSE_HOLD_MS,
     PLAYER_SETTLE_MS,
-    PLAYER_STEP_MS,
-    PLAYER_TRAVEL_MS,
     PLAYER_WALK_CYCLE_TILES,
 )
 from acts.act_three.presentation.player_motion import (
@@ -44,6 +40,8 @@ class LocomotionState:
     started_at: int = -1
     phase_origin: float = 0.0
     phase_distance: float = 0.0
+    travel_ms: int = 0
+    step_ms: int = 0
     last_sample_at: int = -1
 
 
@@ -74,14 +72,14 @@ def _special_movement_active(player):
     )
 
 
-def _sample_body_offset(profile, direction, progress, phase, elapsed):
+def _sample_body_offset(profile, direction, phase, weight):
     dx, dy = direction
     direction_length = math.hypot(dx, dy)
     direction_x = dx / direction_length
     direction_y = dy / direction_length
 
-    stride = math.sin(math.pi * progress)
-    sway = math.sin(math.tau * phase) * stride
+    stride = math.sin(math.tau * phase)
+    sway = stride
 
     offset_x = (
         direction_x * profile.lean * stride
@@ -90,25 +88,10 @@ def _sample_body_offset(profile, direction, progress, phase, elapsed):
     offset_y = (
         direction_y * profile.lean * stride
         + direction_x * profile.sway * sway
-        - profile.lift * stride
+        - profile.lift * abs(stride)
     )
 
-    if elapsed >= PLAYER_TRAVEL_MS:
-        settle_progress = max(
-            0.0,
-            min(
-                1.0,
-                (elapsed - PLAYER_TRAVEL_MS) / PLAYER_SETTLE_MS,
-            ),
-        )
-        landing = math.sin(math.pi * settle_progress)
-        offset_x = -direction_x * profile.lean * 0.35 * landing
-        offset_y = (
-            profile.lift * 0.5
-            - direction_y * profile.lean * 0.35
-        ) * landing
-
-    return round(offset_x), round(offset_y)
+    return round(offset_x * weight), round(offset_y * weight)
 
 
 def sample_player_locomotion(
@@ -172,6 +155,8 @@ def sample_player_locomotion(
         state.destination = None
         return idle_pose
 
+    travel_ms = ACT_THREE_MOVEMENT_PROFILE.travel_duration_for((dx, dy))
+
     token = (
         started_at,
         origin,
@@ -192,14 +177,12 @@ def sample_player_locomotion(
             state.token is not None
             and state.destination == origin
             and 0 < step_interval
-            <= PLAYER_STEP_MS + PLAYER_POSE_HOLD_MS
+            <= state.step_ms + PLAYER_POSE_HOLD_MS
             and not combat_between_steps
         )
 
         if continuing:
-            previous_progress = smoothstep(
-                step_interval / PLAYER_TRAVEL_MS
-            )
+            previous_progress = min(1.0, step_interval / state.travel_ms)
             state.phase_origin = (
                 state.phase_origin
                 + state.phase_distance * previous_progress
@@ -213,6 +196,8 @@ def sample_player_locomotion(
         state.token = token
         state.destination = destination
         state.started_at = started_at
+        state.travel_ms = travel_ms
+        state.step_ms = ACT_THREE_MOVEMENT_PROFILE.step_duration_for((dx, dy))
 
     travel = sample_movement_travel(
         (
@@ -221,7 +206,8 @@ def sample_player_locomotion(
         ),
         destination_pixels,
         elapsed,
-        PLAYER_TRAVEL_MS,
+        travel_ms,
+        easing=None,
     )
 
     phase = (
@@ -234,7 +220,7 @@ def sample_player_locomotion(
         or player.hit_animation_started_at >= started_at
     )
     active = (
-        elapsed < PLAYER_STEP_MS + PLAYER_POSE_HOLD_MS
+        elapsed < travel_ms + PLAYER_POSE_HOLD_MS
         and not combat_interrupted
     )
 
@@ -242,13 +228,19 @@ def sample_player_locomotion(
         player.subclass,
         _PROFILES["berserker"],
     )
+    body_weight = max(
+        0.0,
+        min(
+            1.0,
+            (travel_ms + PLAYER_SETTLE_MS - elapsed) / PLAYER_SETTLE_MS,
+        ),
+    )
     body_offset = (
         _sample_body_offset(
             profile,
             (dx, dy),
-            travel.progress,
             phase,
-            elapsed,
+            body_weight,
         )
         if active
         else (0, 0)

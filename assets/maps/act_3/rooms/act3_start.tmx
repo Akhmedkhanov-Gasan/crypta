@@ -240,21 +240,6 @@
   <object id="32" name="awakening_player" x="672.666" y="483.333">
    <point/>
   </object>
-  <object id="57" name="brute" x="675" y="227">
-   <point/>
-  </object>
-  <object id="58" name="archer" x="348" y="232">
-   <point/>
-  </object>
-  <object id="59" name="goblin" x="291" y="671">
-   <point/>
-  </object>
-  <object id="60" name="priest" x="413" y="805">
-   <point/>
-  </object>
-  <object id="61" name="sentinel" x="797" y="736.5">
-   <point/>
-  </object>
   <object id="63" name="awakening_old_man" x="731.333" y="477.333">
    <point/>
   </object>

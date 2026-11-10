@@ -1,4 +1,5 @@
 import pygame
+from acts.act_three.combat.pacing import player_attack_recovery_active
 
 from application.auto_movement import start_auto_move
 from acts.act_three.npcs import get_npc_at, open_npc_dialog
@@ -125,6 +126,16 @@ def handle_act_three_pointer_event(
     movement_state,
     movement_available,
 ):
+    if (
+        event.type == pygame.MOUSEBUTTONDOWN
+        and event.button == 1
+        and player_attack_recovery_active(
+            game_state.player,
+            pygame.time.get_ticks(),
+        )
+    ):
+        return True
+
     if paladin_sacred_ground_cast_active(
         game_state.player,
         pygame.time.get_ticks(),
