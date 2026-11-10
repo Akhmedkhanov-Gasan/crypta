@@ -312,15 +312,6 @@ def _resolve_floor_exit(
             )
             return False
 
-        game_state.game_won = True
-        add_log_message(
-            game_state.combat_log,
-            "The Crypta is conquered.",
-            category="progress",
-        )
-        return True
-
-
     revisiting_act_one = (
         current_floor_config["act"] == 1
         and game_state.player.player_class is not None
@@ -329,6 +320,9 @@ def _resolve_floor_exit(
         target_floor_index is not None
         and target_floor_index < game_state.floor_index
     )
+    if current_floor_config["act"] == 3 and moving_backward:
+        add_log_message(game_state.combat_log, "The way back is sealed for now.", category="warning")
+        return False
     bypasses_descent_altar = (
         current_floor_config["act"] in (2, 3)
         or revisiting_act_one
@@ -349,13 +343,10 @@ def _resolve_floor_exit(
         return False
 
     if target_floor_index is None:
-        game_state.game_won = True
-        add_log_message(
-            game_state.combat_log,
-            "The Crypta is conquered.",
-            category="progress",
-        )
-        return True
+        message = "This passage is sealed for now."
+        if not game_state.combat_log or game_state.combat_log[-1] != message:
+            add_log_message(game_state.combat_log, message, category="warning")
+        return False
 
     if (
         game_state.floor_index == first_act_final_floor

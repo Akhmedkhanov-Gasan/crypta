@@ -34,7 +34,7 @@ def teleport_to_trial(game_state):
 
     target_index = next(
         (index for index, config in enumerate(FLOOR_CONFIGS)
-         if config["act"] == 3 and config.get("tmx_room_sequence")),
+         if config["act"] == 3 and (config.get("trial_room") or config.get("tmx_room_sequence"))),
         None,
     )
     if target_index is None:

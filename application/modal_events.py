@@ -76,13 +76,10 @@ class ApplicationModalController:
             )
             self._stop_movement()
             if oracle_action == "summary":
-                game_state.game_won = True
-                game_state.run_stats.completed_floors.add(game_state.floor_index)
-                game_state.player.act_two.death_score_open = True
-                game_state.player.act_two.death_input_unlock_at = (
-                    pygame.time.get_ticks() + 250
-                )
-                game_state.floor.oracle_death.finished = True
+                from acts.act_three.awakening.runtime import begin_awakening
+
+                begin_awakening(game_state, pygame.time.get_ticks())
+                return ModalEventResult(True, state)
             elif event.type not in (pygame.QUIT, pygame.VIDEORESIZE):
                 return ModalEventResult(True, state)
 

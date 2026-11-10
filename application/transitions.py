@@ -1,6 +1,7 @@
 """Transitions between floors, acts, and application scenes."""
 
 from levels import FLOOR_CONFIGS
+from game.floor_identity import floor_location_id, tower_floor_number
 from presentation.transition_timing import (
     FLOOR_TRANSITION_CLOSE_END_MS,
     FLOOR_TRANSITION_END_MS,
@@ -149,7 +150,7 @@ def advance_floor_transition(game_state, current_time):
             )
             game_state.visited_floors[target_index] = target_floor
 
-        if target_index > game_state.floor_index:
+        if target_index > game_state.floor_index and floor_location_id(target_index) != floor_location_id(game_state.floor_index):
             game_state.run_stats.completed_floors.add(
                 game_state.floor_index
             )
@@ -188,7 +189,7 @@ def advance_floor_transition(game_state, current_time):
         clear_berserker_crushing_leap(game_state)
         add_log_message(
             game_state.combat_log,
-            f"Hero descends to floor {target_index + 1}.",
+            f"Hero enters floor {tower_floor_number(target_index)}.",
             category="progress",
         )
 

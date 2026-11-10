@@ -10,6 +10,7 @@ import resource_store as resources
 from enemies import ENEMY_TYPES
 from acts.act_three.npcs import NPC_FOOTPRINTS, get_npc_cells
 from acts.act_three.mining.world import build_ores
+from acts.act_three.tile_catalog import normalize_tile_layers
 
 
 def _csv_layer(layer, width, height):
@@ -21,6 +22,8 @@ def _csv_layer(layer, width, height):
         for value in (data.text or "").split(",")
         if value.strip()
     ]
+    if len(values) != width * height:
+        raise ValueError(f"Invalid TMX layer dimensions: {layer.get('name', '')}")
     return [values[row * width : (row + 1) * width] for row in range(height)]
 
 
@@ -213,10 +216,14 @@ def load_tmx_floor(path):
     width = int(root.get("width", 0))
     height = int(root.get("height", 0))
     tile_size = int(root.get("tilewidth", 32))
+    if width <= 0 or height <= 0 or tile_size != int(root.get("tileheight", tile_size)):
+        raise ValueError(f"Act Three requires a finite map with square tiles: {path}")
     layers = {
         layer.get("name", ""): _csv_layer(layer, width, height)
         for layer in root.findall("layer")
     }
+    normalize_tile_layers(layers, root, path)
+    map_properties = _properties(root)
     blocked_rectangles = []
     barrier_rectangles = []
     entities = []
@@ -425,6 +432,7 @@ def load_tmx_floor(path):
                     "position": position,
                     "type": marker_enemy_type,
                     "boss_group": False,
+                    "source_path": str(path),
                 }
             )
     from acts.act_three.shadow_step_trial import build_trial
@@ -443,6 +451,7 @@ def load_tmx_floor(path):
     trial_entrance = trial_doors[0][0] if trial_doors else None
     ores = build_ores(by_name, dungeon_map)
     return {
+        "enemy_spawn_mode": map_properties.get("enemy_spawn_mode", "false").lower() == "true",
         "map": ["".join(row) for row in dungeon_map],
         "trial_entrance": trial_entrance,
         "shadow_step_trial": shadow_step_trial,

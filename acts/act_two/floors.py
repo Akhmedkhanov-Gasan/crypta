@@ -73,6 +73,7 @@ ACT_TWO_FLOORS = (
     {
         "act": 2,
         "act_floor": 4,
+        "location_id": "oracle_arena",
         "room_count": 0,
         "enemy_types": [],
         "boss_enemy_types": ["oracle"],

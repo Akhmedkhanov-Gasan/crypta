@@ -3,6 +3,7 @@ from pathlib import Path
 import pygame
 
 import resource_store as resources
+from acts.act_three.tile_catalog import tileset_catalog
 
 
 def _load_image(path):
@@ -94,27 +95,10 @@ def _load_collection_tiles(
 
 
 def load_tmx_tiles(map_path, tile_size, animations=None):
-    map_path = Path(map_path)
-    map_root = resources.load_xml(map_path).getroot()
     tiles = {}
 
-    for tileset_reference in map_root.findall("tileset"):
-        first_gid = int(tileset_reference.get("firstgid", 1))
-        source = tileset_reference.get("source")
-
-        if source:
-            tileset_path = map_path.parent / source
-            if not resources.is_file(tileset_path):
-                raise FileNotFoundError(
-                    f"Missing external tileset: {tileset_path}"
-                )
-            tileset_root = resources.load_xml(
-                tileset_path
-            ).getroot()
-            tileset_directory = tileset_path.parent
-        else:
-            tileset_root = tileset_reference
-            tileset_directory = map_path.parent
+    for tileset_path, (first_gid, tileset_root) in tileset_catalog().items():
+        tileset_directory = tileset_path.parent
 
         _load_atlas_tiles(
             tiles,

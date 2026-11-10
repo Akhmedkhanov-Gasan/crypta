@@ -7,6 +7,7 @@ from acts.act_three.room_generation import (
     generate_tmx_sequence_floor,
 )
 from acts.act_three.tmx_loader import load_tmx_floor
+from acts.act_three.layout_generation import generate_room_layout
 
 
 def build_act_three_floor(
@@ -14,7 +15,14 @@ def build_act_three_floor(
     floor_index,
     floor_count,
 ):
-    if config.get("tmx_room_sequence"):
+    if config.get("exit_map_path"):
+        from acts.act_three.trials import trial_map_path
+
+        floor = generate_room_layout(
+            config,
+            trial_map_path(config.get("trial_subclass")) if config.get("trial_room") else None,
+        )
+    elif config.get("tmx_room_sequence"):
         from acts.act_three.trials import TRIAL_MAPS, trial_map_path
 
         sequence = tuple(
@@ -45,6 +53,7 @@ def build_act_three_floor(
         floor_index,
         floor_count,
     )
+    floor["presentation_act"] = config.get("presentation_act", config["act"])
 
     return populate_act_three_enemies(
         floor,

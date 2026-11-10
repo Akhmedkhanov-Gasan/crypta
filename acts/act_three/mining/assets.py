@@ -52,7 +52,7 @@ def load_mining_assets():
         **{
             f"{subclass}_mining_frames": _load_player_mining_frames(
                 player_root / subclass,
-                mining_size,
+                size if subclass == "warlock" else mining_size,
             )
             for subclass in (
                 "assassin",
@@ -60,6 +60,7 @@ def load_mining_assets():
                 "berserker",
                 "paladin",
                 "summoner",
+                "warlock",
             )
         },
         "summoner_no_familiar_mining_frames": _load_player_mining_frames(

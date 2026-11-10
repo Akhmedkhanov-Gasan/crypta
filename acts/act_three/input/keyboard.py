@@ -96,7 +96,6 @@ from systems.player_abilities import (
 from acts.act_three.abilities.warlock import (
     cancel_warlock_curse,
     request_warlock_curse,
-    request_warlock_demon_form,
 )
 from levels import FLOOR_CONFIGS
 from acts.act_three.settings import (
@@ -698,12 +697,7 @@ def handle_act_three_key_event(event, game_state):
         and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
         and game_state.player.subclass == "warlock"
     ):
-        request_warlock_demon_form(
-            game_state,
-            pygame.time.get_ticks(),
-        )
-        set_warlock_staff_cursor()
-        return True
+        return False
     
     if (
         event.key == pygame.K_f

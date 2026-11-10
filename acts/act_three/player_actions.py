@@ -7,6 +7,8 @@ from acts.player_abilities import resolve_targeted_player_ability
 from acts.act_three.npcs import get_npc_at, open_npc_dialog
 from acts.act_three.mining.runtime import start_mining
 from acts.act_three.mining.world import get_ore_at
+from acts.act_three.abilities.warlock import request_warlock_demon_form
+from presentation.cursors import set_warlock_staff_cursor
 from acts.act_three.shadow_step_trial import handle_trial_action
 from application.directional_input import WAIT_KEYS
 from logic import get_enemy_occupied_positions
@@ -96,6 +98,14 @@ def resolve_act_three_player_action(
             player_acted=trial_result,
             movement_blocked=not trial_result,
         )
+
+    if event.key == pygame.K_f and game_state.player.subclass == "warlock":
+        acted = request_warlock_demon_form(
+            game_state,
+            pygame.time.get_ticks(),
+        )
+        set_warlock_staff_cursor()
+        return ActThreePlayerActionResult(player_acted=acted)
 
     ability_result = resolve_targeted_player_ability(
         game_state,

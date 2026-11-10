@@ -235,6 +235,7 @@ class ArcherBarrageTurnState:
 class ActThreeSessionState:
     mining_effects: list[dict] = field(default_factory=list)
     mining_reward: dict | None = None
+    mining_warning: dict | None = None
     awakening: AwakeningScene | None = None
     barrage_turn: ArcherBarrageTurnState | None = None
     npc_dialog_position: tuple[int, int] | None = None

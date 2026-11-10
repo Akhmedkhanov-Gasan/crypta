@@ -1,6 +1,7 @@
 import pygame
 
 from levels import FLOOR_CONFIGS
+from game.floor_identity import tower_floor_number
 
 
 _ROMAN_VALUES = (
@@ -20,20 +21,6 @@ _ROMAN_VALUES = (
 )
 
 
-def tower_floor_number(floor_index):
-    return sum(
-        0
-        if floor_config.get(
-            "continues_previous_floor",
-            False,
-        )
-        else 1
-        for floor_config in FLOOR_CONFIGS[
-            :floor_index + 1
-        ]
-    )
-
-
 def roman_number(number):
     result = []
     remaining = number
@@ -50,7 +37,7 @@ def floor_indicator_text(floor_index):
     floor_config = FLOOR_CONFIGS[floor_index]
     tower_floor = tower_floor_number(floor_index)
     act_number = roman_number(
-        floor_config["act"]
+        floor_config.get("presentation_act", floor_config["act"])
     )
 
     return (

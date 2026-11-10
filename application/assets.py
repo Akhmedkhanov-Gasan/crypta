@@ -1061,6 +1061,8 @@ def load_act_three_gameplay_assets():
     assets.update(load_mining_assets())
     assets["tmx_tiles_by_floor"] = {}
     assets["tmx_animations_by_floor"] = {}
+    animations = {}
+    shared_tmx_tiles = load_tmx_tiles(map_path, tile_size, animations)
 
     for floor_index, config in act_three_configs:
         floor_map_path = config.get("map_path")
@@ -1079,14 +1081,7 @@ def load_act_three_gameplay_assets():
         if floor_map_path is None:
             continue
 
-        animations = {}
-        assets["tmx_tiles_by_floor"][floor_index] = (
-            load_tmx_tiles(
-                project_root / floor_map_path,
-                tile_size,
-                animations,
-            )
-        )
+        assets["tmx_tiles_by_floor"][floor_index] = shared_tmx_tiles
         assets["tmx_animations_by_floor"][floor_index] = animations
 
     assets["tmx_tiles"] = assets[

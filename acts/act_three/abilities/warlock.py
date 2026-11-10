@@ -192,7 +192,7 @@ def request_warlock_demon_form(
         return False
 
     if player.health <= 0:
-        return True
+        return False
 
     transition_elapsed = (
         current_time - player.warlock_demon_form_started_at
@@ -203,7 +203,7 @@ def request_warlock_demon_form(
         <= transition_elapsed
         < WARLOCK_DEMON_FORM_TRANSFORM_MS
     ):
-        return True
+        return False
 
     target_active = not player.warlock_demon_form_active
 
@@ -215,7 +215,7 @@ def request_warlock_demon_form(
             game_state.combat_log,
             "Demon Form is not charged.",
         )
-        return True
+        return False
 
     player.warlock_demon_form_active = target_active
     player.warlock_demon_form_target_active = target_active

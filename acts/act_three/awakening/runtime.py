@@ -104,7 +104,6 @@ def enter_act_three(game_state):
     from game.factories import create_floor_state
 
     target = next(i for i, config in enumerate(FLOOR_CONFIGS) if config["act"] == 3)
-    game_state.run_stats.completed_floors.add(game_state.floor_index)
     floor = game_state.visited_floors.get(target)
     if floor is None:
         floor = create_floor_state(target)

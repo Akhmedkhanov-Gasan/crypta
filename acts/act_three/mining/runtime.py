@@ -17,6 +17,7 @@ MINING_DURATION_MS = MINING_FRAME_MS * len(MINING_FRAME_SEQUENCE)
 MINING_RETURN_MS = MINING_FRAME_MS * 2
 MINING_EFFECT_MS = 600
 MINING_REWARD_MS = 1400
+MINING_WARNING_MS = 1400
 
 
 def start_mining(game_state, target, current_time):
@@ -33,6 +34,7 @@ def start_mining(game_state, target, current_time):
             "berserker",
             "paladin",
             "summoner",
+            "warlock",
         )
         or player.health <= 0
         or player.stun_turns > 0
@@ -52,6 +54,24 @@ def start_mining(game_state, target, current_time):
         floor.barriers,
         target_must_be_walkable=False,
     ):
+        return False
+
+    if player.subclass == "warlock" and player.warlock_demon_form_active:
+        warning = game_state.act_three.mining_warning
+        if (
+            warning is None
+            or warning["floor_index"] != game_state.floor_index
+            or current_time - warning["started_at"] >= MINING_WARNING_MS
+        ):
+            add_log_message(
+                game_state.combat_log,
+                "Mining is unavailable in Demon Form. Return to human form.",
+                category="warning",
+            )
+            game_state.act_three.mining_warning = {
+                "floor_index": game_state.floor_index,
+                "started_at": current_time,
+            }
         return False
 
     if ore["stage"] == 2 and not inventory_has_space(player):
@@ -106,6 +126,12 @@ def handle_mining_event(event, game_state):
 def advance_mining(game_state, current_time):
     session = game_state.act_three
     player = game_state.player
+    warning = session.mining_warning
+    if warning is not None and (
+        warning["floor_index"] != game_state.floor_index
+        or current_time - warning["started_at"] >= MINING_WARNING_MS
+    ):
+        session.mining_warning = None
     for ore in game_state.floor.act_three_ores:
         if ore["stage"] == 3:
             clear_ore_collision(game_state.floor, ore["position"])

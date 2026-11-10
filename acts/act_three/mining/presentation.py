@@ -6,6 +6,7 @@ from acts.act_three.mining.effects import draw_active_mining_particles
 from acts.act_three.mining.runtime import (
     MINING_EFFECT_MS,
     MINING_REWARD_MS,
+    MINING_WARNING_MS,
     mining_frame,
 )
 from presentation.layout import ACT_THREE_TILE_SIZE
@@ -45,6 +46,33 @@ def draw_world_ores(context, assets):
 def draw_mining_feedback(context, game_state, assets, font, current_time):
     surface = context.view_surface
     draw_active_mining_particles(context, game_state.player, current_time)
+    warning = game_state.act_three.mining_warning
+    if warning is not None and warning["floor_index"] == game_state.floor_index:
+        elapsed = current_time - warning["started_at"]
+        if 0 <= elapsed < MINING_WARNING_MS:
+            progress = elapsed / MINING_WARNING_MS
+            alpha = round(255 * min(1.0, (1.0 - progress) * 3))
+            label = font.render("Human form required", True, (212, 184, 235))
+            shadow = font.render("Human form required", True, (12, 8, 18))
+            label.set_alpha(alpha)
+            shadow.set_alpha(alpha)
+            rectangle = label.get_rect(
+                center=(
+                    round(
+                        context.locomotion_pose.position[0]
+                        - context.camera_x
+                        + ACT_THREE_TILE_SIZE // 2
+                    ),
+                    round(
+                        context.locomotion_pose.position[1]
+                        - context.camera_y
+                        - 8
+                        - progress * 18
+                    ),
+                )
+            )
+            surface.blit(shadow, rectangle.move(1, 2))
+            surface.blit(label, rectangle)
     particles = None
 
     for effect in game_state.act_three.mining_effects:

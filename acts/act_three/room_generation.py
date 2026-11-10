@@ -128,6 +128,7 @@ def _compose(placements, connections):
     npcs = []
     ores = []
     encounter_zones = []
+    spawn_regions = []
     chests = []
     potions = []
     upgrade_altar = None
@@ -141,6 +142,14 @@ def _compose(placements, connections):
             original_offset[0] + normalization[0],
             original_offset[1] + normalization[1],
         )
+        spawn_regions.append({
+            "left": offset[0],
+            "top": offset[1],
+            "right": offset[0] + template["width"],
+            "bottom": offset[1] + template["height"],
+            "enabled": template.get("enemy_spawn_mode", False),
+            "source_path": template["source_path"],
+        })
 
         if template.get("trial_entrance") is not None:
             trial_entrance = _translated(template["trial_entrance"], offset)
@@ -270,6 +279,8 @@ def _compose(placements, connections):
         "piercing_trial": piercing_trial,
         "trial_entrance": trial_entrance,
         "encounter_zones": encounter_zones,
+        "spawn_regions": spawn_regions,
+        "room_connections": shifted_connections,
         "chests": chests,
         "potions": potions,
         "torches": torches,
@@ -377,66 +388,6 @@ def _structural_connectors(template):
     ]
 
 
-def _normalize_sequence_tile_ids(templates, paths):
-    reference_root = resources.load_xml(paths[0]).getroot()
-    reference_tilesets = {
-        (paths[0].parent / node.get("source")).resolve(): int(
-            node.get("firstgid", 1)
-        )
-        for node in reference_root.findall("tileset")
-        if node.get("source")
-    }
-    flag_mask = 0xF0000000
-
-    for template, path in zip(templates, paths):
-        root = resources.load_xml(path).getroot()
-        ranges = []
-
-        for node in root.findall("tileset"):
-            source = node.get("source")
-
-            if not source:
-                raise ValueError(
-                    f"Room sequence requires external tilesets: {path.name}"
-                )
-
-            tileset_path = (path.parent / source).resolve()
-
-            if tileset_path not in reference_tilesets:
-                raise ValueError(
-                    f"Tileset is missing from the first room: {source}"
-                )
-
-            ranges.append(
-                (
-                    int(node.get("firstgid", 1)),
-                    reference_tilesets[tileset_path],
-                )
-            )
-
-        ranges.sort(reverse=True)
-
-        for layer in template["tile_layers"].values():
-            for row in layer:
-                for index, gid in enumerate(row):
-                    if gid == 0:
-                        continue
-
-                    flags = gid & flag_mask
-                    tile_id = gid & ~flag_mask
-
-                    for source_first, target_first in ranges:
-                        if tile_id >= source_first:
-                            row[index] = flags | (
-                                target_first + tile_id - source_first
-                            )
-                            break
-                    else:
-                        raise ValueError(
-                            f"Invalid tile ID {tile_id} in {path.name}"
-                        )
-
-
 def generate_tmx_sequence_floor(template_paths):
     project_root = Path(__file__).resolve().parents[2]
     resolved_paths = []
@@ -454,8 +405,6 @@ def generate_tmx_sequence_floor(template_paths):
 
     if not templates:
         raise ValueError("TMX room sequence cannot be empty")
-
-    _normalize_sequence_tile_ids(templates, resolved_paths)
 
     placements = [(templates[0], (0, 0))]
     connections = []
@@ -589,11 +538,7 @@ def attach_act_three_passages(
                 else None
             )
         elif name == "exit_back":
-            target_floor_index = (
-                floor_index - 1
-                if floor_index > 0
-                else None
-            )
+            target_floor_index = None
         else:
             continue
 
@@ -609,7 +554,7 @@ def attach_act_three_passages(
                 "wall_position": wall_position,
                 "trigger_position": trigger_position,
                 "target_floor_index": target_floor_index,
-                "target_passage_id": None,
+                "target_passage_id": "exit_back" if target_floor_index is not None else None,
                 "requires_clear": False,
             }
         )

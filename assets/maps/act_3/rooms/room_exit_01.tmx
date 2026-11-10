@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="10" height="8" tilewidth="64" tileheight="64" infinite="0" nextlayerid="14" nextobjectid="15">
- <tileset firstgid="1" source="act3_floor_64.tsx"/>
- <tileset firstgid="9" source="items.tsx"/>
- <tileset firstgid="177" source="my_tiles_textured_v9.tsx"/>
- <tileset firstgid="258" source="torches/torches.tsx"/>
+ <properties>
+  <property name="enemy_spawn_mode" type="bool" value="true"/>
+ </properties>
+ <tileset firstgid="1" source="../act3_floor_64.tsx"/>
+ <tileset firstgid="9" source="../items.tsx"/>
+ <tileset firstgid="177" source="../my_tiles_textured.tsx"/>
+ <tileset firstgid="285" source="../torches/torches.tsx"/>
  <layer id="1" name="Ground" width="10" height="8">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,
@@ -103,7 +106,7 @@
  <layer id="13" name="Torches" width="10" height="8">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,261,0,0,0,0,0,
+0,0,0,0,288,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,
