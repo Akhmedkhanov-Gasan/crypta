@@ -35,7 +35,7 @@ from acts.act_three.abilities.archer import (
     update_archer_barrage_zone_preview,
 )
 from acts.act_three.abilities.assassin import (
-    begin_assassin_ultimate,
+    confirm_assassin_teleport,
     is_valid_assassin_teleport_target,
     select_assassin_ultimate_target,
 )
@@ -927,15 +927,7 @@ def handle_act_three_pointer_event(
                     game_state,
                     game_mouse_position,
                 )
-                if (
-                    target_cell is not None
-                    and is_valid_assassin_teleport_target(
-                        game_state,
-                        *target_cell,
-                    )
-                ):
-                    game_state.player.teleport_target = target_cell
-                    game_state.player.teleport_preview_target = None
+                if confirm_assassin_teleport(game_state, target_cell):
                     pygame.event.post(
                         pygame.event.Event(
                             pygame.KEYDOWN,
@@ -1030,12 +1022,9 @@ def handle_act_three_pointer_event(
                         select_assassin_ultimate_target(
                             game_state,
                             selected_enemy.name,
+                            pygame.time.get_ticks(),
                         )
-                        if len(game_state.player.ultimate_targets) >= 5:
-                            begin_assassin_ultimate(
-                                game_state,
-                                pygame.time.get_ticks(),
-                            )
+                        if not game_state.player.ultimate_aiming:
                             set_assassin_target_cursor()
             elif game_state.player.subclass == "archer":
                 archer_target_cell = (

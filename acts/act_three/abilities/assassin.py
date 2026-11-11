@@ -3,15 +3,18 @@ import random
 
 from game.combat_log import add_log_message
 from acts.act_three.events import GameEvent, GameEventType
+from acts.act_three.npcs import get_npc_at
 from game.state import (
     EnemyState,
     FloorState,
     GameState,
 )
-from logic import get_enemy_occupied_positions
+from logic import can_move_to, get_enemy_occupied_positions
 from acts.act_three.settings import (
     ASSASSIN_TELEPORT_CHARGES,
     ASSASSIN_ULTIMATE_CHARGES,
+    ASSASSIN_ULTIMATE_MAX_MARKS,
+    ASSASSIN_ULTIMATE_RANGE,
 )
 from systems.player_combat import (
     attack_enemy,
@@ -164,7 +167,8 @@ def request_assassin_teleport(game_state: GameState) -> bool:
     player.teleport_preview_target = None
     add_log_message(
         game_state.combat_log,
-        "Choose a free cell for teleportation.",
+        "Choose a free cell with movement keys or the mouse. "
+        "Q to confirm, Esc to cancel.",
     )
     return True
 
@@ -188,11 +192,7 @@ def is_valid_assassin_teleport_target(
         return False
     if not game_state.player.teleport_aiming:
         return False
-    if not (0 <= row < len(floor.map)):
-        return False
-    if not (0 <= column < len(floor.map[0])):
-        return False
-    if floor.map[row][column] in ("#", "C"):
+    if not can_move_to(floor.map, column, row):
         return False
     if (column, row) == (floor.player_column, floor.player_row):
         return False
@@ -210,21 +210,121 @@ def is_valid_assassin_teleport_target(
         for chest in floor.chests
     ):
         return False
+    if any(
+        not crate.is_broken
+        and (crate.column, crate.row) == (column, row)
+        for crate in floor.breakable_crates
+    ):
+        return False
+    if get_npc_at(floor, (column, row)) is not None:
+        return False
     return True
+
+
+def move_assassin_teleport_preview(
+    game_state: GameState,
+    direction: tuple[int, int],
+) -> None:
+    if direction == (0, 0):
+        return
+
+    player = game_state.player
+    floor = game_state.floor
+    column, row = player.teleport_preview_target or (
+        floor.player_column,
+        floor.player_row,
+    )
+    dx, dy = direction
+
+    while True:
+        column += dx
+        row += dy
+        if (column, row) not in floor.visible_cells:
+            return
+        if is_valid_assassin_teleport_target(game_state, column, row):
+            player.teleport_preview_target = (column, row)
+            return
+
+
+def confirm_assassin_teleport(
+    game_state: GameState,
+    target: tuple[int, int] | None,
+) -> bool:
+    player = game_state.player
+    if (
+        player.teleport_target is not None
+        or target is None
+        or not is_valid_assassin_teleport_target(game_state, *target)
+    ):
+        return False
+
+    player.teleport_target = target
+    player.teleport_preview_target = None
+    return True
+
+
+def _assassin_ultimate_targets(game_state: GameState):
+    floor = game_state.floor
+    origin_x, origin_y = floor.player_column, floor.player_row
+
+    def distance(cell):
+        return max(abs(cell[0] - origin_x), abs(cell[1] - origin_y))
+
+    targets = []
+    for enemy in floor.enemies:
+        if enemy.health <= 0:
+            continue
+        cells = (
+            cell for cell in get_enemy_occupied_positions(enemy)
+            if cell in floor.visible_cells and distance(cell) <= ASSASSIN_ULTIMATE_RANGE
+        )
+        cell = min(cells, key=lambda cell: (distance(cell), cell), default=None)
+        if cell is not None:
+            targets.append((distance(cell), cell, enemy.name))
+
+    return {name: cell for _, cell, name in sorted(targets)}
+
+
+def move_assassin_ultimate_preview(
+    game_state: GameState,
+    direction: tuple[int, int],
+) -> None:
+    targets = _assassin_ultimate_targets(game_state)
+    if not targets:
+        return
+
+    player = game_state.player
+    current = player.ultimate_preview_target
+    if current not in targets:
+        player.ultimate_preview_target = next(iter(targets))
+        return
+
+    origin_x, origin_y = targets[current]
+    dx, dy = direction
+    candidates = []
+    for name, (x, y) in targets.items():
+        x -= origin_x
+        y -= origin_y
+        if x * dx + y * dy > 0:
+            candidates.append((abs(x * dy - y * dx), x * x + y * y, name))
+    if candidates:
+        player.ultimate_preview_target = min(candidates)[2]
+
 
 def request_assassin_ultimate(game_state: GameState) -> bool:
     player = game_state.player
 
-    if player.subclass != "assassin":
+    if player.subclass != "assassin" or player.ultimate_animation_active:
         return False
 
     if player.ultimate_aiming:
-        player.ultimate_aiming = False
-        player.ultimate_targets.clear()
-        player.ultimate_visual_variants.clear()
+        return False
+
+    targets = _assassin_ultimate_targets(game_state)
+    if not targets:
         add_log_message(
             game_state.combat_log,
-            "Ultimate targeting cancelled.",
+            "No enemies in range.",
         )
         return True
 
@@ -239,15 +339,18 @@ def request_assassin_ultimate(game_state: GameState) -> bool:
         return True
 
     player.ultimate_aiming = True
+    player.ultimate_preview_target = next(iter(targets))
     player.ultimate_targets.clear()
     add_log_message(
         game_state.combat_log,
-        "Choose up to five targets for Killing Spree.",
+        "Choose a target with movement keys. "
+        f"F to mark ({ASSASSIN_ULTIMATE_MAX_MARKS} marks), Esc to cancel.",
     )
     return True
 
 def cancel_assassin_ultimate(game_state: GameState) -> None:
     game_state.player.ultimate_aiming = False
+    game_state.player.ultimate_preview_target = None
     game_state.player.ultimate_targets.clear()
     game_state.player.ultimate_visual_variants.clear()
     add_log_message(
@@ -257,25 +360,21 @@ def cancel_assassin_ultimate(game_state: GameState) -> None:
 
 def select_assassin_ultimate_target(
     game_state: GameState,
-    enemy_name: str,
+    enemy_name: str | None,
+    current_time: int,
 ) -> bool:
     player = game_state.player
     if not player.ultimate_aiming:
         return False
-    if len(player.ultimate_targets) >= 5:
+    if len(player.ultimate_targets) >= ASSASSIN_ULTIMATE_MAX_MARKS:
         return False
-    enemy = next(
-        (
-            enemy
-            for enemy in game_state.floor.enemies
-            if enemy.name == enemy_name and enemy.health > 0
-        ),
-        None,
-    )
-    if enemy is None:
+    if enemy_name is None or enemy_name not in _assassin_ultimate_targets(game_state):
         return False
 
+    player.ultimate_preview_target = enemy_name
     player.ultimate_targets.append(enemy_name)
+    if len(player.ultimate_targets) == ASSASSIN_ULTIMATE_MAX_MARKS:
+        begin_assassin_ultimate(game_state, current_time)
     return True
 
 def begin_assassin_ultimate(
@@ -286,7 +385,15 @@ def begin_assassin_ultimate(
     if not player.ultimate_aiming or not player.ultimate_targets:
         return False
 
+    targets = _assassin_ultimate_targets(game_state)
+    player.ultimate_targets[:] = [name for name in player.ultimate_targets if name in targets]
+    if not player.ultimate_targets:
+        cancel_assassin_ultimate(game_state)
+        add_log_message(game_state.combat_log, "No enemies in range.")
+        return False
+
     player.ultimate_aiming = False
+    player.ultimate_preview_target = None
     player.ultimate_charge = 0
     player.ultimate_visual_variants = []
     previous_variant = None

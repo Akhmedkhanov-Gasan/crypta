@@ -200,6 +200,7 @@ class ActThreePlayerState:
     teleport_transition_started_at: int = 0
     ultimate_charge: int = 0
     ultimate_aiming: bool = False
+    ultimate_preview_target: str | None = None
     ultimate_targets: list[str] = field(default_factory=list)
     ultimate_visual_variants: list[int] = field(default_factory=list)
     ultimate_origin: tuple[int, int] | None = None

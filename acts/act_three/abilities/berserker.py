@@ -98,7 +98,7 @@ def request_berserker_crushing_leap(
     player.berserker_crushing_leap_preview_cells.clear()
     add_log_message(
         game_state.combat_log,
-        "Choose a direction. Press Q again or click to dash.",
+        "Choose a direction, then press it again or click to dash.",
     )
     return True
 

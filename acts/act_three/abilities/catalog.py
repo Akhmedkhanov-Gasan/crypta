@@ -195,8 +195,8 @@ SUBCLASS_DEFINITIONS = {
                 ),
                 charge_required=8.0,
                 description=(
-                    "Strike up to three visible enemies "
-                    "in rapid succession."
+                    "Mark visible enemies within three tiles. "
+                    "Strike up to five times, with multiple marks on the same target."
                 ),
             ),
         },

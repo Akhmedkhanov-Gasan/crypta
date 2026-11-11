@@ -56,13 +56,18 @@ from acts.act_three.abilities.assassin import (
     begin_assassin_ultimate,
     cancel_assassin_teleport,
     cancel_assassin_ultimate,
+    confirm_assassin_teleport,
+    move_assassin_teleport_preview,
+    move_assassin_ultimate_preview,
     request_assassin_teleport,
     request_assassin_ultimate,
+    select_assassin_ultimate_target,
 )
 from acts.act_three.abilities.berserker import (
     cancel_berserker_crushing_leap,
     request_berserker_crushing_leap,
     request_berserker_last_rage,
+    update_berserker_crushing_leap_preview,
 )
 from acts.act_three.presentation.summoner.true_form import (
     SUMMONER_TRUE_FORM_TRANSFORM_DURATION_MS,
@@ -257,6 +262,51 @@ def handle_act_three_key_event(event, game_state):
     ):
         return True
     aiming_direction = _act_three_aiming_direction(event)
+
+    if game_state.player.teleport_aiming:
+        player = game_state.player
+        if player.teleport_target is not None:
+            return event.key not in (pygame.K_RETURN, pygame.K_KP_ENTER)
+
+        if event.key == pygame.K_ESCAPE:
+            cancel_assassin_teleport(game_state)
+            set_assassin_target_cursor()
+        elif event.key == pygame.K_q:
+            if getattr(event, "repeat", False):
+                return True
+            if confirm_assassin_teleport(
+                game_state,
+                player.teleport_preview_target,
+            ):
+                pygame.event.post(
+                    pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RETURN)
+                )
+        elif aiming_direction is not None:
+            move_assassin_teleport_preview(game_state, aiming_direction)
+        return True
+
+    if game_state.player.ultimate_animation_active:
+        return True
+
+    if game_state.player.ultimate_aiming:
+        player = game_state.player
+        if event.key == pygame.K_ESCAPE:
+            cancel_assassin_ultimate(game_state)
+        elif event.key == pygame.K_f:
+            if not getattr(event, "repeat", False):
+                select_assassin_ultimate_target(
+                    game_state,
+                    player.ultimate_preview_target,
+                    pygame.time.get_ticks(),
+                )
+        elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+            begin_assassin_ultimate(game_state, pygame.time.get_ticks())
+        elif aiming_direction is not None:
+            move_assassin_ultimate_preview(game_state, aiming_direction)
+
+        if not player.ultimate_aiming:
+            set_assassin_target_cursor()
+        return True
 
     if game_state.player.summoner_familiar_summon_aiming:
         if event.key == pygame.K_ESCAPE:
@@ -457,6 +507,28 @@ def handle_act_three_key_event(event, game_state):
         return True
 
     if (
+        game_state.player.berserker_crushing_leap_aiming
+        and aiming_direction is not None
+    ):
+        if getattr(event, "repeat", False):
+            return True
+
+        player = game_state.player
+        floor = game_state.floor
+        previous_target = player.berserker_crushing_leap_target
+        target_selected = update_berserker_crushing_leap_preview(
+            game_state,
+            (
+                floor.player_column + aiming_direction[0],
+                floor.player_row + aiming_direction[1],
+            ),
+        )
+        set_berserker_crushing_leap_cursor(target_selected)
+        if target_selected and previous_target == player.berserker_crushing_leap_target:
+            pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RETURN))
+        return True
+
+    if (
         game_state.player.player_class == "warrior"
         and game_state.player.directional_ability_aiming
         and event.key == pygame.K_ESCAPE
@@ -544,11 +616,6 @@ def handle_act_three_key_event(event, game_state):
         return True
 
     
-    if event.key == pygame.K_ESCAPE and game_state.player.teleport_aiming:
-        cancel_assassin_teleport(game_state)
-        set_assassin_target_cursor()
-        return True
-    
     if (
         event.key == pygame.K_ESCAPE
         and game_state.player.archer_empowered_shot_aiming
@@ -579,11 +646,6 @@ def handle_act_three_key_event(event, game_state):
     ):
         cancel_berserker_crushing_leap(game_state)
         set_berserker_crushing_leap_cursor()
-        return True
-    
-    if event.key == pygame.K_ESCAPE and game_state.player.ultimate_aiming:
-        cancel_assassin_ultimate(game_state)
-        set_assassin_target_cursor()
         return True
     
     if (
@@ -631,7 +693,7 @@ def handle_act_three_key_event(event, game_state):
         and game_state.player.subclass == "berserker"
     ):
         if game_state.player.berserker_crushing_leap_aiming:
-            return game_state.player.berserker_crushing_leap_target is None
+            return True
 
         request_berserker_crushing_leap(game_state)
         if (
@@ -755,6 +817,8 @@ def handle_act_three_key_event(event, game_state):
         and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
         and game_state.player.subclass == "assassin"
     ):
+        if getattr(event, "repeat", False):
+            return True
         request_assassin_teleport(game_state)
         set_assassin_target_cursor(
             "teleport"
@@ -768,29 +832,14 @@ def handle_act_three_key_event(event, game_state):
         and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
         and game_state.player.subclass == "assassin"
     ):
+        if getattr(event, "repeat", False):
+            return True
         request_assassin_ultimate(game_state)
         set_assassin_target_cursor(
             "ultimate"
             if game_state.player.ultimate_aiming
             else None
         )
-        return True
-    
-    if (
-        event.key in (pygame.K_RETURN, pygame.K_KP_ENTER)
-        and game_state.player.ultimate_aiming
-    ):
-        if begin_assassin_ultimate(
-            game_state,
-            pygame.time.get_ticks(),
-        ):
-            set_assassin_target_cursor()
-        return True
-    
-    if (
-        game_state.player.teleport_aiming
-        and game_state.player.teleport_target is None
-    ):
         return True
     
     if (
@@ -805,8 +854,6 @@ def handle_act_three_key_event(event, game_state):
             or game_state.player.berserker_crushing_leap_target is None
         )
     
-    if game_state.player.ultimate_aiming:
-        return True
     if game_state.player.paladin_shield_charge_aiming:
         return event.key not in (
             pygame.K_RETURN,

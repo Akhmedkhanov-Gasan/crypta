@@ -593,7 +593,8 @@ def draw_killing_spree_target_marks(
             enemy.name,
             0,
         )
-        if enemy.health <= 0 or mark_count <= 0:
+        focused = enemy.name == player.ultimate_preview_target
+        if enemy.health <= 0 or (mark_count <= 0 and not focused):
             continue
 
         enemy_position = _view_position(
@@ -607,6 +608,17 @@ def draw_killing_spree_target_marks(
             + ACT_THREE_TILE_SIZE // 2
         )
         mark_y = enemy_position[1] - 7
+
+        if focused:
+            focus_y = mark_y - 12 if mark_count else mark_y
+            diamond = (
+                (center_x, focus_y - 5),
+                (center_x + 5, focus_y),
+                (center_x, focus_y + 5),
+                (center_x - 5, focus_y),
+            )
+            pygame.draw.polygon(surface, (35, 14, 22), diamond)
+            pygame.draw.polygon(surface, (248, 196, 145), diamond, width=1)
 
         for mark_index in range(mark_count):
             mark_x = (
