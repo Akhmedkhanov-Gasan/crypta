@@ -908,16 +908,22 @@ def perform_mage_resonance_attack(
 
     dx = target[0] - origin[0]
     dy = target[1] - origin[1]
-    player.act_two_facing_direction = (
+    facing_direction = (
         (1 if dx > 0 else -1, 0)
         if abs(dx) > abs(dy)
         else (0, 1 if dy > 0 else -1)
     )
 
-    player.act_two.ability_effect_target = target
-    player.act_two.ability_effect_cells = (target,)
-    player.act_two.ability_effect_hit_positions = (target,)
-    player.act_two.ability_effect_kind = "resonance"
+    if floor.presentation_act == 3:
+        player.facing_direction = facing_direction
+        effect_state = player.act_three.mage_arcane_burst
+    else:
+        player.act_two_facing_direction = facing_direction
+        effect_state = player.act_two
+    effect_state.ability_effect_target = target
+    effect_state.ability_effect_cells = (target,)
+    effect_state.ability_effect_hit_positions = (target,)
+    effect_state.ability_effect_kind = "resonance"
 
     game_state.emit(
         GameEvent(

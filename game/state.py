@@ -423,6 +423,7 @@ class PlayerState:
     impact_block_direction: tuple[int, int] = (0, 1)
     veil_triggered_this_turn: bool = False
     directional_ability_aiming: bool = False
+    mage_aim_target: tuple[int, int] | None = None
     potion_effect_started_at: int = 0
     act_two_movement_started_at: int = 0
     act_two_movement_origin: tuple[int, int] | None = None

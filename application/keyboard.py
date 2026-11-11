@@ -1,5 +1,12 @@
 import pygame
 
+from acts.mage_targeting import (
+    mage_aiming,
+    mage_preview_target,
+    mage_target_event,
+    select_mage_aim_target,
+)
+
 from acts.act_one.upgrades import handle_upgrade_key_input
 from acts.act_three.combat.pacing import player_attack_recovery_active
 from acts.act_three.input import (
@@ -108,6 +115,7 @@ class GameplayKeyboardController:
                 event.key in MOVEMENT_KEYS
                 or getattr(event, "movement_direction", None) is not None
             )
+            and not mage_aiming(game_state.player)
             and not (
                 current_act == 3
                 and (
@@ -168,6 +176,10 @@ class GameplayKeyboardController:
             or event.key in WAIT_KEYS
             or event.key in CONSUMABLE_KEYS
             or event.key in (pygame.K_UNKNOWN, pygame.K_e)
+            or (
+                mage_aiming(game_state.player)
+                and event.key in (pygame.K_RETURN, pygame.K_KP_ENTER)
+            )
         ):
             oracle_interrupted_player = finish_oracle_animation_before_action(
                 game_state,
@@ -210,6 +222,33 @@ class GameplayKeyboardController:
             stunned_action = True
             self.movement_state.reset_held_movement()
             self.movement_state.cancel_auto_move()
+
+        if current_act in (2, 3) and mage_aiming(game_state.player):
+            if not any(
+                getattr(event, name, None) is not None
+                for name in ("mage_ability_target", "resonance_target")
+            ):
+                if automatic_movement:
+                    return game_state
+                self.movement_state.reset_held_movement()
+                if event.key == pygame.K_ESCAPE or getattr(event, "mage_aim_toggle", False):
+                    cancel_ability_aiming(game_state)
+                    return game_state
+                aim_direction = movement_direction_for_key(event.key)
+                if aim_direction is not None:
+                    column, row = mage_preview_target(game_state)
+                    select_mage_aim_target(
+                        game_state,
+                        (column + aim_direction[0], row + aim_direction[1]),
+                    )
+                    return game_state
+                if event.key not in (pygame.K_e, pygame.K_RETURN, pygame.K_KP_ENTER):
+                    return game_state
+                if getattr(event, "repeat", False):
+                    return game_state
+                event = mage_target_event(game_state, mage_preview_target(game_state))
+                if event is None:
+                    return game_state
 
         game_state.clear_events()
         action_request = ActTwoActionRequest.from_event(
@@ -283,6 +322,10 @@ class GameplayKeyboardController:
             and game_state.player.subclass == "assassin"
         )
         if event.key == pygame.K_e or assassin_ability_pressed:
+            if current_act in (2, 3) and game_state.player.player_class == "mage":
+                if getattr(event, "repeat", False):
+                    return game_state
+                self.movement_state.reset_held_movement()
             ability_request = request_class_ability(game_state)
             if current_act == 3 and game_state.player.player_class == "warrior":
                 set_archer_attack_cursor(
@@ -299,16 +342,9 @@ class GameplayKeyboardController:
 
         if (
             game_state.player.directional_ability_aiming
-            and game_state.player.player_class == "mage"
-            and mage_ability_target is None
-        ):
-            if event.key == pygame.K_ESCAPE:
-                cancel_ability_aiming(game_state)
-            return game_state
-        if (
-            game_state.player.directional_ability_aiming
             and not player_tried_to_move
             and mage_ability_target is None
+            and action_request.resonance_target is None
         ):
             if event.key == pygame.K_ESCAPE:
                 cancel_ability_aiming(game_state)

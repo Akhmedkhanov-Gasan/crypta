@@ -88,14 +88,14 @@ def request_class_ability(
         and player.selected_rune_id == "rune_of_resonance"
     ):
         player.ability_kill_charge = 0
-        player.directional_ability_aiming = False
+        player.directional_ability_aiming = True
         clear_act_two_ability_selection(game_state)
         add_log_message(
             game_state.combat_log,
-            "Resonance: click an enemy up to 2 cells in any of 8 directions.",
+            "Resonance: choose an enemy within 2 cells.",
             category="rune",
         )
-        return AbilityRequestResult.NOT_READY
+        return AbilityRequestResult.AIMING_TOGGLED
 
     if (
         player.player_class == "warrior"

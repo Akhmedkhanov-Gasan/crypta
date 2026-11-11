@@ -190,5 +190,6 @@ def select_warrior_cleave_direction(
 
 
 def clear_act_two_ability_selection(game_state) -> None:
+    game_state.player.mage_aim_target = None
     game_state.player.act_two.selected_ability_direction = None
     game_state.player_attack_targets = []

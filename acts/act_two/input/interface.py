@@ -1,5 +1,8 @@
 import pygame
 
+from acts.mage_targeting import post_mage_aim_toggle
+from presentation.figma_ui import figma_rect
+
 from game.state import GameState
 
 from acts.act_two.consumables import (
@@ -247,6 +250,15 @@ class ActTwoInterfaceInput:
             and mouse_position is not None
         ):
             return False
+        if (
+            game_state.player.player_class == "mage"
+            and game_state.player.health > 0
+            and figma_rect(
+                self.hud_layout["down_bar"]["ability"]["hitbox"]
+            ).collidepoint(mouse_position)
+        ):
+            post_mage_aim_toggle()
+            return True
         clicked_button = next(
             (
                 button_name

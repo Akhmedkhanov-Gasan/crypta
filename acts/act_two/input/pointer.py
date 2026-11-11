@@ -2,7 +2,11 @@ import pygame
 
 from game.state import GameState
 
-from acts.act_two.abilities import is_valid_mage_arcane_burst_target
+from acts.mage_targeting import (
+    mage_aiming,
+    mage_target_event,
+    select_mage_aim_target,
+)
 from acts.act_two.consumables import (
     cancel_fire_bomb_aiming,
     cancel_scroll_aiming,
@@ -38,6 +42,13 @@ def handle_act_two_pointer_event(
     player = game_state.player
     floor = game_state.floor
 
+    if event.type == pygame.MOUSEMOTION and mage_aiming(player):
+        if mouse_position is not None:
+            select_mage_aim_target(
+                game_state, act_two_screen_to_cell(mouse_position, camera)
+            )
+        return True
+
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
         if not (
             player.directional_ability_aiming
@@ -65,9 +76,11 @@ def handle_act_two_pointer_event(
         if mouse_position is not None
         else None
     )
-    if player.player_class == "mage" and player.directional_ability_aiming:
-        if is_valid_mage_arcane_burst_target(game_state, target_cell):
-            _post_target_event(mage_ability_target=target_cell)
+    if mage_aiming(player):
+        select_mage_aim_target(game_state, target_cell)
+        target_event = mage_target_event(game_state, target_cell)
+        if target_event is not None:
+            pygame.event.post(target_event)
         return True
 
     if player.act_two.fire_bomb_aiming:

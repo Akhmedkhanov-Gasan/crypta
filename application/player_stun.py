@@ -4,6 +4,7 @@ import pygame
 def stunned_wait_event(game_state, wait_key):
     player = game_state.player
     player.directional_ability_aiming = False
+    player.mage_aim_target = None
     player.act_two.fire_bomb_aiming = False
     player.act_two.fire_bomb_aiming_slot = None
     player.act_two.scroll_aiming_kind = None

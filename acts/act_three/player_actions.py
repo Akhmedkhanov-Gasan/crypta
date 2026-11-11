@@ -128,7 +128,7 @@ def resolve_act_three_player_action(
         3,
         direction,
         mage_ability_target,
-        None,
+        getattr(event, "resonance_target", None),
         directional_ability_cast,
         rogue_ability_activated,
         hit_reaction,

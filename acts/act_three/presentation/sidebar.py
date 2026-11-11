@@ -88,7 +88,7 @@ _ABILITY_DESCRIPTIONS = {
     "paladin_shield_charge": "Rush forward behind the shield.",
     "paladin_holy_shield": "Gain a temporary holy shield.",
     "act_three_warlock_curse": "Curse a target for several turns.",
-    "act_three_arcane_burst": "Cast the inherited mage rune ability.",
+    "act_three_warlock_arcane_burst": "Cast the inherited mage rune ability.",
     "act_three_warlock_demon_form": "Transform into a demon.",
     "summoner_familiar": "Summon or release the familiar.",
     "summoner_bond": "Strengthen the bond with the familiar.",
@@ -348,7 +348,7 @@ def _ability_entries(player, accent_color):
                 None,
             ),
             (
-                "act_three_arcane_burst",
+                "act_three_warlock_arcane_burst",
                 "Arcane Burst",
                 _ratio(*arcane_charge),
                 (137, 112, 238),

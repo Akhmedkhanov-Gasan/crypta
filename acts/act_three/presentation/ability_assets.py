@@ -20,13 +20,6 @@ ACT_THREE_ABILITY_ICON_PATHS = {
         / "rogue"
         / "invisibility.png"
     ),
-    "act_three_arcane_burst": (
-        _UI_ROOT
-        / "abilities"
-        / "inherited"
-        / "mage"
-        / "arcane_burst.png"
-    ),
     "act_three_rune_of_impact": (
         _UI_ROOT
         / "abilities"
@@ -153,6 +146,9 @@ ACT_THREE_ABILITY_ICON_PATHS = {
         / "warlock"
         / "curse.png"
     ),
+    "act_three_warlock_arcane_burst": (
+        _UI_ROOT / "abilities" / "subclasses" / "warlock" / "arcane_burst.png"
+    ),
     "act_three_warlock_demon_form": (
         _UI_ROOT
         / "abilities"
@@ -166,6 +162,9 @@ ACT_THREE_ABILITY_ICON_PATHS = {
         / "subclasses"
         / "summoner"
         / "release_familiar.png"
+    ),
+    "act_three_summoner_arcane_burst": (
+        _UI_ROOT / "abilities" / "subclasses" / "summoner" / "arcane_burst.png"
     ),
     "act_three_summoner_true_form": (
         _UI_ROOT

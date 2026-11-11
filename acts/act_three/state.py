@@ -27,7 +27,6 @@ class MageArcaneBurstState:
         tuple[int, int],
         ...
     ] = ()
-    preview_target: tuple[int, int] | None = None
 
 
 @dataclass

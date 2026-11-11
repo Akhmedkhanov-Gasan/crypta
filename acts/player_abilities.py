@@ -2,6 +2,7 @@ import pygame
 
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
+from logic import direction_toward
 
 from acts.act_three.abilities.archer_barrage_zone import (
     place_archer_barrage_zone,
@@ -215,7 +216,13 @@ def resolve_targeted_player_ability(
         if acted:
             started_at = pygame.time.get_ticks()
             player.attack_animation_started_at = started_at
-            player.act_two.ability_effect_started_at = started_at
+            effect_state = (
+                player.act_three.mage_arcane_burst
+                if current_act == 3
+                else player.act_two
+            )
+            effect_state.ability_effect_started_at = started_at
+            player.mage_aim_target = None
         return acted
 
     if mage_ability_target is not None:
@@ -239,8 +246,13 @@ def resolve_targeted_player_ability(
             started_at = pygame.time.get_ticks()
             player.attack_animation_started_at = started_at
             effect_state.ability_effect_started_at = started_at
+            player.mage_aim_target = None
             if current_act == 3:
-                player.act_three.mage_arcane_burst.preview_target = None
+                origin = (game_state.floor.player_column, game_state.floor.player_row)
+                if mage_ability_target != origin:
+                    player.facing_direction = direction_toward(
+                        *origin, *mage_ability_target,
+                    )
         return acted
 
     if directional_ability_cast:

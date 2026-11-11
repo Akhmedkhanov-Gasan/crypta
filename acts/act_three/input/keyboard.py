@@ -1,5 +1,7 @@
 import pygame
 
+from acts.mage_targeting import mage_aiming
+
 from acts.act_three.abilities.progression import (
     is_ability_slot_unlocked,
 )
@@ -261,6 +263,9 @@ def handle_act_three_key_event(event, game_state):
         < BERSERKER_LAST_RAGE_ANIMATION_MS
     ):
         return True
+    if game_state.floor.presentation_act == 3 and mage_aiming(game_state.player):
+        return False
+
     aiming_direction = _act_three_aiming_direction(event)
 
     if game_state.player.teleport_aiming:

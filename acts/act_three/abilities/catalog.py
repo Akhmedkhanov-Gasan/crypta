@@ -57,18 +57,16 @@ INVISIBILITY = AbilityDefinition(
     inherited=True,
 )
 
-ARCANE_BURST = AbilityDefinition(
-    id="arcane_burst",
-    name="ARCANE BURST",
-    slot="e",
-    icon_asset="act_three_arcane_burst",
-    charge_required=2.0,
-    description=(
-        "Detonate a cross at range and scatter enemies "
-        "outward."
-    ),
-    inherited=True,
-)
+def _arcane_burst(subclass):
+    return AbilityDefinition(
+        id="arcane_burst",
+        name="ARCANE BURST",
+        slot="e",
+        icon_asset=f"act_three_{subclass}_arcane_burst",
+        charge_required=2.0,
+        description="Detonate a cross at range and scatter enemies outward.",
+        inherited=True,
+    )
 
 
 SUBCLASS_DEFINITIONS = {
@@ -267,7 +265,7 @@ SUBCLASS_DEFINITIONS = {
                     "it receives for several turns."
                 ),
             ),
-            "e": ARCANE_BURST,
+            "e": _arcane_burst("warlock"),
             "f": AbilityDefinition(
                 id="demon_form",
                 name="DEMON FORM",
@@ -309,7 +307,7 @@ SUBCLASS_DEFINITIONS = {
                     "battlefield or recall it."
                 ),
             ),
-            "e": ARCANE_BURST,
+            "e": _arcane_burst("summoner"),
             "f": AbilityDefinition(
                 id="true_form",
                 name="TRUE FORM",

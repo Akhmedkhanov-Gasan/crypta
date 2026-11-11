@@ -2,6 +2,8 @@ import math
 
 import pygame
 
+from acts.mage_targeting import mage_aiming, mage_preview_target
+
 from acts.act_two.abilities import (
     get_mage_arcane_cells,
     get_warrior_aftershock_cells,
@@ -190,6 +192,8 @@ def draw_act_two_ability_preview(
     mage_target: tuple[int, int] | None = None,
 ) -> None:
     player = game_state.player
+    if mage_aiming(player):
+        mage_target = mage_preview_target(game_state)
 
     if (
         player.player_class == "mage"
@@ -243,6 +247,17 @@ def draw_act_two_ability_preview(
                 overlay,
                 (190, 240, 255, 235),
                 rectangle.inflate(-3, -3),
+                width=2,
+            )
+        elif mage_aiming(player):
+            center = _cell_center(*mage_target)
+            pygame.draw.rect(
+                overlay,
+                (170, 113, 127, 180),
+                pygame.Rect(0, 0, TILE_SIZE - 8, TILE_SIZE - 8).move(
+                    center[0] - TILE_SIZE // 2 + 4,
+                    center[1] - TILE_SIZE // 2 + 4,
+                ),
                 width=2,
             )
 
@@ -366,6 +381,11 @@ def _draw_mage_target_preview(
     current_time: int,
 ) -> None:
     if not is_valid_mage_arcane_burst_target(game_state, target):
+        if target is not None:
+            center = _cell_center(*target)
+            rectangle = pygame.Rect(0, 0, TILE_SIZE - 8, TILE_SIZE - 8)
+            rectangle.center = center
+            pygame.draw.rect(screen, (141, 85, 102), rectangle, width=2)
         return
 
     cells = get_mage_arcane_burst_cells(

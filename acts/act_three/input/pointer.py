@@ -25,8 +25,12 @@ from presentation.cursors import (
     set_warlock_curse_cursor,
     set_warlock_staff_cursor,
 )
-from acts.act_three.abilities.mage import (
-    is_valid_act_three_arcane_burst_target,
+from acts.mage_targeting import (
+    mage_aiming,
+    mage_target_event,
+    post_mage_aim_toggle,
+    select_mage_aim_target,
+    valid_mage_aim_target,
 )
 from acts.act_three.abilities.archer import (
     is_valid_archer_barrage_zone_anchor,
@@ -312,6 +316,14 @@ def handle_act_three_pointer_event(
                     )
                     break
     elif (
+        event.type == pygame.MOUSEBUTTONDOWN
+        and event.button == 3
+        and game_state.floor.presentation_act == 3
+        and mage_aiming(game_state.player)
+    ):
+        post_mage_aim_toggle()
+        return True
+    elif (
         event.type == pygame.MOUSEMOTION
         and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
         and not game_state.act_three_transition_open
@@ -456,17 +468,8 @@ def handle_act_three_pointer_event(
                 game_state.player.player_class == "mage"
                 and game_state.player.directional_ability_aiming
         ):
-            target_is_valid = (
-                is_valid_act_three_arcane_burst_target(
-                    game_state,
-                    target_cell,
-                )
-            )
-            game_state.player.act_three.mage_arcane_burst.preview_target = (
-                target_cell
-                if target_is_valid
-                else None
-            )
+            select_mage_aim_target(game_state, target_cell)
+            target_is_valid = valid_mage_aim_target(game_state, target_cell)
             if game_state.player.subclass == "summoner":
                 set_summoner_staff_cursor(target_is_valid)
             else:
@@ -599,6 +602,14 @@ def handle_act_three_pointer_event(
             event.pos,
         )
         if game_mouse_position is not None:
+            if (
+                game_state.player.player_class == "mage"
+                and get_act_three_ability_slot_rectangle("e").collidepoint(
+                    game_mouse_position
+                )
+            ):
+                post_mage_aim_toggle()
+                return True
             if (
                 game_state.player.subclass == "archer"
                 and get_act_three_ability_slot_rectangle(
@@ -858,6 +869,7 @@ def handle_act_three_pointer_event(
                 game_state.player.player_class == "mage"
                 and game_state.player.selected_rune_id
                 == "rune_of_resonance"
+                and not mage_aiming(game_state.player)
             ):
                 target_cell = get_act_three_cell_from_position(
                     game_state,
@@ -886,20 +898,10 @@ def handle_act_three_pointer_event(
                     game_state,
                     game_mouse_position,
                 )
-                if is_valid_act_three_arcane_burst_target(
-                    game_state,
-                    target_cell,
-                ):
-                    game_state.player.act_three.mage_arcane_burst.preview_target = (
-                        target_cell
-                    )
-                    pygame.event.post(
-                        pygame.event.Event(
-                            pygame.KEYDOWN,
-                            key=pygame.K_UNKNOWN,
-                            mage_ability_target=target_cell,
-                        )
-                    )
+                select_mage_aim_target(game_state, target_cell)
+                target_event = mage_target_event(game_state, target_cell)
+                if target_event is not None:
+                    pygame.event.post(target_event)
                 return True
             elif game_state.player.warlock_curse_aiming:
                 target_cell = get_act_three_cell_from_position(
