@@ -19,7 +19,6 @@ from presentation.cursors import (
     set_archer_empowered_cursor,
     set_archer_leap_cursor,
     set_assassin_target_cursor,
-    set_berserker_crushing_leap_cursor,
     set_paladin_shield_charge_cursor,
     set_summoner_staff_cursor,
     set_warlock_curse_cursor,
@@ -30,7 +29,6 @@ from systems.player_abilities import (
     cast_directional_ability,
     cast_mage_arcane_burst,
     perform_archer_empowered_shot,
-    perform_berserker_crushing_leap,
     perform_paladin_shield_charge,
     perform_warlock_curse,
 )
@@ -95,16 +93,6 @@ def resolve_targeted_player_ability(
         )
         if acted:
             set_paladin_shield_charge_cursor()
-        return acted
-
-    if player.berserker_crushing_leap_target is not None:
-        acted = perform_berserker_crushing_leap(
-            game_state,
-            pygame.time.get_ticks(),
-            hit_reaction,
-        )
-        if acted:
-            set_berserker_crushing_leap_cursor()
         return acted
 
     if player.archer_leap_target is not None:
@@ -265,7 +253,7 @@ def resolve_targeted_player_ability(
         if acted:
             started_at = pygame.time.get_ticks()
             player.attack_animation_started_at = started_at
-            if current_act == 2:
+            if current_act in (2, 3):
                 player.act_two.ability_effect_started_at = started_at
                 player.act_two.ability_effect_direction = direction
         return acted

@@ -1,3 +1,4 @@
+import math
 from collections.abc import Callable
 
 from game.combat_log import add_log_message
@@ -8,9 +9,7 @@ from game.state import (
     GameState,
 )
 from logic import (
-    can_move_to,
     get_enemy_occupied_positions,
-    has_line_of_sight,
 )
 from acts.act_three.settings import (
     BERSERKER_CRUSHING_LEAP_CHARGES,
@@ -18,6 +17,7 @@ from acts.act_three.settings import (
     BERSERKER_LAST_RAGE_CHARGES,
     BERSERKER_LAST_RAGE_TURNS,
 )
+from systems.grid_geometry import can_reach_adjacent_cell
 from systems.player_combat import (
     attack_enemy,
     resolve_enemy_defeat,
@@ -53,72 +53,27 @@ def get_berserker_crushing_leap_cells(
     game_state: GameState,
     target: tuple[int, int],
 ) -> list[tuple[int, int]]:
-    dungeon_map = game_state.floor.map
+    floor = game_state.floor
+    origin = (floor.player_column, floor.player_row)
+    dx, dy = target[0] - origin[0], target[1] - origin[1]
+    if dx == dy == 0:
+        return []
+
+    sector = round(math.atan2(dy, dx) / (math.pi / 4)) % 8
+    step_x, step_y = (
+        (1, 0), (1, 1), (0, 1), (-1, 1),
+        (-1, 0), (-1, -1), (0, -1), (1, -1),
+    )[sector]
     cells = []
-    for row_change in (-1, 0, 1):
-        for column_change in (-1, 0, 1):
-            if column_change == 0 and row_change == 0:
-                continue
-            column = target[0] + column_change
-            row = target[1] + row_change
-            if not (
-                0 <= row < len(dungeon_map)
-                and 0 <= column < len(dungeon_map[0])
-            ):
-                continue
-            if can_move_to(dungeon_map, column, row):
-                cells.append((column, row))
+    previous = origin
+    for distance in range(1, BERSERKER_CRUSHING_LEAP_RANGE + 1):
+        cell = (origin[0] + step_x * distance, origin[1] + step_y * distance)
+        if not can_reach_adjacent_cell(floor.map, previous, cell, floor.barriers):
+            break
+        cells.append(cell)
+        previous = cell
     return cells
 
-def is_valid_berserker_crushing_leap_target(
-    game_state: GameState,
-    target: tuple[int, int],
-) -> bool:
-    player = game_state.player
-    floor = game_state.floor
-    column, row = target
-    if (
-        player.subclass != "berserker"
-        or not player.berserker_crushing_leap_aiming
-    ):
-        return False
-    if not (
-        0 <= row < len(floor.map)
-        and 0 <= column < len(floor.map[0])
-    ):
-        return False
-    if not can_move_to(floor.map, column, row):
-        return False
-
-    origin = (floor.player_column, floor.player_row)
-    if target == origin:
-        return False
-    if (
-        abs(column - origin[0]) + abs(row - origin[1])
-        > BERSERKER_CRUSHING_LEAP_RANGE
-    ):
-        return False
-    if not has_line_of_sight(
-        floor.map,
-        origin[0],
-        origin[1],
-        column,
-        row,
-    ):
-        return False
-    if any(
-        enemy.health > 0
-        and target in get_enemy_occupied_positions(enemy)
-        for enemy in floor.enemies
-    ):
-        return False
-    if any(
-        not chest.is_open
-        and target == (chest.column, chest.row)
-        for chest in floor.chests
-    ):
-        return False
-    return True
 
 def request_berserker_crushing_leap(
     game_state: GameState,
@@ -127,10 +82,6 @@ def request_berserker_crushing_leap(
     if player.subclass != "berserker":
         return False
 
-    if player.berserker_crushing_leap_aiming:
-        cancel_berserker_crushing_leap(game_state)
-        return True
-
     if (
         not player.debug_unlimited_abilities
         and player.berserker_crushing_leap_charge
@@ -138,7 +89,7 @@ def request_berserker_crushing_leap(
     ):
         add_log_message(
             game_state.combat_log,
-            "Crushing Leap is not charged.",
+            "Rending Spin is not charged.",
         )
         return True
 
@@ -147,7 +98,7 @@ def request_berserker_crushing_leap(
     player.berserker_crushing_leap_preview_cells.clear()
     add_log_message(
         game_state.combat_log,
-        "Choose a landing cell for Crushing Leap.",
+        "Choose a direction. Press Q again or click to dash.",
     )
     return True
 
@@ -160,7 +111,7 @@ def cancel_berserker_crushing_leap(
     player.berserker_crushing_leap_preview_cells.clear()
     add_log_message(
         game_state.combat_log,
-        "Crushing Leap aiming cancelled.",
+        "Rending Spin aiming cancelled.",
     )
 
 def update_berserker_crushing_leap_preview(
@@ -168,25 +119,15 @@ def update_berserker_crushing_leap_preview(
     target: tuple[int, int] | None,
 ) -> bool:
     player = game_state.player
-    if (
-        target is None
-        or not is_valid_berserker_crushing_leap_target(
-            game_state,
-            target,
-        )
-    ):
-        player.berserker_crushing_leap_target = None
-        player.berserker_crushing_leap_preview_cells.clear()
-        return False
-
-    player.berserker_crushing_leap_target = target
-    player.berserker_crushing_leap_preview_cells = (
-        get_berserker_crushing_leap_cells(
-            game_state,
-            target,
-        )
+    cells = (
+        get_berserker_crushing_leap_cells(game_state, target)
+        if player.berserker_crushing_leap_aiming and target is not None
+        else []
     )
-    return True
+    player.berserker_crushing_leap_target = cells[-1] if cells else None
+    player.berserker_crushing_leap_preview_cells = cells
+    return bool(cells)
+
 
 def perform_berserker_crushing_leap(
     game_state: GameState,
@@ -197,97 +138,110 @@ def perform_berserker_crushing_leap(
     floor = game_state.floor
     target = player.berserker_crushing_leap_target
     if (
-        target is None
-        or not is_valid_berserker_crushing_leap_target(
-            game_state,
-            target,
-        )
+        player.subclass != "berserker"
+        or not player.berserker_crushing_leap_aiming
+        or target is None
     ):
         return False
 
     origin = (floor.player_column, floor.player_row)
-    leap_direction = get_berserker_crushing_leap_direction(
-        origin,
-        target,
-    )
-    impact_cells = get_berserker_crushing_leap_cells(
-        game_state,
-        target,
-    )
-    floor.player_column, floor.player_row = target
-    player.facing_direction = (
-        (-1, 0)
-        if leap_direction == "left"
-        else (1, 0)
-    )
+    impact_cells = get_berserker_crushing_leap_cells(game_state, target)
+    if not impact_cells:
+        return False
+
+    direction = get_berserker_crushing_leap_direction(origin, impact_cells[-1])
+    player.facing_direction = (-1, 0) if direction == "left" else (1, 0)
+    player.movement_origin = None
+    player.movement_animation_started_at = 0
     player.berserker_crushing_leap_charge = 0
     player.berserker_crushing_leap_aiming = False
     player.berserker_crushing_leap_target = None
-    player.berserker_crushing_leap_preview_cells = list(
-        impact_cells
-    )
     player.berserker_crushing_leap_origin = origin
     player.berserker_crushing_leap_started_at = current_time
 
-    game_state.emit(
-        GameEvent(
-            type=GameEventType.MOVE,
-            actor="hero",
-            origin=origin,
-            destination=target,
-            data={"kind": "berserker_crushing_leap"},
+    def living_enemy_at(cell):
+        return next(
+            (
+                enemy
+                for enemy in floor.enemies
+                if enemy.health > 0
+                and cell in get_enemy_occupied_positions(enemy)
+            ),
+            None,
         )
-    )
+
+    struck_enemies = set()
+    attacked_cells = []
+    traveled_count = 0
+
+    for index, cell in enumerate(impact_cells):
+        attacked_cells.append(cell)
+        enemy = living_enemy_at(cell)
+        if enemy is not None and id(enemy) not in struck_enemies:
+            struck_enemies.add(id(enemy))
+            enemy_was_defeated = attack_enemy(
+                game_state,
+                enemy,
+                player.damage_min,
+                player.damage_max,
+                player.crit_chance,
+                attacker_position=origin,
+            )
+            if enemy.type == "oracle":
+                oracle_hit_reaction(
+                    enemy,
+                    floor,
+                    game_state.combat_log,
+                )
+            if enemy_was_defeated:
+                resolve_enemy_defeat(game_state, enemy)
+
+        if living_enemy_at(cell) is None:
+            traveled_count = index + 1
+            continue
+
+        next_index = index + 1
+        if (
+            next_index >= len(impact_cells)
+            or living_enemy_at(impact_cells[next_index]) is not None
+        ):
+            break
+
+    traveled_cells = impact_cells[:traveled_count]
+    player.berserker_crushing_leap_preview_cells = traveled_cells
     game_state.emit(
         GameEvent(
             type=GameEventType.ATTACK,
             actor="hero",
-            origin=target,
-            positions=tuple(impact_cells),
-            data={"kind": "berserker_crushing_leap"},
+            origin=origin,
+            positions=tuple(attacked_cells),
+            data={"kind": "berserker_rending_spin"},
         )
     )
 
-    enemies_hit = [
-        enemy
-        for enemy in floor.enemies
-        if (
-            enemy.health > 0
-            and any(
-                position in impact_cells
-                for position in get_enemy_occupied_positions(
-                    enemy
-                )
-            )
-        )
-    ]
-    if not enemies_hit:
+    if not struck_enemies:
         add_log_message(
             game_state.combat_log,
-            "Crushing Leap hits nothing.",
+            "Rending Spin hits nothing.",
         )
 
-    for enemy in enemies_hit:
-        enemy_was_defeated = attack_enemy(
-            game_state,
-            enemy,
-            player.damage_min,
-            player.damage_max,
-            player.crit_chance,
-            attacker_position=target,
-        )
-        if enemy.type == "oracle":
-            oracle_hit_reaction(
-                enemy,
-                floor,
-                game_state.combat_log,
+    if traveled_cells:
+        destination = traveled_cells[-1]
+        floor.player_column, floor.player_row = destination
+        game_state.emit(
+            GameEvent(
+                type=GameEventType.MOVE,
+                actor="hero",
+                origin=origin,
+                destination=destination,
+                positions=tuple(traveled_cells),
+                data={"kind": "berserker_rending_spin"},
             )
-        if enemy_was_defeated:
-            resolve_enemy_defeat(game_state, enemy)
+        )
 
     add_log_message(
         game_state.combat_log,
-        "The berserker crashes into the battlefield.",
+        "The berserker unleashes Rending Spin.",
     )
     return True
 

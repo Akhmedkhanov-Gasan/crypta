@@ -798,11 +798,6 @@ def resolve_enemy_turn(
             occupied_positions.add(
                 game_state.player.summoner_familiar_position
             )
-        reserved_leap_target = (
-            game_state.player.berserker_crushing_leap_target
-        )
-        if reserved_leap_target is not None:
-            occupied_positions.add(reserved_leap_target)
         attack_blocking_positions = {
             (chest["column"], chest["row"])
             for chest in game_state.floor["chests"]

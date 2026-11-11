@@ -82,7 +82,7 @@ _ABILITY_DESCRIPTIONS = {
     "archer_leap": "Leap to the selected cell.",
     "archer_barrage_zone": "Place a lasting three-cell phantom trap.",
     "berserker_rage": "Damage rises as health falls.",
-    "berserker_crushing_leap": "Leap and strike an area on landing.",
+    "berserker_crushing_leap": "Dash up to three cells, striking enemies in your path.",
     "berserker_last_rage": "Enter a temporary state of extreme rage.",
     "paladin_holy_hand": "Restore health with holy power.",
     "paladin_shield_charge": "Rush forward behind the shield.",
@@ -257,7 +257,7 @@ def _ability_entries(player, accent_color):
             ("berserker_rage", "Rage", 1.0, (220, 72, 58), "PASSIVE"),
             (
                 "berserker_crushing_leap",
-                "Crushing Leap",
+                "Rending Spin",
                 _ratio(
                     player.berserker_crushing_leap_charge,
                     BERSERKER_CRUSHING_LEAP_CHARGES,

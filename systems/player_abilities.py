@@ -35,11 +35,9 @@ from acts.act_three.abilities.archer import (
 
 from acts.act_three.abilities.berserker import (
     get_berserker_crushing_leap_cells,
-    is_valid_berserker_crushing_leap_target,
     request_berserker_crushing_leap,
     cancel_berserker_crushing_leap,
     update_berserker_crushing_leap_preview,
-    perform_berserker_crushing_leap,
     request_berserker_last_rage,
     advance_berserker_last_rage,
 )
@@ -114,11 +112,9 @@ __all__ = [
     "place_archer_barrage_zone",
     "resolve_archer_barrage_zone_entry",
     "get_berserker_crushing_leap_cells",
-    "is_valid_berserker_crushing_leap_target",
     "request_berserker_crushing_leap",
     "cancel_berserker_crushing_leap",
     "update_berserker_crushing_leap_preview",
-    "perform_berserker_crushing_leap",
     "request_berserker_last_rage",
     "advance_berserker_last_rage",
     "request_paladin_holy_hand",

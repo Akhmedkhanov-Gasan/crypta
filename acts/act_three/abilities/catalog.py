@@ -87,7 +87,7 @@ SUBCLASS_DEFINITIONS = {
         abilities={
             "q": AbilityDefinition(
                 id="crushing_leap",
-                name="CRUSHING LEAP",
+                name="RENDING SPIN",
                 slot="q",
                 icon_asset=(
                     "act_three_berserker_crushing_leap"
@@ -96,8 +96,8 @@ SUBCLASS_DEFINITIONS = {
                     BERSERKER_CRUSHING_LEAP_CHARGES
                 ),
                 description=(
-                    "Leap to a visible cell and damage "
-                    "adjacent enemies on landing."
+                    "Choose a direction, then dash up to three cells, "
+                    "striking every enemy in your path."
                 ),
             ),
             "e": POWER_CLEAVE,

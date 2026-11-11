@@ -1193,7 +1193,7 @@
                     "width": 88,
                     "height": 13
                   },
-                  "text": "Crushing leap",
+                  "text": "Rending Spin",
                   "font": {
                     "family": "Ubuntu Mono",
                     "style": "Medium",
@@ -1224,7 +1224,7 @@
                     "width": 272,
                     "height": 34
                   },
-                  "text": "Leap to a visible cell and damage\nadjacent enemies on landing.",
+                  "text": "Dash up to three cells and\nstrike enemies in your path.",
                   "font": {
                     "family": "Ubuntu Mono",
                     "style": "Medium",

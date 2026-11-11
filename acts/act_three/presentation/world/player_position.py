@@ -4,9 +4,7 @@ from typing import Any
 
 import pygame
 
-from acts.act_three.presentation.berserker import (
-    crushing_leap_position,
-)
+from acts.act_three.presentation.berserker import rending_spin_world_position
 from acts.act_three.presentation.paladin.shield_charge import (
     shield_charge_motion_progress,
 )
@@ -19,7 +17,6 @@ from acts.act_three.presentation.player_motion import (
 from acts.act_three.presentation.view import _view_position
 from acts.act_three.settings import (
     ARCHER_LEAP_DURATION_MS,
-    BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
 )
 from presentation.layout import ACT_THREE_TILE_SIZE
 
@@ -145,19 +142,13 @@ def calculate_player_placement(
                 - math.sin(math.pi * leap_progress) * 8
             ),
         )
-    elif player_state.berserker_leap_travel_active:
-        leap_start_position = _view_position(
-            player_state.berserker_leap_origin[0],
-            player_state.berserker_leap_origin[1],
-            context.camera_x,
-            context.camera_y,
-        )
-        player_position = crushing_leap_position(
-            leap_start_position,
-            leap_end_position,
-            player_state.berserker_leap_elapsed,
-            BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
-            ACT_THREE_TILE_SIZE,
+    spin_position = rending_spin_world_position(
+        player, current_time, ACT_THREE_TILE_SIZE,
+    )
+    if spin_position is not None:
+        player_position = (
+            round(spin_position[0] - context.camera_x),
+            round(spin_position[1] - context.camera_y),
         )
 
     if player.act_three.mining is not None and player_state.death_elapsed is None:

@@ -100,8 +100,7 @@ from acts.act_three.abilities.warlock import (
 from levels import FLOOR_CONFIGS
 from acts.act_three.settings import (
     ARCHER_LEAP_DURATION_MS,
-    BERSERKER_CRUSHING_LEAP_IMPACT_MS,
-    BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
+    BERSERKER_RENDING_SPIN_ANIMATION_MS,
     PALADIN_SHIELD_CHARGE_TOTAL_MS,
     WARLOCK_DEMON_FORM_TRANSFORM_MS,
     BERSERKER_LAST_RAGE_ANIMATION_MS,
@@ -505,6 +504,16 @@ def handle_act_three_key_event(event, game_state):
             set_archer_attack_cursor()
 
         return True
+    if (
+        game_state.player.berserker_crushing_leap_origin
+        is not None
+        and game_state.player.berserker_crushing_leap_started_at
+        > 0
+        and pygame.time.get_ticks()
+        - game_state.player.berserker_crushing_leap_started_at
+        < BERSERKER_RENDING_SPIN_ANIMATION_MS
+    ):
+        return True
     if event.key in MOVEMENT_KEYS or event.key in WAIT_KEYS:
         return False
 
@@ -520,19 +529,6 @@ def handle_act_three_key_event(event, game_state):
         and pygame.time.get_ticks()
         - game_state.player.archer_leap_started_at
         < ARCHER_LEAP_DURATION_MS
-    ):
-        return True
-    if (
-        game_state.player.berserker_crushing_leap_origin
-        is not None
-        and game_state.player.berserker_crushing_leap_started_at
-        > 0
-        and pygame.time.get_ticks()
-        - game_state.player.berserker_crushing_leap_started_at
-        < (
-            BERSERKER_CRUSHING_LEAP_TRAVEL_MS
-            + BERSERKER_CRUSHING_LEAP_IMPACT_MS
-        )
     ):
         return True
     
@@ -634,7 +630,16 @@ def handle_act_three_key_event(event, game_state):
         and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
         and game_state.player.subclass == "berserker"
     ):
+        if game_state.player.berserker_crushing_leap_aiming:
+            return game_state.player.berserker_crushing_leap_target is None
+
         request_berserker_crushing_leap(game_state)
+        if (
+            game_state.player.berserker_crushing_leap_aiming
+            and game_state.player.directional_ability_aiming
+        ):
+            cancel_ability_aiming(game_state)
+            set_archer_attack_cursor()
         set_berserker_crushing_leap_cursor(
             game_state.player.berserker_crushing_leap_aiming
         )
@@ -794,12 +799,11 @@ def handle_act_three_key_event(event, game_state):
     ):
         return True
     
-    if (
-        game_state.player.berserker_crushing_leap_aiming
-        and game_state.player.berserker_crushing_leap_target
-        is None
-    ):
-        return True
+    if game_state.player.berserker_crushing_leap_aiming:
+        return (
+            event.key not in (pygame.K_RETURN, pygame.K_KP_ENTER)
+            or game_state.player.berserker_crushing_leap_target is None
+        )
     
     if game_state.player.ultimate_aiming:
         return True

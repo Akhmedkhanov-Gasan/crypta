@@ -40,7 +40,6 @@ from acts.act_three.abilities.assassin import (
     select_assassin_ultimate_target,
 )
 from acts.act_three.abilities.berserker import (
-    is_valid_berserker_crushing_leap_target,
     update_berserker_crushing_leap_preview,
 )
 from acts.act_three.abilities.paladin import (
@@ -97,8 +96,7 @@ from presentation.screens import (
 )
 from acts.act_three.settings import (
     ARCHER_LEAP_DURATION_MS,
-    BERSERKER_CRUSHING_LEAP_IMPACT_MS,
-    BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
+    BERSERKER_RENDING_SPIN_ANIMATION_MS,
     PALADIN_SHIELD_CHARGE_TOTAL_MS,
     BERSERKER_LAST_RAGE_ANIMATION_MS,
 )
@@ -390,16 +388,9 @@ def handle_act_three_pointer_event(
                 preview_is_valid
             )
         elif game_state.player.berserker_crushing_leap_aiming:
-            preview_is_valid = (
-                target_cell is not None
-                and is_valid_berserker_crushing_leap_target(
-                    game_state,
-                    target_cell,
-                )
-            )
-            update_berserker_crushing_leap_preview(
+            preview_is_valid = update_berserker_crushing_leap_preview(
                 game_state,
-                target_cell if preview_is_valid else None,
+                target_cell,
             )
             set_berserker_crushing_leap_cursor(
                 preview_is_valid
@@ -582,10 +573,7 @@ def handle_act_three_pointer_event(
             > 0
             and pygame.time.get_ticks()
             - game_state.player.berserker_crushing_leap_started_at
-            < (
-                BERSERKER_CRUSHING_LEAP_TRAVEL_MS
-                + BERSERKER_CRUSHING_LEAP_IMPACT_MS
-            )
+            < BERSERKER_RENDING_SPIN_ANIMATION_MS
         ):
             return True
         if (

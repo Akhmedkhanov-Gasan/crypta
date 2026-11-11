@@ -72,6 +72,9 @@ class GameplayKeyboardController:
     ):
         barrage_resume = getattr(event, "archer_barrage_resume", False)
         automatic_movement = getattr(event, "automatic_movement", False)
+        spin_aiming = current_act == 3 and game_state.player.berserker_crushing_leap_aiming
+        if spin_aiming and automatic_movement:
+            return game_state
         if (
             current_act == 3
             and player_attack_recovery_active(
@@ -111,6 +114,7 @@ class GameplayKeyboardController:
                     game_state.player.archer_basic_aiming
                     or game_state.player.archer_piercing_aiming
                     or game_state.player.archer_barrage_zone_aiming
+                    or spin_aiming
                 )
             )
             and movement_input_is_locked(
@@ -225,7 +229,7 @@ class GameplayKeyboardController:
         row_change = 0
         movement_direction = getattr(event, "movement_direction", None)
         direction_key = event.key in MOVEMENT_KEYS
-        if direction_key and game_state.player.directional_ability_aiming:
+        if direction_key and (game_state.player.directional_ability_aiming or spin_aiming):
             self.movement_state.reset_held_movement()
             movement_direction = movement_direction_for_key(event.key)
         elif direction_key or movement_direction is not None:
@@ -243,6 +247,7 @@ class GameplayKeyboardController:
         if movement_direction is not None:
             if (
                 not game_state.player.directional_ability_aiming
+                and not spin_aiming
                 and not accept_movement_direction(
                     self.movement_state,
                     movement_direction,
@@ -253,9 +258,10 @@ class GameplayKeyboardController:
             ):
                 return game_state
             column_change, row_change = movement_direction
-            game_state.player.facing_direction = act_two_visual_direction(
-                movement_direction
-            )
+            if not spin_aiming:
+                game_state.player.facing_direction = act_two_visual_direction(
+                    movement_direction
+                )
 
         player_tried_to_move = column_change != 0 or row_change != 0
         directional_ability_cast = (

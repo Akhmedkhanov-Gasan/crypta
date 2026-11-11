@@ -2,294 +2,179 @@ import math
 
 import pygame
 
+from acts.act_three.presentation.animation import _ATTACK_FRAME_DURATION_MS
 from acts.act_two.abilities import (
     get_warrior_aftershock_cells,
     get_warrior_cleave_cells,
 )
 
 
-def _cleave_colors(subclass):
-    if subclass == "paladin":
-        return (
-            (47, 26, 59, 112),
-            (191, 150, 77, 220),
-            (255, 226, 157, 245),
+_SUBCLASSES = ("berserker", "paladin")
+_SWING_DELAY_MS = _ATTACK_FRAME_DURATION_MS // 2
+_SWING_LIFETIME_MS = 460
+_SHADOW = (37, 22, 29)
+_SCAR = (123, 57, 51)
+_EDGE = (210, 172, 135)
+
+
+def _cell_center(cell, camera_x, camera_y, tile_size):
+    return (
+        (cell[0] + 0.5) * tile_size - camera_x,
+        (cell[1] + 0.5) * tile_size - camera_y,
+    )
+
+
+def _point(center, direction, across, forward):
+    dx, dy = direction
+    return (
+        round(center[0] - dy * across + dx * forward),
+        round(center[1] + dx * across + dy * forward),
+    )
+
+
+def _draw_scars(overlay, cells, direction, camera_x, camera_y, size, alpha):
+    for cell in cells:
+        center = _cell_center(cell, camera_x, camera_y, size)
+        points = [
+            _point(center, direction, across * size, forward * size)
+            for across, forward in (
+                (-0.28, -0.23), (-0.09, -0.08), (-0.13, 0.04),
+                (0.09, 0.11), (0.24, 0.28),
+            )
+        ]
+        pygame.draw.lines(overlay, (*_SHADOW, alpha), False, points, 4)
+        pygame.draw.lines(overlay, (*_SCAR, alpha), False, points)
+        pygame.draw.line(
+            overlay, (*_SCAR, alpha), points[2],
+            _point(center, direction, -0.27 * size, 0.21 * size),
         )
 
-    return (
-        (92, 17, 20, 112),
-        (218, 53, 42, 220),
-        (255, 166, 91, 245),
-    )
 
-
-def _cell_rectangle(
-    column,
-    row,
-    camera_x,
-    camera_y,
-    tile_size,
+def _draw_sweep(
+    overlay, cells, direction, camera_x, camera_y, size, opacity,
+    progress=None,
 ):
-    return pygame.Rect(
-        column * tile_size - camera_x,
-        row * tile_size - camera_y,
-        tile_size,
-        tile_size,
+    ordered_cells = sorted(
+        cells, key=lambda cell: cell[1] * direction[0] - cell[0] * direction[1]
     )
+    first = ordered_cells[0]
+    dx, dy = direction
+    offsets = [
+        (cell[1] - first[1]) * dx - (cell[0] - first[0]) * dy
+        for cell in ordered_cells
+    ]
+    span = offsets[-1] + 1
+    preview = progress is None
+
+    for cell, offset in zip(ordered_cells, offsets):
+        center = _cell_center(cell, camera_x, camera_y, size)
+        for layer in range(3):
+            half_width = size * (0.49 - layer * 0.045)
+            depth = size * (0.43 - layer * 0.075)
+            shape = [
+                _point(center, direction, across * half_width, forward * depth)
+                for across, forward in (
+                    (-1, -0.65), (-0.62, -1), (0.68, -1),
+                    (1, -0.6), (1, 0.5), (0.55, 0.92),
+                    (-0.64, 1), (-1, 0.54),
+                )
+            ]
+            color = _SHADOW if layer < 2 else _SCAR
+            pygame.draw.polygon(
+                overlay, (*color, round((37 + layer * 11) * opacity)), shape
+            )
+
+        for index in range(16):
+            start = (offset + index / 16) / span
+            end = (offset + (index + 1) / 16) / span
+            if not preview:
+                front = progress * 1.75
+                trail = front - (start + end) * 0.5
+                if not 0 <= trail < 0.85:
+                    continue
+                intensity = opacity * (1 - trail / 0.85)
+            else:
+                intensity = opacity * (0.55 + 0.45 * math.sin(math.pi * start))
+
+            points = [
+                _point(
+                    center,
+                    direction,
+                    (t * span - offset - 0.5) * size * 0.96,
+                    size * (0.20 - 0.35 * (2 * t - 1) ** 2),
+                )
+                for t in (start, end)
+            ]
+            for color, width, alpha in (
+                (_SHADOW, 0.14, 155),
+                (_SCAR, 0.065, 177),
+                (_EDGE, 0.018, 125 if preview else 238),
+            ):
+                pygame.draw.line(
+                    overlay, (*color, round(alpha * intensity)),
+                    *points, max(1, round(size * width)),
+                )
 
 
 def draw_power_cleave_targeting(
-    surface,
-    game_state,
-    camera_x,
-    camera_y,
-    current_time,
-    tile_size,
+    surface, game_state, camera_x, camera_y, current_time, tile_size,
 ):
     player = game_state.player
-    direction = (
-        player.act_two.selected_ability_direction
-    )
-
+    direction = player.act_two.selected_ability_direction
     if (
         player.player_class != "warrior"
-        or player.subclass not in ("berserker", "paladin")
+        or player.subclass not in _SUBCLASSES
         or not player.directional_ability_aiming
         or direction is None
     ):
         return
 
-    cells = get_warrior_cleave_cells(
-        game_state.floor,
-        direction[0],
-        direction[1],
-    )
+    cells = get_warrior_cleave_cells(game_state.floor, *direction)
     if not cells:
         return
 
-    aftershock_cells = (
-        get_warrior_aftershock_cells(
-            game_state.floor,
-            direction[0],
-            direction[1],
+    overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+    opacity = 0.78 + 0.10 * math.sin(current_time / 280)
+    _draw_sweep(overlay, cells, direction, camera_x, camera_y, tile_size, opacity)
+    if player.selected_rune_id == "rune_of_aftershock":
+        _draw_scars(
+            overlay, get_warrior_aftershock_cells(game_state.floor, *direction),
+            direction, camera_x, camera_y, tile_size, round(140 * opacity),
         )
-        if player.selected_rune_id == "rune_of_aftershock"
-        else []
-    )
-
-    fill_color, border_color, light_color = (
-        _cleave_colors(player.subclass)
-    )
-    pulse = (
-        0.5
-        + 0.5 * math.sin(current_time * 0.011)
-    )
-    overlay = pygame.Surface(
-        surface.get_size(),
-        pygame.SRCALPHA,
-    )
-
-    player_center = (
-        game_state.floor.player_column * tile_size
-        - camera_x
-        + tile_size // 2,
-        game_state.floor.player_row * tile_size
-        - camera_y
-        + tile_size // 2,
-    )
-    direction_x, direction_y = direction
-    perpendicular_x = -direction_y
-    perpendicular_y = direction_x
-
-    for index, (column, row) in enumerate(cells):
-        rectangle = _cell_rectangle(
-            column,
-            row,
-            camera_x,
-            camera_y,
-            tile_size,
-        )
-        center_cell = index == 0
-        inset = 4 if center_cell else 7
-
-        pygame.draw.rect(
-            overlay,
-            (
-                fill_color[0],
-                fill_color[1],
-                fill_color[2],
-                round(
-                    fill_color[3]
-                    + pulse * 34
-                ),
-            ),
-            rectangle.inflate(-inset, -inset),
-            border_radius=max(3, tile_size // 12),
-        )
-        pygame.draw.rect(
-            overlay,
-            (
-                border_color[0],
-                border_color[1],
-                border_color[2],
-                round(
-                    border_color[3]
-                    + pulse * 25
-                ),
-            ),
-            rectangle.inflate(-3, -3),
-            width=3 if center_cell else 2,
-            border_radius=max(3, tile_size // 12),
-        )
-
-        chevron_center = rectangle.center
-        chevron_back = (
-            round(
-                chevron_center[0]
-                - direction_x * tile_size * 0.14
-            ),
-            round(
-                chevron_center[1]
-                - direction_y * tile_size * 0.14
-            ),
-        )
-        chevron_left = (
-            round(
-                chevron_back[0]
-                + perpendicular_x * tile_size * 0.12
-            ),
-            round(
-                chevron_back[1]
-                + perpendicular_y * tile_size * 0.12
-            ),
-        )
-        chevron_right = (
-            round(
-                chevron_back[0]
-                - perpendicular_x * tile_size * 0.12
-            ),
-            round(
-                chevron_back[1]
-                - perpendicular_y * tile_size * 0.12
-            ),
-        )
-        chevron_tip = (
-            round(
-                chevron_center[0]
-                + direction_x * tile_size * 0.17
-            ),
-            round(
-                chevron_center[1]
-                + direction_y * tile_size * 0.17
-            ),
-        )
-
-        pygame.draw.lines(
-            overlay,
-            light_color,
-            False,
-            (
-                chevron_left,
-                chevron_tip,
-                chevron_right,
-            ),
-            max(2, tile_size // 22),
-        )
-
-    center_distance = tile_size * (
-        0.88 + pulse * 0.06
-    )
-    arc_center = (
-        player_center[0]
-        + direction_x * center_distance,
-        player_center[1]
-        + direction_y * center_distance,
-    )
-    arc_points = []
-
-    for index in range(17):
-        position = -1 + index / 8
-        across = position * tile_size * 1.16
-        forward_bow = (
-            1 - position * position
-        ) * tile_size * 0.27
-        arc_points.append(
-            (
-                round(
-                    arc_center[0]
-                    + perpendicular_x * across
-                    + direction_x * forward_bow
-                ),
-                round(
-                    arc_center[1]
-                    + perpendicular_y * across
-                    + direction_y * forward_bow
-                ),
-            )
-        )
-
-    pygame.draw.lines(
-        overlay,
-        (
-            fill_color[0],
-            fill_color[1],
-            fill_color[2],
-            round(150 + pulse * 35),
-        ),
-        False,
-        arc_points,
-        max(7, tile_size // 7),
-    )
-    pygame.draw.lines(
-        overlay,
-        (
-            border_color[0],
-            border_color[1],
-            border_color[2],
-            round(210 + pulse * 35),
-        ),
-        False,
-        arc_points,
-        max(3, tile_size // 13),
-    )
-    pygame.draw.lines(
-        overlay,
-        light_color,
-        False,
-        arc_points,
-        max(1, tile_size // 32),
-    )
-
-    for column, row in aftershock_cells:
-        rectangle = _cell_rectangle(
-            column,
-            row,
-            camera_x,
-            camera_y,
-            tile_size,
-        )
-        pygame.draw.rect(
-            overlay,
-            (
-                border_color[0],
-                border_color[1],
-                border_color[2],
-                round(42 + pulse * 28),
-            ),
-            rectangle.inflate(-9, -9),
-            border_radius=max(3, tile_size // 12),
-        )
-        pygame.draw.rect(
-            overlay,
-            (
-                light_color[0],
-                light_color[1],
-                light_color[2],
-                round(125 + pulse * 65),
-            ),
-            rectangle.inflate(-6, -6),
-            width=2,
-            border_radius=max(3, tile_size // 12),
-        )
-
     surface.blit(overlay, (0, 0))
+
+
+def draw_power_cleave_effect(
+    surface, player, camera_x, camera_y, current_time, tile_size,
+):
+    state = player.act_two
+    started_at = state.ability_effect_started_at
+    elapsed = current_time - started_at
+    if (
+        player.subclass not in _SUBCLASSES
+        or state.ability_effect_kind != "power_cleave"
+        or not state.ability_effect_cells
+        or started_at <= 0
+        or not 0 <= elapsed < _SWING_DELAY_MS + _SWING_LIFETIME_MS
+    ):
+        return False
+
+    progress = (elapsed - _SWING_DELAY_MS) / _SWING_LIFETIME_MS
+    if progress >= 0:
+        overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+        opacity = (1 - progress) ** 1.2
+        direction = state.ability_effect_direction
+        _draw_sweep(
+            overlay, state.ability_effect_cells, direction,
+            camera_x, camera_y, tile_size, opacity, progress,
+        )
+        if progress > 0.22:
+            aftershock = (progress - 0.22) / 0.78
+            _draw_scars(
+                overlay, state.ability_effect_aftershock_positions, direction,
+                camera_x, camera_y, tile_size,
+                round(194 * math.sin(math.pi * aftershock) * (1 - aftershock)),
+            )
+        surface.blit(overlay, (0, 0))
+
+    return started_at == player.attack_animation_started_at

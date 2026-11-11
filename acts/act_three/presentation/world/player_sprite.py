@@ -34,7 +34,6 @@ from acts.act_three.presentation.warlock import (
     warlock_demon_transition_sprite,
 )
 from acts.act_three.presentation.berserker import (
-    crushing_leap_direction,
     crushing_leap_frame,
     last_rage_frame,
 )
@@ -63,7 +62,7 @@ from acts.act_three.presentation.player_motion import (
     warlock_idle_frame,
 )
 from acts.act_three.settings import (
-    BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
+    BERSERKER_RENDING_SPIN_ANIMATION_MS,
     BERSERKER_LAST_RAGE_ANIMATION_MS,
 )
 from acts.act_three.presentation.archer.projectile import (
@@ -111,6 +110,20 @@ def select_player_sprite(
     )
     if block_sprite is not None:
         return block_sprite, False
+
+    if player_state.berserker_spin_active:
+        direction = "left" if player.facing_direction[0] < 0 else "right"
+        frame = crushing_leap_frame(
+            player_state.berserker_leap_elapsed,
+            BERSERKER_RENDING_SPIN_ANIMATION_MS,
+        )
+        return (
+            assets[
+                "player_berserker_crushing_leap_"
+                f"{direction}_{frame}"
+            ],
+            False,
+        )
 
     if player_state.hurt_sprite_active:
         return (
@@ -172,41 +185,6 @@ def select_player_sprite(
                 context.floor,
                 assets,
             ),
-            False,
-        )
-
-    if player_state.berserker_leap_travel_active:
-        direction = crushing_leap_direction(
-            player_state.berserker_leap_origin,
-            (
-                context.floor.player_column,
-                context.floor.player_row,
-            ),
-        )
-        frame = crushing_leap_frame(
-            player_state.berserker_leap_elapsed,
-            BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
-        )
-        return (
-            assets[
-                "player_berserker_crushing_leap_"
-                f"{direction}_{frame}"
-            ],
-            False,
-        )
-
-    if player_state.berserker_leap_impact_active:
-        direction = crushing_leap_direction(
-            player_state.berserker_leap_origin,
-            (
-                context.floor.player_column,
-                context.floor.player_row,
-            ),
-        )
-        return (
-            assets[
-                f"player_berserker_crushing_leap_{direction}_7"
-            ],
             False,
         )
 

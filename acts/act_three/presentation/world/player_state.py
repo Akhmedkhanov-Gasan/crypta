@@ -11,8 +11,7 @@ from acts.act_three.presentation.player_motion import (
 from acts.act_three.settings import (
     ARCHER_LEAP_DURATION_MS,
     ASSASSIN_SHADOW_STEP_DURATION_MS,
-    BERSERKER_CRUSHING_LEAP_IMPACT_MS,
-    BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
+    BERSERKER_RENDING_SPIN_ANIMATION_MS,
     BERSERKER_LAST_RAGE_ANIMATION_MS,
     PALADIN_SHIELD_CHARGE_TOTAL_MS,
 )
@@ -29,8 +28,7 @@ class PlayerRenderState:
     berserker_leap_origin: Any
     berserker_leap_started_at: int
     berserker_leap_elapsed: int
-    berserker_leap_travel_active: bool
-    berserker_leap_impact_active: bool
+    berserker_spin_active: bool
     last_rage_elapsed: int
     last_rage_activation_active: bool
     shield_charge_origin: Any
@@ -80,27 +78,14 @@ def create_player_render_state(
     berserker_leap_elapsed = (
         current_time - berserker_leap_started_at
     )
-    berserker_leap_travel_active = (
+    berserker_spin_active = (
         player_subclass == "berserker"
         and berserker_leap_origin is not None
         and berserker_leap_started_at > 0
         and 0
         <= berserker_leap_elapsed
-        < BERSERKER_CRUSHING_LEAP_TRAVEL_MS
+        < BERSERKER_RENDING_SPIN_ANIMATION_MS
     )
-    berserker_leap_impact_active = (
-        player_subclass == "berserker"
-        and berserker_leap_origin is not None
-        and (
-            BERSERKER_CRUSHING_LEAP_TRAVEL_MS
-            <= berserker_leap_elapsed
-            < (
-                BERSERKER_CRUSHING_LEAP_TRAVEL_MS
-                + BERSERKER_CRUSHING_LEAP_IMPACT_MS
-            )
-        )
-    )
-
     last_rage_elapsed = (
         current_time - player.berserker_last_rage_started_at
     )
@@ -144,11 +129,8 @@ def create_player_render_state(
         berserker_leap_origin=berserker_leap_origin,
         berserker_leap_started_at=berserker_leap_started_at,
         berserker_leap_elapsed=berserker_leap_elapsed,
-        berserker_leap_travel_active=(
-            berserker_leap_travel_active
-        ),
-        berserker_leap_impact_active=(
-            berserker_leap_impact_active
+        berserker_spin_active=(
+            berserker_spin_active
         ),
         last_rage_elapsed=last_rage_elapsed,
         last_rage_activation_active=(

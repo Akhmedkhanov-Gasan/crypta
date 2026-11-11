@@ -103,6 +103,9 @@ from acts.act_three.presentation.world.targeting import (
     draw_world_attack_markers,
     draw_world_targeting,
 )
+from acts.act_three.presentation.warrior.power_cleave import (
+    draw_power_cleave_effect,
+)
 from acts.act_three.presentation.world.terrain import (
     draw_world_terrain,
 )
@@ -139,8 +142,7 @@ from acts.act_three.settings import (
     ARCHER_LEAP_DURATION_MS,
     BERSERKER_RAGE_CRITICAL_HEALTH_RATIO,
     BERSERKER_RAGE_INJURED_HEALTH_RATIO,
-    BERSERKER_CRUSHING_LEAP_IMPACT_MS,
-    BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
+    BERSERKER_RENDING_SPIN_ANIMATION_MS,
     PALADIN_HOLY_HAND_EFFECT_MS,
     PALADIN_SHIELD_CHARGE_TOTAL_MS,
     BERSERKER_LAST_RAGE_ANIMATION_MS,
@@ -170,8 +172,7 @@ from acts.act_three.presentation.animation import (
     _stable_text_seed,
 )
 from acts.act_three.presentation.berserker import (
-    draw_crushing_leap_impact_effect,
-    draw_crushing_leap_travel_effect,
+    draw_rending_spin_effect,
     draw_last_rage_activation_effect,
 )
 from acts.act_three.presentation.mage import (
@@ -270,29 +271,14 @@ def _draw_act_three_world(
         assets,
         current_time,
     )
-    berserker_impact_elapsed = (
-        current_time
-        - game_state.player.berserker_crushing_leap_started_at
+    draw_rending_spin_effect(
+        view_surface,
+        game_state.player,
+        camera_x,
+        camera_y,
+        current_time,
+        ACT_THREE_TILE_SIZE,
     )
-    if (
-        game_state.player.berserker_crushing_leap_origin is not None
-    ):
-        draw_crushing_leap_impact_effect(
-            view_surface,
-            (
-                floor.player_column,
-                floor.player_row,
-            ),
-            camera_x,
-            camera_y,
-            (
-                berserker_impact_elapsed
-                - BERSERKER_CRUSHING_LEAP_TRAVEL_MS
-            ),
-            BERSERKER_CRUSHING_LEAP_IMPACT_MS,
-            ACT_THREE_TILE_SIZE,
-        )
-
     draw_world_attack_markers(
         context,
         game_state,
@@ -358,11 +344,8 @@ def _draw_act_three_world(
         player_state.berserker_leap_started_at
     )
     berserker_leap_elapsed = player_state.berserker_leap_elapsed
-    berserker_leap_travel_active = (
-        player_state.berserker_leap_travel_active
-    )
-    berserker_leap_impact_active = (
-        player_state.berserker_leap_impact_active
+    berserker_spin_active = (
+        player_state.berserker_spin_active
     )
     last_rage_elapsed = player_state.last_rage_elapsed
     last_rage_activation_active = (
@@ -407,21 +390,6 @@ def _draw_act_three_world(
     shield_charge_start_position = (
         player_placement.shield_charge_start_position
     )
-    if berserker_leap_travel_active:
-        draw_crushing_leap_travel_effect(
-            view_surface,
-            player_sprite,
-            _view_position(
-                berserker_leap_origin[0],
-                berserker_leap_origin[1],
-                camera_x,
-                camera_y,
-            ),
-            leap_end_position,
-            berserker_leap_elapsed,
-            BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
-            ACT_THREE_TILE_SIZE,
-        )
     if player_subclass in ("archer", "assassin"):
         player_sprite = player_sprite.copy()
         light_color = (
@@ -473,7 +441,6 @@ def _draw_act_three_world(
 
     if (
         player_death_elapsed is None
-        and not berserker_leap_travel_active
     ):
         shadow_sprite = player_sprite
         shadow_position = player_position
@@ -510,8 +477,7 @@ def _draw_act_three_world(
         and not game_state.player.ultimate_animation_active
         and not shield_charge_active
         and not leap_active
-        and not berserker_leap_travel_active
-        and not berserker_leap_impact_active
+        and not berserker_spin_active
         and not shadow_step_active
     ):
         player_position = (
@@ -718,46 +684,6 @@ def _draw_act_three_world(
             ghost_sprite = player_sprite.copy()
             ghost_sprite.fill(
                 (15, 55, 35),
-                special_flags=pygame.BLEND_RGB_ADD,
-            )
-            ghost_sprite.set_alpha(alpha)
-            view_surface.blit(ghost_sprite, ghost_position)
-
-    if (
-        berserker_leap_travel_active
-        and leap_start_position is not None
-    ):
-        for lag, alpha in (
-            (0.10, 125),
-            (0.21, 78),
-            (0.32, 38),
-        ):
-            ghost_progress = max(0, leap_progress - lag)
-            ghost_eased_progress = (
-                1 - (1 - ghost_progress) ** 3
-            )
-            ghost_position = (
-                round(
-                    leap_start_position[0]
-                    + (
-                        leap_end_position[0]
-                        - leap_start_position[0]
-                    )
-                    * ghost_eased_progress
-                ),
-                round(
-                    leap_start_position[1]
-                    + (
-                        leap_end_position[1]
-                        - leap_start_position[1]
-                    )
-                    * ghost_eased_progress
-                    - math.sin(math.pi * ghost_progress) * 13
-                ),
-            )
-            ghost_sprite = player_sprite.copy()
-            ghost_sprite.fill(
-                (62, 10, 8),
                 special_flags=pygame.BLEND_RGB_ADD,
             )
             ghost_sprite.set_alpha(alpha)
@@ -1232,10 +1158,7 @@ def _draw_act_three_world(
         and berserker_leap_origin is not None
         and berserker_leap_started_at > 0
         and berserker_leap_elapsed
-        >= (
-            BERSERKER_CRUSHING_LEAP_TRAVEL_MS
-            + BERSERKER_CRUSHING_LEAP_IMPACT_MS
-        )
+        >= BERSERKER_RENDING_SPIN_ANIMATION_MS
     ):
         game_state.player.berserker_crushing_leap_origin = None
         game_state.player.berserker_crushing_leap_started_at = 0
@@ -1466,15 +1389,24 @@ def _draw_act_three_world(
         game_state.player.teleport_camera_origin = None
         game_state.player.teleport_transition_started_at = 0
 
-    draw_paladin_attack_effects(
+    power_cleave_attack = draw_power_cleave_effect(
         view_surface,
         game_state.player,
-        player_position,
-        game_state.player_attack_targets,
         camera_x,
         camera_y,
         current_time,
+        ACT_THREE_TILE_SIZE,
     )
+    if not power_cleave_attack:
+        draw_paladin_attack_effects(
+            view_surface,
+            game_state.player,
+            player_position,
+            game_state.player_attack_targets,
+            camera_x,
+            camera_y,
+            current_time,
+        )
 
     if (
         player_subclass in ("assassin", "archer", "warlock")

@@ -91,7 +91,6 @@ def draw_world_targeting(
                 context.floor.player_column,
                 context.floor.player_row,
             ),
-            player.berserker_crushing_leap_target,
             player.berserker_crushing_leap_preview_cells,
             context.camera_x,
             context.camera_y,

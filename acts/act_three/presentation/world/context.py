@@ -8,8 +8,8 @@ from acts.act_three.presentation.assassin import (
     killing_spree_camera_position,
 )
 from acts.act_three.presentation.berserker import (
-    crushing_leap_camera_offset,
     last_rage_camera_offset,
+    rending_spin_world_position,
 )
 from acts.act_three.presentation.camera import (
     act_three_world_view_size,
@@ -28,8 +28,6 @@ from acts.act_three.presentation.view import (
 )
 from acts.act_three.settings import (
     ASSASSIN_SHADOW_STEP_DURATION_MS,
-    BERSERKER_CRUSHING_LEAP_IMPACT_MS,
-    BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
     BERSERKER_LAST_RAGE_ANIMATION_MS,
 )
 from acts.act_three.presentation.paladin.shield_charge import (
@@ -71,7 +69,12 @@ def create_world_render_context(
         current_time,
         ACT_THREE_TILE_SIZE,
     )
-    camera_player_position = locomotion_pose.position
+    spin_position = rending_spin_world_position(
+        game_state.player, current_time, ACT_THREE_TILE_SIZE,
+    )
+    camera_player_position = (
+        spin_position if spin_position is not None else locomotion_pose.position
+    )
 
     killing_spree_camera = killing_spree_camera_position(
         game_state.player,
@@ -139,16 +142,6 @@ def create_world_render_context(
         game_state.player,
         current_time,
     )
-    crushing_leap_camera_x, crushing_leap_camera_y = (
-        crushing_leap_camera_offset(
-            (
-                current_time
-                - game_state.player.berserker_crushing_leap_started_at
-            ),
-            BERSERKER_CRUSHING_LEAP_TRAVEL_MS,
-            BERSERKER_CRUSHING_LEAP_IMPACT_MS,
-        )
-    )
     shield_charge_camera_x, shield_charge_camera_y = (
         shield_charge_camera_offset(
             (
@@ -170,14 +163,12 @@ def create_world_render_context(
     camera_x += (
         hit_camera_x
         + death_camera_x
-        + crushing_leap_camera_x
         + shield_charge_camera_x
         + last_rage_camera_x
     )
     camera_y += (
         hit_camera_y
         + death_camera_y
-        + crushing_leap_camera_y
         + shield_charge_camera_y
         + last_rage_camera_y
     )
