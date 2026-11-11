@@ -4,7 +4,7 @@ The current route contains the Oracle arena after awakening and two generated fl
 
 ## Room templates
 
-Save ordinary templates in `assets/maps/act_3/rooms` as `room_*.tmx` or `corridor_*.tmx`. Entry and exit templates are configured separately. The generator uses every ordinary template at least once before repeating templates.
+Save room templates in `assets/maps/act_3/rooms` as `room_*.tmx` or `corridor_*.tmx`. Entry and exit templates are configured separately. The generator prefers unused connecting templates. Templates with exactly one structural connector finish branches. Keep a dead end available for each entrance direction.
 
 Use finite orthogonal maps with square 64 px tiles and CSV tile layers. Keep the existing rendering layer prefixes. Use the `Ground` layer for floor tiles and `Blocked` or `Collision` for solid collision rectangles. Thin `Barriers` rectangles block movement between cells.
 
@@ -14,7 +14,7 @@ Place point objects in `Connectors`:
 - `exit_back`: a return gate, temporarily sealed.
 - `exit_up` or `exit_next_floor`: a forward gate. Place it above its walkable approach cell.
 
-Structural connectors currently support one-cell openings. Each connector and its inward neighbor must be walkable and reachable from the other structural connectors. Unused openings are sealed by the generator. Rooms are placed without rotation.
+Structural connectors currently support one-cell openings. Each connector and its inward neighbor must be walkable and reachable from the other structural connectors. Rooms are placed without rotation. Every structural opening on a generated floor must be joined to another room. Dead ends are added beyond `generated_piece_count`. If a layout cannot fit, the generator can retry with up to two fewer connecting pieces.
 
 The entry template needs a `Spawn` point in `Entities`. Keep its `exit_back` approach clear. The exit template needs one forward gate. Map coordinates and object names determine behavior; object colors and visibility do not affect collision.
 

@@ -90,16 +90,11 @@ def _seal_boundaries(floor, placements, connections):
                     (edge[0][0] - min_x, edge[0][1] - min_y),
                     (edge[1][0] - min_x, edge[1][1] - min_y),
                 ))))
-    for connector in floor["connectors"]:
-        if connector["name"] not in {"exit_north", "exit_south", "exit_east", "exit_west"}:
-            continue
-        position = connector["position"]
-        dx, dy = DIRECTION_STEP[connector["direction"]]
-        inside = position[0] - dx, position[1] - dy
-        floor["barriers"].add(tuple(sorted((position, inside))))
 
 
 def _valid_floor(floor):
+    if _structural_connectors(floor):
+        return False
     reachable = reachable_cells(floor["map"], floor["player_start"], floor["barriers"])
     exits = [item for item in floor["connectors"] if item["name"] in ("exit_up", "exit_next_floor")]
     if not exits:
@@ -128,43 +123,70 @@ def generate_room_layout(config, trial_path=None):
         if path != exit_path
     ]
     trial = load_tmx_floor(project_root / trial_path) if trial_path else None
-    if not templates:
-        raise ValueError("Act Three needs at least one room template")
     for template in [entry, exit_room, *templates]:
         _validate_template(template)
-    target_count = config["generated_piece_count"] - 2 - (trial is not None)
-    target_count = max(len(templates), target_count)
-    remaining_attempts = [4000]
+    dead_ends = [template for template in templates if len(_structural_connectors(template)) == 1]
+    connecting_rooms = [template for template in templates if len(_structural_connectors(template)) > 1]
+    if not connecting_rooms or not dead_ends:
+        raise ValueError("Act Three needs connecting rooms and dead ends")
 
-    def search(placements, frontier, connections, count):
-        remaining_attempts[0] -= 1
-        if remaining_attempts[0] <= 0:
+    required_rooms = [exit_room]
+    if trial is not None:
+        required_rooms.append(trial)
+    target_count = config["generated_piece_count"] - 1 - len(required_rooms)
+    remaining_attempts = 0
+
+    def finish(placements, frontier, connections, required):
+        nonlocal remaining_attempts
+        if remaining_attempts <= 0 or len(frontier) < len(required):
             return None
-        if count == target_count:
-            states = [(placements, frontier, connections)]
-            if trial is not None:
-                states = [_extend(*states[0], option) for option in _options(placements, frontier, [trial])]
-            for state in states:
-                for option in _options(state[0], state[1], [exit_room]):
-                    final_placements, _, final_connections = _extend(*state, option)
-                    floor = _compose(final_placements, final_connections)
-                    _seal_boundaries(floor, final_placements, final_connections)
-                    if _valid_floor(floor):
-                        return floor
-            return None
-        usage = Counter(template["source_path"] for template, _ in placements)
-        candidates = [template for template in templates if not usage[template["source_path"]]]
-        options = _options(placements, frontier, candidates or templates)
-        options.sort(key=lambda option: usage[option[1]["source_path"]])
+        remaining_attempts -= 1
+
+        if not frontier:
+            floor = _compose(placements, connections)
+            _seal_boundaries(floor, placements, connections)
+            return floor if _valid_floor(floor) else None
+
+        if required:
+            options = _options(placements, frontier, required[:1])
+            next_required = required[1:]
+        else:
+            options_by_opening = [[] for _ in frontier]
+            for option in _options(placements, frontier, dead_ends):
+                options_by_opening[option[0]].append(option)
+            options = min(options_by_opening, key=len)
+            next_required = required
+
         for option in options:
-            if remaining_attempts[0] <= 0:
+            if remaining_attempts <= 0:
                 break
-            result = search(*_extend(placements, frontier, connections, option), count + 1)
+            result = finish(*_extend(placements, frontier, connections, option), next_required)
             if result is not None:
                 return result
         return None
 
-    result = search([(entry, (0, 0))], [dict(item) for item in _structural_connectors(entry)], [], 0)
-    if result is None:
-        raise ValueError("Cannot assemble a reachable Act Three floor; check room connectors, Blocked and Barriers in Tiled")
-    return result
+    def search(placements, frontier, connections, count):
+        nonlocal remaining_attempts
+        if remaining_attempts <= 0:
+            return None
+        if count == 0:
+            return finish(placements, frontier, connections, required_rooms)
+        remaining_attempts -= 1
+
+        usage = Counter(template["source_path"] for template, _ in placements)
+        options = _options(placements, frontier, connecting_rooms)
+        options.sort(key=lambda option: usage[option[1]["source_path"]])
+        for option in options:
+            if remaining_attempts <= 0:
+                break
+            result = search(*_extend(placements, frontier, connections, option), count - 1)
+            if result is not None:
+                return result
+        return None
+
+    for count in range(target_count, max(-1, target_count - 3), -1):
+        remaining_attempts = 4000
+        result = search([(entry, (0, 0))], _structural_connectors(entry), [], count)
+        if result is not None:
+            return result
+    raise ValueError("Cannot assemble Act Three with all room connectors joined; check room shapes and dead-end directions")
