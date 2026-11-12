@@ -1043,13 +1043,6 @@ def load_act_three_gameplay_assets():
             / "torches_v1_base.png",
             (tile_size, tile_size),
         ),
-        "sidebar_potion": _load_scaled_image(
-            act_directory
-            / "items"
-            / "consumables"
-            / "potion_original.png",
-            (34, 34),
-        ),
     }
     assets.update(load_act_three_hud_assets())
     assets.update(
@@ -1058,6 +1051,7 @@ def load_act_three_gameplay_assets():
     assets.update(
         load_act_three_consumable_assets()
     )
+    assets["sidebar_potion"] = assets["act_three_consumable_belt_sprites"].get("potion")
     assets.update(load_act_three_npc_assets())
     assets.update(load_blacksmith_assets())
     assets.update(load_mining_assets())

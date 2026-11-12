@@ -175,6 +175,9 @@ def damage_player(
         damage = ceil(damage / 2)
     if damage_kind == "physical":
         damage = apply_armor_bonus(player, damage)
+    if damage > 0 and player.act_three.ironblood_guard:
+        damage = ceil(damage / 2)
+        player.act_three.ironblood_guard = False
     previous_health = player.health
     minimum_health = (
         1

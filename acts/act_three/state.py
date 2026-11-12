@@ -30,7 +30,21 @@ class MageArcaneBurstState:
 
 
 @dataclass
+class ItemDragState:
+    slot: int
+    item: str
+    from_belt: bool
+    origin: tuple[int, int]
+    moving: bool = False
+
+
+@dataclass
 class ActThreePlayerState:
+    consumable_aim_slot: int | None = None
+    item_drag: ItemDragState | None = None
+    consumable_aim_target: tuple[int, int] | None = None
+    regeneration_ticks: int = 0
+    ironblood_guard: bool = False
     mining: dict | None = None
     inventory_slots: list[str | None] = field(
         default_factory=lambda: [None] * INVENTORY_SLOT_COUNT,
@@ -243,6 +257,8 @@ class ActThreeSessionState:
     npc_dialog_phase: str = "closed"
     npc_dialog_started_at: int = 0
     npc_dialog_line_index: int = 0
+    trader_tab: str | None = None
+    trader_slot_presses: dict[str, tuple[int, bool]] = field(default_factory=dict)
     npc_conversations_completed: set[str] = field(default_factory=set)
     act_three_transition_open: bool = False
     act_three_transition_started_at: int = 0

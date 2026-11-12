@@ -147,6 +147,7 @@ class ApplicationEventGate:
                 self.dev_console.close()
             elif console_available:
                 self.dev_console.open()
+                game_state.player.act_three.item_drag = None
                 self.movement_state.reset_held_movement()
                 self.movement_state.reset_auto_move()
                 self.movement_state.cancel_consumable_drag()

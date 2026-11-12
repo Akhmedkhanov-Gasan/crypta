@@ -5,6 +5,8 @@ import pygame
 from acts.crates import break_crate
 from acts.player_abilities import resolve_targeted_player_ability
 from acts.act_three.npcs import get_npc_at, open_npc_dialog
+from acts.act_three.items.use import use_belt_item
+from acts.act_three.trader_catalog import POTION_HEALING
 from acts.act_three.mining.runtime import start_mining
 from acts.act_three.mining.world import get_ore_at
 from acts.act_three.abilities.berserker import perform_berserker_crushing_leap
@@ -103,6 +105,16 @@ def resolve_act_three_player_action(
             movement_blocked=not trial_result,
         )
 
+    belt_slot = getattr(event, "act_three_belt_slot", None)
+    if belt_slot is not None:
+        acted = use_belt_item(
+            game_state, belt_slot, getattr(event, "act_three_belt_target", None),
+            pygame.time.get_ticks(),
+        )
+        if acted:
+            game_state.player.act_three.consumable_aim_slot = None
+        return ActThreePlayerActionResult(player_acted=acted)
+
     if event.key == pygame.K_f and game_state.player.subclass == "warlock":
         acted = request_warlock_demon_form(
             game_state,
@@ -138,7 +150,7 @@ def resolve_act_three_player_action(
 
     player = game_state.player
     if event.key == pygame.K_h:
-        acted = try_use_potion(game_state)
+        acted = try_use_potion(game_state, healing_amount=POTION_HEALING)
         if acted:
             player.potion_effect_started_at = pygame.time.get_ticks()
         return ActThreePlayerActionResult(player_acted=acted)

@@ -77,19 +77,18 @@ def act_two_belt_is_full(player) -> bool:
     return all(item is not None for item in player.act_two.consumable_slots)
 
 
-def store_act_two_consumable(player, item: str) -> bool:
-    for slot_index, stored_item in enumerate(
-        player.act_two.consumable_slots
-    ):
-        if stored_item is not None:
-            continue
-        player.act_two.consumable_slots[slot_index] = item
-        if item == POTION:
-            player.potion_count += 1
-        elif item == KEY:
-            player.key_count += 1
-        return True
-    return False
+def store_act_two_consumable(player, item: str, slot_index: int | None = None) -> bool:
+    slots = player.act_two.consumable_slots
+    if slot_index is None:
+        slot_index = next((index for index, stored_item in enumerate(slots) if stored_item is None), -1)
+    if not 0 <= slot_index < len(slots) or slots[slot_index] is not None:
+        return False
+    slots[slot_index] = item
+    if item == POTION:
+        player.potion_count += 1
+    elif item == KEY:
+        player.key_count += 1
+    return True
 
 
 def remove_act_two_consumable(player, slot_index: int) -> str | None:
@@ -320,8 +319,8 @@ def _consume_scroll(player, slot_index: int) -> None:
     player.act_two.scroll_aiming_slot = None
 
 
-def _damage_enemy_with_arcane_impulse(game_state, enemy) -> None:
-    damage = min(ARCANE_IMPULSE_SCROLL_DAMAGE, enemy.health)
+def _damage_enemy_with_arcane_impulse(game_state, enemy, damage_amount) -> None:
+    damage = min(damage_amount, enemy.health)
     damage = limit_oracle_phase_one_damage(
         enemy,
         damage,
@@ -393,6 +392,9 @@ def use_scroll(
     slot_index: int,
     target: tuple[int, int] | None = None,
     effect_started_at: int = 0,
+    *,
+    healing_amount: int = HEALING_SCROLL_HEALING,
+    impulse_damage: int = ARCANE_IMPULSE_SCROLL_DAMAGE,
 ) -> bool:
     player = game_state.player
     slots = player.act_two.consumable_slots
@@ -428,7 +430,7 @@ def use_scroll(
             player,
             adjusted_consumable_healing(
                 player,
-                HEALING_SCROLL_HEALING,
+                healing_amount,
             ),
         )
         game_state.emit(
@@ -489,7 +491,7 @@ def use_scroll(
                 enemy.column,
                 enemy.row,
             )
-            _damage_enemy_with_arcane_impulse(game_state, enemy)
+            _damage_enemy_with_arcane_impulse(game_state, enemy, impulse_damage)
             message = None
 
     _consume_scroll(player, slot_index)
@@ -719,6 +721,8 @@ def throw_fire_bomb(
     slot_index: int,
     target: tuple[int, int],
     started_at: int,
+    *,
+    impact_damage: int = FIRE_BOMB_EXPLOSION_DAMAGE,
 ) -> bool:
     player = game_state.player
     if (
@@ -761,12 +765,12 @@ def throw_fire_bomb(
     apply_fire_zone_tick(
         game_state,
         zone,
-        FIRE_BOMB_EXPLOSION_DAMAGE,
+        impact_damage,
     )
     return True
 
 
-def advance_fire_zones(game_state: GameState) -> None:
+def advance_fire_zones(game_state: GameState, tick_damage: int = FIRE_BOMB_TICK_DAMAGE) -> None:
     from acts.act_two.crates import advance_burning_crate_loot
 
     active_zones = []
@@ -782,7 +786,7 @@ def advance_fire_zones(game_state: GameState) -> None:
         apply_fire_zone_tick(
             game_state,
             zone,
-            FIRE_BOMB_TICK_DAMAGE,
+            tick_damage,
         )
         zone.ticks_remaining -= 1
         if zone.ticks_remaining > 0:

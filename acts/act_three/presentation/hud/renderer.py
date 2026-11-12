@@ -3,8 +3,10 @@ import math
 import pygame
 
 from acts.act_three.equipment import equipment_rank_bonus
+from acts.act_three.items.use import HEALING_ITEMS
+from acts.act_three.trader_catalog import TRADER_ITEMS
 
-from acts.act_three.presentation.hud.inventory import draw_inventory
+from acts.act_three.presentation.hud.inventory import draw_inventory, draw_inventory_drag
 from acts.act_three.presentation.hud.panel_art import (
     draw_panel_equipment,
     draw_panel_image,
@@ -49,7 +51,7 @@ from acts.act_three.presentation.hud.tooltips import (
 )
 from game.progression import experience_required_for_level
 from presentation.text import get_event_color, wrap_text
-from presentation.tooltips import draw_tooltip
+from presentation.tooltips import TooltipContent, draw_tooltip
 from presentation.figma_ui import (
     draw_figma_rectangle,
     draw_figma_text,
@@ -69,10 +71,6 @@ _INACTIVE_CHARGE_COLOR = (77, 73, 73)
 _FLAME_SEQUENCE = (0, 1, 2, 1, 3, 2)
 _FLAME_FRAME_MS = 220
 _CANDLE_GLOW_CACHE = {}
-_HEALING_CONSUMABLES = frozenset({
-    "potion",
-    "healing_scroll",
-})
 
 _SUBCLASS_NAMES = {
     "assassin": "ASSASSIN",
@@ -529,6 +527,8 @@ def _draw_consumables(
         healing_consumables_are_blocked(player)
     )
     hovered_item = None
+    drag = player.act_three.item_drag
+    moving = drag is not None and drag.moving
 
     for index, slot_name in enumerate(
         sorted(slots)
@@ -544,19 +544,20 @@ def _draw_consumables(
             else None
         )
 
-        if item is None:
+        is_hovered = mouse_position is not None and hitbox.collidepoint(mouse_position)
+        is_drag_source = moving and drag.from_belt and drag.slot == index
+        if moving and not is_drag_source and index < len(stored_items):
+            if drag.from_belt or (item is None and drag.item in TRADER_ITEMS):
+                color = (195, 151, 88) if is_hovered else (113, 86, 57)
+                pygame.draw.rect(screen, color, hitbox, width=2 if is_hovered else 1, border_radius=4)
+
+        if item is None or is_drag_source:
             continue
 
-        is_hovered = (
-            mouse_position is not None
-            and hitbox.collidepoint(
-                mouse_position
-            )
-        )
-
-        if is_hovered:
+        if is_hovered and not moving:
             hovered_item = item
 
+        if not moving and (is_hovered or player.act_three.consumable_aim_slot == index):
             pygame.draw.rect(
                 screen,
                 (181, 145, 81),
@@ -573,19 +574,17 @@ def _draw_consumables(
         icon_rectangle = figma_rect(
             slot["icon"]
         )
-        displayed_icon = pygame.transform.smoothscale(
-            icon,
-            icon_rectangle.size,
-        )
+        fitted = icon.get_rect().fit(icon_rectangle)
+        displayed_icon = pygame.transform.smoothscale(icon, fitted.size)
 
         screen.blit(
             displayed_icon,
-            icon_rectangle,
+            fitted,
         )
 
         if (
             healing_blocked
-            and item in _HEALING_CONSUMABLES
+            and item in HEALING_ITEMS
         ):
             disabled_overlay = pygame.Surface(
                 icon_rectangle.size,
@@ -603,14 +602,13 @@ def _draw_consumables(
     if hovered_item is None:
         return None
 
-    return consumable_tooltip_content(
-        hovered_item,
-        (
-            healing_blocked
-            and hovered_item
-            in _HEALING_CONSUMABLES
-        ),
-    )
+    item = TRADER_ITEMS.get(hovered_item)
+    if item is None:
+        return consumable_tooltip_content(hovered_item, False)
+    lines = (item.description,)
+    if healing_blocked and hovered_item in HEALING_ITEMS:
+        lines += ("Blood Hunger blocks this item.",)
+    return TooltipContent(item.name, lines, (181, 145, 81))
 
 
 def _draw_ability_charge_mask(
@@ -1477,10 +1475,11 @@ def draw_act_three_hud(
             assets,
             layout,
         )
-    if hud_tooltip is not None:
+    if hud_tooltip is not None and player.act_three.item_drag is None:
         draw_tooltip(
             screen,
             hud_tooltip,
             mouse_position,
             scale=assets.get("hud_render_scale", 1.0),
         )
+    draw_inventory_drag(screen, player, assets, mouse_position)

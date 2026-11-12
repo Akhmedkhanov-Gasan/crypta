@@ -27,6 +27,7 @@ from acts.act_three.presentation.altar_menu import (
     draw_upgrade_altar_menu,
 )
 from acts.act_three.presentation.npcs import draw_npc_dialog
+from acts.act_three.presentation.trader import draw_trader
 from acts.act_three.presentation.blacksmith import draw_blacksmith
 from acts.act_three.presentation.dialogue_panel import draw_dialogue_panel
 from acts.act_three.presentation.sidebar import (
@@ -536,10 +537,14 @@ def draw_act_three_gameplay(
         current_time,
         mouse_position,
     )
-    draw_act_three_foreground(screen, game_state, fonts, assets, current_time)
+    draw_act_three_foreground(
+        screen, game_state, fonts, assets, current_time, mouse_position=mouse_position,
+    )
 
 
-def draw_act_three_foreground(screen, game_state, fonts, assets, current_time, background=None):
+def draw_act_three_foreground(
+    screen, game_state, fonts, assets, current_time, background=None, *, mouse_position=None,
+):
     if game_state.act_three_transition_open:
         return
     if game_state.upgrade_altar_menu_open:
@@ -550,7 +555,10 @@ def draw_act_three_foreground(screen, game_state, fonts, assets, current_time, b
             assets,
         )
 
-    if not draw_blacksmith(screen, game_state, fonts, assets, current_time):
+    if not (
+        draw_trader(screen, game_state, assets, current_time, mouse_position)
+        or draw_blacksmith(screen, game_state, fonts, assets, current_time)
+    ):
         draw_npc_dialog(screen, game_state, fonts)
 
     if game_state.player.health <= 0:

@@ -6,6 +6,9 @@ from acts.act_one.player_actions import resolve_act_one_player_action
 from acts.act_three.player_actions import resolve_act_three_player_action
 from acts.act_three.presentation.wait import clear_wait_feedback, record_wait_feedback
 from acts.act_three.turns import resume_barrage_turn
+from acts.act_three.items.use import advance_regeneration
+from acts.act_three.trader_catalog import FIRE_BOMB_TICK
+from acts.act_two.consumables import advance_fire_zones
 from acts.act_two.enemies.oracle.behavior import resolve_oracle_hit_reaction
 from acts.act_two.player_actions import resolve_act_two_action_request
 from acts.act_two.traps import advance_spike_traps
@@ -134,6 +137,9 @@ def _complete_non_act_two_turn(
         game_state.player.familiar_turn_started_at = pygame.time.get_ticks()
         advance_spike_traps(game_state)
         update_treasury_trial(game_state)
+        if current_act == 3 and game_state.player.health > 0:
+            advance_regeneration(game_state)
+            advance_fire_zones(game_state, tick_damage=FIRE_BOMB_TICK)
 
     if game_state.player.health > 0:
         if barrage_resume:
@@ -146,6 +152,8 @@ def _complete_non_act_two_turn(
             )
 
     if game_state.act_three.barrage_turn is None:
+        if current_act == 3:
+            game_state.player.act_three.ironblood_guard = False
         if current_act == 3 and not getattr(
             event,
             "paladin_sacred_ground_turn",

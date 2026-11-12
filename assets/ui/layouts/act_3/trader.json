@@ -1,0 +1,798 @@
+{
+  "schema_version": 1,
+  "screen": "trader",
+  "act": 3,
+  "coordinate_space": "frame",
+  "frame": {
+    "name": "act3_trader",
+    "width": 1280,
+    "height": 720
+  },
+  "trader_background": {
+    "rect": {
+      "x": 190,
+      "y": 21,
+      "width": 900,
+      "height": 677
+    },
+    "asset_path": "assets/sprites/ui/act_3/trader_ui_elements/trader_background.png",
+    "opacity": 1
+  },
+  "close_hitbox": {
+    "x": 1006,
+    "y": 117,
+    "width": 40,
+    "height": 39
+  },
+  "gold_balance": null,
+  "trade_selection": {
+    "healing": {
+      "hitbox": {
+        "x": 340,
+        "y": 173,
+        "width": 150,
+        "height": 34
+      },
+      "inactive": {
+        "rect": {
+          "x": 340,
+          "y": 173,
+          "width": 150,
+          "height": 34
+        },
+        "asset_path": "assets/sprites/ui/act_3/trader_ui_elements/selection_deactive.png",
+        "opacity": 1
+      },
+      "active": {
+        "rect": {
+          "x": 340,
+          "y": 172,
+          "width": 150,
+          "height": 35
+        },
+        "asset_path": "assets/sprites/ui/act_3/trader_ui_elements/selection_active.png",
+        "opacity": 1
+      },
+      "title": {
+        "rect": {
+          "x": 385,
+          "y": 181,
+          "width": 60,
+          "height": 17
+        },
+        "text": "Healing",
+        "font": {
+          "family": "JMH Cthulhumbus Arcade",
+          "style": "Regular",
+          "size": 16
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 167,
+          "g": 167,
+          "b": 167,
+          "a": 255
+        }
+      }
+    },
+    "scrolls": {
+      "hitbox": {
+        "x": 490,
+        "y": 173,
+        "width": 150,
+        "height": 34
+      },
+      "inactive": {
+        "rect": {
+          "x": 490,
+          "y": 173,
+          "width": 150,
+          "height": 34
+        },
+        "asset_path": "assets/sprites/ui/act_3/trader_ui_elements/selection_deactive.png",
+        "opacity": 1
+      },
+      "active": {
+        "rect": {
+          "x": 490,
+          "y": 172,
+          "width": 150,
+          "height": 35
+        },
+        "asset_path": "assets/sprites/ui/act_3/trader_ui_elements/selection_active.png",
+        "opacity": 1
+      },
+      "title": {
+        "rect": {
+          "x": 536,
+          "y": 181,
+          "width": 58,
+          "height": 17
+        },
+        "text": "Scrolls",
+        "font": {
+          "family": "JMH Cthulhumbus Arcade",
+          "style": "Regular",
+          "size": 16
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 167,
+          "g": 167,
+          "b": 167,
+          "a": 255
+        }
+      }
+    },
+    "bombs": {
+      "hitbox": {
+        "x": 640,
+        "y": 173,
+        "width": 150,
+        "height": 34
+      },
+      "inactive": {
+        "rect": {
+          "x": 640,
+          "y": 173,
+          "width": 150,
+          "height": 34
+        },
+        "asset_path": "assets/sprites/ui/act_3/trader_ui_elements/selection_deactive.png",
+        "opacity": 1
+      },
+      "active": {
+        "rect": {
+          "x": 640,
+          "y": 172,
+          "width": 150,
+          "height": 35
+        },
+        "asset_path": "assets/sprites/ui/act_3/trader_ui_elements/selection_active.png",
+        "opacity": 1
+      },
+      "title": {
+        "rect": {
+          "x": 687,
+          "y": 181,
+          "width": 56,
+          "height": 17
+        },
+        "text": "Bombs",
+        "font": {
+          "family": "JMH Cthulhumbus Arcade",
+          "style": "Regular",
+          "size": 16
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 167,
+          "g": 167,
+          "b": 167,
+          "a": 255
+        }
+      }
+    },
+    "sell": {
+      "hitbox": {
+        "x": 790,
+        "y": 173,
+        "width": 150,
+        "height": 34
+      },
+      "inactive": {
+        "rect": {
+          "x": 790,
+          "y": 173,
+          "width": 150,
+          "height": 34
+        },
+        "asset_path": "assets/sprites/ui/act_3/trader_ui_elements/selection_deactive.png",
+        "opacity": 1
+      },
+      "active": {
+        "rect": {
+          "x": 790,
+          "y": 172,
+          "width": 150,
+          "height": 35
+        },
+        "asset_path": "assets/sprites/ui/act_3/trader_ui_elements/selection_active.png",
+        "opacity": 1
+      },
+      "title": {
+        "rect": {
+          "x": 849,
+          "y": 181,
+          "width": 32,
+          "height": 17
+        },
+        "text": "Sell",
+        "font": {
+          "family": "JMH Cthulhumbus Arcade",
+          "style": "Regular",
+          "size": 16
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 167,
+          "g": 167,
+          "b": 167,
+          "a": 255
+        }
+      }
+    }
+  },
+  "trade_slots": {
+    "slot_01": {
+      "background": {
+        "rect": {
+          "x": 276,
+          "y": 213,
+          "width": 729,
+          "height": 98
+        },
+        "asset_path": "assets/sprites/ui/act_3/trader_ui_elements/slot_background.png",
+        "opacity": 1
+      },
+      "icon_background": {
+        "rect": {
+          "x": 290,
+          "y": 228,
+          "width": 70,
+          "height": 70
+        },
+        "fill": {
+          "r": 0,
+          "g": 0,
+          "b": 0,
+          "a": 64
+        },
+        "stroke": null,
+        "stroke_weight": 1,
+        "corner_radius": 21,
+        "blur_radius": 0
+      },
+      "icon": {
+        "x": 290,
+        "y": 228,
+        "width": 70,
+        "height": 70
+      },
+      "text": {
+        "rect": {
+          "x": 391,
+          "y": 228,
+          "width": 416,
+          "height": 71
+        },
+        "text": "test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test ",
+        "font": {
+          "family": "Ubuntu Mono",
+          "style": "Medium",
+          "size": 13
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 255,
+          "g": 255,
+          "b": 255,
+          "a": 255
+        }
+      },
+      "gold_coin": {
+        "rect": {
+          "x": 840,
+          "y": 236,
+          "width": 55,
+          "height": 55
+        },
+        "asset_path": "assets/sprites/ui/act_3/trader_ui_elements/gold_coin.png",
+        "opacity": 1
+      },
+      "price": {
+        "rect": {
+          "x": 925,
+          "y": 251,
+          "width": 47,
+          "height": 25
+        },
+        "text": "000",
+        "font": {
+          "family": "JMH Cthulhumbus Arcade",
+          "style": "Regular",
+          "size": 24
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 167,
+          "g": 167,
+          "b": 167,
+          "a": 255
+        }
+      },
+      "hitbox": {
+        "x": 834,
+        "y": 228,
+        "width": 153,
+        "height": 71
+      }
+    },
+    "slot_02": {
+      "background": {
+        "rect": {
+          "x": 276,
+          "y": 316,
+          "width": 729,
+          "height": 98
+        },
+        "asset_path": "assets/sprites/ui/act_3/trader_ui_elements/slot_background.png",
+        "opacity": 1
+      },
+      "icon_background": {
+        "rect": {
+          "x": 290,
+          "y": 331,
+          "width": 70,
+          "height": 70
+        },
+        "fill": {
+          "r": 0,
+          "g": 0,
+          "b": 0,
+          "a": 64
+        },
+        "stroke": null,
+        "stroke_weight": 1,
+        "corner_radius": 21,
+        "blur_radius": 0
+      },
+      "icon": {
+        "x": 290,
+        "y": 331,
+        "width": 70,
+        "height": 70
+      },
+      "text": {
+        "rect": {
+          "x": 391,
+          "y": 331,
+          "width": 416,
+          "height": 71
+        },
+        "text": "test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test ",
+        "font": {
+          "family": "Ubuntu Mono",
+          "style": "Medium",
+          "size": 13
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 255,
+          "g": 255,
+          "b": 255,
+          "a": 255
+        }
+      },
+      "gold_coin": {
+        "rect": {
+          "x": 840,
+          "y": 339,
+          "width": 55,
+          "height": 55
+        },
+        "asset_path": "assets/sprites/ui/act_3/trader_ui_elements/gold_coin.png",
+        "opacity": 1
+      },
+      "price": {
+        "rect": {
+          "x": 925,
+          "y": 354,
+          "width": 47,
+          "height": 25
+        },
+        "text": "000",
+        "font": {
+          "family": "JMH Cthulhumbus Arcade",
+          "style": "Regular",
+          "size": 24
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 167,
+          "g": 167,
+          "b": 167,
+          "a": 255
+        }
+      },
+      "hitbox": {
+        "x": 834,
+        "y": 331,
+        "width": 153,
+        "height": 71
+      }
+    },
+    "slot_03": {
+      "background": {
+        "rect": {
+          "x": 276,
+          "y": 419,
+          "width": 729,
+          "height": 98
+        },
+        "asset_path": "assets/sprites/ui/act_3/trader_ui_elements/slot_background.png",
+        "opacity": 1
+      },
+      "icon_background": {
+        "rect": {
+          "x": 290,
+          "y": 434,
+          "width": 70,
+          "height": 70
+        },
+        "fill": {
+          "r": 0,
+          "g": 0,
+          "b": 0,
+          "a": 64
+        },
+        "stroke": null,
+        "stroke_weight": 1,
+        "corner_radius": 21,
+        "blur_radius": 0
+      },
+      "icon": {
+        "x": 290,
+        "y": 434,
+        "width": 70,
+        "height": 70
+      },
+      "text": {
+        "rect": {
+          "x": 391,
+          "y": 434,
+          "width": 416,
+          "height": 71
+        },
+        "text": "test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test ",
+        "font": {
+          "family": "Ubuntu Mono",
+          "style": "Medium",
+          "size": 13
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 255,
+          "g": 255,
+          "b": 255,
+          "a": 255
+        }
+      },
+      "gold_coin": {
+        "rect": {
+          "x": 840,
+          "y": 442,
+          "width": 55,
+          "height": 55
+        },
+        "asset_path": "assets/sprites/ui/act_3/trader_ui_elements/gold_coin.png",
+        "opacity": 1
+      },
+      "price": {
+        "rect": {
+          "x": 925,
+          "y": 457,
+          "width": 47,
+          "height": 25
+        },
+        "text": "000",
+        "font": {
+          "family": "JMH Cthulhumbus Arcade",
+          "style": "Regular",
+          "size": 24
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 167,
+          "g": 167,
+          "b": 167,
+          "a": 255
+        }
+      },
+      "hitbox": {
+        "x": 834,
+        "y": 434,
+        "width": 153,
+        "height": 71
+      }
+    },
+    "slot_04": {
+      "background": {
+        "rect": {
+          "x": 276,
+          "y": 522,
+          "width": 729,
+          "height": 98
+        },
+        "asset_path": "assets/sprites/ui/act_3/trader_ui_elements/slot_background.png",
+        "opacity": 1
+      },
+      "icon_background": {
+        "rect": {
+          "x": 290,
+          "y": 537,
+          "width": 70,
+          "height": 70
+        },
+        "fill": {
+          "r": 0,
+          "g": 0,
+          "b": 0,
+          "a": 64
+        },
+        "stroke": null,
+        "stroke_weight": 1,
+        "corner_radius": 21,
+        "blur_radius": 0
+      },
+      "icon": {
+        "x": 290,
+        "y": 537,
+        "width": 70,
+        "height": 70
+      },
+      "text": {
+        "rect": {
+          "x": 391,
+          "y": 537,
+          "width": 416,
+          "height": 71
+        },
+        "text": "test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test ",
+        "font": {
+          "family": "Ubuntu Mono",
+          "style": "Medium",
+          "size": 13
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 255,
+          "g": 255,
+          "b": 255,
+          "a": 255
+        }
+      },
+      "gold_coin": {
+        "rect": {
+          "x": 840,
+          "y": 545,
+          "width": 55,
+          "height": 55
+        },
+        "asset_path": "assets/sprites/ui/act_3/trader_ui_elements/gold_coin.png",
+        "opacity": 1
+      },
+      "price": {
+        "rect": {
+          "x": 925,
+          "y": 560,
+          "width": 47,
+          "height": 25
+        },
+        "text": "000",
+        "font": {
+          "family": "JMH Cthulhumbus Arcade",
+          "style": "Regular",
+          "size": 24
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 167,
+          "g": 167,
+          "b": 167,
+          "a": 255
+        }
+      },
+      "hitbox": {
+        "x": 834,
+        "y": 537,
+        "width": 153,
+        "height": 71
+      }
+    }
+  },
+  "candles": {
+    "small": [
+      {
+        "rect": {
+          "x": 279,
+          "y": 62,
+          "width": 15,
+          "height": 25
+        },
+        "asset_path": "assets/sprites/ui/act_3/candles/small/flame_00.png",
+        "opacity": 1
+      },
+      {
+        "rect": {
+          "x": 279,
+          "y": 63,
+          "width": 15,
+          "height": 25
+        },
+        "asset_path": "assets/sprites/ui/act_3/candles/small/flame_01.png",
+        "opacity": 1
+      },
+      {
+        "rect": {
+          "x": 279,
+          "y": 63,
+          "width": 15,
+          "height": 25
+        },
+        "asset_path": "assets/sprites/ui/act_3/candles/small/flame_02.png",
+        "opacity": 1
+      },
+      {
+        "rect": {
+          "x": 279,
+          "y": 63,
+          "width": 15,
+          "height": 25
+        },
+        "asset_path": "assets/sprites/ui/act_3/candles/small/flame_03.png",
+        "opacity": 1
+      }
+    ],
+    "large": [
+      {
+        "rect": {
+          "x": 305,
+          "y": 61,
+          "width": 7,
+          "height": 14
+        },
+        "asset_path": "assets/sprites/ui/act_3/candles/large/flame_00.png",
+        "opacity": 1
+      },
+      {
+        "rect": {
+          "x": 305,
+          "y": 61,
+          "width": 7,
+          "height": 14
+        },
+        "asset_path": "assets/sprites/ui/act_3/candles/large/flame_01.png",
+        "opacity": 1
+      },
+      {
+        "rect": {
+          "x": 305,
+          "y": 61,
+          "width": 7,
+          "height": 14
+        },
+        "asset_path": "assets/sprites/ui/act_3/candles/large/flame_02.png",
+        "opacity": 1
+      },
+      {
+        "rect": {
+          "x": 305,
+          "y": 61,
+          "width": 7,
+          "height": 14
+        },
+        "asset_path": "assets/sprites/ui/act_3/candles/large/flame_03.png",
+        "opacity": 1
+      }
+    ]
+  }
+}

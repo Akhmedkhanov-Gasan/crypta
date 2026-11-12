@@ -86,6 +86,7 @@ class GameplayRenderer:
                 self.act_three_gameplay_assets,
                 current_time,
                 background=game_surface,
+                mouse_position=mouse_position,
             )
             self.map_navigation.draw(
                 overlay_target,

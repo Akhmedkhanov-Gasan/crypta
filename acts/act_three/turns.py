@@ -1,4 +1,5 @@
 import pygame
+from acts.act_three.items.use import trigger_spring_trap
 
 from acts.act_three.abilities.archer_barrage_zone import (
     ArcherBarrageTurnInterrupt,
@@ -34,10 +35,8 @@ def _advance_enemy_turn(game_state, turn):
         enemy_id = turn.enemy_ids[turn.next_index]
         turn.next_index += 1
 
-        if not any(
-            id(enemy) == enemy_id
-            for enemy in game_state.floor.enemies
-        ):
+        enemy = next((enemy for enemy in game_state.floor.enemies if id(enemy) == enemy_id), None)
+        if enemy is None:
             continue
 
         try:
@@ -57,6 +56,7 @@ def _advance_enemy_turn(game_state, turn):
             return
 
         turn.prelude_done = True
+        trigger_spring_trap(game_state, enemy, pygame.time.get_ticks())
         if game_state.player.health <= 0:
             break
 

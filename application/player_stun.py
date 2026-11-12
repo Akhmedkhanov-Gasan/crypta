@@ -9,6 +9,7 @@ def stunned_wait_event(game_state, wait_key):
     player.act_two.fire_bomb_aiming_slot = None
     player.act_two.scroll_aiming_kind = None
     player.act_two.scroll_aiming_slot = None
+    player.act_three.consumable_aim_slot = None
     player.act_two.selected_ability_direction = None
 
     for name in (

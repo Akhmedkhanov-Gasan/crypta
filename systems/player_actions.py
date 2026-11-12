@@ -40,10 +40,12 @@ from settings import POTION_HEALING
 def try_use_potion(
     game_state: GameState,
     slot_index: int | None = None,
+    *,
+    healing_amount: int = POTION_HEALING,
 ) -> bool:
     player = game_state.player
     act_number = game_state.floor.presentation_act
-    if act_number == 2:
+    if act_number in (2, 3):
         slots = get_act_two_consumable_slots(player)
         potion_is_available = (
             any(item == POTION for item in slots)
@@ -73,9 +75,9 @@ def try_use_potion(
     previous_health = player.health
     heal_player(
         player,
-        adjusted_consumable_healing(player, POTION_HEALING),
+        adjusted_consumable_healing(player, healing_amount),
     )
-    if act_number == 2:
+    if act_number in (2, 3):
         consume_act_two_potion(player, slot_index)
     else:
         player.potion_count -= 1

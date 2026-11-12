@@ -68,6 +68,9 @@ def open_npc_dialog(game_state, npc, current_time):
     state.npc_dialog_phase = "opening"
     state.npc_dialog_started_at = current_time
     state.npc_dialog_line_index = 0
+    state.trader_slot_presses.clear()
+    if npc["type"] == "trader" and "trader" in state.npc_conversations_completed:
+        state.trader_tab = "healing"
     return True
 
 
@@ -77,6 +80,7 @@ def close_npc_dialog(game_state, current_time):
         return
 
     frame = NPC_FRAME_COUNT - 1
+    state.trader_tab = None
     if state.npc_dialog_phase == "opening":
         frame = min(
             frame,
@@ -103,6 +107,9 @@ def continue_npc_dialog(game_state, current_time):
         state.npc_dialog_line_index += 1
         return
     state.npc_conversations_completed.add(npc["type"])
+    if npc["type"] == "trader":
+        state.trader_tab = "healing"
+        return
     close_npc_dialog(game_state, current_time)
 
 
@@ -122,6 +129,7 @@ def advance_npc_dialog(game_state, current_time):
         state.npc_dialog_floor_index = -1
         state.npc_dialog_phase = "closed"
         state.npc_dialog_started_at = 0
+        state.trader_tab = None
         return
 
     elapsed = max(0, current_time - state.npc_dialog_started_at)

@@ -323,6 +323,7 @@ class FloorState(AttributeMapping):
     act_three_npcs: list[dict[str, Any]] = field(
         default_factory=list
     )
+    act_three_spring_traps: set[tuple[int, int]] = field(default_factory=set)
     act_three_ores: list[dict[str, Any]] = field(
         default_factory=list
     )

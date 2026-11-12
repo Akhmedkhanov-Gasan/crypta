@@ -691,9 +691,9 @@
       },
       "class_name": {
         "rect": {
-          "x": 951,
+          "x": 941,
           "y": 135,
-          "width": 97,
+          "width": 125,
           "height": 28
         },
         "text": "ASSASSIN",
@@ -2273,7 +2273,7 @@
             "width": 110,
             "height": 33
           },
-          "text": "Dodging a direct attack triggers a counterattack.",
+          "text": "Dodging a direct attack\ntriggers a counterattack.",
           "font": {
             "family": "Asul",
             "style": "Regular",

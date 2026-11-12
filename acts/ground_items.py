@@ -1,6 +1,8 @@
 from functools import partial
 
 from acts.act_one.settings import ACT_ONE_BELT_SIZE
+from acts.act_three.trader_catalog import TRADER_ITEMS
+from acts.act_two.consumables import store_act_two_consumable
 from acts.act_two.ground_items import (
     GROUND_ITEM_RULES as ACT_TWO_GROUND_ITEM_RULES,
 )
@@ -11,6 +13,12 @@ from acts.act_two.presentation.bosses.oracle_phase_transition import (
     oracle_cutscene_active,
 )
 from systems import ground_items as shared_ground_items
+
+
+def _store_act_three_item(player, kind):
+    if kind in TRADER_ITEMS:
+        return store_act_two_consumable(player, kind)
+    return shared_ground_items.store_counted_item(player, kind)
 
 
 _RULES = {
@@ -24,7 +32,7 @@ _RULES = {
     ),
     2: ACT_TWO_GROUND_ITEM_RULES,
     3: shared_ground_items.GroundItemRules(
-        store_item=shared_ground_items.store_counted_item,
+        store_item=_store_act_three_item,
     ),
 }
 

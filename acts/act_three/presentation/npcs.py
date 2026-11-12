@@ -84,6 +84,7 @@ def draw_npc_dialog(screen, game_state, fonts):
     close_label = (
         "SPACE / CLICK - CONTINUE"
         if state.npc_dialog_line_index + 1 < len(lines)
+        else "SPACE / CLICK - TRADE" if npc["type"] == "trader"
         else "SPACE / CLICK - CLOSE"
     )
     draw_dialogue_panel(

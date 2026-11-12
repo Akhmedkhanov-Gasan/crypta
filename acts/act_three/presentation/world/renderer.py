@@ -45,6 +45,7 @@ from acts.act_three.presentation.world.enemies import (
     draw_world_enemies,
 )
 from acts.act_three.presentation.npcs import draw_world_npcs
+from acts.act_three.presentation.world.consumables import draw_consumable_cells
 from acts.act_three.presentation.ore_ambient import draw_ore_ambient
 from acts.act_three.mining.presentation import (
     draw_mining_feedback,
@@ -285,6 +286,7 @@ def _draw_act_three_world(
         current_time,
     )
 
+    draw_consumable_cells(context, game_state, assets)
     draw_world_ores(context, assets)
     draw_world_enemies(
         context,

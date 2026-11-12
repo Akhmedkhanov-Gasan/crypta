@@ -32,12 +32,6 @@ def get_npc_dialogue(game_state, npc):
         return (("blacksmith", "The forge will be available soon."),)
 
     subclass = game_state.player.subclass or "player"
-    if npc_type in game_state.act_three.npc_conversations_completed:
-        return (
-            ("trader", "Good to see you again. Still in one piece? That's enough for today."),
-            (subclass, "For today."),
-        )
-
     greeting, answer = TRADER_REPLIES.get(
         subclass,
         ("Still alive. Good to see you too.", "We'll talk when you're ready."),
@@ -48,5 +42,5 @@ def get_npc_dialogue(game_state, npc):
         ("trader", "Better with my guild seal back where it belongs. I haven't forgotten what you did for me."),
         ("trader", "Actually, I may have a little job for you. Old habits, eh?"),
         (subclass, answer),
-        ("trader", "Easy, easy. No errands today. Catch your breath. We'll talk business another time."),
+        ("trader", "No errands today. The guild sent stronger supplies once I showed them the seal. Take a look."),
     )

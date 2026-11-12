@@ -139,6 +139,20 @@ class GameplayKeyboardController:
             self.window_state.toggle_fullscreen()
             return game_state
 
+        if current_act == 3 and game_state.player.act_three.item_drag is not None:
+            if event.key == pygame.K_ESCAPE:
+                game_state.player.act_three.item_drag = None
+            return game_state
+
+        if (
+            current_act == 3
+            and game_state.player.act_three.consumable_aim_slot is not None
+            and getattr(event, "act_three_belt_slot", None) is None
+        ):
+            if event.key == pygame.K_ESCAPE:
+                game_state.player.act_three.consumable_aim_slot = None
+            return game_state
+
         if handle_act_three_key_event(event, game_state):
             if movement_profile.step_duration_ms > 0:
                 self.movement_state.reset_held_movement()

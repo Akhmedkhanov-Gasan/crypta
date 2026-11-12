@@ -3,6 +3,8 @@ from acts.act_three.combat.pacing import player_attack_recovery_active
 
 from application.auto_movement import start_auto_move
 from acts.act_three.npcs import get_npc_at, open_npc_dialog
+from acts.act_three.input.consumables import handle_consumable_pointer
+from acts.act_three.input.inventory import handle_inventory_drag
 from game.combat_log import add_log_message
 from game.progression import upgrade_attribute
 from acts.act_three.altar import (
@@ -151,6 +153,22 @@ def handle_act_three_pointer_event(
         < ASSASSIN_SHADOW_STEP_DURATION_MS
     ):
         return True
+
+    if event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP):
+        mouse_position = window_to_game_position(screen, event.pos)
+        player = game_state.player
+        item_input_available = (
+            movement_available
+            and not mage_aiming(player)
+            and not player.archer_basic_aiming
+            and not player.archer_piercing_aiming
+            and not player.summoner_aiming
+            and not player.summoner_familiar_summon_aiming
+        )
+        if handle_inventory_drag(event, game_state, mouse_position, item_input_available):
+            return True
+        if handle_consumable_pointer(event, game_state, mouse_position, item_input_available):
+            return True
 
     if (
         game_state.upgrade_altar_menu_open

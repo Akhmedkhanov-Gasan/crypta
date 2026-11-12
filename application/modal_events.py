@@ -4,6 +4,7 @@ import pygame
 
 from acts.act_one.presentation.death_scene import handle_act_one_death_event
 from acts.act_three.presentation.npcs import handle_npc_dialog_event
+from acts.act_three.presentation.trader import handle_trader_event
 from acts.act_three.presentation.blacksmith import handle_blacksmith_event
 from acts.act_three.mining.runtime import handle_mining_event
 from acts.act_two.presentation.bosses.oracle_phase_transition import (
@@ -85,6 +86,7 @@ class ApplicationModalController:
                 return ModalEventResult(True, state)
 
         if event.type == pygame.WINDOWFOCUSLOST:
+            game_state.player.act_three.item_drag = None
             self.movement_state.reset_held_movement()
             self.movement_state.cancel_auto_move()
             return ModalEventResult(True, state)
@@ -98,6 +100,7 @@ class ApplicationModalController:
             and event.type not in (pygame.QUIT, pygame.VIDEORESIZE)
             and (
                 handle_mining_event(event, game_state)
+                or handle_trader_event(event, game_state, self._event_position(event))
                 or handle_blacksmith_event(
                     event,
                     game_state,
