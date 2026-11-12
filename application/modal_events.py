@@ -4,6 +4,7 @@ import pygame
 
 from acts.act_one.presentation.death_scene import handle_act_one_death_event
 from acts.act_three.presentation.npcs import handle_npc_dialog_event
+from acts.act_three.presentation.blacksmith import handle_blacksmith_event
 from acts.act_three.mining.runtime import handle_mining_event
 from acts.act_two.presentation.bosses.oracle_phase_transition import (
     handle_oracle_cutscene_event,
@@ -97,6 +98,11 @@ class ApplicationModalController:
             and event.type not in (pygame.QUIT, pygame.VIDEORESIZE)
             and (
                 handle_mining_event(event, game_state)
+                or handle_blacksmith_event(
+                    event,
+                    game_state,
+                    self._event_position(event),
+                )
                 or handle_npc_dialog_event(
                     event,
                     game_state,

@@ -1,5 +1,7 @@
 import pygame
 
+from acts.act_three.equipment import equipment_rank_bonus
+
 from acts.act_three.abilities import (
     get_mastery_charge_rate,
     get_passive_definition,
@@ -192,9 +194,7 @@ def _act_three_combat_tooltip(
         return TooltipContent(
             title=f"ARMOR  |  {value}",
             lines=(
-                "Shows the protection granted by armor and other effects.",
-                "Armor upgrades increase this value.",
-                "It does not replace dodge chance.",
+                "Reduces incoming physical damage.",
             ),
             accent=_PANEL_ACCENTS["armor"],
         )
@@ -270,9 +270,7 @@ def character_panel_tooltip_content(
             return TooltipContent(
                 title=f"WEAPON  |  RANK {rank}",
                 lines=(
-                    "Shows the current weapon upgrade rank.",
-                    "Weapon rank is increased by the blacksmith.",
-                    "Its effects depend on the subclass weapon.",
+                    f"Weapon damage bonus: +{equipment_rank_bonus(rank)}%.",
                 ),
                 accent=_PANEL_ACCENTS["weapon"],
             )
@@ -280,9 +278,7 @@ def character_panel_tooltip_content(
         return TooltipContent(
             title=f"ARMOR  |  RANK {rank}",
             lines=(
-                "Shows the current armor upgrade rank.",
-                "Armor rank is increased by the blacksmith.",
-                "Its effects depend on the subclass armor.",
+                f"Physical damage reduction: {equipment_rank_bonus(rank)}%.",
             ),
             accent=_PANEL_ACCENTS["equipment_armor"],
         )

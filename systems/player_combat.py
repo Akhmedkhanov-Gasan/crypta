@@ -5,6 +5,7 @@ from math import ceil
 from acts.act_three.combat.paladin import (
     add_paladin_block_chance,
 )
+from acts.act_three.equipment import apply_armor_bonus, apply_weapon_bonus
 from acts.act_two.ability_scaling import (
     mage_basic_attack_damage_bonus,
     rogue_ambush_damage_bonus,
@@ -172,6 +173,8 @@ def damage_player(
         and player.paladin_holy_shield_turns > 0
     ):
         damage = ceil(damage / 2)
+    if damage_kind == "physical":
+        damage = apply_armor_bonus(player, damage)
     previous_health = player.health
     minimum_health = (
         1
@@ -445,6 +448,7 @@ def attack_enemy(
             player,
             damage,
         )
+        damage = apply_weapon_bonus(player, damage)
     damage = limit_oracle_phase_one_damage(
         enemy,
         damage,

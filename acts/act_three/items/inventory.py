@@ -16,3 +16,12 @@ def store_inventory_item(player, item):
             player.act_three.inventory_slots[index] = item
             return True
     return False
+
+
+def remove_inventory_item(player, item):
+    slots = player.act_three.inventory_slots
+    for index, stored_item in enumerate(slots):
+        if stored_item == item:
+            slots[index] = None
+            return True
+    return False

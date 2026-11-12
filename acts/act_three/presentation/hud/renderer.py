@@ -2,6 +2,8 @@ import math
 
 import pygame
 
+from acts.act_three.equipment import equipment_rank_bonus
+
 from acts.act_three.presentation.hud.inventory import draw_inventory
 from acts.act_three.presentation.hud.panel_art import (
     draw_panel_equipment,
@@ -1053,11 +1055,7 @@ def _draw_character_panel(
         armor_rank,
     )
 
-    armor_value = getattr(
-        preview_player,
-        "armor",
-        0,
-    )
+    armor_value = f"{equipment_rank_bonus(armor_rank)}%"
     charge_rate = round(
         get_mastery_charge_rate(preview_player) * 100
     )

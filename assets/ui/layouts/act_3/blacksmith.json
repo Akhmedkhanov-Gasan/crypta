@@ -1,0 +1,371 @@
+{
+  "schema_version": 1,
+  "screen": "blacksmith",
+  "act": 3,
+  "coordinate_space": "frame",
+  "frame": {
+    "name": "act3_blacksmith",
+    "width": 1280,
+    "height": 720
+  },
+  "forge_background": {
+    "rect": {
+      "x": 190,
+      "y": 21,
+      "width": 900,
+      "height": 677
+    },
+    "asset_path": "assets/sprites/ui/act_3/blacksmith_ui_elements/forge_background.png",
+    "opacity": 0.8999999761581421
+  },
+  "confirm_button": {
+    "rect": {
+      "x": 515,
+      "y": 588,
+      "width": 250,
+      "height": 51
+    },
+    "hitbox": {
+      "x": 515,
+      "y": 588,
+      "width": 250,
+      "height": 51
+    },
+    "inactive": {
+      "rect": {
+        "x": 515,
+        "y": 588,
+        "width": 250,
+        "height": 51
+      },
+      "asset_path": "assets/sprites/ui/act_3/blacksmith_ui_elements/confirm_deactive.png",
+      "opacity": 1
+    },
+    "active": {
+      "rect": {
+        "x": 515,
+        "y": 588,
+        "width": 250,
+        "height": 51
+      },
+      "asset_path": "assets/sprites/ui/act_3/blacksmith_ui_elements/confirm_active.png",
+      "opacity": 1
+    }
+  },
+  "scale": {
+    "rect": {
+      "x": 441,
+      "y": 538,
+      "width": 420,
+      "height": 19
+    },
+    "fill": {
+      "rect": {
+        "x": 441,
+        "y": 538,
+        "width": 420,
+        "height": 19
+      },
+      "asset_path": "assets/sprites/ui/act_3/blacksmith_ui_elements/scale_fill.png",
+      "opacity": 1
+    },
+    "frame": {
+      "rect": {
+        "x": 422,
+        "y": 530,
+        "width": 450,
+        "height": 41
+      },
+      "asset_path": "assets/sprites/ui/act_3/blacksmith_ui_elements/scale_frame.png",
+      "opacity": 1
+    }
+  },
+  "selection_buttons": {
+    "rect": {
+      "x": 430,
+      "y": 190,
+      "width": 431,
+      "height": 45
+    },
+    "weapon": {
+      "rect": {
+        "x": 430,
+        "y": 190,
+        "width": 200,
+        "height": 45
+      },
+      "hitbox": {
+        "x": 430,
+        "y": 190,
+        "width": 200,
+        "height": 45
+      },
+      "inactive": {
+        "rect": {
+          "x": 430,
+          "y": 190,
+          "width": 200,
+          "height": 45
+        },
+        "asset_path": "assets/sprites/ui/act_3/blacksmith_ui_elements/selection_deactive.png",
+        "opacity": 1
+      },
+      "active": {
+        "rect": {
+          "x": 430,
+          "y": 190,
+          "width": 200,
+          "height": 45
+        },
+        "asset_path": "assets/sprites/ui/act_3/blacksmith_ui_elements/selection_active.png",
+        "opacity": 1
+      },
+      "title": {
+        "rect": {
+          "x": 495,
+          "y": 202,
+          "width": 71,
+          "height": 21
+        },
+        "text": "Weapon",
+        "font": {
+          "family": "JMH Cthulhumbus Arcade",
+          "style": "Regular",
+          "size": 16
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 167,
+          "g": 167,
+          "b": 167,
+          "a": 255
+        },
+        "auto_resize": "NONE"
+      }
+    },
+    "armor": {
+      "rect": {
+        "x": 661,
+        "y": 190,
+        "width": 200,
+        "height": 45
+      },
+      "hitbox": {
+        "x": 661,
+        "y": 190,
+        "width": 200,
+        "height": 45
+      },
+      "inactive": {
+        "rect": {
+          "x": 661,
+          "y": 190,
+          "width": 200,
+          "height": 45
+        },
+        "asset_path": "assets/sprites/ui/act_3/blacksmith_ui_elements/selection_deactive.png",
+        "opacity": 1
+      },
+      "active": {
+        "rect": {
+          "x": 661,
+          "y": 190,
+          "width": 200,
+          "height": 45
+        },
+        "asset_path": "assets/sprites/ui/act_3/blacksmith_ui_elements/selection_active.png",
+        "opacity": 1
+      },
+      "title": {
+        "rect": {
+          "x": 733,
+          "y": 202,
+          "width": 56,
+          "height": 21
+        },
+        "text": "Armor",
+        "font": {
+          "family": "JMH Cthulhumbus Arcade",
+          "style": "Regular",
+          "size": 16
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 167,
+          "g": 167,
+          "b": 167,
+          "a": 255
+        },
+        "auto_resize": "NONE"
+      }
+    }
+  },
+  "improvement_section": {
+    "rect": {
+      "x": 343,
+      "y": 280,
+      "width": 614,
+      "height": 115
+    },
+    "type_selection": {
+      "rect": {
+        "x": 343,
+        "y": 284,
+        "width": 100,
+        "height": 111
+      },
+      "weapon": {
+        "rect": {
+          "x": 343,
+          "y": 284,
+          "width": 100,
+          "height": 111
+        },
+        "asset_path": "assets/sprites/ui/act_3/blacksmith_ui_elements/weapon_selection.png",
+        "opacity": 1
+      },
+      "armor": {
+        "rect": {
+          "x": 343,
+          "y": 289,
+          "width": 100,
+          "height": 102
+        },
+        "asset_path": "assets/sprites/ui/act_3/blacksmith_ui_elements/armor_selection.png",
+        "opacity": 1
+      }
+    },
+    "text_background": {
+      "rect": {
+        "x": 501,
+        "y": 278,
+        "width": 463,
+        "height": 119
+      },
+      "fill": {
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "a": 79
+      },
+      "stroke": null,
+      "stroke_weight": 1,
+      "corner_radius": 21,
+      "blur_radius": 0
+    },
+    "improvement_description": {
+      "rect": {
+        "x": 508,
+        "y": 280,
+        "width": 449,
+        "height": 115
+      },
+      "text": "test test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test test",
+      "font": {
+        "family": "Ubuntu Mono",
+        "style": "Medium",
+        "size": 16
+      },
+      "line_height": {
+        "unit": "AUTO"
+      },
+      "letter_spacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "horizontal_align": "CENTER",
+      "vertical_align": "CENTER",
+      "text_case": "ORIGINAL",
+      "color": {
+        "r": 167,
+        "g": 167,
+        "b": 167,
+        "a": 255
+      },
+      "auto_resize": "NONE"
+    }
+  },
+  "resources_icons": {
+    "rect": {
+      "x": 488,
+      "y": 453,
+      "width": 314,
+      "height": 62
+    },
+    "resource_01": {
+      "rect": {
+        "x": 488,
+        "y": 453,
+        "width": 64,
+        "height": 64
+      },
+      "material_id": "black_ore_chunk",
+      "icon": {
+        "rect": {
+          "x": 488,
+          "y": 453,
+          "width": 64,
+          "height": 64
+        },
+        "asset_path": "assets/sprites/act_3/npcs/blacksmith/ores/black_ore/black_ore_chunk.png",
+        "opacity": 1
+      }
+    },
+    "resource_02": {
+      "rect": {
+        "x": 614,
+        "y": 453,
+        "width": 64,
+        "height": 62
+      },
+      "material_id": "iron_ore_chunk",
+      "icon": {
+        "rect": {
+          "x": 614,
+          "y": 453,
+          "width": 64,
+          "height": 64
+        },
+        "asset_path": "assets/sprites/act_3/npcs/blacksmith/ores/iron/iron_ore_chunk.png",
+        "opacity": 1
+      }
+    },
+    "resource_03": {
+      "rect": {
+        "x": 738,
+        "y": 453,
+        "width": 64,
+        "height": 62
+      },
+      "material_id": null,
+      "icon": null
+    }
+  },
+  "close_hitbox": {
+    "x": 1012,
+    "y": 135,
+    "width": 40,
+    "height": 39
+  },
+  "warnings": [
+    "act3_blacksmith: resource_03 is reserved. Its ore_icon is skipped."
+  ]
+}
