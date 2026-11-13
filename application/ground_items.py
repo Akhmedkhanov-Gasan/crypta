@@ -20,6 +20,7 @@ def ground_item_input_available(game_state):
 
     return (
         game_state.floor.presentation_act in (1, 2, 3)
+        and not (game_state.floor.presentation_act == 3 and game_state.sidebar_tab == "stats")
         and player.health > 0
         and not game_state.game_won
         and game_state.floor_transition_started_at < 0

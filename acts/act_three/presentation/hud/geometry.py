@@ -1,7 +1,44 @@
+from presentation.figma_ui import figma_rect
+from acts.act_three.progression import can_queue_act_three_attribute_upgrade, get_pending_attribute_points
+
 from acts.act_three.presentation.hud.layout import (
     get_act_three_hud_layout,
     get_layout_rect,
 )
+
+
+def get_character_panel_focus_rectangles(panel, player):
+    rectangles = {
+        f"inventory:{name}": figma_rect(slot["hitbox"])
+        for name, slot in sorted(panel["inventory"]["slots"].items())
+    }
+    for name, row in panel["attributes"]["rows"].items():
+        rectangles[f"attribute:{name}"] = figma_rect(row["rect"])
+        if can_queue_act_three_attribute_upgrade(player, name):
+            rectangles[f"attribute:{name}:plus"] = figma_rect(row["plus_hitbox"])
+        if player.act_three.pending_attribute_upgrades.get(name, 0) > 0:
+            rectangles[f"attribute:{name}:minus"] = figma_rect(row["minus_hitbox"])
+    rectangles.update({
+        f"combat_stat:{name}": figma_rect(row["rect"])
+        for name, row in panel["combat_stats"]["rows"].items()
+    })
+    rectangles["mastery:mastery"] = figma_rect(panel["mastery"]["hitbox"])
+    for name in ("weapon", "armor"):
+        rectangles[f"equipment:{name}"] = figma_rect(panel["equipment"][name]["hitbox"])
+    rectangles["passive:passive"] = figma_rect(panel["subclass_passive"]["hitbox"])
+    if get_pending_attribute_points(player) > 0:
+        rectangles["confirm"] = figma_rect(panel["confirm"]["hitbox"])
+    return rectangles
+
+
+def resolve_character_panel_focus(rectangles, focus):
+    if focus in rectangles:
+        return focus
+    if focus is not None and focus.startswith("attribute:"):
+        row_focus = ":".join(focus.split(":")[:2])
+        if row_focus in rectangles:
+            return row_focus
+    return next(iter(rectangles))
 
 
 def get_act_three_sidebar_tab_rectangles():

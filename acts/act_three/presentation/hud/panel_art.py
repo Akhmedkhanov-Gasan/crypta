@@ -40,6 +40,7 @@ def draw_panel_rank_track(screen, assets, track, current_rank):
 
 
 def draw_panel_equipment(screen, assets, equipment):
+    draw_panel_image(screen, assets, "equipment_decoration", equipment.get("decoration"))
     for name, item in (("weapon", "sword"), ("armor", "armor")):
         track = equipment[name]
         draw_panel_image(screen, assets, "icon", track.get("icon"))

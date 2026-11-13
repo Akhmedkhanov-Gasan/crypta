@@ -66,7 +66,9 @@ class GameplayPointerController:
             game_state,
             act_two_camera,
             mouse_position,
-            enabled=continuous_movement_available,
+            enabled=continuous_movement_available and not (
+                current_act == 3 and game_state.sidebar_tab == "stats"
+            ),
         ):
             return True
         if current_act == 2 and self.act_two_interface_input.handle_event(

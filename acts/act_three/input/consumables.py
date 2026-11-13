@@ -1,10 +1,21 @@
 import pygame
 
+from acts.act_two.controls import CONSUMABLE_KEYS
+
 from acts.act_three.items.use import TARGETED_ITEMS, belt_item, valid_consumable_target
 from acts.act_three.presentation.hit_testing import get_act_three_cell_from_position
 from acts.act_three.presentation.hud.layout import get_act_three_hud_layout
 from acts.act_three.trader_catalog import TRADER_ITEMS
 from presentation.figma_ui import figma_rect
+
+
+BELT_SLOTS_BY_KEY = {
+    **CONSUMABLE_KEYS,
+    **{key: index for index, key in enumerate((
+        pygame.K_KP1, pygame.K_KP2, pygame.K_KP3,
+        pygame.K_KP4, pygame.K_KP5, pygame.K_KP6,
+    ))},
+}
 
 
 def _post_use(slot, target=None):

@@ -1,6 +1,7 @@
 import pygame
 
 from acts.mage_targeting import mage_aiming
+from acts.act_three.input.consumables import BELT_SLOTS_BY_KEY, activate_belt_slot
 
 from acts.act_three.abilities.progression import (
     is_ability_slot_unlocked,
@@ -154,7 +155,7 @@ def _commit_summoner_turn():
     )
 
 
-def handle_act_three_key_event(event, game_state):
+def handle_act_three_key_event(event, game_state, *, belt_available=False):
     from acts.act_three.piercing_trial import handle_key as handle_piercing_key
     from acts.act_three.shadow_step_trial import block_trial_key
 
@@ -175,7 +176,6 @@ def handle_act_three_key_event(event, game_state):
             pygame.K_q: "q",
             pygame.K_e: "e",
             pygame.K_f: "f",
-            pygame.K_1: "e",
         }.get(event.key)
 
         if (
@@ -439,16 +439,6 @@ def handle_act_three_key_event(event, game_state):
         FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
         and game_state.player.subclass == "archer"
     ):
-        if event.key in (
-            pygame.K_1,
-            pygame.K_2,
-            pygame.K_3,
-            pygame.K_KP1,
-            pygame.K_KP2,
-            pygame.K_KP3,
-        ):
-            return True
-
         if event.key == pygame.K_q:
             if not piercing_shot_ready(game_state):
                 add_log_message(
@@ -591,6 +581,17 @@ def handle_act_three_key_event(event, game_state):
         < BERSERKER_RENDING_SPIN_ANIMATION_MS
     ):
         return True
+    if (
+        game_state.floor.presentation_act == 3
+        and belt_available
+        and event.key in BELT_SLOTS_BY_KEY
+        and not getattr(event, "mod", 0) & pygame.KMOD_SHIFT
+        and game_state.act_three.barrage_turn is None
+    ):
+        if not getattr(event, "repeat", False):
+            activate_belt_slot(game_state.player, BELT_SLOTS_BY_KEY[event.key])
+        return True
+
     if event.key in MOVEMENT_KEYS or event.key in WAIT_KEYS:
         return False
 
@@ -655,6 +656,7 @@ def handle_act_three_key_event(event, game_state):
     
     if (
         event.key in (pygame.K_1, pygame.K_KP1)
+        and getattr(event, "mod", 0) & pygame.KMOD_SHIFT
         and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
         and game_state.player.subclass == "archer"
     ):
@@ -683,6 +685,7 @@ def handle_act_three_key_event(event, game_state):
     
     if (
         event.key in (pygame.K_2, pygame.K_KP2)
+        and getattr(event, "mod", 0) & pygame.KMOD_SHIFT
         and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
         and game_state.player.subclass == "archer"
     ):
@@ -758,6 +761,7 @@ def handle_act_three_key_event(event, game_state):
     
     if (
         event.key in (pygame.K_2, pygame.K_KP2)
+        and getattr(event, "mod", 0) & pygame.KMOD_SHIFT
         and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
         and game_state.player.subclass == "summoner"
     ):

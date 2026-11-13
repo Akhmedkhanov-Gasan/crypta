@@ -41,6 +41,10 @@ from acts.act_two.presentation.hud_tooltips import (
     consumable_tooltip_content,
 )
 from game.rune_catalog import RUNES_BY_ID
+from acts.act_three.presentation.hud.geometry import (
+    get_character_panel_focus_rectangles,
+    resolve_character_panel_focus,
+)
 from acts.act_three.presentation.hud.layout import (
     get_layout_rect,
 )
@@ -59,6 +63,7 @@ from presentation.figma_ui import (
     get_figma_font as get_layout_font,
 )
 from acts.act_three.progression import (
+    can_queue_act_three_attribute_upgrade,
     get_act_three_attribute_preview,
     get_pending_attribute_points,
 )
@@ -547,7 +552,7 @@ def _draw_consumables(
         is_hovered = mouse_position is not None and hitbox.collidepoint(mouse_position)
         is_drag_source = moving and drag.from_belt and drag.slot == index
         if moving and not is_drag_source and index < len(stored_items):
-            if drag.from_belt or (item is None and drag.item in TRADER_ITEMS):
+            if drag.from_belt or drag.item in TRADER_ITEMS:
                 color = (195, 151, 88) if is_hovered else (113, 86, 57)
                 pygame.draw.rect(screen, color, hitbox, width=2 if is_hovered else 1, border_radius=4)
 
@@ -926,10 +931,17 @@ def _draw_character_panel(
     preview_player = get_act_three_attribute_preview(player)
     pending_points = get_pending_attribute_points(player)
     panel = layout["right_bar"]["character_panel"]
+    rectangles = get_character_panel_focus_rectangles(panel, player)
+    focus = resolve_character_panel_focus(rectangles, game_state.act_three.character_panel_focus)
+    keyboard_focus = game_state.act_three.character_panel_keyboard_focus
+    tooltip_position = rectangles[focus].midright if keyboard_focus else mouse_position
+    focus_parts = focus.split(":")
     hovered_item = get_character_panel_hover(
         panel,
-        mouse_position,
+        None if keyboard_focus else mouse_position,
     )
+    if keyboard_focus and focus_parts[0] not in ("inventory", "confirm"):
+        hovered_item = tuple(focus_parts[:2])
     _blit_asset(
         screen,
         assets,
@@ -941,19 +953,17 @@ def _draw_character_panel(
             "frame",
         ),
     )
-    if pending_points > 0:
-        _blit_asset(
-            screen,
-            assets,
-            "hud_character_panel_button",
-            get_layout_rect(
-                layout,
-                "right_bar",
-                "character_panel",
-                "confirm",
-                "button",
-            ),
-        )
+    equipment = panel["equipment"]
+    for track_name in ("weapon", "armor"):
+        draw_panel_row_background(screen, equipment[track_name])
+
+    confirm_state = "active" if pending_points > 0 else "deactive"
+    _blit_asset(
+        screen,
+        assets,
+        f"hud_character_panel_button_{confirm_state}",
+        figma_rect(panel["confirm"][f"button_{confirm_state}"]),
+    )
     draw_character_panel_highlight(
         screen,
         panel,
@@ -986,8 +996,10 @@ def _draw_character_panel(
 
     for name, row in panel["attributes"]["rows"].items():
         draw_panel_row_background(screen, row)
-        draw_panel_image(screen, assets, "minus_icon", row.get("minus_icon"))
-        draw_panel_image(screen, assets, "plus_icon", row.get("plus_icon"))
+        if player.act_three.pending_attribute_upgrades.get(name, 0) > 0:
+            draw_panel_image(screen, assets, "minus_icon", row.get("minus_icon"))
+        if can_queue_act_three_attribute_upgrade(player, name):
+            draw_panel_image(screen, assets, "plus_icon", row.get("plus_icon"))
         draw_figma_text(
             screen,
             row["label"],
@@ -999,7 +1011,6 @@ def _draw_character_panel(
             ranks.get(name, 0),
         )
 
-    equipment = panel["equipment"]
     draw_panel_equipment(screen, assets, equipment)
 
     draw_figma_text(
@@ -1114,10 +1125,11 @@ def _draw_character_panel(
             passive_definition.name,
         )
 
-        _draw_dynamic_figma_text(
+        draw_figma_text(
             screen,
             passive_layout["value"],
-            passive_definition.description,
+            text_override=passive_definition.description,
+            wrap=True,
         )
 
     tooltip_content = character_panel_tooltip_content(
@@ -1130,16 +1142,25 @@ def _draw_character_panel(
         player,
         assets,
         panel,
-        mouse_position,
+        None if keyboard_focus and player.act_three.item_drag is None else mouse_position,
+        focused_slot=focus_parts[1] if keyboard_focus and focus_parts[0] == "inventory" else None,
     )
     if inventory_tooltip is not None:
         tooltip_content = inventory_tooltip
+
+    pygame.draw.rect(
+        screen,
+        (214, 178, 106),
+        rectangles[focus],
+        width=max(1, round(assets.get("hud_render_scale", 1.0))),
+        border_radius=3,
+    )
 
     if tooltip_content is not None:
         draw_tooltip(
             screen,
             tooltip_content,
-            mouse_position,
+            tooltip_position,
             scale=assets.get("hud_render_scale", 1.0),
         )
 

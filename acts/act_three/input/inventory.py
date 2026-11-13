@@ -2,9 +2,9 @@ import pygame
 
 from acts.act_three.input.consumables import activate_belt_slot
 from acts.act_three.items.inventory import (
+    assign_inventory_item_to_belt,
     get_inventory_slots,
     move_belt_item_to_inventory,
-    move_inventory_item_to_belt,
     rearrange_belt,
     rearrange_inventory,
 )
@@ -27,7 +27,8 @@ def _slot_at(slots, mouse_position):
     )
 
 
-def _finish_drag(player, drag, mouse_position, inventory_open):
+def _finish_drag(game_state, drag, mouse_position, inventory_open):
+    player = game_state.player
     layout = get_act_three_hud_layout()
     belt_slots = layout["down_bar"]["consumable_belt"]["slots"]
     inventory_slots = layout["right_bar"]["character_panel"]["inventory"]["slots"]
@@ -36,7 +37,7 @@ def _finish_drag(player, drag, mouse_position, inventory_open):
     if drag.from_belt:
         if belt_item(player, drag.slot) != drag.item:
             return
-        if not drag.moving and belt_target == drag.slot:
+        if not drag.moving and belt_target == drag.slot and not inventory_open:
             activate_belt_slot(player, drag.slot)
         elif drag.moving:
             if inventory_target is not None:
@@ -53,7 +54,7 @@ def _finish_drag(player, drag, mouse_position, inventory_open):
     if inventory_target is not None:
         rearrange_inventory(player, drag.slot, inventory_target)
     elif belt_target is not None:
-        move_inventory_item_to_belt(player, drag.slot, belt_target)
+        assign_inventory_item_to_belt(game_state, drag.slot, belt_target)
 
 
 def handle_inventory_drag(event, game_state, mouse_position, movement_available):
@@ -69,7 +70,7 @@ def handle_inventory_drag(event, game_state, mouse_position, movement_available)
             drag.moving = True
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             state.item_drag = None
-            _finish_drag(player, drag, mouse_position, inventory_open)
+            _finish_drag(game_state, drag, mouse_position, inventory_open)
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
             state.item_drag = None
         return True
@@ -85,6 +86,7 @@ def handle_inventory_drag(event, game_state, mouse_position, movement_available)
     inventory = layout["right_bar"]["character_panel"]["inventory"]
     source = _slot_at(inventory["slots"], mouse_position) if inventory_open else None
     if source is not None:
+        game_state.act_three.character_panel_focus = f"inventory:{sorted(inventory['slots'])[source]}"
         items = get_inventory_slots(player)
         if source < len(items) and items[source] is not None:
             state.item_drag = ItemDragState(source, items[source], False, mouse_position)

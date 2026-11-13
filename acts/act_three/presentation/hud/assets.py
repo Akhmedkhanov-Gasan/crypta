@@ -32,9 +32,8 @@ _ART_PATHS = {
     "hud_character_panel_frame": (
         _UI_DIRECTORY / "character_panel_frame.png"
     ),
-    "hud_character_panel_button": (
-            _UI_DIRECTORY / "button.png"
-    ),
+    "hud_character_panel_button_active": _UI_DIRECTORY / "button_active.png",
+    "hud_character_panel_button_deactive": _UI_DIRECTORY / "button_deactive.png",
     "hud_ability_chains": (
             _UI_DIRECTORY / "chains.png"
     ),
@@ -67,11 +66,17 @@ _ART_RECTS = {
         "character_panel",
         "frame",
     ),
-    "hud_character_panel_button": (
+    "hud_character_panel_button_active": (
         "right_bar",
         "character_panel",
         "confirm",
-        "button",
+        "button_active",
+    ),
+    "hud_character_panel_button_deactive": (
+        "right_bar",
+        "character_panel",
+        "confirm",
+        "button_deactive",
     ),
     "hud_ability_chains": (
         "down_bar",
@@ -138,6 +143,8 @@ def load_act_three_hud_assets():
         "plus_icon",
         "inventory_baclground",
         "slot_baclground",
+        "inventory_decoration",
+        "equipment_decoration",
     ):
         assets[f"hud_panel_{name}"] = resources.load_image(
             str(_UI_DIRECTORY / f"{name}.png")

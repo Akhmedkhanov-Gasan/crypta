@@ -2,12 +2,12 @@ import pygame
 
 from acts.act_three.items.inventory import BLACK_ORE_CHUNK, get_inventory_slots
 from acts.act_three.presentation.hud.panel_art import draw_panel_image
-from acts.act_three.trader_catalog import TRADER_ITEMS
+from acts.act_three.trader_catalog import TRADER_ITEMS, TRADER_SELL_ITEMS
 from presentation.figma_ui import figma_rect
 from presentation.tooltips import TooltipContent
 
 
-def draw_inventory(screen, player, assets, panel, mouse_position):
+def draw_inventory(screen, player, assets, panel, mouse_position, focused_slot=None):
     inventory = panel["inventory"]
     slots = inventory["slots"]
     draw_panel_image(
@@ -16,6 +16,9 @@ def draw_inventory(screen, player, assets, panel, mouse_position):
         "inventory_baclground",
         inventory.get("background"),
     )
+    for decoration in inventory.get("decorations", ()):
+        draw_panel_image(screen, assets, "inventory_decoration", decoration)
+
     stored_items = get_inventory_slots(player)
     sprites = {
         **assets.get("act_three_consumable_belt_sprites", {}),
@@ -53,7 +56,7 @@ def draw_inventory(screen, player, assets, panel, mouse_position):
                 fitted,
             )
 
-        if hovered and not moving:
+        if (hovered or name == focused_slot) and not moving:
             hovered_item = item
             pygame.draw.rect(screen, (181, 145, 81), hitbox, width=1)
 
@@ -68,7 +71,11 @@ def draw_inventory(screen, player, assets, panel, mouse_position):
     item = TRADER_ITEMS.get(hovered_item)
     if item is not None:
         return TooltipContent(
-            item.name, (item.description, "Drag to an empty belt slot."), (181, 145, 81),
+            item.name, (item.description, "Press 1-6 or drag to the belt."), (181, 145, 81),
+        )
+    if hovered_item in TRADER_SELL_ITEMS:
+        return TooltipContent(
+            TRADER_SELL_ITEMS[hovered_item], ("Sell to a trader.",), (181, 145, 81),
         )
     return None
 

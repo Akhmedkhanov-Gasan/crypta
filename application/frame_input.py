@@ -101,10 +101,13 @@ def prepare_frame_input(
         game_state.floor,
         movement_profile,
     )
+    world_movement_available = continuous_movement_available and not (
+        current_act == 3 and game_state.sidebar_tab == "stats"
+    )
     held_event = create_held_movement_event(
         movement_state,
         current_time,
-        continuous_movement_available,
+        world_movement_available,
         act_two_combat_is_active(game_state),
         profile=movement_profile,
     )
@@ -115,7 +118,7 @@ def prepare_frame_input(
         movement_state,
         game_state,
         current_time,
-        continuous_movement_available,
+        world_movement_available,
         PLAYER_STEP_MS if current_act == 3 else AUTO_MOVE_INTERVAL_MS,
     )
     if auto_move_event is not None:

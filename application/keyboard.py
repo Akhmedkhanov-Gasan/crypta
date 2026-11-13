@@ -9,6 +9,10 @@ from acts.mage_targeting import (
 
 from acts.act_one.upgrades import handle_upgrade_key_input
 from acts.act_three.combat.pacing import player_attack_recovery_active
+from acts.act_three.input.character_panel import (
+    can_open_character_panel,
+    handle_character_panel_key,
+)
 from acts.act_three.input import (
     handle_act_three_flow_key,
     handle_act_three_key_event,
@@ -33,7 +37,6 @@ from application.movement_input import (
 )
 from application.player_stun import stunned_wait_event
 from application.player_turn import resolve_player_turn
-from levels import FLOOR_CONFIGS
 from presentation.control_effects import forced_movement_is_active
 from presentation.cursors import set_archer_attack_cursor
 from systems.player_abilities import (
@@ -79,6 +82,28 @@ class GameplayKeyboardController:
     ):
         barrage_resume = getattr(event, "archer_barrage_resume", False)
         automatic_movement = getattr(event, "automatic_movement", False)
+        if (
+            current_act == 3
+            and not getattr(event, "open_pause_menu", False)
+            and not barrage_resume
+            and not getattr(event, "paladin_sacred_ground_turn", False)
+            and not getattr(event, "summoner_turn_commit", False)
+            and event.key not in (pygame.K_F11, pygame.K_F1, pygame.K_F2, pygame.K_F3, pygame.K_F4)
+            and not game_state.act_three_transition_open
+            and not game_state.subclass_selection_open
+            and not game_state.act_three_debug_class_selection_open
+            and not game_state.upgrade_altar_menu_open
+            and game_state.player.health > 0
+            and not game_state.game_won
+            and handle_character_panel_key(
+                event,
+                game_state,
+                can_open_character_panel(game_state, continuous_movement_available),
+            )
+        ):
+            self.movement_state.reset_held_movement()
+            self.movement_state.cancel_auto_move()
+            return game_state
         spin_aiming = current_act == 3 and game_state.player.berserker_crushing_leap_aiming
         if spin_aiming and automatic_movement:
             return game_state
@@ -153,7 +178,9 @@ class GameplayKeyboardController:
                 game_state.player.act_three.consumable_aim_slot = None
             return game_state
 
-        if handle_act_three_key_event(event, game_state):
+        if handle_act_three_key_event(
+            event, game_state, belt_available=continuous_movement_available,
+        ):
             if movement_profile.step_duration_ms > 0:
                 self.movement_state.reset_held_movement()
                 self.movement_state.cancel_auto_move()
@@ -330,12 +357,7 @@ class GameplayKeyboardController:
                 return game_state
 
         rogue_ability_activated = False
-        assassin_ability_pressed = (
-            event.key == pygame.K_1
-            and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
-            and game_state.player.subclass == "assassin"
-        )
-        if event.key == pygame.K_e or assassin_ability_pressed:
+        if event.key == pygame.K_e:
             if current_act in (2, 3) and game_state.player.player_class == "mage":
                 if getattr(event, "repeat", False):
                     return game_state

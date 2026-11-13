@@ -6,6 +6,7 @@ import pygame
 import resource_store as resources
 
 from presentation.layout import FONT_ROOT
+from presentation.text import fit_text_to_width, wrap_text
 
 
 _FONT_PATHS = {
@@ -286,6 +287,7 @@ def draw_figma_text(
     text_override: str | None = None,
     color_override: tuple[int, int, int] | None = None,
     opacity_multiplier: float = 1.0,
+    wrap: bool = False,
 ) -> None:
     if text_spec is None:
         return
@@ -329,6 +331,19 @@ def draw_figma_text(
 
     line_height = _line_height_pixels(text_spec, font)
     letter_spacing = _letter_spacing_pixels(text_spec)
+
+    if wrap:
+        if rect.width <= 0 or rect.height <= 0:
+            return
+        lines = [
+            wrapped_line
+            for line in lines
+            for wrapped_line in (wrap_text(font, line, rect.width) or [""])
+        ]
+        max_lines = max(1, rect.height // line_height)
+        if len(lines) > max_lines:
+            lines = lines[:max_lines - 1] + [" ".join(lines[max_lines - 1:])]
+        lines = [fit_text_to_width(font, line, rect.width) for line in lines]
 
     horizontal_alignment = str(
         text_spec.get("horizontal_align", "LEFT")

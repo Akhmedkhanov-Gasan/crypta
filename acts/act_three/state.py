@@ -267,6 +267,8 @@ class ActThreeSessionState:
     subclass_selection_open: bool = False
     act_three_test_mode: bool = False
     sidebar_tab: str = "closed"
+    character_panel_focus: str | None = None
+    character_panel_keyboard_focus: bool = False
     log_scroll_offset: int = 0
     enemy_stun_visuals: dict[int, int] = field(
         default_factory=dict,

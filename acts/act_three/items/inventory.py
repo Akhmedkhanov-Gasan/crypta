@@ -29,16 +29,41 @@ def remove_inventory_item(player, item):
 
 def move_inventory_item_to_belt(player, source_index, belt_index):
     from acts.act_three.trader_catalog import TRADER_ITEMS
-    from acts.act_two.consumables import store_act_two_consumable
+    from acts.act_two.consumables import remove_act_two_consumable, store_act_two_consumable
 
     slots = player.act_three.inventory_slots
-    if not 0 <= source_index < len(slots):
+    belt = player.act_two.consumable_slots
+    if not (0 <= source_index < len(slots) and 0 <= belt_index < len(belt)):
         return False
     item = slots[source_index]
-    if item not in TRADER_ITEMS or not store_act_two_consumable(player, item, belt_index):
+    if item not in TRADER_ITEMS:
         return False
-    slots[source_index] = None
+    previous_item = remove_act_two_consumable(player, belt_index)
+    store_act_two_consumable(player, item, belt_index)
+    slots[source_index] = previous_item
     return True
+
+
+def assign_inventory_item_to_belt(game_state, source_index, belt_index):
+    from acts.act_three.trader_catalog import TRADER_ITEMS, TRADER_SELL_ITEMS
+    from game.combat_log import add_log_message
+
+    player = game_state.player
+    slots = get_inventory_slots(player)
+    if not 0 <= source_index < len(slots) or slots[source_index] is None:
+        return False
+
+    item = slots[source_index]
+    if item not in TRADER_ITEMS:
+        name = TRADER_SELL_ITEMS.get(item, item.replace("_", " ").capitalize())
+        message = f"{name} cannot be placed on the belt."
+    elif move_inventory_item_to_belt(player, source_index, belt_index):
+        return True
+    else:
+        message = f"Belt slot {belt_index + 1} is unavailable."
+
+    add_log_message(game_state.combat_log, message, category="warning")
+    return False
 
 
 def move_belt_item_to_inventory(player, belt_index, target_index):

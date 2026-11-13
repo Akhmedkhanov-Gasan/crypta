@@ -5,6 +5,12 @@ from application.auto_movement import start_auto_move
 from acts.act_three.npcs import get_npc_at, open_npc_dialog
 from acts.act_three.input.consumables import handle_consumable_pointer
 from acts.act_three.input.inventory import handle_inventory_drag
+from acts.act_three.input.character_panel import (
+    activate_character_attribute,
+    can_open_character_panel,
+    confirm_character_panel_upgrades,
+    set_sidebar_tab,
+)
 from game.combat_log import add_log_message
 from game.progression import upgrade_attribute
 from acts.act_three.altar import (
@@ -109,13 +115,6 @@ from acts.act_three.settings import (
 from acts.act_three.abilities.warrior import (
     update_warrior_cleave_preview,
 )
-from acts.act_three.progression import (
-    cancel_act_three_attribute_upgrade,
-    clear_act_three_attribute_upgrades,
-    confirm_act_three_attribute_upgrades,
-    queue_act_three_attribute_upgrade,
-    get_pending_attribute_points,
-)
 from acts.act_three.presentation.hud.geometry import (
     get_act_three_attribute_button_rectangles,
     get_act_three_character_confirm_rectangle,
@@ -155,6 +154,8 @@ def handle_act_three_pointer_event(
         return True
 
     if event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP):
+        if event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN):
+            game_state.act_three.character_panel_keyboard_focus = False
         mouse_position = window_to_game_position(screen, event.pos)
         player = game_state.player
         item_input_available = (
@@ -167,7 +168,12 @@ def handle_act_three_pointer_event(
         )
         if handle_inventory_drag(event, game_state, mouse_position, item_input_available):
             return True
-        if handle_consumable_pointer(event, game_state, mouse_position, item_input_available):
+        if handle_consumable_pointer(
+            event,
+            game_state,
+            mouse_position,
+            item_input_available and game_state.sidebar_tab != "stats",
+        ):
             return True
 
     if (
@@ -243,6 +249,7 @@ def handle_act_three_pointer_event(
         )
         game_state.upgrade_altar_hovered = (
             game_mouse_position is not None
+            and game_state.sidebar_tab != "stats"
             and altar_rectangle is not None
             and altar_rectangle.collidepoint(game_mouse_position)
             and player_is_next_to_upgrade_altar(game_state)
@@ -572,6 +579,7 @@ def handle_act_three_pointer_event(
         )
         if (
             game_mouse_position is not None
+            and game_state.sidebar_tab != "stats"
             and altar_rectangle is not None
             and altar_rectangle.collidepoint(game_mouse_position)
             and player_is_next_to_upgrade_altar(game_state)
@@ -621,7 +629,8 @@ def handle_act_three_pointer_event(
         )
         if game_mouse_position is not None:
             if (
-                game_state.player.player_class == "mage"
+                game_state.sidebar_tab != "stats"
+                and game_state.player.player_class == "mage"
                 and get_act_three_ability_slot_rectangle("e").collidepoint(
                     game_mouse_position
                 )
@@ -629,7 +638,8 @@ def handle_act_three_pointer_event(
                 post_mage_aim_toggle()
                 return True
             if (
-                game_state.player.subclass == "archer"
+                game_state.sidebar_tab != "stats"
+                and game_state.player.subclass == "archer"
                 and get_act_three_ability_slot_rectangle(
                     "q"
                 ).collidepoint(game_mouse_position)
@@ -642,7 +652,8 @@ def handle_act_three_pointer_event(
                 )
                 return True
             if (
-                game_state.player.subclass == "archer"
+                game_state.sidebar_tab != "stats"
+                and game_state.player.subclass == "archer"
                 and get_act_three_ability_slot_rectangle(
                     "f"
                 ).collidepoint(game_mouse_position)
@@ -669,66 +680,47 @@ def handle_act_three_pointer_event(
                         pygame.event.Event(
                             pygame.KEYDOWN,
                             key=pygame.K_ESCAPE,
+                            open_pause_menu=True,
                         )
                     )
+                    return True
                 elif tab_name in ("stats", "journal"):
-                    if game_state.sidebar_tab == "stats":
-                        clear_act_three_attribute_upgrades(
-                            game_state.player
-                        )
-
-                    game_state.sidebar_tab = (
-                        "closed"
-                        if game_state.sidebar_tab == tab_name
-                        else tab_name
+                    if (
+                        tab_name == "stats"
+                        and game_state.sidebar_tab != "stats"
+                        and not can_open_character_panel(game_state, movement_available)
+                    ):
+                        return True
+                    set_sidebar_tab(
+                        game_state,
+                        "closed" if game_state.sidebar_tab == tab_name else tab_name,
                     )
                     return True
             if game_state.sidebar_tab in ("stats", "journal"):
                 if game_state.sidebar_tab == "stats":
-                    if (
-                            get_pending_attribute_points(game_state.player) > 0
-                            and get_act_three_character_confirm_rectangle().collidepoint(
-                        game_mouse_position
-                    )
-                    ):
-                        if confirm_act_three_attribute_upgrades(
-                                game_state.player
-                        ):
-                            add_log_message(
-                                game_state.combat_log,
-                                "Attribute upgrades confirmed.",
-                                category="progress",
-                            )
+                    if get_act_three_character_confirm_rectangle().collidepoint(game_mouse_position):
+                        game_state.act_three.character_panel_focus = "confirm"
+                        confirm_character_panel_upgrades(game_state)
                         return True
 
                     for attribute, buttons in (
                             get_act_three_attribute_button_rectangles().items()
                     ):
                         if buttons["plus"].collidepoint(game_mouse_position):
-                            queue_act_three_attribute_upgrade(
-                                game_state.player,
-                                attribute,
-                            )
+                            activate_character_attribute(game_state, attribute, "plus")
                             return True
 
                         if buttons["minus"].collidepoint(game_mouse_position):
-                            cancel_act_three_attribute_upgrade(
-                                game_state.player,
-                                attribute,
-                            )
+                            activate_character_attribute(game_state, attribute, "minus")
                             return True
 
                 if get_act_three_panel_close_rectangle(
                         game_state.sidebar_tab
                 ).collidepoint(game_mouse_position):
-                    if game_state.sidebar_tab == "stats":
-                        clear_act_three_attribute_upgrades(
-                            game_state.player
-                        )
-                    game_state.sidebar_tab = "closed"
+                    set_sidebar_tab(game_state, "closed")
                     return True
 
-                if get_act_three_popup_rectangle(
+                if game_state.sidebar_tab == "stats" or get_act_three_popup_rectangle(
                         game_state.sidebar_tab
                 ).collidepoint(game_mouse_position):
                     return True

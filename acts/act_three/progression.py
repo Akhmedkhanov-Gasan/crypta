@@ -15,7 +15,7 @@ def get_pending_attribute_points(player):
     return sum(_pending(player).values())
 
 
-def queue_act_three_attribute_upgrade(player, attribute):
+def can_queue_act_three_attribute_upgrade(player, attribute):
     if attribute not in ATTRIBUTE_ORDER:
         return False
 
@@ -32,7 +32,13 @@ def queue_act_three_attribute_upgrade(player, attribute):
     if current_rank + pending.get(attribute, 0) >= MAX_ATTRIBUTE_RANK:
         return False
 
-    pending[attribute] += 1
+    return True
+
+
+def queue_act_three_attribute_upgrade(player, attribute):
+    if not can_queue_act_three_attribute_upgrade(player, attribute):
+        return False
+    _pending(player)[attribute] += 1
     return True
 
 
