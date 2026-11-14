@@ -22,24 +22,12 @@ class MovementInputProfile:
     repeat_interval_ms: int | None = None
     step_duration_ms: int = 0
     continuous_steps: bool = False
-    travel_duration_ms: int | None = None
 
-    def _duration_for(self, duration, direction):
+    def step_duration_for(self, direction):
         column_change, row_change = direction
         diagonal_step = abs(column_change) == abs(row_change) == 1
         distance = math.sqrt(2.0) if self.continuous_steps and diagonal_step else 1.0
-        return round(duration * distance)
-
-    def step_duration_for(self, direction):
-        return self._duration_for(self.step_duration_ms, direction)
-
-    def travel_duration_for(self, direction):
-        duration = (
-            self.step_duration_ms
-            if self.travel_duration_ms is None
-            else self.travel_duration_ms
-        )
-        return self._duration_for(duration, direction)
+        return round(self.step_duration_ms * distance)
 
 
 DEFAULT_MOVEMENT_PROFILE = MovementInputProfile()

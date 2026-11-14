@@ -1,5 +1,5 @@
 from application.movement_input import MovementInputProfile
-from acts.act_three.movement_timing import PLAYER_STEP_MS, PLAYER_TRAVEL_MS
+from acts.act_three.movement_timing import PLAYER_STEP_MS
 
 
 ACT_THREE_MOVEMENT_PROFILE = MovementInputProfile(
@@ -7,5 +7,4 @@ ACT_THREE_MOVEMENT_PROFILE = MovementInputProfile(
     repeat_interval_ms=PLAYER_STEP_MS,
     step_duration_ms=PLAYER_STEP_MS,
     continuous_steps=True,
-    travel_duration_ms=PLAYER_TRAVEL_MS,
 )

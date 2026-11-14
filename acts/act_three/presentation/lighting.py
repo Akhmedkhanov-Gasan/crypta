@@ -1,6 +1,9 @@
+from functools import lru_cache
 import math
 
 import pygame
+
+from acts.act_three.presentation.camera import act_three_view_buffer_size
 
 _AMBIENT_COLOR = (3, 6, 12, 82)
 _TORCH_LIGHT_RADIUS = 148
@@ -54,7 +57,6 @@ def _get_light_map_surface(size):
         light_map = pygame.Surface(size)
         _LIGHT_MAP_SURFACES[size] = light_map
 
-    light_map.fill((0, 0, 0))
     return light_map
 
 
@@ -239,6 +241,7 @@ def _nearest_point_on_segment(point, start, end):
     )
 
 
+@lru_cache(maxsize=512)
 def _torch_light_source(
     column,
     row,
@@ -465,15 +468,21 @@ def draw_act_three_lighting(
     camera_y,
     current_time,
     tile_size,
+    *,
+    overview=False,
 ):
+    view_size = surface.get_size()
+    buffer_size = act_three_view_buffer_size(view_size)
     surface.blit(
-        _get_ambient_surface(surface.get_size()),
+        _get_ambient_surface(buffer_size),
         (0, 0),
+        ((0, 0), view_size),
     )
 
-    light_map = _get_light_map_surface(
-        surface.get_size()
-    )
+    light_map = _get_light_map_surface(buffer_size)
+    if view_size != buffer_size:
+        light_map = light_map.subsurface(((0, 0), view_size))
+    light_map.fill((0, 0, 0))
     barrier_key = tuple(sorted(barriers))
     for torch_index, (column, row) in enumerate(torches):
         light_level = _torch_light_level(
@@ -512,14 +521,6 @@ def draw_act_three_lighting(
             special_flags=pygame.BLEND_RGB_MAX,
         )
 
-        light = _get_occluded_torch_light_surface(
-            column,
-            row,
-            light_level,
-            barrier_key,
-            tile_size,
-        )
-
         light_source_x, light_source_y = (
             _torch_light_source(
                 column,
@@ -530,17 +531,25 @@ def draw_act_three_lighting(
         )
         center_x = round(light_source_x - camera_x)
         center_y = round(light_source_y - camera_y)
-        left = center_x - light.get_width() // 2
-        top = center_y - light.get_height() // 2
+        radius = _TORCH_LIGHT_RADIUS
+        left = center_x - radius
+        top = center_y - radius
 
         if (
                 left >= surface.get_width()
                 or top >= surface.get_height()
-                or left + light.get_width() <= 0
-                or top + light.get_height() <= 0
+                or left + radius * 2 <= 0
+                or top + radius * 2 <= 0
         ):
             continue
 
+        light = (
+            _get_torch_light_surface(light_level)
+            if overview
+            else _get_occluded_torch_light_surface(
+                column, row, light_level, barrier_key, tile_size,
+            )
+        )
         light_map.blit(
             light,
             (left, top),
@@ -706,7 +715,7 @@ def _nearest_torch_direction(
         position[0] + tile_size / 2,
         position[1] + tile_size * 0.84,
     )
-    nearest_distance = float("inf")
+    nearest_distance_squared = (tile_size * 5) ** 2
     nearest_torch = None
 
     for column, row in torches:
@@ -718,19 +727,19 @@ def _nearest_torch_direction(
             - camera_y
             + tile_size / 2,
         )
-        distance = math.hypot(
-            feet[0] - torch_position[0],
-            feet[1] - torch_position[1],
-        )
+        dx = feet[0] - torch_position[0]
+        dy = feet[1] - torch_position[1]
+        distance_squared = dx * dx + dy * dy
 
-        if distance < nearest_distance:
-            nearest_distance = distance
+        if distance_squared <= nearest_distance_squared and (
+            nearest_torch is None or distance_squared < nearest_distance_squared
+        ):
+            nearest_distance_squared = distance_squared
             nearest_torch = torch_position
 
     if (
         nearest_torch is None
-        or nearest_distance > tile_size * 5
-        or nearest_distance < 1
+        or nearest_distance_squared < 1
     ):
         return None
 
@@ -753,7 +762,7 @@ def _nearest_torch_direction(
         feet,
         direction_index,
         quantized_angle,
-        nearest_distance,
+        math.sqrt(nearest_distance_squared),
     )
 
 
@@ -791,7 +800,6 @@ def draw_actor_shadow(
                 shadow_key,
             )
         )
-        directional = directional.copy()
         strength = max(
             0.35,
             min(

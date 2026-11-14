@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 import pygame
 
 from presentation.camera import PixelCamera, update_pixel_camera
@@ -7,6 +9,7 @@ from presentation.layout import (
     ACT_THREE_VIEW_WIDTH,
 )
 from presentation.map_navigation import get_map_navigation
+from presentation.movement import smoothstep
 from settings import GAME_WIDTH
 
 
@@ -17,11 +20,39 @@ _DEAD_ZONE = (
     ACT_THREE_TILE_SIZE * 3 // 4,
 )
 
-_CAMERA = PixelCamera(zoom=1)
+_ZOOM_DURATION_MS = 240
+_OVERVIEW_SCALE = 0.5
+
+
+@dataclass
+class ActThreeCamera(PixelCamera):
+    scale: float = 1.0
+    zoom_start_scale: float = 1.0
+    zoom_target_scale: float = 1.0
+    zoom_started_at: int = 0
+
+
+_CAMERA = ActThreeCamera(zoom=1)
 
 
 def act_three_camera_scale(floor):
-    return 0.5 if get_map_navigation(floor).overview else 1.25
+    if _CAMERA.floor_index == id(floor):
+        return _CAMERA.scale
+    return _target_scale(floor)
+
+
+def _target_scale(floor):
+    return _OVERVIEW_SCALE if get_map_navigation(floor).overview else 1.0
+
+
+def act_three_view_buffer_size(size):
+    normal_size = (ACT_THREE_VIEW_WIDTH, ACT_THREE_VIEW_HEIGHT)
+    if size == normal_size:
+        return normal_size
+    return (
+        round(ACT_THREE_VIEW_WIDTH / _OVERVIEW_SCALE),
+        round(ACT_THREE_VIEW_HEIGHT / _OVERVIEW_SCALE),
+    )
 
 
 def act_three_world_view_size(floor):
@@ -48,19 +79,48 @@ def _player_focus(floor):
     )
 
 
+def _update_zoom(floor, current_time, focus):
+    target = _target_scale(floor)
+    if _CAMERA.floor_index != id(floor) or current_time < _CAMERA.updated_at:
+        _CAMERA.scale = target
+        _CAMERA.zoom_start_scale = target
+        _CAMERA.zoom_target_scale = target
+        _CAMERA.updated_at = -1
+        return
+
+    if target != _CAMERA.zoom_target_scale:
+        _CAMERA.zoom_start_scale = _CAMERA.scale
+        _CAMERA.zoom_target_scale = target
+        _CAMERA.zoom_started_at = current_time
+
+    if _CAMERA.scale == target:
+        return
+
+    previous_width, previous_height = act_three_world_view_size(floor)
+    elapsed = current_time - _CAMERA.zoom_started_at
+    if elapsed >= _ZOOM_DURATION_MS:
+        _CAMERA.scale = target
+    else:
+        progress = smoothstep(elapsed / _ZOOM_DURATION_MS)
+        _CAMERA.scale = (
+            _CAMERA.zoom_start_scale
+            + (target - _CAMERA.zoom_start_scale) * progress
+        )
+    width, height = act_three_world_view_size(floor)
+    shift_x = (focus[0] - _CAMERA.x) * (1.0 - width / previous_width)
+    shift_y = (focus[1] - _CAMERA.y) * (1.0 - height / previous_height)
+    _CAMERA.x += shift_x
+    _CAMERA.y += shift_y
+    _CAMERA.target_x += shift_x
+    _CAMERA.target_y += shift_y
+
+
 def update_act_three_camera(
     floor,
     current_time,
     player_position=None,
     cinematic=False,
 ):
-    view_width, view_height = act_three_world_view_size(floor)
-    viewport = pygame.Rect(
-        0,
-        0,
-        view_width,
-        view_height,
-    )
     focus = _player_focus(floor)
 
     if player_position is not None:
@@ -68,6 +128,9 @@ def update_act_three_camera(
             player_position[0] + ACT_THREE_TILE_SIZE / 2,
             player_position[1] + ACT_THREE_TILE_SIZE / 2,
         )
+
+    _update_zoom(floor, current_time, focus)
+    viewport = pygame.Rect((0, 0), act_three_world_view_size(floor))
 
     update_pixel_camera(
         _CAMERA,

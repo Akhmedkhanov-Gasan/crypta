@@ -1,5 +1,6 @@
 import json
 from functools import lru_cache
+from weakref import WeakKeyDictionary
 
 import pygame
 import resource_store as resources
@@ -21,8 +22,13 @@ from acts.act_three.presentation.forge_effects import (
     stop_tempering,
     tempering_elapsed,
 )
+from application.directional_input import CHORD_MOVEMENT_KEYS, movement_direction_for_key
+from presentation.directional_focus import move_focus
 from presentation.figma_ui import draw_figma_rectangle, draw_figma_text, figma_rect
 from presentation.layout import PROJECT_ROOT
+
+
+_KEYBOARD_FOCUS = WeakKeyDictionary()
 
 
 @lru_cache(maxsize=1)
@@ -97,46 +103,75 @@ def _selected_upgrade(game_state):
     return "armor" if game_state.act_three.npc_dialog_line_index == 1 else "weapon"
 
 
+def _control_rectangles(layout):
+    return {
+        **{
+            upgrade: figma_rect(layout["selection_buttons"][upgrade]["hitbox"])
+            for upgrade in FORGE_UPGRADES
+        },
+        "confirm": figma_rect(layout["confirm_button"]["hitbox"]),
+        "close": figma_rect(layout["close_hitbox"]),
+    }
+
+
 def handle_blacksmith_event(event, game_state, mouse_position):
     if not _blacksmith_is_open(game_state):
         return False
 
-    current_time = pygame.time.get_ticks()
-    is_tempering = tempering_elapsed(game_state.floor, current_time) is not None
-    confirm_requested = False
-
-    if event.type == pygame.KEYDOWN and not getattr(event, "repeat", False):
+    floor = game_state.floor
+    control = None
+    if event.type == pygame.KEYDOWN:
+        if getattr(event, "automatic_movement", False):
+            return True
+        focus = _KEYBOARD_FOCUS.get(floor, _selected_upgrade(game_state))
+        if event.key in CHORD_MOVEMENT_KEYS:
+            _KEYBOARD_FOCUS[floor] = move_focus(
+                _control_rectangles(get_blacksmith_layout()),
+                focus,
+                movement_direction_for_key(event.key),
+            )
+            return True
+        if getattr(event, "repeat", False):
+            return True
         if event.key == pygame.K_ESCAPE:
-            stop_tempering(game_state.floor)
-            close_npc_dialog(game_state, current_time)
-            return True
-        confirm_requested = event.key in (pygame.K_RETURN, pygame.K_KP_ENTER)
-
-    if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and mouse_position is not None:
-        layout = get_blacksmith_layout()
-        if figma_rect(layout["close_hitbox"]).collidepoint(mouse_position):
-            stop_tempering(game_state.floor)
-            close_npc_dialog(game_state, current_time)
-            return True
-        confirm_requested = figma_rect(layout["confirm_button"]["hitbox"]).collidepoint(
-            mouse_position
+            control = "close"
+        elif event.key == pygame.K_SPACE:
+            _KEYBOARD_FOCUS[floor] = focus
+            control = focus
+        elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+            control = "confirm"
+    elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and mouse_position is not None:
+        _KEYBOARD_FOCUS.pop(floor, None)
+        control = next(
+            (
+                name for name, rect in _control_rectangles(get_blacksmith_layout()).items()
+                if rect.collidepoint(mouse_position)
+            ),
+            None,
         )
-        if not confirm_requested and not is_tempering:
-            for index, upgrade in enumerate(FORGE_UPGRADES):
-                hitbox = layout["selection_buttons"][upgrade]["hitbox"]
-                if figma_rect(hitbox).collidepoint(mouse_position):
-                    game_state.act_three.npc_dialog_line_index = index
-                    break
 
-    if confirm_requested and not is_tempering:
+    if control is None:
+        return True
+
+    current_time = pygame.time.get_ticks()
+    if control == "close":
+        _KEYBOARD_FOCUS.pop(floor, None)
+        stop_tempering(floor)
+        close_npc_dialog(game_state, current_time)
+    elif tempering_elapsed(floor, current_time) is not None:
+        return True
+    elif control == "confirm":
         if try_forge_upgrade(game_state, _selected_upgrade(game_state)):
-            start_tempering(game_state.floor, current_time)
+            start_tempering(floor, current_time)
+    elif control in FORGE_UPGRADES:
+        game_state.act_three.npc_dialog_line_index = FORGE_UPGRADES.index(control)
 
     return True
 
 
 def draw_blacksmith(screen, game_state, fonts, assets, current_time):
     if not _blacksmith_is_open(game_state):
+        _KEYBOARD_FOCUS.pop(game_state.floor, None)
         return False
 
     layout = get_blacksmith_layout()
@@ -203,4 +238,11 @@ def draw_blacksmith(screen, game_state, fonts, assets, current_time):
         draw_forge_fill_glow(screen, fill_rect, fill_width, elapsed)
     draw_art(scale["frame"])
     draw_art(layout["confirm_button"]["active" if can_upgrade else "inactive"])
+    focus = _KEYBOARD_FOCUS.get(game_state.floor)
+    if focus is not None:
+        rectangle = _control_rectangles(layout)[focus].inflate(6, 6)
+        color = (181, 145, 81)
+        if focus == "confirm" and not can_upgrade:
+            color = (122, 105, 86)
+        pygame.draw.rect(screen, color, rectangle, width=2, border_radius=5)
     return True

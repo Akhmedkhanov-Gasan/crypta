@@ -6,6 +6,7 @@ import pygame
 from acts.act_three.presentation.camera import (
     act_three_camera_position,
     act_three_centered_camera_position,
+    act_three_view_buffer_size,
     act_three_world_view_size,
 )
 from acts.act_three.settings import (
@@ -237,7 +238,8 @@ def _get_act_three_visibility(floor):
     origin = (floor.player_column, floor.player_row)
     floor.act_three_exploration_origins.add(origin)
     visible = set()
-    radius_squared = ACT_THREE_VISION_RADIUS_TILES ** 2
+    radius = ACT_THREE_VISION_RADIUS_TILES
+    radius_squared = radius ** 2
     map_height = len(floor.map)
     map_width = len(floor.map[0])
     altar_cells = get_upgrade_altar_cells(floor)
@@ -258,8 +260,10 @@ def _get_act_three_visibility(floor):
     if trial is not None and trial["phase"] not in ("closed", "opening"):
         transparent_cells.add(trial["door"])
 
-    for row in range(map_height):
-        for column in range(map_width):
+    columns = range(max(0, origin[0] - radius), min(map_width, origin[0] + radius + 1))
+    rows = range(max(0, origin[1] - radius), min(map_height, origin[1] + radius + 1))
+    for row in rows:
+        for column in columns:
             delta_x = column - origin[0]
             delta_y = row - origin[1]
 
@@ -434,6 +438,11 @@ def _explored_fog_surface(
     return reveal
 
 
+@lru_cache(maxsize=2)
+def _fog_buffer(size):
+    return pygame.Surface(size, pygame.SRCALPHA)
+
+
 def _draw_fog_of_war(
     view_surface,
     floor,
@@ -441,10 +450,11 @@ def _draw_fog_of_war(
     camera_y,
     player_position,
 ):
-    fog = pygame.Surface(
-        view_surface.get_size(),
-        pygame.SRCALPHA,
-    )
+    view_size = view_surface.get_size()
+    buffer_size = act_three_view_buffer_size(view_size)
+    fog = _fog_buffer(buffer_size)
+    if view_size != buffer_size:
+        fog = fog.subsurface(((0, 0), view_size))
     fog.fill((0, 0, 0, 255))
 
     inner_radius = round(
@@ -461,6 +471,8 @@ def _draw_fog_of_war(
         outer_radius,
         ACT_THREE_EXPLORED_FOG_ALPHA,
     )
+    reveal_width, reveal_height = explored_reveal.get_size()
+    view_width, view_height = view_surface.get_size()
 
     for column, row in floor.act_three_exploration_origins:
         center_x = (
@@ -474,12 +486,19 @@ def _draw_fog_of_war(
             + ACT_THREE_TILE_SIZE // 2
         )
 
+        left = center_x - reveal_width // 2
+        top = center_y - reveal_height // 2
+        if (
+            left >= view_width
+            or top >= view_height
+            or left + reveal_width <= 0
+            or top + reveal_height <= 0
+        ):
+            continue
+
         fog.blit(
             explored_reveal,
-            (
-                center_x - explored_reveal.get_width() // 2,
-                center_y - explored_reveal.get_height() // 2,
-            ),
+            (left, top),
             special_flags=pygame.BLEND_RGBA_MIN,
         )
 
