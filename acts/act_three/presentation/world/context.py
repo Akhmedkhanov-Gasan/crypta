@@ -1,5 +1,6 @@
 import math
 from dataclasses import dataclass
+from functools import lru_cache
 from typing import Any
 
 import pygame
@@ -12,6 +13,7 @@ from acts.act_three.presentation.berserker import (
     rending_spin_world_position,
 )
 from acts.act_three.presentation.camera import (
+    act_three_view_buffer_size,
     act_three_world_view_size,
     update_act_three_camera,
 )
@@ -54,6 +56,11 @@ class WorldRenderContext:
     transition_started_at: int
 
 
+@lru_cache(maxsize=2)
+def _world_buffer(size):
+    return pygame.Surface(size)
+
+
 def create_world_render_context(
     game_state,
     assets,
@@ -61,7 +68,6 @@ def create_world_render_context(
 ):
     floor = game_state.floor
     dungeon_map = floor.map
-    view_width, view_height = act_three_world_view_size(floor)
 
     locomotion_pose = sample_player_locomotion(
         game_state.player,
@@ -92,7 +98,12 @@ def create_world_render_context(
     )
     _get_act_three_visibility(floor)
 
-    view_surface = pygame.Surface((view_width, view_height))
+    view_size = act_three_world_view_size(floor)
+    view_width, view_height = view_size
+    buffer_size = act_three_view_buffer_size(view_size)
+    view_surface = _world_buffer(buffer_size)
+    if view_size != buffer_size:
+        view_surface = view_surface.subsurface(((0, 0), view_size))
     view_surface.fill((0, 0, 0))
 
     camera_x, camera_y = _camera_position(floor)

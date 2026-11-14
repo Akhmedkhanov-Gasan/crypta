@@ -247,6 +247,8 @@ def _draw_act_three_world(
     )
 
     floor = context.floor
+    camera_scale = act_three_camera_scale(floor)
+    overview = camera_scale < 1.0
     view_surface = context.view_surface
     view_width = context.view_width
     view_height = context.view_height
@@ -1593,15 +1595,17 @@ def _draw_act_three_world(
         camera_y,
         current_time,
         ACT_THREE_TILE_SIZE,
+        overview=overview,
     )
-    draw_lit_atmosphere(
-        view_surface,
-        floor.torches,
-        camera_x,
-        camera_y,
-        current_time,
-        ACT_THREE_TILE_SIZE,
-    )
+    if not overview:
+        draw_lit_atmosphere(
+            view_surface,
+            floor.torches,
+            camera_x,
+            camera_y,
+            current_time,
+            ACT_THREE_TILE_SIZE,
+        )
     for torch_index, (column, row) in enumerate(floor.torches):
         if (column, row) not in legacy_torches:
             continue
@@ -1635,13 +1639,14 @@ def _draw_act_three_world(
         camera_y,
         visibility_position,
     )
-    draw_act_three_color_grading(
-        view_surface,
-        floor.torches,
-        camera_x,
-        camera_y,
-        ACT_THREE_TILE_SIZE,
-    )
+    if not overview:
+        draw_act_three_color_grading(
+            view_surface,
+            floor.torches,
+            camera_x,
+            camera_y,
+            ACT_THREE_TILE_SIZE,
+        )
 
     draw_trial_detection(context)
     draw_trial_seal_effects(context)
@@ -1679,10 +1684,10 @@ def _draw_act_three_world(
     )
 
     if view_surface.get_size() != viewport.size:
-        view_surface = pygame.transform.scale(
-            view_surface,
-            viewport.size,
-        )
+        scale_frame = pygame.transform.scale
+        if camera_scale > 0.5:
+            scale_frame = pygame.transform.smoothscale
+        view_surface = scale_frame(view_surface, viewport.size)
 
     screen.blit(view_surface, viewport)
 
@@ -1691,6 +1696,6 @@ def _draw_act_three_world(
         floor,
         (camera_x, camera_y),
         ACT_THREE_TILE_SIZE,
-        act_three_camera_scale(floor),
+        camera_scale,
         viewport,
     )

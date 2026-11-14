@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import math
 
-from presentation.movement import sample_movement_travel
+from presentation.movement import sample_movement_travel, smoothstep
 from acts.act_three.movement import ACT_THREE_MOVEMENT_PROFILE
 from acts.act_three.movement_timing import (
     PLAYER_POSE_HOLD_MS,
@@ -40,7 +40,6 @@ class LocomotionState:
     started_at: int = -1
     phase_origin: float = 0.0
     phase_distance: float = 0.0
-    travel_ms: int = 0
     step_ms: int = 0
     last_sample_at: int = -1
 
@@ -55,6 +54,10 @@ _PROFILES = {
 }
 
 _STATE = None
+
+
+def _walk_progress(progress):
+    return progress * 0.85 + smoothstep(progress) * 0.15
 
 
 def _special_movement_active(player):
@@ -155,7 +158,7 @@ def sample_player_locomotion(
         state.destination = None
         return idle_pose
 
-    travel_ms = ACT_THREE_MOVEMENT_PROFILE.travel_duration_for((dx, dy))
+    step_ms = ACT_THREE_MOVEMENT_PROFILE.step_duration_for((dx, dy))
 
     token = (
         started_at,
@@ -182,7 +185,9 @@ def sample_player_locomotion(
         )
 
         if continuing:
-            previous_progress = min(1.0, step_interval / state.travel_ms)
+            previous_progress = _walk_progress(
+                min(1.0, step_interval / state.step_ms),
+            )
             state.phase_origin = (
                 state.phase_origin
                 + state.phase_distance * previous_progress
@@ -196,8 +201,7 @@ def sample_player_locomotion(
         state.token = token
         state.destination = destination
         state.started_at = started_at
-        state.travel_ms = travel_ms
-        state.step_ms = ACT_THREE_MOVEMENT_PROFILE.step_duration_for((dx, dy))
+        state.step_ms = step_ms
 
     travel = sample_movement_travel(
         (
@@ -206,8 +210,8 @@ def sample_player_locomotion(
         ),
         destination_pixels,
         elapsed,
-        travel_ms,
-        easing=None,
+        step_ms,
+        easing=_walk_progress,
     )
 
     phase = (
@@ -220,7 +224,7 @@ def sample_player_locomotion(
         or player.hit_animation_started_at >= started_at
     )
     active = (
-        elapsed < travel_ms + PLAYER_POSE_HOLD_MS
+        elapsed < step_ms + PLAYER_POSE_HOLD_MS
         and not combat_interrupted
     )
 
@@ -228,13 +232,8 @@ def sample_player_locomotion(
         player.subclass,
         _PROFILES["berserker"],
     )
-    body_weight = max(
-        0.0,
-        min(
-            1.0,
-            (travel_ms + PLAYER_SETTLE_MS - elapsed) / PLAYER_SETTLE_MS,
-        ),
-    )
+    settle_start = step_ms + PLAYER_POSE_HOLD_MS - PLAYER_SETTLE_MS
+    body_weight = 1.0 - smoothstep((elapsed - settle_start) / PLAYER_SETTLE_MS)
     body_offset = (
         _sample_body_offset(
             profile,

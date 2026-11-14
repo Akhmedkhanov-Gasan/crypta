@@ -16,6 +16,7 @@ from acts.act_three.progression import (
 )
 from application.directional_input import CHORD_MOVEMENT_KEYS, movement_direction_for_key
 from game.combat_log import add_log_message
+from presentation.directional_focus import move_focus
 
 
 def can_open_character_panel(game_state, movement_available):
@@ -53,21 +54,6 @@ def activate_character_attribute(game_state, name, action):
     change(game_state.player, name)
 
 
-def _move_focus(rectangles, focus, direction):
-    origin = rectangles[focus].center
-    dx, dy = direction
-    candidates = []
-    for name, rectangle in rectangles.items():
-        x = rectangle.centerx - origin[0]
-        y = rectangle.centery - origin[1]
-        forward = x * dx + y * dy
-        if forward <= 0:
-            continue
-        sideways = abs(x * dy - y * dx)
-        candidates.append((forward + 3 * sideways, sideways, name))
-    return min(candidates)[2] if candidates else focus
-
-
 def handle_character_panel_key(event, game_state, can_open):
     state = game_state.act_three
     panel_open = game_state.sidebar_tab == "stats"
@@ -101,7 +87,7 @@ def handle_character_panel_key(event, game_state, can_open):
     state.character_panel_keyboard_focus = True
 
     if event.key in CHORD_MOVEMENT_KEYS:
-        state.character_panel_focus = _move_focus(
+        state.character_panel_focus = move_focus(
             rectangles, focus, movement_direction_for_key(event.key),
         )
     elif event.key == pygame.K_SPACE and not getattr(event, "repeat", False):
