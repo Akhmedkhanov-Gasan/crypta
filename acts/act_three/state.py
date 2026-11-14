@@ -258,6 +258,7 @@ class ActThreeSessionState:
     npc_dialog_started_at: int = 0
     npc_dialog_line_index: int = 0
     trader_tab: str | None = None
+    trader_focus: str | None = None
     trader_slot_presses: dict[str, tuple[int, bool]] = field(default_factory=dict)
     npc_conversations_completed: set[str] = field(default_factory=set)
     act_three_transition_open: bool = False

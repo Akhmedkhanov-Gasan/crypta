@@ -302,11 +302,11 @@
           "width": 416,
           "height": 71
         },
-        "text": "test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test ",
+        "text": "test test test test test test test test test test test test test test test test test test test test test test ",
         "font": {
           "family": "Ubuntu Mono",
           "style": "Medium",
-          "size": 13
+          "size": 16
         },
         "line_height": {
           "unit": "AUTO"
@@ -414,11 +414,11 @@
           "width": 416,
           "height": 71
         },
-        "text": "test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test ",
+        "text": "test test test test test test test test test test test test test test test test test test ",
         "font": {
           "family": "Ubuntu Mono",
           "style": "Medium",
-          "size": 13
+          "size": 16
         },
         "line_height": {
           "unit": "AUTO"
@@ -526,11 +526,11 @@
           "width": 416,
           "height": 71
         },
-        "text": "test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test ",
+        "text": "test test test test test test test test test test test test test test test test test test test test test test ",
         "font": {
           "family": "Ubuntu Mono",
           "style": "Medium",
-          "size": 13
+          "size": 16
         },
         "line_height": {
           "unit": "AUTO"
@@ -638,11 +638,11 @@
           "width": 416,
           "height": 71
         },
-        "text": "test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test ",
+        "text": "test test test test test test test test test test test test test test test test test test test test test test test test test test test ",
         "font": {
           "family": "Ubuntu Mono",
           "style": "Medium",
-          "size": 13
+          "size": 16
         },
         "line_height": {
           "unit": "AUTO"

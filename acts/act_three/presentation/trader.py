@@ -11,9 +11,13 @@ from acts.act_three.presentation.trader_effects import (
 )
 from acts.act_three.trader import buy_trader_item
 from acts.act_three.trader_catalog import TRADER_ITEMS, TRADER_SELL_ITEMS, TRADER_STOCK
+from application.directional_input import CHORD_MOVEMENT_KEYS, movement_direction_for_key
 from presentation.dialogue_text import draw_dialogue_text
 from presentation.figma_ui import draw_figma_rectangle, figma_rect
 from presentation.layout import PROJECT_ROOT
+
+
+_FOCUS_COLOR = (195, 151, 88)
 
 
 @lru_cache(maxsize=1)
@@ -95,27 +99,72 @@ def _slot_image(assets, slot_name, row, item_id, sell):
     return surface
 
 
+def _select_tab(state, tab):
+    state.trader_tab = tab
+    state.trader_slot_presses.clear()
+
+
+def _buy_slot(game_state, slot_name, item_id):
+    purchased = buy_trader_item(game_state, item_id)
+    game_state.act_three.trader_slot_presses[slot_name] = pygame.time.get_ticks(), purchased
+
+
+def _handle_trader_key(event, game_state, layout):
+    if getattr(event, "automatic_movement", False):
+        return
+
+    state = game_state.act_three
+    tab_specs = layout["trade_selection"]
+    tabs = sorted(tab_specs, key=lambda name: tab_specs[name]["hitbox"]["x"])
+    slots = sorted(layout["trade_slots"])
+    focus = state.trader_focus or state.trader_tab
+    if event.key in CHORD_MOVEMENT_KEYS:
+        dx, dy = movement_direction_for_key(event.key)
+        if focus in tabs:
+            if dx:
+                index = max(0, min(len(tabs) - 1, tabs.index(focus) + dx))
+                focus = tabs[index]
+            elif dy > 0:
+                focus = slots[0]
+        elif dy:
+            index = slots.index(focus) + dy
+            focus = state.trader_tab if index < 0 else slots[min(index, len(slots) - 1)]
+        state.trader_focus = focus
+    elif event.key == pygame.K_SPACE and not getattr(event, "repeat", False):
+        state.trader_focus = focus
+        if focus in tabs:
+            _select_tab(state, focus)
+        else:
+            for (slot_name, _), item_id in _stock_rows(layout, state.trader_tab):
+                if slot_name == focus:
+                    _buy_slot(game_state, slot_name, item_id)
+                    break
+
+
 def handle_trader_event(event, game_state, mouse_position):
     state = game_state.act_three
     if state.trader_tab is None:
         return False
-    if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-        close_npc_dialog(game_state, pygame.time.get_ticks())
+    if event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_ESCAPE:
+            close_npc_dialog(game_state, pygame.time.get_ticks())
+        elif event.key in CHORD_MOVEMENT_KEYS or event.key == pygame.K_SPACE:
+            _handle_trader_key(event, game_state, load_trader_layout())
+        return True
     if event.type != pygame.MOUSEBUTTONDOWN or event.button != 1 or mouse_position is None:
         return True
     layout = load_trader_layout()
+    state.trader_focus = None
     if figma_rect(layout["close_hitbox"]).collidepoint(mouse_position):
         close_npc_dialog(game_state, pygame.time.get_ticks())
         return True
     for tab, spec in layout["trade_selection"].items():
         if figma_rect(spec["hitbox"]).collidepoint(mouse_position):
-            state.trader_tab = tab
-            state.trader_slot_presses.clear()
+            _select_tab(state, tab)
             return True
     for (slot_name, row), item_id in _stock_rows(layout, state.trader_tab):
         if figma_rect(row["background"]["rect"]).collidepoint(mouse_position):
-            purchased = buy_trader_item(game_state, item_id)
-            state.trader_slot_presses[slot_name] = pygame.time.get_ticks(), purchased
+            _buy_slot(game_state, slot_name, item_id)
             break
     return True
 
@@ -133,16 +182,24 @@ def draw_trader(screen, game_state, assets, current_time, mouse_position=None):
     for name, spec in layout["trade_selection"].items():
         _draw_art(screen, spec["active" if name == tab else "inactive"])
         draw_dialogue_text(screen, spec["title"], spec["title"]["text"])
+        if state.trader_focus == name:
+            rect = figma_rect(spec["hitbox"]).inflate(-4, -4)
+            pygame.draw.rect(screen, _FOCUS_COLOR, rect, width=2, border_radius=4)
     sell = tab == "sell"
     items = tuple(TRADER_SELL_ITEMS) if sell else TRADER_STOCK[tab]
     for index, (slot_name, row) in enumerate(sorted(layout["trade_slots"].items())):
         item_id = items[index] if index < len(items) else None
         rect = figma_rect(row["background"]["rect"])
-        hovered = mouse_position is not None and rect.collidepoint(mouse_position)
+        focused = state.trader_focus == slot_name
+        hovered = focused or (
+            state.trader_focus is None and mouse_position is not None and rect.collidepoint(mouse_position)
+        )
         pressed = state.trader_slot_presses.get(slot_name)
         elapsed = max(0, current_time - pressed[0]) if pressed is not None else None
         purchased = pressed is not None and pressed[1]
         rect = rect.move(trader_press_offset(elapsed, purchased))
         screen.blit(_slot_image(assets, slot_name, row, item_id, sell), rect)
         draw_trader_slot_effect(screen, rect, hovered, elapsed, purchased, current_time)
+        if focused:
+            pygame.draw.rect(screen, _FOCUS_COLOR, rect.inflate(-6, -6), width=1, border_radius=8)
     return True

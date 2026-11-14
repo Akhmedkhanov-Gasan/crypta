@@ -69,6 +69,7 @@ def open_npc_dialog(game_state, npc, current_time):
     state.npc_dialog_started_at = current_time
     state.npc_dialog_line_index = 0
     state.trader_slot_presses.clear()
+    state.trader_focus = None
     if npc["type"] == "trader" and "trader" in state.npc_conversations_completed:
         state.trader_tab = "healing"
     return True
