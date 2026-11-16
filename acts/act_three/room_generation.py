@@ -130,6 +130,7 @@ def _compose(placements, connections):
     encounter_zones = []
     spawn_regions = []
     chests = []
+    breakable_crates = []
     potions = []
     upgrade_altar = None
     shadow_step_trial = None
@@ -202,6 +203,7 @@ def _compose(placements, connections):
             )
         )
         chests.extend(_shift_entities(template["chests"], offset))
+        breakable_crates.extend(_shift_entities(template["breakable_crates"], offset))
         potions.extend(
             _translated(position, offset)
             for position in template["potions"]
@@ -282,6 +284,7 @@ def _compose(placements, connections):
         "spawn_regions": spawn_regions,
         "room_connections": shifted_connections,
         "chests": chests,
+        "breakable_crates": breakable_crates,
         "potions": potions,
         "torches": torches,
         "upgrade_altar": upgrade_altar,

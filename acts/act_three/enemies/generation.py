@@ -35,6 +35,7 @@ def _fits(floor, cells, occupied):
 def _reserved_positions(floor):
     positions = {floor["player_start"], floor["stairs"]}
     positions.update(chest["position"] for chest in floor["chests"])
+    positions.update(crate["position"] for crate in floor.get("breakable_crates", []))
     positions.update(floor["potions"])
     positions.update(ore["position"] for ore in floor.get("ores", []))
     for npc in floor.get("npcs", []):

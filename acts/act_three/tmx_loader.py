@@ -11,6 +11,7 @@ from enemies import ENEMY_TYPES
 from acts.act_three.npcs import NPC_FOOTPRINTS, get_npc_cells
 from acts.act_three.mining.world import build_ores
 from acts.act_three.tile_catalog import normalize_tile_layers
+from acts.act_three.environment_objects import extract_breakable_environment_objects
 
 
 def _csv_layer(layer, width, height):
@@ -223,6 +224,7 @@ def load_tmx_floor(path):
         for layer in root.findall("layer")
     }
     normalize_tile_layers(layers, root, path)
+    breakable_crates = extract_breakable_environment_objects(layers)
     map_properties = _properties(root)
     blocked_rectangles = []
     barrier_rectangles = []
@@ -459,6 +461,7 @@ def load_tmx_floor(path):
         "player_start": player_start,
         "enemies": enemies,
         "chests": chests,
+        "breakable_crates": breakable_crates,
         "potions": potions,
         "torches": torches,
         "upgrade_altar": upgrade_altar,

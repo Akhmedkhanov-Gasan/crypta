@@ -95,7 +95,8 @@ def ground_items(game_state, current_time, rules):
 
     for index, crate in enumerate(floor.breakable_crates):
         if not (
-            crate.is_broken
+            floor.presentation_act != 3
+            and crate.is_broken
             and crate.loot_available
             and crate.loot_kind in ("potion", "gold")
         ):

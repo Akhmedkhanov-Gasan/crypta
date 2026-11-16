@@ -98,6 +98,8 @@ class SpikeTrapState:
 
 @dataclass
 class BreakableCrateState:
+    destruction_started_at = None
+
     column: int
     row: int
     variant: int

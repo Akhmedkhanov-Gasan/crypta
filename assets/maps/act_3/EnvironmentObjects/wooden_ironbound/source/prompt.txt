@@ -1,0 +1,16 @@
+Use case: stylized-concept
+Asset type: production sprite sheet for a dark fantasy top-down dungeon roguelike, matching the attached existing game artwork.
+Input images: items.png is the PRIMARY STYLE reference only; my_tiles_textured_v21.png is the palette and environment reference only. Do not reproduce the reference sheets.
+Create one weathered wooden supply crate with blackened iron corner straps and eight sequential destruction frames. Nine sprites total, arranged in EXACTLY a regular 3-column by 3-row square grid, equal square cells, read left to right then top to bottom. Transparent background, no grid marks, no text. Request canvas 1536x1536, each cell 512x512, to be downsampled to 64x64 tiles.
+Art direction: intricate but readable low-resolution pixel art, gritty hand-painted pixel clusters, muted dark gray-brown desaturated timber, cool dark iron, restrained worn edge highlights, deep charcoal outlines matching the reference dungeon props. No bright orange wood, no cartoon style, no smooth glossy 3D. Camera slightly elevated, looking down onto visible top and front with a narrow right side, matching the reference coffins and pots. Fixed orthographic camera and fixed scale.
+Each sprite is designed on a logical 64x64 pixel grid. Intact crate occupies approximately 38x39 logical pixels; center on x32, grounded at y51. All frames share the exact same pivot, light from upper left, same crate design, and fixed floor contact. Keep ALL particles inside each tile with 5 logical pixels margin. No floor tile, no background scene, no large aura or glow. Very restrained contact shadow only.
+Cell 1: undamaged intact closed square wooden crate, clearly readable plank lid, front boards and iron corner straps.
+Cell 2: destruction frame 01, first hard impact, front boards split, thin visible fracture, crate still whole.
+Cell 3: destruction frame 02, boards buckle outwards and lid lifts, silhouette beginning to break.
+Cell 4: destruction frame 03, peak rupture, lid and side boards separate, several chunky splinters fly outward within cell.
+Cell 5: destruction frame 04, broken boards travel outward and begin falling, body collapses.
+Cell 6: destruction frame 05, larger planks fall and rotate down, lower broken base remains.
+Cell 7: destruction frame 06, pieces contact floor, a tiny muted dust puff, loose iron strap visible.
+Cell 8: destruction frame 07, pieces settle into low rubble pile, dust almost gone.
+Cell 9: destruction frame 08, completely settled permanent low pile of broken wood and iron, no upright intact walls, no dust.
+This is a coherent animation of ONE identical crate breaking, not nine unrelated crate variants. Every cell including debris must be centered at same floor position. Generous equal transparent padding. Actual alpha transparency. No captions, no borders, no checkerboard baked into pixels.

@@ -7,6 +7,7 @@
  <tileset firstgid="169" source="../act3_floor_64.tsx"/>
  <tileset firstgid="177" source="../my_tiles_textured.tsx"/>
  <tileset firstgid="285" source="../torches/torches.tsx"/>
+ <tileset firstgid="289" source="../EnvironmentObjects/environment_objects.tsx"/>
  <layer id="1" name="Ground" width="17" height="15">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -108,7 +109,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,105,0,0,0,0,0,0,0,0,0,105,0,0,0,
+0,0,0,105,0,0,0,0,0,0,289,298,0,105,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,109,110,111,0,0,0,0,0,0,0,
 0,0,0,105,0,0,0,121,122,123,0,0,0,105,0,0,0,

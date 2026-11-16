@@ -1,5 +1,7 @@
 import random
 
+import pygame
+
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from game.state import BreakableCrateState, GameState
@@ -20,25 +22,30 @@ def break_crate(
     if crate.is_broken:
         return False
 
-    roll = random.random()
+    is_environment_object = game_state.floor.presentation_act == 3
     crate.is_broken = True
-    if roll < BREAKABLE_CRATE_GOLD_CHANCE:
-        crate.loot_kind = "gold"
-    elif roll < (
-        BREAKABLE_CRATE_GOLD_CHANCE
-        + BREAKABLE_CRATE_POTION_CHANCE
-    ):
-        crate.loot_kind = "potion"
-    elif roll < (
-        BREAKABLE_CRATE_GOLD_CHANCE
-        + BREAKABLE_CRATE_POTION_CHANCE
-        + BREAKABLE_CRATE_EMPTY_CHANCE
-    ):
+    if is_environment_object:
+        crate.destruction_started_at = pygame.time.get_ticks()
         crate.loot_kind = None
     else:
-        crate.loot_kind = None
-    if cause == "shield_bash" and crate.loot_kind is None:
-        crate.loot_kind = "potion"
+        roll = random.random()
+        if roll < BREAKABLE_CRATE_GOLD_CHANCE:
+            crate.loot_kind = "gold"
+        elif roll < (
+            BREAKABLE_CRATE_GOLD_CHANCE
+            + BREAKABLE_CRATE_POTION_CHANCE
+        ):
+            crate.loot_kind = "potion"
+        elif roll < (
+            BREAKABLE_CRATE_GOLD_CHANCE
+            + BREAKABLE_CRATE_POTION_CHANCE
+            + BREAKABLE_CRATE_EMPTY_CHANCE
+        ):
+            crate.loot_kind = None
+        else:
+            crate.loot_kind = None
+        if cause == "shield_bash" and crate.loot_kind is None:
+            crate.loot_kind = "potion"
     crate.loot_available = crate.loot_kind is not None
     crate.loot_fire_turns_remaining = (
         2
@@ -75,17 +82,23 @@ def break_crate(
         loot_message = "a gold coin falls out"
     elif crate.loot_kind == "potion":
         loot_message = "a healing potion falls out"
-    elif try_spawn_crate_goblin(game_state, crate):
+    elif (
+        not is_environment_object
+        and try_spawn_crate_goblin(game_state, crate)
+    ):
         loot_message = "a goblin jumps out"
     else:
         loot_message = None
+    object_name = "object" if is_environment_object else "crate"
     if cause == "fire_bomb":
-        message = "The fire bomb destroys the crate"
+        message = f"The fire bomb destroys the {object_name}"
     elif cause == "shield_bash":
-        message = "The hero crashes through the crate"
+        message = f"The hero crashes through the {object_name}"
     else:
-        message = "Hero smashes the crate"
-    if loot_message is not None:
+        message = f"Hero smashes the {object_name}"
+    if is_environment_object:
+        message = f"{message}."
+    elif loot_message is not None:
         message = f"{message}: {loot_message}."
     else:
         message = f"{message}. It is empty."

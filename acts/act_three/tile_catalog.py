@@ -4,16 +4,23 @@ from pathlib import Path
 import resource_store as resources
 
 
+MAP_DIRECTORY = Path(__file__).resolve().parents[2] / "assets/maps/act_3"
+ENVIRONMENT_OBJECTS_TILESET_PATH = (
+    MAP_DIRECTORY / "EnvironmentObjects" / "environment_objects.tsx"
+).resolve()
+TILED_GID_MASK = 0x0FFFFFFF
+
+
 @lru_cache(maxsize=1)
 def tileset_catalog():
-    directory = Path(__file__).resolve().parents[2] / "assets/maps/act_3"
-    paths = [
-        *resources.glob_resources(directory, "*.tsx"),
-        *resources.glob_resources(directory / "torches", "*.tsx"),
-    ]
+    paths = sorted([
+        *resources.glob_resources(MAP_DIRECTORY, "*.tsx"),
+        *resources.glob_resources(MAP_DIRECTORY / "torches", "*.tsx"),
+    ])
+    paths.append(ENVIRONMENT_OBJECTS_TILESET_PATH)
     catalog = {}
     first_gid = 1
-    for path in sorted(paths):
+    for path in paths:
         root = resources.load_xml(path).getroot()
         count = int(root.get("tilecount", 0))
         count = max(count, max((int(tile.get("id", 0)) + 1 for tile in root.findall("tile")), default=0))
@@ -41,8 +48,8 @@ def normalize_tile_layers(layers, map_root, map_path):
             for index, gid in enumerate(row):
                 if not gid:
                     continue
-                flags = gid & 0xF0000000
-                tile_id = gid & 0x0FFFFFFF
+                flags = gid & ~TILED_GID_MASK
+                tile_id = gid & TILED_GID_MASK
                 for source_first, target_first in ranges:
                     if tile_id >= source_first:
                         row[index] = flags | (target_first + tile_id - source_first)
