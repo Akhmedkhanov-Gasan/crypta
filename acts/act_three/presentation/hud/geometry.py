@@ -7,11 +7,15 @@ from acts.act_three.presentation.hud.layout import (
 )
 
 
-def get_character_panel_focus_rectangles(panel, player):
+def get_character_panel_focus_rectangles(panel, belt_slots, player):
     rectangles = {
         f"inventory:{name}": figma_rect(slot["hitbox"])
         for name, slot in sorted(panel["inventory"]["slots"].items())
     }
+    rectangles.update({
+        f"belt:{name}": figma_rect(slot["hitbox"])
+        for name, slot in sorted(belt_slots.items())
+    })
     for name, row in panel["attributes"]["rows"].items():
         rectangles[f"attribute:{name}"] = figma_rect(row["rect"])
         if can_queue_act_three_attribute_upgrade(player, name):

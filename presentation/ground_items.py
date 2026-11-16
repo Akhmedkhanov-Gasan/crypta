@@ -6,11 +6,12 @@ from acts.ground_items import (
 )
 
 
-def ground_item_window_layout(size, count, selected):
-    width = min(480, size[0] - 32)
-    available_rows = max(1, (size[1] - 160) // 42)
-    row_count = min(8, available_rows, max(1, count))
-    height = 116 + row_count * 42
+def ground_item_window_layout(size, count, selected, *, act_three=False):
+    width = min(520 if act_three else 480, size[0] - 32)
+    row_spacing = 66 if act_three else 42
+    available_rows = max(1, (size[1] - 160) // row_spacing)
+    row_count = min(6 if act_three else 8, available_rows, max(1, count))
+    height = 116 + row_count * row_spacing
 
     panel = pygame.Rect(0, 0, width, height)
     panel.center = (size[0] // 2, size[1] // 2)
@@ -30,9 +31,9 @@ def ground_item_window_layout(size, count, selected):
             index,
             pygame.Rect(
                 panel.left + 16,
-                panel.top + 54 + row * 42,
+                panel.top + 54 + row * row_spacing,
                 panel.width - 32,
-                38,
+                row_spacing - 4,
             ),
         )
         for row, index in enumerate(
@@ -51,6 +52,8 @@ def draw_ground_items(
     tile_size,
     offset,
     separate_sources=(),
+    *,
+    pile_sprites=(),
 ):
     floor = game_state.floor
     grouped = {}
@@ -67,12 +70,12 @@ def draw_ground_items(
         ):
             continue
 
-        sprite_name = (
-            "item_pile"
-            if len(items) > 1
-            else items[0].sprite_name
-        )
-        sprite = sprites[sprite_name]
+        if len(items) > 1 and pile_sprites:
+            pile_index = hash((floor.visual_seed, position)) % len(pile_sprites)
+            sprite = pile_sprites[pile_index]
+        else:
+            sprite_name = "item_pile" if len(items) > 1 else items[0].sprite_name
+            sprite = sprites[sprite_name]
         if sprite.get_size() != (tile_size, tile_size):
             sprite = pygame.transform.scale(
                 sprite,
@@ -104,10 +107,12 @@ def draw_ground_item_window(
         return
 
     selected = min(window.selected, len(items) - 1)
+    act_three = game_state.floor.presentation_act == 3
     panel, close_button, rows = ground_item_window_layout(
         screen.get_size(),
         len(items),
         selected,
+        act_three=act_three,
     )
 
     shade = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
@@ -160,11 +165,16 @@ def draw_ground_item_window(
             border_radius=4,
         )
 
-        icon = pygame.transform.scale(
-            sprites[item.sprite_name],
-            (28, 28),
-        )
-        screen.blit(icon, (rect.left + 6, rect.top + 5))
+        sprite = sprites[item.sprite_name]
+        if act_three:
+            icon_box = pygame.Rect(rect.left + 8, rect.centery - 26, 52, 52)
+            pygame.draw.rect(screen, (22, 18, 23), icon_box, border_radius=4)
+            pygame.draw.rect(screen, (153, 126, 83), icon_box, width=1, border_radius=4)
+            icon_rect = sprite.get_rect().fit(icon_box.inflate(-4, -4))
+            screen.blit(pygame.transform.smoothscale(sprite, icon_rect.size), icon_rect)
+        else:
+            icon = pygame.transform.scale(sprite, (28, 28))
+            screen.blit(icon, (rect.left + 6, rect.top + 5))
 
         name = fonts["text"].render(
             item.name,
@@ -174,13 +184,15 @@ def draw_ground_item_window(
         screen.blit(
             name,
             (
-                rect.left + 44,
+                rect.left + (72 if act_three else 44),
                 rect.centery - name.get_height() // 2,
             ),
         )
 
-    controls = fonts["log"].render(
-        "WASD / arrows: select   G / Enter / click: take",
+    controls_font = fonts["sidebar_log" if act_three else "log"]
+    take_keys = "Space / G / click" if act_three else "G / Enter / click"
+    controls = controls_font.render(
+        f"WASD / arrows: select   {take_keys}: take",
         True,
         (198, 187, 168),
     )
@@ -189,7 +201,7 @@ def draw_ground_item_window(
         (panel.left + 16, panel.bottom - 48),
     )
 
-    footer = fonts["log"].render(
+    footer = controls_font.render(
         f"{selected + 1}/{len(items)}   Wheel: select   Esc: close",
         True,
         (198, 187, 168),

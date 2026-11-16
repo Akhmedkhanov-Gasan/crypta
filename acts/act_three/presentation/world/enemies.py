@@ -36,7 +36,6 @@ from acts.act_two.presentation.enemies.sentinel import (
     draw_sentinel_status,
 )
 from game.state import EnemyBehaviorState
-from presentation.ground_items import draw_ground_items
 from presentation.layout import ACT_THREE_TILE_SIZE
 from settings import DANGER_BORDER_COLOR, HEALTH_BAR_COLOR
 
@@ -129,15 +128,6 @@ def draw_world_enemies(
             healing_aura_seeds[id(heal_target)] = (
                 link_seed ^ 0x9E3779B9
             )
-
-    draw_ground_items(
-        context.view_surface,
-        game_state,
-        assets["ground_item_sprites"],
-        current_time,
-        ACT_THREE_TILE_SIZE,
-        (-context.camera_x, -context.camera_y),
-    )
 
     for enemy in living_enemies:
         aura_seed = healing_aura_seeds.get(id(enemy))

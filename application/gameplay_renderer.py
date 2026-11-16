@@ -7,6 +7,7 @@ from acts.act_one.runtime import update_act_one_view
 from acts.act_three.presentation import draw_act_three_gameplay
 from acts.act_three.presentation.renderer import draw_act_three_foreground
 from acts.act_three.presentation.hud.native import NativeActThreeHud
+from acts.act_three.presentation.pickup_feedback import draw_pickup_feedback
 from application.frame_overlays import draw_frame_overlays
 from application.ground_items import ground_item_input_available
 from presentation.display import present_game, window_to_game_position
@@ -99,9 +100,16 @@ class GameplayRenderer:
                     overlay_target,
                     game_state,
                     ground_item_window,
-                    self.act_two_sprites,
-                    self.act_two_fonts,
+                    self.act_three_gameplay_assets["ground_item_window_sprites"],
+                    self.act_three_fonts,
                     current_time,
+                )
+                draw_pickup_feedback(
+                    overlay_target,
+                    game_state,
+                    ground_item_window,
+                    current_time,
+                    show_prompt=continuous_movement_available,
                 )
         else:
             game_surface.fill(BACKGROUND_COLOR)

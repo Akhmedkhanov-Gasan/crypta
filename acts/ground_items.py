@@ -1,7 +1,8 @@
 from functools import partial
 
 from acts.act_one.settings import ACT_ONE_BELT_SIZE
-from acts.act_three.trader_catalog import TRADER_ITEMS
+from acts.act_three.items.inventory import BLACK_ORE_CHUNK, store_inventory_item
+from acts.act_three.trader_catalog import TRADER_ITEMS, TRADER_SELL_ITEMS
 from acts.act_two.consumables import store_act_two_consumable
 from acts.act_two.ground_items import (
     GROUND_ITEM_RULES as ACT_TWO_GROUND_ITEM_RULES,
@@ -17,7 +18,9 @@ from systems import ground_items as shared_ground_items
 
 def _store_act_three_item(player, kind):
     if kind in TRADER_ITEMS:
-        return store_act_two_consumable(player, kind)
+        return store_act_two_consumable(player, kind) or store_inventory_item(player, kind)
+    if kind == BLACK_ORE_CHUNK or kind in TRADER_SELL_ITEMS:
+        return store_inventory_item(player, kind)
     return shared_ground_items.store_counted_item(player, kind)
 
 

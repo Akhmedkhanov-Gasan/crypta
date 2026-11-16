@@ -29,7 +29,7 @@ class GroundItem:
 
     @property
     def name(self):
-        name = ITEM_NAMES.get(self.kind, self.kind)
+        name = ITEM_NAMES.get(self.kind, self.kind.replace("_", " ").title())
         if self.kind == "gold":
             return f"{name} x{self.amount}"
         return name

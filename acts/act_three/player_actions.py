@@ -208,8 +208,6 @@ def resolve_act_three_player_action(
         acted = open_chest(game_state, chest, started_at)
     elif crate is not None:
         acted = break_crate(game_state, crate)
-        if acted:
-            player.attack_animation_started_at = started_at
     elif secret_wall:
         acted = break_secret_passage(game_state, target[0], target[1])
         if acted:

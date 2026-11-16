@@ -22,6 +22,7 @@ def draw_inventory(screen, player, assets, panel, mouse_position, focused_slot=N
     stored_items = get_inventory_slots(player)
     sprites = {
         **assets.get("act_three_consumable_belt_sprites", {}),
+        **assets.get("act_three_sell_item_sprites", {}),
         **assets.get("act_three_inventory_sprites", {}),
     }
     hovered_item = None
@@ -65,17 +66,21 @@ def draw_inventory(screen, player, assets, panel, mouse_position, focused_slot=N
     if hovered_item == BLACK_ORE_CHUNK:
         return TooltipContent(
             title="Black ore",
-            lines=("Crafting material.",),
+            lines=("Crafting material.", "Shift: drop in front."),
             accent=(176, 139, 214),
         )
     item = TRADER_ITEMS.get(hovered_item)
     if item is not None:
         return TooltipContent(
-            item.name, (item.description, "Press 1-6 or drag to the belt."), (181, 145, 81),
+            item.name,
+            (item.description, "Press 1-6 or drag to the belt.", "Shift: drop in front."),
+            (181, 145, 81),
         )
     if hovered_item in TRADER_SELL_ITEMS:
         return TooltipContent(
-            TRADER_SELL_ITEMS[hovered_item], ("Sell to a trader.",), (181, 145, 81),
+            TRADER_SELL_ITEMS[hovered_item],
+            ("Sell to a trader.", "Shift: drop in front."),
+            (181, 145, 81),
         )
     return None
 
@@ -85,6 +90,8 @@ def draw_inventory_drag(screen, player, assets, mouse_position):
     if drag is None or not drag.moving or mouse_position is None:
         return
     sprite = assets.get("act_three_inventory_sprites", {}).get(drag.item)
+    if sprite is None:
+        sprite = assets.get("act_three_sell_item_sprites", {}).get(drag.item)
     if sprite is None:
         sprite = assets.get("act_three_consumable_belt_sprites", {}).get(drag.item)
     if sprite is None:

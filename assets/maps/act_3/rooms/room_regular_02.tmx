@@ -135,7 +135,7 @@
   <object id="13" x="9.5" y="265.25" width="55.5" height="41.5"/>
   <object id="14" x="7.25" y="404.75" width="82.5" height="35.75"/>
   <object id="15" x="1020" y="142.5" width="51.75" height="35.25"/>
-  <object id="16" x="1020" y="267.75" width="55" height="41"/>
+  <object id="16" x="1034" y="267" width="46" height="41"/>
  </objectgroup>
  <objectgroup id="12" name="Connectors">
   <object id="11" name="exit_west" x="33.4964" y="364.284">

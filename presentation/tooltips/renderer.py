@@ -70,25 +70,23 @@ def _tooltip_rectangle(
     width,
     height,
     scale=1.0,
+    above=False,
 ):
     screen_rectangle = screen.get_rect()
     offset = round(_TOOLTIP_OFFSET * scale)
     margin = max(1, round(8 * scale))
-    left = anchor[0] + offset
-    top = anchor[1] + offset
+    rectangle = pygame.Rect(0, 0, width, height)
+    if above:
+        rectangle.midbottom = (anchor[0], anchor[1] - offset)
+        if rectangle.top < margin:
+            rectangle.midtop = (anchor[0], anchor[1] + offset)
+    else:
+        rectangle.topleft = (anchor[0] + offset, anchor[1] + offset)
+        if rectangle.right > screen_rectangle.right - margin:
+            rectangle.right = anchor[0] - offset
+        if rectangle.bottom > screen_rectangle.bottom - margin:
+            rectangle.bottom = anchor[1] - offset
 
-    if left + width > screen_rectangle.right - margin:
-        left = anchor[0] - width - offset
-
-    if top + height > screen_rectangle.bottom - margin:
-        top = anchor[1] - height - offset
-
-    rectangle = pygame.Rect(
-        left,
-        top,
-        width,
-        height,
-    )
     rectangle.clamp_ip(
         screen_rectangle.inflate(-margin * 2, -margin * 2)
     )
@@ -101,8 +99,10 @@ def draw_tooltip(
     anchor,
     *,
     scale=1.0,
+    above=False,
+    opacity=1.0,
 ):
-    if anchor is None:
+    if anchor is None or opacity <= 0:
         return
 
     padding = round(_TOOLTIP_PADDING * scale)
@@ -159,6 +159,7 @@ def draw_tooltip(
         width,
         height,
         scale,
+        above,
     )
 
     shadow = pygame.Surface(
@@ -171,6 +172,8 @@ def draw_tooltip(
         pygame.Rect(8, 8, width, height),
         border_radius=7,
     )
+    if opacity < 1:
+        shadow.set_alpha(round(255 * opacity))
     screen.blit(
         shadow,
         (rectangle.x - 4, rectangle.y - 4),
@@ -218,4 +221,6 @@ def draw_tooltip(
             + line_gap
         )
 
+    if opacity < 1:
+        panel.set_alpha(round(255 * opacity))
     screen.blit(panel, rectangle)

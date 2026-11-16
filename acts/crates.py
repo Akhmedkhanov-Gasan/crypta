@@ -2,6 +2,7 @@ import random
 
 import pygame
 
+from acts.act_three.items.drops import drop_from_environment_object
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from game.state import BreakableCrateState, GameState
@@ -27,6 +28,7 @@ def break_crate(
     if is_environment_object:
         crate.destruction_started_at = pygame.time.get_ticks()
         crate.loot_kind = None
+        drop_from_environment_object(game_state.floor, crate)
     else:
         roll = random.random()
         if roll < BREAKABLE_CRATE_GOLD_CHANCE:
@@ -54,7 +56,7 @@ def break_crate(
     )
 
     position = (crate.column, crate.row)
-    if cause in ("fire_bomb", "shield_bash"):
+    if is_environment_object or cause in ("fire_bomb", "shield_bash"):
         game_state.emit(
             GameEvent(
                 type=GameEventType.ENVIRONMENT,

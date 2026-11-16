@@ -55,6 +55,7 @@ class GroundItemInput:
         self.selected = 0
         self.floor = None
         self.seen_position = None
+        self.pickup_notice = None
 
     def close(self):
         self.is_open = False
@@ -106,7 +107,11 @@ class GroundItemInput:
 
             self.seen_position = position
 
-            if len(items) > 1 and ground_item_rules(game_state).use_window:
+            if (
+                floor.presentation_act != 3
+                and len(items) > 1
+                and ground_item_rules(game_state).use_window
+            ):
                 self._open(movement_state)
                 return True
 
@@ -145,11 +150,12 @@ class GroundItemInput:
         self.selected = min(self.selected, len(items) - 1)
         event_start = len(game_state.events)
 
-        pick_up_ground_item(
-            game_state,
-            items[self.selected],
-            current_time,
-        )
+        item = items[self.selected]
+        if (
+            pick_up_ground_item(game_state, item, current_time)
+            and game_state.floor.presentation_act == 3
+        ):
+            self.pickup_notice = (game_state.floor, item, current_time)
 
         play_ground_item_events(
             game_state,
@@ -242,16 +248,17 @@ class GroundItemInput:
             self.close()
             return True
 
+        act_three = game_state.floor.presentation_act == 3
         if event.type == pygame.KEYDOWN:
+            take_keys = (
+                (pygame.K_g, pygame.K_SPACE)
+                if act_three else (pygame.K_g, pygame.K_RETURN, pygame.K_KP_ENTER)
+            )
             if event.key == pygame.K_ESCAPE:
                 self.close()
             elif getattr(event, "movement_direction", None) is not None:
                 return True
-            elif event.key in (
-                pygame.K_g,
-                pygame.K_RETURN,
-                pygame.K_KP_ENTER,
-            ):
+            elif event.key in take_keys:
                 if not getattr(event, "repeat", False):
                     self._take(
                         game_state,
@@ -281,6 +288,7 @@ class GroundItemInput:
                 surface_size,
                 len(items),
                 self.selected,
+                act_three=act_three,
             )
 
             if (
@@ -288,11 +296,15 @@ class GroundItemInput:
                 and event.button == 1
             ):
                 if (
-                    close_button.collidepoint(mouse_position)
+                    mouse_position is None
+                    or close_button.collidepoint(mouse_position)
                     or not panel.collidepoint(mouse_position)
                 ):
                     self.close()
                     return True
+
+            if mouse_position is None:
+                return True
 
             for index, rect in rows:
                 if not rect.collidepoint(mouse_position):

@@ -2,6 +2,7 @@ import pygame
 
 from acts.act_three.input.consumables import BELT_SLOTS_BY_KEY
 from acts.mage_targeting import mage_aiming
+from acts.act_three.items.discard import discard_item
 from acts.act_three.items.inventory import assign_inventory_item_to_belt
 from acts.act_three.presentation.hud.geometry import (
     get_character_panel_focus_rectangles,
@@ -80,8 +81,10 @@ def handle_character_panel_key(event, game_state, can_open):
     if game_state.player.act_three.item_drag is not None:
         return True
 
-    panel = get_act_three_hud_layout()["right_bar"]["character_panel"]
-    rectangles = get_character_panel_focus_rectangles(panel, game_state.player)
+    layout = get_act_three_hud_layout()
+    panel = layout["right_bar"]["character_panel"]
+    belt_slots = layout["down_bar"]["consumable_belt"]["slots"]
+    rectangles = get_character_panel_focus_rectangles(panel, belt_slots, game_state.player)
     focus = resolve_character_panel_focus(rectangles, state.character_panel_focus)
     state.character_panel_focus = focus
     state.character_panel_keyboard_focus = True
@@ -98,6 +101,14 @@ def handle_character_panel_key(event, game_state, can_open):
             activate_character_attribute(game_state, name, actions[0] if actions else "plus")
         elif focus == "confirm":
             confirm_character_panel_upgrades(game_state)
+    elif event.key in (pygame.K_LSHIFT, pygame.K_RSHIFT) and not getattr(event, "repeat", False):
+        section, _, slot_name = focus.partition(":")
+        if section in ("inventory", "belt"):
+            slots = belt_slots if section == "belt" else panel["inventory"]["slots"]
+            discard_item(
+                game_state, sorted(slots).index(slot_name), pygame.time.get_ticks(),
+                from_belt=section == "belt",
+            )
     elif focus.startswith("inventory:") and not getattr(event, "repeat", False):
         belt_slot = BELT_SLOTS_BY_KEY.get(event.key)
         if belt_slot is not None:

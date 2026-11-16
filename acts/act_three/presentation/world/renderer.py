@@ -47,6 +47,7 @@ from acts.act_three.presentation.world.enemies import (
 from acts.act_three.presentation.npcs import draw_world_npcs
 from acts.act_three.presentation.world.consumables import draw_consumable_cells
 from acts.act_three.presentation.world.environment_objects import draw_breakable_environment_objects
+from acts.act_three.presentation.world.loot import draw_loot_drops
 from acts.act_three.presentation.ore_ambient import draw_ore_ambient
 from acts.act_three.mining.presentation import (
     draw_mining_feedback,
@@ -115,6 +116,7 @@ from acts.act_three.presentation.camera import (
     act_three_camera_scale,
 )
 from presentation.map_navigation import draw_map_trail
+from presentation.ground_items import draw_ground_items
 from acts.act_three.presentation.tile_layers import (
     draw_fading_foreground_layers,
     draw_tile_layers,
@@ -299,6 +301,16 @@ def _draw_act_three_world(
         assets,
         current_time,
     )
+    draw_ground_items(
+        view_surface,
+        game_state,
+        assets["ground_item_sprites"],
+        current_time,
+        ACT_THREE_TILE_SIZE,
+        (-camera_x, -camera_y),
+        pile_sprites=assets["act_three_item_pile_sprites"],
+    )
+    draw_loot_drops(context, assets["ground_item_sprites"], current_time)
     draw_world_npcs(
         context,
         game_state,

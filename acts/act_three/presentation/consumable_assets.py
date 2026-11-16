@@ -4,6 +4,7 @@ import resource_store as resources
 from acts.act_three.items.consumables import (
     ACT_THREE_CONSUMABLES,
 )
+from acts.act_three.items.drops import DROP_ITEM_IDS
 from acts.act_three.trader_catalog import TRADER_ITEMS, TRADER_SELL_ITEMS
 from presentation.layout import ASSET_ROOT
 
@@ -16,6 +17,7 @@ _CONSUMABLE_ROOT = (
 )
 _BELT_ROOT = _CONSUMABLE_ROOT / "belt"
 _GROUND_ROOT = _CONSUMABLE_ROOT / "on_ground"
+_DROP_ROOT = _CONSUMABLE_ROOT / "ground_drops"
 _ORIGINAL_ROOT = _CONSUMABLE_ROOT / "original"
 _ART_FILENAMES = {
     "fire_bomb": "fire_bomb2.png",
@@ -83,6 +85,14 @@ def load_act_three_consumable_assets():
         "act_three_consumable_belt_sprites": belt_sprites,
         "act_three_consumable_ground_sprites": ground_sprites,
         "act_three_consumable_original_sprites": original_sprites,
+        "act_three_ground_drop_sprites": {
+            item_id: resources.load_image(_DROP_ROOT / f"{item_id}.png").convert_alpha()
+            for item_id in sorted(DROP_ITEM_IDS)
+        },
+        "act_three_item_pile_sprites": tuple(
+            resources.load_image(path).convert_alpha()
+            for path in resources.glob_resources(_DROP_ROOT / "item_piles", "*.png")
+        ),
         "act_three_sell_item_sprites": {
             item_id: _fit_icon(_load_optional_image(_CONSUMABLE_ROOT / f"{item_id}.png"))
             for item_id in TRADER_SELL_ITEMS

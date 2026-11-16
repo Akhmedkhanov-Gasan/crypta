@@ -35,8 +35,6 @@ from acts.act_three.abilities.archer import (
     cancel_archer_empowered_shot,
     cancel_archer_leap,
     request_archer_barrage_zone,
-    request_archer_empowered_shot,
-    request_archer_leap,
     select_archer_barrage_zone_direction,
 )
 from acts.act_three.combat.archer_aim import (
@@ -91,7 +89,6 @@ from acts.act_three.abilities.summoner import (
     cancel_summoner_familiar_summon,
     confirm_summoner_familiar_summon,
     release_summoner_familiar,
-    request_summoner_bond,
     request_summoner_true_form,
     select_summoner_familiar_summon_direction,
 )
@@ -655,18 +652,6 @@ def handle_act_three_key_event(event, game_state, *, belt_available=False):
         return True
     
     if (
-        event.key in (pygame.K_1, pygame.K_KP1)
-        and getattr(event, "mod", 0) & pygame.KMOD_SHIFT
-        and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
-        and game_state.player.subclass == "archer"
-    ):
-        request_archer_empowered_shot(game_state)
-        set_archer_empowered_cursor(
-            game_state.player.archer_empowered_shot_aiming
-        )
-        return True
-
-    if (
         event.key == pygame.K_ESCAPE
         and game_state.player.paladin_shield_charge_aiming
     ):
@@ -682,18 +667,6 @@ def handle_act_three_key_event(event, game_state, *, belt_available=False):
         set_warlock_curse_cursor()
         return True
 
-    
-    if (
-        event.key in (pygame.K_2, pygame.K_KP2)
-        and getattr(event, "mod", 0) & pygame.KMOD_SHIFT
-        and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
-        and game_state.player.subclass == "archer"
-    ):
-        request_archer_leap(game_state)
-        set_archer_leap_cursor(
-            game_state.player.archer_leap_aiming
-        )
-        return True
     
     if (
         event.key == pygame.K_q
@@ -757,15 +730,6 @@ def handle_act_three_key_event(event, game_state, *, belt_available=False):
             and not game_state.player.summoner_familiar_active
         ):
             _commit_summoner_turn()
-        return True
-    
-    if (
-        event.key in (pygame.K_2, pygame.K_KP2)
-        and getattr(event, "mod", 0) & pygame.KMOD_SHIFT
-        and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
-        and game_state.player.subclass == "summoner"
-    ):
-        request_summoner_bond(game_state)
         return True
     
     if (

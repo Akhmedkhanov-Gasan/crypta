@@ -610,7 +610,7 @@ def _draw_consumables(
     item = TRADER_ITEMS.get(hovered_item)
     if item is None:
         return consumable_tooltip_content(hovered_item, False)
-    lines = (item.description,)
+    lines = (item.description, "In inventory, select this slot and press Shift to drop.")
     if healing_blocked and hovered_item in HEALING_ITEMS:
         lines += ("Blood Hunger blocks this item.",)
     return TooltipContent(item.name, lines, (181, 145, 81))
@@ -931,7 +931,8 @@ def _draw_character_panel(
     preview_player = get_act_three_attribute_preview(player)
     pending_points = get_pending_attribute_points(player)
     panel = layout["right_bar"]["character_panel"]
-    rectangles = get_character_panel_focus_rectangles(panel, player)
+    belt_slots = layout["down_bar"]["consumable_belt"]["slots"]
+    rectangles = get_character_panel_focus_rectangles(panel, belt_slots, player)
     focus = resolve_character_panel_focus(rectangles, game_state.act_three.character_panel_focus)
     keyboard_focus = game_state.act_three.character_panel_keyboard_focus
     tooltip_position = rectangles[focus].midright if keyboard_focus else mouse_position
@@ -940,7 +941,7 @@ def _draw_character_panel(
         panel,
         None if keyboard_focus else mouse_position,
     )
-    if keyboard_focus and focus_parts[0] not in ("inventory", "confirm"):
+    if keyboard_focus and focus_parts[0] not in ("inventory", "belt", "confirm"):
         hovered_item = tuple(focus_parts[:2])
     _blit_asset(
         screen,
@@ -1147,6 +1148,14 @@ def _draw_character_panel(
     )
     if inventory_tooltip is not None:
         tooltip_content = inventory_tooltip
+    if keyboard_focus and focus_parts[0] == "belt":
+        slot_index = sorted(belt_slots).index(focus_parts[1])
+        item_id = get_act_two_consumable_slots(player)[slot_index]
+        item = TRADER_ITEMS.get(item_id)
+        if item is not None:
+            tooltip_content = TooltipContent(
+                item.name, (item.description, "Shift: drop in front."), (181, 145, 81),
+            )
 
     pygame.draw.rect(
         screen,

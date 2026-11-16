@@ -6,6 +6,7 @@ from acts.act_three.combat.paladin import (
     add_paladin_block_chance,
 )
 from acts.act_three.equipment import apply_armor_bonus, apply_weapon_bonus
+from acts.act_three.items.drops import drop_from_monster
 from acts.act_two.ability_scaling import (
     mage_basic_attack_damage_bonus,
     rogue_ambush_damage_bonus,
@@ -815,6 +816,8 @@ def resolve_enemy_defeat(
                 f"{enemy.name} drops one gold.",
                 category="loot",
             )
+    elif current_act == 3:
+        drop_from_monster(floor, enemy)
     try_spawn_enemy_after_death(game_state, enemy)
     release_mimic_loot(game_state, enemy)
 
