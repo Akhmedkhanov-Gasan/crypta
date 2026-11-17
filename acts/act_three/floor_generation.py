@@ -1,3 +1,4 @@
+from acts.act_three.crate_generation import populate_act_three_crates
 from acts.act_three.enemies.generation import (
     populate_act_three_enemies,
 )
@@ -55,7 +56,6 @@ def build_act_three_floor(
     )
     floor["presentation_act"] = config.get("presentation_act", config["act"])
 
-    return populate_act_three_enemies(
-        floor,
-        config["act_floor"],
-    )
+    populate_act_three_enemies(floor, config["act_floor"])
+    populate_act_three_crates(floor)
+    return floor

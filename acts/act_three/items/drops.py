@@ -2,6 +2,7 @@ import random
 
 import pygame
 
+from acts.act_three.environment_objects import CRATE_TILE_IDS
 from acts.act_three.tile_catalog import (
     ENVIRONMENT_OBJECTS_TILESET_PATH,
     TILED_GID_MASK,
@@ -12,29 +13,24 @@ from systems.ground_items import DROPPED_ITEM_FLIGHT_MS
 
 
 CRATE_DROPS = (
-    ("potion", 3600),
-    ("regeneration_draught", 1400),
+    ("potion", 2000),
+    ("regeneration_draught", 700),
     ("silverware", 300),
-    ("healing_scroll", 50),
-    ("ironblood_tonic", 50),
-    ("scroll_of_stoneflesh", 50),
-    ("scroll_of_binding", 50),
-    ("scroll_of_arcane_impulse", 50),
-    ("fire_bomb", 50),
-    ("flash_bomb", 50),
-    ("spring_trap", 50),
-    ("blast_charge", 50),
+    ("healing_scroll", 25),
+    ("ironblood_tonic", 25),
+    ("scroll_of_stoneflesh", 25),
+    ("scroll_of_binding", 25),
+    ("scroll_of_arcane_impulse", 25),
+    ("fire_bomb", 25),
+    ("flash_bomb", 25),
+    ("spring_trap", 25),
+    ("blast_charge", 25),
     ("burial_relic", 10),
 )
 URN_DROPS = (("silverware", 300),)
-MONSTER_DROPS = (("monster_parts", 1500), ("burial_relic", 10))
+MONSTER_DROPS = (("monster_parts", 1800), ("burial_relic", 10))
 ORE_DROPS = (("gemstone", 1200),)
-ENVIRONMENT_OBJECT_DROPS = {
-    0: CRATE_DROPS,
-    9: URN_DROPS,
-    18: CRATE_DROPS,
-    36: CRATE_DROPS,
-}
+ENVIRONMENT_OBJECT_DROPS = {**dict.fromkeys(CRATE_TILE_IDS, CRATE_DROPS), 9: URN_DROPS}
 DROP_ITEM_IDS = frozenset(
     item for table in (*ENVIRONMENT_OBJECT_DROPS.values(), MONSTER_DROPS) for item, _ in table
 )

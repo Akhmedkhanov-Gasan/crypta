@@ -4,12 +4,17 @@ import random
 from enemies import ENEMY_TYPES
 from logic import get_enemy_occupied_positions
 from systems.grid_geometry import can_reach_adjacent_cell
-from acts.act_three.npcs import get_npc_cells
+from acts.act_three.spawn_regions import (
+    inside_region,
+    reserved_spawn_positions,
+    room_entrances,
+    spawn_regions,
+)
 from acts.act_three.settings import ACT_THREE_ENCOUNTER_SETTINGS
 from acts.act_three.world_geometry import reachable_cells
 
 
-def _enemy_cells(enemy_type, position):
+def enemy_spawn_cells(enemy_type, position):
     config = ENEMY_TYPES[enemy_type]
     return set(get_enemy_occupied_positions({
         "column": position[0],
@@ -32,38 +37,17 @@ def _fits(floor, cells, occupied):
     return True
 
 
-def _reserved_positions(floor):
-    positions = {floor["player_start"], floor["stairs"]}
-    positions.update(chest["position"] for chest in floor["chests"])
-    positions.update(crate["position"] for crate in floor.get("breakable_crates", []))
-    positions.update(floor["potions"])
-    positions.update(ore["position"] for ore in floor.get("ores", []))
-    for npc in floor.get("npcs", []):
-        positions.update(get_npc_cells(npc))
-    altar = floor.get("upgrade_altar")
-    if altar is not None:
-        positions.update((altar[0] + x, altar[1] + y) for x in range(2) for y in range(2))
-    for passage in floor.get("passages", []):
-        positions.update((passage["wall_position"], passage["trigger_position"]))
-    return positions - {None}
-
-
-def _inside(position, region):
-    return region["left"] <= position[0] < region["right"] and region["top"] <= position[1] < region["bottom"]
-
-
 def _candidates(floor, region, enemy_type, occupied, reachable, settings):
     ground = floor["tile_layers"].get("Ground", [])
     player = floor["player_start"]
-    entrances = [connector["position"] for connector in floor.get("connectors", [])]
-    entrances.extend(position for edge in floor.get("room_connections", []) for position in edge)
+    entrances = room_entrances(floor)
     enemy_positions = [enemy["position"] for enemy in floor["enemies"]]
     candidates = []
     for position in reachable:
-        if not _inside(position, region):
+        if not inside_region(position, region):
             continue
-        cells = _enemy_cells(enemy_type, position)
-        if not cells <= reachable or not all(_inside(cell, region) for cell in cells):
+        cells = enemy_spawn_cells(enemy_type, position)
+        if not cells <= reachable or not all(inside_region(cell, region) for cell in cells):
             continue
         if not _fits(floor, cells, occupied):
             continue
@@ -80,9 +64,9 @@ def _candidates(floor, region, enemy_type, occupied, reachable, settings):
 
 
 def populate_act_three_enemies(floor, act_floor):
-    occupied = _reserved_positions(floor)
+    occupied = reserved_spawn_positions(floor)
     for enemy in floor["enemies"]:
-        cells = _enemy_cells(enemy["type"], enemy["position"])
+        cells = enemy_spawn_cells(enemy["type"], enemy["position"])
         if not _fits(floor, cells, occupied):
             raise ValueError(f"Enemy overlaps a blocked or occupied cell: {enemy!r}")
         occupied.update(cells)
@@ -90,19 +74,12 @@ def populate_act_three_enemies(floor, act_floor):
     if not settings or not settings["enabled"]:
         return floor
     reachable = reachable_cells(floor["map"], floor["player_start"], floor["barriers"])
-    regions = floor.get("spawn_regions", [{
-        "left": 0,
-        "top": 0,
-        "right": len(floor["map"][0]),
-        "bottom": len(floor["map"]),
-        "enabled": floor.get("enemy_spawn_mode", False),
-    }])
     available = []
-    for region in regions:
+    for region in spawn_regions(floor):
         if not region["enabled"]:
             continue
-        area = sum(_inside(cell, region) for cell in reachable)
-        existing = sum(_inside(enemy["position"], region) for enemy in floor["enemies"])
+        area = sum(inside_region(cell, region) for cell in reachable)
+        existing = sum(inside_region(enemy["position"], region) for enemy in floor["enemies"])
         limit = min(settings["maximum_per_room"], math.ceil(area / settings["cells_per_enemy"]))
         if limit > existing:
             available.append([region, limit - existing])
@@ -119,7 +96,7 @@ def populate_act_three_enemies(floor, act_floor):
             if candidates:
                 position = random.choice(candidates)
                 floor["enemies"].append({"position": position, "type": enemy_type, "boss_group": False})
-                occupied.update(_enemy_cells(enemy_type, position))
+                occupied.update(enemy_spawn_cells(enemy_type, position))
                 remaining -= 1
                 available[index][1] -= 1
                 placed = True
