@@ -40,6 +40,8 @@ class ItemDragState:
 
 @dataclass
 class ActThreePlayerState:
+    environment_attack = None
+
     consumable_aim_slot: int | None = None
     item_drag: ItemDragState | None = None
     consumable_aim_target: tuple[int, int] | None = None

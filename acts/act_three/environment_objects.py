@@ -5,6 +5,14 @@ from acts.act_three.tile_catalog import (
 )
 
 
+def get_breakable_environment_object(floor, position):
+    return next(
+        (crate for crate in floor.breakable_crates
+         if not crate.is_broken and (crate.column, crate.row) == position),
+        None,
+    )
+
+
 def extract_breakable_environment_objects(layers):
     first_gid, tileset = tileset_catalog()[ENVIRONMENT_OBJECTS_TILESET_PATH]
     breakable_gids = {

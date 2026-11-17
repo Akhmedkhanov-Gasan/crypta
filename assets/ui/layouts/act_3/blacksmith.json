@@ -325,7 +325,7 @@
           "width": 64,
           "height": 64
         },
-        "asset_path": "assets/sprites/act_3/npcs/blacksmith/ores/black_ore/black_ore_chunk.png",
+        "asset_path": "assets/sprites/act_3/items/ores/black_ore/black_ore_chunk.png",
         "opacity": 1
       }
     },
@@ -344,7 +344,7 @@
           "width": 64,
           "height": 64
         },
-        "asset_path": "assets/sprites/act_3/npcs/blacksmith/ores/iron/iron_ore_chunk.png",
+        "asset_path": "assets/sprites/act_3/items/ores/iron/iron_ore_chunk.png",
         "opacity": 1
       }
     },

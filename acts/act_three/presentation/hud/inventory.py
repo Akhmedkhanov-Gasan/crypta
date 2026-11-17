@@ -1,6 +1,6 @@
 import pygame
 
-from acts.act_three.items.inventory import BLACK_ORE_CHUNK, get_inventory_slots
+from acts.act_three.items.inventory import ORE_ITEM_NAMES, get_inventory_slots
 from acts.act_three.presentation.hud.panel_art import draw_panel_image
 from acts.act_three.trader_catalog import TRADER_ITEMS, TRADER_SELL_ITEMS
 from presentation.figma_ui import figma_rect
@@ -63,9 +63,9 @@ def draw_inventory(screen, player, assets, panel, mouse_position, focused_slot=N
 
     if moving:
         return None
-    if hovered_item == BLACK_ORE_CHUNK:
+    if hovered_item in ORE_ITEM_NAMES:
         return TooltipContent(
-            title="Black ore",
+            title=ORE_ITEM_NAMES[hovered_item],
             lines=("Crafting material.", "Shift: drop in front."),
             accent=(176, 139, 214),
         )

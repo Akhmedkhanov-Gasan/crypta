@@ -5,19 +5,16 @@ from acts.act_three.items.consumables import (
     ACT_THREE_CONSUMABLES,
 )
 from acts.act_three.items.drops import DROP_ITEM_IDS
+from acts.act_three.items.inventory import ORE_ITEM_NAMES
 from acts.act_three.trader_catalog import TRADER_ITEMS, TRADER_SELL_ITEMS
 from presentation.layout import ASSET_ROOT
 
 
-_CONSUMABLE_ROOT = (
-    ASSET_ROOT
-    / "act_3"
-    / "items"
-    / "consumables"
-)
+_ITEM_ROOT = ASSET_ROOT / "act_3" / "items"
+_CONSUMABLE_ROOT = _ITEM_ROOT / "consumables"
 _BELT_ROOT = _CONSUMABLE_ROOT / "belt"
 _GROUND_ROOT = _CONSUMABLE_ROOT / "on_ground"
-_DROP_ROOT = _CONSUMABLE_ROOT / "ground_drops"
+_DROP_ROOT = _ITEM_ROOT / "ground_drops"
 _ORIGINAL_ROOT = _CONSUMABLE_ROOT / "original"
 _ART_FILENAMES = {
     "fire_bomb": "fire_bomb2.png",
@@ -81,14 +78,20 @@ def load_act_three_consumable_assets():
         if original_image is not None:
             original_sprites[item_id] = original_image
 
+    drop_sprites = {}
+    for item_id in sorted(DROP_ITEM_IDS):
+        folder = "consumables" if item_id in TRADER_ITEMS else "drops"
+        drop_sprites[item_id] = resources.load_image(
+            _DROP_ROOT / folder / f"{item_id}.png"
+        ).convert_alpha()
+    ore_pile = resources.load_image(_DROP_ROOT / "ore_pile.png").convert_alpha()
+    drop_sprites.update(dict.fromkeys((*ORE_ITEM_NAMES, "gemstone"), ore_pile))
+
     return {
         "act_three_consumable_belt_sprites": belt_sprites,
         "act_three_consumable_ground_sprites": ground_sprites,
         "act_three_consumable_original_sprites": original_sprites,
-        "act_three_ground_drop_sprites": {
-            item_id: resources.load_image(_DROP_ROOT / f"{item_id}.png").convert_alpha()
-            for item_id in sorted(DROP_ITEM_IDS)
-        },
+        "act_three_ground_drop_sprites": drop_sprites,
         "act_three_item_pile_sprites": tuple(
             resources.load_image(path).convert_alpha()
             for path in resources.glob_resources(_DROP_ROOT / "item_piles", "*.png")

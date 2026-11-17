@@ -74,7 +74,10 @@ def handle_warlock_aim_key(event, game_state, direction):
             if not getattr(event, "automatic_movement", False):
                 target = next_enemy_aim_target(
                     game_state,
-                    enemy_aim_targets(game_state, valid_warlock_aim_target),
+                    enemy_aim_targets(
+                        game_state, valid_warlock_aim_target,
+                        include_objects=player.warlock_basic_aiming and not player.warlock_curse_aiming,
+                    ),
                     player.warlock_aim_target,
                     direction,
                 )
@@ -97,11 +100,14 @@ def handle_warlock_aim_key(event, game_state, direction):
     else:
         player.warlock_basic_aiming = True
 
-    targets = enemy_aim_targets(game_state, valid_warlock_aim_target)
+    targets = enemy_aim_targets(
+        game_state, valid_warlock_aim_target, include_objects=event.key == pygame.K_r,
+    )
     if targets:
         hover_warlock_aim(game_state, targets[0])
     else:
         player.warlock_basic_aiming = False
         player.warlock_curse_aiming = False
-        add_log_message(game_state.combat_log, "No enemies in range.")
+        message = "No enemies in range." if event.key == pygame.K_q else "No targets in range."
+        add_log_message(game_state.combat_log, message)
     return True

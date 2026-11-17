@@ -3,6 +3,7 @@ from acts.act_three.altar import (
     open_upgrade_altar,
 )
 from acts.act_three.combat.attacks import navigation_attack
+from acts.act_three.environment_objects import get_breakable_environment_object
 from acts.act_three.mining.world import get_ore_at
 from acts.act_two.input.auto_movement import (
     player_attack_warnings as act_two_attack_warnings,
@@ -85,11 +86,7 @@ def navigation_target_info(game_state, target):
         and (candidate.column, candidate.row) == target
         for candidate in floor.chests
     )
-    crate = any(
-        not candidate.is_broken
-        and (candidate.column, candidate.row) == target
-        for candidate in floor.breakable_crates
-    )
+    crate = get_breakable_environment_object(floor, target) is not None
     column, row = target
     secret_wall = floor.map[row][column] == "S"
     altar = (
@@ -165,7 +162,7 @@ def navigation_action(game_state, origin, target, has_enemy):
                 return {"navigation_altar": True}
             return None
 
-        if has_enemy:
+        if has_enemy or get_breakable_environment_object(floor, target) is not None:
             attack = navigation_attack(
                 game_state,
                 target,

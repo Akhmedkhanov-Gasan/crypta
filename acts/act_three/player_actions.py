@@ -2,7 +2,8 @@ from dataclasses import dataclass
 
 import pygame
 
-from acts.crates import break_crate
+from acts.act_three.combat.attacks import attack_breakable_environment_object
+from acts.act_three.environment_objects import get_breakable_environment_object
 from acts.player_abilities import resolve_targeted_player_ability
 from acts.act_three.npcs import get_npc_at, open_npc_dialog
 from acts.act_three.items.use import use_belt_item
@@ -57,15 +58,7 @@ def _cell_targets(game_state, target):
         ),
         None,
     )
-    crate = next(
-        (
-            candidate
-            for candidate in floor.breakable_crates
-            if not candidate.is_broken
-            and (candidate.column, candidate.row) == target
-        ),
-        None,
-    )
+    crate = get_breakable_environment_object(floor, target)
     column, row = target
     secret_wall = (
         0 <= row < len(floor.map)
@@ -207,7 +200,7 @@ def resolve_act_three_player_action(
     elif chest is not None:
         acted = open_chest(game_state, chest, started_at)
     elif crate is not None:
-        acted = break_crate(game_state, crate)
+        acted = attack_breakable_environment_object(game_state, crate, started_at)
     elif secret_wall:
         acted = break_secret_passage(game_state, target[0], target[1])
         if acted:

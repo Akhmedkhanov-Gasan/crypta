@@ -61,3 +61,10 @@ TRADER_SELL_ITEMS = {
     "silverware": "Silverware",
     "burial_relic": "Burial Relic",
 }
+
+TRADER_SELL_PRICES = {
+    "gemstone": 12,
+    "monster_parts": 3,
+    "silverware": 6,
+    "burial_relic": 10,
+}

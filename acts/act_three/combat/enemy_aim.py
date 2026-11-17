@@ -1,7 +1,7 @@
 from logic import get_enemy_occupied_positions
 
 
-def enemy_aim_targets(game_state, is_valid_target):
+def enemy_aim_targets(game_state, is_valid_target, *, include_objects=False):
     floor = game_state.floor
     origin = (
         floor.player_column,
@@ -37,6 +37,15 @@ def enemy_aim_targets(game_state, is_valid_target):
             ),
         )
         targets.append(target)
+
+    if include_objects:
+        for crate in floor.breakable_crates:
+            cell = (crate.column, crate.row)
+            if (
+                not crate.is_broken and cell in floor.visible_cells
+                and cell not in targets and is_valid_target(game_state, cell)
+            ):
+                targets.append(cell)
 
     return sorted(
         targets,

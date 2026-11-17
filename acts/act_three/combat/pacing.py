@@ -5,7 +5,10 @@ SUMMONER_BASIC_ATTACK_DURATION_MS = 480
 
 def player_attack_recovery_until(player):
     started_at = player.attack_animation_started_at
-    if started_at <= 0:
+    environment_attack = player.act_three.environment_attack
+    if started_at <= 0 or (
+        environment_attack is not None and started_at == environment_attack[0]
+    ):
         return 0
 
     duration = (

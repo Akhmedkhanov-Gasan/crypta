@@ -74,8 +74,6 @@ def resolve_targeted_player_ability(
         player.warlock_basic_aiming = False
         player.warlock_aim_target = None
         acted = perform_warlock_attack(game_state, target, hit_reaction)
-        if acted:
-            player.attack_animation_started_at = pygame.time.get_ticks()
         set_warlock_staff_cursor()
         return acted
 
@@ -83,8 +81,6 @@ def resolve_targeted_player_ability(
         target = player.summoner_attack_target
         player.summoner_attack_target = None
         acted = perform_summoner_attack(game_state, target, hit_reaction)
-        if acted:
-            player.attack_animation_started_at = pygame.time.get_ticks()
         set_summoner_staff_cursor()
         return acted
 
@@ -171,8 +167,6 @@ def resolve_targeted_player_ability(
             target,
         )
         acted = perform_archer_attack(game_state, target, hit_reaction)
-        if acted:
-            player.attack_animation_started_at = pygame.time.get_ticks()
         set_archer_attack_cursor()
         return acted
 

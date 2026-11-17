@@ -1,7 +1,7 @@
 import pygame
 import resource_store as resources
 
-from acts.act_three.items.inventory import BLACK_ORE_CHUNK
+from acts.act_three.items.inventory import BLACK_ORE_CHUNK, IRON_ORE_CHUNK
 from presentation.layout import ACT_THREE_TILE_SIZE, ASSET_ROOT
 
 
@@ -24,31 +24,32 @@ def _load_player_mining_frames(root, mining_size):
 
 
 def load_mining_assets():
-    ore_root = (
-        ASSET_ROOT / "act_3" / "npcs" / "blacksmith" / "ores" / "black_ore"
-    )
+    ore_root = ASSET_ROOT / "act_3" / "items" / "ores"
     player_root = ASSET_ROOT / "act_3" / "player"
     size = (ACT_THREE_TILE_SIZE, ACT_THREE_TILE_SIZE)
     mining_size = (ACT_THREE_TILE_SIZE, ACT_THREE_TILE_SIZE * 2)
-    chunk = resources.load_image(ore_root / "black_ore_chunk.png").convert_alpha()
+    ore_icons = {
+        item: resources.load_image(
+            ore_root / directory / f"{item}.png"
+        ).convert_alpha()
+        for item, directory in ((BLACK_ORE_CHUNK, "black_ore"), (IRON_ORE_CHUNK, "iron"))
+    }
 
     return {
         "black_ore_stages": tuple(
             pygame.transform.scale(
                 resources.load_image(
-                    ore_root / f"black_ore_{index:02d}.png"
+                    ore_root / "black_ore" / f"black_ore_{index:02d}.png"
                 ).convert_alpha(),
                 size,
             )
             for index in range(1, 5)
         ),
         "black_ore_chunk_icon": pygame.transform.scale(
-            chunk,
+            ore_icons[BLACK_ORE_CHUNK],
             (18, 18),
         ),
-        "act_three_inventory_sprites": {
-            BLACK_ORE_CHUNK: chunk,
-        },
+        "act_three_inventory_sprites": ore_icons,
         **{
             f"{subclass}_mining_frames": _load_player_mining_frames(
                 player_root / subclass,

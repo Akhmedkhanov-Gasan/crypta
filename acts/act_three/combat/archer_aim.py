@@ -1,47 +1,19 @@
+from functools import partial
+
 from acts.act_three.combat.attacks import (
     is_valid_archer_attack_target,
 )
+from acts.act_three.combat.enemy_aim import enemy_aim_targets
 from game.combat_log import add_log_message
-from logic import get_enemy_occupied_positions
 
 
-def archer_aim_targets(game_state):
-    floor = game_state.floor
-    origin = (floor.player_column, floor.player_row)
-    targets = []
-
-    for enemy in floor.enemies:
-        if enemy.health <= 0:
-            continue
-
-        cells = [
-            cell
-            for cell in get_enemy_occupied_positions(enemy)
-            if cell in floor.visible_cells
-            and is_valid_archer_attack_target(game_state, cell)
-        ]
-        if not cells:
-            continue
-
-        target = min(
-            cells,
-            key=lambda cell: (
-                abs(cell[0] - origin[0])
-                + abs(cell[1] - origin[1]),
-                cell[1],
-                cell[0],
-            ),
-        )
-        targets.append(target)
-
-    return sorted(
-        targets,
-        key=lambda cell: (
-            abs(cell[0] - origin[0])
-            + abs(cell[1] - origin[1]),
-            cell[1],
-            cell[0],
-        ),
+def archer_aim_targets(game_state, *, piercing=None):
+    if piercing is None:
+        piercing = game_state.player.archer_piercing_aiming
+    return enemy_aim_targets(
+        game_state,
+        partial(is_valid_archer_attack_target, include_objects=not piercing),
+        include_objects=not piercing,
     )
 
 
@@ -50,11 +22,11 @@ def begin_archer_aim(game_state, current_time, piercing=False):
     if player.subclass != "archer" or player.health <= 0:
         return False
 
-    targets = archer_aim_targets(game_state)
+    targets = archer_aim_targets(game_state, piercing=piercing)
     if not targets:
         add_log_message(
             game_state.combat_log,
-            "No enemies in range.",
+            "No enemies in range." if piercing else "No targets in range.",
         )
         return False
 

@@ -1,5 +1,10 @@
 INVENTORY_SLOT_COUNT = 24
 BLACK_ORE_CHUNK = "black_ore_chunk"
+IRON_ORE_CHUNK = "iron_ore_chunk"
+ORE_ITEM_NAMES = {
+    BLACK_ORE_CHUNK: "Black ore",
+    IRON_ORE_CHUNK: "Iron ore",
+}
 
 
 def get_inventory_slots(player):

@@ -1273,7 +1273,15 @@ def _draw_act_three_world(
         if game_state.player_attack_targets
         else None
     )
-    ordinary_elapsed = current_time - game_state.player.attack_animation_started_at
+    ordinary_started_at = game_state.player.attack_animation_started_at
+    ordinary_origin = player_position
+    environment_attack = game_state.player.act_three.environment_attack
+    if environment_attack is not None:
+        started_at, floor_index, origin_cell, target_cell = environment_attack
+        if started_at == ordinary_started_at and floor_index == game_state.floor_index:
+            ordinary_origin = _view_position(*origin_cell, camera_x, camera_y)
+            ordinary_target = target_cell
+    ordinary_elapsed = current_time - ordinary_started_at
     if (
         player_subclass == "archer"
         and empowered_target is not None
@@ -1326,8 +1334,8 @@ def _draw_act_three_world(
             camera_y,
         )
         origin = (
-            player_position[0] + ACT_THREE_TILE_SIZE // 2,
-            player_position[1] + ACT_THREE_TILE_SIZE // 2,
+            ordinary_origin[0] + ACT_THREE_TILE_SIZE // 2,
+            ordinary_origin[1] + ACT_THREE_TILE_SIZE // 2,
         )
         destination = (
             target_position[0] + ACT_THREE_TILE_SIZE // 2,
@@ -1357,9 +1365,9 @@ def _draw_act_three_world(
         _draw_warlock_orb(
             view_surface,
             (
-                player_position[0]
+                ordinary_origin[0]
                 + ACT_THREE_TILE_SIZE // 2,
-                player_position[1]
+                ordinary_origin[1]
                 + ACT_THREE_TILE_SIZE // 2,
             ),
             (
@@ -1391,9 +1399,9 @@ def _draw_act_three_world(
         draw_summoner_bird_attack(
             view_surface,
             (
-                player_position[0]
+                ordinary_origin[0]
                 + ACT_THREE_TILE_SIZE // 2,
-                player_position[1]
+                ordinary_origin[1]
                 + ACT_THREE_TILE_SIZE // 2,
             ),
             (

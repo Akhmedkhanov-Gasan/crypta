@@ -1,5 +1,6 @@
 import pygame
 
+from acts.act_three.items.drops import drop_from_ore
 from acts.act_three.items.inventory import (
     BLACK_ORE_CHUNK,
     inventory_has_space,
@@ -204,6 +205,7 @@ def advance_mining(game_state, current_time):
 
         if ore["stage"] == 3:
             clear_ore_collision(game_state.floor, ore["position"])
+            drop_from_ore(game_state.floor, ore["position"])
             session.mining_reward = {
                 "floor_index": game_state.floor_index,
                 "position": mining["origin"],

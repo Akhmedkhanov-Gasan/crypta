@@ -123,6 +123,14 @@ def handle_blacksmith_event(event, game_state, mouse_position):
     if event.type == pygame.KEYDOWN:
         if getattr(event, "automatic_movement", False):
             return True
+        if event.key in (pygame.K_a, pygame.K_d):
+            if tempering_elapsed(floor, pygame.time.get_ticks()) is None:
+                game_state.act_three.npc_dialog_line_index = (
+                    0 if event.key == pygame.K_a else 1
+                )
+                _KEYBOARD_FOCUS[floor] = "confirm"
+            return True
+
         focus = _KEYBOARD_FOCUS.get(floor, _selected_upgrade(game_state))
         if event.key in CHORD_MOVEMENT_KEYS:
             _KEYBOARD_FOCUS[floor] = move_focus(
@@ -136,8 +144,8 @@ def handle_blacksmith_event(event, game_state, mouse_position):
         if event.key == pygame.K_ESCAPE:
             control = "close"
         elif event.key == pygame.K_SPACE:
-            _KEYBOARD_FOCUS[floor] = focus
-            control = focus
+            control = _KEYBOARD_FOCUS.get(floor, "confirm")
+            _KEYBOARD_FOCUS[floor] = control
         elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
             control = "confirm"
     elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and mouse_position is not None:

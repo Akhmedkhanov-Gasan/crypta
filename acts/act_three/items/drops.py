@@ -28,7 +28,13 @@ CRATE_DROPS = (
 )
 URN_DROPS = (("silverware", 300),)
 MONSTER_DROPS = (("monster_parts", 1500), ("burial_relic", 10))
-ENVIRONMENT_OBJECT_DROPS = {0: CRATE_DROPS, 9: URN_DROPS}
+ORE_DROPS = (("gemstone", 1200),)
+ENVIRONMENT_OBJECT_DROPS = {
+    0: CRATE_DROPS,
+    9: URN_DROPS,
+    18: CRATE_DROPS,
+    36: CRATE_DROPS,
+}
 DROP_ITEM_IDS = frozenset(
     item for table in (*ENVIRONMENT_OBJECT_DROPS.values(), MONSTER_DROPS) for item, _ in table
 )
@@ -64,3 +70,7 @@ def drop_from_environment_object(floor, crate):
 
 def drop_from_monster(floor, enemy):
     _roll_ground_drop(floor, (enemy.column, enemy.row), MONSTER_DROPS, animate=True)
+
+
+def drop_from_ore(floor, position):
+    _roll_ground_drop(floor, position, ORE_DROPS, animate=True)
