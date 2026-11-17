@@ -19,8 +19,6 @@ from logic import (
 from acts.act_three.settings import (
     PALADIN_HOLY_HAND_CHARGES,
     PALADIN_HOLY_HAND_HEALING,
-    PALADIN_HOLY_SHIELD_CHARGES,
-    PALADIN_HOLY_SHIELD_TURNS,
     PALADIN_SHIELD_CHARGE_CHARGES,
     PALADIN_SHIELD_CHARGE_RANGE,
     PALADIN_SHIELD_CHARGE_STUN_TURNS,
@@ -85,60 +83,6 @@ def request_paladin_holy_hand(
         f"Holy Hand restores {healing} health.",
     )
     return True
-
-def request_paladin_holy_shield(
-    game_state: GameState,
-) -> bool:
-    player = game_state.player
-    if player.subclass != "paladin":
-        return False
-
-    if player.paladin_holy_shield_turns > 0:
-        add_log_message(
-            game_state.combat_log,
-            "Holy Shield is already active.",
-        )
-        return True
-    if (
-        not player.debug_unlimited_abilities
-        and player.paladin_holy_shield_charge
-        < PALADIN_HOLY_SHIELD_CHARGES
-    ):
-        add_log_message(
-            game_state.combat_log,
-            "Holy Shield is not charged.",
-        )
-        return True
-
-    player.paladin_holy_shield_charge = 0
-    player.paladin_holy_shield_turns = (
-        PALADIN_HOLY_SHIELD_TURNS
-    )
-    player.paladin_shield_charge_aiming = False
-    player.paladin_shield_charge_target = None
-    player.paladin_shield_charge_preview_cells.clear()
-    add_log_message(
-        game_state.combat_log,
-        "Holy Shield surrounds the paladin.",
-    )
-    return True
-
-def advance_paladin_holy_shield(
-    game_state: GameState,
-) -> None:
-    player = game_state.player
-    if (
-        player.subclass != "paladin"
-        or player.paladin_holy_shield_turns <= 0
-    ):
-        return
-
-    player.paladin_holy_shield_turns -= 1
-    if player.paladin_holy_shield_turns == 0:
-        add_log_message(
-            game_state.combat_log,
-            "Holy Shield fades.",
-        )
 
 def get_paladin_shield_charge_path(
     game_state: GameState,

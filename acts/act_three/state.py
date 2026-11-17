@@ -140,8 +140,8 @@ class ActThreePlayerState:
     ] = field(default_factory=list)
     paladin_shield_charge_origin: tuple[int, int] | None = None
     paladin_shield_charge_started_at: int = 0
-    paladin_holy_shield_charge: int = 0
-    paladin_holy_shield_turns: int = 0
+    paladin_holy_shield_charge: int = field(default=0, metadata={"save_only": True})
+    paladin_holy_shield_turns: int = field(default=0, metadata={"save_only": True})
     paladin_sacred_ground_charge: int = 0
     paladin_sacred_ground_cast_requested: bool = False
     paladin_sacred_ground_anchor: tuple[int, int] | None = None
@@ -178,18 +178,18 @@ class ActThreePlayerState:
     summoner_familiar_max_health: int = 0
     summoner_familiar_health: int = 0
     summoner_familiar_charge: float = 0.0
-    summoner_familiar_death_penalty: bool = False
+    summoner_familiar_death_penalty: bool = field(default=False, metadata={"save_only": True})
     summoner_familiar_death_true_form: bool = False
     summoner_true_form_active: bool = False
     summoner_true_form_started_at: int = -1
     summoner_true_form_ending_started_at: int = -1
     summoner_true_form_charge: int = 0
     summoner_true_form_base_max_health: int = 0
-    summoner_bond_charge: int = 0
-    summoner_bond_active: bool = False
-    summoner_bond_player_max_health: int = 0
-    summoner_bond_familiar_max_health: int = 0
-    summoner_bond_familiar_health: int = 0
+    summoner_bond_charge: int = field(default=0, metadata={"save_only": True})
+    summoner_bond_active: bool = field(default=False, metadata={"save_only": True})
+    summoner_bond_player_max_health: int = field(default=0, metadata={"save_only": True})
+    summoner_bond_familiar_max_health: int = field(default=0, metadata={"save_only": True})
+    summoner_bond_familiar_health: int = field(default=0, metadata={"save_only": True})
     summoner_familiar_movement_origin: tuple[int, int] | None = None
     summoner_familiar_movement_started_at: int = 0
     summoner_familiar_attack_started_at: int = 0
@@ -290,6 +290,7 @@ class ActThreeSessionState:
 ACT_THREE_PLAYER_FIELD_NAMES = frozenset(
     state_field.name
     for state_field in fields(ActThreePlayerState)
+    if not state_field.metadata.get("save_only")
 )
 ACT_THREE_SESSION_FIELD_NAMES = frozenset(
     state_field.name

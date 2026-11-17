@@ -1,6 +1,7 @@
 import math
 
 import pygame
+from acts.act_three.presentation.hud.status_effects import draw_player_statuses
 
 from acts.act_three.equipment import equipment_rank_bonus
 from acts.act_three.items.use import HEALING_ITEMS
@@ -1446,6 +1447,9 @@ def draw_act_three_hud(
 
     if ability_tooltip is not None:
         hud_tooltip = ability_tooltip
+    status_tooltip = draw_player_statuses(screen, player, assets, layout, mouse_position)
+    if status_tooltip is not None:
+        hud_tooltip = status_tooltip
     _draw_gold(
         screen,
         player,

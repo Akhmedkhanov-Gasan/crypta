@@ -296,45 +296,6 @@ def _draw_summoner_idle_lights(
     )
 
 
-def _draw_summoner_bond_pentagram(
-    surface,
-    left,
-    top,
-    current_time,
-):
-    margin = 22
-    effect_surface = pygame.Surface(
-        (
-            ACT_THREE_TILE_SIZE + margin * 2,
-            ACT_THREE_TILE_SIZE + margin * 2,
-        ),
-        pygame.SRCALPHA,
-    )
-    center = (
-        margin + ACT_THREE_TILE_SIZE // 2,
-        margin + ACT_THREE_TILE_SIZE // 2 + 8,
-    )
-    pulse = 0.5 + 0.5 * math.sin(current_time / 260)
-    radius = 27 + round(pulse * 2)
-    glow_color = (54, 239, 227, round(55 + pulse * 35))
-    line_color = (109, 255, 244, round(175 + pulse * 65))
-    pygame.draw.circle(
-        effect_surface,
-        glow_color,
-        center,
-        radius + 4,
-        width=3,
-    )
-    pygame.draw.circle(
-        effect_surface,
-        line_color,
-        center,
-        radius,
-        width=1,
-    )
-    surface.blit(effect_surface, (left - margin, top - margin))
-
-
 def _draw_summoner_familiar_attack_glow(
     surface,
     left,

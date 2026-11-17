@@ -17,7 +17,6 @@ from acts.act_three.settings import (
     SUMMONER_FAMILIAR_AGGRO_RANGE,
     SUMMONER_FAMILIAR_CHARGES,
     SUMMONER_FAMILIAR_LEASH_RANGE,
-    SUMMONER_BOND_CHARGES,
     SUMMONER_TRUE_FORM_CHARGES,
     SUMMONER_TRUE_FORM_HEALTH_BONUS,
     SUMMONER_TRUE_FORM_HEALTH_DRAIN,
@@ -161,8 +160,6 @@ def release_summoner_familiar(game_state: GameState) -> bool:
         return False
 
     if player.summoner_familiar_active:
-        if player.summoner_bond_active:
-            break_summoner_bond(game_state)
         player.summoner_true_form_active = False
         if player.summoner_familiar_health > 0:
             health_ratio = (
@@ -273,7 +270,6 @@ def confirm_summoner_familiar_summon(
     player.summoner_familiar_summon_aiming = False
     player.summoner_familiar_summon_target = None
     player.summoner_familiar_charge = 0.0
-    player.summoner_familiar_death_penalty = False
     player.summoner_familiar_death_true_form = False
     player.summoner_true_form_active = False
     player.summoner_true_form_started_at = -1
@@ -322,56 +318,6 @@ def confirm_summoner_familiar_summon(
     return True
 
 
-def request_summoner_bond(game_state: GameState) -> bool:
-    player = game_state.player
-    if player.subclass != "summoner":
-        return False
-    if player.summoner_bond_active:
-        add_log_message(
-            game_state.combat_log,
-            "The summoner and familiar are already bonded.",
-        )
-        return True
-    if (
-        not player.summoner_familiar_active
-        or player.summoner_familiar_health <= 0
-    ):
-        add_log_message(
-            game_state.combat_log,
-            "The familiar must be present to form the bond.",
-        )
-        return True
-    if (
-        not player.debug_unlimited_abilities
-        and player.summoner_bond_charge < SUMMONER_BOND_CHARGES
-    ):
-        add_log_message(
-            game_state.combat_log,
-            "Bond is not charged.",
-        )
-        return True
-
-    player.summoner_bond_charge = 0
-    player.summoner_bond_active = True
-    player.summoner_bond_player_max_health = player.max_health
-    player.summoner_bond_familiar_max_health = (
-        player.summoner_familiar_max_health
-    )
-    shared_max_health = (
-        player.summoner_bond_player_max_health
-        + player.summoner_bond_familiar_max_health
-    )
-    shared_health = player.health + player.summoner_familiar_health
-    player.max_health = shared_max_health
-    player.health = min(shared_max_health, shared_health)
-    player.summoner_familiar_max_health = shared_max_health
-    player.summoner_familiar_health = player.health
-    add_log_message(
-        game_state.combat_log,
-        "The summoner and familiar are bound by a shared life force.",
-    )
-    return True
-
 def request_summoner_true_form(
     game_state: GameState,
     current_time: int,
@@ -404,11 +350,6 @@ def request_summoner_true_form(
             player.summoner_familiar_health,
             base_max_health,
         )
-        if player.summoner_bond_active:
-            player.health = min(
-                player.health,
-                player.summoner_familiar_health,
-            )
         add_log_message(
             game_state.combat_log,
             "The familiar abandons its true form. Its power is exhausted.",
@@ -460,7 +401,6 @@ def deplete_summoner_true_form(game_state: GameState) -> None:
     player.summoner_familiar_active = False
     player.summoner_familiar_position = None
     player.summoner_true_form_base_max_health = 0
-    player.summoner_familiar_death_penalty = True
     game_state.emit(
         GameEvent(
             type=GameEventType.DEATH,
@@ -473,33 +413,6 @@ def deplete_summoner_true_form(game_state: GameState) -> None:
         game_state.combat_log,
         "The astral form fades after exhausting its power.",
     )
-
-def break_summoner_bond(game_state: GameState) -> None:
-    player = game_state.player
-    if not player.summoner_bond_active:
-        return
-
-    shared_health = max(0, player.health)
-    player_max_health = max(1, player.summoner_bond_player_max_health)
-    familiar_max_health = max(
-        1,
-        player.summoner_bond_familiar_max_health,
-    )
-    total_max_health = player_max_health + familiar_max_health
-    player.health = min(
-        player_max_health,
-        round(shared_health * player_max_health / total_max_health),
-    )
-    player.max_health = player_max_health
-    player.summoner_familiar_max_health = familiar_max_health
-    player.summoner_familiar_health = min(
-        familiar_max_health,
-        max(0, shared_health - player.health),
-    )
-    player.summoner_bond_active = False
-    player.summoner_bond_player_max_health = 0
-    player.summoner_bond_familiar_max_health = 0
-
 
 def _familiar_distance_to_enemy(
     familiar_position,
@@ -760,23 +673,10 @@ def damage_summoner_familiar(
     familiar_was_true_form = (
         player.summoner_true_form_active
     )
-    previous_health = (
-        player.health
-        if player.summoner_bond_active
-        else player.summoner_familiar_health
-    )
+    previous_health = player.summoner_familiar_health
     current_health = max(0, previous_health - damage)
-    if player.summoner_bond_active:
-        player.health = current_health
-        player.summoner_familiar_health = current_health
-    else:
-        player.summoner_familiar_health = current_health
+    player.summoner_familiar_health = current_health
     damage_dealt = previous_health - current_health
-    if damage_dealt > 0 and player.summoner_bond_active:
-        player.summoner_bond_charge = min(
-            SUMMONER_BOND_CHARGES,
-            player.summoner_bond_charge + 1,
-        )
     if damage_dealt > 0 and not player.summoner_true_form_active:
         player.summoner_true_form_charge = min(
             SUMMONER_TRUE_FORM_CHARGES,
@@ -798,8 +698,6 @@ def damage_summoner_familiar(
         player.summoner_true_form_charge = 0
         player.summoner_true_form_base_max_health = 0
         player.summoner_familiar_charge = 0.0
-        player.summoner_familiar_death_penalty = True
-        player.summoner_bond_active = False
         game_state.emit(
             GameEvent(
                 type=GameEventType.DEATH,

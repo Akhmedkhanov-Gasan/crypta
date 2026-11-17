@@ -39,7 +39,6 @@ from acts.act_two.enemies.oracle.health import (
 )
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
-from game.healing import heal_player
 from systems.bleeding import apply_bleed
 from game.progression import (
     experience_reward_for_enemy,
@@ -70,13 +69,8 @@ from acts.act_three.settings import (
     BERSERKER_RAGE_INJURED_DAMAGE_MULTIPLIER,
     BERSERKER_RAGE_INJURED_HEALTH_RATIO,
     PALADIN_HOLY_HAND_CHARGES,
-    PALADIN_HOLY_SHIELD_CHARGES,
-    PALADIN_HOLY_SHIELD_DAMAGE_BONUS,
-    PALADIN_HOLY_SHIELD_HEALING_PER_HIT,
     PALADIN_SHIELD_CHARGE_CHARGES,
     SUMMONER_FAMILIAR_CHARGES,
-    SUMMONER_BOND_CHARGES,
-    SUMMONER_BOND_DAMAGE_BONUS,
     SUMMONER_TRUE_FORM_CHARGES,
     SUMMONER_TRUE_FORM_DAMAGE_BONUS,
     WARLOCK_CURSE_DAMAGE_MULTIPLIER,
@@ -169,11 +163,6 @@ def damage_player(
         damage = ceil(
             damage * STONEFLESH_PHYSICAL_DAMAGE_MULTIPLIER
         )
-    if (
-        player.subclass == "paladin"
-        and player.paladin_holy_shield_turns > 0
-    ):
-        damage = ceil(damage / 2)
     if damage_kind == "physical":
         damage = apply_armor_bonus(player, damage)
     if damage > 0 and player.act_three.ironblood_guard:
@@ -192,16 +181,6 @@ def damage_player(
         minimum_health,
         player.health - damage,
     )
-    if player.summoner_bond_active:
-        player.summoner_familiar_health = player.health
-        if player.health <= 0:
-            player.summoner_familiar_active = False
-            player.summoner_familiar_position = None
-            player.summoner_true_form_active = False
-            player.summoner_true_form_charge = 0
-            player.summoner_true_form_base_max_health = 0
-            player.summoner_bond_active = False
-            player.summoner_familiar_death_penalty = True
     damage_dealt = previous_health - player.health
     if stoneflesh_applied and damage_dealt > 0:
         player.act_two.stoneflesh_hits -= 1
@@ -213,10 +192,6 @@ def damage_player(
             )
 
     if damage_dealt > 0 and player.subclass == "summoner":
-        player.summoner_bond_charge = min(
-            SUMMONER_BOND_CHARGES,
-            player.summoner_bond_charge + 1,
-        )
         if not player.summoner_true_form_active:
             player.summoner_true_form_charge = min(
                 SUMMONER_TRUE_FORM_CHARGES,
@@ -401,11 +376,6 @@ def attack_enemy(
     )
 
     if (
-            player.subclass == "summoner"
-        and player.summoner_bond_active
-    ):
-        damage += SUMMONER_BOND_DAMAGE_BONUS
-    if (
         player.subclass == "summoner"
         and player.summoner_true_form_active
         and attacker_name == "familiar"
@@ -431,11 +401,6 @@ def attack_enemy(
                 damage
                 * BERSERKER_RAGE_INJURED_DAMAGE_MULTIPLIER
             )
-    elif (
-        player.subclass == "paladin"
-        and player.paladin_holy_shield_turns > 0
-    ):
-        damage += PALADIN_HOLY_SHIELD_DAMAGE_BONUS
     critical_hit = (
         force_critical
         or attack_from_invisibility
@@ -528,30 +493,6 @@ def attack_enemy(
         else:
             player.act_two.blood_hunger_healing_progress = 0.0
     if (
-        player.subclass == "paladin"
-        and player.paladin_holy_shield_turns > 0
-        and player.health < player.max_health
-    ):
-        healing = heal_player(
-            player,
-            PALADIN_HOLY_SHIELD_HEALING_PER_HIT,
-        )
-        game_state.emit(
-            GameEvent(
-                type=GameEventType.HEAL,
-                actor="hero",
-                target="hero",
-                destination=attacker_position,
-                amount=healing,
-                data={"kind": "paladin_holy_shield"},
-            )
-        )
-        add_log_message(
-            game_state.combat_log,
-            f"Holy Shield restores {healing} health.",
-            category="healing",
-        )
-    if (
         grant_ability_charge
         and player.player_class is not None
         and player.subclass is None
@@ -605,11 +546,6 @@ def attack_enemy(
             PALADIN_SHIELD_CHARGE_CHARGES,
             player.paladin_shield_charge_charge + 1,
         )
-        if player.paladin_holy_shield_turns <= 0:
-            player.paladin_holy_shield_charge = min(
-                PALADIN_HOLY_SHIELD_CHARGES,
-                player.paladin_holy_shield_charge + 1,
-            )
     elif grant_ability_charge and player.subclass == "warlock":
         charge_ability_slots(
             player,
@@ -621,24 +557,10 @@ def attack_enemy(
                 SUMMONER_TRUE_FORM_CHARGES,
                 player.summoner_true_form_charge + 1,
             )
-        player.summoner_bond_charge = min(
-            SUMMONER_BOND_CHARGES,
-            player.summoner_bond_charge + 1,
-        )
-        charge_gain = (
-            0.5
-            if player.summoner_familiar_death_penalty
-            else 1.0
-        )
         player.summoner_familiar_charge = min(
             SUMMONER_FAMILIAR_CHARGES,
-            player.summoner_familiar_charge + charge_gain,
+            player.summoner_familiar_charge + 1.0,
         )
-        if (
-            player.summoner_familiar_charge
-            >= SUMMONER_FAMILIAR_CHARGES
-        ):
-            player.summoner_familiar_death_penalty = False
     game_state.emit(
         GameEvent(
             type=GameEventType.HIT,

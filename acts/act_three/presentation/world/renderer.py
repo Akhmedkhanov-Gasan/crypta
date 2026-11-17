@@ -184,7 +184,6 @@ from acts.act_three.presentation.mage import (
     draw_act_three_arcane_burst_effect,
 )
 from acts.act_three.presentation.class_effects import (
-    _draw_summoner_bond_pentagram,
     _draw_summoner_familiar_attack_glow,
     _draw_summoner_idle_lights,
     _draw_warlock_idle_flashes,
@@ -223,7 +222,6 @@ from acts.act_three.presentation.status_effects import (
     _draw_berserker_last_rage_effect,
     _draw_berserker_rage_effect,
     _draw_paladin_holy_hand_glow,
-    _draw_paladin_holy_shield_aura,
     _draw_rogue_idle_particles,
     _draw_warlock_curse_aura,
     _draw_assassin_idle_smoke,
@@ -669,18 +667,6 @@ def _draw_act_three_world(
             holy_hand_elapsed,
         )
 
-    if (
-        player_subclass == "paladin"
-        and game_state.player.paladin_holy_shield_turns > 0
-    ):
-        _draw_paladin_holy_shield_aura(
-            view_surface,
-            player_sprite,
-            player_position[0],
-            player_position[1],
-            current_time,
-        )
-
     if leap_active and leap_start_position is not None:
         for lag, alpha in (
             (0.12, 105),
@@ -1079,20 +1065,6 @@ def _draw_act_three_world(
                 game_state.player.summoner_familiar_health,
                 game_state.player.summoner_familiar_max_health,
                 HEALTH_BAR_COLOR,
-            )
-
-        if game_state.player.summoner_bond_active:
-            _draw_summoner_bond_pentagram(
-                view_surface,
-                player_effect_position[0],
-                player_effect_position[1],
-                current_time,
-            )
-            _draw_summoner_bond_pentagram(
-                view_surface,
-                familiar_render_position[0],
-                familiar_render_position[1],
-                current_time + 180,
             )
     elif (
         player_subclass == "summoner"

@@ -36,10 +36,7 @@ from acts.act_three.settings import (
     BERSERKER_RAGE_INJURED_DAMAGE_MULTIPLIER,
     BERSERKER_RAGE_INJURED_HEALTH_RATIO,
     PALADIN_HOLY_HAND_CHARGES,
-    PALADIN_HOLY_SHIELD_CHARGES,
-    PALADIN_HOLY_SHIELD_DAMAGE_BONUS,
     PALADIN_SHIELD_CHARGE_CHARGES,
-    SUMMONER_BOND_CHARGES,
     SUMMONER_FAMILIAR_CHARGES,
     SUMMONER_TRUE_FORM_CHARGES,
 )
@@ -86,12 +83,10 @@ _ABILITY_DESCRIPTIONS = {
     "berserker_last_rage": "Enter a temporary state of extreme rage.",
     "paladin_holy_hand": "Restore health with holy power.",
     "paladin_shield_charge": "Rush forward behind the shield.",
-    "paladin_holy_shield": "Gain a temporary holy shield.",
     "act_three_warlock_curse": "Curse a target for several turns.",
     "act_three_warlock_arcane_burst": "Cast the inherited mage rune ability.",
     "act_three_warlock_demon_form": "Transform into a demon.",
     "summoner_familiar": "Summon or release the familiar.",
-    "summoner_bond": "Strengthen the bond with the familiar.",
     "summoner_true_form": "Unite with the familiar temporarily.",
 }
 
@@ -306,24 +301,6 @@ def _ability_entries(player, accent_color):
                 (239, 194, 78),
                 None,
             ),
-            (
-                "paladin_holy_shield",
-                "Holy Shield",
-                (
-                    1.0
-                    if player.paladin_holy_shield_turns > 0
-                    else _ratio(
-                        player.paladin_holy_shield_charge,
-                        PALADIN_HOLY_SHIELD_CHARGES,
-                    )
-                ),
-                (255, 219, 116),
-                (
-                    f"{player.paladin_holy_shield_turns} TURNS"
-                    if player.paladin_holy_shield_turns > 0
-                    else None
-                ),
-            ),
         )
     if player.subclass == "warlock":
         curse_charge = get_act_three_ability_charge_state(
@@ -375,13 +352,6 @@ def _ability_entries(player, accent_color):
                     player.summoner_familiar_charge,
                     SUMMONER_FAMILIAR_CHARGES,
                 ),
-                (74, 207, 202),
-                None,
-            ),
-            (
-                "summoner_bond",
-                "Bond",
-                _ratio(player.summoner_bond_charge, SUMMONER_BOND_CHARGES),
                 (74, 207, 202),
                 None,
             ),
@@ -460,9 +430,6 @@ def _damage_value(player):
             multiplier = 1.0
         bonus_minimum = math.ceil(player.damage_min * multiplier) - player.damage_min
         bonus_maximum = math.ceil(player.damage_max * multiplier) - player.damage_max
-    elif player.subclass == "paladin" and player.paladin_holy_shield_turns > 0:
-        bonus_minimum = PALADIN_HOLY_SHIELD_DAMAGE_BONUS
-        bonus_maximum = PALADIN_HOLY_SHIELD_DAMAGE_BONUS
     if bonus_maximum > 0:
         bonus = (
             f"+{bonus_minimum}"

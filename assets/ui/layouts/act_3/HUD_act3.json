@@ -2815,7 +2815,7 @@
       "x": 4,
       "y": 8,
       "width": 392,
-      "height": 192
+      "height": 188
     },
     "frame": {
       "x": 4,
@@ -2944,8 +2944,8 @@
       "rect": {
         "x": 6,
         "y": 141,
-        "width": 293,
-        "height": 59
+        "width": 270,
+        "height": 55
       },
       "slots": {
         "slot_01": {
@@ -2957,27 +2957,18 @@
           },
           "frame": {
             "rect": {
-              "x": 10,
+              "x": 8,
               "y": 144,
-              "width": 37,
-              "height": 39
+              "width": 40,
+              "height": 40
             },
-            "fill": null,
-            "stroke": {
-              "r": 0,
-              "g": 0,
-              "b": 0,
-              "a": 255
-            },
-            "stroke_weight": 3,
-            "corner_radius": 11,
-            "blur_radius": 0
+            "asset": "status_effect_frame.png"
           },
           "icon": {
-            "x": 12,
-            "y": 148,
-            "width": 32,
-            "height": 32
+            "x": 13,
+            "y": 149,
+            "width": 30,
+            "height": 30
           },
           "value": {
             "rect": {
@@ -3010,10 +3001,10 @@
             }
           },
           "hitbox": {
-            "x": 10,
+            "x": 8,
             "y": 144,
-            "width": 37,
-            "height": 39
+            "width": 40,
+            "height": 40
           }
         },
         "slot_02": {
@@ -3025,27 +3016,18 @@
           },
           "frame": {
             "rect": {
-              "x": 55,
+              "x": 53,
               "y": 144,
-              "width": 37,
-              "height": 39
+              "width": 40,
+              "height": 40
             },
-            "fill": null,
-            "stroke": {
-              "r": 0,
-              "g": 0,
-              "b": 0,
-              "a": 255
-            },
-            "stroke_weight": 3,
-            "corner_radius": 11,
-            "blur_radius": 0
+            "asset": "status_effect_frame.png"
           },
           "icon": {
-            "x": 57,
-            "y": 148,
-            "width": 32,
-            "height": 32
+            "x": 58,
+            "y": 149,
+            "width": 30,
+            "height": 30
           },
           "value": {
             "rect": {
@@ -3078,10 +3060,10 @@
             }
           },
           "hitbox": {
-            "x": 55,
+            "x": 53,
             "y": 144,
-            "width": 37,
-            "height": 39
+            "width": 40,
+            "height": 40
           }
         },
         "slot_03": {
@@ -3093,27 +3075,18 @@
           },
           "frame": {
             "rect": {
-              "x": 100,
+              "x": 98,
               "y": 144,
-              "width": 37,
-              "height": 39
+              "width": 40,
+              "height": 40
             },
-            "fill": null,
-            "stroke": {
-              "r": 0,
-              "g": 0,
-              "b": 0,
-              "a": 255
-            },
-            "stroke_weight": 3,
-            "corner_radius": 11,
-            "blur_radius": 0
+            "asset": "status_effect_frame.png"
           },
           "icon": {
-            "x": 102,
-            "y": 148,
-            "width": 32,
-            "height": 32
+            "x": 103,
+            "y": 149,
+            "width": 30,
+            "height": 30
           },
           "value": {
             "rect": {
@@ -3146,10 +3119,10 @@
             }
           },
           "hitbox": {
-            "x": 100,
+            "x": 98,
             "y": 144,
-            "width": 37,
-            "height": 39
+            "width": 40,
+            "height": 40
           }
         },
         "slot_04": {
@@ -3161,27 +3134,18 @@
           },
           "frame": {
             "rect": {
-              "x": 145,
+              "x": 143,
               "y": 144,
-              "width": 37,
-              "height": 39
+              "width": 40,
+              "height": 40
             },
-            "fill": null,
-            "stroke": {
-              "r": 0,
-              "g": 0,
-              "b": 0,
-              "a": 255
-            },
-            "stroke_weight": 3,
-            "corner_radius": 11,
-            "blur_radius": 0
+            "asset": "status_effect_frame.png"
           },
           "icon": {
-            "x": 147,
-            "y": 148,
-            "width": 32,
-            "height": 32
+            "x": 148,
+            "y": 149,
+            "width": 30,
+            "height": 30
           },
           "value": {
             "rect": {
@@ -3214,10 +3178,10 @@
             }
           },
           "hitbox": {
-            "x": 145,
+            "x": 143,
             "y": 144,
-            "width": 37,
-            "height": 39
+            "width": 40,
+            "height": 40
           }
         },
         "slot_05": {
@@ -3229,27 +3193,18 @@
           },
           "frame": {
             "rect": {
-              "x": 190,
+              "x": 188,
               "y": 144,
-              "width": 37,
-              "height": 39
+              "width": 40,
+              "height": 40
             },
-            "fill": null,
-            "stroke": {
-              "r": 0,
-              "g": 0,
-              "b": 0,
-              "a": 255
-            },
-            "stroke_weight": 3,
-            "corner_radius": 11,
-            "blur_radius": 0
+            "asset": "status_effect_frame.png"
           },
           "icon": {
-            "x": 192,
-            "y": 148,
-            "width": 32,
-            "height": 32
+            "x": 193,
+            "y": 149,
+            "width": 30,
+            "height": 30
           },
           "value": {
             "rect": {
@@ -3282,10 +3237,10 @@
             }
           },
           "hitbox": {
-            "x": 190,
+            "x": 188,
             "y": 144,
-            "width": 37,
-            "height": 39
+            "width": 40,
+            "height": 40
           }
         },
         "slot_06": {
@@ -3297,27 +3252,18 @@
           },
           "frame": {
             "rect": {
-              "x": 235,
+              "x": 233,
               "y": 144,
-              "width": 37,
-              "height": 39
+              "width": 40,
+              "height": 40
             },
-            "fill": null,
-            "stroke": {
-              "r": 0,
-              "g": 0,
-              "b": 0,
-              "a": 255
-            },
-            "stroke_weight": 3,
-            "corner_radius": 11,
-            "blur_radius": 0
+            "asset": "status_effect_frame.png"
           },
           "icon": {
-            "x": 237,
-            "y": 148,
-            "width": 32,
-            "height": 32
+            "x": 238,
+            "y": 149,
+            "width": 30,
+            "height": 30
           },
           "value": {
             "rect": {
@@ -3350,10 +3296,10 @@
             }
           },
           "hitbox": {
-            "x": 235,
+            "x": 233,
             "y": 144,
-            "width": 37,
-            "height": 39
+            "width": 40,
+            "height": 40
           }
         }
       }

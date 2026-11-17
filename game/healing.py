@@ -15,7 +15,4 @@ def heal_player(player, amount: int) -> int:
     if player.health >= player.max_health:
         player.act_two.open_wound_healing_progress = 0.0
 
-    if player.summoner_bond_active:
-        player.summoner_familiar_health = player.health
-
     return player.health - previous_health

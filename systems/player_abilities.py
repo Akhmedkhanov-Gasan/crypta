@@ -8,10 +8,8 @@ from systems.base_abilities import (
 
 from acts.act_three.abilities.summoner import (
     release_summoner_familiar,
-    request_summoner_bond,
     request_summoner_true_form,
     deplete_summoner_true_form,
-    break_summoner_bond,
     resolve_summoner_familiar_turn,
     damage_summoner_familiar,
 )
@@ -44,8 +42,6 @@ from acts.act_three.abilities.berserker import (
 
 from acts.act_three.abilities.paladin import (
     request_paladin_holy_hand,
-    request_paladin_holy_shield,
-    advance_paladin_holy_shield,
     get_paladin_shield_charge_path,
     is_valid_paladin_shield_charge_target,
     request_paladin_shield_charge,
@@ -91,10 +87,8 @@ __all__ = [
     "cast_directional_ability",
     "cast_mage_arcane_burst",
     "release_summoner_familiar",
-    "request_summoner_bond",
     "request_summoner_true_form",
     "deplete_summoner_true_form",
-    "break_summoner_bond",
     "resolve_summoner_familiar_turn",
     "damage_summoner_familiar",
     "request_archer_empowered_shot",
@@ -118,8 +112,6 @@ __all__ = [
     "request_berserker_last_rage",
     "advance_berserker_last_rage",
     "request_paladin_holy_hand",
-    "request_paladin_holy_shield",
-    "advance_paladin_holy_shield",
     "get_paladin_shield_charge_path",
     "is_valid_paladin_shield_charge_target",
     "request_paladin_shield_charge",
