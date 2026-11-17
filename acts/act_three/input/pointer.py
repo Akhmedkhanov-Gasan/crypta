@@ -30,7 +30,6 @@ from presentation.cursors import (
     set_paladin_shield_charge_cursor,
     set_summoner_attack_cursor,
     set_summoner_staff_cursor,
-    set_warlock_curse_cursor,
     set_warlock_staff_cursor,
 )
 from acts.mage_targeting import (
@@ -60,9 +59,12 @@ from acts.act_three.abilities.paladin import (
 from acts.act_three.abilities.paladin_sacred_ground import (
     paladin_sacred_ground_cast_active,
 )
-from acts.act_three.abilities.warlock import (
-    is_valid_warlock_curse_target,
+from acts.act_three.input.warlock_aim import (
+    cancel_warlock_aim,
+    confirm_warlock_aim,
+    hover_warlock_aim,
 )
+from acts.act_three.combat.warlock_aim import warlock_aiming
 from acts.act_three.combat import (
     is_valid_archer_attack_target,
     is_valid_summoner_attack_target,
@@ -161,6 +163,7 @@ def handle_act_three_pointer_event(
         item_input_available = (
             movement_available
             and not mage_aiming(player)
+            and not warlock_aiming(player)
             and not player.archer_basic_aiming
             and not player.archer_piercing_aiming
             and not player.summoner_aiming
@@ -344,6 +347,14 @@ def handle_act_three_pointer_event(
         event.type == pygame.MOUSEBUTTONDOWN
         and event.button == 3
         and game_state.floor.presentation_act == 3
+        and warlock_aiming(game_state.player)
+    ):
+        cancel_warlock_aim(game_state)
+        return True
+    elif (
+        event.type == pygame.MOUSEBUTTONDOWN
+        and event.button == 3
+        and game_state.floor.presentation_act == 3
         and mage_aiming(game_state.player)
     ):
         post_mage_aim_toggle()
@@ -402,18 +413,8 @@ def handle_act_three_pointer_event(
                 else None
             )
             set_assassin_target_cursor("teleport")
-        elif game_state.player.warlock_curse_aiming:
-            target_is_valid = (
-                    target_cell is not None
-                    and is_valid_warlock_curse_target(
-                game_state,
-                target_cell,
-            )
-            )
-            set_warlock_curse_cursor(
-                True,
-                target_is_valid,
-            )
+        elif warlock_aiming(game_state.player):
+            hover_warlock_aim(game_state, target_cell)
         elif game_state.player.paladin_shield_charge_aiming:
             preview_is_valid = (
                 update_paladin_shield_charge_preview(
@@ -630,6 +631,15 @@ def handle_act_three_pointer_event(
         if game_mouse_position is not None:
             if (
                 game_state.sidebar_tab != "stats"
+                and game_state.player.subclass == "warlock"
+                and get_act_three_ability_slot_rectangle("q").collidepoint(
+                    game_mouse_position
+                )
+            ):
+                pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_q))
+                return True
+            if (
+                game_state.sidebar_tab != "stats"
                 and game_state.player.player_class == "mage"
                 and get_act_three_ability_slot_rectangle("e").collidepoint(
                     game_mouse_position
@@ -772,6 +782,12 @@ def handle_act_three_pointer_event(
                         )
                     )
                     return True
+            if warlock_aiming(game_state.player):
+                target_cell = get_act_three_cell_from_position(
+                    game_state, game_mouse_position
+                )
+                confirm_warlock_aim(game_state, target_cell)
+                return True
             if game_state.player.summoner_aiming:
                 target_cell = get_act_three_cell_from_position(
                     game_state,
@@ -913,27 +929,6 @@ def handle_act_three_pointer_event(
                 if target_event is not None:
                     pygame.event.post(target_event)
                 return True
-            elif game_state.player.warlock_curse_aiming:
-                target_cell = get_act_three_cell_from_position(
-                    game_state,
-                    game_mouse_position,
-                )
-                if (
-                    target_cell is not None
-                    and is_valid_warlock_curse_target(
-                        game_state,
-                        target_cell,
-                    )
-                ):
-                    game_state.player.warlock_curse_target = (
-                        target_cell
-                    )
-                    pygame.event.post(
-                        pygame.event.Event(
-                            pygame.KEYDOWN,
-                            key=pygame.K_RETURN,
-                        )
-                    )
             elif game_state.player.teleport_aiming:
                 target_cell = get_act_three_cell_from_position(
                     game_state,

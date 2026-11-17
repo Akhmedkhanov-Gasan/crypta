@@ -81,6 +81,7 @@ def continuous_movement_input_available(
         and not player.paladin_shield_charge_aiming
         and not paladin_sacred_ground_cast_active(player, current_time)
         and not player.warlock_curse_aiming
+        and not player.warlock_basic_aiming
         and player.health > 0
         and not game_state.game_won
         and not game_state.trade_screen_open

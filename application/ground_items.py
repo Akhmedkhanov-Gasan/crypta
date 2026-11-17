@@ -45,6 +45,7 @@ def ground_item_input_available(game_state):
         and not player.berserker_crushing_leap_aiming
         and not player.paladin_shield_charge_aiming
         and not player.warlock_curse_aiming
+        and not player.warlock_basic_aiming
         and ground_item_act_input_available(game_state)
     )
 

@@ -4,6 +4,7 @@ from acts.act_three.presentation.berserker import (
 from acts.act_three.presentation.mage import (
     draw_act_three_arcane_burst_targeting,
 )
+from acts.act_three.combat.warlock_aim import valid_warlock_aim_target
 from acts.act_three.presentation.paladin.sacred_ground import (
     draw_paladin_sacred_ground_cells,
 )
@@ -37,6 +38,15 @@ def draw_world_targeting(
     current_time,
 ):
     player = game_state.player
+    target = player.warlock_aim_target
+    if player.warlock_curse_aiming and valid_warlock_aim_target(game_state, target):
+        _draw_tile_markers(
+            context.view_surface,
+            (target,),
+            context.camera_x,
+            context.camera_y,
+            (206, 97, 245),
+        )
 
     draw_summoner_familiar_summon_targeting(
         context.view_surface,

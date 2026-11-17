@@ -38,6 +38,7 @@ from acts.act_three.presentation.summoner.projectile import (
 from acts.act_three.presentation.paladin.block import (
     draw_player_block_effect,
 )
+from acts.act_three.presentation.warlock.aim_effect import draw_warlock_aim_effect
 from acts.act_three.presentation.world.context import (
     create_world_render_context,
 )
@@ -328,6 +329,14 @@ def _draw_act_three_world(
         ACT_THREE_TILE_SIZE,
     )
     draw_summoner_aim_effect(
+        view_surface,
+        game_state,
+        camera_x,
+        camera_y,
+        current_time,
+        ACT_THREE_TILE_SIZE,
+    )
+    draw_warlock_aim_effect(
         view_surface,
         game_state,
         camera_x,

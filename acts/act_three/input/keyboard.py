@@ -27,8 +27,6 @@ from presentation.cursors import (
     set_paladin_shield_charge_cursor,
     set_summoner_attack_cursor,
     set_summoner_staff_cursor,
-    set_warlock_curse_cursor,
-    set_warlock_staff_cursor,
 )
 from acts.act_three.abilities.archer import (
     cancel_archer_barrage_zone,
@@ -98,10 +96,7 @@ from acts.act_two.abilities import (
 from systems.player_abilities import (
     cancel_ability_aiming,
 )
-from acts.act_three.abilities.warlock import (
-    cancel_warlock_curse,
-    request_warlock_curse,
-)
+from acts.act_three.input.warlock_aim import handle_warlock_aim_key
 from levels import FLOOR_CONFIGS
 from acts.act_three.settings import (
     ARCHER_LEAP_DURATION_MS,
@@ -264,6 +259,8 @@ def handle_act_three_key_event(event, game_state, *, belt_available=False):
         return False
 
     aiming_direction = _act_three_aiming_direction(event)
+    if handle_warlock_aim_key(event, game_state, aiming_direction):
+        return True
 
     if game_state.player.teleport_aiming:
         player = game_state.player
@@ -659,14 +656,6 @@ def handle_act_three_key_event(event, game_state, *, belt_available=False):
         set_paladin_shield_charge_cursor()
         return True
     
-    if (
-        event.key == pygame.K_ESCAPE
-        and game_state.player.warlock_curse_aiming
-    ):
-        cancel_warlock_curse(game_state)
-        set_warlock_curse_cursor()
-        return True
-
     
     if (
         event.key == pygame.K_q
@@ -689,17 +678,6 @@ def handle_act_three_key_event(event, game_state, *, belt_available=False):
         return True
 
     
-    if (
-        event.key == pygame.K_q
-        and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
-        and game_state.player.subclass == "warlock"
-    ):
-        request_warlock_curse(game_state)
-        set_warlock_curse_cursor(
-            game_state.player.warlock_curse_aiming,
-            False,
-        )
-        return True
     
     if (
         event.key == pygame.K_r

@@ -148,6 +148,8 @@ class GameplayKeyboardController:
                     or game_state.player.archer_piercing_aiming
                     or game_state.player.archer_barrage_zone_aiming
                     or spin_aiming
+                    or game_state.player.warlock_basic_aiming
+                    or game_state.player.warlock_curse_aiming
                 )
             )
             and movement_input_is_locked(

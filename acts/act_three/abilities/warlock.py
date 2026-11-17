@@ -112,10 +112,11 @@ def perform_warlock_curse(
 ) -> bool:
     player = game_state.player
     floor = game_state.floor
-    if not is_valid_warlock_curse_target(
-        game_state,
-        target,
+    if (
+        not is_ability_slot_charged(player, "q")
+        or not is_valid_warlock_curse_target(game_state, target)
     ):
+        player.warlock_curse_target = None
         return False
 
     target_enemy = next(

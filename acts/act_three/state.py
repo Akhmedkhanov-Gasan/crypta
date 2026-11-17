@@ -153,6 +153,8 @@ class ActThreePlayerState:
     ] = field(default_factory=list)
 
     warlock_attack_target: tuple[int, int] | None = None
+    warlock_basic_aiming: bool = False
+    warlock_aim_target: tuple[int, int] | None = None
     warlock_curse_aiming: bool = False
     warlock_curse_target: tuple[int, int] | None = None
     warlock_newly_cursed_enemy: str | None = None

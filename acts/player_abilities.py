@@ -71,6 +71,8 @@ def resolve_targeted_player_ability(
     if player.warlock_attack_target is not None:
         target = player.warlock_attack_target
         player.warlock_attack_target = None
+        player.warlock_basic_aiming = False
+        player.warlock_aim_target = None
         acted = perform_warlock_attack(game_state, target, hit_reaction)
         if acted:
             player.attack_animation_started_at = pygame.time.get_ticks()
