@@ -244,6 +244,8 @@ def _get_act_three_visibility(floor):
     map_width = len(floor.map[0])
     altar_cells = get_upgrade_altar_cells(floor)
     transparent_cells = set(altar_cells)
+    if floor.crushing_trial is not None:
+        transparent_cells.update(rock["cell"] for rock in floor.crushing_trial["rocks"])
     piercing_trial = floor.piercing_trial
     if piercing_trial is not None:
         transparent_cells.update(piercing_trial["levers"].values())

@@ -527,6 +527,13 @@ def draw_act_three_gameplay(
         + ACT_THREE_VIEW_WIDTH // 2,
         top=2,
     )
+    from acts.act_three.presentation.crushing_trial import draw_reset_hint
+
+    draw_reset_hint(
+        screen, game_state.floor.crushing_trial, fonts["text"],
+        ACT_THREE_VIEW_X + ACT_THREE_VIEW_WIDTH // 2,
+        2 + fonts["text"].get_linesize() + 8, current_time,
+    )
     if defer_interface:
         return
     _draw_act_three_sidebar(

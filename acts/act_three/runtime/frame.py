@@ -36,6 +36,9 @@ def advance_act_three_frame(game_state, current_act, current_time, sounds):
                 game_state.player.death_animation_started_at += elapsed - held
         advance_trial_frame(game_state, current_time)
         advance_piercing_trial(game_state, current_time)
+        from acts.act_three.crushing_trial import advance_frame as advance_crushing_trial
+
+        advance_crushing_trial(game_state, current_time)
         advance_npc_dialog(game_state, current_time)
         advance_mining(game_state, current_time)
         sounds.update(game_state.player, current_time)

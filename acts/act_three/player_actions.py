@@ -79,6 +79,11 @@ def resolve_act_three_player_action(
     hit_reaction,
 ) -> ActThreePlayerActionResult:
     from acts.act_three.piercing_trial import handle_action as handle_piercing_action
+    from acts.act_three.crushing_trial import handle_action as handle_crushing_action
+
+    crushing_result = handle_crushing_action(game_state, event, direction)
+    if crushing_result is not None:
+        return ActThreePlayerActionResult(player_acted=crushing_result, movement_blocked=not crushing_result)
 
     piercing_result = handle_piercing_action(game_state, event, direction)
     if piercing_result is not None:

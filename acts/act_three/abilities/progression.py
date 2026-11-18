@@ -39,7 +39,7 @@ def initialize_act_three_progression(
     )
     if player.subclass == "assassin" and not unlock_all:
         player.unlocked_ability_slots = {"e"}
-    if player.subclass == "archer" and not unlock_all:
+    if player.subclass in ("archer", "berserker") and not unlock_all:
         player.unlocked_ability_slots.discard("q")
 
     player.ability_slot_charges = {

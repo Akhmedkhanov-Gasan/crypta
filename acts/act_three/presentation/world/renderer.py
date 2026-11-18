@@ -5,6 +5,7 @@ from acts.act_three.combat.pacing import PLAYER_BASIC_ATTACK_DURATION_MS
 
 from acts.act_three.presentation.shadow_step_effects import draw_trial_seal_effects
 from acts.act_three.presentation.piercing_trial import draw_layer as draw_piercing_layer, draw_overlay as draw_piercing_overlay
+from acts.act_three.presentation.crushing_trial import draw_overlay as draw_crushing_overlay
 
 from acts.act_three.presentation.shadow_step_trial import (
     draw_trial_detection,
@@ -1654,6 +1655,7 @@ def _draw_act_three_world(
     draw_trial_detection(context)
     draw_trial_seal_effects(context)
     draw_piercing_overlay(context)
+    draw_crushing_overlay(context)
 
     if player_subclass == "assassin":
         draw_shadow_reflex_feedback(

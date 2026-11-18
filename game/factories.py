@@ -322,6 +322,7 @@ def create_floor_state(
         act_three_ores=floor.get("ores", []),
         shadow_step_trial=floor.get("shadow_step_trial"),
         piercing_trial=floor.get("piercing_trial"),
+        crushing_trial=floor.get("crushing_trial"),
         trial_entrance=floor.get("trial_entrance"),
         bloody_altar=bloody_altar,
         trader=trader,

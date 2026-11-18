@@ -23,9 +23,24 @@ def draw_world_terrain(context):
             floor,
             "Ground",
             "GroundDetails",
-            "WallsBack",
-            "DecorBack",
         ),
+        context.first_column,
+        context.first_row,
+        context.last_column,
+        context.last_row,
+        context.camera_x,
+        context.camera_y,
+    )
+    from acts.act_three.presentation.crushing_trial import draw_layer as draw_crushing_layer
+
+    draw_crushing_layer(context, "ground")
+    draw_crushing_layer(context, "back")
+    draw_crushing_layer(context, "front")
+    draw_tile_layers(
+        context.view_surface,
+        floor,
+        tile_assets,
+        layer_names_by_prefix(floor, "WallsBack", "DecorBack"),
         context.first_column,
         context.first_row,
         context.last_column,

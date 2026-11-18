@@ -735,6 +735,24 @@ def handle_act_three_pointer_event(
                     return True
             from acts.act_three.piercing_trial import interact, interaction_cells
 
+            crushing_trial = game_state.floor.crushing_trial
+            if crushing_trial is not None:
+                if crushing_trial["stage"] is not None:
+                    return True
+                trial_cell = get_act_three_cell_from_position(game_state, game_mouse_position)
+                origin = (game_state.floor.player_column, game_state.floor.player_row)
+                rocks = {rock["cell"] for rock in crushing_trial["rocks"]}
+                if crushing_trial["active"] and trial_cell in rocks and abs(trial_cell[0] - origin[0]) + abs(trial_cell[1] - origin[1]) == 1:
+                    from acts.act_three.crushing_trial import handle_action
+
+                    handle_action(game_state, pygame.event.Event(pygame.KEYDOWN, key=pygame.K_SPACE), (trial_cell[0] - origin[0], trial_cell[1] - origin[1]))
+                    movement_state.cancel_auto_move()
+                    movement_state.reset_held_movement()
+                    return True
+                if trial_cell is not None and (crushing_trial["active"] or trial_cell == crushing_trial["enter_zone"]):
+                    start_auto_move(movement_state, game_state, trial_cell)
+                    return True
+
             piercing_trial = game_state.floor.piercing_trial
             if piercing_trial is not None:
                 if piercing_trial["phase"] == "opening" or piercing_trial["stage"] is not None:
