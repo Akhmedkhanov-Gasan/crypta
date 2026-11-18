@@ -534,6 +534,9 @@ def draw_act_three_gameplay(
         ACT_THREE_VIEW_X + ACT_THREE_VIEW_WIDTH // 2,
         2 + fonts["text"].get_linesize() + 8, current_time,
     )
+    from acts.act_three.presentation.shield_trial import draw_hint as draw_shield_hint
+
+    draw_shield_hint(screen, game_state.floor.shield_trial, fonts["text"], 2 + fonts["text"].get_linesize() + 8)
     if defer_interface:
         return
     _draw_act_three_sidebar(

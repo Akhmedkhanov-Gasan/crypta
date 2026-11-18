@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="11" height="11" tilewidth="64" tileheight="64" infinite="0" nextlayerid="12" nextobjectid="39">
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="11" height="11" tilewidth="64" tileheight="64" infinite="0" nextlayerid="12" nextobjectid="40">
  <tileset firstgid="1" source="../../act3_floor_64.tsx"/>
  <tileset firstgid="9" source="../../my_tiles_textured.tsx"/>
  <tileset firstgid="117" source="../../items.tsx"/>
@@ -16,7 +16,7 @@
 0,8,5,8,3,6,5,4,8,5,0,
 0,1,7,1,2,8,4,3,7,8,0,
 0,5,4,7,4,1,8,1,4,6,0,
-0,3,5,1,8,8,6,8,2,3,0
+0,0,0,0,0,8,0,0,0,0,0
 </data>
  </layer>
  <layer id="4" name="GroundDetails_01" width="11" height="11">
@@ -34,7 +34,7 @@
 0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
- <layer id="2" name="WallsBack" width="11" height="11">
+ <layer id="2" name="WallsBack_01" width="11" height="11">
   <data encoding="csv">
 9,10,10,10,10,10,10,10,10,10,11,
 18,19,19,19,19,19,19,19,19,19,20,
@@ -49,7 +49,7 @@
 0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
- <layer id="3" name="WallsFront" width="11" height="11">
+ <layer id="3" name="WallsFront_01" width="11" height="11">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,
@@ -60,8 +60,8 @@
 0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,
-18,68,68,68,68,68,68,68,68,68,20,
-18,75,19,19,19,79,19,19,19,73,20
+57,39,39,39,98,10,97,39,39,39,55,
+0,0,0,0,18,79,20,0,0,0,0
 </data>
  </layer>
  <layer id="6" name="DecorBack_02" width="11" height="11">
@@ -106,11 +106,14 @@
 0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,288,0,0,0,288,0,0,0
+0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
  <objectgroup id="7" name="Connectors">
   <object id="1" name="exit_south" x="352.667" y="690">
+   <point/>
+  </object>
+  <object id="39" name="trial_door" x="352.769" y="688.374">
    <point/>
   </object>
  </objectgroup>
@@ -123,9 +126,6 @@
  </objectgroup>
  <objectgroup id="9" name="Barriers"/>
  <objectgroup id="10" name="Entities">
-  <object id="12" name="trial_door" x="355.091" y="673.818">
-   <point/>
-  </object>
   <object id="15" name="piercing_trial_launcher_03" x="545.5" y="544.667">
    <properties>
     <property name="direction" value="south"/>

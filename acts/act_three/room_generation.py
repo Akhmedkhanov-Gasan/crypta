@@ -136,6 +136,7 @@ def _compose(placements, connections):
     shadow_step_trial = None
     piercing_trial = None
     crushing_trial = None
+    shield_trial = None
     trial_entrance = None
     open_connectors = []
 
@@ -162,6 +163,11 @@ def _compose(placements, connections):
             if piercing_trial is not None:
                 raise ValueError("Only one Piercing Shot trial is supported per floor")
             piercing_trial = shift_piercing_trial(template["piercing_trial"], offset)
+
+        if template.get("shield_trial") is not None:
+            from acts.act_three.shield_trial import shift_trial as shift_shield_trial
+
+            shield_trial = shift_shield_trial(template["shield_trial"], offset)
 
         if template.get("crushing_trial") is not None:
             from acts.act_three.crushing_trial import shift_trial as shift_crushing_trial
@@ -286,6 +292,7 @@ def _compose(placements, connections):
         "shadow_step_trial": shadow_step_trial,
         "piercing_trial": piercing_trial,
         "crushing_trial": crushing_trial,
+        "shield_trial": shield_trial,
         "trial_entrance": trial_entrance,
         "encounter_zones": encounter_zones,
         "spawn_regions": spawn_regions,

@@ -80,6 +80,11 @@ def resolve_act_three_player_action(
     hit_reaction,
 ) -> ActThreePlayerActionResult:
     from acts.act_three.piercing_trial import handle_action as handle_piercing_action
+    from acts.act_three.shield_trial import handle_action as handle_shield_action
+
+    shield_result = handle_shield_action(game_state, event, direction)
+    if shield_result is not None:
+        return ActThreePlayerActionResult(player_acted=shield_result, movement_blocked=not shield_result)
     from acts.act_three.crushing_trial import handle_action as handle_crushing_action
 
     crushing_result = handle_crushing_action(game_state, event, direction)

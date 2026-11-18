@@ -23,7 +23,7 @@ LIGHT_HALF_ANGLE = math.radians(30)
 def build_trial(markers, width, height, dungeon_map):
     prefix = "shadow_step_trial_"
 
-    if not markers.get(prefix + "door"):
+    if not markers.get(prefix + "eye"):
         return None
 
     def single(name):
@@ -55,7 +55,10 @@ def build_trial(markers, width, height, dungeon_map):
     if len(seals) != 3 or {seal["id"] for seal in seals} != {1, 2, 3}:
         raise ValueError("Trial requires three distinct seal IDs")
 
-    door = single("door")
+    doors = markers.get("trial_door", [])
+    if len(doors) != 1:
+        raise ValueError("Shadow Step trial requires one trial_door marker")
+    door = doors[0][0]
     return_position = single("return")
     final_seal = single("final_seal")
     positions = (

@@ -1,4 +1,5 @@
 TRIAL_MAPS = {
+    "paladin": "assets/maps/act_3/trials/paladin_shield_charge/paladin_shield_charge.tmx",
     "berserker": "assets/maps/act_3/trials/berserker_crushing_leap/berserker_crushing_leap.tmx",
     "assassin": "assets/maps/act_3/trials/assassin_shadow_step/assassin_shadow_step.tmx",
     "archer": "assets/maps/act_3/trials/archer_piercing_trial/archer_piercing_trial.tmx",
@@ -25,6 +26,9 @@ def teleport_to_trial(game_state):
     trial = game_state.floor.shadow_step_trial
     piercing_trial = game_state.floor.piercing_trial
     crushing_trial = game_state.floor.crushing_trial
+    shield_trial = game_state.floor.shield_trial
+    if shield_trial is not None and shield_trial["phase"] in ("completion", "opening", "awakening", "extinguishing"):
+        return "Wait for the trial animation to finish."
     if crushing_trial is not None and crushing_trial["stage"] is not None:
         return "Wait for the trial animation to finish."
     if piercing_trial is not None and (
@@ -49,7 +53,8 @@ def teleport_to_trial(game_state):
     )
     expected_archer = game_state.player.subclass == "archer"
     expected_berserker = game_state.player.subclass == "berserker"
-    if floor is None or (floor.piercing_trial is not None) != expected_archer or (floor.crushing_trial is not None) != expected_berserker:
+    expected_paladin = game_state.player.subclass == "paladin"
+    if floor is None or (floor.piercing_trial is not None) != expected_archer or (floor.crushing_trial is not None) != expected_berserker or (floor.shield_trial is not None) != expected_paladin:
         floor = create_floor_state(
             target_index,
             trial_subclass=game_state.player.subclass,

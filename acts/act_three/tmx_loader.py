@@ -266,7 +266,7 @@ def load_tmx_floor(path):
                     )
                 )
             elif group_name == "connectors":
-                if _entity_name(obj) in ("enter_zone", "player_start", "player_exit"):
+                if _entity_name(obj) in ("trial_door", "enter_zone", "player_start", "player_exit", "start_trial"):
                     entities.append((_entity_name(obj), _position(obj, tile_size), _properties(obj)))
                     continue
                 properties = _properties(obj)
@@ -455,10 +455,13 @@ def load_tmx_floor(path):
     from acts.act_three.crushing_trial import build_trial as build_crushing_trial
 
     crushing_trial = build_crushing_trial(by_name, width, height, dungeon_map)
-    trial_doors = by_name.get("trial_door", []) or by_name.get("shadow_step_trial_door", [])
+    from acts.act_three.shield_trial import build_trial as build_shield_trial
+
+    shield_trial = build_shield_trial(by_name, width, height, dungeon_map)
+    trial_doors = by_name.get("trial_door", [])
     trial_entrance = trial_doors[0][0] if trial_doors else None
-    if crushing_trial is not None:
-        trial_entrance = crushing_trial["enter_zone"]
+    if shield_trial is not None:
+        trial_entrance = shield_trial["door"]
     ores = build_ores(by_name, dungeon_map)
     return {
         "enemy_spawn_mode": map_properties.get("enemy_spawn_mode", "false").lower() == "true",
@@ -467,6 +470,7 @@ def load_tmx_floor(path):
         "shadow_step_trial": shadow_step_trial,
         "piercing_trial": piercing_trial,
         "crushing_trial": crushing_trial,
+        "shield_trial": shield_trial,
         "player_start": player_start,
         "enemies": enemies,
         "chests": chests,

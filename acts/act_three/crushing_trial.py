@@ -15,6 +15,11 @@ def build_trial(markers, width, height, dungeon_map):
     if not markers.get("enter_zone") or not markers.get("crushing_trial_pressure_plate"):
         return None
     trial = {name: markers[name][0][0] for name in ("enter_zone", "player_start", "player_exit")}
+    doors = markers.get("trial_door", [])
+    if len(doors) != 1:
+        raise ValueError("Crushing trial requires one trial_door marker")
+    trial["door"] = doors[0][0]
+    trial["door_open"] = False
     trial["rocks"] = [
         {"cell": cell, "variant": int(name.rsplit("_", 1)[1])}
         for name, values in markers.items() if name.startswith("crushing_trial_boulder_")
@@ -26,14 +31,14 @@ def build_trial(markers, width, height, dungeon_map):
     cells = [rock["cell"] for rock in trial["rocks"]]
     if len(set(cells)) != len(cells) or len(set(trial["plates"])) != len(trial["plates"]):
         raise ValueError("Crushing trial contains duplicate objects")
-    for x, y in set(cells + trial["plates"] + list(trial[name] for name in ("enter_zone", "player_start"))):
+    for x, y in set(cells + trial["plates"] + list(trial[name] for name in ("door", "enter_zone", "player_start"))):
         if not (0 <= x < width and 0 <= y < height and dungeon_map[y][x] == "."):
             raise ValueError(f"Crushing trial object requires free floor: {(x, y)}")
     x, y = trial["player_exit"]
     dungeon_map[y][x] = "."
     trial.update(initial=deepcopy(trial["rocks"]), active=False, complete=False,
                  stage=None, started=0, hold=None, plate_levels={cell: float(cell in cells) for cell in trial["plates"]}, last_frame=0)
-    for x, y in cells:
+    for x, y in [trial["door"], *cells]:
         dungeon_map[y][x] = "#"
     return trial
 
@@ -42,7 +47,7 @@ def shift_trial(trial, offset):
     trial = deepcopy(trial)
     def shift(cell):
         return cell[0] + offset[0], cell[1] + offset[1]
-    for key in ("enter_zone", "player_start", "player_exit"):
+    for key in ("door", "enter_zone", "player_start", "player_exit"):
         trial[key] = shift(trial[key])
     for key in ("rocks", "initial"):
         for rock in trial[key]:
@@ -80,6 +85,10 @@ def handle_action(game_state, event, direction):
         return False
     origin = (floor.player_column, floor.player_row)
     target = origin[0] + direction[0], origin[1] + direction[1]
+    if not trial["door_open"] and target == trial["door"]:
+        if game_state.player.subclass == "berserker" and abs(direction[0]) + abs(direction[1]) == 1 and can_reach_adjacent_cell(floor.map, origin, target, floor.barriers, target_must_be_walkable=False):
+            trial.update(stage="door", started=pygame.time.get_ticks())
+        return False
     if not trial["active"]:
         if target != trial["enter_zone"]:
             return None
@@ -123,6 +132,11 @@ def advance_frame(game_state, now):
         return
     dt = min(100, max(0, now - trial["last_frame"]))
     trial["last_frame"] = now
+    if trial["stage"] == "door":
+        if now - trial["started"] >= 640:
+            set_cell(floor, trial["door"], ".")
+            trial.update(door_open=True, stage=None)
+        return
     if trial["stage"] == "completion":
         if now - trial["completed"] >= 4400:
             trial.update(

@@ -330,6 +330,7 @@ class FloorState(AttributeMapping):
     shadow_step_trial: dict[str, Any] | None = None
     piercing_trial: dict[str, Any] | None = None
     crushing_trial: dict[str, Any] | None = None
+    shield_trial: dict[str, Any] | None = None
     trial_entrance: tuple[int, int] | None = None
     bloody_altar: BloodyAltarState | None = None
     trader: TraderState | None = None

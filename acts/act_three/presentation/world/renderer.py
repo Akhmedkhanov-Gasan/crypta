@@ -1656,6 +1656,9 @@ def _draw_act_three_world(
     draw_trial_seal_effects(context)
     draw_piercing_overlay(context)
     draw_crushing_overlay(context)
+    from acts.act_three.presentation.shield_trial import draw_overlay as draw_shield_overlay
+
+    draw_shield_overlay(context)
 
     if player_subclass == "assassin":
         draw_shadow_reflex_feedback(

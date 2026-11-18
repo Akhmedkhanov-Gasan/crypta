@@ -253,6 +253,10 @@ def _get_act_three_visibility(floor):
         transparent_cells.update(piercing_trial["fragile"])
         transparent_cells.update(item["position"] for item in piercing_trial["launchers"])
     closed_doors = set()
+    if floor.crushing_trial is not None and not floor.crushing_trial["door_open"]:
+        closed_doors.add(floor.crushing_trial["door"])
+    if floor.shield_trial is not None and floor.shield_trial["phase"] in ("closed", "opening"):
+        closed_doors.add(floor.shield_trial["door"])
 
     if floor.boss_door is not None and not floor.boss_fight_started:
         closed_doors.add(floor.boss_door)
@@ -301,6 +305,10 @@ def _get_act_three_visibility(floor):
 
         visible.difference_update(trial_cells(piercing_trial))
 
+    shield_trial = floor.shield_trial
+    if shield_trial is not None and shield_trial["phase"] in ("closed", "opening"):
+        left, top, right, bottom = shield_trial["bounds"]
+        visible.difference_update((x, y) for y in range(top, bottom + 1) for x in range(left, right))
     floor.explored_cells.update(visible)
     floor.visible_cells = visible
     return visible

@@ -736,11 +736,43 @@ def handle_act_three_pointer_event(
             from acts.act_three.piercing_trial import interact, interaction_cells
 
             crushing_trial = game_state.floor.crushing_trial
+            shield_trial = game_state.floor.shield_trial
+            if shield_trial is not None:
+                if shield_trial["phase"] in ("completion", "opening", "awakening", "extinguishing"):
+                    movement_state.cancel_auto_move()
+                    movement_state.reset_held_movement()
+                    return True
+                trial_cell = get_act_three_cell_from_position(game_state, game_mouse_position)
+                if trial_cell is not None:
+                    from acts.act_three.shield_trial import inside
+
+                    if trial_cell == shield_trial["door"]:
+                        origin = (game_state.floor.player_column, game_state.floor.player_row)
+                        direction = (trial_cell[0] - origin[0], trial_cell[1] - origin[1])
+                        if abs(direction[0]) + abs(direction[1]) == 1:
+                            from acts.act_three.shield_trial import handle_action
+
+                            handle_action(game_state, pygame.event.Event(pygame.KEYDOWN, key=pygame.K_SPACE), direction)
+                            return True
+                    if shield_trial["phase"] == "active" or inside(shield_trial, trial_cell) or trial_cell == shield_trial["door"]:
+                        start_auto_move(movement_state, game_state, trial_cell)
+                        return True
             if crushing_trial is not None:
                 if crushing_trial["stage"] is not None:
                     return True
                 trial_cell = get_act_three_cell_from_position(game_state, game_mouse_position)
                 origin = (game_state.floor.player_column, game_state.floor.player_row)
+                if trial_cell == crushing_trial["door"] and not crushing_trial["door_open"]:
+                    direction = (trial_cell[0] - origin[0], trial_cell[1] - origin[1])
+                    if abs(direction[0]) + abs(direction[1]) == 1:
+                        from acts.act_three.crushing_trial import handle_action
+
+                        handle_action(game_state, pygame.event.Event(pygame.KEYDOWN, key=pygame.K_SPACE), direction)
+                        movement_state.cancel_auto_move()
+                        movement_state.reset_held_movement()
+                    else:
+                        start_auto_move(movement_state, game_state, trial_cell)
+                    return True
                 rocks = {rock["cell"] for rock in crushing_trial["rocks"]}
                 if crushing_trial["active"] and trial_cell in rocks and abs(trial_cell[0] - origin[0]) + abs(trial_cell[1] - origin[1]) == 1:
                     from acts.act_three.crushing_trial import handle_action

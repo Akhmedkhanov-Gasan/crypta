@@ -128,7 +128,7 @@
 </data>
  </layer>
  <objectgroup id="13" name="Entities"/>
- <objectgroup id="11" name="Barriers">
+ <objectgroup id="11" name="Barriers" visible="0">
   <object id="6" x="68.094" y="175.358" width="7.5056" height="134.418"/>
   <object id="7" x="1011.07" y="122.137" width="8.18792" height="64.8211"/>
   <object id="8" x="1011.75" y="259.967" width="9.55258" height="124.866"/>
@@ -145,7 +145,7 @@
    <point/>
   </object>
  </objectgroup>
- <objectgroup id="10" name="Blocked">
+ <objectgroup id="10" name="Blocked" visible="0">
   <object id="1" x="332.837" y="66.1857" width="678.915" height="47.7629"/>
   <object id="2" x="78.3289" y="139.195" width="281.801" height="30.7047"/>
   <object id="3" x="73.5526" y="400.526" width="40.2573" height="99.6197"/>

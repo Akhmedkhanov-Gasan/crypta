@@ -8,6 +8,7 @@ from presentation.layout import ACT_THREE_TILE_SIZE
 from acts.act_three.crushing_trial import PUSH_MS, HOLD_MS
 from acts.act_three.presentation.piercing_trial import screen_position
 from acts.act_three.presentation.crushing_trial_effects import draw_completion
+from acts.act_three.presentation.trial_door import door_frames
 
 
 @lru_cache(maxsize=1)
@@ -24,6 +25,12 @@ def assets():
 def draw_layer(context, layer):
     trial = context.floor.crushing_trial
     if trial is None:
+        return
+    if layer == "ground":
+        elapsed = pygame.time.get_ticks() - trial["started"]
+        frame = min(7, elapsed // 80) if trial["stage"] == "door" else (7 if trial["door_open"] else 0)
+        context.view_surface.blit(door_frames()[frame], screen_position(context, trial["door"]))
+    if not trial["door_open"]:
         return
     sprites = assets()
     if layer == "ground":
