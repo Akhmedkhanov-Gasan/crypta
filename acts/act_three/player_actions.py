@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import pygame
 
 from acts.act_three.combat.attacks import attack_breakable_environment_object
+from acts.act_three.combat.pacing import player_attack_recovery_active
 from acts.act_three.environment_objects import get_breakable_environment_object
 from acts.player_abilities import resolve_targeted_player_ability
 from acts.act_three.npcs import get_npc_at, open_npc_dialog
@@ -189,6 +190,12 @@ def resolve_act_three_player_action(
         return ActThreePlayerActionResult(movement_blocked=True)
 
     enemy, chest, crate, secret_wall = _cell_targets(game_state, target)
+    if (
+        (enemy is not None or crate is not None or secret_wall)
+        and player_attack_recovery_active(player, started_at)
+    ):
+        return ActThreePlayerActionResult(movement_blocked=True)
+
     acted = False
     if enemy is not None:
         if player.subclass == "warlock":

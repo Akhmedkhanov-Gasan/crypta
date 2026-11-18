@@ -56,6 +56,27 @@ def apply_movement_interruptions(state, game_state, current_time):
         and position in enemy.attack_targets
         for enemy in floor.enemies
     )
+    safe_kill = (
+        floor.presentation_act == 3
+        and player.health > 0
+        and player_attacked
+        and any(
+            event.type is GameEventType.DEATH
+            and event.actor not in ("hero", "familiar")
+            for event in events
+        )
+        and not incoming_attack
+        and not player_hit_or_dodged
+        and not enemy_prepared_action
+        and not player_is_targeted
+        and not any(
+            enemy.health > 0 and enemy.is_aggro
+            for enemy in floor.enemies
+        )
+    )
+
+    if player_attacked:
+        state.resume_held_movement_after_attack = safe_kill
 
     pause_until = state.movement_input_locked_until
 
@@ -65,7 +86,7 @@ def apply_movement_interruptions(state, game_state, current_time):
             player.attack_animation_started_at
             + PLAYER_ATTACK_PAUSE_MS,
         )
-        if floor.presentation_act == 3:
+        if floor.presentation_act == 3 and not safe_kill:
             pause_until = max(pause_until, player_attack_recovery_until(player))
 
     if attack_feedback:
@@ -110,7 +131,7 @@ def apply_movement_interruptions(state, game_state, current_time):
     state.movement_input_locked_until = pause_until
 
     if (
-        player_attacked
+        (player_attacked and not safe_kill)
         or enemy_prepared_action
         or incoming_attack
         or player_hit_or_dodged

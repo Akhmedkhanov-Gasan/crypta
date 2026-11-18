@@ -83,7 +83,7 @@ def perform_archer_piercing_shot(
 
     if (
         not piercing_shot_ready(game_state)
-        or not is_valid_archer_attack_target(game_state, target, include_objects=False)
+        or not is_valid_archer_attack_target(game_state, target)
     ):
         return False
 

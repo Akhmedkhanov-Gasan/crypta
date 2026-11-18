@@ -4,7 +4,6 @@ from math import ceil
 import pygame
 
 from acts.crates import break_crate
-from acts.act_three.environment_objects import get_breakable_environment_object
 from acts.act_three.events import GameEvent, GameEventType
 from game.state import (
     EnemyState,
@@ -56,15 +55,6 @@ def _enemy_at(floor, target):
     )
 
 
-def _has_attack_target(floor, target, include_objects=True):
-    return _enemy_at(floor, target) is not None or (
-        include_objects
-        and floor.presentation_act == 3
-        and target in floor.visible_cells
-        and get_breakable_environment_object(floor, target) is not None
-    )
-
-
 def navigation_attack(game_state, target, *, origin=None):
     attacks = {
         "archer": (
@@ -105,14 +95,13 @@ def is_valid_archer_attack_target(
     target_cell: tuple[int, int],
     *,
     origin=None,
-    include_objects=True,
 ) -> bool:
     player = game_state.player
     floor = game_state.floor
     if player.subclass != "archer":
         return False
 
-    if not _has_attack_target(floor, target_cell, include_objects):
+    if _enemy_at(floor, target_cell) is None:
         return False
 
     if origin is None:
@@ -141,7 +130,7 @@ def is_valid_warlock_attack_target(
     if player.subclass != "warlock":
         return False
 
-    if not _has_attack_target(floor, target_cell):
+    if _enemy_at(floor, target_cell) is None:
         return False
 
     if origin is None:
@@ -180,10 +169,6 @@ def perform_warlock_attack(
     )
     hit_enemy = _enemy_at(floor, target_cell)
     started_at = pygame.time.get_ticks()
-    if hit_enemy is None:
-        return attack_breakable_environment_object(
-            game_state, get_breakable_environment_object(floor, target_cell), started_at,
-        )
     if floor.presentation_act == 3:
         player.act_three.environment_attack = None
         player.attack_animation_started_at = started_at
@@ -247,10 +232,6 @@ def perform_archer_attack(
     floor = game_state.floor
     hit_enemy = _enemy_at(floor, target_cell)
     started_at = pygame.time.get_ticks()
-    if hit_enemy is None:
-        return attack_breakable_environment_object(
-            game_state, get_breakable_environment_object(floor, target_cell), started_at,
-        )
     player.act_three.environment_attack = None
     player.attack_animation_started_at = started_at
     game_state.player_attack_targets = [target_cell]
@@ -292,7 +273,7 @@ def is_valid_summoner_attack_target(
     if player.subclass != "summoner":
         return False
 
-    if not _has_attack_target(floor, target_cell):
+    if _enemy_at(floor, target_cell) is None:
         return False
 
     if origin is None:
@@ -334,10 +315,6 @@ def perform_summoner_attack(
     )
     hit_enemy = _enemy_at(floor, target_cell)
     started_at = pygame.time.get_ticks()
-    if hit_enemy is None:
-        return attack_breakable_environment_object(
-            game_state, get_breakable_environment_object(floor, target_cell), started_at,
-        )
     player.act_three.environment_attack = None
     player.attack_animation_started_at = started_at
     game_state.player_attack_targets = [target_cell]

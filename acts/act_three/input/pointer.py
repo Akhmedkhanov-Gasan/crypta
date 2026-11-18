@@ -460,7 +460,7 @@ def handle_act_three_pointer_event(
             valid = (
                 target_cell is not None
                 and is_valid_archer_attack_target(
-                    game_state, target_cell, include_objects=False,
+                    game_state, target_cell,
                 )
             )
             if valid:
@@ -784,7 +784,6 @@ def handle_act_three_pointer_event(
                     and is_valid_archer_attack_target(
                         game_state,
                         target_cell,
-                        include_objects=not game_state.player.archer_piercing_aiming,
                     )
                 ):
                     piercing = game_state.player.archer_piercing_aiming

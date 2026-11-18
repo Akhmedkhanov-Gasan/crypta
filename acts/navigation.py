@@ -162,7 +162,7 @@ def navigation_action(game_state, origin, target, has_enemy):
                 return {"navigation_altar": True}
             return None
 
-        if has_enemy or get_breakable_environment_object(floor, target) is not None:
+        if has_enemy:
             attack = navigation_attack(
                 game_state,
                 target,

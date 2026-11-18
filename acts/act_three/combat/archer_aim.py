@@ -1,5 +1,3 @@
-from functools import partial
-
 from acts.act_three.combat.attacks import (
     is_valid_archer_attack_target,
 )
@@ -7,14 +5,8 @@ from acts.act_three.combat.enemy_aim import enemy_aim_targets
 from game.combat_log import add_log_message
 
 
-def archer_aim_targets(game_state, *, piercing=None):
-    if piercing is None:
-        piercing = game_state.player.archer_piercing_aiming
-    return enemy_aim_targets(
-        game_state,
-        partial(is_valid_archer_attack_target, include_objects=not piercing),
-        include_objects=not piercing,
-    )
+def archer_aim_targets(game_state):
+    return enemy_aim_targets(game_state, is_valid_archer_attack_target)
 
 
 def begin_archer_aim(game_state, current_time, piercing=False):
@@ -22,7 +14,7 @@ def begin_archer_aim(game_state, current_time, piercing=False):
     if player.subclass != "archer" or player.health <= 0:
         return False
 
-    targets = archer_aim_targets(game_state, piercing=piercing)
+    targets = archer_aim_targets(game_state)
     if not targets:
         add_log_message(
             game_state.combat_log,

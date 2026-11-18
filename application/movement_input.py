@@ -200,7 +200,8 @@ def create_held_movement_event(
 
     if profile.step_duration_ms > 0:
         if movement_input_is_locked(state, current_time):
-            state.reset_held_movement()
+            if not state.resume_held_movement_after_attack:
+                state.reset_held_movement()
             return None
 
         if current_time < state.next_step_at:
@@ -293,7 +294,8 @@ def accept_movement_direction(
         return True
 
     if movement_input_is_locked(state, current_time):
-        state.reset_held_movement()
+        if not state.resume_held_movement_after_attack:
+            state.reset_held_movement()
         return False
 
     if direction == (0, 0):

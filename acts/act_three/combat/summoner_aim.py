@@ -6,7 +6,7 @@ from acts.act_three.combat.enemy_aim import enemy_aim_targets, next_enemy_aim_ta
 
 
 def summoner_aim_targets(game_state):
-    return enemy_aim_targets(game_state, is_valid_summoner_attack_target, include_objects=True)
+    return enemy_aim_targets(game_state, is_valid_summoner_attack_target)
 
 
 def begin_summoner_aim(game_state, current_time):

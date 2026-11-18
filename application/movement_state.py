@@ -10,6 +10,7 @@ class MovementInputState:
     pending_movement_requires_hold: bool = False
     next_held_move_at: int = 0
     movement_input_locked_until: int = 0
+    resume_held_movement_after_attack: bool = False
     next_step_at: int = 0
     movement_revision: int = 0
     movement_scope: tuple[int, int] | None = None
@@ -21,6 +22,7 @@ class MovementInputState:
     next_auto_move_at: int = 0
 
     def reset_held_movement(self):
+        self.resume_held_movement_after_attack = False
         self.held_movement_keys.clear()
         self.held_direction = (0, 0)
         self.pending_movement_direction = None

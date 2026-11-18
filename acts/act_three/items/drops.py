@@ -27,10 +27,9 @@ CRATE_DROPS = (
     ("blast_charge", 25),
     ("burial_relic", 10),
 )
-URN_DROPS = (("silverware", 300),)
 MONSTER_DROPS = (("monster_parts", 1800), ("burial_relic", 10))
 ORE_DROPS = (("gemstone", 1200),)
-ENVIRONMENT_OBJECT_DROPS = {**dict.fromkeys(CRATE_TILE_IDS, CRATE_DROPS), 9: URN_DROPS}
+ENVIRONMENT_OBJECT_DROPS = dict.fromkeys(CRATE_TILE_IDS, CRATE_DROPS)
 DROP_ITEM_IDS = frozenset(
     item for table in (*ENVIRONMENT_OBJECT_DROPS.values(), MONSTER_DROPS) for item, _ in table
 )

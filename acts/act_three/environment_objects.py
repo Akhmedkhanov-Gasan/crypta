@@ -5,7 +5,7 @@ from acts.act_three.tile_catalog import (
 )
 
 
-CRATE_TILE_IDS = (0, 18, 36)
+CRATE_TILE_IDS = (0, 9, 18, 36)
 
 
 def get_breakable_environment_object(floor, position):

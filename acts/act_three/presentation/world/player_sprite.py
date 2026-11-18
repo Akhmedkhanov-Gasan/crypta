@@ -237,6 +237,7 @@ def select_player_sprite(
 
     if (
         player_state.subclass == "summoner"
+        and not context.locomotion_pose.active
         and 0
         <= player_state.attack_elapsed
         < SUMMONER_ATTACK_DURATION_MS
@@ -252,7 +253,10 @@ def select_player_sprite(
             False,
         )
 
-    if 0 <= player_state.attack_elapsed < attack_frame_duration:
+    if (
+        0 <= player_state.attack_elapsed < attack_frame_duration
+        and not context.locomotion_pose.active
+    ):
         return (
             _attack_sprite(
                 player_state.subclass,

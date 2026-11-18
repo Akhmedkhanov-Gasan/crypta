@@ -109,6 +109,13 @@ class GameplayKeyboardController:
             return game_state
         if (
             current_act == 3
+            and not (
+                self.movement_state.resume_held_movement_after_attack
+                and (
+                    event.key in MOVEMENT_KEYS
+                    or getattr(event, "movement_direction", None) is not None
+                )
+            )
             and player_attack_recovery_active(
                 game_state.player,
                 pygame.time.get_ticks(),
@@ -157,7 +164,16 @@ class GameplayKeyboardController:
                 pygame.time.get_ticks(),
             )
         ):
-            self.movement_state.reset_held_movement()
+            if self.movement_state.resume_held_movement_after_attack:
+                if event.key in MOVEMENT_KEYS and not automatic_movement:
+                    begin_held_movement(
+                        self.movement_state,
+                        event.key,
+                        pygame.time.get_ticks(),
+                        profile=movement_profile,
+                    )
+            else:
+                self.movement_state.reset_held_movement()
             return game_state
 
         if not automatic_movement:

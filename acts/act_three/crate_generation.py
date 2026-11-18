@@ -3,7 +3,7 @@ from collections import defaultdict
 from math import ceil
 
 from acts.act_three.enemies.generation import enemy_spawn_cells
-from acts.act_three.environment_objects import CRATE_TILE_IDS, breakable_environment_gids
+from acts.act_three.environment_objects import breakable_environment_gids
 from acts.act_three.settings import (
     ACT_THREE_CELLS_PER_CRATE,
     ACT_THREE_MAX_CRATES_PER_ROOM,
@@ -14,7 +14,6 @@ from acts.act_three.spawn_regions import (
     room_entrances,
     spawn_regions,
 )
-from acts.act_three.tile_catalog import ENVIRONMENT_OBJECTS_TILESET_PATH, tileset_catalog
 from acts.act_three.world_geometry import reachable_cells
 
 
@@ -41,9 +40,7 @@ def populate_act_three_crates(floor):
     if not regions:
         return
 
-    first_gid, _ = tileset_catalog()[ENVIRONMENT_OBJECTS_TILESET_PATH]
-    crate_gids = breakable_environment_gids()
-    variants = [first_gid + tile_id for tile_id in CRATE_TILE_IDS if first_gid + tile_id in crate_gids]
+    variants = sorted(breakable_environment_gids())
     if not variants:
         return
 
