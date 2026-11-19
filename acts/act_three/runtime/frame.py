@@ -42,6 +42,9 @@ def advance_act_three_frame(game_state, current_act, current_time, sounds):
         from acts.act_three.shield_trial import advance_frame as advance_shield_trial
 
         advance_shield_trial(game_state, current_time)
+        from acts.act_three.curse_trial import advance_frame as advance_curse_trial
+
+        advance_curse_trial(game_state, current_time)
         advance_npc_dialog(game_state, current_time)
         advance_mining(game_state, current_time)
         sounds.update(game_state.player, current_time)

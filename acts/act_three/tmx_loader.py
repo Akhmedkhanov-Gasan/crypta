@@ -458,6 +458,9 @@ def load_tmx_floor(path):
     from acts.act_three.shield_trial import build_trial as build_shield_trial
 
     shield_trial = build_shield_trial(by_name, width, height, dungeon_map)
+    from acts.act_three.curse_trial import build_trial as build_curse_trial
+
+    curse_trial = build_curse_trial(by_name, width, height, dungeon_map)
     trial_doors = by_name.get("trial_door", [])
     trial_entrance = trial_doors[0][0] if trial_doors else None
     if shield_trial is not None:
@@ -471,6 +474,7 @@ def load_tmx_floor(path):
         "piercing_trial": piercing_trial,
         "crushing_trial": crushing_trial,
         "shield_trial": shield_trial,
+        "curse_trial": curse_trial,
         "player_start": player_start,
         "enemies": enemies,
         "chests": chests,

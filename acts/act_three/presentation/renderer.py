@@ -519,6 +519,9 @@ def draw_act_three_gameplay(
     )
     if game_state.act_three_transition_open:
         return
+    from acts.act_three.presentation.curse_trial import draw_spirit_view
+
+    draw_spirit_view(screen, game_state, assets, current_time)
     draw_floor_indicator(
         screen,
         fonts["text"],

@@ -253,6 +253,8 @@ def _get_act_three_visibility(floor):
         transparent_cells.update(piercing_trial["fragile"])
         transparent_cells.update(item["position"] for item in piercing_trial["launchers"])
     closed_doors = set()
+    if floor.curse_trial is not None and floor.curse_trial["phase"] in ("closed", "opening"):
+        closed_doors.add(floor.curse_trial["door"])
     if floor.crushing_trial is not None and not floor.crushing_trial["door_open"]:
         closed_doors.add(floor.crushing_trial["door"])
     if floor.shield_trial is not None and floor.shield_trial["phase"] in ("closed", "opening"):

@@ -137,6 +137,7 @@ def _compose(placements, connections):
     piercing_trial = None
     crushing_trial = None
     shield_trial = None
+    curse_trial = None
     trial_entrance = None
     open_connectors = []
 
@@ -168,6 +169,11 @@ def _compose(placements, connections):
             from acts.act_three.shield_trial import shift_trial as shift_shield_trial
 
             shield_trial = shift_shield_trial(template["shield_trial"], offset)
+
+        if template.get("curse_trial") is not None:
+            from acts.act_three.curse_trial import shift_trial as shift_curse_trial
+
+            curse_trial = shift_curse_trial(template["curse_trial"], offset)
 
         if template.get("crushing_trial") is not None:
             from acts.act_three.crushing_trial import shift_trial as shift_crushing_trial
@@ -293,6 +299,7 @@ def _compose(placements, connections):
         "piercing_trial": piercing_trial,
         "crushing_trial": crushing_trial,
         "shield_trial": shield_trial,
+        "curse_trial": curse_trial,
         "trial_entrance": trial_entrance,
         "encounter_zones": encounter_zones,
         "spawn_regions": spawn_regions,

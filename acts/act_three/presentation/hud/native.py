@@ -86,7 +86,9 @@ class NativeActThreeHud:
         viewport, _ = game_viewport(window.get_size())
         target = window.subsurface(viewport)
 
-        if not game_state.act_three_transition_open:
+        from acts.act_three.curse_trial import is_spirit
+
+        if not game_state.act_three_transition_open and not is_spirit(game_state.floor.curse_trial):
             prepared = self._prepare_assets(assets, viewport.size)
             mouse = pygame.mouse.get_pos()
             mouse_position = (

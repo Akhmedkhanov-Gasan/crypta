@@ -5,8 +5,7 @@ import pygame
 
 from presentation.layout import ACT_THREE_TILE_SIZE, ACT_THREE_VIEW_X, ACT_THREE_VIEW_WIDTH
 from acts.act_three.presentation.piercing_trial import screen_position
-from acts.act_three.presentation.piercing_trial_effects import glow, center
-from acts.act_three.presentation.ability_unlock_banner import draw_unlock_banner
+from acts.act_three.presentation.piercing_trial_effects import glow
 from acts.act_three.presentation.trial_door import door_frames
 
 
@@ -121,35 +120,9 @@ def draw_overlay(context):
     trial = context.floor.shield_trial
     if trial is None or trial.get("completed") is None:
         return
-    now = pygame.time.get_ticks()
-    elapsed = now - trial["completed"]
-    if not 0 <= elapsed < 4200:
-        return
-    surface = context.view_surface
-    size = ACT_THREE_TILE_SIZE
-    px, py = center(context, trial["completion_origin"])
-    energy = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
-    for number, cell in enumerate(trial["cells"]):
-        sx, sy = center(context, cell)
-        t = (elapsed - number * 28) / 1150
-        if 0 < t < 1:
-            eased = t * t * (3 - 2 * t)
-            x = sx + (px - sx) * eased
-            y = sy + (py - sy) * eased - math.sin(t * math.pi) * size * .6
-            alpha = round(210 * math.sin(t * math.pi))
-            pygame.draw.line(energy, (218, 185, 107, alpha), (x, y), (x, y + 6), 2)
-    impact = max(0, min(1, (elapsed - 1200) / 1900))
-    if 0 < impact < 1:
-        aura = glow(size, (211, 168, 74))
-        aura.set_alpha(round(220 * math.sin(impact * math.pi)))
-        energy.blit(aura, (round(px - size), round(py - size * 1.3)))
-        for index in range(24):
-            angle = index * 2.399
-            x = px + math.cos(angle) * size * .55 * (1 - impact)
-            y = py + math.sin(angle) * size * .2 - impact * size * 1.4
-            pygame.draw.line(energy, (235, 211, 155, round(180 * math.sin(impact * math.pi))), (x, y), (x, y + 5), 2)
-    surface.blit(energy, (0, 0))
-    draw_unlock_banner(surface, elapsed - 700, "SHIELD CHARGE", (237, 220, 164), (193, 165, 103), (23, 21, 14))
+    from acts.act_three.presentation.shield_trial_rite import draw_completion
+
+    draw_completion(context, trial, pygame.time.get_ticks())
 
 
 def draw_hint(screen, trial, font, top):

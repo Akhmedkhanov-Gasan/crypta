@@ -324,6 +324,7 @@ def create_floor_state(
         piercing_trial=floor.get("piercing_trial"),
         crushing_trial=floor.get("crushing_trial"),
         shield_trial=floor.get("shield_trial"),
+        curse_trial=floor.get("curse_trial"),
         trial_entrance=floor.get("trial_entrance"),
         bloody_altar=bloody_altar,
         trader=trader,

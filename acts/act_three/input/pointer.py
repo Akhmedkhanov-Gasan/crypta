@@ -131,6 +131,10 @@ def handle_act_three_pointer_event(
     movement_state,
     movement_available,
 ):
+    from acts.act_three.input.curse_trial import handle_pointer as handle_curse_pointer
+
+    if handle_curse_pointer(event, game_state, lambda position: window_to_game_position(screen, position), movement_state):
+        return True
     if (
         event.type == pygame.MOUSEBUTTONDOWN
         and event.button == 1
@@ -736,6 +740,23 @@ def handle_act_three_pointer_event(
             from acts.act_three.piercing_trial import interact, interaction_cells
 
             crushing_trial = game_state.floor.crushing_trial
+            curse_trial = game_state.floor.curse_trial
+            if curse_trial is not None and curse_trial["phase"] in ("closed", "opening", "ready"):
+                if curse_trial["phase"] == "opening":
+                    return True
+                cell = get_act_three_cell_from_position(game_state, game_mouse_position)
+                if cell in (curse_trial["door"], curse_trial["start"]):
+                    origin = (game_state.floor.player_column, game_state.floor.player_row)
+                    direction = (cell[0] - origin[0], cell[1] - origin[1])
+                    if abs(direction[0]) + abs(direction[1]) == 1:
+                        from acts.act_three.curse_trial import handle_action
+
+                        handle_action(game_state, pygame.event.Event(pygame.KEYDOWN, key=pygame.K_SPACE), direction)
+                        movement_state.cancel_auto_move()
+                        movement_state.reset_held_movement()
+                    else:
+                        start_auto_move(movement_state, game_state, cell)
+                    return True
             shield_trial = game_state.floor.shield_trial
             if shield_trial is not None:
                 if shield_trial["phase"] in ("completion", "opening", "awakening", "extinguishing"):

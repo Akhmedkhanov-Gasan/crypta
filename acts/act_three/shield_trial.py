@@ -14,7 +14,7 @@ def neighbors(index):
 
 
 def build_trial(markers, width, height, dungeon_map):
-    if not markers.get("start_trial"):
+    if not markers.get("start_trial") or markers.get("curse_shackle_left"):
         return None
     start = markers["start_trial"][0][0]
     left, top = (width - 4) // 2, start[1] - 4

@@ -4,7 +4,6 @@ from functools import lru_cache
 import pygame
 
 from presentation.layout import ACT_THREE_TILE_SIZE
-from acts.act_three.presentation.ability_unlock_banner import draw_unlock_banner
 
 
 def center(context, cell):
@@ -52,34 +51,6 @@ def draw_target_effects(context, trial, now):
 def draw_completion(context, trial, now):
     if trial["phase"] != "complete":
         return
-    elapsed = now - trial["completed"]
-    if not 0 <= elapsed < 3400:
-        return
-    size = ACT_THREE_TILE_SIZE
-    surface = context.view_surface
-    player = (context.floor.player_column, context.floor.player_row)
-    px, py = center(context, player)
-    energy = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
-    for target in trial["targets"]:
-        sx, sy = center(context, target["position"])
-        for index in range(6):
-            progress = max(0, min(1, (elapsed - 140 - index * 85) / 1100))
-            if not 0 < progress < 1:
-                continue
-            t = progress * progress * (3 - 2 * progress)
-            x = sx + (px - sx) * t
-            y = sy + (py - sy) * t - math.sin(progress * math.pi) * size * .55
-            alpha = round(170 * math.sin(progress * math.pi))
-            pygame.draw.line(energy, (151, 173, 111, alpha), (x, y), (x - (px - sx) * .025, y + 5), 2)
-    pulse = max(0, 1 - abs(elapsed - 1450) / 850)
-    aura = glow(size, (107, 137, 76))
-    aura.set_alpha(round(210 * pulse))
-    energy.blit(aura, (round(px - size), round(py - size * 1.25)))
-    for index in range(16):
-        t = max(0, min(1, (elapsed - 1100 - index * 20) / 1350))
-        if 0 < t < 1:
-            x = px + math.sin(index * 2.399) * size * .35 * (1 - t)
-            y = py - size * t * 1.1
-            pygame.draw.line(energy, (161, 180, 122, round(155 * math.sin(t * math.pi))), (x, y), (x, y + 5), 2)
-    surface.blit(energy, (0, 0))
-    draw_unlock_banner(surface, elapsed, "PIERCING SHOT", (208, 216, 174), (158, 171, 136), (10, 15, 12))
+    from acts.act_three.presentation.piercing_trial_rite import draw_completion as draw_rite
+
+    draw_rite(context, trial, now)

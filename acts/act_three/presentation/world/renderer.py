@@ -1659,6 +1659,9 @@ def _draw_act_three_world(
     from acts.act_three.presentation.shield_trial import draw_overlay as draw_shield_overlay
 
     draw_shield_overlay(context)
+    from acts.act_three.presentation.curse_trial_effects import draw_body_rite
+
+    draw_body_rite(context, current_time)
 
     if player_subclass == "assassin":
         draw_shadow_reflex_feedback(

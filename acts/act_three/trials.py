@@ -1,4 +1,5 @@
 TRIAL_MAPS = {
+    "warlock": "assets/maps/act_3/trials/warlock_curse/warlock_curse.tmx",
     "paladin": "assets/maps/act_3/trials/paladin_shield_charge/paladin_shield_charge.tmx",
     "berserker": "assets/maps/act_3/trials/berserker_crushing_leap/berserker_crushing_leap.tmx",
     "assassin": "assets/maps/act_3/trials/assassin_shadow_step/assassin_shadow_step.tmx",
@@ -27,6 +28,10 @@ def teleport_to_trial(game_state):
     piercing_trial = game_state.floor.piercing_trial
     crushing_trial = game_state.floor.crushing_trial
     shield_trial = game_state.floor.shield_trial
+    from acts.act_three.curse_trial import is_spirit
+
+    if is_spirit(game_state.floor.curse_trial) or (game_state.floor.curse_trial is not None and game_state.floor.curse_trial["phase"] == "body_rite"):
+        return "Return to your body first."
     if shield_trial is not None and shield_trial["phase"] in ("completion", "opening", "awakening", "extinguishing"):
         return "Wait for the trial animation to finish."
     if crushing_trial is not None and crushing_trial["stage"] is not None:
@@ -54,7 +59,8 @@ def teleport_to_trial(game_state):
     expected_archer = game_state.player.subclass == "archer"
     expected_berserker = game_state.player.subclass == "berserker"
     expected_paladin = game_state.player.subclass == "paladin"
-    if floor is None or (floor.piercing_trial is not None) != expected_archer or (floor.crushing_trial is not None) != expected_berserker or (floor.shield_trial is not None) != expected_paladin:
+    expected_warlock = game_state.player.subclass == "warlock"
+    if floor is None or (floor.piercing_trial is not None) != expected_archer or (floor.crushing_trial is not None) != expected_berserker or (floor.shield_trial is not None) != expected_paladin or (floor.curse_trial is not None) != expected_warlock:
         floor = create_floor_state(
             target_index,
             trial_subclass=game_state.player.subclass,

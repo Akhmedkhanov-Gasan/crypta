@@ -37,6 +37,9 @@ def draw_world_terrain(context):
     from acts.act_three.presentation.shield_trial import draw_ground as draw_shield_ground
 
     draw_shield_ground(context)
+    from acts.act_three.presentation.curse_trial import draw_ground as draw_curse_ground
+
+    draw_curse_ground(context)
     draw_crushing_layer(context, "back")
     draw_crushing_layer(context, "front")
     draw_tile_layers(

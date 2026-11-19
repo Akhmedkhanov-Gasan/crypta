@@ -148,6 +148,10 @@ def _commit_summoner_turn():
 
 
 def handle_act_three_key_event(event, game_state, *, belt_available=False):
+    from acts.act_three.curse_trial import handle_key as handle_curse_key
+
+    if game_state.floor.presentation_act == 3 and handle_curse_key(event, game_state):
+        return True
     from acts.act_three.shield_trial import handle_key as handle_shield_key
 
     if game_state.floor.presentation_act == 3 and handle_shield_key(event, game_state):
