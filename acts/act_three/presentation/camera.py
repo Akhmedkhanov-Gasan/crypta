@@ -153,6 +153,11 @@ def act_three_camera_position():
     return round(_CAMERA.x), round(_CAMERA.y)
 
 
+def snap_act_three_camera(floor, current_time):
+    _CAMERA.floor_index = -1
+    update_act_three_camera(floor, current_time)
+
+
 def act_three_centered_camera_position(floor, position):
     view_width, view_height = act_three_world_view_size(floor)
 

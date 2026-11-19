@@ -1,4 +1,5 @@
 TRIAL_MAPS = {
+    "summoner": "assets/maps/act_3/trials/summoner_release_familiar/summoner_release_familiar.tmx",
     "warlock": "assets/maps/act_3/trials/warlock_curse/warlock_curse.tmx",
     "paladin": "assets/maps/act_3/trials/paladin_shield_charge/paladin_shield_charge.tmx",
     "berserker": "assets/maps/act_3/trials/berserker_crushing_leap/berserker_crushing_leap.tmx",
@@ -30,6 +31,10 @@ def teleport_to_trial(game_state):
     shield_trial = game_state.floor.shield_trial
     from acts.act_three.curse_trial import is_spirit
 
+    from acts.act_three.summoner_trial import in_scene
+    if in_scene(game_state.floor.summoner_trial) or (game_state.floor.summoner_trial is not None and game_state.floor.summoner_trial["phase"] == "opening"):
+        return "Wait for the trial scene to finish."
+
     if is_spirit(game_state.floor.curse_trial) or (game_state.floor.curse_trial is not None and game_state.floor.curse_trial["phase"] == "body_rite"):
         return "Return to your body first."
     if shield_trial is not None and shield_trial["phase"] in ("completion", "opening", "awakening", "extinguishing"):
@@ -60,7 +65,8 @@ def teleport_to_trial(game_state):
     expected_berserker = game_state.player.subclass == "berserker"
     expected_paladin = game_state.player.subclass == "paladin"
     expected_warlock = game_state.player.subclass == "warlock"
-    if floor is None or (floor.piercing_trial is not None) != expected_archer or (floor.crushing_trial is not None) != expected_berserker or (floor.shield_trial is not None) != expected_paladin or (floor.curse_trial is not None) != expected_warlock:
+    expected_summoner = game_state.player.subclass == "summoner"
+    if floor is None or (floor.piercing_trial is not None) != expected_archer or (floor.crushing_trial is not None) != expected_berserker or (floor.shield_trial is not None) != expected_paladin or (floor.curse_trial is not None) != expected_warlock or (floor.summoner_trial is not None) != expected_summoner:
         floor = create_floor_state(
             target_index,
             trial_subclass=game_state.player.subclass,

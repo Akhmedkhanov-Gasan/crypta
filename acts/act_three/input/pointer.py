@@ -132,6 +132,10 @@ def handle_act_three_pointer_event(
     movement_available,
 ):
     from acts.act_three.input.curse_trial import handle_pointer as handle_curse_pointer
+    from acts.act_three.input.summoner_trial import handle_pointer as handle_summoner_pointer
+
+    if handle_summoner_pointer(event, game_state, lambda position: window_to_game_position(screen, position), movement_state):
+        return True
 
     if handle_curse_pointer(event, game_state, lambda position: window_to_game_position(screen, position), movement_state):
         return True

@@ -30,6 +30,7 @@ CONSOLE_COMMANDS = (
     "trade",
     "skills",
     "trial",
+    "trialwin",
 )
 
 CONSOLE_HELP = (

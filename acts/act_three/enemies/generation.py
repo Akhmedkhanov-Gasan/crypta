@@ -65,6 +65,7 @@ def _candidates(floor, region, enemy_type, occupied, reachable, settings):
 
 def populate_act_three_enemies(floor, act_floor):
     occupied = reserved_spawn_positions(floor)
+    occupied.update(floor.get("trial_safe_cells", ()))
     for enemy in floor["enemies"]:
         cells = enemy_spawn_cells(enemy["type"], enemy["position"])
         if not _fits(floor, cells, occupied):

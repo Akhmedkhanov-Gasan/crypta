@@ -81,6 +81,13 @@ class GameplayKeyboardController:
         movement_profile,
     ):
         barrage_resume = getattr(event, "archer_barrage_resume", False)
+        from acts.act_three.summoner_trial import busy as summoner_trial_busy, handle_key as handle_summoner_key
+
+        if current_act == 3 and summoner_trial_busy(game_state.floor.summoner_trial) and event.key != pygame.K_ESCAPE:
+            self.movement_state.reset_held_movement()
+            self.movement_state.cancel_auto_move()
+            handle_summoner_key(event, game_state)
+            return game_state
         from acts.act_three.curse_trial import is_spirit, handle_key as handle_curse_key
 
         if current_act == 3 and (is_spirit(game_state.floor.curse_trial) or (game_state.floor.curse_trial is not None and game_state.floor.curse_trial["phase"] == "body_rite")):

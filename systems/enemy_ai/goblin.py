@@ -385,6 +385,7 @@ def _goblin_summon_positions(
 
             if (
                 position in occupied_positions
+                or position in floor.trial_safe_cells
                 or not can_move_to(
                     floor.map,
                     position[0],

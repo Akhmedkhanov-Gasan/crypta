@@ -461,6 +461,14 @@ def load_tmx_floor(path):
     from acts.act_three.curse_trial import build_trial as build_curse_trial
 
     curse_trial = build_curse_trial(by_name, width, height, dungeon_map)
+    from acts.act_three.summoner_trial import build_trial as build_summoner_trial
+
+    water = set()
+    for group in root.findall("objectgroup"):
+        if group.get("name", "").lower() == "water":
+            rectangles = [(float(obj.get("x", 0)), float(obj.get("y", 0)), float(obj.get("width", 0)), float(obj.get("height", 0))) for obj in group.findall("object")]
+            water.update((x, y) for y in range(height) for x in range(width) if _blocked(x, y, rectangles, tile_size))
+    summoner_trial = build_summoner_trial(by_name, width, height, dungeon_map, water)
     trial_doors = by_name.get("trial_door", [])
     trial_entrance = trial_doors[0][0] if trial_doors else None
     if shield_trial is not None:
@@ -470,11 +478,13 @@ def load_tmx_floor(path):
         "enemy_spawn_mode": map_properties.get("enemy_spawn_mode", "false").lower() == "true",
         "map": ["".join(row) for row in dungeon_map],
         "trial_entrance": trial_entrance,
+        "trial_safe_cells": {(x, y) for y in range(height) for x in range(width)} if trial_entrance is not None else set(),
         "shadow_step_trial": shadow_step_trial,
         "piercing_trial": piercing_trial,
         "crushing_trial": crushing_trial,
         "shield_trial": shield_trial,
         "curse_trial": curse_trial,
+        "summoner_trial": summoner_trial,
         "player_start": player_start,
         "enemies": enemies,
         "chests": chests,

@@ -5,6 +5,7 @@ from acts.act_three.abilities import (
 
 
 ACT_THREE_CONSOLE_HELP = (
+    "trialwin - complete your trial and preview the unlock effect (repeatable)",
     "trial - teleport to your class trial entrance (Act III)",
     "wake3[_warrior|_rogue|_mage] - jump to the post-Oracle awakening scene",
     "skills - unlock all abilities and disable charges (Act III)",
@@ -18,6 +19,15 @@ def execute_act_three_console_command(
     request_debug_jump=None,
 ):
     name = parts[0]
+    if name == "trialwin":
+        from acts.act_three.trial_preview import complete_trial
+
+        if len(parts) != 1:
+            return "Usage: trialwin"
+        result = complete_trial(game_state)
+        if result == "Trial completion effect started." and close_console is not None:
+            close_console()
+        return result
 
     if name == "trial":
         from acts.act_three.trials import teleport_to_trial

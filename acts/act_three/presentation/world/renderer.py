@@ -435,6 +435,11 @@ def _draw_act_three_world(
         player_sprite = player_sprite.copy()
         player_sprite.set_alpha(255)
 
+    from acts.act_three.summoner_trial import aboard
+
+    if aboard(floor.summoner_trial, current_time):
+        player_sprite.fill((0, 0, 0, 0))
+
     if (
         player_subclass == "assassin"
         and game_state.player.ultimate_animation_active
@@ -1517,7 +1522,7 @@ def _draw_act_three_world(
                 )
                 ),
             )
-    elif player_subclass == "summoner" and player_death_elapsed is None:
+    elif player_subclass == "summoner" and player_death_elapsed is None and not aboard(floor.summoner_trial, current_time):
         _draw_summoner_idle_lights(
             view_surface,
             player_effect_position[0],
@@ -1636,6 +1641,11 @@ def _draw_act_three_world(
         if game_state.player.act_three.mining is not None
         else player_position
     )
+    from acts.act_three.summoner_trial import focus_cell
+
+    trial_focus = focus_cell(floor.summoner_trial, current_time)
+    if trial_focus is not None:
+        visibility_position = _view_position(trial_focus[0], trial_focus[1], camera_x, camera_y)
     _draw_fog_of_war(
         view_surface,
         floor,
@@ -1662,6 +1672,9 @@ def _draw_act_three_world(
     from acts.act_three.presentation.curse_trial_effects import draw_body_rite
 
     draw_body_rite(context, current_time)
+    from acts.act_three.presentation.summoner_trial import draw_overlay as draw_summoner_overlay
+
+    draw_summoner_overlay(context, game_state, current_time)
 
     if player_subclass == "assassin":
         draw_shadow_reflex_feedback(

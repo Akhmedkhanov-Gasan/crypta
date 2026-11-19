@@ -259,6 +259,8 @@ def _apply_forced_knockback(
     destination: tuple[int, int],
     movement_kind: str,
 ) -> None:
+    if any((destination[0] + dx, destination[1] + dy) in game_state.floor.trial_safe_cells for dy in range(enemy.footprint_height) for dx in range(enemy.footprint_width)):
+        return
     origin = (enemy.column, enemy.row)
     enemy.column, enemy.row = destination
     enemy.skip_next_movement = True

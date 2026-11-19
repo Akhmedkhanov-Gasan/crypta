@@ -236,6 +236,11 @@ def _line_of_sight(
 def _get_act_three_visibility(floor):
     """Calculate current sight and remember cells seen earlier."""
     origin = (floor.player_column, floor.player_row)
+    from acts.act_three.summoner_trial import focus_cell
+
+    trial_focus = focus_cell(floor.summoner_trial, pygame.time.get_ticks())
+    if trial_focus is not None:
+        origin = round(trial_focus[0]), round(trial_focus[1])
     floor.act_three_exploration_origins.add(origin)
     visible = set()
     radius = ACT_THREE_VISION_RADIUS_TILES
@@ -253,6 +258,11 @@ def _get_act_three_visibility(floor):
         transparent_cells.update(piercing_trial["fragile"])
         transparent_cells.update(item["position"] for item in piercing_trial["launchers"])
     closed_doors = set()
+    if floor.summoner_trial is not None and floor.summoner_trial["phase"] in ("closed", "opening"):
+        closed_doors.add(floor.summoner_trial["door"])
+    if floor.summoner_trial is not None:
+        transparent_cells.update(floor.summoner_trial["water"])
+        transparent_cells.update(floor.summoner_trial["occupied"])
     if floor.curse_trial is not None and floor.curse_trial["phase"] in ("closed", "opening"):
         closed_doors.add(floor.curse_trial["door"])
     if floor.crushing_trial is not None and not floor.crushing_trial["door_open"]:

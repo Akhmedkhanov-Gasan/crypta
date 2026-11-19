@@ -236,6 +236,10 @@ def resolve_enemy_turn(
 ) -> None:
     if hazard_costs is None:
         hazard_costs = {}
+    from acts.act_three.trial_safety import player_is_safe, maintain_safety
+
+    maintain_safety(game_state)
+    player_in_trial = player_is_safe(game_state.floor)
     if run_prelude:
         update_oracle_projectiles(game_state)
         resolve_summoner_familiar_turn(game_state)
@@ -375,6 +379,11 @@ def resolve_enemy_turn(
                 )
             continue
 
+        if player_in_trial:
+            from acts.act_three.trial_safety import idle_turn
+
+            idle_turn(game_state, enemy, hazard_costs)
+            continue
         if (
             enemy.type == "warden"
             and resolve_warden_reposition(game_state, enemy)
@@ -773,6 +782,9 @@ def resolve_enemy_turn(
             for chest in game_state.floor["chests"]
             if not chest["is_open"]
         )
+        from acts.act_three.trial_safety import blocked_anchors
+
+        occupied_positions.update(blocked_anchors(game_state.floor, enemy))
         occupied_positions.update(
             (crate.column, crate.row)
             for crate in game_state.floor.breakable_crates
@@ -808,6 +820,7 @@ def resolve_enemy_turn(
             for crate in game_state.floor.breakable_crates
             if not crate.is_broken
         )
+        attack_blocking_positions.update(game_state.floor.trial_safe_cells)
         turn_handler = (
             enemy_turn_handlers.get(enemy.type)
             if enemy_turn_handlers is not None

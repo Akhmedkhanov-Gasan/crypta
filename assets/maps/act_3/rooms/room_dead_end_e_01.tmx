@@ -97,11 +97,11 @@
  </layer>
  <objectgroup id="8" name="Barriers"/>
  <objectgroup id="9" name="Blocked">
-  <object id="2" x="32.6667" y="12.6667" width="389.333" height="33.3333"/>
-  <object id="3" x="404" y="22.6667" width="34" height="217.333"/>
+  <object id="2" x="32.6667" y="71.6667" width="389.333" height="42.3333"/>
+  <object id="3" x="404" y="83.1667" width="34" height="156.833"/>
   <object id="4" x="400.667" y="342" width="34.6667" height="98.6667"/>
   <object id="5" x="352" y="407.333" width="71.3333" height="20.6667"/>
-  <object id="6" x="20.6667" y="27.3333" width="26.6667" height="400"/>
+  <object id="6" x="20.6667" y="79.3333" width="26.6667" height="348"/>
  </objectgroup>
  <objectgroup id="10" name="Connectors">
   <object id="1" name="exit_east" x="419.333" y="293.333">

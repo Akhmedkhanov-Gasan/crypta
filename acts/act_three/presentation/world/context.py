@@ -90,11 +90,17 @@ def create_world_render_context(
     if killing_spree_camera is not None:
         camera_player_position = killing_spree_camera
 
+    from acts.act_three.summoner_trial import focus_cell
+
+    trial_focus = focus_cell(floor.summoner_trial, current_time)
+    if trial_focus is not None:
+        camera_player_position = trial_focus[0] * ACT_THREE_TILE_SIZE, trial_focus[1] * ACT_THREE_TILE_SIZE
+
     update_act_three_camera(
         floor,
         current_time,
         player_position=camera_player_position,
-        cinematic=killing_spree_camera is not None,
+        cinematic=killing_spree_camera is not None or trial_focus is not None,
     )
     _get_act_three_visibility(floor)
 

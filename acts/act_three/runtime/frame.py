@@ -22,6 +22,9 @@ def advance_act_three_frame(game_state, current_act, current_time, sounds):
         if game_state.act_three.awakening.phase != "complete":
             return
     if current_act == 3:
+        from acts.act_three.trial_safety import maintain_safety
+
+        maintain_safety(game_state)
         if game_state.player.health <= 0 and game_state.player.death_animation_started_at >= 0:
             from game.dialogue import hold_dialogue
             from acts.act_three.presentation.renderer import (
@@ -45,6 +48,9 @@ def advance_act_three_frame(game_state, current_act, current_time, sounds):
         from acts.act_three.curse_trial import advance_frame as advance_curse_trial
 
         advance_curse_trial(game_state, current_time)
+        from acts.act_three.summoner_trial import advance_frame as advance_summoner_trial
+
+        advance_summoner_trial(game_state, current_time)
         advance_npc_dialog(game_state, current_time)
         advance_mining(game_state, current_time)
         sounds.update(game_state.player, current_time)

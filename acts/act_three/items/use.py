@@ -137,6 +137,7 @@ def _push_from_blast(game_state, enemy, center):
     destination = (2 * origin[0] - center[0], 2 * origin[1] - center[1])
     if (
         destination == (floor.player_column, floor.player_row)
+        or destination in floor.trial_safe_cells
         or _occupied(floor, destination, enemy)
         or not can_player_move_between(floor.map, *origin, *destination, floor.barriers)
     ):

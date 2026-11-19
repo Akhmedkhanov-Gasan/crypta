@@ -28,8 +28,8 @@ def assets(size):
         "fragile": frames(f"{archer}/piercing_trial_fragile_column", "piercing_trial_fragile_column_break"),
         "intact": load(f"{archer}/piercing_trial_fragile_column/piercing_trial_fragile_column_idle.png"),
         "movable": load(f"{archer}/piercing_trial_movable_column.png"),
-        "rotary": frames("piercing_trial_rotary_lever", "piercing_trial_rotary_lever_turn"),
-        "fire": frames("piercing_trial_fire_lever", "piercing_trial_fire_lever_pull"),
+        "rotary": frames(f"{archer}/piercing_trial_rotary_lever", "piercing_trial_rotary_lever_turn"),
+        "fire": frames(f"{archer}/piercing_trial_fire_lever", "piercing_trial_fire_lever_pull"),
         "seals": {
             index: (
                 frames(f"{archer}/piercing_trial_seal_{index:02d}_v01", f"piercing_trial_seal_{index:02d}_shimmer"),

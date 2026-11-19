@@ -138,7 +138,9 @@ def _compose(placements, connections):
     crushing_trial = None
     shield_trial = None
     curse_trial = None
+    summoner_trial = None
     trial_entrance = None
+    trial_safe_cells = set()
     open_connectors = []
 
     for template, original_offset in placements:
@@ -157,6 +159,7 @@ def _compose(placements, connections):
 
         if template.get("trial_entrance") is not None:
             trial_entrance = _translated(template["trial_entrance"], offset)
+        trial_safe_cells.update(_translated(cell, offset) for cell in template.get("trial_safe_cells", ()))
 
         if template.get("piercing_trial") is not None:
             from acts.act_three.piercing_trial import shift_trial as shift_piercing_trial
@@ -174,6 +177,11 @@ def _compose(placements, connections):
             from acts.act_three.curse_trial import shift_trial as shift_curse_trial
 
             curse_trial = shift_curse_trial(template["curse_trial"], offset)
+
+        if template.get("summoner_trial") is not None:
+            from acts.act_three.summoner_trial import shift_trial as shift_summoner_trial
+
+            summoner_trial = shift_summoner_trial(template["summoner_trial"], offset)
 
         if template.get("crushing_trial") is not None:
             from acts.act_three.crushing_trial import shift_trial as shift_crushing_trial
@@ -300,7 +308,9 @@ def _compose(placements, connections):
         "crushing_trial": crushing_trial,
         "shield_trial": shield_trial,
         "curse_trial": curse_trial,
+        "summoner_trial": summoner_trial,
         "trial_entrance": trial_entrance,
+        "trial_safe_cells": trial_safe_cells,
         "encounter_zones": encounter_zones,
         "spawn_regions": spawn_regions,
         "room_connections": shifted_connections,
