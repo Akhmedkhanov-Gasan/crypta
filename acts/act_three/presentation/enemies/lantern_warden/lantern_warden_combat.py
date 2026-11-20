@@ -568,6 +568,7 @@ def draw_warden_combat_effects(
 
     if (
         action == "attack"
+        and enemy.attack_effect_mode in ("melee", "lantern_sweep")
         and enemy.attack_effect_positions
         and 0 <= attack_elapsed < WARDEN_ATTACK_DURATION_MS
     ):

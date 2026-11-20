@@ -33,16 +33,16 @@ def draw_world_terrain(context):
         context.camera_x,
         context.camera_y,
     )
-    from acts.act_three.presentation.crushing_trial import draw_layer as draw_crushing_layer
+    from acts.act_three.presentation.trials.berserker import draw_layer as draw_crushing_layer
 
     draw_crushing_layer(context, "ground")
-    from acts.act_three.presentation.shield_trial import draw_ground as draw_shield_ground
+    from acts.act_three.presentation.trials.paladin import draw_ground as draw_shield_ground
 
     draw_shield_ground(context)
-    from acts.act_three.presentation.curse_trial import draw_ground as draw_curse_ground
+    from acts.act_three.presentation.trials.warlock import draw_ground as draw_curse_ground
 
     draw_curse_ground(context)
-    from acts.act_three.presentation.summoner_trial import draw_ground as draw_summoner_ground
+    from acts.act_three.presentation.trials.summoner import draw_ground as draw_summoner_ground
 
     draw_summoner_ground(context)
     draw_crushing_layer(context, "back")

@@ -200,8 +200,13 @@ def choose_subclass(game_state, subclass):
         add_log_message(game_state.combat_log, "Act III begins. The world is alive.")
 
 
-def clear_archer_barrage_zone(game_state):
+def clear_archer_barrage_zone(game_state, *, preserve_phantoms=False):
     player = game_state.player
+    player.act_three.archer_phantom_cast = None
+    if not preserve_phantoms:
+        player.act_three.archer_phantoms.clear()
+    player.act_three.archer_phantom_travel_started_at = -1
+    player.act_three.archer_phantom_travel_ended_at = -1
     player.archer_barrage_zone_aiming = False
     player.archer_barrage_zone_anchor = None
     player.archer_barrage_zone_preview_cells.clear()
@@ -212,6 +217,11 @@ def clear_archer_barrage_zone(game_state):
     player.archer_barrage_shots.clear()
     player.archer_barrage_pending_hits.clear()
     game_state.act_three.barrage_turn = None
+    if preserve_phantoms:
+        import pygame
+        from acts.act_three.abilities.phantom_retinue import relocate_phantom_retinue
+
+        relocate_phantom_retinue(game_state, pygame.time.get_ticks())
 
 
 def clear_berserker_crushing_leap(game_state):

@@ -29,7 +29,9 @@ TRADER_REPLIES = {
 def get_npc_dialogue(game_state, npc):
     npc_type = npc["type"]
     if npc_type == "blacksmith":
-        return (("blacksmith", "The forge will be available soon."),)
+        from acts.act_three.quests.blacksmith import blacksmith_dialogue
+
+        return blacksmith_dialogue(game_state)
 
     subclass = game_state.player.subclass or "player"
     greeting, answer = TRADER_REPLIES.get(

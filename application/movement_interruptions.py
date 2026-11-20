@@ -32,7 +32,7 @@ def apply_movement_interruptions(state, game_state, current_time):
     )
     incoming_attack = any(
         event.type is GameEventType.ATTACK
-        and event.actor != "hero"
+        and event.actor not in ("hero", "phantom")
         and position in event.positions
         for event in events
     )

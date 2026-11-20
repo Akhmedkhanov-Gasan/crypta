@@ -6,7 +6,7 @@
  <tileset firstgid="1" source="../act3_floor_64.tsx"/>
  <tileset firstgid="9" source="../items.tsx"/>
  <tileset firstgid="177" source="../my_tiles_textured.tsx"/>
- <tileset firstgid="285" source="../torches/torches.tsx"/>
+ <tileset firstgid="350" source="../torches/torches.tsx"/>
  <layer id="1" name="Ground" width="8" height="9">
   <data encoding="csv">
 0,0,8,0,0,0,0,0,
@@ -114,7 +114,7 @@
  <layer id="17" name="Torches" width="8" height="9">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,
-0,0,0,288,0,0,0,0,
+0,0,0,353,0,0,0,0,
 0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,
@@ -136,7 +136,7 @@
  <objectgroup id="13" name="Barriers">
   <object id="5" x="47.3333" y="0" width="14" height="508"/>
   <object id="6" x="454.667" y="-2" width="9.33333" height="504.667"/>
-  <object id="15" x="134.18" y="497.747" width="165.359" height="68.4819"/>
+  <object id="15" x="134.18" y="519.08" width="165.359" height="47.1486"/>
  </objectgroup>
  <objectgroup id="14" name="Blocked">
   <object id="8" x="212.667" y="70.6667" width="282" height="44"/>

@@ -17,7 +17,7 @@ from presentation.cursors import (
     set_berserker_crushing_leap_cursor,
     set_warlock_staff_cursor,
 )
-from acts.act_three.shadow_step_trial import handle_trial_action
+from acts.act_three.trials.assassin import handle_trial_action
 from application.directional_input import WAIT_KEYS
 from logic import get_enemy_occupied_positions
 from systems.grid_geometry import can_reach_adjacent_cell
@@ -79,23 +79,23 @@ def resolve_act_three_player_action(
     final_floor_index,
     hit_reaction,
 ) -> ActThreePlayerActionResult:
-    from acts.act_three.piercing_trial import handle_action as handle_piercing_action
-    from acts.act_three.summoner_trial import handle_action as handle_summoner_action
+    from acts.act_three.trials.archer import handle_action as handle_piercing_action
+    from acts.act_three.trials.summoner import handle_action as handle_summoner_action
 
     summoner_result = handle_summoner_action(game_state, event, direction)
     if summoner_result is not None:
         return ActThreePlayerActionResult(player_acted=summoner_result, movement_blocked=not summoner_result)
-    from acts.act_three.curse_trial import handle_action as handle_curse_action
+    from acts.act_three.trials.warlock import handle_action as handle_curse_action
 
     curse_result = handle_curse_action(game_state, event, direction)
     if curse_result is not None:
         return ActThreePlayerActionResult(player_acted=curse_result, movement_blocked=not curse_result)
-    from acts.act_three.shield_trial import handle_action as handle_shield_action
+    from acts.act_three.trials.paladin import handle_action as handle_shield_action
 
     shield_result = handle_shield_action(game_state, event, direction)
     if shield_result is not None:
         return ActThreePlayerActionResult(player_acted=shield_result, movement_blocked=not shield_result)
-    from acts.act_three.crushing_trial import handle_action as handle_crushing_action
+    from acts.act_three.trials.berserker import handle_action as handle_crushing_action
 
     crushing_result = handle_crushing_action(game_state, event, direction)
     if crushing_result is not None:

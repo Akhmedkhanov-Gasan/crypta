@@ -1,3 +1,6 @@
+from acts.act_three.items.keys import CRYPTA_KEY, KEYRING_ITEMS, collect_loose_keys, combine_key_and_ring, store_key_on_ring
+
+
 INVENTORY_SLOT_COUNT = 24
 BLACK_ORE_CHUNK = "black_ore_chunk"
 IRON_ORE_CHUNK = "iron_ore_chunk"
@@ -16,9 +19,18 @@ def inventory_has_space(player):
 
 
 def store_inventory_item(player, item):
-    for index, stored_item in enumerate(player.act_three.inventory_slots):
+    slots = player.act_three.inventory_slots
+    if item in ("key", CRYPTA_KEY):
+        item = CRYPTA_KEY
+        if store_key_on_ring(slots):
+            return True
+    if item in KEYRING_ITEMS and any(stored in KEYRING_ITEMS for stored in slots):
+        return False
+    for index, stored_item in enumerate(slots):
         if stored_item is None:
-            player.act_three.inventory_slots[index] = item
+            slots[index] = item
+            if item in KEYRING_ITEMS:
+                collect_loose_keys(slots, index)
             return True
     return False
 
@@ -95,6 +107,8 @@ def _rearrange_slots(slots, source_index, target_index):
 
 
 def rearrange_inventory(player, source_index, target_index):
+    if combine_key_and_ring(player.act_three.inventory_slots, source_index, target_index):
+        return True
     return _rearrange_slots(player.act_three.inventory_slots, source_index, target_index)
 
 

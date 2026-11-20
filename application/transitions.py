@@ -187,7 +187,7 @@ def advance_floor_transition(game_state, current_time):
         cancel_scroll_aiming(game_state)
         game_state.player.act_three.consumable_aim_slot = None
         game_state.player.act_three.item_drag = None
-        clear_archer_barrage_zone(game_state)
+        clear_archer_barrage_zone(game_state, preserve_phantoms=True)
         clear_berserker_crushing_leap(game_state)
         add_log_message(
             game_state.combat_log,

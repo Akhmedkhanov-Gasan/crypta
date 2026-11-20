@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field, fields
 from acts.act_three.awakening.state import AwakeningScene
 from acts.act_three.items.inventory import INVENTORY_SLOT_COUNT
+from acts.act_three.abilities.phantom_state import ArcherPhantom
 
 
 @dataclass(eq=False)
@@ -48,6 +49,7 @@ class ActThreePlayerState:
     regeneration_ticks: int = 0
     ironblood_guard: bool = False
     mining: dict | None = None
+    blacksmith_quest: dict[str, bool] = field(default_factory=dict)
     inventory_slots: list[str | None] = field(
         default_factory=lambda: [None] * INVENTORY_SLOT_COUNT,
     )
@@ -77,6 +79,10 @@ class ActThreePlayerState:
         default_factory=MageArcaneBurstState,
     )
     archer_empowered_shot_charge: int = 0
+    archer_phantoms: list[ArcherPhantom] = field(default_factory=list)
+    archer_phantom_cast: dict | None = None
+    archer_phantom_travel_started_at: int = -1
+    archer_phantom_travel_ended_at: int = -1
     archer_leap_charge: int = 0
     archer_attack_target: tuple[int, int] | None = None
     archer_basic_aiming: bool = False
@@ -251,6 +257,9 @@ class ArcherBarrageTurnState:
 
 @dataclass
 class ActThreeSessionState:
+    pending_monster_loot: list[dict] = field(default_factory=list)
+    dialogue_queue: list[dict] = field(default_factory=list)
+    blacksmith_forge_open: bool = False
     mining_effects: list[dict] = field(default_factory=list)
     mining_reward: dict | None = None
     mining_warning: dict | None = None

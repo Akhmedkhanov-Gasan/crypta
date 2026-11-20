@@ -29,6 +29,7 @@ _STATE_MODULES = (
     "acts.act_two.state",
     "acts.act_two.quests.state",
     "acts.act_three.state",
+    "acts.act_three.abilities.phantom_state",
     "acts.act_three.awakening.state",
     "acts.act_one.presentation.death_scene",
     "acts.act_two.presentation.bosses.oracle_intro",

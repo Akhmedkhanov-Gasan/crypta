@@ -3,11 +3,11 @@ import math
 import pygame
 from acts.act_three.combat.pacing import PLAYER_BASIC_ATTACK_DURATION_MS
 
-from acts.act_three.presentation.shadow_step_effects import draw_trial_seal_effects
-from acts.act_three.presentation.piercing_trial import draw_layer as draw_piercing_layer, draw_overlay as draw_piercing_overlay
-from acts.act_three.presentation.crushing_trial import draw_overlay as draw_crushing_overlay
+from acts.act_three.presentation.trials.assassin_effects import draw_trial_seal_effects
+from acts.act_three.presentation.trials.archer import draw_layer as draw_piercing_layer, draw_overlay as draw_piercing_overlay
+from acts.act_three.presentation.trials.berserker import draw_overlay as draw_crushing_overlay
 
-from acts.act_three.presentation.shadow_step_trial import (
+from acts.act_three.presentation.trials.assassin import (
     draw_trial_detection,
     draw_trial_layer,
     draw_trial_lighting,
@@ -80,6 +80,7 @@ from acts.act_three.presentation.archer.barrage_zone import (
     BARRAGE_SHOT_MS,
     draw_barrage_shot,
 )
+from acts.act_three.presentation.archer.phantom_retinue import draw_phantom_retinue
 from acts.act_three.presentation.archer.projectile import (
     PIERCING_TOTAL_MS,
     PIERCING_WINDUP_MS,
@@ -435,7 +436,7 @@ def _draw_act_three_world(
         player_sprite = player_sprite.copy()
         player_sprite.set_alpha(255)
 
-    from acts.act_three.summoner_trial import aboard
+    from acts.act_three.trials.summoner import aboard
 
     if aboard(floor.summoner_trial, current_time):
         player_sprite.fill((0, 0, 0, 0))
@@ -1115,6 +1116,10 @@ def _draw_act_three_world(
             current_time,
             fonts["sidebar_numbers"],
         )
+    draw_phantom_retinue(
+        view_surface, assets, game_state, camera_x, camera_y,
+        current_time, ACT_THREE_TILE_SIZE,
+    )
     active_barrage_shots = []
     for barrage_shot in game_state.player.archer_barrage_shots:
         if barrage_shot.started_at <= 0:
@@ -1641,11 +1646,16 @@ def _draw_act_three_world(
         if game_state.player.act_three.mining is not None
         else player_position
     )
-    from acts.act_three.summoner_trial import focus_cell
+    from acts.act_three.trials.summoner import focus_cell
 
     trial_focus = focus_cell(floor.summoner_trial, current_time)
     if trial_focus is not None:
         visibility_position = _view_position(trial_focus[0], trial_focus[1], camera_x, camera_y)
+    from acts.act_three.enemies.lantern_warden.encounter import camera_focus
+
+    lantern_focus = camera_focus(floor, current_time)
+    if lantern_focus is not None:
+        visibility_position = _view_position(lantern_focus[0], lantern_focus[1], camera_x, camera_y)
     _draw_fog_of_war(
         view_surface,
         floor,
@@ -1666,13 +1676,13 @@ def _draw_act_three_world(
     draw_trial_seal_effects(context)
     draw_piercing_overlay(context)
     draw_crushing_overlay(context)
-    from acts.act_three.presentation.shield_trial import draw_overlay as draw_shield_overlay
+    from acts.act_three.presentation.trials.paladin import draw_overlay as draw_shield_overlay
 
     draw_shield_overlay(context)
-    from acts.act_three.presentation.curse_trial_effects import draw_body_rite
+    from acts.act_three.presentation.trials.warlock_effects import draw_body_rite
 
     draw_body_rite(context, current_time)
-    from acts.act_three.presentation.summoner_trial import draw_overlay as draw_summoner_overlay
+    from acts.act_three.presentation.trials.summoner import draw_overlay as draw_summoner_overlay
 
     draw_summoner_overlay(context, game_state, current_time)
 

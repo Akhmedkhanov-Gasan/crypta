@@ -89,6 +89,7 @@ def load_application_resources(startup):
         **act_three_gameplay_assets["act_three_consumable_belt_sprites"],
         **act_three_gameplay_assets["act_three_sell_item_sprites"],
         **act_three_gameplay_assets["act_three_inventory_sprites"],
+        **act_three_gameplay_assets["act_three_special_item_sprites"],
     }
     act_three_transition_assets = startup.load(
         load_act_three_transition_assets,

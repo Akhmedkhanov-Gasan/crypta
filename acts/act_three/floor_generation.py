@@ -17,14 +17,14 @@ def build_act_three_floor(
     floor_count,
 ):
     if config.get("exit_map_path"):
-        from acts.act_three.trials import trial_map_path
+        from acts.act_three.trials.catalog import trial_map_path
 
         floor = generate_room_layout(
             config,
             trial_map_path(config.get("trial_subclass")) if config.get("trial_room") else None,
         )
     elif config.get("tmx_room_sequence"):
-        from acts.act_three.trials import TRIAL_MAPS, trial_map_path
+        from acts.act_three.trials.catalog import TRIAL_MAPS, trial_map_path
 
         sequence = tuple(
             trial_map_path(config.get("trial_subclass"))

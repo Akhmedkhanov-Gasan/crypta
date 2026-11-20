@@ -7,6 +7,7 @@ from acts.act_three.items.consumables import (
 from acts.act_three.items.drops import DROP_ITEM_IDS
 from acts.act_three.items.inventory import ORE_ITEM_NAMES
 from acts.act_three.trader_catalog import TRADER_ITEMS, TRADER_SELL_ITEMS
+from acts.act_three.presentation.items.special import load_special_item_assets
 from presentation.layout import ASSET_ROOT
 
 
@@ -86,8 +87,11 @@ def load_act_three_consumable_assets():
         ).convert_alpha()
     ore_pile = resources.load_image(_DROP_ROOT / "ore_pile.png").convert_alpha()
     drop_sprites.update(dict.fromkeys((*ORE_ITEM_NAMES, "gemstone"), ore_pile))
+    special_icons, special_ground = load_special_item_assets()
+    drop_sprites.update(special_ground)
 
     return {
+        "act_three_special_item_sprites": special_icons,
         "act_three_consumable_belt_sprites": belt_sprites,
         "act_three_consumable_ground_sprites": ground_sprites,
         "act_three_consumable_original_sprites": original_sprites,

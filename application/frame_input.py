@@ -4,6 +4,7 @@ import pygame
 
 from acts.act_three.movement import ACT_THREE_MOVEMENT_PROFILE
 from acts.act_three.movement_timing import PLAYER_STEP_MS
+from acts.act_three.abilities.phantom_motion import update_phantom_travel
 from acts.act_two.turns import act_two_combat_is_active
 from application.auto_movement import AUTO_MOVE_INTERVAL_MS, create_auto_move_event
 from application.input_policy import (
@@ -123,6 +124,13 @@ def prepare_frame_input(
     )
     if auto_move_event is not None:
         pygame.event.post(auto_move_event)
+
+    if current_act == 3:
+        update_phantom_travel(
+            game_state.player,
+            world_movement_available and bool(movement_state.held_movement_keys),
+            current_time,
+        )
 
     menu_visual_theme = (
         FLOOR_CONFIGS[game_state.floor_index]["act"]

@@ -21,6 +21,7 @@ def forge_ore_count(player):
 def can_forge_upgrade(player, upgrade):
     return (
         upgrade in FORGE_UPGRADES
+        and player.act_three.blacksmith_quest.get("completed", False)
         and forge_rank(player, upgrade) < MAX_EQUIPMENT_RANK
         and forge_ore_count(player) > 0
     )
@@ -28,7 +29,7 @@ def can_forge_upgrade(player, upgrade):
 
 def try_forge_upgrade(game_state, upgrade):
     player = game_state.player
-    if upgrade not in FORGE_UPGRADES:
+    if not can_forge_upgrade(player, upgrade):
         return False
 
     rank = forge_rank(player, upgrade)

@@ -90,17 +90,22 @@ def create_world_render_context(
     if killing_spree_camera is not None:
         camera_player_position = killing_spree_camera
 
-    from acts.act_three.summoner_trial import focus_cell
+    from acts.act_three.trials.summoner import focus_cell
 
     trial_focus = focus_cell(floor.summoner_trial, current_time)
     if trial_focus is not None:
         camera_player_position = trial_focus[0] * ACT_THREE_TILE_SIZE, trial_focus[1] * ACT_THREE_TILE_SIZE
+    from acts.act_three.enemies.lantern_warden.encounter import camera_focus
+
+    lantern_focus = camera_focus(floor, current_time)
+    if lantern_focus is not None:
+        camera_player_position = tuple(value * ACT_THREE_TILE_SIZE for value in lantern_focus)
 
     update_act_three_camera(
         floor,
         current_time,
         player_position=camera_player_position,
-        cinematic=killing_spree_camera is not None or trial_focus is not None,
+        cinematic=killing_spree_camera is not None or trial_focus is not None or lantern_focus is not None,
     )
     _get_act_three_visibility(floor)
 
@@ -113,6 +118,11 @@ def create_world_render_context(
     view_surface.fill((0, 0, 0))
 
     camera_x, camera_y = _camera_position(floor)
+    from acts.act_three.presentation.enemies.lantern_warden.encounter import camera_shake
+
+    shake_x, shake_y = camera_shake(floor, current_time)
+    camera_x += shake_x
+    camera_y += shake_y
     teleport_origin = game_state.player.teleport_camera_origin
     transition_started_at = (
         game_state.player.teleport_transition_started_at

@@ -137,7 +137,7 @@ ACT_THREE_ABILITY_ICON_PATHS = {
         / "abilities"
         / "subclasses"
         / "archer"
-        / "barrage_zone.png"
+        / "phantom_retinue.png"
     ),
     "act_three_warlock_curse": (
         _UI_ROOT

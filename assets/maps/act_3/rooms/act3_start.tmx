@@ -6,8 +6,8 @@
  <tileset firstgid="1" source="../items.tsx"/>
  <tileset firstgid="169" source="../act3_floor_64.tsx"/>
  <tileset firstgid="177" source="../my_tiles_textured.tsx"/>
- <tileset firstgid="285" source="../torches/torches.tsx"/>
- <tileset firstgid="289" source="../EnvironmentObjects/environment_objects.tsx"/>
+ <tileset firstgid="350" source="../torches/torches.tsx"/>
+ <tileset firstgid="354" source="../EnvironmentObjects/environment_objects.tsx"/>
  <layer id="1" name="Ground" width="17" height="15">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -182,7 +182,7 @@
  <layer id="19" name="Torches" width="17" height="15">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,288,0,0,288,0,0,288,0,0,288,0,0,
+0,0,0,0,0,353,0,0,353,0,0,353,0,0,353,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -218,9 +218,6 @@
   <object id="54" x="844.667" y="658.667" width="33.3333" height="26"/>
  </objectgroup>
  <objectgroup id="18" name="NPCs">
-  <object id="62" name="blacksmith" x="797" y="167.5">
-   <point/>
-  </object>
   <object id="65" name="trader" x="930.667" y="225.333">
    <point/>
   </object>

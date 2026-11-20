@@ -72,6 +72,18 @@ def _active_statuses(player):
         Status("true_form", "True Form", "Empowers the familiar.", state.summoner_true_form_charge if state.summoner_true_form_active else 0, "attacks"),
     )
     yield from (status for status in timed if status.count > 0)
+    if player.subclass == "archer" and player.health > 0:
+        for phantom in state.archer_phantoms:
+            if phantom.shots_remaining > 0:
+                yield Status(
+                    f"archer_phantom_{phantom.number}",
+                    f"Phantom {phantom.number}",
+                    "Follows you and fires within 3 cells, prioritizing your target. "
+                    "Deals 25% basic shot damage. Fades after its sixth shot.",
+                    phantom.shots_remaining,
+                    "shots",
+                    "act_three_archer_barrage_zone",
+                )
     if state.ironblood_guard:
         yield Status("ironblood_guard", "Ironblood Guard", "Halves the next damaging hit.", 1, "hit")
     if state.warlock_demon_form_active:

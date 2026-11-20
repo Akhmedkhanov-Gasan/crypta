@@ -139,6 +139,7 @@ def _compose(placements, connections):
     shield_trial = None
     curse_trial = None
     summoner_trial = None
+    lantern_encounter = None
     trial_entrance = None
     trial_safe_cells = set()
     open_connectors = []
@@ -159,37 +160,41 @@ def _compose(placements, connections):
 
         if template.get("trial_entrance") is not None:
             trial_entrance = _translated(template["trial_entrance"], offset)
+        if template.get("lantern_encounter") is not None:
+            from acts.act_three.enemies.lantern_warden.encounter import shift_encounter
+
+            lantern_encounter = shift_encounter(template["lantern_encounter"], offset)
         trial_safe_cells.update(_translated(cell, offset) for cell in template.get("trial_safe_cells", ()))
 
         if template.get("piercing_trial") is not None:
-            from acts.act_three.piercing_trial import shift_trial as shift_piercing_trial
+            from acts.act_three.trials.archer import shift_trial as shift_piercing_trial
 
             if piercing_trial is not None:
                 raise ValueError("Only one Piercing Shot trial is supported per floor")
             piercing_trial = shift_piercing_trial(template["piercing_trial"], offset)
 
         if template.get("shield_trial") is not None:
-            from acts.act_three.shield_trial import shift_trial as shift_shield_trial
+            from acts.act_three.trials.paladin import shift_trial as shift_shield_trial
 
             shield_trial = shift_shield_trial(template["shield_trial"], offset)
 
         if template.get("curse_trial") is not None:
-            from acts.act_three.curse_trial import shift_trial as shift_curse_trial
+            from acts.act_three.trials.warlock import shift_trial as shift_curse_trial
 
             curse_trial = shift_curse_trial(template["curse_trial"], offset)
 
         if template.get("summoner_trial") is not None:
-            from acts.act_three.summoner_trial import shift_trial as shift_summoner_trial
+            from acts.act_three.trials.summoner import shift_trial as shift_summoner_trial
 
             summoner_trial = shift_summoner_trial(template["summoner_trial"], offset)
 
         if template.get("crushing_trial") is not None:
-            from acts.act_three.crushing_trial import shift_trial as shift_crushing_trial
+            from acts.act_three.trials.berserker import shift_trial as shift_crushing_trial
 
             crushing_trial = shift_crushing_trial(template["crushing_trial"], offset)
 
         if template.get("shadow_step_trial") is not None:
-            from acts.act_three.shadow_step_trial import shift_trial
+            from acts.act_three.trials.assassin import shift_trial
 
             if shadow_step_trial is not None:
                 raise ValueError(
@@ -220,7 +225,14 @@ def _compose(placements, connections):
             for position in template["torches"]
         )
         enemies.extend(_shift_entities(template["enemies"], offset))
-        npcs.extend(_shift_entities(template.get("npcs", []), offset))
+        room_npcs = _shift_entities(template.get("npcs", []), offset)
+        entrance = next(iter(_structural_connectors(template)), None)
+        if entrance is not None:
+            dx, dy = DIRECTION_STEP[entrance["direction"]]
+            x, y = entrance["position"]
+            for npc in room_npcs:
+                npc["room_entrance"] = _translated((x - dx, y - dy), offset)
+        npcs.extend(room_npcs)
         ores.extend(_shift_entities(template.get("ores", []), offset))
         encounter_zones.extend(
             _shift_encounter_zones(
@@ -312,6 +324,7 @@ def _compose(placements, connections):
         "trial_entrance": trial_entrance,
         "trial_safe_cells": trial_safe_cells,
         "encounter_zones": encounter_zones,
+        "lantern_encounter": lantern_encounter,
         "spawn_regions": spawn_regions,
         "room_connections": shifted_connections,
         "chests": chests,

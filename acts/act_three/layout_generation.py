@@ -73,6 +73,28 @@ def _extend(placements, frontier, connections, option):
     )
 
 
+def _required_openings(rooms):
+    required = Counter()
+    for room in rooms:
+        connectors = _structural_connectors(room)
+        if len(connectors) != 1:
+            return Counter()
+        required[OPPOSITE_DIRECTION[connectors[0]["direction"]]] += 1
+    return required
+
+
+def _opening_deficits(frontier, required):
+    available = Counter(opening["direction"] for opening in frontier)
+    return {direction: max(0, count - available[direction]) for direction, count in required.items()}
+
+
+def _frontier_after_option(frontier, option):
+    index, template, connector, _ = option
+    return frontier[:index] + frontier[index + 1:] + [
+        item for item in _structural_connectors(template) if item is not connector
+    ]
+
+
 def _seal_boundaries(floor, placements, connections):
     min_x = min(offset[0] for _, offset in placements)
     min_y = min(offset[1] for _, offset in placements)
@@ -123,16 +145,30 @@ def generate_room_layout(config, trial_path=None):
         if path != exit_path
     ]
     trial = load_tmx_floor(project_root / trial_path) if trial_path else None
-    for template in [entry, exit_room, *templates]:
+    required_templates = [
+        load_tmx_floor(project_root / path)
+        for path in config.get("required_room_paths", ())
+    ]
+    required_sources = {template["source_path"] for template in required_templates}
+    templates = [template for template in templates if template["source_path"] not in required_sources]
+    for template in [entry, exit_room, *templates, *required_templates]:
         _validate_template(template)
     dead_ends = [template for template in templates if len(_structural_connectors(template)) == 1]
     connecting_rooms = [template for template in templates if len(_structural_connectors(template)) > 1]
     if not connecting_rooms or not dead_ends:
         raise ValueError("Act Three needs connecting rooms and dead ends")
 
-    required_rooms = [exit_room]
+    required_rooms = [exit_room, *required_templates]
     if trial is not None:
         required_rooms.append(trial)
+    required_openings = _required_openings(required_rooms)
+    maximum_openings = {
+        direction: max(
+            sum(connector["direction"] == direction for connector in _structural_connectors(room))
+            for room in connecting_rooms
+        )
+        for direction in required_openings
+    }
     target_count = config["generated_piece_count"] - 1 - len(required_rooms)
     remaining_attempts = 0
 
@@ -148,8 +184,19 @@ def generate_room_layout(config, trial_path=None):
             return floor if _valid_floor(floor) else None
 
         if required:
-            options = _options(placements, frontier, required[:1])
-            next_required = required[1:]
+            demands = _required_openings(required)
+            if any(_opening_deficits(frontier, demands).values()):
+                return None
+            if demands:
+                choices = [
+                    (index, _options(placements, frontier, [room]))
+                    for index, room in enumerate(required)
+                ]
+                required_index, options = min(choices, key=lambda choice: len(choice[1]))
+            else:
+                required_index = 0
+                options = _options(placements, frontier, required[:1])
+            next_required = required[:required_index] + required[required_index + 1:]
         else:
             options_by_opening = [[] for _ in frontier]
             for option in _options(placements, frontier, dead_ends):
@@ -169,13 +216,26 @@ def generate_room_layout(config, trial_path=None):
         nonlocal remaining_attempts
         if remaining_attempts <= 0:
             return None
+        deficits = _opening_deficits(frontier, required_openings)
+        if any(deficit > count * maximum_openings[direction] for direction, deficit in deficits.items()):
+            return None
         if count == 0:
             return finish(placements, frontier, connections, required_rooms)
         remaining_attempts -= 1
 
         usage = Counter(template["source_path"] for template, _ in placements)
         options = _options(placements, frontier, connecting_rooms)
-        options.sort(key=lambda option: usage[option[1]["source_path"]])
+        needs_branches = any(deficits.values())
+
+        def priority(option):
+            next_frontier = _frontier_after_option(frontier, option)
+            return (
+                sum(_opening_deficits(next_frontier, required_openings).values()),
+                -len(next_frontier) if needs_branches else 0,
+                usage[option[1]["source_path"]],
+            )
+
+        options.sort(key=priority)
         for option in options:
             if remaining_attempts <= 0:
                 break

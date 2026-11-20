@@ -228,15 +228,17 @@ SUBCLASS_DEFINITIONS = {
             "e": INVISIBILITY,
             "f": AbilityDefinition(
                 id="barrage_zone",
-                name="BARRAGE ZONE",
+                name="PHANTOM RETINUE",
                 slot="f",
                 icon_asset=(
                     "act_three_archer_barrage_zone"
                 ),
                 charge_required=8.0,
                 description=(
-                    "Place a permanent three-cell trap. Phantom "
-                    "archers strike enemies entering it."
+                    "Summon two phantom archers with 6 shots each. "
+                    "They fire within 3 cells for 25% of a basic "
+                    "shot's damage, prioritizing your attack target. "
+                    "Each phantom fades after its final shot."
                 ),
             ),
         },

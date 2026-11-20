@@ -48,6 +48,10 @@ def draw_world_enemies(
     current_time,
 ):
     floor = context.floor
+    from acts.act_three.presentation.enemies.lantern_warden.encounter import draw_sleeping_warden, draw_ability_impacts
+
+    draw_ability_impacts(context, current_time)
+    draw_sleeping_warden(context, assets, current_time)
     stun_visuals = game_state.act_three.enemy_stun_visuals
     consumed_corpses = (
         game_state.act_three.priest_rebirth_consumed_corpses

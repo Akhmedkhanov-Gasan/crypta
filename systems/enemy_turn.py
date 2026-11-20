@@ -236,7 +236,7 @@ def resolve_enemy_turn(
 ) -> None:
     if hazard_costs is None:
         hazard_costs = {}
-    from acts.act_three.trial_safety import player_is_safe, maintain_safety
+    from acts.act_three.trials.safety import player_is_safe, maintain_safety
 
     maintain_safety(game_state)
     player_in_trial = player_is_safe(game_state.floor)
@@ -380,7 +380,7 @@ def resolve_enemy_turn(
             continue
 
         if player_in_trial:
-            from acts.act_three.trial_safety import idle_turn
+            from acts.act_three.trials.safety import idle_turn
 
             idle_turn(game_state, enemy, hazard_costs)
             continue
@@ -782,7 +782,7 @@ def resolve_enemy_turn(
             for chest in game_state.floor["chests"]
             if not chest["is_open"]
         )
-        from acts.act_three.trial_safety import blocked_anchors
+        from acts.act_three.trials.safety import blocked_anchors
 
         occupied_positions.update(blocked_anchors(game_state.floor, enemy))
         occupied_positions.update(

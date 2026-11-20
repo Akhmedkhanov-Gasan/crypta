@@ -94,7 +94,7 @@ def navigation_target_info(game_state, target):
         and target in get_upgrade_altar_cells(floor)
     )
     trial = floor.shadow_step_trial
-    from acts.act_three.piercing_trial import interaction_cells
+    from acts.act_three.trials.archer import interaction_cells
 
     piercing_interaction = floor.piercing_trial is not None and target in interaction_cells(floor.piercing_trial)
     trial_door = (
@@ -134,7 +134,7 @@ def navigation_action(game_state, origin, target, has_enemy):
         return None
 
     if floor.presentation_act == 3:
-        from acts.act_three.piercing_trial import interaction_cells
+        from acts.act_three.trials.archer import interaction_cells
 
         if floor.piercing_trial is not None and target in interaction_cells(floor.piercing_trial):
             if abs(target[0] - origin[0]) + abs(target[1] - origin[1]) != 1:

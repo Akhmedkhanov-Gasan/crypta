@@ -519,7 +519,7 @@ def draw_act_three_gameplay(
     )
     if game_state.act_three_transition_open:
         return
-    from acts.act_three.presentation.curse_trial import draw_spirit_view
+    from acts.act_three.presentation.trials.warlock import draw_spirit_view
 
     draw_spirit_view(screen, game_state, assets, current_time)
     draw_floor_indicator(
@@ -530,14 +530,14 @@ def draw_act_three_gameplay(
         + ACT_THREE_VIEW_WIDTH // 2,
         top=2,
     )
-    from acts.act_three.presentation.crushing_trial import draw_reset_hint
+    from acts.act_three.presentation.trials.berserker import draw_reset_hint
 
     draw_reset_hint(
         screen, game_state.floor.crushing_trial, fonts["text"],
         ACT_THREE_VIEW_X + ACT_THREE_VIEW_WIDTH // 2,
         2 + fonts["text"].get_linesize() + 8, current_time,
     )
-    from acts.act_three.presentation.shield_trial import draw_hint as draw_shield_hint
+    from acts.act_three.presentation.trials.paladin import draw_hint as draw_shield_hint
 
     draw_shield_hint(screen, game_state.floor.shield_trial, fonts["text"], 2 + fonts["text"].get_linesize() + 8)
     if defer_interface:
@@ -560,6 +560,9 @@ def draw_act_three_foreground(
 ):
     if game_state.act_three_transition_open:
         return
+    from acts.act_three.presentation.enemies.lantern_warden.encounter import draw_encounter_dialogue
+
+    draw_encounter_dialogue(screen, game_state, fonts)
     if game_state.upgrade_altar_menu_open:
         draw_upgrade_altar_menu(
             screen,
@@ -573,6 +576,11 @@ def draw_act_three_foreground(
         or draw_blacksmith(screen, game_state, fonts, assets, current_time)
     ):
         draw_npc_dialog(screen, game_state, fonts)
+
+    queue = game_state.act_three.dialogue_queue
+    if queue and queue[0]["started_at"] >= 0 and game_state.player.health > 0:
+        line = queue[0]
+        draw_dialogue_panel(screen, fonts, line["speaker"], text=line["message"], close_label="SPACE / CLICK - CONTINUE")
 
     if game_state.player.health <= 0:
         if _draw_defeat_sequence(

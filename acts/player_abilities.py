@@ -138,7 +138,7 @@ def resolve_targeted_player_ability(
     if getattr(event, "archer_barrage_commit", False):
         acted = place_archer_barrage_zone(game_state)
         if acted:
-            set_archer_barrage_zone_cursor()
+            set_archer_attack_cursor()
         return acted
 
     if player.archer_piercing_target is not None:

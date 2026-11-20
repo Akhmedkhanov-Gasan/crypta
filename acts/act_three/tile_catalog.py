@@ -18,6 +18,7 @@ def tileset_catalog():
         *resources.glob_resources(MAP_DIRECTORY / "torches", "*.tsx"),
     ])
     paths.append(ENVIRONMENT_OBJECTS_TILESET_PATH)
+    paths.append(MAP_DIRECTORY / "EnvironmentObjects" / "lantern_warden_room_props" / "lantern_warden_room_props.tsx")
     catalog = {}
     first_gid = 1
     for path in paths:
@@ -33,13 +34,25 @@ def tileset_catalog():
 
 def normalize_tile_layers(layers, map_root, map_path):
     catalog = tileset_catalog()
+    used_tile_ids = {
+        gid & TILED_GID_MASK
+        for layer in layers.values()
+        for row in layer
+        for gid in row
+        if gid
+    }
+    tilesets = sorted(map_root.findall("tileset"), key=lambda node: int(node.get("firstgid", 1)))
     ranges = []
-    for node in map_root.findall("tileset"):
+    for index, node in enumerate(tilesets):
         source = node.get("source")
         if not source:
             raise ValueError(f"Act Three requires external tilesets: {map_path}")
         path = (map_path.parent / source).resolve()
         if path not in catalog:
+            first_gid = int(node.get("firstgid", 1))
+            next_gid = int(tilesets[index + 1].get("firstgid", 1)) if index + 1 < len(tilesets) else float("inf")
+            if not any(first_gid <= tile_id < next_gid for tile_id in used_tile_ids):
+                continue
             raise ValueError(f"Tileset must be in the Act Three map catalog: {path}")
         ranges.append((int(node.get("firstgid", 1)), catalog[path][0]))
     ranges.sort(reverse=True)

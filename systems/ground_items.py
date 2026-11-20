@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from acts.act_three.items.special import SPECIAL_ITEM_NAMES
 
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
@@ -7,6 +8,7 @@ from game.events import GameEvent, GameEventType
 DROPPED_ITEM_FLIGHT_MS = 340
 
 ITEM_NAMES = {
+    **SPECIAL_ITEM_NAMES,
     "potion": "Healing potion",
     "fire_bomb": "Fire bomb",
     "key": "Key",

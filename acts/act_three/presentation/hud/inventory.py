@@ -1,6 +1,7 @@
 import pygame
 
 from acts.act_three.items.inventory import ORE_ITEM_NAMES, get_inventory_slots
+from acts.act_three.items.special import SPECIAL_ITEM_NAMES, SPECIAL_ITEM_DESCRIPTIONS
 from acts.act_three.presentation.hud.panel_art import draw_panel_image
 from acts.act_three.trader_catalog import TRADER_ITEMS, TRADER_SELL_ITEMS
 from presentation.figma_ui import figma_rect
@@ -24,6 +25,7 @@ def draw_inventory(screen, player, assets, panel, mouse_position, focused_slot=N
         **assets.get("act_three_consumable_belt_sprites", {}),
         **assets.get("act_three_sell_item_sprites", {}),
         **assets.get("act_three_inventory_sprites", {}),
+        **assets.get("act_three_special_item_sprites", {}),
     }
     hovered_item = None
     drag = player.act_three.item_drag
@@ -69,6 +71,12 @@ def draw_inventory(screen, player, assets, panel, mouse_position, focused_slot=N
             lines=("Crafting material.", "Shift: drop in front."),
             accent=(176, 139, 214),
         )
+    if hovered_item in SPECIAL_ITEM_NAMES:
+        return TooltipContent(
+            SPECIAL_ITEM_NAMES[hovered_item],
+            (SPECIAL_ITEM_DESCRIPTIONS[hovered_item], "Shift: drop in front."),
+            (181, 145, 81),
+        )
     item = TRADER_ITEMS.get(hovered_item)
     if item is not None:
         return TooltipContent(
@@ -90,6 +98,8 @@ def draw_inventory_drag(screen, player, assets, mouse_position):
     if drag is None or not drag.moving or mouse_position is None:
         return
     sprite = assets.get("act_three_inventory_sprites", {}).get(drag.item)
+    if sprite is None:
+        sprite = assets.get("act_three_special_item_sprites", {}).get(drag.item)
     if sprite is None:
         sprite = assets.get("act_three_sell_item_sprites", {}).get(drag.item)
     if sprite is None:

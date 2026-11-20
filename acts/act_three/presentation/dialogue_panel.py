@@ -46,7 +46,7 @@ def dialogue_portrait(speaker_id):
     return transform(image, size)
 
 
-def draw_dialogue_panel(screen, fonts, speaker_id, speaker_name, text, visible_characters=None, opacity=1.0, close_label=None):
+def draw_dialogue_panel(screen, fonts, speaker_id, speaker_name=None, text="", visible_characters=None, opacity=1.0, close_label=None):
     if opacity <= 0:
         return
     layout = load_dialogue_layout()
@@ -61,7 +61,8 @@ def draw_dialogue_panel(screen, fonts, speaker_id, speaker_name, text, visible_c
         portrait = portrait.copy()
         portrait.set_alpha(round(255 * layout["portrait_section"]["portrait"].get("opacity", 1)))
         panel.blit(portrait, portrait.get_rect(center=portrait_rect.center))
-    _draw_dialogue_text(panel, layout["speaker_name"], speaker_name, color=SPEAKER_COLORS.get(speaker_id))
+    name = speaker_name if speaker_name is not None else (speaker_id or "").replace("_", " ").upper()
+    _draw_dialogue_text(panel, layout["speaker_name"], name, color=SPEAKER_COLORS.get(speaker_id))
     _draw_dialogue_text(panel, layout["dialogue_text"], text, visible_characters)
     if layout.get("skip_text") is not None:
         _draw_dialogue_text(panel, layout["skip_text"], close_label or "SPACE / CLICK - SKIP TEXT", color=(142, 139, 133))

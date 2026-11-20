@@ -3,6 +3,7 @@ import math
 import pygame
 
 from acts.act_three.mining.runtime import MINING_FRAME_MS
+from acts.act_three.mining.catalog import ORE_TYPES
 from presentation.layout import ACT_THREE_TILE_SIZE
 
 
@@ -26,6 +27,7 @@ def draw_active_mining_particles(context, player, current_time):
         + (origin_row - row) * ACT_THREE_TILE_SIZE * 0.2
     )
     particles = pygame.Surface((64, 64), pygame.SRCALPHA)
+    color = ORE_TYPES[mining.get("ore_type", "black_ore")]["color"]
 
     for step in range(max(0, frame_step - 2), frame_step + 1):
         age = elapsed - step * MINING_FRAME_MS
@@ -47,14 +49,14 @@ def draw_active_mining_particles(context, player, current_time):
             if index < 2:
                 pygame.draw.circle(
                     particles,
-                    (100, 87, 111, round(alpha * 0.3)),
+                    (*(round(channel * 0.45) for channel in color), round(alpha * 0.3)),
                     point,
                     round(2 + progress * 4),
                 )
             else:
                 pygame.draw.rect(
                     particles,
-                    (177, 151, 190, alpha),
+                    (*color, alpha),
                     (point[0], point[1], 2, 2),
                 )
 

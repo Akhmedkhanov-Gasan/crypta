@@ -2,6 +2,7 @@ from functools import partial
 
 from acts.act_one.settings import ACT_ONE_BELT_SIZE
 from acts.act_three.items.inventory import ORE_ITEM_NAMES, store_inventory_item
+from acts.act_three.items.special import PICKAXE, SPECIAL_ITEM_NAMES
 from acts.act_three.trader_catalog import TRADER_ITEMS, TRADER_SELL_ITEMS
 from acts.act_two.consumables import store_act_two_consumable
 from acts.act_two.ground_items import (
@@ -19,8 +20,13 @@ from systems import ground_items as shared_ground_items
 def _store_act_three_item(player, kind):
     if kind in TRADER_ITEMS:
         return store_act_two_consumable(player, kind) or store_inventory_item(player, kind)
-    if kind in ORE_ITEM_NAMES or kind in TRADER_SELL_ITEMS:
-        return store_inventory_item(player, kind)
+    if kind in ORE_ITEM_NAMES or kind in TRADER_SELL_ITEMS or kind in SPECIAL_ITEM_NAMES or kind == "key":
+        stored = store_inventory_item(player, kind)
+        if stored and kind == PICKAXE:
+            from acts.act_three.quests.blacksmith import note_pickaxe_pickup
+
+            note_pickaxe_pickup(player)
+        return stored
     return shared_ground_items.store_counted_item(player, kind)
 
 

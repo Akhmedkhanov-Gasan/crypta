@@ -68,6 +68,7 @@ def open_npc_dialog(game_state, npc, current_time):
     state.npc_dialog_phase = "opening"
     state.npc_dialog_started_at = current_time
     state.npc_dialog_line_index = 0
+    state.blacksmith_forge_open = npc["type"] == "blacksmith" and game_state.player.act_three.blacksmith_quest.get("completed", False)
     state.trader_slot_presses.clear()
     state.trader_focus = None
     if npc["type"] == "trader" and "trader" in state.npc_conversations_completed:
@@ -82,6 +83,7 @@ def close_npc_dialog(game_state, current_time):
 
     frame = NPC_FRAME_COUNT - 1
     state.trader_tab = None
+    state.blacksmith_forge_open = False
     if state.npc_dialog_phase == "opening":
         frame = min(
             frame,
@@ -111,6 +113,13 @@ def continue_npc_dialog(game_state, current_time):
     if npc["type"] == "trader":
         state.trader_tab = "healing"
         return
+    if npc["type"] == "blacksmith":
+        from acts.act_three.quests.blacksmith import finish_blacksmith_dialogue
+
+        if finish_blacksmith_dialogue(game_state):
+            state.blacksmith_forge_open = True
+            state.npc_dialog_line_index = 0
+            return
     close_npc_dialog(game_state, current_time)
 
 
@@ -131,6 +140,7 @@ def advance_npc_dialog(game_state, current_time):
         state.npc_dialog_phase = "closed"
         state.npc_dialog_started_at = 0
         state.trader_tab = None
+        state.blacksmith_forge_open = False
         return
 
     elapsed = max(0, current_time - state.npc_dialog_started_at)

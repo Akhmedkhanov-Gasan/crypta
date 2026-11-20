@@ -22,6 +22,7 @@ def ground_item_input_available(game_state):
         game_state.floor.presentation_act in (1, 2, 3)
         and not (game_state.floor.presentation_act == 3 and game_state.sidebar_tab == "stats")
         and player.health > 0
+        and not game_state.dialogue.active
         and not game_state.game_won
         and game_state.floor_transition_started_at < 0
         and not game_state.class_selection_open
@@ -58,9 +59,13 @@ class GroundItemInput:
         self.seen_position = None
         self.pickup_notice = None
 
-    def close(self):
+    def close(self, game_state=None):
         self.is_open = False
         self.selected = 0
+        if game_state is not None and game_state.floor.presentation_act == 3:
+            from acts.act_three.quests.blacksmith import on_loot_closed
+
+            on_loot_closed(game_state)
 
     def _open(self, movement_state):
         self.is_open = True
@@ -78,7 +83,7 @@ class GroundItemInput:
         sounds=None,
     ):
         if not enabled or not ground_item_input_available(game_state):
-            self.close()
+            self.close(game_state)
             self.floor = None
             self.seen_position = None
             return False
@@ -93,7 +98,7 @@ class GroundItemInput:
 
         floor = game_state.floor
         if self.floor is not floor:
-            self.close()
+            self.close(game_state)
             self.floor = floor
             self.seen_position = None
 
@@ -101,7 +106,7 @@ class GroundItemInput:
         items = ground_items_at_player(game_state, current_time)
 
         if position != self.seen_position:
-            self.close()
+            self.close(game_state)
 
             if movement_input_is_locked(movement_state, current_time):
                 return False
@@ -118,7 +123,7 @@ class GroundItemInput:
 
         if self.is_open:
             if not items:
-                self.close()
+                self.close(game_state)
             else:
                 self.selected = min(self.selected, len(items) - 1)
 
@@ -140,12 +145,12 @@ class GroundItemInput:
             sounds,
         )
         if not ground_item_input_available(game_state):
-            self.close()
+            self.close(game_state)
             return
 
         items = ground_items_at_player(game_state, current_time)
         if not items:
-            self.close()
+            self.close(game_state)
             return
 
         self.selected = min(self.selected, len(items) - 1)
@@ -166,9 +171,20 @@ class GroundItemInput:
 
         remaining = ground_items_at_player(game_state, current_time)
         if not remaining:
-            self.close()
+            self.close(game_state)
         else:
             self.selected = min(self.selected, len(remaining) - 1)
+
+    def _take_all(self, game_state, movement_state, sounds, current_time):
+        while True:
+            before = len(ground_items_at_player(game_state, current_time))
+            if not before:
+                self.close(game_state)
+                return
+            self.selected = 0
+            self._take(game_state, movement_state, sounds, current_time)
+            if len(ground_items_at_player(game_state, current_time)) >= before:
+                return
 
     def handle_event(
         self,
@@ -246,7 +262,7 @@ class GroundItemInput:
 
         items = ground_items_at_player(game_state, current_time)
         if not items:
-            self.close()
+            self.close(game_state)
             return True
 
         act_three = game_state.floor.presentation_act == 3
@@ -256,7 +272,10 @@ class GroundItemInput:
                 if act_three else (pygame.K_g, pygame.K_RETURN, pygame.K_KP_ENTER)
             )
             if event.key == pygame.K_ESCAPE:
-                self.close()
+                self.close(game_state)
+            elif act_three and event.key == pygame.K_r:
+                if not getattr(event, "repeat", False):
+                    self._take_all(game_state, movement_state, sounds, current_time)
             elif getattr(event, "movement_direction", None) is not None:
                 return True
             elif event.key in take_keys:
@@ -301,7 +320,7 @@ class GroundItemInput:
                     or close_button.collidepoint(mouse_position)
                     or not panel.collidepoint(mouse_position)
                 ):
-                    self.close()
+                    self.close(game_state)
                     return True
 
             if mouse_position is None:

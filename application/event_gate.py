@@ -40,6 +40,8 @@ class ApplicationEventGate:
             if game_state.floor.presentation_act == 3
             else DEFAULT_MOVEMENT_PROFILE
         )
+        from acts.act_three.enemies.lantern_warden.encounter import cinematic_active
+
         if app_runtime.game_started and not app_runtime.menu_open and not self.dev_console.is_open:
             if handle_dialogue_event(game_state, event, pygame.time.get_ticks()):
                 if event.type == pygame.KEYDOWN:
@@ -60,6 +62,12 @@ class ApplicationEventGate:
                 self.movement_state.reset_held_movement()
                 self.movement_state.cancel_auto_move()
                 return EventGateResult(True, movement_profile)
+        if cinematic_active(game_state.floor) and event.type in (
+            pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEWHEEL,
+        ):
+            self.movement_state.reset_held_movement()
+            self.movement_state.cancel_auto_move()
+            return EventGateResult(True, movement_profile)
         if self.cutscene_skip.handle_event(
             game_state, event,
             enabled=app_runtime.game_started and not app_runtime.menu_open,

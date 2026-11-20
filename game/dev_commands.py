@@ -31,6 +31,8 @@ CONSOLE_COMMANDS = (
     "skills",
     "trial",
     "trialwin",
+    "lantern",
+    "blacksmith",
 )
 
 CONSOLE_HELP = (

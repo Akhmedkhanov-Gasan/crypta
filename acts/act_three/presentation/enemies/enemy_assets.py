@@ -310,6 +310,12 @@ def load_enemy_animation_assets(
         image_loader,
     )
 
+    for frame_index in range(LANTERN_WARDEN_FRAME_COUNT):
+        assets[f"enemy_lantern_warden_awaken_{frame_index}"] = image_loader(
+            enemies_directory / "lantern_warden" / "awaken" / f"awaken_down_{frame_index + 1:02d}.png",
+            (tile_size * 2, tile_size * 2),
+        )
+
     for action in ("idle", "walk", "attack", "hurt", "death"):
         _load_directional_animation(
             assets,

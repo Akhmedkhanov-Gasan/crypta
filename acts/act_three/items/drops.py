@@ -28,6 +28,13 @@ CRATE_DROPS = (
     ("burial_relic", 10),
 )
 MONSTER_DROPS = (("monster_parts", 1800), ("burial_relic", 10))
+LANTERN_WARDEN_DROPS = (
+    ("monster_parts", 0.85),
+    ("silverware", 0.60),
+    ("healing_scroll", 0.35),
+    ("ironblood_tonic", 0.30),
+    ("gemstone", 0.15),
+)
 ORE_DROPS = (("gemstone", 1200),)
 ENVIRONMENT_OBJECT_DROPS = dict.fromkeys(CRATE_TILE_IDS, CRATE_DROPS)
 DROP_ITEM_IDS = frozenset(
@@ -63,8 +70,38 @@ def drop_from_environment_object(floor, crate):
         _roll_ground_drop(floor, (crate.column, crate.row), drop_table)
 
 
-def drop_from_monster(floor, enemy):
+def drop_from_monster(game_state, enemy):
+    floor = game_state.floor
+    if enemy.type == "lantern_warden":
+        from acts.act_three.quests.blacksmith import claim_pickaxe_drop
+
+        game_state.act_three.pending_monster_loot.append({
+            "floor": floor,
+            "enemy": enemy,
+            "pickaxe": claim_pickaxe_drop(game_state, enemy),
+        })
+        return
     _roll_ground_drop(floor, (enemy.column, enemy.row), MONSTER_DROPS, animate=True)
+
+
+def advance_monster_loot(game_state, current_time):
+    from acts.act_three.enemies.lantern_warden.settings import WARDEN_DEATH_DURATION_MS
+    from acts.act_three.items.special import PICKAXE
+
+    pending = game_state.act_three.pending_monster_loot
+    for entry in tuple(pending):
+        enemy = entry["enemy"]
+        if enemy.death_animation_started_at < 0 or current_time - enemy.death_animation_started_at < WARDEN_DEATH_DURATION_MS:
+            continue
+        floor = entry["floor"]
+        position = (enemy.column, enemy.row)
+        place_ground_drop(floor, "burial_relic", position, current_time, animate=True)
+        for item, chance in LANTERN_WARDEN_DROPS:
+            if random.random() < chance:
+                place_ground_drop(floor, item, position, current_time, animate=True)
+        if entry["pickaxe"]:
+            place_ground_drop(floor, PICKAXE, position, current_time, animate=True)
+        pending.remove(entry)
 
 
 def drop_from_ore(floor, position):

@@ -31,6 +31,10 @@ Initial targets are 12–16 total enemies on the second Act Three map and 18–2
 
 Use an enemy type as the point name in `Entities` or `Enemies`, or use `enemy` with an `enemy_type` string property. Hand-authored NPCs, ores, chests and potions are retained.
 
+## Ores
+
+Place point objects named `black_ore` / `black_ores` or `iron_ore` / `iron_ores` in `Ores` or `Entities`. The optional integer property `state` selects stages 1–4. Each interaction advances one stage; the final hit grants one matching ore chunk in a separate inventory slot. Stage 4 is depleted and walkable. Ore definitions and assets are configured in `acts/act_three/mining/catalog.py`.
+
 ## Tilesets and trials
 
 Use external TSX files from `assets/maps/act_3` or its `torches` directory. Each TMX may use its own `firstgid` order; loading remaps it to the shared catalog. After expanding a tileset, update overlapping `firstgid` ranges in Tiled before painting more tiles.

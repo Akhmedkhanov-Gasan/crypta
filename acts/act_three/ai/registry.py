@@ -1,4 +1,4 @@
-from acts.act_three.ai.lantern_warden import (
+from acts.act_three.enemies.lantern_warden.behavior import (
     take_lantern_warden_turn,
 )
 from acts.act_three.enemies.catalog import LANTERN_WARDEN_TYPE

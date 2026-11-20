@@ -77,7 +77,7 @@ _ABILITY_DESCRIPTIONS = {
     "assassin_killing_spree": "Chain rapid attacks across marked targets.",
     "archer_empowered_shot": "Fire a stronger long-range shot.",
     "archer_leap": "Leap to the selected cell.",
-    "archer_barrage_zone": "Place a lasting three-cell phantom trap.",
+    "archer_barrage_zone": "Two phantoms, 6 shots each, 25% basic shot damage.",
     "berserker_rage": "Damage rises as health falls.",
     "berserker_crushing_leap": "Dash up to three cells, striking enemies in your path.",
     "berserker_last_rage": "Enter a temporary state of extreme rage.",
@@ -238,7 +238,7 @@ def _ability_entries(player, accent_color):
             ),
             (
                 "archer_barrage_zone",
-                "Barrage Zone",
+                "Phantom Retinue",
                 _ratio(
                     player.ability_slot_charges.get("f", 0.0),
                     8.0,

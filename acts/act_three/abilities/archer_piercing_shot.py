@@ -6,17 +6,12 @@ from acts.act_three.combat.attacks import (
     is_valid_archer_attack_target,
 )
 from acts.act_three.events import GameEvent, GameEventType
-from acts.act_three.combat.stun import (
-    apply_act_three_enemy_stun,
-)
-from game.combat_log import add_log_message
 from logic import get_enemy_occupied_positions, has_line_of_sight
 from systems.player_combat import attack_enemy, resolve_enemy_defeat
 
 
 PIERCING_DAMAGE_MIN = 3
 PIERCING_DAMAGE_MAX = 5
-PIERCING_STUN_TURNS = 2
 PIERCING_PATH_CELLS = 6
 
 
@@ -124,7 +119,7 @@ def perform_archer_piercing_shot(
     )
     shot_from_invisibility = player.invisibility_turns > 0
 
-    for index, enemy in enumerate(hit_enemies):
+    for enemy in hit_enemies:
         defeated = attack_enemy(
             game_state,
             enemy,
@@ -145,18 +140,5 @@ def perform_archer_piercing_shot(
         if defeated:
             resolve_enemy_defeat(game_state, enemy)
             continue
-
-        if index == 0:
-            apply_act_three_enemy_stun(
-                game_state,
-                enemy,
-                PIERCING_STUN_TURNS,
-                current_time,
-            )
-            add_log_message(
-                game_state.combat_log,
-                f"{enemy.name} is stunned by Piercing Shot.",
-                category="debuff",
-            )
 
     return True

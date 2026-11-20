@@ -1,4 +1,5 @@
 import pygame
+from acts.act_three.abilities.phantom_retinue import advance_phantom_retinue
 from acts.act_three.items.use import trigger_spring_trap
 
 from acts.act_three.abilities.archer_barrage_zone import (
@@ -75,6 +76,8 @@ def resolve_enemy_turn(
     player_position_before_action,
     rogue_ability_activated,
 ):
+    advance_phantom_retinue(game_state)
+    resolve_archer_barrage_hits(game_state)
     damaged_enemy_names = frozenset(
         event.target
         for event in game_state.events
@@ -97,13 +100,6 @@ def resolve_enemy_turn(
         rogue_ability_activated=rogue_ability_activated,
         damaged_enemy_names=damaged_enemy_names,
     )
-
-    if game_state.player.archer_barrage_pending_hits:
-        turn.ready_at = (
-            pygame.time.get_ticks() + BARRAGE_SHOT_MS
-        )
-        game_state.act_three.barrage_turn = turn
-        return
 
     _advance_enemy_turn(game_state, turn)
 

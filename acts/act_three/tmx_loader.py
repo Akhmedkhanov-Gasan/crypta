@@ -266,6 +266,8 @@ def load_tmx_floor(path):
                     )
                 )
             elif group_name == "connectors":
+                if _entity_name(obj) == "awaken_zone":
+                    continue
                 if _entity_name(obj) in ("trial_door", "enter_zone", "player_start", "player_exit", "start_trial"):
                     entities.append((_entity_name(obj), _position(obj, tile_size), _properties(obj)))
                     continue
@@ -440,7 +442,7 @@ def load_tmx_floor(path):
                     "source_path": str(path),
                 }
             )
-    from acts.act_three.shadow_step_trial import build_trial
+    from acts.act_three.trials.assassin import build_trial
 
     shadow_step_trial = build_trial(
         by_name,
@@ -449,19 +451,19 @@ def load_tmx_floor(path):
         dungeon_map,
     )
     potions = [position for position, _ in by_name.get("potion", [])]
-    from acts.act_three.piercing_trial import build_trial as build_piercing_trial
+    from acts.act_three.trials.archer import build_trial as build_piercing_trial
 
     piercing_trial = build_piercing_trial(by_name, width, height, dungeon_map)
-    from acts.act_three.crushing_trial import build_trial as build_crushing_trial
+    from acts.act_three.trials.berserker import build_trial as build_crushing_trial
 
     crushing_trial = build_crushing_trial(by_name, width, height, dungeon_map)
-    from acts.act_three.shield_trial import build_trial as build_shield_trial
+    from acts.act_three.trials.paladin import build_trial as build_shield_trial
 
     shield_trial = build_shield_trial(by_name, width, height, dungeon_map)
-    from acts.act_three.curse_trial import build_trial as build_curse_trial
+    from acts.act_three.trials.warlock import build_trial as build_curse_trial
 
     curse_trial = build_curse_trial(by_name, width, height, dungeon_map)
-    from acts.act_three.summoner_trial import build_trial as build_summoner_trial
+    from acts.act_three.trials.summoner import build_trial as build_summoner_trial
 
     water = set()
     for group in root.findall("objectgroup"):
@@ -474,7 +476,11 @@ def load_tmx_floor(path):
     if shield_trial is not None:
         trial_entrance = shield_trial["door"]
     ores = build_ores(by_name, dungeon_map)
+    from acts.act_three.enemies.lantern_warden.encounter import build_encounter
+
+    lantern_encounter = build_encounter(root, tile_size, width, height, by_name, connectors)
     return {
+        "lantern_encounter": lantern_encounter,
         "enemy_spawn_mode": map_properties.get("enemy_spawn_mode", "false").lower() == "true",
         "map": ["".join(row) for row in dungeon_map],
         "trial_entrance": trial_entrance,

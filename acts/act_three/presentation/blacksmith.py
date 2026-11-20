@@ -89,6 +89,7 @@ def _blacksmith_is_open(game_state):
     state = game_state.act_three
     if (
         state.npc_dialog_position is None
+        or not state.blacksmith_forge_open
         or state.npc_dialog_floor_index != game_state.floor_index
         or state.npc_dialog_phase not in ("opening", "talk")
         or game_state.player.health <= 0

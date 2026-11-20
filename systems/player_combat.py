@@ -268,6 +268,7 @@ def attack_enemy(
     grant_ability_charge: bool = True,
     attacker_name: str = "hero",
     suppress_veil_retrigger: bool = False,
+    damage_multiplier: float = 1.0,
 ) -> bool:
     player = game_state.player
     veil_passive = (
@@ -358,7 +359,7 @@ def attack_enemy(
             )
         )
         attacker_label = (
-            "Hero" if attacker_name == "hero" else "Familiar"
+            "Hero" if attacker_name == "hero" else "Phantom" if attacker_name == "phantom" else "Familiar"
         )
         add_log_message(
             game_state.combat_log,
@@ -412,12 +413,14 @@ def attack_enemy(
             damage
             * player.critical_damage_multiplier
         )
-    if attacker_name == "hero":
+    if attacker_name in ("hero", "phantom"):
         damage = adjusted_outgoing_damage(
             player,
             damage,
         )
         damage = apply_weapon_bonus(player, damage)
+    if damage_multiplier != 1.0:
+        damage = max(1, ceil(damage * damage_multiplier))
     damage = limit_oracle_phase_one_damage(
         enemy,
         damage,
@@ -579,7 +582,7 @@ def attack_enemy(
     )
 
     attacker_label = (
-        "Hero" if attacker_name == "hero" else "Familiar"
+        "Hero" if attacker_name == "hero" else "Phantom" if attacker_name == "phantom" else "Familiar"
     )
     if critical_hit:
         add_log_message(
@@ -739,7 +742,7 @@ def resolve_enemy_defeat(
                 category="loot",
             )
     elif current_act == 3:
-        drop_from_monster(floor, enemy)
+        drop_from_monster(game_state, enemy)
     try_spawn_enemy_after_death(game_state, enemy)
     release_mimic_loot(game_state, enemy)
 

@@ -45,6 +45,17 @@ def handle_dialogue_event(game_state, event, current_time):
         game_state.player.death_animation_started_at -= delta
     elif track == "act_three_death":
         game_state.player.death_animation_started_at = current_time - target
+    elif track in ("lantern_entry", "lantern_awakening"):
+        encounter = game_state.floor.lantern_encounter
+        if encounter is None:
+            return False
+        field = "entry_at" if track == "lantern_entry" else "started_at"
+        encounter[field] = current_time - target
+    elif track == "act_three_comment":
+        queue = game_state.act_three.dialogue_queue
+        if not queue:
+            return False
+        queue[0]["started_at"] = current_time - target
     else:
         return False
     state.completed_until = target

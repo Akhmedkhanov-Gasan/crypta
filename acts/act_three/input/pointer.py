@@ -131,8 +131,8 @@ def handle_act_three_pointer_event(
     movement_state,
     movement_available,
 ):
-    from acts.act_three.input.curse_trial import handle_pointer as handle_curse_pointer
-    from acts.act_three.input.summoner_trial import handle_pointer as handle_summoner_pointer
+    from acts.act_three.input.trials.warlock import handle_pointer as handle_curse_pointer
+    from acts.act_three.input.trials.summoner import handle_pointer as handle_summoner_pointer
 
     if handle_summoner_pointer(event, game_state, lambda position: window_to_game_position(screen, position), movement_state):
         return True
@@ -741,7 +741,7 @@ def handle_act_three_pointer_event(
                         game_state.sidebar_tab
                 ).collidepoint(game_mouse_position):
                     return True
-            from acts.act_three.piercing_trial import interact, interaction_cells
+            from acts.act_three.trials.archer import interact, interaction_cells
 
             crushing_trial = game_state.floor.crushing_trial
             curse_trial = game_state.floor.curse_trial
@@ -753,7 +753,7 @@ def handle_act_three_pointer_event(
                     origin = (game_state.floor.player_column, game_state.floor.player_row)
                     direction = (cell[0] - origin[0], cell[1] - origin[1])
                     if abs(direction[0]) + abs(direction[1]) == 1:
-                        from acts.act_three.curse_trial import handle_action
+                        from acts.act_three.trials.warlock import handle_action
 
                         handle_action(game_state, pygame.event.Event(pygame.KEYDOWN, key=pygame.K_SPACE), direction)
                         movement_state.cancel_auto_move()
@@ -769,13 +769,13 @@ def handle_act_three_pointer_event(
                     return True
                 trial_cell = get_act_three_cell_from_position(game_state, game_mouse_position)
                 if trial_cell is not None:
-                    from acts.act_three.shield_trial import inside
+                    from acts.act_three.trials.paladin import inside
 
                     if trial_cell == shield_trial["door"]:
                         origin = (game_state.floor.player_column, game_state.floor.player_row)
                         direction = (trial_cell[0] - origin[0], trial_cell[1] - origin[1])
                         if abs(direction[0]) + abs(direction[1]) == 1:
-                            from acts.act_three.shield_trial import handle_action
+                            from acts.act_three.trials.paladin import handle_action
 
                             handle_action(game_state, pygame.event.Event(pygame.KEYDOWN, key=pygame.K_SPACE), direction)
                             return True
@@ -790,7 +790,7 @@ def handle_act_three_pointer_event(
                 if trial_cell == crushing_trial["door"] and not crushing_trial["door_open"]:
                     direction = (trial_cell[0] - origin[0], trial_cell[1] - origin[1])
                     if abs(direction[0]) + abs(direction[1]) == 1:
-                        from acts.act_three.crushing_trial import handle_action
+                        from acts.act_three.trials.berserker import handle_action
 
                         handle_action(game_state, pygame.event.Event(pygame.KEYDOWN, key=pygame.K_SPACE), direction)
                         movement_state.cancel_auto_move()
@@ -800,7 +800,7 @@ def handle_act_three_pointer_event(
                     return True
                 rocks = {rock["cell"] for rock in crushing_trial["rocks"]}
                 if crushing_trial["active"] and trial_cell in rocks and abs(trial_cell[0] - origin[0]) + abs(trial_cell[1] - origin[1]) == 1:
-                    from acts.act_three.crushing_trial import handle_action
+                    from acts.act_three.trials.berserker import handle_action
 
                     handle_action(game_state, pygame.event.Event(pygame.KEYDOWN, key=pygame.K_SPACE), (trial_cell[0] - origin[0], trial_cell[1] - origin[1]))
                     movement_state.cancel_auto_move()
@@ -823,7 +823,7 @@ def handle_act_three_pointer_event(
                     start_auto_move(movement_state, game_state, trial_cell)
                     return True
                 if trial_cell is not None and piercing_trial["phase"] == "active":
-                    from acts.act_three.piercing_trial import inside
+                    from acts.act_three.trials.archer import inside
 
                     if inside(piercing_trial, trial_cell):
                         start_auto_move(movement_state, game_state, trial_cell)

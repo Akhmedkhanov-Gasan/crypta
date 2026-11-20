@@ -190,9 +190,9 @@ def draw_ground_item_window(
         )
 
     controls_font = fonts["sidebar_log" if act_three else "log"]
-    take_keys = "Space / G / click" if act_three else "G / Enter / click"
+    take_keys = "Space / G / click: take   R: all" if act_three else "G / Enter / click: take"
     controls = controls_font.render(
-        f"WASD / arrows: select   {take_keys}: take",
+        f"WASD / arrows: select   {take_keys}",
         True,
         (198, 187, 168),
     )

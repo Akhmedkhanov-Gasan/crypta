@@ -2,11 +2,12 @@ import pygame
 
 from acts.act_three.items.drops import drop_from_ore
 from acts.act_three.items.inventory import (
-    BLACK_ORE_CHUNK,
+    ORE_ITEM_NAMES,
     inventory_has_space,
     store_inventory_item,
 )
 from acts.act_three.mining.world import clear_ore_collision, get_ore_at
+from acts.act_three.mining.catalog import ORE_TYPES
 from game.combat_log import add_log_message
 from systems.grid_geometry import can_reach_adjacent_cell
 
@@ -19,6 +20,14 @@ MINING_RETURN_MS = MINING_FRAME_MS * 2
 MINING_EFFECT_MS = 600
 MINING_REWARD_MS = 1400
 MINING_WARNING_MS = 1400
+
+
+def _warn_mining(game_state, current_time, message, log_message):
+    warning = game_state.act_three.mining_warning
+    if warning is not None and warning["floor_index"] == game_state.floor_index and warning.get("message") == message and current_time - warning["started_at"] < MINING_WARNING_MS:
+        return
+    add_log_message(game_state.combat_log, log_message, category="warning")
+    game_state.act_three.mining_warning = {"floor_index": game_state.floor_index, "started_at": current_time, "message": message}
 
 
 def start_mining(game_state, target, current_time):
@@ -57,28 +66,19 @@ def start_mining(game_state, target, current_time):
     ):
         return False
 
+    from acts.act_three.quests.blacksmith import has_pickaxe
+
+    if not has_pickaxe(player):
+        _warn_mining(game_state, current_time, "Pickaxe required", "You need a pickaxe to mine ore. The blacksmith knows where to find one.")
+        return False
     if player.subclass == "warlock" and player.warlock_demon_form_active:
-        warning = game_state.act_three.mining_warning
-        if (
-            warning is None
-            or warning["floor_index"] != game_state.floor_index
-            or current_time - warning["started_at"] >= MINING_WARNING_MS
-        ):
-            add_log_message(
-                game_state.combat_log,
-                "Mining is unavailable in Demon Form. Return to human form.",
-                category="warning",
-            )
-            game_state.act_three.mining_warning = {
-                "floor_index": game_state.floor_index,
-                "started_at": current_time,
-            }
+        _warn_mining(game_state, current_time, "Human form required", "Mining is unavailable in Demon Form. Return to human form.")
         return False
 
     if ore["stage"] == 2 and not inventory_has_space(player):
         add_log_message(
             game_state.combat_log,
-            "The inventory is full. Make room for Black ore.",
+            f"The inventory is full. Make room for {ORE_ITEM_NAMES[ORE_TYPES[ore['type']]['item']]}.",
             category="warning",
         )
         return False
@@ -98,6 +98,7 @@ def start_mining(game_state, target, current_time):
         "started_at": current_time,
         "ending_at": None,
         "initial_stage": ore["stage"],
+        "ore_type": ore["type"],
         "hits": 0,
     }
     player.facing_direction = (
@@ -183,10 +184,11 @@ def advance_mining(game_state, current_time):
     elapsed = max(0, current_time - mining["started_at"])
 
     if mining["hits"] == 0 and elapsed >= MINING_IMPACT_MS:
-        if ore["stage"] == 2 and not store_inventory_item(player, BLACK_ORE_CHUNK):
+        item = ORE_TYPES[ore["type"]]["item"]
+        if ore["stage"] == 2 and not store_inventory_item(player, item):
             add_log_message(
                 game_state.combat_log,
-                "The inventory is full. Make room for Black ore.",
+                f"The inventory is full. Make room for {ORE_ITEM_NAMES[item]}.",
                 category="warning",
             )
             mining["ending_at"] = current_time
@@ -200,6 +202,7 @@ def advance_mining(game_state, current_time):
                 "position": mining["target"],
                 "started_at": mining["started_at"] + MINING_IMPACT_MS,
                 "seed": ore["stage"],
+                "ore_type": ore["type"],
             }
         )
 
@@ -210,10 +213,11 @@ def advance_mining(game_state, current_time):
                 "floor_index": game_state.floor_index,
                 "position": mining["origin"],
                 "started_at": current_time,
+                "ore_type": ore["type"],
             }
             add_log_message(
                 game_state.combat_log,
-                "Mined 1 Black ore.",
+                f"Mined 1 {ORE_ITEM_NAMES[item]}.",
                 category="loot",
             )
 

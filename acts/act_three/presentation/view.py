@@ -236,11 +236,16 @@ def _line_of_sight(
 def _get_act_three_visibility(floor):
     """Calculate current sight and remember cells seen earlier."""
     origin = (floor.player_column, floor.player_row)
-    from acts.act_three.summoner_trial import focus_cell
+    from acts.act_three.trials.summoner import focus_cell
 
     trial_focus = focus_cell(floor.summoner_trial, pygame.time.get_ticks())
     if trial_focus is not None:
         origin = round(trial_focus[0]), round(trial_focus[1])
+    from acts.act_three.enemies.lantern_warden.encounter import camera_focus
+
+    lantern_focus = camera_focus(floor, pygame.time.get_ticks())
+    if lantern_focus is not None:
+        origin = round(lantern_focus[0]), round(lantern_focus[1])
     floor.act_three_exploration_origins.add(origin)
     visible = set()
     radius = ACT_THREE_VISION_RADIUS_TILES
@@ -306,14 +311,14 @@ def _get_act_three_visibility(floor):
     trial = floor.shadow_step_trial
 
     if trial is not None:
-        from acts.act_three.shadow_step_trial import trial_cells
+        from acts.act_three.trials.assassin import trial_cells
 
         if trial["phase"] in ("closed", "opening"):
             visible.difference_update(trial_cells(trial))
 
     piercing_trial = floor.piercing_trial
     if piercing_trial is not None and piercing_trial["phase"] in ("closed", "opening"):
-        from acts.act_three.shadow_step_trial import trial_cells
+        from acts.act_three.trials.assassin import trial_cells
 
         visible.difference_update(trial_cells(piercing_trial))
 

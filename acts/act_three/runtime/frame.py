@@ -1,8 +1,8 @@
 from acts.act_two.enemies.oracle.behavior import resolve_oracle_hit_reaction
 from acts.act_three.npcs import advance_npc_dialog
 from acts.act_three.mining.runtime import advance_mining
-from acts.act_three.shadow_step_trial import advance_trial_frame
-from acts.act_three.piercing_trial import advance_frame as advance_piercing_trial
+from acts.act_three.trials.assassin import advance_trial_frame
+from acts.act_three.trials.archer import advance_frame as advance_piercing_trial
 from acts.act_three.settings import (
     ASSASSIN_ULTIMATE_OUTRO_MS,
     ASSASSIN_ULTIMATE_PRELUDE_MS,
@@ -22,7 +22,16 @@ def advance_act_three_frame(game_state, current_act, current_time, sounds):
         if game_state.act_three.awakening.phase != "complete":
             return
     if current_act == 3:
-        from acts.act_three.trial_safety import maintain_safety
+        from acts.act_three.enemies.lantern_warden.encounter import advance_encounter
+
+        advance_encounter(game_state, current_time)
+        from acts.act_three.items.drops import advance_monster_loot
+
+        advance_monster_loot(game_state, current_time)
+        from acts.act_three.dialogue.runtime import advance_dialogue
+
+        advance_dialogue(game_state, current_time)
+        from acts.act_three.trials.safety import maintain_safety
 
         maintain_safety(game_state)
         if game_state.player.health <= 0 and game_state.player.death_animation_started_at >= 0:
@@ -39,16 +48,16 @@ def advance_act_three_frame(game_state, current_act, current_time, sounds):
                 game_state.player.death_animation_started_at += elapsed - held
         advance_trial_frame(game_state, current_time)
         advance_piercing_trial(game_state, current_time)
-        from acts.act_three.crushing_trial import advance_frame as advance_crushing_trial
+        from acts.act_three.trials.berserker import advance_frame as advance_crushing_trial
 
         advance_crushing_trial(game_state, current_time)
-        from acts.act_three.shield_trial import advance_frame as advance_shield_trial
+        from acts.act_three.trials.paladin import advance_frame as advance_shield_trial
 
         advance_shield_trial(game_state, current_time)
-        from acts.act_three.curse_trial import advance_frame as advance_curse_trial
+        from acts.act_three.trials.warlock import advance_frame as advance_curse_trial
 
         advance_curse_trial(game_state, current_time)
-        from acts.act_three.summoner_trial import advance_frame as advance_summoner_trial
+        from acts.act_three.trials.summoner import advance_frame as advance_summoner_trial
 
         advance_summoner_trial(game_state, current_time)
         advance_npc_dialog(game_state, current_time)

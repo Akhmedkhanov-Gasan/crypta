@@ -1,4 +1,6 @@
 from acts.act_one.presentation.intro import act_one_intro_active
+from acts.act_three.dialogue.runtime import dialogue_active as act_three_dialogue_active
+from acts.act_three.enemies.lantern_warden.encounter import cinematic_active as lantern_cinematic_active
 from acts.act_one.warden_intro import warden_intro_active
 from acts.act_three.abilities.paladin_sacred_ground import (
     paladin_sacred_ground_cast_active,
@@ -25,6 +27,8 @@ def console_input_available(app_runtime, game_state):
         and game_state.player.act_three.mining is None
         and not oracle_cutscene_active(game_state.floor)
         and not warden_intro_active(game_state.floor)
+        and not lantern_cinematic_active(game_state.floor)
+        and not act_three_dialogue_active(game_state)
     )
 
 
@@ -34,6 +38,8 @@ def gameplay_cutscene_active(game_state):
         or oracle_cutscene_active(game_state.floor)
         or act_one_intro_active(game_state)
         or warden_intro_active(game_state.floor)
+        or lantern_cinematic_active(game_state.floor)
+        or act_three_dialogue_active(game_state)
     )
 
 

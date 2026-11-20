@@ -292,7 +292,7 @@ def create_floor_state(
         )
         for passage_data in floor.get("passages", [])
     ]
-    return FloorState(
+    floor_state = FloorState(
         map=floor["map"],
         player_column=player_column,
         player_row=player_row,
@@ -326,6 +326,7 @@ def create_floor_state(
         shield_trial=floor.get("shield_trial"),
         curse_trial=floor.get("curse_trial"),
         summoner_trial=floor.get("summoner_trial"),
+        lantern_encounter=floor.get("lantern_encounter"),
         trial_entrance=floor.get("trial_entrance"),
         trial_safe_cells=set(floor.get("trial_safe_cells", ())),
         bloody_altar=bloody_altar,
@@ -345,6 +346,11 @@ def create_floor_state(
             FLOOR_CONFIGS[floor_index]["act"],
         ),
     )
+    if floor_state.lantern_encounter is not None:
+        from acts.act_three.enemies.lantern_warden.encounter import initialize_encounter
+
+        initialize_encounter(floor_state)
+    return floor_state
 
 
 def prepare_act_one_revisit_floors(game_state: GameState):

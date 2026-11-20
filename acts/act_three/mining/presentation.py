@@ -3,6 +3,8 @@ import math
 import pygame
 
 from acts.act_three.mining.effects import draw_active_mining_particles
+from acts.act_three.mining.catalog import ORE_TYPES
+from acts.act_three.items.inventory import ORE_ITEM_NAMES
 from acts.act_three.mining.runtime import (
     MINING_EFFECT_MS,
     MINING_REWARD_MS,
@@ -35,7 +37,7 @@ def draw_world_ores(context, assets):
 
         column, row = ore["position"]
         context.view_surface.blit(
-            assets["black_ore_stages"][ore["stage"]],
+            assets[f"{ore['type']}_stages"][ore["stage"]],
             (
                 column * ACT_THREE_TILE_SIZE - context.camera_x,
                 row * ACT_THREE_TILE_SIZE - context.camera_y,
@@ -52,8 +54,9 @@ def draw_mining_feedback(context, game_state, assets, font, current_time):
         if 0 <= elapsed < MINING_WARNING_MS:
             progress = elapsed / MINING_WARNING_MS
             alpha = round(255 * min(1.0, (1.0 - progress) * 3))
-            label = font.render("Human form required", True, (212, 184, 235))
-            shadow = font.render("Human form required", True, (12, 8, 18))
+            message = warning.get("message", "Human form required")
+            label = font.render(message, True, (212, 184, 235))
+            shadow = font.render(message, True, (12, 8, 18))
             label.set_alpha(alpha)
             shadow.set_alpha(alpha)
             rectangle = label.get_rect(
@@ -98,6 +101,7 @@ def draw_mining_feedback(context, game_state, assets, font, current_time):
             + ACT_THREE_TILE_SIZE // 2
         )
         alpha = round(220 * (1 - progress))
+        ore_color = ORE_TYPES[effect.get("ore_type", "black_ore")]["color"]
 
         for index in range(5):
             angle = index * 2.399 + effect["seed"] * 0.71
@@ -107,7 +111,7 @@ def draw_mining_feedback(context, game_state, assets, font, current_time):
             radius = round(3 + progress * (6 + index % 3))
             pygame.draw.circle(
                 particles,
-                (99, 86, 108, round(34 * (1 - progress) ** 2)),
+                (*(round(channel * 0.45) for channel in ore_color), round(34 * (1 - progress) ** 2)),
                 (round(dust_x), round(dust_y)),
                 radius,
             )
@@ -123,9 +127,9 @@ def draw_mining_feedback(context, game_state, assets, font, current_time):
                 + progress * progress * 15
             )
             color = (
-                (205, 171, 235, alpha)
+                (*ore_color, alpha)
                 if index % 3 == 0
-                else (89, 70, 111, alpha)
+                else (*(round(channel * 0.4) for channel in ore_color), alpha)
             )
             pygame.draw.circle(
                 particles,
@@ -171,7 +175,9 @@ def draw_mining_feedback(context, game_state, assets, font, current_time):
     progress = elapsed / MINING_REWARD_MS
     alpha = round(255 * min(1, (1 - progress) * 3))
     column, row = reward["position"]
-    label = font.render("+1 Black ore", True, (212, 184, 235))
+    definition = ORE_TYPES[reward.get("ore_type", "black_ore")]
+    message = f"+1 {ORE_ITEM_NAMES[definition['item']]}"
+    label = font.render(message, True, definition["color"])
     label.set_alpha(alpha)
     rectangle = label.get_rect(
         center=(
@@ -183,10 +189,10 @@ def draw_mining_feedback(context, game_state, assets, font, current_time):
             round(row * ACT_THREE_TILE_SIZE - context.camera_y - 8 - progress * 18),
         )
     )
-    shadow = font.render("+1 Black ore", True, (12, 8, 18))
+    shadow = font.render(message, True, (12, 8, 18))
     shadow.set_alpha(alpha)
     surface.blit(shadow, rectangle.move(1, 2))
     surface.blit(label, rectangle)
-    icon = assets["black_ore_chunk_icon"].copy()
+    icon = assets[f"{definition['item']}_icon"].copy()
     icon.set_alpha(alpha)
     surface.blit(icon, (rectangle.left - 23, rectangle.centery - 9))

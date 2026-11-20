@@ -148,24 +148,24 @@ def _commit_summoner_turn():
 
 
 def handle_act_three_key_event(event, game_state, *, belt_available=False):
-    from acts.act_three.summoner_trial import handle_key as handle_summoner_key
+    from acts.act_three.trials.summoner import handle_key as handle_summoner_key
 
     if game_state.floor.presentation_act == 3 and handle_summoner_key(event, game_state):
         return True
-    from acts.act_three.curse_trial import handle_key as handle_curse_key
+    from acts.act_three.trials.warlock import handle_key as handle_curse_key
 
     if game_state.floor.presentation_act == 3 and handle_curse_key(event, game_state):
         return True
-    from acts.act_three.shield_trial import handle_key as handle_shield_key
+    from acts.act_three.trials.paladin import handle_key as handle_shield_key
 
     if game_state.floor.presentation_act == 3 and handle_shield_key(event, game_state):
         return True
-    from acts.act_three.crushing_trial import handle_key as handle_crushing_key
+    from acts.act_three.trials.berserker import handle_key as handle_crushing_key
 
     if game_state.floor.presentation_act == 3 and handle_crushing_key(event, game_state):
         return True
-    from acts.act_three.piercing_trial import handle_key as handle_piercing_key
-    from acts.act_three.shadow_step_trial import block_trial_key
+    from acts.act_three.trials.archer import handle_key as handle_piercing_key
+    from acts.act_three.trials.assassin import block_trial_key
 
     if game_state.floor.presentation_act == 3 and handle_piercing_key(event, game_state):
         return True
@@ -471,10 +471,9 @@ def handle_act_three_key_event(event, game_state, *, belt_available=False):
             return True
 
         if event.key == pygame.K_f:
+            if getattr(event, "repeat", False):
+                return True
             request_archer_barrage_zone(game_state)
-            set_archer_barrage_zone_cursor(
-                game_state.player.archer_barrage_zone_aiming
-            )
             return True
 
     if (

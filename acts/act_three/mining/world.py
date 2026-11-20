@@ -1,8 +1,18 @@
+from acts.act_three.items.inventory import ORE_ITEM_NAMES
+from acts.act_three.mining.catalog import ORE_TYPES
+
+
 def build_ores(by_name, dungeon_map):
     ores = []
     occupied = set()
 
-    for position, properties in by_name.get("black_ores", []):
+    markers = (
+        (ore_type, definition, position, properties)
+        for ore_type, definition in ORE_TYPES.items()
+        for marker in definition["markers"]
+        for position, properties in by_name.get(marker, [])
+    )
+    for ore_type, definition, position, properties in markers:
         column, row = position
         stage = int(properties.get("state", "1")) - 1
 
@@ -12,13 +22,13 @@ def build_ores(by_name, dungeon_map):
             and 0 <= stage <= 3
             and position not in occupied
         ):
-            raise ValueError(f"Invalid Black ore marker: {position!r}")
+            raise ValueError(f"Invalid {ORE_ITEM_NAMES[definition['item']]} marker: {position!r}")
 
         occupied.add(position)
         dungeon_map[row][column] = "." if stage == 3 else "#"
         ores.append(
             {
-                "type": "black_ore",
+                "type": ore_type,
                 "position": position,
                 "stage": stage,
             }
