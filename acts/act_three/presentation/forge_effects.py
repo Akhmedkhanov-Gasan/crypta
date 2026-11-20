@@ -5,9 +5,9 @@ from weakref import WeakKeyDictionary
 import pygame
 
 from presentation.movement import smoothstep
+from acts.act_three.blacksmith.recipes import TEMPERING_DURATION_MS
 
 
-TEMPERING_DURATION_MS = 1450
 QUENCH_MS = 520
 FILL_DELAY_MS = 140
 FILL_DURATION_MS = 1150
@@ -15,8 +15,8 @@ FILL_DURATION_MS = 1150
 _TEMPERING_STARTS = WeakKeyDictionary()
 
 
-def start_tempering(floor, current_time):
-    _TEMPERING_STARTS[floor] = current_time
+def start_tempering(floor, current_time, start_progress, target_progress):
+    _TEMPERING_STARTS[floor] = (current_time, start_progress, target_progress)
 
 
 def stop_tempering(floor):
@@ -24,22 +24,25 @@ def stop_tempering(floor):
 
 
 def tempering_elapsed(floor, current_time):
-    started_at = _TEMPERING_STARTS.get(floor)
-    if started_at is None:
+    animation = _TEMPERING_STARTS.get(floor)
+    if animation is None:
         return None
 
-    elapsed = max(0, current_time - started_at)
+    elapsed = max(0, current_time - animation[0])
     if elapsed >= TEMPERING_DURATION_MS:
         stop_tempering(floor)
         return None
     return elapsed
 
 
-def animated_forge_rank(rank, elapsed):
+def animated_forge_progress(fraction, elapsed, floor):
     if elapsed is None:
-        return rank
+        return fraction
     progress = smoothstep((elapsed - FILL_DELAY_MS) / FILL_DURATION_MS)
-    return max(0, rank - 1) + progress
+    animation = _TEMPERING_STARTS.get(floor)
+    if animation is None:
+        return fraction
+    return animation[1] + (animation[2] - animation[1]) * progress
 
 
 @lru_cache(maxsize=32)

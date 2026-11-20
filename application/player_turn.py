@@ -238,6 +238,7 @@ def resolve_player_turn(
                 getattr(event, name, False)
                 for name in (
                     "summoner_turn_commit",
+                    "ability_turn_commit",
                     "paladin_sacred_ground_turn",
                     "archer_barrage_commit",
                 )

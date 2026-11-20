@@ -9,6 +9,7 @@ from acts.act_three.room_generation import (
 )
 from acts.act_three.tmx_loader import load_tmx_floor
 from acts.act_three.layout_generation import generate_room_layout
+from acts.act_three.mining.generation import populate_act_three_ores
 
 
 def build_act_three_floor(
@@ -58,4 +59,5 @@ def build_act_three_floor(
 
     populate_act_three_enemies(floor, config["act_floor"])
     populate_act_three_crates(floor)
+    populate_act_three_ores(floor, config["act_floor"])
     return floor

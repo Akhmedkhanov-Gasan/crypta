@@ -102,6 +102,7 @@ class GameplayKeyboardController:
             and not barrage_resume
             and not getattr(event, "paladin_sacred_ground_turn", False)
             and not getattr(event, "summoner_turn_commit", False)
+            and not getattr(event, "ability_turn_commit", False)
             and event.key not in (pygame.K_F11, pygame.K_F1, pygame.K_F2, pygame.K_F3, pygame.K_F4)
             and not game_state.act_three_transition_open
             and not game_state.subclass_selection_open
@@ -150,6 +151,7 @@ class GameplayKeyboardController:
                     "archer_barrage_resume",
                     "paladin_sacred_ground_turn",
                     "summoner_turn_commit",
+                    "ability_turn_commit",
                 )
             )
         ):
@@ -267,7 +269,11 @@ class GameplayKeyboardController:
                 return game_state
 
         stunned_action = False
-        if game_state.player.stun_turns > 0 and not barrage_resume:
+        if (
+            game_state.player.stun_turns > 0
+            and not barrage_resume
+            and not getattr(event, "ability_turn_commit", False)
+        ):
             if forced_movement_is_active(
                 game_state.player,
                 pygame.time.get_ticks(),
@@ -296,7 +302,11 @@ class GameplayKeyboardController:
             self.movement_state.reset_held_movement()
             self.movement_state.cancel_auto_move()
 
-        if current_act in (2, 3) and mage_aiming(game_state.player):
+        if (
+            current_act in (2, 3)
+            and mage_aiming(game_state.player)
+            and not getattr(event, "ability_turn_commit", False)
+        ):
             if not any(
                 getattr(event, name, None) is not None
                 for name in ("mage_ability_target", "resonance_target")
@@ -413,6 +423,7 @@ class GameplayKeyboardController:
             and not player_tried_to_move
             and mage_ability_target is None
             and action_request.resonance_target is None
+            and not getattr(event, "ability_turn_commit", False)
         ):
             if event.key == pygame.K_ESCAPE:
                 cancel_ability_aiming(game_state)

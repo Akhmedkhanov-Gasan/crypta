@@ -1,3 +1,5 @@
+import pygame
+
 from acts.act_two.enemies.oracle.behavior import resolve_oracle_hit_reaction
 from acts.act_three.npcs import advance_npc_dialog
 from acts.act_three.mining.runtime import advance_mining
@@ -81,6 +83,13 @@ def advance_act_three_frame(game_state, current_act, current_time, sounds):
             )
             game_state.player.ultimate_animation_active = False
             game_state.player.ultimate_animation_started_at = 0
+            pygame.event.post(
+                pygame.event.Event(
+                    pygame.KEYDOWN,
+                    key=pygame.K_SPACE,
+                    ability_turn_commit=True,
+                )
+            )
 
     if (
         game_state.act_three_transition_open

@@ -1,34 +1,32 @@
 import json
 from functools import lru_cache
-from weakref import WeakKeyDictionary
 
 import pygame
 import resource_store as resources
 
 from acts.act_three.equipment import MAX_EQUIPMENT_RANK, equipment_rank_bonus
+from acts.act_three.blacksmith.recipes import IMPLEMENTED_FORGE_RANK
 from acts.act_three.forge import (
     FORGE_UPGRADES,
     can_forge_upgrade,
     forge_ore_count,
     forge_rank,
+    forge_recipe,
+    forge_work,
+    forge_progress_fraction,
     try_forge_upgrade,
 )
 from acts.act_three.npcs import close_npc_dialog, get_npc_at
 from acts.act_three.presentation.forge_effects import (
-    animated_forge_rank,
+    animated_forge_progress,
     draw_forge_fill_glow,
     draw_tempering,
     start_tempering,
     stop_tempering,
     tempering_elapsed,
 )
-from application.directional_input import CHORD_MOVEMENT_KEYS, movement_direction_for_key
-from presentation.directional_focus import move_focus
 from presentation.figma_ui import draw_figma_rectangle, draw_figma_text, figma_rect
 from presentation.layout import PROJECT_ROOT
-
-
-_KEYBOARD_FOCUS = WeakKeyDictionary()
 
 
 @lru_cache(maxsize=1)
@@ -66,7 +64,6 @@ def load_blacksmith_assets():
         confirm["active"],
         scale["fill"],
         scale["frame"],
-        layout["resources_icons"]["resource_01"]["icon"],
     ]
     for upgrade in FORGE_UPGRADES:
         art.extend(
@@ -129,28 +126,17 @@ def handle_blacksmith_event(event, game_state, mouse_position):
                 game_state.act_three.npc_dialog_line_index = (
                     0 if event.key == pygame.K_a else 1
                 )
-                _KEYBOARD_FOCUS[floor] = "confirm"
             return True
 
-        focus = _KEYBOARD_FOCUS.get(floor, _selected_upgrade(game_state))
-        if event.key in CHORD_MOVEMENT_KEYS:
-            _KEYBOARD_FOCUS[floor] = move_focus(
-                _control_rectangles(get_blacksmith_layout()),
-                focus,
-                movement_direction_for_key(event.key),
-            )
-            return True
         if getattr(event, "repeat", False):
             return True
         if event.key == pygame.K_ESCAPE:
             control = "close"
         elif event.key == pygame.K_SPACE:
-            control = _KEYBOARD_FOCUS.get(floor, "confirm")
-            _KEYBOARD_FOCUS[floor] = control
+            control = "confirm"
         elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
             control = "confirm"
     elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and mouse_position is not None:
-        _KEYBOARD_FOCUS.pop(floor, None)
         control = next(
             (
                 name for name, rect in _control_rectangles(get_blacksmith_layout()).items()
@@ -164,14 +150,19 @@ def handle_blacksmith_event(event, game_state, mouse_position):
 
     current_time = pygame.time.get_ticks()
     if control == "close":
-        _KEYBOARD_FOCUS.pop(floor, None)
+        if tempering_elapsed(floor, current_time) is not None:
+            return True
         stop_tempering(floor)
         close_npc_dialog(game_state, current_time)
     elif tempering_elapsed(floor, current_time) is not None:
         return True
     elif control == "confirm":
-        if try_forge_upgrade(game_state, _selected_upgrade(game_state)):
-            start_tempering(floor, current_time)
+        selected = _selected_upgrade(game_state)
+        before = forge_progress_fraction(game_state.player, selected)
+        previous_rank = forge_rank(game_state.player, selected)
+        if try_forge_upgrade(game_state, selected):
+            target = 1.0 if forge_rank(game_state.player, selected) > previous_rank else forge_progress_fraction(game_state.player, selected)
+            start_tempering(floor, current_time, before, target)
     elif control in FORGE_UPGRADES:
         game_state.act_three.npc_dialog_line_index = FORGE_UPGRADES.index(control)
 
@@ -180,7 +171,6 @@ def handle_blacksmith_event(event, game_state, mouse_position):
 
 def draw_blacksmith(screen, game_state, fonts, assets, current_time):
     if not _blacksmith_is_open(game_state):
-        _KEYBOARD_FOCUS.pop(game_state.floor, None)
         return False
 
     layout = get_blacksmith_layout()
@@ -211,34 +201,49 @@ def draw_blacksmith(screen, game_state, fonts, assets, current_time):
     bonus_label = "Weapon damage" if selected == "weapon" else "Physical damage reduction"
     bonus = equipment_rank_bonus(rank)
     next_bonus = equipment_rank_bonus(rank + 1)
-    description = (
-        f"{selected.title()} rank {rank}/{MAX_EQUIPMENT_RANK}\n"
-        + (
-            f"{bonus_label}: {bonus}%\nMaximum rank reached."
-            if rank >= MAX_EQUIPMENT_RANK
-            else f"{bonus_label}: {bonus}% to {next_bonus}%"
+    recipe = forge_recipe(player, selected)
+    work = forge_work(player, selected)
+    worked = sum(min(work.get(item, 0), required) for item, required in recipe.items())
+    description = f"{selected.title()} rank {rank}/{MAX_EQUIPMENT_RANK}\n"
+    if rank >= MAX_EQUIPMENT_RANK:
+        description += f"{bonus_label}: {bonus}%\nMaximum rank reached."
+    elif rank >= IMPLEMENTED_FORGE_RANK:
+        description += f"{bonus_label}: {bonus}%\nFurther ranks are not available yet."
+    else:
+        description += (
+            f"{bonus_label}: {bonus}% to {next_bonus}%\n"
+            f"Work on next rank: {worked}/{sum(recipe.values())} materials\n"
+            "Finish this rank to receive the bonus."
         )
-    )
     if elapsed is not None:
         description = f"Tempering {selected}...\n{bonus_label}: {bonus}%"
-    draw_figma_text(screen, improvement["improvement_description"], text_override=description)
+    draw_figma_text(screen, improvement["improvement_description"], text_override=description, wrap=True)
 
-    ore = layout["resources_icons"]["resource_01"]
-    draw_art(ore["icon"])
-    owned = forge_ore_count(player)
-    amount = fonts["sidebar_numbers"].render(
-        f"{owned}/1", True, (224, 205, 163) if owned else (217, 115, 107),
-    )
-    ore_rectangle = figma_rect(ore["rect"])
-    amount_rectangle = amount.get_rect(bottomright=ore_rectangle.bottomright)
-    pygame.draw.rect(screen, (14, 10, 13), amount_rectangle.inflate(6, 2), border_radius=3)
-    screen.blit(amount, amount_rectangle)
+    for index, (item, required) in enumerate(recipe.items(), start=1):
+        ore = layout["resources_icons"].get(f"resource_{index:02d}")
+        if ore is None:
+            continue
+        ore_rectangle = figma_rect(ore["rect"])
+        sprite = assets.get("act_three_inventory_sprites", {}).get(item)
+        if sprite is not None:
+            fitted = sprite.get_rect().fit(ore_rectangle)
+            screen.blit(pygame.transform.smoothscale(sprite, fitted.size), fitted)
+        else:
+            label = fonts["sidebar_numbers"].render("?", True, (122, 114, 128))
+            screen.blit(label, label.get_rect(center=ore_rectangle.center))
+        owned = forge_ore_count(player, item)
+        done = min(work.get(item, 0), required)
+        color = (143, 188, 128) if done == required else (224, 205, 163) if owned else (217, 115, 107)
+        amount = fonts["sidebar_numbers"].render(f"{done}/{required}", True, color)
+        amount_rectangle = amount.get_rect(bottomright=ore_rectangle.bottomright)
+        pygame.draw.rect(screen, (14, 10, 13), amount_rectangle.inflate(6, 2), border_radius=3)
+        screen.blit(amount, amount_rectangle)
 
     scale = layout["scale"]
     fill = scale["fill"]
     fill_rect = figma_rect(fill["rect"])
-    display_rank = animated_forge_rank(rank, elapsed)
-    fill_width = round(fill_rect.width * display_rank / MAX_EQUIPMENT_RANK)
+    progress = animated_forge_progress(forge_progress_fraction(player, selected), elapsed, game_state.floor)
+    fill_width = round(fill_rect.width * max(0.0, min(1.0, progress)))
     if fill_width > 0:
         screen.blit(
             images[_art_key(fill)], fill_rect,
@@ -247,11 +252,4 @@ def draw_blacksmith(screen, game_state, fonts, assets, current_time):
         draw_forge_fill_glow(screen, fill_rect, fill_width, elapsed)
     draw_art(scale["frame"])
     draw_art(layout["confirm_button"]["active" if can_upgrade else "inactive"])
-    focus = _KEYBOARD_FOCUS.get(game_state.floor)
-    if focus is not None:
-        rectangle = _control_rectangles(layout)[focus].inflate(6, 6)
-        color = (181, 145, 81)
-        if focus == "confirm" and not can_upgrade:
-            color = (122, 105, 86)
-        pygame.draw.rect(screen, color, rectangle, width=2, border_radius=5)
     return True

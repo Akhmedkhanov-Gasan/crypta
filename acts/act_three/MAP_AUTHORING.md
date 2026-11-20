@@ -35,6 +35,22 @@ Use an enemy type as the point name in `Entities` or `Enemies`, or use `enemy` w
 
 Place point objects named `black_ore` / `black_ores` or `iron_ore` / `iron_ores` in `Ores` or `Entities`. The optional integer property `state` selects stages 1–4. Each interaction advances one stage; the final hit grants one matching ore chunk in a separate inventory slot. Stage 4 is depleted and walkable. Ore definitions and assets are configured in `acts/act_three/mining/catalog.py`.
 
+`bloodvein_ore` / `bloodvein_ores` adds dark turquoise ore with red veins. It uses the same four stages and mining rules. Authored sprites are loaded from `assets/sprites/act_3/items/ores/bloodvein_ore`, using `bloodvein_ore_01.png` through `bloodvein_ore_04.png` and `bloodvein_ore_chunk.png`. Random bloodvein placement is disabled for now; floors 9 and 10 generate iron and black ore only.
+
+Random ore placement follows the same room regions and edge placement as crates. Map properties:
+
+- `ore_spawn_mode` (boolean): allow or disable random veins; defaults to `enemy_spawn_mode` when absent.
+- `ore_types` (string): optional comma-separated ore types; random placement uses only types enabled in that floor's `weights`. Currently these are `iron_ore,black_ore`.
+- `ore_count` (integer): optional cap on active veins in this room, including authored veins; zero disables extra veins.
+
+Authored veins are retained regardless of the random spawn flag. Random veins avoid occupied cells, decorated tiles, NPC approaches, trial areas and room connectors. Placement preserves walking routes and mining access. Floor targets, ore weights, density and spacing are configured in `acts/act_three/mining/settings.py`; available space can reduce the final count. Iron is prioritized until at least four active iron veins exist on the floor, when room properties and space allow it.
+
+Floors 9 and 10 each target nine iron veins and five black veins, including authored veins: 18 iron and 10 black chunks in total. Weapon and armour ranks I–II together cost 16 iron and eight black chunks. Corridor templates never receive random veins. Each candidate must fit inside a connected open 3x3 patch, remain at least five cells from another vein, and stay outside the two-cell buffer around room entrances. Connectivity checks still apply after placement.
+
+Forge ranks I–III require four iron, then four iron plus four black ore, then four of each of those plus four bloodvein ore. Materials can be worked in across multiple visits; weapon and armour progress are separate, and stat bonuses apply only after a whole rank is finished. Ranks IV–V are reserved and cannot consume materials yet. The blacksmith's keyring is a gift and does not consume the iron shown during the quest.
+
+The forge bar shows only the current rank's material progress. One iron chunk fills 25% of rank I; completing the rank fills the bar during tempering, then resets it for the next rank. A/D selects weapon or armour, Space confirms work, and Escape closes the forge.
+
 ## Tilesets and trials
 
 Use external TSX files from `assets/maps/act_3` or its `torches` directory. Each TMX may use its own `firstgid` order; loading remaps it to the shared catalog. After expanding a tileset, update overlapping `firstgid` ranges in Tiled before painting more tiles.

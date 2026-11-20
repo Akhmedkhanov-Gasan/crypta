@@ -65,7 +65,6 @@ from acts.act_three.abilities.assassin import (
 from acts.act_three.abilities.berserker import (
     cancel_berserker_crushing_leap,
     request_berserker_crushing_leap,
-    request_berserker_last_rage,
     update_berserker_crushing_leap_preview,
 )
 from acts.act_three.presentation.summoner.true_form import (
@@ -142,7 +141,7 @@ def _commit_summoner_turn():
         pygame.event.Event(
             pygame.KEYDOWN,
             key=pygame.K_SPACE,
-            summoner_turn_commit=True,
+            ability_turn_commit=True,
         )
     )
 
@@ -202,6 +201,7 @@ def handle_act_three_key_event(event, game_state, *, belt_available=False):
     if (
         getattr(event, "archer_barrage_commit", False)
         or getattr(event, "archer_barrage_resume", False)
+        or getattr(event, "ability_turn_commit", False)
     ):
         return False
     sacred_ground_turn = getattr(
@@ -771,12 +771,7 @@ def handle_act_three_key_event(event, game_state, *, belt_available=False):
         and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
         and game_state.player.subclass == "berserker"
     ):
-        request_berserker_last_rage(
-            game_state,
-            pygame.time.get_ticks(),
-        )
-        set_berserker_crushing_leap_cursor()
-        return True
+        return False
     
     if (
         event.key == pygame.K_q

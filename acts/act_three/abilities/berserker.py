@@ -258,7 +258,7 @@ def request_berserker_last_rage(
             game_state.combat_log,
             "Last Rage is already active.",
         )
-        return True
+        return False
     if (
         not player.debug_unlimited_abilities
         and player.berserker_last_rage_charge
@@ -268,7 +268,7 @@ def request_berserker_last_rage(
             game_state.combat_log,
             "Last Rage is not charged.",
         )
-        return True
+        return False
 
     player.berserker_last_rage_charge = 0
     player.berserker_last_rage_turns = (

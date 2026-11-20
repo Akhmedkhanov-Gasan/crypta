@@ -155,6 +155,9 @@ def _compose(placements, connections):
             "right": offset[0] + template["width"],
             "bottom": offset[1] + template["height"],
             "enabled": template.get("enemy_spawn_mode", False),
+            "ore_spawn_mode": template.get("ore_spawn_mode", template.get("enemy_spawn_mode", False)),
+            "ore_types": template.get("ore_types", ()),
+            "ore_count": template.get("ore_count"),
             "source_path": template["source_path"],
         })
 

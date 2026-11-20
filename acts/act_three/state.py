@@ -50,6 +50,7 @@ class ActThreePlayerState:
     ironblood_guard: bool = False
     mining: dict | None = None
     blacksmith_quest: dict[str, bool] = field(default_factory=dict)
+    forge_progress: dict[str, dict[str, int]] = field(default_factory=dict)
     inventory_slots: list[str | None] = field(
         default_factory=lambda: [None] * INVENTORY_SLOT_COUNT,
     )

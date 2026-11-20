@@ -4,9 +4,11 @@ from acts.act_three.items.keys import CRYPTA_KEY, KEYRING_ITEMS, collect_loose_k
 INVENTORY_SLOT_COUNT = 24
 BLACK_ORE_CHUNK = "black_ore_chunk"
 IRON_ORE_CHUNK = "iron_ore_chunk"
+BLOODVEIN_ORE_CHUNK = "bloodvein_ore_chunk"
 ORE_ITEM_NAMES = {
     BLACK_ORE_CHUNK: "Black ore",
     IRON_ORE_CHUNK: "Iron ore",
+    BLOODVEIN_ORE_CHUNK: "Bloodvein ore",
 }
 
 

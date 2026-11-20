@@ -482,6 +482,9 @@ def load_tmx_floor(path):
     return {
         "lantern_encounter": lantern_encounter,
         "enemy_spawn_mode": map_properties.get("enemy_spawn_mode", "false").lower() == "true",
+        "ore_spawn_mode": map_properties.get("ore_spawn_mode", map_properties.get("enemy_spawn_mode", "false")).lower() == "true",
+        "ore_types": tuple(value.strip() for value in map_properties.get("ore_types", "").split(",") if value.strip()),
+        "ore_count": _optional_int(map_properties, "ore_count"),
         "map": ["".join(row) for row in dungeon_map],
         "trial_entrance": trial_entrance,
         "trial_safe_cells": {(x, y) for y in range(height) for x in range(width)} if trial_entrance is not None else set(),

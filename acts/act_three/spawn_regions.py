@@ -8,6 +8,9 @@ def spawn_regions(floor):
         "right": len(floor["map"][0]),
         "bottom": len(floor["map"]),
         "enabled": floor.get("enemy_spawn_mode", False),
+        "ore_spawn_mode": floor.get("ore_spawn_mode", floor.get("enemy_spawn_mode", False)),
+        "ore_types": floor.get("ore_types", ()),
+        "ore_count": floor.get("ore_count"),
     }])
 
 

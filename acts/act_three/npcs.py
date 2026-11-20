@@ -68,6 +68,8 @@ def open_npc_dialog(game_state, npc, current_time):
     state.npc_dialog_phase = "opening"
     state.npc_dialog_started_at = current_time
     state.npc_dialog_line_index = 0
+    if npc["type"] == "blacksmith":
+        game_state.player.act_three.blacksmith_quest["met"] = True
     state.blacksmith_forge_open = npc["type"] == "blacksmith" and game_state.player.act_three.blacksmith_quest.get("completed", False)
     state.trader_slot_presses.clear()
     state.trader_focus = None

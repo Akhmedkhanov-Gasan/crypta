@@ -11,7 +11,10 @@ from acts.act_three.items.use import use_belt_item
 from acts.act_three.trader_catalog import POTION_HEALING
 from acts.act_three.mining.runtime import start_mining
 from acts.act_three.mining.world import get_ore_at
-from acts.act_three.abilities.berserker import perform_berserker_crushing_leap
+from acts.act_three.abilities.berserker import (
+    perform_berserker_crushing_leap,
+    request_berserker_last_rage,
+)
 from acts.act_three.abilities.warlock import request_warlock_demon_form
 from presentation.cursors import (
     set_berserker_crushing_leap_cursor,
@@ -79,6 +82,9 @@ def resolve_act_three_player_action(
     final_floor_index,
     hit_reaction,
 ) -> ActThreePlayerActionResult:
+    if getattr(event, "ability_turn_commit", False):
+        return ActThreePlayerActionResult(player_acted=True)
+
     from acts.act_three.trials.archer import handle_action as handle_piercing_action
     from acts.act_three.trials.summoner import handle_action as handle_summoner_action
 
@@ -127,6 +133,11 @@ def resolve_act_three_player_action(
         )
         if acted:
             game_state.player.act_three.consumable_aim_slot = None
+        return ActThreePlayerActionResult(player_acted=acted)
+
+    if event.key == pygame.K_f and game_state.player.subclass == "berserker":
+        acted = request_berserker_last_rage(game_state, pygame.time.get_ticks())
+        set_berserker_crushing_leap_cursor()
         return ActThreePlayerActionResult(player_acted=acted)
 
     if event.key == pygame.K_f and game_state.player.subclass == "warlock":

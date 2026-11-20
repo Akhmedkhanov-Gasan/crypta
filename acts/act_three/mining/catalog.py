@@ -1,4 +1,4 @@
-from acts.act_three.items.inventory import BLACK_ORE_CHUNK, IRON_ORE_CHUNK
+from acts.act_three.items.inventory import BLACK_ORE_CHUNK, BLOODVEIN_ORE_CHUNK, IRON_ORE_CHUNK
 
 
 ORE_TYPES = {
@@ -11,5 +11,10 @@ ORE_TYPES = {
         "markers": ("iron_ore", "iron_ores"),
         "item": IRON_ORE_CHUNK,
         "color": (200, 198, 183),
+    },
+    "bloodvein_ore": {
+        "markers": ("bloodvein_ore", "bloodvein_ores"),
+        "item": BLOODVEIN_ORE_CHUNK,
+        "color": (71, 156, 153),
     },
 }

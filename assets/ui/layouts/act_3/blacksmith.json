@@ -274,11 +274,11 @@
     "improvement_description": {
       "rect": {
         "x": 508,
-        "y": 280,
-        "width": 449,
-        "height": 115
+        "y": 283,
+        "width": 448,
+        "height": 108
       },
-      "text": "test test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test testtest test test",
+      "text": "test test testtest test testtest test testtest\ntest testtest test testtest test testtest test\ntesttest test testtest test testtest test testtest\ntest testtest test testtest test testtest test\ntesttest test testtest test testtest test testtest\ntest testtest test testtest test test",
       "font": {
         "family": "Ubuntu Mono",
         "style": "Medium",
@@ -300,7 +300,7 @@
         "b": 167,
         "a": 255
       },
-      "auto_resize": "NONE"
+      "auto_resize": "WIDTH_AND_HEIGHT"
     }
   },
   "resources_icons": {
@@ -325,7 +325,7 @@
           "width": 64,
           "height": 64
         },
-        "asset_path": "assets/sprites/act_3/items/ores/black_ore/black_ore_chunk.png",
+        "asset_path": "assets/sprites/act_3/npcs/blacksmith/ores/black_ore/black_ore_chunk.png",
         "opacity": 1
       }
     },
@@ -344,7 +344,7 @@
           "width": 64,
           "height": 64
         },
-        "asset_path": "assets/sprites/act_3/items/ores/iron/iron_ore_chunk.png",
+        "asset_path": "assets/sprites/act_3/npcs/blacksmith/ores/iron/iron_ore_chunk.png",
         "opacity": 1
       }
     },
@@ -366,6 +366,7 @@
     "height": 39
   },
   "warnings": [
+    "act3_blacksmith: set improvement_description to Fixed size.",
     "act3_blacksmith: resource_03 is reserved. Its ore_icon is skipped."
   ]
 }

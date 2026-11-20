@@ -1,5 +1,5 @@
 from acts.act_three.dialogue.runtime import queue_dialogue
-from acts.act_three.items.inventory import IRON_ORE_CHUNK, get_inventory_slots, remove_inventory_item, store_inventory_item
+from acts.act_three.items.inventory import IRON_ORE_CHUNK, get_inventory_slots, store_inventory_item
 from acts.act_three.items.keys import KEYRING_ITEMS
 from acts.act_three.items.special import PICKAXE
 from game.combat_log import add_log_message
@@ -20,6 +20,14 @@ PICKAXE_LINES = {
     "paladin": "The pickaxe the blacksmith spoke of. He mentioned iron in these rooms. I should try that vein.",
     "warlock": "A pickaxe, just as the blacksmith promised. He mentioned iron nearby. Let's test it on that vein.",
     "summoner": "Found it! The blacksmith's pickaxe. He said there was iron here. Come on, let's try that vein.",
+}
+UNKNOWN_PICKAXE_LINES = {
+    "assassin": "A pickaxe? Odd thing to guard. Might come in handy.",
+    "archer": "What's this? A pickaxe. I'll keep it; there must be a use for it down here.",
+    "berserker": "All that for a bloody pickaxe? Fine. I'm keeping it.",
+    "paladin": "A pickaxe. Someone must have used it down here. Best take it with me.",
+    "warlock": "A pickaxe? A curious prize for such an unpleasant keeper.",
+    "summoner": "Oh, what's this? A pickaxe! Let's take it along.",
 }
 
 BLACKSMITH_REPLIES = {
@@ -88,13 +96,15 @@ def note_pickaxe_pickup(player):
     if not quest.get("pickaxe_recovered"):
         quest["pickaxe_recovered"] = True
         quest["pickaxe_comment_pending"] = True
+        quest["pickaxe_hint_known"] = quest.get("met", quest.get("introduced", False))
 
 
 def on_loot_closed(game_state):
     quest = game_state.player.act_three.blacksmith_quest
     if quest.pop("pickaxe_comment_pending", False):
         speaker = game_state.player.subclass or "assassin"
-        queue_dialogue(game_state, speaker, PICKAXE_LINES.get(speaker, PICKAXE_LINES["assassin"]))
+        lines = PICKAXE_LINES if quest.get("pickaxe_hint_known", quest.get("introduced", False)) else UNKNOWN_PICKAXE_LINES
+        queue_dialogue(game_state, speaker, lines.get(speaker, lines["assassin"]))
 
 
 def blacksmith_dialogue(game_state):
@@ -102,24 +112,38 @@ def blacksmith_dialogue(game_state):
     quest = player.act_three.blacksmith_quest
     speaker = player.subclass or "assassin"
     surprise, equipment, tools, danger, delivery = BLACKSMITH_REPLIES.get(speaker, BLACKSMITH_REPLIES["assassin"])
+    has_iron = IRON_ORE_CHUNK in get_inventory_slots(player)
+    reward = (
+        ("blacksmith", "Good find. Keep the iron for your equipment. This keyring is a gift: three keys on the ring, any more stay loose."),
+        (speaker, "And my equipment?"),
+        ("blacksmith", "Choose a weapon or armour and I'll start working that iron into it. We can finish the job when you bring more."),
+    )
     if not quest.get("introduced"):
-        return (
+        introduction = (
             (speaker, surprise),
             ("blacksmith", "I'm the blacksmith. Lived here so long, I've stopped being surprised by anything. Even visitors."),
             (speaker, equipment),
             ("blacksmith", "I can improve weapons and armour. Bring me ore. You'll find veins throughout the crypt, even in the old passages."),
+        )
+        if quest.get("pickaxe_recovered"):
+            discovery = (
+                (speaker, "You mean this pickaxe? Took it off a very unpleasant monster."),
+                ("blacksmith", "You killed that thing? Well, that's a surprise. Was there any ore nearby?"),
+            )
+            if has_iron:
+                return introduction + discovery + ((speaker, "Yes. Here, I brought some iron."),) + reward
+            return introduction + discovery + (
+                (speaker, "There was a vein. Haven't tried the pickaxe on it yet."),
+                ("blacksmith", "Try it, then. Bring me one piece of iron and we'll get started."),
+            )
+        return introduction + (
             (speaker, tools),
             ("blacksmith", "There's a pickaxe in a rubbish heap in the distant rooms. Mind yourself. Something dangerous has settled there."),
             (speaker, danger),
             ("blacksmith", "One piece of iron. There's a vein near that heap. Bring it back, then we'll put the forge to work."),
         )
-    if not quest.get("completed") and quest.get("pickaxe_recovered") and IRON_ORE_CHUNK in get_inventory_slots(player):
-        return (
-            (speaker, delivery),
-            ("blacksmith", "Good iron. Here, take this keyring for your trouble. Holds three keys; the rest stay loose."),
-            (speaker, "And my equipment?"),
-            ("blacksmith", "Now we can start. Bring black ore for improvements. Let's see what you're carrying."),
-        )
+    if not quest.get("completed") and quest.get("pickaxe_recovered") and has_iron:
+        return ((speaker, delivery),) + reward
     if quest.get("completed"):
         return (("blacksmith", "Back for more? Show me what needs work."),)
     if quest.get("pickaxe_recovered"):
@@ -138,12 +162,44 @@ def finish_blacksmith_dialogue(game_state):
     quest = player.act_three.blacksmith_quest
     if not quest.get("introduced"):
         quest["introduced"] = True
-        return False
     if not quest.get("completed") and quest.get("pickaxe_recovered"):
-        if remove_inventory_item(player, IRON_ORE_CHUNK):
-            if not store_inventory_item(player, KEYRING_ITEMS[0]):
-                store_inventory_item(player, IRON_ORE_CHUNK)
+        if IRON_ORE_CHUNK in get_inventory_slots(player):
+            if not any(item in KEYRING_ITEMS for item in get_inventory_slots(player)) and not store_inventory_item(player, KEYRING_ITEMS[0]):
+                add_log_message(game_state.combat_log, "Make room for the blacksmith's keyring. Keep your iron for forging.", category="warning")
                 return False
             quest["completed"] = True
-            add_log_message(game_state.combat_log, "Iron delivered. The blacksmith gives you a keyring and opens the forge.", category="quest")
+            add_log_message(game_state.combat_log, "The blacksmith gives you a keyring and opens the forge. Your iron stays in your pack.", category="quest")
     return quest.get("completed", False)
+
+
+def queue_forge_dialogue(game_state, rank, complete, ready_at):
+    quest = game_state.player.act_three.blacksmith_quest
+    speaker = game_state.player.subclass or "assassin"
+    lines = ()
+    if not complete and not quest.get("forge_explained"):
+        quest["forge_explained"] = True
+        curses = {
+            "assassin": "Shit. Nothing down here comes easy.",
+            "archer": "Damn it. More trips into the dark, then.",
+            "berserker": "Four bloody rocks. Of course one wasn't enough.",
+            "paladin": "Damn this place. Very well, I'll bring more.",
+            "warlock": "Of course. Even steel has a bloody appetite here.",
+            "summoner": "Damn it. Come on, we'll have to find more.",
+        }
+        lines = (
+            (speaker, "Well? I can't see any difference in my equipment."),
+            ("blacksmith", "Thought one piece would do it? That only starts the work. The first improvement takes four pieces of iron."),
+            ("blacksmith", "Harder work needs more ore, and more kinds of it. What you've brought is already worked in; bring the rest and I'll finish."),
+            (speaker, curses.get(speaker, curses["assassin"])),
+        )
+    elif complete and not quest.get(f"forge_rank_{rank}_explained"):
+        quest["forge_explained"] = True
+        quest[f"forge_rank_{rank}_explained"] = True
+        messages = {
+            1: "Good. That's a proper improvement. The next rank needs four iron and four black ore. Bring both.",
+            2: "That's stronger steel. Next time, add four bloodvein ore to the iron and black ore. Dark turquoise, with red veins. You won't mistake it.",
+            3: "That's as far as I can take it for now. The next work will need ashsilver from deeper in the crypt.",
+        }
+        lines = (("blacksmith", messages[rank]),)
+    for actor, text in lines:
+        queue_dialogue(game_state, actor, text, ready_at=ready_at, allow_npc=True)
