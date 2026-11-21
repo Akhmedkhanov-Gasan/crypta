@@ -27,6 +27,7 @@ def draw_frame_overlays(
     dev_console,
     mouse_position,
     act_two_camera=None,
+    defer_subclass_selection=False,
 ):
     if game_state.class_selection_open:
         draw_class_selection_screen(
@@ -79,7 +80,7 @@ def draw_frame_overlays(
                 ),
                 game_state.player.player_class,
             )
-    elif game_state.subclass_selection_open:
+    elif game_state.subclass_selection_open and not defer_subclass_selection:
         draw_selection(
             screen,
             act_three_fonts["title"],
@@ -89,6 +90,7 @@ def draw_frame_overlays(
             mouse_position,
             game_state.player.subclass,
             game_state.player.player_class,
+            pressed_subclass=game_state.act_three.subclass_pressed_option,
         )
 
     if (

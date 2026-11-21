@@ -174,6 +174,7 @@ def choose_subclass(game_state, subclass):
     game_state.player.key_count = 0
     game_state.player_attack_targets = []
     game_state.subclass_selection_open = False
+    game_state.act_three.subclass_pressed_option = None
     display_name = {
         "berserker": "Berserker",
         "paladin": "Paladin",

@@ -4,35 +4,8 @@ from acts.act_three.presentation.hud.assets import _ART_RECTS
 from acts.act_three.presentation.hud.layout import get_layout_rect
 from acts.act_three.presentation.hud.renderer import draw_act_three_hud
 from presentation.display import game_viewport, present_game
+from presentation.figma_layout import scale_figma_layout as _scale_layout
 from settings import GAME_HEIGHT, GAME_WIDTH
-
-
-_PIXEL_FIELDS = frozenset({
-    "x", "y", "width", "height", "size", "corner_radius",
-    "stroke_weight", "blur_radius",
-})
-
-
-def _scale_layout(value, scale):
-    if isinstance(value, list):
-        return [_scale_layout(item, scale) for item in value]
-    if not isinstance(value, dict):
-        return value
-
-    result = {}
-    for key, item in value.items():
-        if (
-            isinstance(item, (int, float))
-            and not isinstance(item, bool)
-            and (
-                key in _PIXEL_FIELDS
-                or (key == "value" and value.get("unit") == "PIXELS")
-            )
-        ):
-            result[key] = round(item * scale)
-        else:
-            result[key] = _scale_layout(item, scale)
-    return result
 
 
 class NativeActThreeHud:
@@ -81,7 +54,7 @@ class NativeActThreeHud:
         self._cache_key = key
         return prepared
 
-    def present(self, window, game_surface, foreground, game_state, fonts, assets, current_time):
+    def present(self, window, game_surface, foreground, game_state, fonts, assets, current_time, native_overlay=None):
         present_game(window, game_surface, flip=False)
         viewport, _ = game_viewport(window.get_size())
         target = window.subsurface(viewport)
@@ -103,6 +76,9 @@ class NativeActThreeHud:
             target.blit(foreground, (0, 0))
         else:
             target.blit(pygame.transform.smoothscale(foreground, target.get_size()), (0, 0))
+
+        if native_overlay is not None:
+            native_overlay(target)
 
         pygame.transform.smoothscale(target, game_surface.get_size(), game_surface)
         pygame.display.flip()

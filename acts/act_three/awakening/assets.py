@@ -37,6 +37,7 @@ def load_selection_assets():
     paths = {
         "act_three_subclass_card": root / "portrait_background.png",
         "act_three_skill_panel": root / "passive_background.png",
+        "act_three_subclass_title": root.parent / "screen_title.png",
     }
     for subclass, definition in SUBCLASS_DEFINITIONS.items():
         folder = root / subclass

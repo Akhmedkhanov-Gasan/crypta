@@ -25,7 +25,7 @@ def _wrap_dialogue(font, text, width, spacing):
     return lines
 
 
-def draw_dialogue_text(surface, source_spec, text, visible_characters=None, color=None):
+def draw_dialogue_text(surface, source_spec, text, visible_characters=None, color=None, *, preserve_glyphs=False):
     spec = deepcopy(source_spec)
     rectangle = figma_rect(spec["rect"])
     text = _apply_text_case(text, spec.get("text_case", "ORIGINAL"))
@@ -39,6 +39,7 @@ def draw_dialogue_text(surface, source_spec, text, visible_characters=None, colo
         line_height = _line_height_pixels(spec, font)
         if (
             len(lines) * line_height <= rectangle.height
+            and (not preserve_glyphs or (len(lines) - 1) * line_height + font.get_height() <= rectangle.height)
             and font.get_height() <= rectangle.height
             and all(_text_width(font, line, spacing) <= rectangle.width for line in lines)
         ):
@@ -46,6 +47,8 @@ def draw_dialogue_text(surface, source_spec, text, visible_characters=None, colo
     else:
         raise ValueError(f"Dialogue does not fit its Figma rectangle: {text!r}")
     total_height = len(lines) * line_height
+    if preserve_glyphs:
+        total_height = (len(lines) - 1) * line_height + font.get_height()
     vertical = spec.get("vertical_align", "TOP")
     y = rectangle.top
     if vertical == "CENTER":
@@ -62,7 +65,7 @@ def draw_dialogue_text(surface, source_spec, text, visible_characters=None, colo
             x = rectangle.right - width
         line_spec = {
             **spec,
-            "rect": {"x": x, "y": y, "width": width, "height": line_height},
+            "rect": {"x": x, "y": y, "width": width, "height": max(line_height, font.get_height()) if preserve_glyphs else line_height},
             "horizontal_align": "LEFT",
             "vertical_align": "TOP",
         }

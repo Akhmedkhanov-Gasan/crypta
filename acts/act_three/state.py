@@ -2,6 +2,7 @@ from dataclasses import dataclass, field, fields
 from acts.act_three.awakening.state import AwakeningScene
 from acts.act_three.items.inventory import INVENTORY_SLOT_COUNT
 from acts.act_three.abilities.phantom_state import ArcherPhantom
+from acts.act_three.rune_master.state import RuneMenuState
 
 
 @dataclass(eq=False)
@@ -261,6 +262,7 @@ class ActThreeSessionState:
     pending_monster_loot: list[dict] = field(default_factory=list)
     dialogue_queue: list[dict] = field(default_factory=list)
     blacksmith_forge_open: bool = False
+    rune_menu: RuneMenuState | None = None
     mining_effects: list[dict] = field(default_factory=list)
     mining_reward: dict | None = None
     mining_warning: dict | None = None
@@ -280,6 +282,7 @@ class ActThreeSessionState:
     act_three_visual_started_at: int = 0
     act_three_debug_class_selection_open: bool = False
     subclass_selection_open: bool = False
+    subclass_pressed_option: str | None = None
     act_three_test_mode: bool = False
     sidebar_tab: str = "closed"
     character_panel_focus: str | None = None

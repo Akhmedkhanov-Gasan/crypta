@@ -71,7 +71,8 @@ def draw_world_npcs(context, game_state, assets, current_time):
 def draw_npc_dialog(screen, game_state, fonts):
     state = game_state.act_three
     if (
-        state.npc_dialog_position is None
+        state.rune_menu is not None
+        or state.npc_dialog_position is None
         or state.npc_dialog_phase not in ("opening", "talk")
     ):
         return

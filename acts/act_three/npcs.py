@@ -5,10 +5,12 @@ from acts.act_three.npc_dialogue import get_npc_dialogue
 NPC_FOOTPRINTS = {
     "blacksmith": (2, 1),
     "trader": (2, 1),
+    "rune_master": (2, 1),
 }
 NPC_ANIMATIONS = {
     "blacksmith": ("work_down", "talk_start_down", "talk_idle_down"),
     "trader": ("idle_down",),
+    "rune_master": ("idle_down",),
 }
 NPC_FRAME_COUNT = 8
 NPC_TRANSITION_FRAME_MS = 90
@@ -68,6 +70,11 @@ def open_npc_dialog(game_state, npc, current_time):
     state.npc_dialog_phase = "opening"
     state.npc_dialog_started_at = current_time
     state.npc_dialog_line_index = 0
+    if npc["type"] == "rune_master":
+        from acts.act_three.rune_master.runtime import open_menu
+
+        state.npc_dialog_phase = "talk"
+        open_menu(game_state, current_time)
     if npc["type"] == "blacksmith":
         game_state.player.act_three.blacksmith_quest["met"] = True
     state.blacksmith_forge_open = npc["type"] == "blacksmith" and game_state.player.act_three.blacksmith_quest.get("completed", False)
@@ -80,6 +87,13 @@ def open_npc_dialog(game_state, npc, current_time):
 
 def close_npc_dialog(game_state, current_time):
     state = game_state.act_three
+    if state.rune_menu is not None:
+        state.rune_menu = None
+        state.npc_dialog_position = None
+        state.npc_dialog_floor_index = -1
+        state.npc_dialog_phase = "closed"
+        state.npc_dialog_started_at = 0
+        return
     if state.npc_dialog_phase not in ("opening", "talk"):
         return
 
@@ -102,6 +116,8 @@ def close_npc_dialog(game_state, current_time):
 
 def continue_npc_dialog(game_state, current_time):
     state = game_state.act_three
+    if state.rune_menu is not None:
+        return
     if state.npc_dialog_phase not in ("opening", "talk"):
         return
     npc = get_npc_at(game_state.floor, state.npc_dialog_position)
@@ -143,6 +159,13 @@ def advance_npc_dialog(game_state, current_time):
         state.npc_dialog_started_at = 0
         state.trader_tab = None
         state.blacksmith_forge_open = False
+        state.rune_menu = None
+        return
+
+    if npc["type"] == "rune_master":
+        from acts.act_three.rune_master.runtime import advance_menu
+
+        advance_menu(game_state, current_time)
         return
 
     elapsed = max(0, current_time - state.npc_dialog_started_at)
@@ -160,7 +183,7 @@ def advance_npc_dialog(game_state, current_time):
 
 
 def get_npc_animation(game_state, npc, current_time):
-    if npc["type"] == "trader":
+    if npc["type"] in ("trader", "rune_master"):
         return "idle_down", current_time // NPC_LOOP_FRAME_MS % NPC_FRAME_COUNT
 
     state = game_state.act_three

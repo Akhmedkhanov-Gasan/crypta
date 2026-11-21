@@ -29,6 +29,7 @@ from acts.act_three.presentation.altar_menu import (
 from acts.act_three.presentation.npcs import draw_npc_dialog
 from acts.act_three.presentation.trader import draw_trader
 from acts.act_three.presentation.blacksmith import draw_blacksmith
+from acts.act_three.rune_master.presentation import draw_rune_menu
 from acts.act_three.presentation.dialogue_panel import draw_dialogue_panel
 from acts.act_three.presentation.sidebar import (
     _draw_act_three_sidebar,
@@ -556,7 +557,7 @@ def draw_act_three_gameplay(
 
 
 def draw_act_three_foreground(
-    screen, game_state, fonts, assets, current_time, background=None, *, mouse_position=None,
+    screen, game_state, fonts, assets, current_time, background=None, *, mouse_position=None, defer_rune_menu=False,
 ):
     if game_state.act_three_transition_open:
         return
@@ -572,7 +573,9 @@ def draw_act_three_foreground(
         )
 
     if not (
-        draw_trader(screen, game_state, assets, current_time, mouse_position)
+        (defer_rune_menu and game_state.act_three.rune_menu is not None)
+        or draw_rune_menu(screen, game_state, assets, current_time, mouse_position)
+        or draw_trader(screen, game_state, assets, current_time, mouse_position)
         or draw_blacksmith(screen, game_state, fonts, assets, current_time)
     ):
         draw_npc_dialog(screen, game_state, fonts)

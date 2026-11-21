@@ -25,42 +25,13 @@
       },
       "screen_title": {
         "rect": {
-          "x": 416,
-          "y": 50,
-          "width": 448,
-          "height": 44
+          "x": 440,
+          "y": 3,
+          "width": 400,
+          "height": 97
         },
-        "text": {
-          "rect": {
-            "x": 416,
-            "y": 50,
-            "width": 448,
-            "height": 45
-          },
-          "text": "Choose your subclass",
-          "font": {
-            "family": "Ubuntu Mono",
-            "style": "Medium",
-            "size": 40
-          },
-          "line_height": {
-            "unit": "AUTO"
-          },
-          "letter_spacing": {
-            "unit": "PERCENT",
-            "value": 0
-          },
-          "horizontal_align": "LEFT",
-          "vertical_align": "TOP",
-          "text_case": "ORIGINAL",
-          "color": {
-            "r": 167,
-            "g": 167,
-            "b": 167,
-            "a": 255
-          },
-          "auto_resize": "WIDTH_AND_HEIGHT"
-        }
+        "asset_key": "act_three_subclass_title",
+        "opacity": 1
       },
       "subclass_choices": {
         "rect": {
@@ -895,42 +866,13 @@
       },
       "screen_title": {
         "rect": {
-          "x": 416,
-          "y": 50,
-          "width": 448,
-          "height": 44
+          "x": 440,
+          "y": 3,
+          "width": 400,
+          "height": 97
         },
-        "text": {
-          "rect": {
-            "x": 416,
-            "y": 50,
-            "width": 448,
-            "height": 45
-          },
-          "text": "Choose your subclass",
-          "font": {
-            "family": "Ubuntu Mono",
-            "style": "Medium",
-            "size": 40
-          },
-          "line_height": {
-            "unit": "AUTO"
-          },
-          "letter_spacing": {
-            "unit": "PERCENT",
-            "value": 0
-          },
-          "horizontal_align": "LEFT",
-          "vertical_align": "TOP",
-          "text_case": "ORIGINAL",
-          "color": {
-            "r": 167,
-            "g": 167,
-            "b": 167,
-            "a": 255
-          },
-          "auto_resize": "WIDTH_AND_HEIGHT"
-        }
+        "asset_key": "act_three_subclass_title",
+        "opacity": 1
       },
       "subclass_choices": {
         "rect": {
@@ -1193,7 +1135,7 @@
                     "width": 88,
                     "height": 13
                   },
-                  "text": "Rending Spin",
+                  "text": "Crushing leap",
                   "font": {
                     "family": "Ubuntu Mono",
                     "style": "Medium",
@@ -1224,7 +1166,7 @@
                     "width": 272,
                     "height": 34
                   },
-                  "text": "Dash up to three cells and\nstrike enemies in your path.",
+                  "text": "Leap to a visible cell and damage\nadjacent enemies on landing.",
                   "font": {
                     "family": "Ubuntu Mono",
                     "style": "Medium",
@@ -1765,42 +1707,13 @@
       },
       "screen_title": {
         "rect": {
-          "x": 416,
-          "y": 50,
-          "width": 448,
-          "height": 44
+          "x": 440,
+          "y": 3,
+          "width": 400,
+          "height": 97
         },
-        "text": {
-          "rect": {
-            "x": 416,
-            "y": 50,
-            "width": 448,
-            "height": 45
-          },
-          "text": "Choose your subclass",
-          "font": {
-            "family": "Ubuntu Mono",
-            "style": "Medium",
-            "size": 40
-          },
-          "line_height": {
-            "unit": "AUTO"
-          },
-          "letter_spacing": {
-            "unit": "PERCENT",
-            "value": 0
-          },
-          "horizontal_align": "LEFT",
-          "vertical_align": "TOP",
-          "text_case": "ORIGINAL",
-          "color": {
-            "r": 167,
-            "g": 167,
-            "b": 167,
-            "a": 255
-          },
-          "auto_resize": "WIDTH_AND_HEIGHT"
-        }
+        "asset_key": "act_three_subclass_title",
+        "opacity": 1
       },
       "subclass_choices": {
         "rect": {

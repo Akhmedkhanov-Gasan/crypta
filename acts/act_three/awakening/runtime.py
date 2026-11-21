@@ -137,6 +137,7 @@ def show_subclass_selection(game_state, current_time):
     enter_act_three(game_state)
     _set_phase(scene, "choice", current_time)
     game_state.act_three_transition_open = False
+    game_state.act_three.subclass_pressed_option = None
     if game_state.player.player_class in ("rogue", "warrior", "mage"):
         game_state.subclass_selection_open = True
     else:

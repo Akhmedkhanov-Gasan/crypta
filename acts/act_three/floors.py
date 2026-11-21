@@ -10,6 +10,7 @@ ACT_THREE_FLOORS = (
     {
         "act": 3,
         "act_floor": 2,
+        "random_trader": True,
         "map_path": "assets/maps/act_3/rooms/room_entry_01.tmx",
         "exit_map_path": "assets/maps/act_3/rooms/room_exit_01.tmx",
         "room_template_directory": "assets/maps/act_3/rooms",

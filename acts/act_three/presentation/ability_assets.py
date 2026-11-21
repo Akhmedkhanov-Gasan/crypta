@@ -24,6 +24,7 @@ ACT_THREE_ABILITY_ICON_PATHS = {
         _UI_ROOT
         / "abilities"
         / "runes"
+        / "icon"
         / "warrior"
         / "rune_of_impact.png"
     ),
@@ -31,6 +32,7 @@ ACT_THREE_ABILITY_ICON_PATHS = {
         _UI_ROOT
         / "abilities"
         / "runes"
+        / "icon"
         / "warrior"
         / "rune_of_reaping.png"
     ),
@@ -38,6 +40,7 @@ ACT_THREE_ABILITY_ICON_PATHS = {
         _UI_ROOT
         / "abilities"
         / "runes"
+        / "icon"
         / "warrior"
         / "rune_of_aftershock.png"
     ),
@@ -45,6 +48,7 @@ ACT_THREE_ABILITY_ICON_PATHS = {
         _UI_ROOT
         / "abilities"
         / "runes"
+        / "icon"
         / "rogue"
         / "rune_of_the_shade.png"
     ),
@@ -52,6 +56,7 @@ ACT_THREE_ABILITY_ICON_PATHS = {
         _UI_ROOT
         / "abilities"
         / "runes"
+        / "icon"
         / "rogue"
         / "rune_of_cruelty.png"
     ),
@@ -59,6 +64,7 @@ ACT_THREE_ABILITY_ICON_PATHS = {
         _UI_ROOT
         / "abilities"
         / "runes"
+        / "icon"
         / "rogue"
         / "rune_of_the_veil.png"
     ),
@@ -66,6 +72,7 @@ ACT_THREE_ABILITY_ICON_PATHS = {
         _UI_ROOT
         / "abilities"
         / "runes"
+        / "icon"
         / "mage"
         / "rune_of_fracture.png"
     ),
@@ -73,6 +80,7 @@ ACT_THREE_ABILITY_ICON_PATHS = {
         _UI_ROOT
         / "abilities"
         / "runes"
+        / "icon"
         / "mage"
         / "rune_of_resonance.png"
     ),
@@ -80,6 +88,7 @@ ACT_THREE_ABILITY_ICON_PATHS = {
         _UI_ROOT
         / "abilities"
         / "runes"
+        / "icon"
         / "mage"
         / "rune_of_concentration.png"
     ),

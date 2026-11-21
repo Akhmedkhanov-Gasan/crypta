@@ -313,7 +313,7 @@ def handle_act_three_pointer_event(
             pygame.time.get_ticks(),
         )
     elif (
-        event.type == pygame.MOUSEBUTTONDOWN
+        event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP)
         and event.button == 1
         and game_state.subclass_selection_open
     ):
@@ -321,7 +321,8 @@ def handle_act_three_pointer_event(
             screen,
             event.pos,
         )
-    
+        pressed_option = game_state.act_three.subclass_pressed_option
+        game_state.act_three.subclass_pressed_option = None
         if (
             game_mouse_position is not None
             and game_state.player.subclass is None
@@ -344,12 +345,15 @@ def handle_act_three_pointer_event(
                 if subclass_rectangle.collidepoint(
                     game_mouse_position
                 ):
-                    pygame.event.post(
-                        pygame.event.Event(
-                            pygame.KEYDOWN,
-                            key=subclass_keys[subclass],
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        game_state.act_three.subclass_pressed_option = subclass
+                    elif pressed_option == subclass:
+                        pygame.event.post(
+                            pygame.event.Event(
+                                pygame.KEYDOWN,
+                                key=subclass_keys[subclass],
+                            )
                         )
-                    )
                     break
     elif (
         event.type == pygame.MOUSEBUTTONDOWN

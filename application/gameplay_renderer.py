@@ -8,9 +8,10 @@ from acts.act_three.presentation import draw_act_three_gameplay
 from acts.act_three.presentation.renderer import draw_act_three_foreground
 from acts.act_three.presentation.hud.native import NativeActThreeHud
 from acts.act_three.presentation.pickup_feedback import draw_pickup_feedback
+from acts.act_three.awakening.selection import draw_selection
 from application.frame_overlays import draw_frame_overlays
 from application.ground_items import ground_item_input_available
-from presentation.display import present_game, window_to_game_position
+from presentation.display import game_viewport, present_game, window_to_game_position
 from presentation.ground_items import draw_ground_item_window
 from settings import BACKGROUND_COLOR, FPS
 
@@ -31,6 +32,21 @@ class GameplayRenderer:
     cutscene_skip: object
     dev_console: object
     native_act_three_hud: NativeActThreeHud = field(default_factory=NativeActThreeHud)
+
+    def _draw_native_subclass_selection(self, target, window, game_state):
+        viewport, _ = game_viewport(window.get_size())
+        mouse = pygame.mouse.get_pos()
+        mouse_position = (
+            (mouse[0] - viewport.x, mouse[1] - viewport.y)
+            if viewport.collidepoint(mouse) else None
+        )
+        draw_selection(
+            target, self.act_three_fonts["title"], self.act_three_fonts["heading"],
+            self.act_three_fonts["text"], self.act_three_transition_assets,
+            mouse_position, game_state.player.subclass, game_state.player.player_class,
+            pressed_subclass=game_state.act_three.subclass_pressed_option,
+        )
+        self.dev_console.draw(target)
 
     def draw(
         self,
@@ -88,6 +104,7 @@ class GameplayRenderer:
                 current_time,
                 background=game_surface,
                 mouse_position=mouse_position,
+                defer_rune_menu=True,
             )
             self.map_navigation.draw(
                 overlay_target,
@@ -155,11 +172,22 @@ class GameplayRenderer:
             self.dev_console,
             mouse_position,
             act_two_camera,
+            defer_subclass_selection=current_act >= 3,
         )
         if current_act >= 3:
+            native_overlay = None
+            if game_state.subclass_selection_open:
+                native_overlay = lambda target: self._draw_native_subclass_selection(target, screen, game_state)
+            elif game_state.act_three.rune_menu is not None:
+                from acts.act_three.rune_master.presentation import draw_native_rune_menu
+
+                native_overlay = lambda target: draw_native_rune_menu(
+                    target, game_state, self.act_three_gameplay_assets, current_time, mouse_position,
+                )
             self.native_act_three_hud.present(
                 screen, game_surface, overlay_target, game_state,
                 self.act_three_fonts, self.act_three_gameplay_assets, current_time,
+                native_overlay=native_overlay,
             )
         else:
             present_game(screen, game_surface)
