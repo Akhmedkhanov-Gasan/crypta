@@ -4,7 +4,7 @@ from functools import lru_cache
 import pygame
 import resource_store as resources
 
-from acts.act_three.rune_master.default_layout import rect, text
+from acts.act_three.rune_master.default_layout import text
 from acts.act_three.rune_master.effects import illuminated_art, draw_card_mist, draw_subpixel_card, draw_confirmation_light
 from acts.act_three.rune_master.layout import get_layout
 from acts.act_three.rune_master.motion import card_hitbox, card_poses
@@ -133,17 +133,10 @@ def draw_rune_menu(screen, game_state, assets, current_time, mouse_position=None
     idle_choices = menu.page == "choices" and menu.phase == "idle"
     for name, enabled in (
         ("return_button", idle_choices),
-        ("confirm_button", idle_choices and menu.selected_choice is not None),
+        ("confirm_button", idle_choices and menu.selected_choice is not None
+         and not menu.choices[menu.selected_choice].placeholder),
     ):
         draw_rune_button(screen, assets, menu, name, layout[name], enabled, mouse_position, current_time, _art)
-    heading = "Choose an ability" if menu.page == "abilities" else "Choose a rune"
-    if menu.phase in ("confirming", "confirmed", "confirmation_fade"):
-        heading = "Rune confirmed"
-    if not cards:
-        heading = "No unlocked abilities"
-    draw_dialogue_text(screen, scale_figma_layout(text(rect(350, 96, 580, 24), 20, 225), render_scale), heading)
-    draw_dialogue_text(screen, scale_figma_layout(text(rect(350, 651, 580, 19), 13, 170), render_scale),
-                       "Preview: your abilities will not be changed")
     return True
 
 

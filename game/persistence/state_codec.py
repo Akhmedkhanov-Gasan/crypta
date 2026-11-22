@@ -1,5 +1,5 @@
 import base64
-from dataclasses import fields, is_dataclass
+from dataclasses import MISSING, fields, is_dataclass
 import hashlib
 import io
 import json
@@ -43,11 +43,44 @@ def encode_state(value, registry, persistent_id):
     }
 
 
+def _restore_default_fields(value):
+    pending = [value]
+    visited = set()
+    while pending:
+        item = pending.pop()
+        identifier = id(item)
+        if identifier in visited:
+            continue
+        visited.add(identifier)
+        if is_dataclass(item) and not isinstance(item, type):
+            attributes = vars(item)
+            for state_field in fields(item):
+                if state_field.name in attributes:
+                    continue
+                if state_field.default_factory is not MISSING:
+                    default = state_field.default_factory()
+                elif state_field.default is not MISSING:
+                    default = state_field.default
+                else:
+                    raise ValueError(
+                        f"Missing required saved field: {type(item).__name__}.{state_field.name}"
+                    )
+                object.__setattr__(item, state_field.name, default)
+            pending.extend(vars(item).values())
+        elif isinstance(item, dict):
+            pending.extend(item.keys())
+            pending.extend(item.values())
+        elif isinstance(item, (list, tuple, set, frozenset)):
+            pending.extend(item)
+
+
 def decode_state(snapshot, registry, persistent_load):
     if (
         not isinstance(snapshot, dict)
         or snapshot.get("format") != "crypta-state-1"
-        or snapshot.get("schema") != _schema_signature(registry)
+        or not isinstance(snapshot.get("schema"), str)
+        or len(snapshot["schema"]) != 64
+        or any(character not in "0123456789abcdef" for character in snapshot["schema"])
     ):
         raise ValueError(
             "The saved run is incompatible with this game version."
@@ -76,4 +109,5 @@ def decode_state(snapshot, registry, persistent_load):
     if buffer.read(1):
         raise ValueError("Unexpected data after the saved run.")
 
+    _restore_default_fields(result)
     return result

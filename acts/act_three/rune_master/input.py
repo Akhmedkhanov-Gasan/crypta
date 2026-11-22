@@ -17,7 +17,7 @@ def _control_at(menu, position, current_time):
     if menu.page == "choices":
         if figma_rect(layout["return_button"]["hitbox"]).collidepoint(position):
             return "back"
-        if menu.selected_choice is not None and figma_rect(layout["confirm_button"]["hitbox"]).collidepoint(position):
+        if menu.selected_choice is not None and not menu.choices[menu.selected_choice].placeholder and figma_rect(layout["confirm_button"]["hitbox"]).collidepoint(position):
             return "confirm"
     for pose in reversed(card_poses(menu, layout, current_time)):
         if card_hitbox(layout, pose).collidepoint(position):
@@ -34,7 +34,7 @@ def _activate(control, game_state, current_time):
         menu = game_state.act_three.rune_menu
         if menu.phase != "idle" or menu.page != "choices" or menu.pending_button_action is not None:
             return
-        if control == "confirm" and menu.selected_choice is None:
+        if control == "confirm" and (menu.selected_choice is None or menu.choices[menu.selected_choice].placeholder):
             return
         menu.pending_button_action = control
         menu.pending_button_started_at = current_time

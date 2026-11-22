@@ -22,6 +22,9 @@ def _draw_arrow(effect, start, end, age):
 
 def draw_phantom_retinue(surface, assets, game_state, camera_x, camera_y, current_time, tile_size):
     player = game_state.player
+    from acts.act_three.presentation.archer.rune_projectiles import draw_rune_projectiles
+
+    draw_rune_projectiles(surface, game_state, camera_x, camera_y, current_time, tile_size)
     if player.subclass != "archer" or player.health <= 0 or not player.act_three.archer_phantoms:
         return
     draw_retinue_summon(surface, game_state, camera_x, camera_y, current_time, tile_size)
@@ -70,6 +73,11 @@ def draw_phantom_retinue(surface, assets, game_state, camera_x, camera_y, curren
         frame = min(7, int(max(0, age) * 8 // 460)) if attacking else (current_time // 85 + phantom.seed) % 8
         sprite = assets[f"player_archer_{animation}_{facing}_{frame}"].copy()
         sprite.fill((122, 183, 153), special_flags=pygame.BLEND_RGB_MULT)
+        if phantom.mirror:
+            sprite = assets[f"player_archer_{animation}_{facing}_{frame}"].copy()
+            sprite.fill((185, 207, 221), special_flags=pygame.BLEND_RGB_MULT)
+            if phantom.invisibility_turns > 0 and not attacking:
+                visibility *= 0.25
         alpha = round((170 + 20 * math.sin(current_time * 0.006 + phantom.seed)) * visibility * fade)
         sprite.set_alpha(alpha)
         x, y = _view_position(*position, camera_x, camera_y)
@@ -81,5 +89,10 @@ def draw_phantom_retinue(surface, assets, game_state, camera_x, camera_y, curren
         if attacking:
             sx, sy = _view_position(*shot["origin"], camera_x, camera_y)
             tx, ty = _view_position(*shot["target"], camera_x, camera_y)
-            _draw_arrow(effect, (sx + tile_size / 2, sy + tile_size / 2), (tx + tile_size / 2, ty + tile_size / 2), age)
+            if shot.get("kind") == "piercing" and 220 <= age < 560:
+                draw_arrow_flight(effect, (sx + tile_size / 2, sy + tile_size / 2),
+                                  (tx + tile_size / 2, ty + tile_size / 2),
+                                  (age - 220) / 340, phantom=True, power=2)
+            else:
+                _draw_arrow(effect, (sx + tile_size / 2, sy + tile_size / 2), (tx + tile_size / 2, ty + tile_size / 2), age)
     surface.blit(effect, (0, 0))

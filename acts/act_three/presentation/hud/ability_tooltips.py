@@ -135,9 +135,12 @@ def ability_tooltip_content(
         title = inherited_content.title
         description_lines = inherited_content.lines
     else:
-        title = ability.name
+        from acts.act_three.rune_master.definitions import equipped_rune
+
+        rune = equipped_rune(player, slot)
+        title = rune.name if rune else ability.name
         description_lines = (
-            ability.description,
+            rune.description if rune else ability.description,
         )
 
     slot_title = (

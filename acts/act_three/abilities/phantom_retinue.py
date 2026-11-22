@@ -10,6 +10,7 @@ from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from logic import can_move_to, get_enemy_occupied_positions, has_line_of_sight
 from systems.grid_geometry import can_reach_adjacent_cell
+from acts.act_three.rune_master.definitions import MIRROR_ACTIONS, SPECTRAL_ARCHER_COUNT, has_ability_rune
 
 
 PHANTOM_COUNT = 2
@@ -48,6 +49,8 @@ def summon_phantom_retinue(game_state):
     if not cells:
         add_log_message(game_state.combat_log, "No room for the Phantom Retinue.")
         return False
+    mirror = has_ability_rune(player, "rune_of_phantom_archer")
+    count = 1 if mirror else SPECTRAL_ARCHER_COUNT if has_ability_rune(player, "rune_of_spectral_archers") else PHANTOM_COUNT
     now = pygame.time.get_ticks()
     random.shuffle(cells)
     enemies = [enemy for enemy in game_state.floor.enemies if enemy.health > 0]
@@ -67,9 +70,11 @@ def summon_phantom_retinue(game_state):
     player.archer_barrage_zones.clear()
     player.archer_barrage_zone_preview_cells.clear()
     player.act_three.archer_phantoms = [
-        ArcherPhantom(cell, cell, now, random.randrange(1_000_000), number=index)
-        for index, cell in enumerate(cells[:PHANTOM_COUNT], 1)
+        ArcherPhantom(cell, cell, now, random.randrange(1_000_000), number=index,
+                      mirror=mirror, shots_remaining=MIRROR_ACTIONS if mirror else 6)
+        for index, cell in enumerate(cells[:count], 1)
     ]
+    player.act_three.archer_mirror_actions.clear()
     player.act_three.archer_phantom_travel_started_at = -1
     player.act_three.archer_phantom_travel_ended_at = -1
     player.act_three.archer_phantom_cast = {
@@ -81,7 +86,7 @@ def summon_phantom_retinue(game_state):
     clear_ability_slot_charge(player, "f")
     game_state.emit(GameEvent(
         type=GameEventType.ABILITY, actor="hero",
-        positions=tuple(cells[:PHANTOM_COUNT]),
+        positions=tuple(cells[:count]),
         data={"ability": "phantom_retinue"},
     ))
     add_log_message(game_state.combat_log, "The Phantom Retinue answers the call.", category="ability")
@@ -109,6 +114,8 @@ def relocate_phantom_retinue(game_state, current_time):
         phantom.walk_direction = (0, 0)
         phantom.has_acted = False
         phantom.attack_animations.clear()
+    state.archer_mirror_actions.clear()
+    state.archer_rune_projectiles.clear()
 
 
 def _target_cell(game_state, phantom, enemy):
@@ -121,7 +128,7 @@ def _target_cell(game_state, phantom, enemy):
     return min(cells, key=lambda cell: abs(cell[0] - phantom.position[0]) + abs(cell[1] - phantom.position[1]), default=None)
 
 
-def advance_phantom_retinue(game_state):
+def advance_phantom_retinue(game_state, player_previous_position=None):
     state = game_state.player.act_three
     if not state.archer_phantoms or game_state.player.health <= 0:
         return
@@ -147,7 +154,22 @@ def advance_phantom_retinue(game_state):
         outside_follow_radius = max(abs(phantom.position[0] - px), abs(phantom.position[1] - py)) != PHANTOM_FOLLOW_DISTANCE
         targets = [(enemy, _target_cell(game_state, phantom, enemy)) for enemy in enemies]
         targets = [(enemy, cell) for enemy, cell in targets if cell is not None]
-        if cells and phantom.has_acted and (outside_follow_radius or not targets):
+        mirrored_move = False
+        if phantom.mirror and player_previous_position is not None:
+            dx, dy = px - player_previous_position[0], py - player_previous_position[1]
+            destination = phantom.position[0] + dx, phantom.position[1] + dy
+            if (dx or dy) and destination in cells and max(abs(dx), abs(dy)) == 1 and can_reach_adjacent_cell(
+                game_state.floor.map, phantom.position, destination, game_state.floor.barriers,
+            ):
+                occupied.discard(phantom.position)
+                phantom.origin = phantom_position(phantom, now)
+                phantom.walk_direction = dx, dy
+                phantom.position = destination
+                phantom.moved_at = now
+                phantom.teleporting = False
+                occupied.add(destination)
+                mirrored_move = True
+        if not mirrored_move and cells and phantom.has_acted and (outside_follow_radius or (not targets and not phantom.mirror)):
             occupied.discard(phantom.position)
             nearby = [
                 cell for cell in cells
@@ -171,6 +193,12 @@ def advance_phantom_retinue(game_state):
             occupied.add(destination)
             targets = [(enemy, _target_cell(game_state, phantom, enemy)) for enemy in enemies]
             targets = [(enemy, cell) for enemy, cell in targets if cell is not None]
+        if phantom.mirror:
+            from acts.act_three.abilities.mirror_actions import advance_mirror_actions
+
+            advance_mirror_actions(game_state, phantom, now)
+            phantom.has_acted = True
+            continue
         if targets:
             enemy, target = min(targets, key=lambda pair: (
                 not bool(set(get_enemy_occupied_positions(pair[0])) & preferred),

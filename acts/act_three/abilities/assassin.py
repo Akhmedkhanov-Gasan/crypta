@@ -166,10 +166,16 @@ def request_assassin_teleport(game_state: GameState) -> bool:
     player.teleport_aiming = True
     player.teleport_target = None
     player.teleport_preview_target = None
+    from acts.act_three.rune_master.definitions import has_ability_rune
+
+    target_hint = (
+        "Choose a free cell or a single-cell enemy to exchange places. "
+        if has_ability_rune(player, "rune_of_displacement")
+        else "Choose a free cell with movement keys or the mouse. "
+    )
     add_log_message(
         game_state.combat_log,
-        "Choose a free cell with movement keys or the mouse. "
-        "Q to confirm, Esc to cancel.",
+        target_hint + "Q to confirm, Esc to cancel.",
     )
     return True
 
@@ -204,7 +210,10 @@ def is_valid_assassin_teleport_target(
         and (column, row) in get_enemy_occupied_positions(enemy)
         for enemy in floor.enemies
     ):
-        return False
+        from acts.act_three.abilities.shadow_step_runes import displacement_target
+
+        if displacement_target(game_state, (column, row)) is None:
+            return False
     if any(
         not chest.is_open
         and (column, row) == (chest.column, chest.row)
@@ -342,10 +351,17 @@ def request_assassin_ultimate(game_state: GameState) -> bool:
     player.ultimate_aiming = True
     player.ultimate_preview_target = next(iter(targets))
     player.ultimate_targets.clear()
+    from acts.act_three.rune_master.definitions import has_ability_rune
+
+    hint = (
+        "Choose one enemy. F commits five strikes against it; Esc to cancel."
+        if has_ability_rune(player, "rune_of_the_executioner")
+        else "Choose a target with movement keys. "
+             f"F to mark ({ASSASSIN_ULTIMATE_MAX_MARKS} marks), Esc to cancel."
+    )
     add_log_message(
         game_state.combat_log,
-        "Choose a target with movement keys. "
-        f"F to mark ({ASSASSIN_ULTIMATE_MAX_MARKS} marks), Esc to cancel.",
+        hint,
     )
     return True
 
@@ -373,6 +389,11 @@ def select_assassin_ultimate_target(
         return False
 
     player.ultimate_preview_target = enemy_name
+    from acts.act_three.rune_master.definitions import has_ability_rune
+
+    if has_ability_rune(player, "rune_of_the_executioner"):
+        player.ultimate_targets[:] = [enemy_name] * ASSASSIN_ULTIMATE_MAX_MARKS
+        return begin_assassin_ultimate(game_state, current_time)
     player.ultimate_targets.append(enemy_name)
     if len(player.ultimate_targets) == ASSASSIN_ULTIMATE_MAX_MARKS:
         begin_assassin_ultimate(game_state, current_time)
@@ -396,6 +417,8 @@ def begin_assassin_ultimate(
     player.ultimate_aiming = False
     player.ultimate_preview_target = None
     player.ultimate_charge = 0
+    player.ultimate_resolved_strikes = 0
+    player.ultimate_bonus_strikes_awarded = False
     player.ultimate_visual_variants = []
     previous_variant = None
 
@@ -431,48 +454,11 @@ def resolve_assassin_ultimate(
     oracle_hit_reaction: OracleHitReaction,
     current_time: int,
 ) -> None:
+    from acts.act_three.abilities.killing_spree_runes import advance_killing_spree
+
+    advance_killing_spree(game_state, oracle_hit_reaction, current_time, finish=True)
     player = game_state.player
-    selected_targets = tuple(player.ultimate_targets)
-    enemies_by_name = {
-        enemy.name: enemy
-        for enemy in game_state.floor.enemies
-    }
-    player.ultimate_impact_positions = [
-        (
-            enemies_by_name[enemy_name].column,
-            enemies_by_name[enemy_name].row,
-        )
-        for enemy_name in selected_targets
-        if enemy_name in enemies_by_name
-    ]
-    player.ultimate_impact_started_at = current_time
     player.ultimate_targets.clear()
     player.ultimate_visual_variants.clear()
     player.ultimate_origin = None
 
-    for enemy_name in selected_targets:
-        enemy = enemies_by_name.get(enemy_name)
-        if enemy is not None and enemy.health <= 0:
-            enemy = None
-        if enemy is None:
-            continue
-
-        enemy_was_defeated = attack_enemy(
-            game_state,
-            enemy,
-            player.damage_min,
-            player.damage_max,
-            player.crit_chance,
-            attacker_position=(
-                game_state.floor.player_column,
-                game_state.floor.player_row,
-            ),
-        )
-        if enemy.type == "oracle":
-            oracle_hit_reaction(
-                enemy,
-                game_state.floor,
-                game_state.combat_log,
-            )
-        if enemy_was_defeated:
-            resolve_enemy_defeat(game_state, enemy)

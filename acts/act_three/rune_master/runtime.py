@@ -1,5 +1,6 @@
 from acts.act_three.rune_master.catalog import available_abilities, upgrade_choices
 from acts.act_three.rune_master.state import RuneMenuState
+from acts.act_three.rune_master.selection import apply_rune
 
 
 PHASE_DURATIONS = {
@@ -46,7 +47,8 @@ def advance_menu(game_state, current_time):
         if menu.phase == "revealing":
             if menu.page == "choices" and menu.pending_page == "abilities" and menu.confirming_choice:
                 choice = menu.choices[menu.selected_choice]
-                menu.preview_choices[choice.slot] = choice
+                if apply_rune(game_state, choice):
+                    menu.abilities = available_abilities(game_state.player)
                 menu.confirming_choice = False
             menu.page = menu.pending_page
         if menu.phase == "idle":
@@ -57,7 +59,7 @@ def advance_menu(game_state, current_time):
 def visible_cards(menu):
     if menu.page == "choices":
         return menu.choices
-    return tuple(menu.preview_choices.get(card.slot, card) for card in menu.abilities)
+    return menu.abilities
 
 
 def _transition(menu, target, current_time):
@@ -93,6 +95,8 @@ def return_to_abilities(game_state, current_time, confirm=False):
         return
     if confirm:
         if menu.selected_choice is None:
+            return
+        if menu.choices[menu.selected_choice].placeholder:
             return
         menu.confirming_choice = True
         menu.pending_page = "abilities"

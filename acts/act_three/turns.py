@@ -76,7 +76,7 @@ def resolve_enemy_turn(
     player_position_before_action,
     rogue_ability_activated,
 ):
-    advance_phantom_retinue(game_state)
+    advance_phantom_retinue(game_state, player_position_before_action)
     resolve_archer_barrage_hits(game_state)
     damaged_enemy_names = frozenset(
         event.target

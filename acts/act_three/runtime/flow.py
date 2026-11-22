@@ -217,6 +217,8 @@ def clear_archer_barrage_zone(game_state, *, preserve_phantoms=False):
     player.archer_barrage_hit_turns.clear()
     player.archer_barrage_shots.clear()
     player.archer_barrage_pending_hits.clear()
+    player.act_three.archer_mirror_actions.clear()
+    player.act_three.archer_rune_projectiles.clear()
     game_state.act_three.barrage_turn = None
     if preserve_phantoms:
         import pygame

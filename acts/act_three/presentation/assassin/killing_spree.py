@@ -580,6 +580,10 @@ def draw_killing_spree_target_marks(
 ):
     if not player.ultimate_aiming:
         return
+    from acts.act_three.presentation.assassin.spree_targeting import draw_rune_spree_targets
+
+    if draw_rune_spree_targets(surface, player, floor, camera_x, camera_y, pygame.time.get_ticks()):
+        return
 
     target_counts = {}
 

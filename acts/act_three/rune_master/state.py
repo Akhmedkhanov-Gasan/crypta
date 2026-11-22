@@ -30,4 +30,3 @@ class RuneMenuState:
     pending_button_started_at: int = 0
     pending_page: str = "abilities"
     confirming_choice: bool = False
-    preview_choices: dict[str, RuneCard] = field(default_factory=dict)

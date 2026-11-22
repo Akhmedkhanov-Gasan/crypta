@@ -51,6 +51,7 @@ class ActThreePlayerState:
     ironblood_guard: bool = False
     mining: dict | None = None
     blacksmith_quest: dict[str, bool] = field(default_factory=dict)
+    ability_runes: dict[str, str] = field(default_factory=dict)
     forge_progress: dict[str, dict[str, int]] = field(default_factory=dict)
     inventory_slots: list[str | None] = field(
         default_factory=lambda: [None] * INVENTORY_SLOT_COUNT,
@@ -82,6 +83,8 @@ class ActThreePlayerState:
     )
     archer_empowered_shot_charge: int = 0
     archer_phantoms: list[ArcherPhantom] = field(default_factory=list)
+    archer_mirror_actions: list[dict] = field(default_factory=list)
+    archer_rune_projectiles: list[dict] = field(default_factory=list)
     archer_phantom_cast: dict | None = None
     archer_phantom_travel_started_at: int = -1
     archer_phantom_travel_ended_at: int = -1
@@ -224,6 +227,8 @@ class ActThreePlayerState:
     teleport_camera_origin: tuple[int, int] | None = None
     teleport_transition_started_at: int = 0
     ultimate_charge: int = 0
+    ultimate_resolved_strikes: int = 0
+    ultimate_bonus_strikes_awarded: bool = False
     ultimate_aiming: bool = False
     ultimate_preview_target: str | None = None
     ultimate_targets: list[str] = field(default_factory=list)

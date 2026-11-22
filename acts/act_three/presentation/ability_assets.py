@@ -67,9 +67,14 @@ ACT_THREE_ABILITY_ICON_PATHS.update({
 
 def ability_icon_key(player, ability):
     from game.rune_catalog import RUNES_BY_ID
+    from acts.act_three.rune_master.definitions import equipped_rune
 
     rune = RUNES_BY_ID.get(player.selected_rune_id) if ability.inherited else None
-    if rune is not None and rune.player_class == player.player_class:
+    if rune is not None and rune.player_class != player.player_class:
+        rune = None
+    if not ability.inherited:
+        rune = equipped_rune(player, ability.slot)
+    if rune is not None:
         identifier = rune.id
     else:
         identifier = ability.id

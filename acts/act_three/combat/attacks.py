@@ -232,6 +232,9 @@ def perform_archer_attack(
     floor = game_state.floor
     hit_enemy = _enemy_at(floor, target_cell)
     started_at = pygame.time.get_ticks()
+    from acts.act_three.abilities.mirror_actions import queue_mirror_action
+
+    queue_mirror_action(game_state, "basic", target_cell, started_at)
     player.act_three.environment_attack = None
     player.attack_animation_started_at = started_at
     game_state.player_attack_targets = [target_cell]

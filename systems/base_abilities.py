@@ -157,6 +157,10 @@ def request_class_ability(
             "The rogue vanishes from sight.",
             category="ability",
         )
+        if game_state.floor.presentation_act == 3 and player.subclass == "archer":
+            from acts.act_three.abilities.mirror_actions import queue_mirror_action
+
+            queue_mirror_action(game_state, "invisibility", None, 0)
         return AbilityRequestResult.ROGUE_ACTIVATED
     if player.player_class in ("warrior", "mage"):
         player.directional_ability_aiming = (

@@ -16,3 +16,5 @@ class ArcherPhantom:
     walk_direction: tuple[int, int] = (0, 0)
     number: int = 1
     attack_animations: list[dict] = field(default_factory=list)
+    mirror: bool = False
+    invisibility_turns: int = 0

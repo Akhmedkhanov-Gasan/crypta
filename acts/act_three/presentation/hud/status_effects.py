@@ -78,11 +78,13 @@ def _active_statuses(player):
             if phantom.shots_remaining > 0:
                 yield Status(
                     f"archer_phantom_{phantom.number}",
-                    f"Phantom {phantom.number}",
-                    "Follows you and fires within 3 cells, prioritizing your target. "
-                    "Deals 25% basic shot damage. Fades after its sixth shot.",
+                    "Phantom Double" if phantom.mirror else f"Phantom {phantom.number}",
+                    ("Echoes your attacks, invisibility and Piercing Shot at 50% damage. "
+                     "Never attacks independently." if phantom.mirror else
+                     "Follows you and fires within 3 cells, prioritizing your target. "
+                     "Deals 25% basic shot damage. Fades after its sixth shot."),
                     phantom.shots_remaining,
-                    "shots",
+                    "actions" if phantom.mirror else "shots",
                     "act_three_archer_barrage_zone",
                 )
     if state.ironblood_guard:

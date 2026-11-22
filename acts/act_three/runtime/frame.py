@@ -67,6 +67,9 @@ def advance_act_three_frame(game_state, current_act, current_time, sounds):
         sounds.update(game_state.player, current_time)
 
     if game_state.player.ultimate_animation_active:
+        from acts.act_three.abilities.killing_spree_runes import advance_killing_spree
+
+        advance_killing_spree(game_state, resolve_oracle_hit_reaction, current_time)
         animation_duration = (
             ASSASSIN_ULTIMATE_PRELUDE_MS
             + len(game_state.player.ultimate_targets) * ASSASSIN_ULTIMATE_STEP_MS

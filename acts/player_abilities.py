@@ -176,6 +176,13 @@ def resolve_targeted_player_ability(
     if player.teleport_target is not None:
         target = player.teleport_target
         origin = (game_state.floor.player_column, game_state.floor.player_row)
+        from acts.act_three.abilities.assassin import is_valid_assassin_teleport_target
+        from acts.act_three.abilities.shadow_step_runes import resolve_shadow_step_rune
+
+        if not is_valid_assassin_teleport_target(game_state, *target):
+            player.teleport_target = None
+            return False
+        resolve_shadow_step_rune(game_state, origin, target, pygame.time.get_ticks())
         player.facing_direction = assassin_teleport_facing_direction(
             origin,
             target,
