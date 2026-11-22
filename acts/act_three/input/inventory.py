@@ -16,7 +16,7 @@ from acts.act_three.presentation.hud.geometry import (
     get_act_three_popup_rectangle,
     get_act_three_sidebar_tab_rectangles,
 )
-from acts.act_three.presentation.hud.layout import get_act_three_hud_layout
+from acts.act_three.presentation.hud.layout import get_player_hud_layout
 from acts.act_three.state import ItemDragState
 from presentation.figma_ui import figma_rect
 
@@ -40,7 +40,7 @@ def _drop_dragged_item(game_state, drag, mouse_position):
         return
 
     hud_rectangles = (
-        *get_act_three_bottom_hud_rectangles(),
+        *get_act_three_bottom_hud_rectangles(game_state.player),
         *get_act_three_sidebar_tab_rectangles().values(),
     )
     if game_state.sidebar_tab in ("stats", "journal"):
@@ -56,7 +56,7 @@ def _drop_dragged_item(game_state, drag, mouse_position):
 
 def _finish_drag(game_state, drag, mouse_position, inventory_open):
     player = game_state.player
-    layout = get_act_three_hud_layout()
+    layout = get_player_hud_layout(player)
     belt_slots = layout["down_bar"]["consumable_belt"]["slots"]
     inventory_slots = layout["right_bar"]["character_panel"]["inventory"]["slots"]
     belt_target = _slot_at(belt_slots, mouse_position)
@@ -113,7 +113,7 @@ def handle_inventory_drag(event, game_state, mouse_position, movement_available)
         or mouse_position is None
     ):
         return False
-    layout = get_act_three_hud_layout()
+    layout = get_player_hud_layout(player)
     inventory = layout["right_bar"]["character_panel"]["inventory"]
     source = _slot_at(inventory["slots"], mouse_position) if inventory_open else None
     if source is not None:

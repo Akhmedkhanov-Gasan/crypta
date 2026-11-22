@@ -1,6 +1,7 @@
 import math
 
 import pygame
+from acts.act_three.presentation.hud.belt_art import draw_belt_frame, draw_belt_abilities, draw_belt_image
 from acts.act_three.presentation.hud.status_effects import draw_player_statuses
 
 from acts.act_three.equipment import equipment_rank_bonus
@@ -15,22 +16,9 @@ from acts.act_three.presentation.hud.panel_art import (
     draw_panel_row_background,
 )
 
-from acts.act_three.presentation.hud.content import (
-    ABILITY_SLOT_ORDER,
-)
-from acts.act_three.presentation.hud.ability_tooltips import (
-    ability_tooltip_content,
-    draw_ability_slot_highlight,
-    hovered_ability_slot,
-)
 from acts.act_three.abilities import (
-    get_ability_definition,
     get_mastery_charge_rate,
     get_passive_definition,
-    is_ability_slot_unlocked,
-)
-from acts.act_three.abilities.charges import (
-    get_act_three_ability_charge_state,
 )
 from acts.act_two.bloody_altar import (
     healing_consumables_are_blocked,
@@ -41,7 +29,6 @@ from acts.act_two.consumables import (
 from acts.act_two.presentation.hud_tooltips import (
     consumable_tooltip_content,
 )
-from game.rune_catalog import RUNES_BY_ID
 from acts.act_three.presentation.hud.geometry import (
     get_character_panel_focus_rectangles,
     resolve_character_panel_focus,
@@ -507,16 +494,7 @@ def _draw_consumables(
     layout,
     mouse_position,
 ):
-    _blit_asset(
-        screen,
-        assets,
-        "hud_consumable_belt_frame",
-        get_layout_rect(
-            layout,
-            "down_bar",
-            "consumable_belt_frame",
-        ),
-    )
+    draw_belt_frame(screen, player, assets, layout)
 
     slots = layout[
         "down_bar"
@@ -540,6 +518,7 @@ def _draw_consumables(
         sorted(slots)
     ):
         slot = slots[slot_name]
+        draw_belt_image(screen, assets, slot.get("background"))
         hitbox = figma_rect(
             slot["hitbox"]
         )
@@ -605,6 +584,9 @@ def _draw_consumables(
                 icon_rectangle,
             )
 
+    for slot in slots.values():
+        draw_belt_image(screen, assets, slot.get("number"))
+
     if hovered_item is None:
         return None
 
@@ -617,218 +599,8 @@ def _draw_consumables(
     return TooltipContent(item.name, lines, (181, 145, 81))
 
 
-def _draw_ability_charge_mask(
-    screen,
-    charge_level,
-    ratio,
-):
-    remaining_ratio = 1.0 - max(
-        0.0,
-        min(1.0, ratio),
-    )
-
-    if remaining_ratio <= 0.0:
-        return
-
-    source_rectangle = charge_level["rect"]
-    visible_height = round(
-        source_rectangle["height"]
-        * remaining_ratio
-    )
-
-    if visible_height <= 0:
-        return
-
-    runtime_charge_level = {
-        **charge_level,
-        "rect": {
-            **source_rectangle,
-            "height": visible_height,
-        },
-    }
-
-    draw_figma_rectangle(
-        screen,
-        runtime_charge_level,
-    )
-
-
-def _get_ability_icon_asset(
-    player,
-    ability,
-):
-    if not ability.inherited:
-        return ability.icon_asset
-
-    selected_rune = RUNES_BY_ID.get(
-        player.selected_rune_id
-    )
-
-    if selected_rune is None:
-        return ability.icon_asset
-
-    return f"act_three_{selected_rune.id}"
-
-
-def _get_ability_charge_ratio(
-    player,
-    slot,
-    ability,
-):
-    if (
-        slot == "e"
-        and player.selected_rune_id == "rune_of_the_veil"
-    ):
-        return 1.0
-
-    current_charge, required_charge = (
-        get_act_three_ability_charge_state(
-            player,
-            slot,
-        )
-    )
-
-    return _ratio(
-        current_charge,
-        required_charge,
-    )
-
-def _draw_locked_ability(
-    screen,
-    assets,
-    slot,
-):
-    _draw_ability_charge_mask(
-        screen,
-        slot["charge_level"],
-        0.0,
-    )
-
-    chains_layout = slot.get("chains")
-    chains_image = assets.get(
-        "hud_ability_chains"
-    )
-
-    if (
-        chains_layout is None
-        or chains_image is None
-    ):
-        return
-
-    chains_rectangle = figma_rect(
-        chains_layout
-    )
-
-    screen.blit(
-        pygame.transform.smoothscale(
-            chains_image,
-            chains_rectangle.size,
-        ),
-        chains_rectangle,
-    )
-
-
-def _draw_abilities(
-    screen,
-    player,
-    assets,
-    layout,
-    mouse_position,
-):
-    from acts.act_three.presentation.sidebar import (
-        _SUBCLASS_PRESENTATION,
-    )
-
-    _, accent_color = _SUBCLASS_PRESENTATION.get(
-        player.subclass,
-        ("UNBOUND", _ACTIVE_CHARGE_COLOR),
-    )
-
-    slots = layout["down_bar"]["abilities"]["slots"]
-    hovered_slot = hovered_ability_slot(
-        slots,
-        mouse_position,
-    )
-
-    for slot_name in ABILITY_SLOT_ORDER:
-        slot_key = slot_name.removeprefix(
-            "ability_"
-        )
-        slot = slots.get(slot_name)
-
-        if slot is None:
-            continue
-
-        ability = get_ability_definition(
-            player.subclass,
-            slot_key,
-        )
-
-        if ability is None:
-            continue
-
-        unlocked = is_ability_slot_unlocked(
-            player,
-            slot_key,
-        )
-
-        if slot_key == hovered_slot:
-            draw_ability_slot_highlight(
-                screen,
-                slot,
-                locked=not unlocked,
-            )
-
-        icon_rectangle = figma_rect(
-            slot["icon"]
-        )
-        icon_asset = _get_ability_icon_asset(
-            player,
-            ability,
-        )
-        icon = assets.get(icon_asset)
-
-        if icon is not None:
-            screen.blit(
-                pygame.transform.smoothscale(
-                    icon,
-                    icon_rectangle.size,
-                ),
-                icon_rectangle,
-            )
-
-        if not unlocked:
-            _draw_locked_ability(
-                screen,
-                assets,
-                slot,
-            )
-            continue
-
-        charge_ratio = _get_ability_charge_ratio(
-            player,
-            slot_key,
-            ability,
-        )
-
-        _draw_ability_charge_mask(
-            screen,
-            slot["charge_level"],
-            charge_ratio,
-        )
-
-        if charge_ratio >= 1.0:
-            pygame.draw.rect(
-                screen,
-                accent_color,
-                icon_rectangle.inflate(2, 2),
-                width=1,
-                border_radius=6,
-            )
-    return ability_tooltip_content(
-        player,
-        hovered_slot,
-    )
+def _draw_abilities(screen, player, assets, layout, mouse_position):
+    return draw_belt_abilities(screen, player, assets, layout, mouse_position)
 
 
 def _draw_gold(

@@ -25,6 +25,7 @@ from settings import (
 from acts.act_two.abilities import ability_charge_required
 from acts.act_three.abilities import (
     charge_ability_slots,
+    is_ability_slot_unlocked,
 )
 from acts.act_two.bloody_altar import (
     BLOOD_HUNGER,
@@ -70,6 +71,7 @@ from acts.act_three.settings import (
     BERSERKER_RAGE_INJURED_HEALTH_RATIO,
     PALADIN_HOLY_HAND_CHARGES,
     PALADIN_SHIELD_CHARGE_CHARGES,
+    PALADIN_SACRED_GROUND_CHARGES,
     SUMMONER_FAMILIAR_CHARGES,
     SUMMONER_TRUE_FORM_CHARGES,
     SUMMONER_TRUE_FORM_DAMAGE_BONUS,
@@ -192,7 +194,7 @@ def damage_player(
             )
 
     if damage_dealt > 0 and player.subclass == "summoner":
-        if not player.summoner_true_form_active:
+        if not player.summoner_true_form_active and is_ability_slot_unlocked(player, "f"):
             player.summoner_true_form_charge = min(
                 SUMMONER_TRUE_FORM_CHARGES,
                 player.summoner_true_form_charge + 1,
@@ -202,6 +204,7 @@ def damage_player(
         damage_dealt > 0
         and player.subclass == "berserker"
         and player.berserker_last_rage_turns <= 0
+        and is_ability_slot_unlocked(player, "f")
     ):
         player.berserker_last_rage_charge = min(
             BERSERKER_LAST_RAGE_CHARGES,
@@ -520,22 +523,25 @@ def attack_enemy(
                 player.ability_kill_charge + 1,
             )
 
-        player.teleport_charge = min(
-            ASSASSIN_TELEPORT_CHARGES,
-            player.teleport_charge + 1,
-        )
-        player.ultimate_charge = min(
-            ASSASSIN_ULTIMATE_CHARGES,
-            player.ultimate_charge + 1,
-        )
+        if is_ability_slot_unlocked(player, "q"):
+            player.teleport_charge = min(
+                ASSASSIN_TELEPORT_CHARGES,
+                player.teleport_charge + 1,
+            )
+        if is_ability_slot_unlocked(player, "f"):
+            player.ultimate_charge = min(
+                ASSASSIN_ULTIMATE_CHARGES,
+                player.ultimate_charge + 1,
+            )
     elif grant_ability_charge and player.subclass == "archer":
-        charge_ability_slots(player, ("q",))
+        charge_ability_slots(player, ("q", "f"))
     elif grant_ability_charge and player.subclass == "berserker":
-        player.berserker_crushing_leap_charge = min(
-            BERSERKER_CRUSHING_LEAP_CHARGES,
-            player.berserker_crushing_leap_charge + 1,
-        )
-        if player.berserker_last_rage_turns <= 0:
+        if is_ability_slot_unlocked(player, "q"):
+            player.berserker_crushing_leap_charge = min(
+                BERSERKER_CRUSHING_LEAP_CHARGES,
+                player.berserker_crushing_leap_charge + 1,
+            )
+        if player.berserker_last_rage_turns <= 0 and is_ability_slot_unlocked(player, "f"):
             player.berserker_last_rage_charge = min(
                 BERSERKER_LAST_RAGE_CHARGES,
                 player.berserker_last_rage_charge + 1,
@@ -545,24 +551,40 @@ def attack_enemy(
             PALADIN_HOLY_HAND_CHARGES,
             player.paladin_holy_hand_charge + 1,
         )
-        player.paladin_shield_charge_charge = min(
-            PALADIN_SHIELD_CHARGE_CHARGES,
-            player.paladin_shield_charge_charge + 1,
-        )
+        if is_ability_slot_unlocked(player, "q"):
+            player.paladin_shield_charge_charge = min(
+                PALADIN_SHIELD_CHARGE_CHARGES,
+                player.paladin_shield_charge_charge + 1,
+            )
+        if is_ability_slot_unlocked(player, "f"):
+            player.paladin_sacred_ground_charge = min(
+                PALADIN_SACRED_GROUND_CHARGES,
+                player.paladin_sacred_ground_charge + 1,
+            )
     elif grant_ability_charge and player.subclass == "warlock":
         charge_ability_slots(
             player,
             ("q", "f"),
         )
     elif grant_ability_charge and player.subclass == "summoner":
-        if not player.summoner_true_form_active:
+        if not player.summoner_true_form_active and is_ability_slot_unlocked(player, "f"):
             player.summoner_true_form_charge = min(
                 SUMMONER_TRUE_FORM_CHARGES,
                 player.summoner_true_form_charge + 1,
             )
-        player.summoner_familiar_charge = min(
-            SUMMONER_FAMILIAR_CHARGES,
-            player.summoner_familiar_charge + 1.0,
+        if is_ability_slot_unlocked(player, "q"):
+            player.summoner_familiar_charge = min(
+                SUMMONER_FAMILIAR_CHARGES,
+                player.summoner_familiar_charge + 1.0,
+            )
+    if (
+        grant_ability_charge
+        and player.subclass in ("archer", "berserker", "paladin", "warlock", "summoner")
+        and player.selected_rune_id not in ("rune_of_the_veil", "rune_of_resonance", "rune_of_impact")
+    ):
+        player.ability_kill_charge = min(
+            ability_charge_required(player),
+            player.ability_kill_charge + 1,
         )
     game_state.emit(
         GameEvent(

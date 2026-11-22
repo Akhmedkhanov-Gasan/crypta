@@ -116,8 +116,8 @@ def get_act_three_popup_rectangle(
     return _get_popup_rectangle(panel_name)
 
 
-def get_act_three_bottom_hud_rectangles():
-    return _get_bottom_hud_rectangles()
+def get_act_three_bottom_hud_rectangles(player=None):
+    return _get_bottom_hud_rectangles(player)
 
 
 def get_act_three_log_panel_rect():

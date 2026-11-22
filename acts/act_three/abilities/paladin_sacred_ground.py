@@ -1,4 +1,5 @@
 from game.combat_log import add_log_message
+from acts.act_three.abilities.progression import is_ability_slot_unlocked
 from game.state import GameState
 from logic import (
     can_move_to,
@@ -56,6 +57,7 @@ def request_paladin_sacred_ground(
 
     if (
         player.subclass != "paladin"
+        or not is_ability_slot_unlocked(player, "f")
         or player.paladin_sacred_ground_cast_requested
         or paladin_sacred_ground_cast_active(
             player,

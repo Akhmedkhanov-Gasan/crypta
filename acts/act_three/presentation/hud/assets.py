@@ -21,9 +21,6 @@ _ART_PATHS = {
     "hud_journal_scrollbar_thumb": (
         _UI_DIRECTORY / "journal_scrollbar_thumb.png"
     ),
-    "hud_consumable_belt_frame": (
-        _UI_DIRECTORY / "consumable_belt_frame.png"
-    ),
     "hud_combat_log_frame": (
         _UI_DIRECTORY / "combat_log_frame.png"
     ),
@@ -35,9 +32,6 @@ _ART_PATHS = {
     ),
     "hud_character_panel_button_active": _UI_DIRECTORY / "button_active.png",
     "hud_character_panel_button_deactive": _UI_DIRECTORY / "button_deactive.png",
-    "hud_ability_chains": (
-            _UI_DIRECTORY / "chains.png"
-    ),
 }
 
 _ART_RECTS = {
@@ -49,10 +43,6 @@ _ART_RECTS = {
         "journal_panel",
         "scrollbar",
         "thumb",
-    ),
-    "hud_consumable_belt_frame": (
-        "down_bar",
-        "consumable_belt_frame",
     ),
     "hud_combat_log_frame": (
         "down_bar",
@@ -79,13 +69,6 @@ _ART_RECTS = {
         "confirm",
         "button_deactive",
     ),
-    "hud_ability_chains": (
-        "down_bar",
-        "abilities",
-        "slots",
-        "ability_q",
-        "chains",
-    ),
 }
 
 _PLAYER_DIRECTORY = ASSET_ROOT / "act_3" / "player"
@@ -111,14 +94,40 @@ def _load_scaled_image(path, rectangle):
     )
 
 
+def _load_belt_images(layout):
+    down_bar = layout["down_bar"]
+    art = down_bar["belt_art"]
+    nodes = [art["background"]]
+    for slot in down_bar["consumable_belt"]["slots"].values():
+        nodes.extend(slot[name] for name in ("background", "number") if slot.get(name) is not None)
+    nodes.extend(down_bar["abilities"].get("ornaments", {}).values())
+    for slot in down_bar["abilities"]["slots"].values():
+        if slot.get("frame") is not None:
+            nodes.append(slot["frame"])
+        if slot.get("letter") is not None:
+            nodes.append(slot["letter"])
+        if slot["plug"] is not None:
+            nodes.append(slot["plug"])
+    return {
+        name: resources.load_image(
+            str(_UI_DIRECTORY / "consumable_belt_frames" / name)
+        ).convert_alpha()
+        for name in dict.fromkeys(node["asset"] for node in nodes)
+    }
+
+
 def load_act_three_hud_assets():
     layout = get_act_three_hud_layout()
 
     assets = {
+        "hud_belt_feedback": {},
         "act_three_hud_layout": layout,
         "hud_status_images": load_status_assets(_UI_DIRECTORY),
         "hud_source_images": {},
     }
+
+    assets["hud_belt_images"] = _load_belt_images(layout)
+    assets["hud_belt_image_cache"] = {}
 
     for asset_name, path in _ART_PATHS.items():
         assets["hud_source_images"][asset_name] = resources.load_image(

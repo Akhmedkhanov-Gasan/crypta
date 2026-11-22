@@ -4,7 +4,7 @@ from acts.act_two.controls import CONSUMABLE_KEYS
 
 from acts.act_three.items.use import TARGETED_ITEMS, belt_item, valid_consumable_target
 from acts.act_three.presentation.hit_testing import get_act_three_cell_from_position
-from acts.act_three.presentation.hud.layout import get_act_three_hud_layout
+from acts.act_three.presentation.hud.layout import get_player_hud_layout
 from acts.act_three.trader_catalog import TRADER_ITEMS
 from presentation.figma_ui import figma_rect
 
@@ -57,7 +57,7 @@ def handle_consumable_pointer(event, game_state, mouse_position, movement_availa
         or mouse_position is None
     ):
         return False
-    slots = get_act_three_hud_layout()["down_bar"]["consumable_belt"]["slots"]
+    slots = get_player_hud_layout(player)["down_bar"]["consumable_belt"]["slots"]
     for index, name in enumerate(sorted(slots)):
         if not figma_rect(slots[name]["hitbox"]).collidepoint(mouse_position):
             continue

@@ -5,6 +5,8 @@ from acts.act_three.abilities import (
     is_ability_slot_unlocked,
 )
 from acts.act_three.abilities.charges import (
+    ability_charge_hint,
+    ability_active,
     get_act_three_ability_charge_state,
 )
 from acts.act_two.presentation.hud_tooltips import (
@@ -174,7 +176,7 @@ def ability_tooltip_content(
     )
 
     charge_line = (
-        "READY"
+        f"READY  |  {_format_charge(current_charge)}/{_format_charge(required_charge)}"
         if current_charge >= required_charge
         else (
             "CHARGE  |  "
@@ -183,12 +185,15 @@ def ability_tooltip_content(
             f"{_format_charge(required_charge)}"
         )
     )
+    if ability_active(player, slot):
+        charge_line = f"ACTIVE  |  CHARGE {_format_charge(current_charge)}/{_format_charge(required_charge)}"
 
     return TooltipContent(
         title=slot_title,
         lines=(
             *description_lines,
             charge_line,
+            ability_charge_hint(player, slot),
         ),
         accent=_ABILITY_ACCENT,
     )

@@ -1,6 +1,7 @@
 from collections.abc import Callable
 
 from game.combat_log import add_log_message
+from acts.act_three.abilities.progression import is_ability_slot_unlocked
 from game.healing import heal_player
 from acts.act_three.events import GameEvent, GameEventType
 from acts.act_three.combat.stun import (
@@ -182,7 +183,7 @@ def request_paladin_shield_charge(
     game_state: GameState,
 ) -> bool:
     player = game_state.player
-    if player.subclass != "paladin":
+    if player.subclass != "paladin" or not is_ability_slot_unlocked(player, "q"):
         return False
 
     if player.paladin_shield_charge_aiming:

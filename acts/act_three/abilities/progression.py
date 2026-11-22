@@ -10,9 +10,7 @@ ABILITY_SLOTS = frozenset({
 })
 
 DEFAULT_UNLOCKED_ABILITY_SLOTS = frozenset({
-    "q",
     "e",
-    "f",
 })
 
 MASTERY_CHARGE_RATES = (
@@ -37,11 +35,6 @@ def initialize_act_three_progression(
         if unlock_all
         else DEFAULT_UNLOCKED_ABILITY_SLOTS
     )
-    if player.subclass == "assassin" and not unlock_all:
-        player.unlocked_ability_slots = {"e"}
-    if player.subclass in ("archer", "berserker", "paladin", "warlock", "summoner") and not unlock_all:
-        player.unlocked_ability_slots.discard("q")
-
     player.ability_slot_charges = {
         slot: 0.0
         for slot in ABILITY_SLOTS
@@ -53,8 +46,12 @@ def is_ability_slot_unlocked(
     player,
     slot,
 ):
-    if player.subclass == "assassin" and slot == "e":
+    if slot not in ABILITY_SLOTS:
+        return False
+    if player.debug_unlimited_abilities or slot == "e":
         return True
+    if slot == "f":
+        return False
 
     return (
         slot in ABILITY_SLOTS
@@ -117,11 +114,11 @@ def is_ability_slot_charged(
     player,
     slot,
 ):
-    if player.debug_unlimited_abilities:
-        return True
-
     if not is_ability_slot_unlocked(player, slot):
         return False
+
+    if player.debug_unlimited_abilities:
+        return True
 
     definition = get_subclass_definition(player.subclass)
     if definition is None:

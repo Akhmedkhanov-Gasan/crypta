@@ -12,8 +12,10 @@ def draw_panel_image(screen, assets, name, rectangle, alpha=255):
         return
 
     target = figma_rect(rectangle)
-    image = pygame.transform.smoothscale(image, target.size)
+    if image.get_size() != target.size:
+        image = pygame.transform.smoothscale(image, target.size)
     if alpha != 255:
+        image = image.copy()
         image.set_alpha(alpha)
     screen.blit(image, target)
 

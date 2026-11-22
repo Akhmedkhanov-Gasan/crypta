@@ -3,6 +3,7 @@ from acts.act_three.progression import can_queue_act_three_attribute_upgrade, ge
 
 from acts.act_three.presentation.hud.layout import (
     get_act_three_hud_layout,
+    get_player_hud_layout,
     get_layout_rect,
 )
 
@@ -143,8 +144,8 @@ def get_act_three_character_confirm_rectangle():
     )
 
 
-def get_act_three_bottom_hud_rectangles():
-    layout = get_act_three_hud_layout()
+def get_act_three_bottom_hud_rectangles(player=None):
+    layout = get_player_hud_layout(player) if player is not None else get_act_three_hud_layout()
 
     return (
         get_layout_rect(
@@ -160,7 +161,7 @@ def get_act_three_bottom_hud_rectangles():
         get_layout_rect(
             layout,
             "down_bar",
-            "consumable_belt_frame",
+            "belt_art",
         ),
         get_layout_rect(
             layout,
@@ -194,12 +195,9 @@ def get_act_three_log_arrow_rectangles():
     return {}
 
 
-def get_act_three_ability_slot_rectangle(slot):
-    return get_layout_rect(
-        get_act_three_hud_layout(),
-        "down_bar",
-        "abilities",
-        "slots",
-        f"ability_{slot}",
-        "hitbox",
-    )
+def get_act_three_ability_slot_rectangle(slot, player=None):
+    import pygame
+
+    layout = get_player_hud_layout(player) if player is not None else get_act_three_hud_layout()
+    value = layout["down_bar"]["abilities"]["slots"].get(f"ability_{slot}")
+    return get_layout_rect(value, "hitbox") if value is not None else pygame.Rect(0, 0, 0, 0)

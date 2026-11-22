@@ -2,6 +2,7 @@ import math
 from collections.abc import Callable
 
 from game.combat_log import add_log_message
+from acts.act_three.abilities.progression import is_ability_slot_unlocked
 from acts.act_three.events import GameEvent, GameEventType
 from game.state import (
     EnemyState,
@@ -79,7 +80,7 @@ def request_berserker_crushing_leap(
     game_state: GameState,
 ) -> bool:
     player = game_state.player
-    if player.subclass != "berserker":
+    if player.subclass != "berserker" or not is_ability_slot_unlocked(player, "q"):
         return False
 
     if (
@@ -250,7 +251,7 @@ def request_berserker_last_rage(
     current_time: int,
 ) -> bool:
     player = game_state.player
-    if player.subclass != "berserker":
+    if player.subclass != "berserker" or not is_ability_slot_unlocked(player, "f"):
         return False
 
     if player.berserker_last_rage_turns > 0:

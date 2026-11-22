@@ -57,6 +57,10 @@ def get_layout_value(layout, *path):
     return value
 
 
+def get_player_hud_layout(player):
+    return get_act_three_hud_layout()
+
+
 def get_layout_rect(layout, *path):
     value = get_layout_value(layout, *path)
 

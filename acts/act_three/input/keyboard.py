@@ -175,10 +175,7 @@ def handle_act_three_key_event(event, game_state, *, belt_available=False):
     ):
         return True
 
-    if (
-        game_state.floor.presentation_act == 3
-        and game_state.player.subclass == "assassin"
-    ):
+    if game_state.floor.presentation_act == 3:
         ability_slot = {
             pygame.K_q: "q",
             pygame.K_e: "e",

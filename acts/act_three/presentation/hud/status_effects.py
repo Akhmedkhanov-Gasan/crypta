@@ -64,7 +64,8 @@ def _active_statuses(player):
     state = player.act_three
     timed = (
         Status("stun", "Stunned", "You cannot act.", player.stun_turns),
-        Status("invisibility", "Invisibility", "Enemies cannot see you.", player.invisibility_turns),
+        Status("invisibility", "Invisibility", "Enemies cannot see you.", player.invisibility_turns,
+               icon_asset=f"act_three_{player.subclass}_invisibility"),
         Status("regeneration", "Regeneration", "Restores health over time.", state.regeneration_ticks),
         Status("stoneflesh", "Stoneflesh", "Reduces incoming physical damage.", player.act_two.stoneflesh_hits, "hits"),
         Status("last_rage", "Last Rage", "Keeps the Berserker from dying.", state.berserker_last_rage_turns),
@@ -92,7 +93,8 @@ def _active_statuses(player):
         yield Status("familiar", "Familiar", "The familiar is on the battlefield.")
     rune = RUNES_BY_ID.get(player.selected_rune_id)
     if rune is not None:
-        yield Status(rune.id, rune.name, rune.description)
+        yield Status(rune.id, rune.name, rune.description,
+                     icon_asset=f"act_three_{player.subclass}_{rune.id}")
     pact = BLOODY_PACTS_BY_ID.get(player.act_two.bloody_pact_id)
     if pact is not None:
         yield Status(pact.id, pact.name, f"{pact.reward} {pact.sacrifice}")

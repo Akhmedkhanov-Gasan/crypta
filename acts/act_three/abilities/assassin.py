@@ -2,6 +2,7 @@ from collections.abc import Callable
 import random
 
 from game.combat_log import add_log_message
+from acts.act_three.abilities.progression import is_ability_slot_unlocked
 from acts.act_three.events import GameEvent, GameEventType
 from acts.act_three.npcs import get_npc_at
 from game.state import (
@@ -139,7 +140,7 @@ def resolve_assassin_shadow_reflex(
 def request_assassin_teleport(game_state: GameState) -> bool:
     player = game_state.player
 
-    if player.subclass != "assassin":
+    if player.subclass != "assassin" or not is_ability_slot_unlocked(player, "q"):
         return False
 
     if player.teleport_aiming:
@@ -314,7 +315,7 @@ def move_assassin_ultimate_preview(
 def request_assassin_ultimate(game_state: GameState) -> bool:
     player = game_state.player
 
-    if player.subclass != "assassin" or player.ultimate_animation_active:
+    if player.subclass != "assassin" or player.ultimate_animation_active or not is_ability_slot_unlocked(player, "f"):
         return False
 
     if player.ultimate_aiming:

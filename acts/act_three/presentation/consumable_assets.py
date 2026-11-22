@@ -51,7 +51,7 @@ def load_act_three_consumable_assets():
         presentation = ACT_THREE_CONSUMABLES.get(item_id)
         if item_art is not None:
             icon = _fit_icon(item_art)
-            belt_sprites[item_id] = icon
+            belt_sprites[item_id] = item_art
             ground_sprites[item_id] = icon
             original_sprites[item_id] = item_art
             continue
@@ -101,7 +101,7 @@ def load_act_three_consumable_assets():
             for path in resources.glob_resources(_DROP_ROOT / "item_piles", "*.png")
         ),
         "act_three_sell_item_sprites": {
-            item_id: _fit_icon(_load_optional_image(_CONSUMABLE_ROOT / f"{item_id}.png"))
+            item_id: _load_optional_image(_CONSUMABLE_ROOT / f"{item_id}.png")
             for item_id in TRADER_SELL_ITEMS
         },
     }

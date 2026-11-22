@@ -1,4 +1,5 @@
 import pygame
+from acts.act_three.abilities.progression import is_ability_slot_unlocked
 from acts.act_three.combat.pacing import player_attack_recovery_active
 
 from application.auto_movement import start_auto_move
@@ -640,55 +641,24 @@ def handle_act_three_pointer_event(
             event.pos,
         )
         if game_mouse_position is not None:
-            if (
-                game_state.sidebar_tab != "stats"
-                and game_state.player.subclass == "warlock"
-                and get_act_three_ability_slot_rectangle("q").collidepoint(
-                    game_mouse_position
-                )
-            ):
-                pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_q))
-                return True
-            if (
-                game_state.sidebar_tab != "stats"
-                and game_state.player.player_class == "mage"
-                and get_act_three_ability_slot_rectangle("e").collidepoint(
-                    game_mouse_position
-                )
-            ):
-                post_mage_aim_toggle()
-                return True
-            if (
-                game_state.sidebar_tab != "stats"
-                and game_state.player.subclass == "archer"
-                and get_act_three_ability_slot_rectangle(
-                    "q"
-                ).collidepoint(game_mouse_position)
-            ):
-                pygame.event.post(
-                    pygame.event.Event(
-                        pygame.KEYDOWN,
-                        key=pygame.K_q,
-                    )
-                )
-                return True
-            if (
-                game_state.sidebar_tab != "stats"
-                and game_state.player.subclass == "archer"
-                and get_act_three_ability_slot_rectangle(
-                    "f"
-                ).collidepoint(game_mouse_position)
-            ):
-                pygame.event.post(
-                    pygame.event.Event(
-                        pygame.KEYDOWN,
-                        key=pygame.K_f,
-                    )
-                )
-                return True
+            if game_state.sidebar_tab != "stats":
+                for ability_slot in ("q", "e", "f"):
+                    if get_act_three_ability_slot_rectangle(ability_slot, game_state.player).collidepoint(game_mouse_position):
+                        if (
+                            not game_state.player.debug_unlimited_abilities
+                            and not is_ability_slot_unlocked(game_state.player, ability_slot)
+                        ):
+                            return True
+                        if ability_slot == "e" and game_state.player.player_class == "mage":
+                            post_mage_aim_toggle()
+                        else:
+                            pygame.event.post(pygame.event.Event(
+                                pygame.KEYDOWN, key={"q": pygame.K_q, "e": pygame.K_e, "f": pygame.K_f}[ability_slot],
+                            ))
+                        return True
             if any(
                 rectangle.collidepoint(game_mouse_position)
-                for rectangle in get_act_three_bottom_hud_rectangles()
+                for rectangle in get_act_three_bottom_hud_rectangles(game_state.player)
             ):
                 return True
             for tab_name, tab_rectangle in (

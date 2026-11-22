@@ -1,6 +1,7 @@
 from collections.abc import Callable
 
 from game.combat_log import add_log_message
+from acts.act_three.abilities.progression import is_ability_slot_unlocked
 from acts.act_three.events import GameEvent, GameEventType
 from game.state import (
     EnemyState,
@@ -156,7 +157,7 @@ def cancel_summoner_familiar_summon(
 
 def release_summoner_familiar(game_state: GameState) -> bool:
     player = game_state.player
-    if player.subclass != "summoner":
+    if player.subclass != "summoner" or not is_ability_slot_unlocked(player, "q"):
         return False
 
     if player.summoner_familiar_active:
@@ -275,7 +276,7 @@ def confirm_summoner_familiar_summon(
     player.summoner_true_form_started_at = -1
     player.summoner_true_form_ending_started_at = -1
     player.summoner_true_form_charge = (
-        SUMMONER_TRUE_FORM_CHARGES
+        SUMMONER_TRUE_FORM_CHARGES if is_ability_slot_unlocked(player, "f") else 0
     )
     player.summoner_true_form_base_max_health = 0
 
@@ -323,7 +324,7 @@ def request_summoner_true_form(
     current_time: int,
 ) -> bool:
     player = game_state.player
-    if player.subclass != "summoner":
+    if player.subclass != "summoner" or not is_ability_slot_unlocked(player, "f"):
         return False
     if not player.summoner_familiar_active:
         add_log_message(
@@ -677,7 +678,7 @@ def damage_summoner_familiar(
     current_health = max(0, previous_health - damage)
     player.summoner_familiar_health = current_health
     damage_dealt = previous_health - current_health
-    if damage_dealt > 0 and not player.summoner_true_form_active:
+    if damage_dealt > 0 and not player.summoner_true_form_active and is_ability_slot_unlocked(player, "f"):
         player.summoner_true_form_charge = min(
             SUMMONER_TRUE_FORM_CHARGES,
             player.summoner_true_form_charge + 1,

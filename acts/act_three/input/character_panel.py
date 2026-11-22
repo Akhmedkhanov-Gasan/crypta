@@ -8,7 +8,7 @@ from acts.act_three.presentation.hud.geometry import (
     get_character_panel_focus_rectangles,
     resolve_character_panel_focus,
 )
-from acts.act_three.presentation.hud.layout import get_act_three_hud_layout
+from acts.act_three.presentation.hud.layout import get_player_hud_layout
 from acts.act_three.progression import (
     cancel_act_three_attribute_upgrade,
     clear_act_three_attribute_upgrades,
@@ -81,7 +81,7 @@ def handle_character_panel_key(event, game_state, can_open):
     if game_state.player.act_three.item_drag is not None:
         return True
 
-    layout = get_act_three_hud_layout()
+    layout = get_player_hud_layout(game_state.player)
     panel = layout["right_bar"]["character_panel"]
     belt_slots = layout["down_bar"]["consumable_belt"]["slots"]
     rectangles = get_character_panel_focus_rectangles(panel, belt_slots, game_state.player)

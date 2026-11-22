@@ -13,7 +13,7 @@
       "x": 4,
       "y": 8,
       "width": 1276,
-      "height": 715
+      "height": 704
     }
   },
   "journal_panel": {
@@ -119,181 +119,192 @@
     }
   },
   "down_bar": {
-    "rect": {
-      "x": 26,
-      "y": 8,
-      "width": 1240,
-      "height": 715
+    "belt_art": {
+      "rect": {
+        "x": 424,
+        "y": 622,
+        "width": 442,
+        "height": 90
+      },
+      "background": {
+        "rect": {
+          "x": 424,
+          "y": 624,
+          "width": 470,
+          "height": 80
+        },
+        "asset": "consumable_belt_background.png"
+      }
     },
     "consumable_belt_frame": {
-      "x": 437,
-      "y": 614,
+      "x": 424,
+      "y": 624,
       "width": 470,
-      "height": 109
+      "height": 80
     },
     "consumable_belt": {
       "rect": {
-        "x": 474,
-        "y": 640,
-        "width": 258,
+        "x": 454,
+        "y": 642,
+        "width": 270,
         "height": 43
       },
       "slots": {
         "slot_01": {
           "rect": {
-            "x": 478,
-            "y": 646,
-            "width": 31,
-            "height": 31
+            "x": 455,
+            "y": 644,
+            "width": 40,
+            "height": 40
           },
           "icon": {
-            "x": 480,
-            "y": 649,
-            "width": 26,
-            "height": 26
+            "x": 458,
+            "y": 646,
+            "width": 35,
+            "height": 35
           },
           "hitbox": {
-            "x": 478,
-            "y": 646,
-            "width": 31,
-            "height": 31
+            "x": 455,
+            "y": 644,
+            "width": 40,
+            "height": 40
           }
         },
         "slot_02": {
           "rect": {
-            "x": 518,
-            "y": 646,
-            "width": 31,
-            "height": 31
+            "x": 502,
+            "y": 645,
+            "width": 40,
+            "height": 40
           },
           "icon": {
-            "x": 520,
-            "y": 649,
-            "width": 26,
-            "height": 26
+            "x": 505,
+            "y": 647,
+            "width": 35,
+            "height": 35
           },
           "hitbox": {
-            "x": 518,
-            "y": 646,
-            "width": 31,
-            "height": 31
+            "x": 502,
+            "y": 645,
+            "width": 40,
+            "height": 40
           }
         },
         "slot_03": {
           "rect": {
-            "x": 561,
-            "y": 646,
-            "width": 31,
-            "height": 31
+            "x": 547,
+            "y": 645,
+            "width": 40,
+            "height": 40
           },
           "icon": {
-            "x": 563,
-            "y": 649,
-            "width": 26,
-            "height": 26
+            "x": 550,
+            "y": 647,
+            "width": 35,
+            "height": 35
           },
           "hitbox": {
-            "x": 561,
-            "y": 646,
-            "width": 31,
-            "height": 31
+            "x": 547,
+            "y": 645,
+            "width": 40,
+            "height": 40
           }
         },
         "slot_04": {
           "rect": {
-            "x": 603,
-            "y": 646,
-            "width": 31,
-            "height": 31
+            "x": 594,
+            "y": 645,
+            "width": 40,
+            "height": 40
           },
           "icon": {
-            "x": 605,
-            "y": 649,
-            "width": 26,
-            "height": 26
+            "x": 597,
+            "y": 647,
+            "width": 35,
+            "height": 35
           },
           "hitbox": {
-            "x": 603,
-            "y": 646,
-            "width": 31,
-            "height": 31
+            "x": 594,
+            "y": 645,
+            "width": 40,
+            "height": 40
           }
         },
         "slot_05": {
           "rect": {
-            "x": 645,
-            "y": 646,
-            "width": 31,
-            "height": 31
+            "x": 639,
+            "y": 645,
+            "width": 40,
+            "height": 40
           },
           "icon": {
-            "x": 647,
-            "y": 649,
-            "width": 26,
-            "height": 26
+            "x": 642,
+            "y": 647,
+            "width": 35,
+            "height": 35
           },
           "hitbox": {
-            "x": 645,
-            "y": 646,
-            "width": 31,
-            "height": 31
+            "x": 639,
+            "y": 645,
+            "width": 40,
+            "height": 40
           }
         },
         "slot_06": {
           "rect": {
-            "x": 688,
-            "y": 646,
-            "width": 31,
-            "height": 31
+            "x": 684,
+            "y": 645,
+            "width": 40,
+            "height": 40
           },
           "icon": {
-            "x": 690,
-            "y": 649,
-            "width": 26,
-            "height": 26
+            "x": 687,
+            "y": 647,
+            "width": 35,
+            "height": 35
           },
           "hitbox": {
-            "x": 688,
-            "y": 646,
-            "width": 31,
-            "height": 31
+            "x": 684,
+            "y": 645,
+            "width": 40,
+            "height": 40
           }
         }
       }
     },
     "abilities": {
       "rect": {
-        "x": 751,
-        "y": 640,
-        "width": 119,
-        "height": 40
+        "x": 741,
+        "y": 637,
+        "width": 120,
+        "height": 60
       },
       "slots": {
         "ability_e": {
           "rect": {
-            "x": 792,
+            "x": 782,
             "y": 644,
             "width": 35,
-            "height": 35
+            "height": 40
           },
           "icon": {
-            "x": 792,
-            "y": 643,
+            "x": 782,
+            "y": 646,
             "width": 35,
             "height": 35
           },
           "hitbox": {
-            "x": 792,
-            "y": 643,
+            "x": 782,
+            "y": 646,
             "width": 35,
             "height": 35
           },
           "charge_level": {
             "rect": {
-              "x": 794,
-              "y": 645,
-              "width": 32,
-              "height": 33
+              "x": 782,
+              "y": 646,
+              "width": 35,
+              "height": 35
             },
             "fill": {
               "r": 0,
@@ -306,33 +317,33 @@
             "corner_radius": 6,
             "blur_radius": 0
           },
-          "chains": null
+          "plug": null
         },
         "ability_f": {
           "rect": {
-            "x": 833,
-            "y": 645,
+            "x": 826,
+            "y": 644,
             "width": 35,
-            "height": 35
+            "height": 40
           },
           "icon": {
-            "x": 833,
-            "y": 644,
+            "x": 826,
+            "y": 646,
             "width": 35,
             "height": 35
           },
           "hitbox": {
-            "x": 833,
-            "y": 644,
+            "x": 826,
+            "y": 646,
             "width": 35,
             "height": 35
           },
           "charge_level": {
             "rect": {
-              "x": 835,
-              "y": 646,
-              "width": 32,
-              "height": 33
+              "x": 826,
+              "y": 647,
+              "width": 35,
+              "height": 35
             },
             "fill": {
               "r": 0,
@@ -345,38 +356,41 @@
             "corner_radius": 6,
             "blur_radius": 0
           },
-          "chains": {
-            "x": 836,
-            "y": 647,
-            "width": 30,
-            "height": 30
+          "plug": {
+            "rect": {
+              "x": 826,
+              "y": 646,
+              "width": 35,
+              "height": 35
+            },
+            "asset": "plug_f.png"
           }
         },
         "ability_q": {
           "rect": {
-            "x": 751,
+            "x": 738,
             "y": 644,
             "width": 35,
-            "height": 35
+            "height": 40
           },
           "icon": {
-            "x": 751,
-            "y": 643,
+            "x": 739,
+            "y": 647,
             "width": 35,
             "height": 35
           },
           "hitbox": {
-            "x": 751,
-            "y": 643,
+            "x": 739,
+            "y": 647,
             "width": 35,
             "height": 35
           },
           "charge_level": {
             "rect": {
-              "x": 753,
-              "y": 645,
-              "width": 32,
-              "height": 33
+              "x": 739,
+              "y": 647,
+              "width": 35,
+              "height": 35
             },
             "fill": {
               "r": 0,
@@ -389,14 +403,23 @@
             "corner_radius": 6,
             "blur_radius": 0
           },
-          "chains": {
-            "x": 754,
-            "y": 646,
-            "width": 30,
-            "height": 30
+          "plug": {
+            "rect": {
+              "x": 739,
+              "y": 646,
+              "width": 35,
+              "height": 35
+            },
+            "asset": "plug_q.png"
           }
         }
       }
+    },
+    "rect": {
+      "x": 26,
+      "y": 8,
+      "width": 1240,
+      "height": 704
     },
     "combat_log": {
       "rect": {

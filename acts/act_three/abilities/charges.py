@@ -1,6 +1,7 @@
 from acts.act_three.abilities.catalog import (
     get_ability_definition,
 )
+from acts.act_three.abilities.progression import is_ability_slot_unlocked
 from acts.act_two.abilities import (
     ability_charge_required,
 )
@@ -11,6 +12,8 @@ from acts.act_three.settings import (
     BERSERKER_LAST_RAGE_CHARGES,
     PALADIN_SACRED_GROUND_CHARGES,
     PALADIN_SHIELD_CHARGE_CHARGES,
+    SUMMONER_FAMILIAR_CHARGES,
+    SUMMONER_TRUE_FORM_CHARGES,
 )
 
 
@@ -49,13 +52,56 @@ _SUBCLASS_CHARGES = {
     "assassin": _ASSASSIN_CHARGES,
     "berserker": _BERSERKER_CHARGES,
     "paladin": _PALADIN_CHARGES,
+    "summoner": {
+        "q": ("summoner_familiar_charge", SUMMONER_FAMILIAR_CHARGES),
+        "f": ("summoner_true_form_charge", SUMMONER_TRUE_FORM_CHARGES),
+    },
 }
+
+
+PASSIVE_RUNES = frozenset({"rune_of_the_veil", "rune_of_resonance", "rune_of_impact"})
+
+
+def ability_is_passive(player, slot):
+    return slot == "e" and player.selected_rune_id in PASSIVE_RUNES
+
+
+def ability_charge_hint(player, slot):
+    if player.debug_unlimited_abilities:
+        return "Unlimited uses enabled by the console."
+    if ability_is_passive(player, slot):
+        return "Passive effect. No charge required."
+    if player.subclass == "summoner" and slot == "f":
+        return "Charges through successful attacks and incoming damage."
+    if player.subclass == "archer" and slot in ("q", "f"):
+        return "Charges through successful attacks; Mastery increases charge gained."
+    if player.subclass == "warlock" and slot in ("q", "f"):
+        return "Charges through successful attacks; Mastery increases charge gained."
+    return "Charges through successful attacks."
+
+
+def ability_active(player, slot):
+    if slot == "e":
+        return not ability_is_passive(player, slot) and player.invisibility_turns > 0
+    if slot == "q" and player.subclass == "summoner":
+        return player.summoner_familiar_active
+    if slot == "f":
+        return {
+            "berserker": player.berserker_last_rage_turns > 0,
+            "paladin": player.paladin_sacred_ground_turns > 0,
+            "warlock": player.warlock_demon_form_active,
+            "summoner": player.summoner_true_form_active,
+            "archer": bool(player.archer_phantoms),
+        }.get(player.subclass, False)
+    return False
 
 def get_act_three_ability_charge_state(
     player,
     slot,
 ):
-    if player.debug_unlimited_abilities:
+    if not is_ability_slot_unlocked(player, slot):
+        return 0.0, 1.0
+    if player.debug_unlimited_abilities or ability_is_passive(player, slot):
         return 1.0, 1.0
 
     if slot == "e":

@@ -21,6 +21,7 @@ from acts.act_three.settings import (
 from acts.act_three.abilities.progression import (
     clear_ability_slot_charge,
     is_ability_slot_charged,
+    is_ability_slot_unlocked,
 )
 
 OracleHitReaction = Callable[
@@ -189,7 +190,7 @@ def request_warlock_demon_form(
     current_time: int,
 ) -> bool:
     player = game_state.player
-    if player.subclass != "warlock":
+    if player.subclass != "warlock" or not is_ability_slot_unlocked(player, "f"):
         return False
 
     if player.health <= 0:
