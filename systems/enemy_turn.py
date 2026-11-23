@@ -1,3 +1,4 @@
+from acts.act_three.abilities.paladin_runes import effective_dodge_chance
 import random
 
 from acts.act_three.ai import (
@@ -315,14 +316,18 @@ def resolve_enemy_turn(
 
         if _advance_enemy_bleed(game_state, enemy):
             continue
+        if enemy.possessed_by_summoner:
+            continue
         if (
             enemy.type == "sentinel"
             and enemy.sentinel.recovery_turns > 0
         ):
             enemy.sentinel.recovery_turns -= 1
+            enemy.madness_turns = max(0, enemy.madness_turns - 1)
             continue
         if enemy.stun_turns > 0:
             enemy.stun_turns -= 1
+            enemy.madness_turns = max(0, enemy.madness_turns - 1)
             enemy.attack_targets = []
             enemy.prepared_attack_mode = None
             enemy.attack_windup_turns_remaining = 0
@@ -348,6 +353,11 @@ def resolve_enemy_turn(
                 category="buff",
             )
 
+        if enemy.madness_turns > 0 and not player_in_trial:
+            from acts.act_three.abilities.warlock_madness import take_madness_turn
+
+            take_madness_turn(game_state, enemy)
+            continue
         if game_state.player.invisibility_turns > 0:
             if (
                 game_state.player.selected_rune_id == "rune_of_the_veil"
@@ -498,7 +508,7 @@ def resolve_enemy_turn(
                 if (
                     not is_lethal_oracle_shockwave
                     and random.random()
-                    < game_state.player.dodge_chance
+                    < effective_dodge_chance(game_state.player)
                 ):
                     game_state.emit(
                         GameEvent(

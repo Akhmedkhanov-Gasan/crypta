@@ -24,6 +24,9 @@ def advance_act_three_frame(game_state, current_act, current_time, sounds):
         if game_state.act_three.awakening.phase != "complete":
             return
     if current_act == 3:
+        from acts.act_three.abilities.summoner_lifecycle import maintain_summoner
+
+        maintain_summoner(game_state)
         from acts.act_three.enemies.lantern_warden.encounter import advance_encounter
 
         advance_encounter(game_state, current_time)

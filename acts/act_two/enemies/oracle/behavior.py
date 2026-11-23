@@ -1,3 +1,4 @@
+from acts.act_three.abilities.paladin_runes import effective_dodge_chance
 import random
 
 from game.combat_log import add_log_message
@@ -219,7 +220,7 @@ def hit_player_with_projectile(
     projectile,
     game_state: GameState,
 ) -> None:
-    if random.random() < game_state.player.dodge_chance:
+    if random.random() < effective_dodge_chance(game_state.player):
         add_log_message(
             game_state.combat_log,
             "Hero dodges an Oracle projectile.",

@@ -139,7 +139,7 @@ SUBCLASS_DEFINITIONS = {
                 charge_required=4.0,
                 description=(
                     "Rush in a chosen direction, damaging "
-                    "and stunning enemies in the path."
+                    "and stunning enemies in the path for one turn."
                 ),
             ),
             "e": POWER_CLEAVE,
@@ -154,7 +154,8 @@ SUBCLASS_DEFINITIONS = {
                 description=(
                     "Drive the blade into the earth and "
                     "corrupt the surrounding ground. "
-                    "Enemies inside are struck by black lightning."
+                    "Black lightning has 6 damaging enemy hits. "
+                    "Empty turns do not spend the zone. A charged recast replaces it with 6 new hits."
                 ),
             ),
         },
@@ -279,7 +280,8 @@ SUBCLASS_DEFINITIONS = {
                 charge_required=8.0,
                 description=(
                     "Transform into a demon, increasing "
-                    "damage while draining health each turn."
+                    "attack damage by 75%. Each attack costs 1 HP; "
+                    "kills restore 10% maximum HP. Revert with F."
                 ),
             ),
         },
@@ -320,8 +322,9 @@ SUBCLASS_DEFINITIONS = {
                 ),
                 charge_required=8.0,
                 description=(
-                    "Empower the released familiar for "
-                    "five of its actions."
+                    "Empower the familiar with 8 extra HP and +3 damage. "
+                    "Each attack spends 1 of its own HP; movement and waiting are free. "
+                    "Q alternatives are disabled until the ultimate ends."
                 ),
             ),
         },

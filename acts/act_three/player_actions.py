@@ -216,6 +216,8 @@ def resolve_act_three_player_action(
         return ActThreePlayerActionResult(movement_blocked=True)
 
     enemy, chest, crate, secret_wall = _cell_targets(game_state, target)
+    if enemy is not None and enemy.possessed_by_summoner:
+        return ActThreePlayerActionResult(movement_blocked=True)
     if (
         (enemy is not None or crate is not None or secret_wall)
         and player_attack_recovery_active(player, started_at)
@@ -225,7 +227,7 @@ def resolve_act_three_player_action(
     acted = False
     if enemy is not None:
         if player.subclass == "warlock":
-            perform_warlock_attack(game_state, target, hit_reaction)
+            acted = perform_warlock_attack(game_state, target, hit_reaction)
         else:
             perform_basic_attack(
                 game_state,
@@ -233,8 +235,9 @@ def resolve_act_three_player_action(
                 row_change,
                 hit_reaction,
             )
-        player.attack_animation_started_at = started_at
-        acted = True
+            acted = True
+        if acted:
+            player.attack_animation_started_at = started_at
     elif chest is not None:
         acted = open_chest(game_state, chest, started_at)
     elif crate is not None:

@@ -21,6 +21,34 @@ SECOND_WIND_RATIO = 0.1
 SECOND_WIND_CAP = 0.4
 DEATH_WISH_MULTIPLIER = 1.35
 DEATH_WISH_EXTRA_HITS = 2
+TOWER_SHIELD_BLOCK_BONUS = 0.35
+TOWER_SHIELD_DAMAGE_MULTIPLIER = 0.8
+TOWER_SHIELD_BLOCK_CAP = 0.85
+BATTERING_RAM_COLLISION_MULTIPLIER = 0.5
+FERVENT_CRUSADE_HITS = 6
+FERVENT_CRUSADE_DAMAGE_MULTIPLIER = 1.75
+SANCTUARY_HEAL_RATIO = 0.03
+SPREADING_CURSE_RANGE = 3
+MADNESS_TURNS = 4
+MADNESS_ELITE_TURNS = 2
+ETERNAL_FORM_DAMAGE_MULTIPLIER = 1.4
+BLOOD_PACT_DAMAGE_STEP = 0.15
+BLOOD_PACT_DAMAGE_CAP = 3.0
+BLOOD_PACT_COST_INTERVAL = 3
+BLOOD_PACT_KILL_HEAL_RATIO = 0.3
+DEMON_KILL_HEAL_RATIO = 0.1
+SPIRIT_TOTEM_RANGE = 3
+SPIRIT_TOTEM_PLACEMENT_RANGE = 3
+POSSESSION_RANGE = 4
+POSSESSION_TURNS = 6
+POSSESSION_ELITE_TURNS = 3
+FAMILIAR_DEATH_CHARGES = 6
+CATACLYSM_RADIUS = 2
+CATACLYSM_DAMAGE_MULTIPLIER = 5.0
+ABSORPTION_ATTACKS = 6
+ABSORPTION_DAMAGE_MULTIPLIER = 1.75
+ABSORPTION_BLOCK_CHANCE = 0.25
+ABSORPTION_ATTACK_RANGE = 3
 
 
 @dataclass(frozen=True)
@@ -33,6 +61,30 @@ class AbilityRune:
 
 
 ABILITY_RUNES = (
+    AbilityRune("rune_of_spirit_totem", "summoner", "q", "Rune of Spirit Totem",
+                "Place a stationary familiar totem within 3 cells. It attacks enemies within 3 cells. True Form temporarily replaces the totem."),
+    AbilityRune("rune_of_possession", "summoner", "q", "Rune of Possession",
+                "Possess a visible enemy within 4 cells for 6 actions, or 3 for elites. Uses its attacks and stats. Bosses are immune. Host death causes the familiar-loss penalty; True Form releases it."),
+    AbilityRune("rune_of_cataclysm", "summoner", "f", "Rune of Cataclysm",
+                "F during True Form detonates the familiar within 2 cells for five times its attack damage. Also hurts you. The familiar dies; resummoning requires 12 charges instead of the normal death penalty of 6."),
+    AbilityRune("rune_of_absorption", "summoner", "f", "Rune of Absorption",
+                "Absorb your familiar for 6 attacks: +75% damage, +25 percentage points of block chance and attack range 3. The familiar returns afterward. Q is disabled while empowered."),
+    AbilityRune("rune_of_spreading_curse", "warlock", "q", "Rune of Spreading Curse",
+                "When a cursed enemy dies, its remaining curse transfers to the nearest uncursed enemy within 3 cells."),
+    AbilityRune("rune_of_madness", "warlock", "q", "Rune of Madness",
+                "Replace vulnerability with random attacks that can hit allies, walls or empty cells. Lasts 4 enemy actions, or 2 for elites and bosses."),
+    AbilityRune("rune_of_eternal_form", "warlock", "f", "Rune of Eternal Form",
+                "Choosing this rune immediately transforms you permanently for this run: +40% attack damage, no HP cost and no healing on kills. No activation charge needed. Cannot revert or replace this rune."),
+    AbilityRune("rune_of_blood_pact", "warlock", "f", "Rune of Blood Pact",
+                "Transform without charges. Start at +75% damage; each attack adds 15 percentage points, capped at +200%. Cost starts at 1 HP and rises every 3 attacks. Kills heal 30% maximum HP. Revert with F."),
+    AbilityRune("rune_of_battering_ram", "paladin", "q", "Rune of Battering Ram",
+                "Shield Charge damages and pushes enemies out of its path. Failed pushes deal an extra 50% hit on collision."),
+    AbilityRune("rune_of_tower_shield", "paladin", "q", "Rune of Tower Shield",
+                "Passive: gain 35 percentage points of block chance, stacking with Guard and Impact up to 85%. Deal 20% less damage. Replaces Shield Charge."),
+    AbilityRune("rune_of_fervent_crusade", "paladin", "f", "Rune of Fervent Crusade",
+                "Empower your next 6 successful hits for 75% more damage instead of creating a zone. Cannot block or dodge while empowered. Recasting replaces the old effect."),
+    AbilityRune("rune_of_redeeming_sanctuary", "paladin", "f", "Rune of Redeeming Sanctuary",
+                "Sacred Ground has 6 damaging hits. Each enemy damaged is stunned for 1 turn and restores 3% of your maximum HP. Recasting replaces the old zone with 6 new hits."),
     AbilityRune("rune_of_blood_wheel", "berserker", "q", "Rune of Blood Wheel",
                 "Rending Spin causes bleeding for 3 turns, dealing 20% of the hit's damage each turn."),
     AbilityRune("rune_of_devastation", "berserker", "q", "Rune of Devastation",

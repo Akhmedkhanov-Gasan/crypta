@@ -22,7 +22,6 @@ from acts.act_three.settings import (
     WARLOCK_BASIC_ATTACK_RANGE,
     WARLOCK_BASIC_DAMAGE_MAX,
     WARLOCK_BASIC_DAMAGE_MIN,
-    WARLOCK_DEMON_FORM_DAMAGE_MULTIPLIER,
     SUMMONER_ATTACK_RANGE,
     SUMMONER_ATTACK_RANGE_WITH_FAMILIAR,
 )
@@ -50,7 +49,7 @@ def attack_breakable_environment_object(game_state, crate, started_at):
 def _enemy_at(floor, target):
     return next(
         (enemy for enemy in floor.enemies
-         if enemy.health > 0 and target in get_enemy_occupied_positions(enemy)),
+         if enemy.health > 0 and not enemy.possessed_by_summoner and target in get_enemy_occupied_positions(enemy)),
         None,
     )
 
@@ -159,6 +158,10 @@ def perform_warlock_attack(
     ):
         return False
 
+    from acts.act_three.abilities.warlock_runes import prepare_demon_attack
+
+    if not prepare_demon_attack(game_state):
+        return False
     player = game_state.player
     floor = game_state.floor
     player.facing_direction = direction_toward(
@@ -186,29 +189,8 @@ def perform_warlock_attack(
         )
     )
     enemy_was_defeated = attack_enemy(
-        game_state,
-        hit_enemy,
-        ceil(
-            WARLOCK_BASIC_DAMAGE_MIN
-            * (
-                WARLOCK_DEMON_FORM_DAMAGE_MULTIPLIER
-                if player.warlock_demon_form_active
-                else 1
-            )
-        ),
-        ceil(
-            WARLOCK_BASIC_DAMAGE_MAX
-            * (
-                WARLOCK_DEMON_FORM_DAMAGE_MULTIPLIER
-                if player.warlock_demon_form_active
-                else 1
-            )
-        ),
-        player.crit_chance,
-        attacker_position=(
-            floor.player_column,
-            floor.player_row,
-        ),
+        game_state, hit_enemy, WARLOCK_BASIC_DAMAGE_MIN, WARLOCK_BASIC_DAMAGE_MAX,
+        player.crit_chance, attacker_position=(floor.player_column, floor.player_row),
     )
     if hit_enemy.type == "oracle":
         oracle_hit_reaction(
@@ -282,11 +264,16 @@ def is_valid_summoner_attack_target(
     if origin is None:
         origin = (floor.player_column, floor.player_row)
 
+    from acts.act_three.abilities.summoner_runes import absorption_active
+    from acts.act_three.rune_master.definitions import ABSORPTION_ATTACK_RANGE
+
     attack_range = (
         SUMMONER_ATTACK_RANGE_WITH_FAMILIAR
         if player.summoner_familiar_active
         else SUMMONER_ATTACK_RANGE
     )
+    if absorption_active(player):
+        attack_range = ABSORPTION_ATTACK_RANGE
     distance = max(
         abs(target_cell[0] - origin[0]),
         abs(target_cell[1] - origin[1]),
@@ -308,6 +295,9 @@ def perform_summoner_attack(
     if not is_valid_summoner_attack_target(game_state, target_cell):
         return False
 
+    from acts.act_three.abilities.summoner_runes import begin_summoner_attack, finish_summoner_attack
+
+    begin_summoner_attack(game_state)
     player = game_state.player
     floor = game_state.floor
     player.facing_direction = direction_toward(
@@ -330,7 +320,7 @@ def perform_summoner_attack(
             data={
                 "kind": (
                     "summoner_magic"
-                    if player.summoner_familiar_active
+                    if player.summoner_familiar_active or player.act_three.summoner_absorption_attack_active
                     else "summoner_bird"
                 )
             },
@@ -355,4 +345,5 @@ def perform_summoner_attack(
         )
     if enemy_was_defeated:
         resolve_enemy_defeat(game_state, hit_enemy)
+    finish_summoner_attack(game_state)
     return True

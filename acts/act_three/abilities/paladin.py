@@ -145,6 +145,11 @@ def is_valid_paladin_shield_charge_target(
         or target == origin
     ):
         return False
+    from acts.act_three.abilities.paladin_runes import tower_shield_active
+    from systems.grid_geometry import can_reach_adjacent_cell
+
+    if tower_shield_active(player):
+        return False
     if not (
         0 <= row < len(floor.map)
         and 0 <= column < len(floor.map[0])
@@ -172,6 +177,9 @@ def is_valid_paladin_shield_charge_target(
         game_state,
         target,
     )
+    if any(not can_reach_adjacent_cell(floor.map, previous, cell, floor.barriers)
+           for previous, cell in zip([origin, *path[:-1]], path)):
+        return False
     blocked_by_chest = any(
         not chest.is_open
         and (chest.column, chest.row) in path
@@ -184,6 +192,14 @@ def request_paladin_shield_charge(
 ) -> bool:
     player = game_state.player
     if player.subclass != "paladin" or not is_ability_slot_unlocked(player, "q"):
+        return False
+    from acts.act_three.abilities.paladin_runes import tower_shield_active
+
+    if tower_shield_active(player):
+        player.paladin_shield_charge_aiming = False
+        player.paladin_shield_charge_target = None
+        player.paladin_shield_charge_preview_cells.clear()
+        add_log_message(game_state.combat_log, "Tower Shield is passive and replaces Shield Charge.", category="rune")
         return False
 
     if player.paladin_shield_charge_aiming:
@@ -253,7 +269,9 @@ def _paladin_shield_charge_target_in_direction(
 
         target = candidate
 
-        if any(
+        from acts.act_three.rune_master.definitions import has_ability_rune
+
+        if not has_ability_rune(game_state.player, "rune_of_battering_ram") and any(
             enemy.health > 0
             and candidate in get_enemy_occupied_positions(enemy)
             for enemy in floor.enemies
@@ -406,6 +424,12 @@ def perform_paladin_shield_charge(
         return False
 
     origin = (floor.player_column, floor.player_row)
+    from acts.act_three.rune_master.definitions import has_ability_rune
+
+    if has_ability_rune(player, "rune_of_battering_ram"):
+        from acts.act_three.abilities.paladin_ram import perform_battering_ram
+
+        return perform_battering_ram(game_state, current_time, oracle_hit_reaction)
     path = get_paladin_shield_charge_path(
         game_state,
         target,

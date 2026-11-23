@@ -105,42 +105,80 @@ def shield_charge_camera_offset(elapsed):
     )
 
 
-def _jagged_ring(
+def draw_shield_charge_targeting(
     surface,
-    center,
-    radius,
-    color,
-    width,
-    phase,
+    origin,
+    cells,
+    camera_x,
+    camera_y,
+    current_time,
+    size,
 ):
-    points = []
+    if not cells:
+        return
 
-    for index in range(12):
-        angle = math.tau * index / 12
-        variation = (
-            1
-            + math.sin(index * 4.7 + phase) * 0.14
-        )
-        distance = radius * variation
-        points.append(
-            (
-                round(
-                    center[0]
-                    + math.cos(angle) * distance
-                ),
-                round(
-                    center[1]
-                    + math.sin(angle) * distance
-                ),
-            )
-        )
-
-    pygame.draw.polygon(
-        surface,
-        color,
-        points,
-        width,
+    start = (
+        (origin[0] + 0.5) * size - camera_x,
+        (origin[1] + 0.5) * size - camera_y,
     )
+    end = (
+        (cells[-1][0] + 0.5) * size - camera_x,
+        (cells[-1][1] + 0.5) * size - camera_y,
+    )
+    length = math.hypot(end[0] - start[0], end[1] - start[1])
+    if length < 1:
+        return
+
+    dx = (end[0] - start[0]) / length
+    dy = (end[1] - start[1]) / length
+    nx, ny = -dy, dx
+    pulse = 0.5 + 0.5 * math.sin(current_time * 0.004)
+    layer = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+
+    def point(distance, offset=0):
+        return (
+            round(start[0] + dx * distance + nx * offset),
+            round(start[1] + dy * distance + ny * offset),
+        )
+
+    half_width = size * 0.19
+    shoulder = max(size * 0.22, length - size * 0.29)
+    outline = (
+        point(size * 0.24, -half_width),
+        point(shoulder, -half_width),
+        point(shoulder, -size * 0.32),
+        point(length + size * 0.16),
+        point(shoulder, size * 0.32),
+        point(shoulder, half_width),
+        point(size * 0.24, half_width),
+    )
+    pygame.draw.polygon(layer, (17, 14, 18, 72), outline)
+    pygame.draw.lines(
+        layer, (107, 44, 53, round(135 + pulse * 35)),
+        False, outline, 2,
+    )
+    pygame.draw.lines(
+        layer, (187, 179, 183, round(165 + pulse * 35)),
+        False,
+        (
+            point(shoulder, -size * 0.23),
+            point(length + size * 0.09),
+            point(shoulder, size * 0.23),
+        ),
+        2,
+    )
+    for column, row in cells:
+        center = (
+            (column + 0.5) * size - camera_x,
+            (row + 0.5) * size - camera_y,
+        )
+        pygame.draw.line(
+            layer, (145, 117, 122, 115),
+            (round(center[0] - nx * 3), round(center[1] - ny * 3)),
+            (round(center[0] + nx * 3), round(center[1] + ny * 3)),
+            1,
+        )
+    surface.blit(layer, (0, 0))
 
 
 def draw_shield_charge_effect(
@@ -151,383 +189,107 @@ def draw_shield_charge_effect(
     elapsed,
     size,
 ):
-    if start_position is None:
+    if start_position is None or elapsed < 0:
         return
 
     start = (
-        start_position[0] + size // 2,
-        start_position[1] + size // 2,
+        start_position[0] + size * 0.5,
+        start_position[1] + size * 0.5,
     )
     end = (
-        end_position[0] + size // 2,
-        end_position[1] + size // 2,
+        end_position[0] + size * 0.5,
+        end_position[1] + size * 0.5,
     )
     current = (
-        player_position[0] + size // 2,
-        player_position[1] + size // 2,
+        player_position[0] + size * 0.5,
+        player_position[1] + size * 0.5,
     )
+    length = math.hypot(end[0] - start[0], end[1] - start[1])
+    if length < 1:
+        return
 
-    travel_x = end[0] - start[0]
-    travel_y = end[1] - start[1]
-    travel_length = max(
-        1.0,
-        math.hypot(travel_x, travel_y),
-    )
-    direction_x = travel_x / travel_length
-    direction_y = travel_y / travel_length
-    normal_x = -direction_y
-    normal_y = direction_x
+    dx = (end[0] - start[0]) / length
+    dy = (end[1] - start[1]) / length
+    nx, ny = -dy, dx
+    layer = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
 
-    windup_progress = max(
-        0.0,
-        min(
-            1.0,
-            elapsed / PALADIN_SHIELD_CHARGE_WINDUP_MS,
-        ),
-    )
-    travel_elapsed = (
-        elapsed - PALADIN_SHIELD_CHARGE_WINDUP_MS
-    )
-    travel_progress = max(
-        0.0,
-        min(
-            1.0,
-            travel_elapsed
-            / PALADIN_SHIELD_CHARGE_TRAVEL_MS,
-        ),
-    )
-    impact_elapsed = (
-        travel_elapsed
-        - PALADIN_SHIELD_CHARGE_TRAVEL_MS
-    )
-    impact_progress = max(
-        0.0,
-        min(
-            1.0,
-            impact_elapsed
-            / PALADIN_SHIELD_CHARGE_IMPACT_MS,
-        ),
-    )
-
-    effect = pygame.Surface(
-        surface.get_size(),
-        pygame.SRCALPHA,
-    )
-
-    if elapsed < PALADIN_SHIELD_CHARGE_WINDUP_MS:
-        pulse = 0.65 + math.sin(elapsed * 0.06) * 0.18
-        shield_center = (
-            round(
-                current[0] + direction_x * size * 0.27
-            ),
-            round(
-                current[1] + direction_y * size * 0.27
-            ),
+    def point(center, forward, side=0):
+        return (
+            round(center[0] + dx * forward + nx * side),
+            round(center[1] + dy * forward + ny * side),
         )
 
-        for index in range(3):
-            radius = round(
-                size
-                * (
-                    0.54
-                    - windup_progress * 0.24
-                    + index * 0.08
-                )
+    def shield_edge(center, scale, alpha):
+        points = tuple(
+            point(center, size * forward * scale, size * side * scale)
+            for forward, side in (
+                (0.13, -0.25),
+                (0.27, -0.14),
+                (0.31, 0),
+                (0.27, 0.14),
+                (0.13, 0.25),
             )
-            alpha = round(
-                (75 - index * 18)
-                * windup_progress
-            )
-            _jagged_ring(
-                effect,
-                shield_center,
-                radius,
-                (74, 45, 91, alpha),
-                max(1, size // 28),
-                elapsed * 0.025 + index,
-            )
-
-        for index in range(8):
-            angle = math.tau * index / 8
-            distance = (
-                size
-                * (
-                    0.48
-                    - windup_progress * 0.25
-                )
-            )
-            particle_position = (
-                round(
-                    shield_center[0]
-                    + math.cos(angle) * distance
-                ),
-                round(
-                    shield_center[1]
-                    + math.sin(angle) * distance
-                ),
-            )
-            pygame.draw.circle(
-                effect,
-                (
-                    188,
-                    148,
-                    91,
-                    round(150 * windup_progress),
-                ),
-                particle_position,
-                max(1, size // 30),
-            )
-
-        pygame.draw.circle(
-            effect,
-            (
-                38,
-                20,
-                50,
-                round(130 * windup_progress),
-            ),
-            shield_center,
-            round(size * 0.31 * pulse),
         )
-        pygame.draw.circle(
-            effect,
-            (
-                229,
-                197,
-                126,
-                round(210 * windup_progress),
-            ),
-            shield_center,
-            round(size * 0.31 * pulse),
-            max(2, size // 24),
+        pygame.draw.lines(layer, (27, 18, 24, alpha), False, points, 7)
+        pygame.draw.lines(layer, (114, 44, 57, alpha), False, points, 3)
+        pygame.draw.lines(
+            layer, (190, 182, 187, round(alpha * 0.72)),
+            False, points[1:4], 1,
         )
 
-    if 0 < travel_progress < 1:
-        trail_length = size * (
-            0.85 + travel_progress * 1.15
-        )
+    travel_elapsed = elapsed - PALADIN_SHIELD_CHARGE_WINDUP_MS
+    impact_elapsed = travel_elapsed - PALADIN_SHIELD_CHARGE_TRAVEL_MS
 
-        for index in range(7):
-            segment_start_distance = (
-                trail_length * index / 7
+    if travel_elapsed < 0:
+        progress = min(1.0, elapsed / PALADIN_SHIELD_CHARGE_WINDUP_MS)
+        shield_edge(current, 0.82 + progress * 0.18, round(165 * progress))
+        for side in (-1, 1):
+            pygame.draw.line(
+                layer, (108, 69, 79, round(110 * progress)),
+                point(current, -size * (0.34 - progress * 0.16), side * size * 0.2),
+                point(current, size * 0.08, side * size * 0.16),
+                2,
             )
-            segment_end_distance = (
-                trail_length * (index + 0.62) / 7
-            )
+    elif impact_elapsed < 0:
+        progress = travel_elapsed / PALADIN_SHIELD_CHARGE_TRAVEL_MS
+        traveled = length * shield_charge_motion_progress(elapsed)
+        shield_edge(current, 1.0, 190)
+        for index in range(5):
             side = -1 if index % 2 else 1
-            offset = (
-                size
-                * (0.04 + index % 3 * 0.035)
-                * side
-            )
-
-            segment_start = (
-                round(
-                    current[0]
-                    - direction_x
-                    * segment_start_distance
-                    + normal_x * offset
-                ),
-                round(
-                    current[1]
-                    - direction_y
-                    * segment_start_distance
-                    + normal_y * offset
-                ),
-            )
-            segment_end = (
-                round(
-                    current[0]
-                    - direction_x
-                    * segment_end_distance
-                    - normal_x * offset * 0.55
-                ),
-                round(
-                    current[1]
-                    - direction_y
-                    * segment_end_distance
-                    - normal_y * offset * 0.55
-                ),
-            )
-            fade = 1 - index / 7
-
+            distance = min(traveled, size * (0.24 + index * 0.16))
+            offset = side * size * (0.12 + index % 3 * 0.035)
+            alpha = 120 - index * 17
             pygame.draw.line(
-                effect,
-                (
-                    48,
-                    27,
-                    59,
-                    round(155 * fade),
-                ),
-                segment_start,
-                segment_end,
-                max(3, round(size * 0.20 * fade)),
+                layer, (65, 31, 42, alpha),
+                point(current, -distance, offset),
+                point(current, -max(0, distance - size * 0.22), offset * 0.85),
+                3 if index < 2 else 2,
             )
-            pygame.draw.line(
-                effect,
-                (
-                    207,
-                    168,
-                    102,
-                    round(220 * fade),
-                ),
-                segment_start,
-                segment_end,
-                max(1, round(size * 0.055 * fade)),
-            )
-
-        shield_center = (
-            round(
-                current[0] + direction_x * size * 0.34
-            ),
-            round(
-                current[1] + direction_y * size * 0.34
-            ),
-        )
-        shield_points = []
-
         for index in range(6):
-            angle = math.tau * index / 6
-            radius = size * (
-                0.27
-                + (0.04 if index % 2 else 0)
-            )
-            shield_points.append(
-                (
-                    round(
-                        shield_center[0]
-                        + math.cos(angle) * radius
-                    ),
-                    round(
-                        shield_center[1]
-                        + math.sin(angle) * radius
-                    ),
-                )
-            )
-
-        pygame.draw.polygon(
-            effect,
-            (32, 17, 43, 190),
-            shield_points,
-        )
-        pygame.draw.polygon(
-            effect,
-            (226, 194, 126, 235),
-            shield_points,
-            max(2, size // 18),
-        )
-
-    if impact_progress > 0:
-        visibility = (1 - impact_progress) ** 1.4
-        impact_center = (
-            round(
-                end[0] + direction_x * size * 0.26
-            ),
-            round(
-                end[1] + direction_y * size * 0.26
-            ),
-        )
-
-        for index in range(3):
-            radius = size * (
-                0.25
-                + impact_progress * (0.65 + index * 0.16)
-            )
-            _jagged_ring(
-                effect,
-                impact_center,
-                radius,
-                (
-                    232,
-                    202,
-                    134,
-                    round(
-                        visibility
-                        * (220 - index * 48)
-                    ),
-                ),
-                max(2, size // (20 + index * 5)),
-                impact_elapsed * 0.04 + index,
-            )
-
-        for index in range(16):
-            angle = (
-                math.tau * index / 16
-                + math.sin(index * 3.1) * 0.11
-            )
-            distance = size * (
-                0.20 + impact_progress * 0.74
-            )
-            length = size * (
-                0.10 + index % 4 * 0.045
-            )
-            spark_start = (
-                round(
-                    impact_center[0]
-                    + math.cos(angle) * distance
-                ),
-                round(
-                    impact_center[1]
-                    + math.sin(angle) * distance
-                ),
-            )
-            spark_end = (
-                round(
-                    spark_start[0]
-                    + math.cos(angle) * length
-                ),
-                round(
-                    spark_start[1]
-                    + math.sin(angle) * length
-                ),
-            )
-
-            pygame.draw.line(
-                effect,
-                (
-                    245,
-                    218,
-                    155,
-                    round(235 * visibility),
-                ),
-                spark_start,
-                spark_end,
-                max(1, size // 25),
-            )
-
-        for index in range(9):
+            age = (progress * 2.5 + index / 6) % 1.0
             side = -1 if index % 2 else 1
-            distance = size * (
-                0.22 + impact_progress * 0.55
+            distance = min(traveled, size * (0.2 + age * 0.65))
+            center = point(current, -distance, side * size * (0.18 + age * 0.18))
+            pygame.draw.line(
+                layer, (156, 145, 149, round(105 * (1 - age))),
+                center,
+                point(center, -size * 0.055, side * size * 0.025),
+                1,
             )
-            debris_position = (
-                round(
-                    impact_center[0]
-                    - direction_x * distance
-                    + normal_x
-                    * side
-                    * size
-                    * (0.10 + index * 0.025)
-                ),
-                round(
-                    impact_center[1]
-                    - direction_y * distance
-                    + normal_y
-                    * side
-                    * size
-                    * (0.10 + index * 0.025)
-                ),
-            )
-            pygame.draw.circle(
-                effect,
-                (
-                    82,
-                    58,
-                    65,
-                    round(170 * visibility),
-                ),
-                debris_position,
-                max(1, size // 24),
+    elif impact_elapsed < PALADIN_SHIELD_CHARGE_IMPACT_MS:
+        progress = impact_elapsed / PALADIN_SHIELD_CHARGE_IMPACT_MS
+        fade = (1 - progress) ** 1.5
+        shield_edge(end, 1.0 + progress * 0.75, round(190 * fade))
+        for index in range(7):
+            angle = (index - 3) * 0.29
+            forward = size * (0.3 + progress * 0.6)
+            side = math.sin(angle) * size * (0.25 + progress * 0.55)
+            center = point(end, forward * math.cos(angle), side)
+            pygame.draw.line(
+                layer, (170, 150, 156, round(150 * fade)),
+                center,
+                point(center, size * 0.075 * math.cos(angle), size * 0.075 * math.sin(angle)),
+                2 if index % 3 == 0 else 1,
             )
 
-    surface.blit(effect, (0, 0))
+    surface.blit(layer, (0, 0))

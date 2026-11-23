@@ -606,6 +606,13 @@ def cast_mage_arcane_burst(
     concentration_active = (
         player.selected_rune_id == "rune_of_concentration"
     )
+    from acts.act_three.abilities.warlock_runes import prepare_demon_attack
+
+    if not prepare_demon_attack(game_state):
+        return False
+    from acts.act_three.abilities.summoner_runes import begin_summoner_attack
+
+    begin_summoner_attack(game_state)
     fracture_active = player.selected_rune_id == "rune_of_fracture"
 
     player.directional_ability_aiming = False
@@ -630,7 +637,7 @@ def cast_mage_arcane_burst(
 
     targets = []
     for enemy in floor.enemies:
-        if enemy.health <= 0:
+        if enemy.health <= 0 or enemy.possessed_by_summoner:
             continue
         hit_cells = get_enemy_occupied_positions(enemy) & cell_set
         if hit_cells:
@@ -749,5 +756,8 @@ def cast_mage_arcane_burst(
         if defeated:
             resolve_enemy_defeat(game_state, enemy)
 
+    from acts.act_three.abilities.summoner_runes import finish_summoner_attack
+
+    finish_summoner_attack(game_state)
     return True
 

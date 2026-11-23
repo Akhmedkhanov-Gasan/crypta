@@ -6,7 +6,7 @@ from game.rune_catalog import RUNES_BY_ID, runes_for_class
 
 
 ICON_ROOT = "assets/sprites/ui/act_3/skills/abilities"
-READY_SUBCLASSES = frozenset({"assassin", "archer", "berserker"})
+READY_SUBCLASSES = frozenset({"assassin", "archer", "berserker", "paladin", "warlock", "summoner"})
 
 
 def icon_paths(owner, identifier, fallback=None):
@@ -62,7 +62,8 @@ def upgrade_choices(player, slot):
     definitions = tuple(rune for rune in ABILITY_RUNES if rune.subclass == player.subclass and rune.slot == slot)
     choices = [
         RuneCard(rune.id, slot, rune.name, rune.description,
-                 icon_paths(player.subclass, rune.id))
+                 icon_paths(player.subclass, rune.id),
+                 placeholder=player.act_three.warlock_eternal_bound and slot == "f" and rune.id != "rune_of_eternal_form")
         for rune in definitions
     ]
     choice_count = 3 if ability.inherited else 2

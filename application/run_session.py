@@ -156,6 +156,15 @@ class RunSession:
             from acts.act_three.abilities.last_rage import migrate_last_rage
 
             migrate_last_rage(state.player)
+            from acts.act_three.abilities.paladin_runes import migrate_paladin_ultimate
+
+            migrate_paladin_ultimate(state.player, state.floor_index)
+            from acts.act_three.abilities.warlock_runes import restore_eternal_form
+
+            restore_eternal_form(state.player)
+            from acts.act_three.abilities.summoner_lifecycle import restore_summoner_state
+
+            restore_summoner_state(state)
             self.saved = saved
             self.error = ""
         except Exception as error:

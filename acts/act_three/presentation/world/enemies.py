@@ -266,7 +266,17 @@ def draw_world_enemies(
                 enemy.curse_turns,
                 fonts["sidebar_numbers"],
             )
-        if enemy.health > 0 and enemy.is_aggro:
+        if enemy.health > 0 and enemy.madness_turns > 0:
+            from acts.act_three.presentation.warlock.rune_effects import draw_madness_status
+
+            draw_madness_status(context.view_surface, enemy_position, enemy.footprint_width,
+                                current_time, enemy.madness_turns, fonts["sidebar_numbers"])
+        if enemy.health > 0 and enemy.possessed_by_summoner:
+            from acts.act_three.presentation.summoner.rune_effects import draw_possession_mark
+
+            draw_possession_mark(context.view_surface, enemy_position, enemy.footprint_width, current_time,
+                                  game_state.player.act_three.summoner_possession_turns, fonts["sidebar_numbers"])
+        if enemy.health > 0 and enemy.is_aggro and not enemy.possessed_by_summoner:
             pygame.draw.rect(
                 context.view_surface,
                 DANGER_BORDER_COLOR,

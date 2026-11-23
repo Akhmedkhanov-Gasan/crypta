@@ -77,10 +77,15 @@ def _active_statuses(player):
         Status("regeneration", "Regeneration", "Restores health over time.", state.regeneration_ticks),
         Status("stoneflesh", "Stoneflesh", "Reduces incoming physical damage.", player.act_two.stoneflesh_hits, "hits"),
         Status("last_rage", "Last Rage", rage_description, state.berserker_last_rage_hits, "hits", icon_asset=rage_icon),
-        Status("sacred_ground", "Sacred Ground", "The consecrated area is still active.", state.paladin_sacred_ground_turns),
-        Status("true_form", "True Form", "Empowers the familiar.", state.summoner_true_form_charge if state.summoner_true_form_active else 0, "attacks"),
+        Status("sacred_ground", "Sacred Ground", "Damaging enemy hits remaining. Empty turns do not spend the zone.", state.paladin_sacred_ground_hits, "hits"),
+        Status("true_form", "True Form", "Each familiar attack spends 1 of its own HP. Q is disabled. F reverts, or detonates Cataclysm within 2 cells, including you.",
+               state.summoner_familiar_health if state.summoner_true_form_active else 0, "HP",
+               f"act_three_summoner_{state.summoner_ultimate_rune or 'true_form'}"),
     )
     yield from (status for status in timed if status.count > 0)
+    if state.paladin_crusade_hits > 0:
+        yield Status("fervent_crusade", "Fervent Crusade", "+75% attack damage. Cannot block or dodge.",
+                     state.paladin_crusade_hits, "hits", "act_three_paladin_rune_of_fervent_crusade")
     if player.subclass == "archer" and player.health > 0:
         for phantom in state.archer_phantoms:
             if phantom.shots_remaining > 0:
@@ -98,9 +103,22 @@ def _active_statuses(player):
     if state.ironblood_guard:
         yield Status("ironblood_guard", "Ironblood Guard", "Halves the next damaging hit.", 1, "hit")
     if state.warlock_demon_form_active:
-        yield Status("demon_form", "Demon Form", "Empowers the Warlock and drains health each turn until cancelled.")
+        from acts.act_three.abilities.warlock_runes import demon_attack_cost, demon_damage_multiplier
+
+        description = f"Next attack: +{(demon_damage_multiplier(player, next_attack=True) - 1):.0%} damage; {demon_attack_cost(player)} HP cost."
+        description += " Permanent; no healing on kills." if state.warlock_eternal_bound else " F reverts to mortal form."
+        yield Status("demon_form", "Demon Form", description,
+                     icon_asset=f"act_three_warlock_{state.warlock_demon_rune or 'demon_form'}")
     if state.summoner_familiar_active:
-        yield Status("familiar", "Familiar", "The familiar is on the battlefield.")
+        if state.summoner_possession_host is not None:
+            yield Status("possession", "Possession", f"The familiar controls {state.summoner_possession_host}.",
+                         state.summoner_possession_turns, "actions", "act_three_summoner_rune_of_possession")
+        else:
+            yield Status("familiar", "Spirit Totem" if state.summoner_familiar_mode == "totem" else "Familiar",
+                         "The familiar is on the battlefield.", icon_asset="act_three_summoner_rune_of_spirit_totem" if state.summoner_familiar_mode == "totem" else None)
+    if state.summoner_absorption_attacks > 0:
+        yield Status("absorption", "Absorption", "+75% damage, +25% block chance, attack range 3. Q is disabled; the familiar returns after the last attack.",
+                     state.summoner_absorption_attacks, "attacks", "act_three_summoner_rune_of_absorption")
     rune = RUNES_BY_ID.get(player.selected_rune_id)
     if rune is not None:
         yield Status(rune.id, rune.name, rune.description,
@@ -110,7 +128,14 @@ def _active_statuses(player):
         yield Status(pact.id, pact.name, f"{pact.reward} {pact.sacrifice}")
     passive = get_passive_definition(player.subclass)
     if passive is not None:
-        yield Status(passive.id, passive.name, passive.description, icon_asset=passive.icon_asset)
+        description = passive.description
+        if player.subclass == "paladin":
+            from acts.act_three.combat.paladin import add_paladin_block_chance
+            from settings import WARRIOR_IMPACT_BLOCK_CHANCE
+
+            chance = add_paladin_block_chance(player, WARRIOR_IMPACT_BLOCK_CHANCE if player.selected_rune_id == "rune_of_impact" else 0)
+            description = f"Current total block chance: {chance:.0%}. Includes equipped runes; disabled during Fervent Crusade."
+        yield Status(passive.id, passive.name, description, icon_asset=passive.icon_asset)
 
 
 def _icon(assets, custom, key):

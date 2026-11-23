@@ -167,6 +167,14 @@ class ActThreePlayerState:
         tuple[int, int]
     ] = field(default_factory=list)
     paladin_sacred_ground_turns: int = 0
+    paladin_sacred_ground_hits: int = 0
+    paladin_sacred_ground_floor: int | None = None
+    paladin_crusade_hits: int = 0
+    paladin_ultimate_rune: str | None = None
+    paladin_ram_impacts: list[tuple[int, int, bool, int]] = field(default_factory=list)
+    paladin_rune_block_started_at: int = -1
+    paladin_tower_damage_remainder: float = 0.0
+    paladin_sanctuary_healing_progress: float = 0.0
     paladin_sacred_ground_started_at: int = 0
     paladin_sacred_ground_lightnings: list[
         PaladinSacredLightningState
@@ -183,10 +191,31 @@ class ActThreePlayerState:
         tuple[int, int] | None
     ) = None
     warlock_demon_form_active: bool = False
+    warlock_demon_rune: str | None = None
+    warlock_eternal_bound: bool = False
+    warlock_blood_attacks: int = 0
+    warlock_last_demon_attack_at: int = -1
+    warlock_demon_healing_progress: float = 0.0
+    warlock_newly_cursed_enemies: set[str] = field(default_factory=set)
+    warlock_curse_transfers: list[tuple[int, int, int, int, int]] = field(default_factory=list)
+    warlock_madness_attacks: list[tuple[int, int, int, int, int]] = field(default_factory=list)
     warlock_demon_form_started_at: int = -1
     warlock_demon_form_target_active: bool | None = None
 
     summoner_familiar_active: bool = False
+    summoner_familiar_mode: str = "familiar"
+    summoner_entity_floor: int | None = None
+    summoner_totem_anchor: tuple[int, int] | None = None
+    summoner_possession_host: str | None = None
+    summoner_possession_turns: int = 0
+    summoner_recall_requirement: int = 0
+    summoner_ultimate_rune: str | None = None
+    summoner_absorption_attacks: int = 0
+    summoner_absorption_attack_active: bool = False
+    summoner_suspended_familiar: dict | None = None
+    summoner_rune_started_at: int = -1
+    summoner_cataclysm_position: tuple[int, int] | None = None
+    summoner_cataclysm_started_at: int = -1
     summoner_familiar_position: tuple[int, int] | None = None
     summoner_familiar_summon_aiming: bool = False
     summoner_familiar_summon_target: tuple[int, int] | None = None

@@ -111,6 +111,13 @@ def try_block_enemy_attack(
         player,
         rune_chance,
     )
+    from acts.act_three.abilities.summoner_runes import absorption_active
+
+    absorption_guard = absorption_active(player)
+    if absorption_guard:
+        from acts.act_three.rune_master.definitions import ABSORPTION_BLOCK_CHANCE
+
+        block_chance += ABSORPTION_BLOCK_CHANCE
 
     if block_chance <= 0 or random.random() >= block_chance:
         return False
@@ -120,6 +127,14 @@ def try_block_enemy_attack(
         if player.subclass == "paladin"
         else "rune_of_impact"
     )
+    if absorption_guard:
+        source = "rune_of_absorption"
+    if player.subclass == "paladin":
+        from acts.act_three.abilities.paladin_runes import tower_shield_active
+        import pygame
+
+        if tower_shield_active(player):
+            player.act_three.paladin_rune_block_started_at = pygame.time.get_ticks()
 
     game_state.emit(
         GameEvent(
@@ -144,6 +159,8 @@ def try_block_enemy_attack(
         if player.subclass == "paladin"
         else "Rune of Impact"
     )
+    if absorption_guard:
+        defender = "Absorption"
     add_log_message(
         game_state.combat_log,
         f"{defender} blocks {attacker_name}'s attack.",
@@ -197,7 +214,9 @@ def damage_player(
             )
 
     if damage_dealt > 0 and player.subclass == "summoner":
-        if not player.summoner_true_form_active and is_ability_slot_unlocked(player, "f"):
+        from acts.act_three.abilities.summoner_runes import absorption_active
+
+        if not player.summoner_true_form_active and not absorption_active(player) and is_ability_slot_unlocked(player, "f"):
             player.summoner_true_form_charge = min(
                 SUMMONER_TRUE_FORM_CHARGES,
                 player.summoner_true_form_charge + 1,
@@ -281,6 +300,8 @@ def attack_enemy(
     damage_multiplier: float = 1.0,
 ) -> bool:
     player = game_state.player
+    if enemy.possessed_by_summoner and attacker_name in ("hero", "familiar"):
+        return False
     veil_passive = (
         player.player_class == "rogue"
         and player.selected_rune_id == "rune_of_the_veil"
@@ -435,8 +456,27 @@ def attack_enemy(
             damage,
         )
         damage = apply_weapon_bonus(player, damage)
+    if attacker_name == "hero" and player.subclass == "warlock":
+        from acts.act_three.abilities.warlock_runes import demon_damage_multiplier
+
+        damage_multiplier *= demon_damage_multiplier(player)
+    if attacker_name == "hero" and player.subclass == "summoner":
+        from acts.act_three.abilities.summoner_runes import absorption_damage_multiplier
+
+        damage_multiplier *= absorption_damage_multiplier(player)
+    tower_damage_rounding = False
+    if attacker_name == "hero" and player.subclass == "paladin":
+        from acts.act_three.abilities.paladin_runes import paladin_attack_multiplier, tower_shield_active
+
+        tower_damage_rounding = tower_shield_active(player)
+        damage_multiplier *= paladin_attack_multiplier(player)
     if damage_multiplier != 1.0:
-        damage = max(1, ceil(damage * damage_multiplier))
+        if tower_damage_rounding:
+            from acts.act_three.abilities.paladin_runes import round_tower_damage
+
+            damage = round_tower_damage(player, damage * damage_multiplier)
+        else:
+            damage = max(1, ceil(damage * damage_multiplier))
     damage = limit_oracle_phase_one_damage(
         enemy,
         damage,
@@ -453,6 +493,9 @@ def attack_enemy(
     )
 
     if attacker_name == "hero":
+        from acts.act_three.abilities.paladin_runes import consume_crusade_hit
+
+        consume_crusade_hit(game_state, damage_dealt)
         from acts.act_three.abilities.berserker_runes import record_rage_damage
 
         record_rage_damage(player, damage_dealt)
@@ -584,14 +627,16 @@ def attack_enemy(
             ("q", "f"),
         )
     elif grant_ability_charge and player.subclass == "summoner":
-        if not player.summoner_true_form_active and is_ability_slot_unlocked(player, "f"):
+        from acts.act_three.abilities.summoner_runes import absorption_active, familiar_recharge_requirement
+
+        if not player.summoner_true_form_active and not absorption_active(player) and is_ability_slot_unlocked(player, "f"):
             player.summoner_true_form_charge = min(
                 SUMMONER_TRUE_FORM_CHARGES,
                 player.summoner_true_form_charge + 1,
             )
         if is_ability_slot_unlocked(player, "q"):
             player.summoner_familiar_charge = min(
-                SUMMONER_FAMILIAR_CHARGES,
+                familiar_recharge_requirement(player),
                 player.summoner_familiar_charge + 1.0,
             )
     if (
@@ -721,6 +766,15 @@ def resolve_enemy_defeat(
 
     if enemy.type == "oracle_pillar":
         return
+
+    if enemy.possessed_by_summoner:
+        from acts.act_three.abilities.summoner_possession import host_defeated
+
+        host_defeated(game_state, enemy)
+
+    from acts.act_three.abilities.warlock_runes import resolve_warlock_defeat
+
+    resolve_warlock_defeat(game_state, enemy)
 
     from acts.act_three.abilities.berserker_runes import record_rage_kill
 
@@ -875,6 +929,13 @@ def perform_mage_resonance_attack(
     enemy = get_mage_resonance_target(game_state, target)
     if enemy is None:
         return False
+    from acts.act_three.abilities.warlock_runes import prepare_demon_attack
+
+    if not prepare_demon_attack(game_state):
+        return False
+    from acts.act_three.abilities.summoner_runes import begin_summoner_attack
+
+    begin_summoner_attack(game_state)
 
     player = game_state.player
     floor = game_state.floor
@@ -936,6 +997,9 @@ def perform_mage_resonance_attack(
     if defeated:
         resolve_enemy_defeat(game_state, enemy)
 
+    from acts.act_three.abilities.summoner_runes import finish_summoner_attack
+
+    finish_summoner_attack(game_state)
     return True
 
 
@@ -945,6 +1009,9 @@ def perform_basic_attack(
     row_change: int,
     oracle_hit_reaction: OracleHitReaction,
 ) -> None:
+    from acts.act_three.abilities.summoner_runes import begin_summoner_attack, finish_summoner_attack
+
+    begin_summoner_attack(game_state)
     player = game_state.player
     floor = game_state.floor
     attack_was_from_invisibility = (
@@ -1116,6 +1183,7 @@ def perform_basic_attack(
                 ),
                 category="rune",
             )
+    finish_summoner_attack(game_state)
 
 from acts.act_three.combat import (
     is_valid_archer_attack_target,

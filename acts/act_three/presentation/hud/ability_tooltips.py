@@ -157,15 +157,14 @@ def ability_tooltip_content(
             accent=_LOCKED_ACCENT,
         )
 
-    if (
-        slot == "e"
-        and player.selected_rune_id in _PASSIVE_RUNES
-    ):
+    from acts.act_three.abilities.charges import ability_is_passive
+
+    if ability_is_passive(player, slot):
         return TooltipContent(
             title=slot_title,
             lines=(
                 *description_lines,
-                "This rune changes the inherited ability into a passive effect.",
+                "Passive effect. No activation or charge required.",
             ),
             accent=_ABILITY_ACCENT,
         )

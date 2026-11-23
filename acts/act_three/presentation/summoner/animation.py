@@ -1,3 +1,4 @@
+from acts.act_three.abilities.summoner_runes import familiar_is_away
 from acts.act_three.combat.pacing import SUMMONER_BASIC_ATTACK_DURATION_MS
 
 
@@ -67,7 +68,7 @@ def summoner_familiar_cast_sprite(
             - player.summoner_familiar_summoned_at
         )
         if (
-            not player.summoner_familiar_active
+            not familiar_is_away(player)
             or player.summoner_familiar_summoned_at < 0
             or cast_elapsed < 0
             or cast_elapsed

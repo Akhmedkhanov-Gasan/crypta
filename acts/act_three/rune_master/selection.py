@@ -4,9 +4,12 @@ from game.combat_log import add_log_message
 from game.rune_catalog import RUNES_BY_ID
 
 
-def apply_rune(game_state, card):
+def apply_rune(game_state, card, current_time=None):
     player = game_state.player
     if card.placeholder or not is_ability_slot_unlocked(player, card.slot):
+        return False
+    if card.slot == "f" and player.act_three.warlock_eternal_bound and card.id != "rune_of_eternal_form":
+        add_log_message(game_state.combat_log, "Eternal Form is bound for the rest of this run.", category="warning")
         return False
     if card.slot == "e":
         rune = RUNES_BY_ID.get(card.id)
@@ -21,5 +24,13 @@ def apply_rune(game_state, card):
         if rune is None or rune.subclass != player.subclass or rune.slot != card.slot:
             return False
         player.act_three.ability_runes[card.slot] = rune.id
+        if card.id == "rune_of_eternal_form":
+            from acts.act_three.abilities.warlock_runes import bind_eternal_form
+
+            bind_eternal_form(game_state, current_time)
+        if card.id == "rune_of_tower_shield":
+            player.paladin_shield_charge_aiming = False
+            player.paladin_shield_charge_target = None
+            player.paladin_shield_charge_preview_cells.clear()
     add_log_message(game_state.combat_log, f"{rune.name} bound to {card.slot.upper()}.", category="rune")
     return True

@@ -15,7 +15,6 @@ from logic import (
 from acts.act_three.settings import (
     WARLOCK_CURSE_RANGE,
     WARLOCK_CURSE_TURNS,
-    WARLOCK_DEMON_FORM_HEALTH_DRAIN,
     WARLOCK_DEMON_FORM_TRANSFORM_MS,
 )
 from acts.act_three.abilities.progression import (
@@ -135,7 +134,9 @@ def perform_warlock_curse(
     player.attack_animation_started_at = current_time
     player.warlock_curse_started_at = current_time
     player.warlock_curse_effect_target = target
-    target_enemy.curse_turns = WARLOCK_CURSE_TURNS
+    from acts.act_three.abilities.warlock_runes import apply_curse_rune
+
+    apply_curse_rune(game_state, target_enemy)
     clear_ability_slot_charge(player, "q")
     player.warlock_curse_aiming = False
     player.warlock_curse_target = None
@@ -156,8 +157,8 @@ def perform_warlock_curse(
     add_log_message(
         game_state.combat_log,
         (
-            f"{target_enemy.name} is cursed for "
-            f"{WARLOCK_CURSE_TURNS} turns."
+            f"{target_enemy.name} is maddened for {target_enemy.madness_turns} actions."
+            if target_enemy.madness_turns else f"{target_enemy.name} is cursed for {target_enemy.curse_turns} turns."
         ),
     )
     return True
@@ -173,6 +174,7 @@ def advance_warlock_curses(
             enemy.health <= 0
             or enemy.curse_turns <= 0
             or enemy.name == newly_cursed_enemy
+            or enemy.name in game_state.player.act_three.warlock_newly_cursed_enemies
         ):
             continue
         enemy.curse_turns -= 1
@@ -183,6 +185,7 @@ def advance_warlock_curses(
             )
 
     game_state.player.warlock_newly_cursed_enemy = None
+    game_state.player.act_three.warlock_newly_cursed_enemies.clear()
 
 
 def request_warlock_demon_form(
@@ -208,9 +211,17 @@ def request_warlock_demon_form(
         return False
 
     target_active = not player.warlock_demon_form_active
+    from acts.act_three.rune_master.definitions import equipped_rune
+
+    if player.act_three.warlock_eternal_bound:
+        add_log_message(game_state.combat_log, "Eternal Form cannot be reversed during this run.", category="rune")
+        return False
+    rune = equipped_rune(player, "f")
+    free = rune is not None and rune.id == "rune_of_blood_pact"
 
     if (
         target_active
+        and not free
         and not is_ability_slot_charged(player, "f")
     ):
         add_log_message(
@@ -227,7 +238,11 @@ def request_warlock_demon_form(
     game_state.player_attack_targets.clear()
 
     if target_active:
+        player.act_three.warlock_demon_rune = rune.id if rune else None
+        player.act_three.warlock_eternal_bound = rune is not None and rune.id == "rune_of_eternal_form"
         clear_ability_slot_charge(player, "f")
+    player.act_three.warlock_blood_attacks = 0
+    player.act_three.warlock_demon_healing_progress = 0.0
 
     add_log_message(
         game_state.combat_log,
@@ -239,34 +254,3 @@ def request_warlock_demon_form(
     )
     return True
 
-def advance_warlock_demon_form(
-        game_state: GameState,
-) -> None:
-    player = game_state.player
-    if (
-        player.subclass != "warlock"
-        or not player.warlock_demon_form_active
-        or player.health <= 0
-    ):
-        return
-
-    player.health = max(
-        0,
-        player.health - WARLOCK_DEMON_FORM_HEALTH_DRAIN,
-    )
-    add_log_message(
-        game_state.combat_log,
-        f"Demon Form consumes {WARLOCK_DEMON_FORM_HEALTH_DRAIN} HP.",
-    )
-    if player.health <= 0:
-        game_state.emit(
-            GameEvent(
-                type=GameEventType.DEATH,
-                actor="hero",
-                destination=(
-                    game_state.floor.player_column,
-                    game_state.floor.player_row,
-                ),
-                data={"cause": "demon_form"},
-            )
-        )

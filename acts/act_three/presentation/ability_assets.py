@@ -9,7 +9,9 @@ _SUBCLASS_ICONS = {
                   "rune_of_impact", "rune_of_reaping", "rune_of_aftershock",
                   "rune_of_blood_wheel", "rune_of_devastation", "rune_of_second_wind", "rune_of_death_wish"),
     "paladin": ("power_cleave", "shield_charge", "sacred_ground",
-                "rune_of_impact", "rune_of_reaping", "rune_of_aftershock"),
+                "rune_of_impact", "rune_of_reaping", "rune_of_aftershock",
+                "rune_of_battering_ram", "rune_of_tower_shield",
+                "rune_of_fervent_crusade", "rune_of_redeeming_sanctuary"),
     "assassin": ("invisibility", "shadow_step", "killing_spree",
                  "rune_of_the_shade", "rune_of_cruelty", "rune_of_the_veil",
                  "rune_of_displacement", "rune_of_the_doppelganger",
@@ -19,9 +21,11 @@ _SUBCLASS_ICONS = {
                "rune_of_emerald_piercing_shot", "rune_of_splitfang_arrow",
                "rune_of_phantom_archer", "rune_of_spectral_archers"),
     "warlock": ("arcane_burst", "curse", "demon_form",
-                "rune_of_fracture", "rune_of_resonance", "rune_of_concentration"),
+                "rune_of_fracture", "rune_of_resonance", "rune_of_concentration",
+                "rune_of_spreading_curse", "rune_of_madness", "rune_of_eternal_form", "rune_of_blood_pact"),
     "summoner": ("arcane_burst", "release_familiar", "true_form",
-                 "rune_of_fracture", "rune_of_resonance", "rune_of_concentration"),
+                 "rune_of_fracture", "rune_of_resonance", "rune_of_concentration",
+                 "rune_of_spirit_totem", "rune_of_possession", "rune_of_cataclysm", "rune_of_absorption"),
 }
 
 

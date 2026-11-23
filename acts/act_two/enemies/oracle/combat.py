@@ -1,3 +1,4 @@
+from acts.act_three.abilities.paladin_runes import effective_dodge_chance
 import math
 import random
 from dataclasses import dataclass, field
@@ -517,7 +518,7 @@ def _strike(game_state, state, damage, kind):
         )
         return
 
-    if random.random() < player.dodge_chance:
+    if random.random() < effective_dodge_chance(player):
         game_state.emit(
             GameEvent(
                 type=GameEventType.DODGE,

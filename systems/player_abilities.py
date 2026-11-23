@@ -9,7 +9,6 @@ from systems.base_abilities import (
 from acts.act_three.abilities.summoner import (
     release_summoner_familiar,
     request_summoner_true_form,
-    deplete_summoner_true_form,
     resolve_summoner_familiar_turn,
     damage_summoner_familiar,
 )
@@ -49,7 +48,6 @@ from acts.act_three.abilities.paladin import (
     perform_paladin_shield_charge,
 )
 from acts.act_three.abilities.paladin_sacred_ground import (
-    advance_paladin_sacred_ground,
     get_paladin_sacred_ground_cells,
     paladin_sacred_ground_cast_active,
     paladin_sacred_ground_impact_ready,
@@ -64,7 +62,6 @@ from acts.act_three.abilities.warlock import (
     cancel_warlock_curse,
     perform_warlock_curse,
     advance_warlock_curses,
-    advance_warlock_demon_form,
 )
 
 from acts.act_three.abilities.assassin import (
@@ -87,7 +84,6 @@ __all__ = [
     "cast_mage_arcane_burst",
     "release_summoner_familiar",
     "request_summoner_true_form",
-    "deplete_summoner_true_form",
     "resolve_summoner_familiar_turn",
     "damage_summoner_familiar",
     "request_archer_empowered_shot",
@@ -121,7 +117,6 @@ __all__ = [
     "cancel_warlock_curse",
     "perform_warlock_curse",
     "advance_warlock_curses",
-    "advance_warlock_demon_form",
     "assassin_teleport_facing_direction",
     "request_assassin_teleport",
     "cancel_assassin_teleport",

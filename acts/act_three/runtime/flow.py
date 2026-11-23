@@ -245,4 +245,6 @@ def clear_paladin_sacred_ground(game_state):
     player.paladin_sacred_ground_cells.clear()
     player.paladin_sacred_ground_lightnings.clear()
     player.paladin_sacred_ground_turns = 0
+    player.paladin_sacred_ground_hits = 0
+    player.act_three.paladin_sacred_ground_floor = None
     player.paladin_sacred_ground_started_at = 0

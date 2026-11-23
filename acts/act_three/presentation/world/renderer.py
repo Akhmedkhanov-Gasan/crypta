@@ -1,5 +1,6 @@
 import math
 from acts.act_three.abilities.berserker_runes import spin_duration
+from acts.act_three.abilities.summoner_runes import familiar_is_away
 
 import pygame
 from acts.act_three.combat.pacing import PLAYER_BASIC_ATTACK_DURATION_MS
@@ -524,10 +525,16 @@ def _draw_act_three_world(
     draw_paladin_sacred_ground_cast_effect(
         view_surface,
         game_state.player,
-        player_position,
+        player_effect_position,
         current_time,
         ACT_THREE_TILE_SIZE,
     )
+
+    if player_subclass == "paladin" and game_state.player.health > 0:
+        from acts.act_three.presentation.paladin.rune_effects import draw_paladin_rune_effects
+
+        draw_paladin_rune_effects(view_surface, game_state.player, player_effect_position,
+                                  camera_x, camera_y, current_time)
 
     _draw_player_hit_feedback(
         view_surface,
@@ -571,6 +578,8 @@ def _draw_act_three_world(
         <= curse_elapsed
         < WARLOCK_CURSE_CAST_DURATION_MS
     ):
+        from acts.act_three.rune_master.definitions import has_ability_rune
+
         draw_warlock_curse_cast(
             view_surface,
             player_position,
@@ -582,6 +591,7 @@ def _draw_act_three_world(
             ),
             current_time,
             curse_started_at,
+            madness=has_ability_rune(game_state.player, "rune_of_madness"),
         )
     elif (
         curse_target is not None
@@ -733,9 +743,8 @@ def _draw_act_three_world(
         )
 
         for delay, alpha in (
-            (70, 135),
-            (145, 82),
-            (225, 38),
+            (65, 64),
+            (130, 28),
         ):
             ghost_progress = shield_charge_motion_progress(
                 shield_charge_elapsed - delay
@@ -763,7 +772,7 @@ def _draw_act_three_world(
             )
             ghost_sprite = player_sprite.copy()
             ghost_sprite.fill(
-                (73, 46, 17),
+                (12, 5, 10),
                 special_flags=pygame.BLEND_RGB_ADD,
             )
             ghost_sprite.set_alpha(alpha)
@@ -917,6 +926,7 @@ def _draw_act_three_world(
         player_subclass == "summoner"
         and game_state.player.summoner_familiar_active
         and familiar_position is not None
+        and game_state.player.act_three.summoner_possession_host is None
     ):
         familiar_attack_elapsed = (
             current_time
@@ -1009,13 +1019,13 @@ def _draw_act_three_world(
                 familiar_moving,
             )
         else:
-            draw_summoner_familiar_aura(
-                view_surface,
-                familiar_render_position,
-                current_time,
-                familiar_direction,
-                familiar_moving,
-            )
+            if game_state.player.act_three.summoner_familiar_mode == "totem":
+                from acts.act_three.presentation.summoner.rune_effects import draw_totem_aura
+
+                draw_totem_aura(view_surface, familiar_render_position, game_state.player, current_time)
+            else:
+                draw_summoner_familiar_aura(view_surface, familiar_render_position, current_time,
+                                            familiar_direction, familiar_moving)
 
         _draw_familiar_hit_feedback(
             view_surface,
@@ -1085,6 +1095,7 @@ def _draw_act_three_world(
             )
     elif (
         player_subclass == "summoner"
+        and game_state.player.act_three.summoner_familiar_mode != "possession"
         and (
             _familiar_hit_feedback_active(
                 game_state.player,
@@ -1130,6 +1141,10 @@ def _draw_act_three_world(
         view_surface, assets, game_state, camera_x, camera_y,
         current_time, ACT_THREE_TILE_SIZE,
     )
+    if player_subclass == "summoner":
+        from acts.act_three.presentation.summoner.rune_effects import draw_summoner_rune_effects
+
+        draw_summoner_rune_effects(view_surface, game_state, player_effect_position, camera_x, camera_y, current_time)
     active_barrage_shots = []
     for barrage_shot in game_state.player.archer_barrage_shots:
         if barrage_shot.started_at <= 0:
@@ -1378,7 +1393,7 @@ def _draw_act_three_world(
         )
     elif (
         player_subclass == "summoner"
-        and not game_state.player.summoner_familiar_active
+        and not familiar_is_away(game_state.player)
         and ordinary_target is not None
         and 0
         <= ordinary_elapsed
@@ -1513,18 +1528,23 @@ def _draw_act_three_world(
             player_subclass,
         )
     elif player_subclass == "warlock" and player_death_elapsed is None:
+        from acts.act_three.presentation.warlock.rune_effects import draw_demon_rune_aura, draw_warlock_rune_links
+
+        draw_warlock_rune_links(view_surface, game_state.player, player_effect_position, camera_x, camera_y, current_time)
         draw_warlock_demon_transformation(
             view_surface,
             game_state.player,
-            player_position,
+            player_effect_position,
             current_time,
         )
         if game_state.player.warlock_demon_form_active:
-            draw_warlock_demon_smoke(
-                view_surface,
-                player_position,
-                current_time,
-            )
+            rune_aura = draw_demon_rune_aura(view_surface, game_state.player, player_effect_position, current_time)
+            if not rune_aura:
+                draw_warlock_demon_smoke(
+                    view_surface,
+                    player_effect_position,
+                    current_time,
+                )
         else:
             _draw_warlock_idle_flashes(
                 view_surface,

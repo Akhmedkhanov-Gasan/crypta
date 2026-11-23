@@ -181,6 +181,10 @@ class EnemyState(AttributeMapping):
     heal_cooldown_duration: int = 0
     heal_range: int = 0
     curse_turns: int = 0
+    spreading_curse: bool = False
+    madness_turns: int = 0
+    is_elite: bool = False
+    possessed_by_summoner: bool = False
     binding_turns: int = 0
     stun_turns: int = 0
     bleed_turns: int = 0
@@ -243,6 +247,7 @@ class EnemyState(AttributeMapping):
             attack_kind=config["attack_kind"],
             attack_range=config["attack_range"],
             damage_by_mode=config["damage_by_mode"],
+            is_elite=config.get("is_elite", False),
             phase_two_damage_by_mode=config.get(
                 "phase_two_damage_by_mode"
             ),

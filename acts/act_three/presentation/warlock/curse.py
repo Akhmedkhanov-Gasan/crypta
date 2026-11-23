@@ -92,6 +92,7 @@ def draw_warlock_curse_cast(
     target_position,
     current_time,
     started_at,
+    madness=False,
 ):
     elapsed = current_time - started_at
 
@@ -99,6 +100,11 @@ def draw_warlock_curse_cast(
         return
 
     progress = elapsed / WARLOCK_CURSE_CAST_DURATION_MS
+    if madness:
+        from acts.act_three.presentation.warlock.rune_effects import draw_madness_cast
+
+        draw_madness_cast(surface, origin_position, target_position, progress)
+        return
     reveal = min(1.0, progress * 4)
     fade = min(1.0, (1 - progress) * 4)
     visibility = reveal * fade

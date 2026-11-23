@@ -1,3 +1,4 @@
+from acts.act_three.abilities.paladin_runes import effective_dodge_chance
 import random
 from dataclasses import dataclass
 
@@ -163,7 +164,7 @@ def advance_oracle_ground_fire(game_state, state):
         )
         return
 
-    if random.random() < player.dodge_chance:
+    if random.random() < effective_dodge_chance(player):
         game_state.emit(
             GameEvent(
                 type=GameEventType.DODGE,

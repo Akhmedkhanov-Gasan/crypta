@@ -47,7 +47,7 @@ def advance_menu(game_state, current_time):
         if menu.phase == "revealing":
             if menu.page == "choices" and menu.pending_page == "abilities" and menu.confirming_choice:
                 choice = menu.choices[menu.selected_choice]
-                if apply_rune(game_state, choice):
+                if apply_rune(game_state, choice, current_time):
                     menu.abilities = available_abilities(game_state.player)
                 menu.confirming_choice = False
             menu.page = menu.pending_page

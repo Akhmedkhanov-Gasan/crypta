@@ -8,6 +8,9 @@ from acts.act_three.combat.warlock_aim import valid_warlock_aim_target
 from acts.act_three.presentation.paladin.sacred_ground import (
     draw_paladin_sacred_ground_cells,
 )
+from acts.act_three.presentation.paladin.shield_charge import (
+    draw_shield_charge_targeting,
+)
 from acts.act_three.presentation.primitives import (
     _draw_tile_markers,
 )
@@ -58,7 +61,7 @@ def draw_world_targeting(
 
     draw_paladin_sacred_ground_cells(
         context.view_surface,
-        player.paladin_sacred_ground_cells,
+        player.paladin_sacred_ground_cells if player.act_three.paladin_sacred_ground_floor in (None, game_state.floor_index) else (),
         player.paladin_sacred_ground_anchor,
         context.camera_x,
         context.camera_y,
@@ -109,12 +112,17 @@ def draw_world_targeting(
         )
 
     if player.paladin_shield_charge_aiming:
-        _draw_tile_markers(
+        draw_shield_charge_targeting(
             context.view_surface,
+            (
+                context.floor.player_column,
+                context.floor.player_row,
+            ),
             player.paladin_shield_charge_preview_cells,
             context.camera_x,
             context.camera_y,
-            (241, 192, 70),
+            current_time,
+            ACT_THREE_TILE_SIZE,
         )
 
     draw_act_three_arcane_burst_targeting(

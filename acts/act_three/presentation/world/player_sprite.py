@@ -1,3 +1,4 @@
+from acts.act_three.abilities.summoner_runes import familiar_is_away
 from collections import ChainMap
 from acts.act_three.rune_master.definitions import DEVASTATION_ANIMATION_MS
 
@@ -485,7 +486,7 @@ def _hurt_sprite(
         _PLAYER_HIT_SPRITE_DURATION_MS,
     )
 
-    if player.summoner_familiar_active:
+    if familiar_is_away(player):
         return assets[
             (
                 "player_summoner_no_familiar_hurt_"
@@ -544,7 +545,7 @@ def _attack_sprite(
             attack_frame_duration,
         )
 
-        if player.summoner_familiar_active:
+        if familiar_is_away(player):
             return assets[
                 (
                     "player_summoner_no_familiar_attack_"
@@ -580,7 +581,7 @@ def _idle_sprite(
 
     if (
         player_subclass == "summoner"
-        and not player.summoner_familiar_active
+        and not familiar_is_away(player)
     ):
         direction = assassin_walk_direction(
             player.facing_direction
@@ -631,7 +632,7 @@ def _idle_sprite(
 
     if (
         player_subclass == "summoner"
-        and player.summoner_familiar_active
+        and familiar_is_away(player)
     ):
         direction = assassin_walk_direction(
             player.facing_direction

@@ -42,6 +42,11 @@ def paladin_sacred_ground_sprite(
         0.90,
     )
     progress = elapsed / PALADIN_SACRED_GROUND_CAST_MS
+    if player.act_three.paladin_ultimate_rune == "rune_of_fervent_crusade":
+        if elapsed >= PALADIN_SACRED_GROUND_IMPACT_MS:
+            return None
+        frame = min(2, int(progress * 5))
+        return assets[f"player_paladin_sacred_ground_{direction}_{frame}"]
     frame = sum(
         progress >= boundary
         for boundary in frame_boundaries
@@ -64,146 +69,31 @@ def _sacred_ground_local_position(
     )
 
 
-def _sacred_ground_patch(
-    layer,
-    left,
-    top,
-    tile_size,
-    seed,
-    pulse,
-):
+def _sacred_ground_patch(layer, left, top, tile_size, seed, pulse):
+    from acts.act_three.presentation.berserker.effect_brushes import mist
+
     generator = random.Random(seed)
-    inset = tile_size * 0.08
-
-    points = [
-        (
-            left + inset + generator.randint(0, tile_size // 7),
-            top + inset + generator.randint(0, tile_size // 7),
-        ),
-        (
-            left + tile_size * 0.48,
-            top + generator.randint(0, tile_size // 9),
-        ),
-        (
-            left + tile_size - inset,
-            top + inset + generator.randint(0, tile_size // 6),
-        ),
-        (
-            left + tile_size - generator.randint(0, tile_size // 8),
-            top + tile_size * 0.52,
-        ),
-        (
-            left + tile_size - inset - generator.randint(
-                0,
-                tile_size // 8,
-            ),
-            top + tile_size - inset,
-        ),
-        (
-            left + tile_size * 0.48,
-            top + tile_size - generator.randint(0, tile_size // 8),
-        ),
-        (
-            left + inset + generator.randint(0, tile_size // 7),
-            top + tile_size - inset,
-        ),
-        (
-            left + generator.randint(0, tile_size // 8),
-            top + tile_size * 0.48,
-        ),
-    ]
-
-    pygame.draw.polygon(
-        layer,
-        (
-            9,
-            7,
-            8,
-            round(118 + pulse * 24),
-        ),
-        points,
-    )
-    pygame.draw.polygon(
-        layer,
-        (
-            54,
-            12,
-            14,
-            round(88 + pulse * 35),
-        ),
-        points,
-        width=3,
-    )
-
-    center = (
-        round(left + tile_size * 0.5),
-        round(top + tile_size * 0.52),
-    )
-
-    for crack_index in range(4):
-        angle = (
-            generator.random() * math.tau
-            + crack_index * 1.2
-        )
-        length = generator.uniform(
-            tile_size * 0.22,
-            tile_size * 0.52,
-        )
-        middle = (
-            round(
-                center[0]
-                + math.cos(angle) * length * 0.48
-            ),
-            round(
-                center[1]
-                + math.sin(angle) * length * 0.48
-            ),
-        )
-        end = (
-            round(
-                center[0]
-                + math.cos(angle + generator.uniform(-0.22, 0.22))
-                * length
-            ),
-            round(
-                center[1]
-                + math.sin(angle + generator.uniform(-0.22, 0.22))
-                * length
-            ),
-        )
-
-        pygame.draw.lines(
-            layer,
-            (
-                17,
-                15,
-                16,
-                230,
-            ),
-            False,
-            (
-                center,
-                middle,
-                end,
-            ),
-            width=5,
-        )
-        pygame.draw.lines(
-            layer,
-            (
-                131,
-                27,
-                31,
-                round(145 + pulse * 65),
-            ),
-            False,
-            (
-                center,
-                middle,
-                end,
-            ),
-            width=2,
-        )
+    center = left + tile_size * 0.5, top + tile_size * 0.5
+    for index in range(4):
+        point = (center[0] + generator.uniform(-0.25, 0.25) * tile_size,
+                 center[1] + generator.uniform(-0.25, 0.25) * tile_size)
+        mist(layer, point, tile_size * 0.4, (22, 15, 28), 0.85)
+        mist(layer, point, tile_size * 0.23, (69, 47, 79), 0.3 + pulse * 0.12)
+    for index in range(5):
+        angle = generator.random() * math.tau
+        length = generator.uniform(0.22, 0.46) * tile_size
+        origin = (center[0] + generator.uniform(-0.15, 0.15) * tile_size,
+                  center[1] + generator.uniform(-0.15, 0.15) * tile_size)
+        middle = (origin[0] + math.cos(angle) * length * 0.5,
+                  origin[1] + math.sin(angle) * length * 0.5)
+        end = (origin[0] + math.cos(angle + 0.3) * length,
+               origin[1] + math.sin(angle + 0.3) * length)
+        points = [(round(x), round(y)) for x, y in (origin, middle, end)]
+        pygame.draw.lines(layer, (15, 11, 19, 165), False, points, 4)
+        pygame.draw.aalines(layer, (132, 94, 128, round(95 + pulse * 35)), False, points)
+        branch = (middle[0] + math.cos(angle - 0.8) * length * 0.4,
+                  middle[1] + math.sin(angle - 0.8) * length * 0.4)
+        pygame.draw.aaline(layer, (110, 82, 111, round(85 + pulse * 25)), middle, branch)
 
 
 def draw_paladin_sacred_ground_cells(
@@ -300,6 +190,11 @@ def draw_paladin_sacred_ground_cast_effect(
     ):
         return
 
+    if player.act_three.paladin_ultimate_rune == "rune_of_fervent_crusade":
+        from acts.act_three.presentation.paladin.rune_effects import draw_crusade_activation
+
+        draw_crusade_activation(surface, player_position, elapsed, PALADIN_SACRED_GROUND_CAST_MS, tile_size)
+        return
     layer = pygame.Surface(
         surface.get_size(),
         pygame.SRCALPHA,
@@ -703,56 +598,17 @@ def draw_paladin_sacred_ground_lightnings(
             width=1,
         )
 
-        impact_progress = min(1.0, progress * 3.0)
-        impact_radius = round(
-            tile_size * (
-                0.18 + impact_progress * 0.55
-            )
-        )
+        from acts.act_three.presentation.berserker.effect_brushes import mist, spark
 
-        pygame.draw.circle(
-            bolt_layer,
-            (22, 4, 31, round(210 * fade)),
-            target,
-            impact_radius + 8,
-        )
-        pygame.draw.circle(
-            bolt_layer,
-            (125, 51, 154, round(245 * fade)),
-            target,
-            impact_radius,
-            width=4,
-        )
-        pygame.draw.circle(
-            bolt_layer,
-            (231, 184, 91, round(230 * fade)),
-            target,
-            max(4, impact_radius - 7),
-            width=2,
-        )
-
-        for angle_index in range(8):
-            angle = (
-                math.tau * angle_index / 8
-                + progress * 0.6
-            )
-            inner = tile_size * 0.18
-            outer = tile_size * (
-                0.38 + impact_progress * 0.28
-            )
-            pygame.draw.line(
-                bolt_layer,
-                (97, 38, 127, round(220 * fade)),
-                (
-                    round(target[0] + math.cos(angle) * inner),
-                    round(target[1] + math.sin(angle) * inner),
-                ),
-                (
-                    round(target[0] + math.cos(angle) * outer),
-                    round(target[1] + math.sin(angle) * outer),
-                ),
-                width=3,
-            )
+        mist(bolt_layer, target, tile_size * 0.42, (96, 58, 119), fade * 0.85)
+        mist(bolt_layer, target, tile_size * 0.17, (208, 178, 151), fade * 0.65)
+        for index in range(11):
+            angle = index * 2.399
+            distance = tile_size * (0.12 + progress * 0.43)
+            point = (target[0] + math.cos(angle) * distance,
+                     target[1] + math.sin(angle) * distance * 0.5 - math.sin(progress * math.pi) * 8)
+            spark(bolt_layer, point, (math.cos(angle), math.sin(angle) * 0.6),
+                  (209, 181, 153), fade * 0.7, 2)
 
         surface.blit(bolt_layer, (0, 0))
 

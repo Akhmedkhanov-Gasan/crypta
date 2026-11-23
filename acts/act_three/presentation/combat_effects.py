@@ -244,9 +244,15 @@ def record_player_death_feedback(game_state, started_at):
 
     player.death_animation_started_at = started_at
     if player.subclass == "summoner":
+        from acts.act_three.abilities.summoner_possession import release_host
+
+        release_host(game_state)
         player.summoner_familiar_active = False
         player.summoner_familiar_position = None
         player.summoner_true_form_active = False
+        player.act_three.summoner_absorption_attacks = 0
+        player.act_three.summoner_absorption_attack_active = False
+        player.act_three.summoner_suspended_familiar = None
     death_identity = player.subclass or player.player_class
     if death_identity not in (
         "berserker",

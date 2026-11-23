@@ -1,6 +1,7 @@
 import math
 
 import pygame
+from acts.act_three.abilities.paladin_runes import effective_dodge_chance
 
 from game.progression import experience_required_for_level
 from game.rune_catalog import RUNES_BY_ID
@@ -779,7 +780,7 @@ def _draw_stats_popup(screen, player, fonts, accent_color):
         ("Damage", _damage_value(player)),
         ("Critical chance", f"{round(player.crit_chance * 100)}%"),
         ("Critical damage", f"{round(player.critical_damage_multiplier * 100)}%"),
-        ("Dodge chance", f"{round(player.dodge_chance * 100)}%"),
+        ("Dodge chance", f"{round(effective_dodge_chance(player) * 100)}%"),
         ("Gold", str(player.gold_count)),
         ("Keys", str(player.key_count)),
     )

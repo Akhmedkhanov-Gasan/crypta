@@ -1,3 +1,4 @@
+from acts.act_three.abilities.paladin_runes import effective_dodge_chance
 import math
 import random
 from dataclasses import dataclass, field
@@ -657,7 +658,7 @@ def _damage_player(game_state, state, damage, mode, dodgeable):
     if player.health <= 0:
         return
 
-    if dodgeable and random.random() < player.dodge_chance:
+    if dodgeable and random.random() < effective_dodge_chance(player):
         game_state.emit(
             GameEvent(
                 type=GameEventType.DODGE,

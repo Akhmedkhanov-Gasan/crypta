@@ -1,4 +1,5 @@
 import math
+from acts.act_three.abilities.paladin_runes import effective_dodge_chance
 
 import pygame
 from acts.act_three.presentation.hud.belt_art import draw_belt_frame, draw_belt_abilities, draw_belt_image
@@ -853,7 +854,7 @@ def _draw_character_panel(
             f"x{preview_player.critical_damage_multiplier:.1f}"
         ),
         "dodge_chance": (
-            f"{round(preview_player.dodge_chance * 100)}%"
+            f"{round(effective_dodge_chance(preview_player) * 100)}%"
         ),
         "charge_rate": f"{charge_rate}%",
     }

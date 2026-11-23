@@ -45,6 +45,9 @@ def load_summoner_familiar_assets(
         / "summoner"
         / "summoner_familiar"
     )
+    for state in ("idle", "attack", "destroyed"):
+        assets[f"summoner_totem_{state}"] = image_loader(
+            act_directory / "player" / "summoner" / "totem" / f"totem_{state}.png", (tile_size, tile_size))
 
     for (
         animation,
@@ -212,6 +215,12 @@ def summoner_familiar_sprite(
     current_time,
     direction,
 ):
+    if (player.act_three.summoner_familiar_mode == "totem" and not player.summoner_true_form_active
+            and not player.summoner_familiar_death_true_form):
+        state = "destroyed" if player.summoner_familiar_health <= 0 else (
+            "attack" if player.summoner_familiar_attack_started_at > 0
+            and 0 <= current_time - player.summoner_familiar_attack_started_at < SUMMONER_FAMILIAR_ATTACK_DURATION_MS else "idle")
+        return assets[f"summoner_totem_{state}"]
     hit_elapsed = (
         current_time
         - player.summoner_familiar_hit_animation_started_at

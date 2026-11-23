@@ -623,6 +623,10 @@ def draw_warlock_demon_transformation(
         return
 
     progress, target_active = transition
+    from acts.act_three.presentation.warlock.rune_effects import draw_demon_rune_aura
+
+    if draw_demon_rune_aura(surface, player, position, current_time, transform_phase=progress):
+        return
     intensity = math.sin(math.pi * progress)
     margin = 28
     size = ACT_THREE_TILE_SIZE + margin * 2
