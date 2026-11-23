@@ -16,7 +16,7 @@ from acts.act_three.settings import (
     BERSERKER_CRUSHING_LEAP_CHARGES,
     BERSERKER_CRUSHING_LEAP_RANGE,
     BERSERKER_LAST_RAGE_CHARGES,
-    BERSERKER_LAST_RAGE_TURNS,
+    BERSERKER_LAST_RAGE_HITS,
 )
 from systems.grid_geometry import can_reach_adjacent_cell
 from systems.player_combat import (
@@ -159,6 +159,11 @@ def perform_berserker_crushing_leap(
     player.berserker_crushing_leap_target = None
     player.berserker_crushing_leap_origin = origin
     player.berserker_crushing_leap_started_at = current_time
+    from acts.act_three.abilities.berserker_runes import apply_blood_wheel, perform_devastation
+    from acts.act_three.rune_master.definitions import has_ability_rune
+
+    player.act_three.berserker_devastation_active = has_ability_rune(player, "rune_of_devastation")
+    player.act_three.berserker_blood_cuts.clear()
 
     def living_enemy_at(cell):
         return next(
@@ -180,6 +185,7 @@ def perform_berserker_crushing_leap(
         enemy = living_enemy_at(cell)
         if enemy is not None and id(enemy) not in struck_enemies:
             struck_enemies.add(id(enemy))
+            health_before_hit = enemy.health
             enemy_was_defeated = attack_enemy(
                 game_state,
                 enemy,
@@ -188,6 +194,7 @@ def perform_berserker_crushing_leap(
                 player.crit_chance,
                 attacker_position=origin,
             )
+            apply_blood_wheel(player, enemy, health_before_hit - enemy.health, current_time)
             if enemy.type == "oracle":
                 oracle_hit_reaction(
                     enemy,
@@ -240,10 +247,9 @@ def perform_berserker_crushing_leap(
             )
         )
 
-    add_log_message(
-        game_state.combat_log,
-        "The berserker unleashes Rending Spin.",
-    )
+    if player.act_three.berserker_devastation_active:
+        perform_devastation(game_state, oracle_hit_reaction)
+    add_log_message(game_state.combat_log, "The berserker unleashes Rending Spin.")
     return True
 
 def request_berserker_last_rage(
@@ -254,7 +260,7 @@ def request_berserker_last_rage(
     if player.subclass != "berserker" or not is_ability_slot_unlocked(player, "f"):
         return False
 
-    if player.berserker_last_rage_turns > 0:
+    if player.berserker_last_rage_hits > 0:
         add_log_message(
             game_state.combat_log,
             "Last Rage is already active.",
@@ -272,32 +278,20 @@ def request_berserker_last_rage(
         return False
 
     player.berserker_last_rage_charge = 0
-    player.berserker_last_rage_turns = (
-        BERSERKER_LAST_RAGE_TURNS
+    player.berserker_last_rage_hits = (
+        BERSERKER_LAST_RAGE_HITS
     )
+    player.act_three.berserker_last_rage_turns = 0
     player.berserker_last_rage_started_at = current_time
+    from acts.act_three.abilities.berserker_runes import begin_rage_rune
+
+    begin_rage_rune(player)
     player.berserker_crushing_leap_aiming = False
     player.berserker_crushing_leap_target = None
     player.berserker_crushing_leap_preview_cells.clear()
     add_log_message(
         game_state.combat_log,
-        "Last Rage ignites. The berserker cannot die.",
+        f"Last Rage ignites. The berserker cannot die for {BERSERKER_LAST_RAGE_HITS} damaging hits.",
     )
     return True
 
-def advance_berserker_last_rage(
-    game_state: GameState,
-) -> None:
-    player = game_state.player
-    if (
-        player.subclass != "berserker"
-        or player.berserker_last_rage_turns <= 0
-    ):
-        return
-
-    player.berserker_last_rage_turns -= 1
-    if player.berserker_last_rage_turns == 0:
-        add_log_message(
-            game_state.combat_log,
-            "Last Rage fades. Death can claim the berserker again.",
-        )

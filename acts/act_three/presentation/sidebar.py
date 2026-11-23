@@ -265,7 +265,7 @@ def _ability_entries(player, accent_color):
                 "Last Rage",
                 (
                     1.0
-                    if player.berserker_last_rage_turns > 0
+                    if player.berserker_last_rage_hits > 0
                     else _ratio(
                         player.berserker_last_rage_charge,
                         BERSERKER_LAST_RAGE_CHARGES,
@@ -273,8 +273,8 @@ def _ability_entries(player, accent_color):
                 ),
                 (245, 54, 45),
                 (
-                    f"{player.berserker_last_rage_turns} TURNS"
-                    if player.berserker_last_rage_turns > 0
+                    f"{player.berserker_last_rage_hits} HITS"
+                    if player.berserker_last_rage_hits > 0
                     else None
                 ),
             ),
@@ -420,7 +420,7 @@ def _damage_value(player):
     if player.subclass == "berserker":
         health_ratio = player.health / player.max_health
         if (
-            player.berserker_last_rage_turns > 0
+            player.berserker_last_rage_hits > 0
             or health_ratio <= BERSERKER_RAGE_CRITICAL_HEALTH_RATIO
         ):
             multiplier = BERSERKER_RAGE_CRITICAL_DAMAGE_MULTIPLIER

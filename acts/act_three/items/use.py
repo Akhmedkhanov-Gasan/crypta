@@ -28,7 +28,7 @@ from acts.act_two.consumables import (
 )
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
-from game.healing import heal_player
+from game.healing import heal_player, healing_is_blocked
 from game.state import EnemyBehaviorState
 from logic import can_player_move_between, get_enemy_occupied_positions
 from systems.grid_geometry import can_reach_adjacent_cell
@@ -191,6 +191,9 @@ def use_belt_item(game_state, slot, target, current_time):
     player = game_state.player
     item_id = belt_item(player, slot)
     if item_id not in TRADER_ITEMS:
+        return False
+    if item_id in HEALING_ITEMS and healing_is_blocked(player):
+        add_log_message(game_state.combat_log, "Last Rage prevents healing until it ends.", category="warning")
         return False
     if item_id in TARGETED_ITEMS and not valid_consumable_target(game_state, item_id, target):
         return False

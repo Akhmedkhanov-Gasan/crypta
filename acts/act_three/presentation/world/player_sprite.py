@@ -1,4 +1,5 @@
 from collections import ChainMap
+from acts.act_three.rune_master.definitions import DEVASTATION_ANIMATION_MS
 
 from acts.act_three.presentation.animation import (
     _idle_frame,
@@ -119,9 +120,11 @@ def select_player_sprite(
 
     if player_state.berserker_spin_active:
         direction = "left" if player.facing_direction[0] < 0 else "right"
+        elapsed = player_state.berserker_leap_elapsed
+        extra_spin = elapsed >= BERSERKER_RENDING_SPIN_ANIMATION_MS
         frame = crushing_leap_frame(
-            player_state.berserker_leap_elapsed,
-            BERSERKER_RENDING_SPIN_ANIMATION_MS,
+            elapsed - BERSERKER_RENDING_SPIN_ANIMATION_MS if extra_spin else elapsed,
+            DEVASTATION_ANIMATION_MS if extra_spin else BERSERKER_RENDING_SPIN_ANIMATION_MS,
         )
         return (
             assets[

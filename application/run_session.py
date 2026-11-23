@@ -153,6 +153,9 @@ class RunSession:
                 raise ValueError("Invalid or finished saved run.")
 
             random.Random().setstate(saved["random_state"])
+            from acts.act_three.abilities.last_rage import migrate_last_rage
+
+            migrate_last_rage(state.player)
             self.saved = saved
             self.error = ""
         except Exception as error:

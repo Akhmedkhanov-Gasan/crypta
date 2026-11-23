@@ -1,4 +1,5 @@
 import pygame
+from acts.act_three.abilities.berserker_runes import spin_duration
 
 from acts.mage_targeting import mage_aiming
 from acts.act_three.input.consumables import BELT_SLOTS_BY_KEY, activate_belt_slot
@@ -584,7 +585,7 @@ def handle_act_three_key_event(event, game_state, *, belt_available=False):
         > 0
         and pygame.time.get_ticks()
         - game_state.player.berserker_crushing_leap_started_at
-        < BERSERKER_RENDING_SPIN_ANIMATION_MS
+        < spin_duration(game_state.player)
     ):
         return True
     if (

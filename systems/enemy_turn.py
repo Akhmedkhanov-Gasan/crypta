@@ -82,6 +82,9 @@ def _advance_enemy_bleed(game_state: GameState, enemy) -> bool:
         damage,
     )
     enemy.health -= damage
+    from acts.act_three.abilities.berserker_runes import record_rage_damage
+
+    record_rage_damage(game_state.player, damage)
     enemy.bleed_turns -= 1
     game_state.emit(
         GameEvent(

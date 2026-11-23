@@ -1,6 +1,7 @@
 import math
 
 import pygame
+from acts.act_three.abilities.berserker_runes import spin_duration
 
 from acts.act_three.settings import (
     BERSERKER_CRUSHING_LEAP_RANGE,
@@ -28,7 +29,7 @@ def rending_spin_world_position(player, current_time, tile_size):
         or player.health <= 0
         or origin is None
         or started_at <= 0
-        or not 0 <= elapsed < BERSERKER_RENDING_SPIN_ANIMATION_MS
+        or not 0 <= elapsed < spin_duration(player)
     ):
         return None
 
@@ -103,36 +104,12 @@ def draw_rending_spin_effect(surface, player, camera_x, camera_y, now, size):
         return
 
     elapsed = now - player.berserker_crushing_leap_started_at
-    progress = elapsed / BERSERKER_RENDING_SPIN_ANIMATION_MS
-    opacity = math.sin(math.pi * progress) ** 0.7
-    if opacity <= 0:
+    if elapsed >= BERSERKER_RENDING_SPIN_ANIMATION_MS:
+        from acts.act_three.presentation.berserker.rune_effects import draw_devastation
+
+        draw_devastation(surface, position, camera_x, camera_y, elapsed - BERSERKER_RENDING_SPIN_ANIMATION_MS, size)
         return
+    from acts.act_three.presentation.berserker.rune_effects import draw_spin_sweep
 
-    extent = size * 2
-    overlay = pygame.Surface((extent, extent), pygame.SRCALPHA)
-    center_x = extent // 2
-    center_y = extent // 2
-    for side in (0, 1):
-        angle = progress * math.tau * 2 + side * math.pi
-        points = []
-        for index in range(15):
-            phase = index / 14
-            theta = angle + phase * 1.6
-            radius = size * (0.35 + phase * 0.19)
-            points.append((
-                round(center_x + math.cos(theta) * radius),
-                round(center_y + math.sin(theta) * radius * 0.54),
-            ))
-        for color, alpha, width in (
-            ((32, 10, 14), 172, 8),
-            ((121, 31, 29), 192, 4),
-            ((218, 135, 91), 211, 1),
-        ):
-            pygame.draw.lines(
-                overlay, (*color, round(alpha * opacity)), False, points, width,
-            )
-
-    surface.blit(overlay, (
-        round(position[0] - camera_x + size * 0.5 - center_x),
-        round(position[1] - camera_y + size * 0.72 - center_y),
-    ))
+    draw_spin_sweep(surface, position, camera_x, camera_y,
+                    elapsed / BERSERKER_RENDING_SPIN_ANIMATION_MS, size)

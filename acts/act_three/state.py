@@ -138,8 +138,15 @@ class ActThreePlayerState:
     berserker_crushing_leap_origin: tuple[int, int] | None = None
     berserker_crushing_leap_started_at: int = 0
     berserker_last_rage_charge: int = 0
+    berserker_last_rage_hits: int = 0
     berserker_last_rage_turns: int = 0
     berserker_last_rage_started_at: int = 0
+    berserker_rage_rune: str | None = None
+    berserker_deferred_healing: float = 0.0
+    berserker_rage_extensions: int = 0
+    berserker_rage_released_at: int = -1
+    berserker_devastation_active: bool = False
+    berserker_blood_cuts: list[tuple[int, int, int]] = field(default_factory=list)
 
     paladin_holy_hand_charge: int = 0
     paladin_holy_hand_started_at: int = 0

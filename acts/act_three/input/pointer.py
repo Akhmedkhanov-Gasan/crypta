@@ -1,4 +1,5 @@
 import pygame
+from acts.act_three.abilities.berserker_runes import spin_duration
 from acts.act_three.abilities.progression import is_ability_slot_unlocked
 from acts.act_three.combat.pacing import player_attack_recovery_active
 
@@ -615,7 +616,7 @@ def handle_act_three_pointer_event(
             > 0
             and pygame.time.get_ticks()
             - game_state.player.berserker_crushing_leap_started_at
-            < BERSERKER_RENDING_SPIN_ANIMATION_MS
+            < spin_duration(game_state.player)
         ):
             return True
         if (

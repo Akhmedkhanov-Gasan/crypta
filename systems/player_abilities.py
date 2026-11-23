@@ -37,7 +37,6 @@ from acts.act_three.abilities.berserker import (
     cancel_berserker_crushing_leap,
     update_berserker_crushing_leap_preview,
     request_berserker_last_rage,
-    advance_berserker_last_rage,
 )
 
 from acts.act_three.abilities.paladin import (
@@ -110,7 +109,6 @@ __all__ = [
     "cancel_berserker_crushing_leap",
     "update_berserker_crushing_leap_preview",
     "request_berserker_last_rage",
-    "advance_berserker_last_rage",
     "request_paladin_holy_hand",
     "get_paladin_shield_charge_path",
     "is_valid_paladin_shield_charge_target",

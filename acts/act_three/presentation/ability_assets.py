@@ -6,7 +6,8 @@ _UI_ROOT = ASSET_ROOT / "ui" / "act_3" / "skills"
 ABILITY_ICON_ROOT = _UI_ROOT / "abilities" / "icon"
 _SUBCLASS_ICONS = {
     "berserker": ("power_cleave", "crushing_leap", "last_rage",
-                  "rune_of_impact", "rune_of_reaping", "rune_of_aftershock"),
+                  "rune_of_impact", "rune_of_reaping", "rune_of_aftershock",
+                  "rune_of_blood_wheel", "rune_of_devastation", "rune_of_second_wind", "rune_of_death_wish"),
     "paladin": ("power_cleave", "shield_charge", "sacred_ground",
                 "rune_of_impact", "rune_of_reaping", "rune_of_aftershock"),
     "assassin": ("invisibility", "shadow_step", "killing_spree",
@@ -25,6 +26,8 @@ _SUBCLASS_ICONS = {
 
 
 def ability_icon_filename(subclass, identifier):
+    if subclass == "berserker" and identifier == "rune_of_death_wish":
+        identifier = "rune_of_blood_frenzy"
     if identifier == "barrage_zone":
         identifier = "phantom_retinue"
     if subclass == "archer":

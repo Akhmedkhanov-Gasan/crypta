@@ -19,7 +19,6 @@ from application.directional_input import WAIT_KEYS
 from application.turn_feedback import present_turn_feedback
 from game.combat_log import add_log_message
 from systems.player_abilities import (
-    advance_berserker_last_rage,
     advance_paladin_sacred_ground,
     advance_warlock_curses,
     advance_warlock_demon_form,
@@ -161,7 +160,6 @@ def _complete_non_act_two_turn(
         ):
             resolve_paladin_sacred_ground(game_state)
         update_treasury_trial(game_state)
-        advance_berserker_last_rage(game_state)
         advance_paladin_sacred_ground(game_state)
         advance_warlock_curses(game_state)
         advance_warlock_demon_form(game_state)

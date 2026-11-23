@@ -6,7 +6,7 @@ from acts.ground_items import (
 )
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
-from game.healing import heal_player
+from game.healing import heal_player, healing_is_blocked
 from systems.mimic import awaken_mimic
 from acts.act_two.bloody_altar import (
     adjusted_consumable_healing,
@@ -59,6 +59,10 @@ def try_use_potion(
         potion_is_available = player.potion_count > 0
 
     if not potion_is_available:
+        return False
+
+    if healing_is_blocked(player):
+        add_log_message(game_state.combat_log, "Last Rage prevents healing until it ends.", category="warning")
         return False
 
     if healing_consumables_are_blocked(player):

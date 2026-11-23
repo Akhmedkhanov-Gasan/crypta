@@ -1,8 +1,14 @@
 from acts.act_two.bloody_altar import adjusted_received_healing
 
 
+def healing_is_blocked(player):
+    from acts.act_three.abilities.berserker_runes import rage_blocks_healing
+
+    return rage_blocks_healing(player)
+
+
 def heal_player(player, amount: int) -> int:
-    if player.health <= 0:
+    if player.health <= 0 or healing_is_blocked(player):
         return 0
 
     healing = adjusted_received_healing(player, amount)

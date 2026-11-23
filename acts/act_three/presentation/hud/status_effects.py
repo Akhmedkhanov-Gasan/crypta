@@ -62,13 +62,21 @@ def load_status_assets(ui_directory):
 
 def _active_statuses(player):
     state = player.act_three
+    rage_description = "Maximum Rage; health cannot fall below 1. Each damaging hit spends one protection. No turn limit."
+    rage_icon = "act_three_berserker_last_rage"
+    if state.berserker_rage_rune == "rune_of_second_wind":
+        rage_description += f" Stored healing: {int(state.berserker_deferred_healing)} HP. Released when Last Rage ends."
+        rage_icon = "act_three_berserker_rune_of_second_wind"
+    elif state.berserker_rage_rune == "rune_of_death_wish":
+        rage_description += f" +35% attack damage; healing blocked. Extra protected hits earned: {state.berserker_rage_extensions}/2."
+        rage_icon = "act_three_berserker_rune_of_death_wish"
     timed = (
         Status("stun", "Stunned", "You cannot act.", player.stun_turns),
         Status("invisibility", "Invisibility", "Enemies cannot see you.", player.invisibility_turns,
                icon_asset=f"act_three_{player.subclass}_invisibility"),
         Status("regeneration", "Regeneration", "Restores health over time.", state.regeneration_ticks),
         Status("stoneflesh", "Stoneflesh", "Reduces incoming physical damage.", player.act_two.stoneflesh_hits, "hits"),
-        Status("last_rage", "Last Rage", "Keeps the Berserker from dying.", state.berserker_last_rage_turns),
+        Status("last_rage", "Last Rage", rage_description, state.berserker_last_rage_hits, "hits", icon_asset=rage_icon),
         Status("sacred_ground", "Sacred Ground", "The consecrated area is still active.", state.paladin_sacred_ground_turns),
         Status("true_form", "True Form", "Empowers the familiar.", state.summoner_true_form_charge if state.summoner_true_form_active else 0, "attacks"),
     )

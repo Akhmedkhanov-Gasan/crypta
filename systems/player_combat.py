@@ -41,6 +41,7 @@ from acts.act_two.enemies.oracle.health import (
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from systems.bleeding import apply_bleed
+from game.healing import healing_is_blocked
 from game.progression import (
     experience_reward_for_enemy,
     grant_experience,
@@ -171,12 +172,14 @@ def damage_player(
         damage = ceil(damage / 2)
         player.act_three.ironblood_guard = False
     previous_health = player.health
+    rage_protected = (
+        player.subclass == "berserker"
+        and player.berserker_last_rage_hits > 0
+        and previous_health > 0
+    )
     minimum_health = (
         1
-        if (
-            player.subclass == "berserker"
-            and player.berserker_last_rage_turns > 0
-        )
+        if rage_protected
         else 0
     )
     player.health = max(
@@ -203,7 +206,7 @@ def damage_player(
     if (
         damage_dealt > 0
         and player.subclass == "berserker"
-        and player.berserker_last_rage_turns <= 0
+        and not rage_protected
         and is_ability_slot_unlocked(player, "f")
     ):
         player.berserker_last_rage_charge = min(
@@ -211,6 +214,10 @@ def damage_player(
             player.berserker_last_rage_charge + 1,
         )
 
+    if rage_protected and damage > 0:
+        from acts.act_three.abilities.last_rage import consume_last_rage_hit
+
+        consume_last_rage_hit(game_state)
     return damage_dealt
 
 def _prepare_sentinel_counter(
@@ -392,7 +399,7 @@ def attack_enemy(
     if player.subclass == "berserker" and player.health > 0:
         health_ratio = player.health / player.max_health
         if (
-            player.berserker_last_rage_turns > 0
+            player.berserker_last_rage_hits > 0
             or health_ratio
             <= BERSERKER_RAGE_CRITICAL_HEALTH_RATIO
         ):
@@ -405,6 +412,12 @@ def attack_enemy(
                 damage
                 * BERSERKER_RAGE_INJURED_DAMAGE_MULTIPLIER
             )
+    if attacker_name == "hero" and player.subclass == "berserker":
+        from acts.act_three.abilities.berserker_runes import rage_rune_active
+        from acts.act_three.rune_master.definitions import DEATH_WISH_MULTIPLIER
+
+        if rage_rune_active(player, "rune_of_death_wish"):
+            damage = ceil(damage * DEATH_WISH_MULTIPLIER)
     critical_hit = (
         force_critical
         or attack_from_invisibility
@@ -440,6 +453,9 @@ def attack_enemy(
     )
 
     if attacker_name == "hero":
+        from acts.act_three.abilities.berserker_runes import record_rage_damage
+
+        record_rage_damage(player, damage_dealt)
         try_apply_open_wound_bleed(
             game_state,
             enemy,
@@ -464,6 +480,7 @@ def attack_enemy(
             attacker_name == "hero"
             and damage_dealt > 0
             and has_bloody_pact(player, BLOOD_HUNGER)
+            and not healing_is_blocked(player)
     ):
         if player.health < player.max_health:
             player.act_two.blood_hunger_healing_progress += (
@@ -541,7 +558,7 @@ def attack_enemy(
                 BERSERKER_CRUSHING_LEAP_CHARGES,
                 player.berserker_crushing_leap_charge + 1,
             )
-        if player.berserker_last_rage_turns <= 0 and is_ability_slot_unlocked(player, "f"):
+        if player.berserker_last_rage_hits <= 0 and is_ability_slot_unlocked(player, "f"):
             player.berserker_last_rage_charge = min(
                 BERSERKER_LAST_RAGE_CHARGES,
                 player.berserker_last_rage_charge + 1,
@@ -704,6 +721,10 @@ def resolve_enemy_defeat(
 
     if enemy.type == "oracle_pillar":
         return
+
+    from acts.act_three.abilities.berserker_runes import record_rage_kill
+
+    record_rage_kill(game_state)
 
     kills = game_state.run_stats.kills_by_type
     kills[enemy.type] = kills.get(enemy.type, 0) + 1

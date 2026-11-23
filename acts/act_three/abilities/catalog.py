@@ -110,8 +110,9 @@ SUBCLASS_DEFINITIONS = {
                     BERSERKER_LAST_RAGE_CHARGES
                 ),
                 description=(
-                    "Refuse death for five turns and gain "
-                    "the maximum Rage bonus."
+                    "Gain maximum Rage and survive eight damaging hits. "
+                    "No turn limit. The final hit is still protected; "
+                    "dodges and fully blocked attacks do not spend protection."
                 ),
             ),
         },

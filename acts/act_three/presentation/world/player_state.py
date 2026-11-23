@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from acts.act_three.abilities.berserker_runes import spin_duration
 from typing import Any
 
 from acts.act_three.presentation.combat_effects import (
@@ -84,7 +85,7 @@ def create_player_render_state(
         and berserker_leap_started_at > 0
         and 0
         <= berserker_leap_elapsed
-        < BERSERKER_RENDING_SPIN_ANIMATION_MS
+        < spin_duration(player)
     )
     last_rage_elapsed = (
         current_time - player.berserker_last_rage_started_at

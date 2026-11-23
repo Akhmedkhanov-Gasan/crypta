@@ -1,4 +1,5 @@
 import math
+from acts.act_three.abilities.berserker_runes import spin_duration
 
 import pygame
 from acts.act_three.combat.pacing import PLAYER_BASIC_ATTACK_DURATION_MS
@@ -591,12 +592,15 @@ def _draw_act_three_world(
         game_state.player.warlock_curse_effect_target = None
         game_state.player.warlock_curse_started_at = 0
     if last_rage_activation_active:
+        from acts.act_three.presentation.berserker.effect_brushes import ASH, BLOOD
+
         draw_last_rage_activation_effect(
             view_surface,
-            player_position,
+            player_effect_position,
             last_rage_elapsed,
             BERSERKER_LAST_RAGE_ANIMATION_MS,
             ACT_THREE_TILE_SIZE,
+            ASH if game_state.player.act_three.berserker_rage_rune == "rune_of_second_wind" else BLOOD,
         )
 
     if (
@@ -617,16 +621,22 @@ def _draw_act_three_world(
         and game_state.player.health > 0
     ):
         last_rage_is_active = (
-            game_state.player.berserker_last_rage_turns > 0
+            game_state.player.berserker_last_rage_hits > 0
+        )
+        from acts.act_three.presentation.berserker.rune_effects import draw_berserker_rune_effects
+
+        rune_rage_effect = draw_berserker_rune_effects(
+            view_surface, game_state.player, player_effect_position, camera_x, camera_y, current_time,
         )
         if (
             last_rage_is_active
             and not last_rage_activation_active
+            and not rune_rage_effect
         ):
             _draw_berserker_last_rage_effect(
                 view_surface,
-                player_position[0],
-                player_position[1],
+                player_effect_position[0],
+                player_effect_position[1],
                 current_time,
             )
         berserker_health_ratio = (
@@ -649,8 +659,8 @@ def _draw_act_three_world(
             berserker_rage_stage = 0
         _draw_berserker_rage_effect(
             view_surface,
-            player_position[0],
-            player_position[1],
+            player_effect_position[0],
+            player_effect_position[1],
             current_time,
             berserker_rage_stage,
         )
@@ -1168,11 +1178,12 @@ def _draw_act_three_world(
         and berserker_leap_origin is not None
         and berserker_leap_started_at > 0
         and berserker_leap_elapsed
-        >= BERSERKER_RENDING_SPIN_ANIMATION_MS
+        >= spin_duration(game_state.player)
     ):
         game_state.player.berserker_crushing_leap_origin = None
         game_state.player.berserker_crushing_leap_started_at = 0
         game_state.player.berserker_crushing_leap_preview_cells.clear()
+        game_state.player.act_three.berserker_devastation_active = False
     if (
         player_subclass == "paladin"
         and shield_charge_origin is not None

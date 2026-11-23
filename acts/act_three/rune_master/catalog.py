@@ -6,7 +6,7 @@ from game.rune_catalog import RUNES_BY_ID, runes_for_class
 
 
 ICON_ROOT = "assets/sprites/ui/act_3/skills/abilities"
-READY_SUBCLASSES = frozenset({"assassin", "archer"})
+READY_SUBCLASSES = frozenset({"assassin", "archer", "berserker"})
 
 
 def icon_paths(owner, identifier, fallback=None):

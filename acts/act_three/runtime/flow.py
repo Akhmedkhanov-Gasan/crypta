@@ -234,6 +234,8 @@ def clear_berserker_crushing_leap(game_state):
     player.berserker_crushing_leap_preview_cells.clear()
     player.berserker_crushing_leap_origin = None
     player.berserker_crushing_leap_started_at = 0
+    player.act_three.berserker_devastation_active = False
+    player.act_three.berserker_blood_cuts.clear()
 
 
 def clear_paladin_sacred_ground(game_state):

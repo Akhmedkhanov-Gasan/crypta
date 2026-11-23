@@ -87,7 +87,7 @@ def ability_active(player, slot):
         return player.summoner_familiar_active
     if slot == "f":
         return {
-            "berserker": player.berserker_last_rage_turns > 0,
+            "berserker": player.berserker_last_rage_hits > 0,
             "paladin": player.paladin_sacred_ground_turns > 0,
             "warlock": player.warlock_demon_form_active,
             "summoner": player.summoner_true_form_active,
