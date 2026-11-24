@@ -2,6 +2,7 @@ from acts.act_three.abilities.summoner_runes import summon_cell_is_free
 from acts.act_three.rune_master.definitions import SPIRIT_TOTEM_PLACEMENT_RANGE, SPIRIT_TOTEM_RANGE
 from game.events import GameEvent, GameEventType
 from logic import get_enemy_occupied_positions, has_line_of_sight
+from logic import can_player_move_between
 
 
 def totem_targets(game_state):
@@ -12,7 +13,7 @@ def totem_targets(game_state):
                  for dy in range(-radius, radius + 1) for dx in range(-radius, radius + 1)
                  if summon_cell_is_free(game_state, (origin[0] + dx, origin[1] + dy))
                  and (origin[0] + dx, origin[1] + dy) in floor.visible_cells
-                 and has_line_of_sight(floor.map, *origin, origin[0] + dx, origin[1] + dy, floor.barriers))
+                 and can_player_move_between(floor.map, *origin, origin[0] + dx, origin[1] + dy, floor.barriers))
 
 
 def take_totem_turn(game_state):

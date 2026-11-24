@@ -451,6 +451,23 @@ def resolve_enemy_turn(
                 )
             )
 
+            if enemy.type == "lantern_warden" and enemy.prepared_attack_target == "hero":
+                from acts.act_three.combat.lantern_summon_hits import resolve_lantern_summon_hits
+
+                resolve_lantern_summon_hits(game_state, enemy, attack_targets, attack_mode)
+
+            if enemy.prepared_attack_target == "greater_manifestation":
+                from acts.act_three.abilities.greater_manifestation import damage_manifestation
+
+                enemy.prepared_attack_target = "hero"
+                spirit = game_state.player.act_three.summoner_manifestation
+                if spirit is not None and spirit["health"] > 0 and tuple(spirit["position"]) in attack_targets:
+                    damage = damage_manifestation(game_state, roll_enemy_damage(enemy, attack_mode), game_state.player.familiar_turn_started_at, attacker=enemy.name)
+                    game_state.emit(GameEvent(type=GameEventType.HIT, actor=enemy.name, target="greater_manifestation",
+                                              origin=(enemy.column, enemy.row), destination=spirit["position"], amount=damage,
+                                              data={"mode": attack_mode}))
+                continue
+
             if enemy.prepared_attack_target == "familiar":
                 enemy.prepared_attack_target = "hero"
                 familiar_position = (
@@ -823,6 +840,9 @@ def resolve_enemy_turn(
             occupied_positions.add(
                 game_state.player.summoner_familiar_position
             )
+        spirit = game_state.player.act_three.summoner_manifestation
+        if spirit is not None and spirit["health"] > 0 and spirit["floor"] == game_state.floor_index:
+            occupied_positions.add(tuple(spirit["position"]))
         attack_blocking_positions = {
             (chest["column"], chest["row"])
             for chest in game_state.floor["chests"]

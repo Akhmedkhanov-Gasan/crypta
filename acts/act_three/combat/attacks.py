@@ -23,7 +23,7 @@ from acts.act_three.settings import (
     WARLOCK_BASIC_DAMAGE_MAX,
     WARLOCK_BASIC_DAMAGE_MIN,
     SUMMONER_ATTACK_RANGE,
-    SUMMONER_ATTACK_RANGE_WITH_FAMILIAR,
+    SUMMONER_ATTACK_RANGE_WITHOUT_FAMILIAR,
 )
 
 
@@ -268,7 +268,7 @@ def is_valid_summoner_attack_target(
     from acts.act_three.rune_master.definitions import ABSORPTION_ATTACK_RANGE
 
     attack_range = (
-        SUMMONER_ATTACK_RANGE_WITH_FAMILIAR
+        SUMMONER_ATTACK_RANGE_WITHOUT_FAMILIAR
         if player.summoner_familiar_active
         else SUMMONER_ATTACK_RANGE
     )

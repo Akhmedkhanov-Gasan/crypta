@@ -74,7 +74,9 @@ def ability_charge_hint(player, slot):
     if player.subclass == "summoner" and slot == "q":
         from acts.act_three.abilities.summoner_runes import familiar_recharge_requirement
 
-        return f"Recall requires {familiar_recharge_requirement(player)} successful attack charges. Q is disabled during the ultimate."
+        if player.act_three.summoner_loss_turns > 0:
+            return f"Familiar recovery: {player.act_three.summoner_loss_turns} turns remaining."
+        return f"Requires {familiar_recharge_requirement(player)} successful attack charges. Q is disabled during the ultimate."
     if player.subclass == "warlock" and slot == "f":
         from acts.act_three.rune_master.definitions import has_ability_rune
 
@@ -107,7 +109,7 @@ def ability_active(player, slot):
             "berserker": player.berserker_last_rage_hits > 0,
             "paladin": paladin_ultimate_active(player),
             "warlock": player.warlock_demon_form_active,
-            "summoner": player.summoner_true_form_active or player.act_three.summoner_absorption_attacks > 0,
+            "summoner": bool(player.act_three.summoner_manifestation and player.act_three.summoner_manifestation["health"] > 0) or player.act_three.summoner_absorption_attacks > 0 or player.act_three.summoner_manifestation_aiming,
             "archer": bool(player.archer_phantoms),
         }.get(player.subclass, False)
     return False
@@ -117,6 +119,8 @@ def get_act_three_ability_charge_state(
     slot,
 ):
     if not is_ability_slot_unlocked(player, slot):
+        return 0.0, 1.0
+    if slot == "q" and player.subclass == "summoner" and player.act_three.summoner_loss_turns > 0:
         return 0.0, 1.0
     if slot == "f" and player.subclass == "warlock":
         from acts.act_three.rune_master.definitions import has_ability_rune
@@ -132,6 +136,9 @@ def get_act_three_ability_charge_state(
             float(ability_charge_required(player)),
         )
     if player.subclass == "summoner":
+        spirit = player.act_three.summoner_manifestation
+        if slot == "f" and spirit is not None and spirit["health"] > 0:
+            return float(spirit["health"]), float(spirit["max_health"])
         if slot == "q":
             from acts.act_three.abilities.summoner_runes import familiar_recharge_requirement
 

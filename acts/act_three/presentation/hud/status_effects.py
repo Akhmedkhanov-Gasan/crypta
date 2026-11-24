@@ -31,8 +31,8 @@ _ABILITY_ICONS = {
     "last_rage": "act_three_berserker_last_rage",
     "sacred_ground": "act_three_paladin_sacred_ground",
     "demon_form": "act_three_warlock_demon_form",
-    "true_form": "act_three_summoner_true_form",
-    "familiar": "act_three_summoner_release_familiar",
+    "greater_manifestation": "act_three_summoner_greater_manifestation",
+    "familiar": "act_three_summoner_summon_familiar",
 }
 _ITEM_ICONS = {
     "stoneflesh": "scroll_of_stoneflesh",
@@ -62,6 +62,9 @@ def load_status_assets(ui_directory):
 
 def _active_statuses(player):
     state = player.act_three
+    if state.summoner_loss_turns > 0:
+        yield Status("familiar_loss", "Familiar Recovery", "The familiar cannot be summoned until this penalty expires.",
+                     state.summoner_loss_turns, "turns", "act_three_summoner_summon_familiar")
     rage_description = "Maximum Rage; health cannot fall below 1. Each damaging hit spends one protection. No turn limit."
     rage_icon = "act_three_berserker_last_rage"
     if state.berserker_rage_rune == "rune_of_second_wind":
@@ -78,11 +81,19 @@ def _active_statuses(player):
         Status("stoneflesh", "Stoneflesh", "Reduces incoming physical damage.", player.act_two.stoneflesh_hits, "hits"),
         Status("last_rage", "Last Rage", rage_description, state.berserker_last_rage_hits, "hits", icon_asset=rage_icon),
         Status("sacred_ground", "Sacred Ground", "Damaging enemy hits remaining. Empty turns do not spend the zone.", state.paladin_sacred_ground_hits, "hits"),
-        Status("true_form", "True Form", "Each familiar attack spends 1 of its own HP. Q is disabled. F reverts, or detonates Cataclysm within 2 cells, including you.",
-               state.summoner_familiar_health if state.summoner_true_form_active else 0, "HP",
-               f"act_three_summoner_{state.summoner_ultimate_rune or 'true_form'}"),
     )
     yield from (status for status in timed if status.count > 0)
+    spirit = state.summoner_manifestation
+    if spirit is not None and spirit["health"] > 0:
+        from acts.act_three.abilities.greater_manifestation import SOUL_DAMAGE_STEP, manifestation_attack_cost
+
+        souls = spirit["souls"]
+        description = f"Independent spirit. +{souls * SOUL_DAMAGE_STEP:.0%} damage from souls; next attack costs {manifestation_attack_cost(spirit)} HP. F dismisses it."
+        if spirit["devourer"]:
+            description += " Each kill restores 90% maximum HP, capped at full health, after paying the attack cost. Lethal costs cannot be healed."
+        name = f"Soul Devourer · {souls} souls" if spirit["devourer"] else "Greater Manifestation"
+        icon = "rune_of_soul_devourer" if spirit["devourer"] else "greater_manifestation"
+        yield Status("greater_manifestation", name, description, spirit["health"], "HP", f"act_three_summoner_{icon}")
     if state.paladin_crusade_hits > 0:
         yield Status("fervent_crusade", "Fervent Crusade", "+75% attack damage. Cannot block or dodge.",
                      state.paladin_crusade_hits, "hits", "act_three_paladin_rune_of_fervent_crusade")
@@ -111,13 +122,13 @@ def _active_statuses(player):
                      icon_asset=f"act_three_warlock_{state.warlock_demon_rune or 'demon_form'}")
     if state.summoner_familiar_active:
         if state.summoner_possession_host is not None:
-            yield Status("possession", "Possession", f"The familiar controls {state.summoner_possession_host}.",
-                         state.summoner_possession_turns, "actions", "act_three_summoner_rune_of_possession")
+            yield Status("possession", "Possession", f"The familiar controls {state.summoner_possession_host} until death or transfer. Q selects another host; Escape keeps the current one.",
+                         icon_asset="act_three_summoner_rune_of_possession")
         else:
             yield Status("familiar", "Spirit Totem" if state.summoner_familiar_mode == "totem" else "Familiar",
                          "The familiar is on the battlefield.", icon_asset="act_three_summoner_rune_of_spirit_totem" if state.summoner_familiar_mode == "totem" else None)
     if state.summoner_absorption_attacks > 0:
-        yield Status("absorption", "Absorption", "+75% damage, +25% block chance, attack range 3. Q is disabled; the familiar returns after the last attack.",
+        yield Status("absorption", "Absorption", f"+{(state.summoner_absorption_damage - 1):.0%} attack damage, +25% block chance, attack range 3. The greater spirit's power fades after the last attack.",
                      state.summoner_absorption_attacks, "attacks", "act_three_summoner_rune_of_absorption")
     rune = RUNES_BY_ID.get(player.selected_rune_id)
     if rune is not None:

@@ -30,7 +30,7 @@ def load_summoner_true_form_assets(
         act_directory
         / "player"
         / "summoner"
-        / "true_form"
+        / "greater_manifestation"
     )
 
     for animation in _TRUE_FORM_ANIMATIONS:
@@ -63,7 +63,7 @@ def load_summoner_true_form_assets(
                 )
 
     transform_directory = (
-        true_form_directory / "transform"
+        true_form_directory / "summon"
     )
     for frame_index in range(
         SUMMONER_TRUE_FORM_FRAME_COUNT
@@ -73,7 +73,7 @@ def load_summoner_true_form_assets(
             f"summoner_true_form_transform_{frame_index}"
         ] = image_loader(
             transform_directory
-            / f"transform_{source_index:02d}.png",
+            / f"summon_down_{source_index:02d}.png",
             (tile_size, tile_size),
         )
 

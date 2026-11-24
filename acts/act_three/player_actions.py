@@ -192,6 +192,13 @@ def resolve_act_three_player_action(
         floor.player_column + column_change,
         floor.player_row + row_change,
     )
+    from acts.act_three.abilities.summoner_targeting import totem_blocks_cell
+    from acts.act_three.abilities.summoner_follow import yield_mobile_summon
+
+    if not yield_mobile_summon(game_state, target, pygame.time.get_ticks()):
+        return ActThreePlayerActionResult(movement_blocked=True)
+    if totem_blocks_cell(player, target):
+        return ActThreePlayerActionResult(movement_blocked=True)
     started_at = pygame.time.get_ticks()
     if not can_reach_adjacent_cell(
         floor.map,
@@ -217,7 +224,12 @@ def resolve_act_three_player_action(
 
     enemy, chest, crate, secret_wall = _cell_targets(game_state, target)
     if enemy is not None and enemy.possessed_by_summoner:
-        return ActThreePlayerActionResult(movement_blocked=True)
+        from acts.act_three.abilities.summoner_companion import yield_companion
+
+        if not yield_companion(game_state, enemy, target, started_at):
+            return ActThreePlayerActionResult(movement_blocked=True)
+        moved = try_move_player(game_state, target[0], target[1], final_floor_index, started_at)
+        return ActThreePlayerActionResult(player_acted=moved, movement_blocked=not moved)
     if (
         (enemy is not None or crate is not None or secret_wall)
         and player_attack_recovery_active(player, started_at)

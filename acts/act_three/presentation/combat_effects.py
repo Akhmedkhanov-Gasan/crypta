@@ -253,6 +253,7 @@ def record_player_death_feedback(game_state, started_at):
         player.act_three.summoner_absorption_attacks = 0
         player.act_three.summoner_absorption_attack_active = False
         player.act_three.summoner_suspended_familiar = None
+        player.act_three.summoner_cataclysm_aiming = False
     death_identity = player.subclass or player.player_class
     if death_identity not in (
         "berserker",

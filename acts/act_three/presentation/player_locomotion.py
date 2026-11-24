@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from acts.act_three.abilities.summoner_runes import familiar_is_away
 import math
 
 from presentation.movement import sample_movement_travel, smoothstep
@@ -276,7 +277,7 @@ def locomotion_sprite(assets, player, pose):
         ]
 
     if subclass == "summoner":
-        if player.summoner_familiar_active:
+        if familiar_is_away(player):
             return assets[
                 (
                     "player_summoner_no_familiar_walk_"

@@ -203,14 +203,25 @@ class ActThreePlayerState:
     warlock_demon_form_target_active: bool | None = None
 
     summoner_familiar_active: bool = False
+    summoner_manifestation: dict | None = None
+    summoner_manifestation_aiming: bool = False
+    summoner_manifestation_target: tuple[int, int] | None = None
     summoner_familiar_mode: str = "familiar"
     summoner_entity_floor: int | None = None
     summoner_totem_anchor: tuple[int, int] | None = None
     summoner_possession_host: str | None = None
     summoner_possession_turns: int = 0
     summoner_recall_requirement: int = 0
+    summoner_loss_turns: int = 0
+    summoner_cataclysm_aiming: bool = False
+    summoner_recall_position: tuple[int, int] | None = None
+    summoner_recall_started_at: int = -1
+    summoner_recall_floor: int | None = None
+    summoner_recall_totem: bool = False
+    summoner_absorption_origin: tuple[int, int] | None = None
     summoner_ultimate_rune: str | None = None
     summoner_absorption_attacks: int = 0
+    summoner_absorption_damage: float = 1.75
     summoner_absorption_attack_active: bool = False
     summoner_suspended_familiar: dict | None = None
     summoner_rune_started_at: int = -1

@@ -30,6 +30,8 @@ def can_open_character_panel(game_state, movement_available):
         and not player.archer_piercing_aiming
         and not player.summoner_aiming
         and not player.summoner_familiar_summon_aiming
+        and not player.act_three.summoner_manifestation_aiming
+        and not player.act_three.summoner_cataclysm_aiming
     )
 
 

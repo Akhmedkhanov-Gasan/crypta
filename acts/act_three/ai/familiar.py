@@ -13,16 +13,25 @@ from logic import (
 from systems.enemy_ai.common import movement_is_ready
 
 
+def _summoner_target(game_state, enemy):
+    player = game_state.player
+    candidates = []
+    if player.summoner_familiar_active and player.summoner_familiar_position is not None and player.summoner_familiar_health > 0:
+        candidates.append(("familiar", player.summoner_familiar_position))
+    spirit = player.act_three.summoner_manifestation
+    if spirit is not None and spirit["health"] > 0 and spirit["floor"] == game_state.floor_index:
+        candidates.append(("greater_manifestation", spirit["position"]))
+    return min(candidates, key=lambda item: distance_between(enemy.column, enemy.row, *item[1]), default=(None, None))
+
+
 def _familiar_is_preferred_target(
     game_state: GameState,
     enemy,
 ) -> bool:
-    familiar_position = game_state.player.summoner_familiar_position
+    _, familiar_position = _summoner_target(game_state, enemy)
     if (
         enemy.type == "oracle"
-        or not game_state.player.summoner_familiar_active
         or familiar_position is None
-        or game_state.player.summoner_familiar_health <= 0
     ):
         return False
 
@@ -47,7 +56,7 @@ def _prepare_attack_against_familiar(
     enemy,
     attack_blocking_positions: set[tuple[int, int]],
 ) -> bool:
-    familiar_position = game_state.player.summoner_familiar_position
+    target_kind, familiar_position = _summoner_target(game_state, enemy)
     if familiar_position is None:
         return False
 
@@ -67,14 +76,14 @@ def _prepare_attack_against_familiar(
         familiar_position[0],
         familiar_position[1],
     )
-    enemy.prepared_attack_target = "familiar"
+    enemy.prepared_attack_target = target_kind
     enemy.behavior_state = EnemyBehaviorState.PREPARING_ATTACK
     add_log_message(
         game_state.combat_log,
         (
             f"{enemy.name} prepares "
             f"{enemy.prepared_attack_mode.replace('_', ' ')} "
-            "attack on the familiar."
+            f"attack on the {target_kind.replace('_', ' ')}."
         ),
     )
     return True
@@ -95,7 +104,7 @@ def _take_familiar_target_turn(
     if enemy.is_immobile or not movement_is_ready(enemy):
         return
 
-    familiar_position = game_state.player.summoner_familiar_position
+    _, familiar_position = _summoner_target(game_state, enemy)
     if familiar_position is None:
         return
     previous_position = (enemy.column, enemy.row)

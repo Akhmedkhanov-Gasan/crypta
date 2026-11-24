@@ -89,9 +89,8 @@ def summoner_familiar_cast_sprite(
         player_position,
         target_position,
     )
-    return assets[
-        f"player_summoner_attack_{direction}_{frame}"
-    ]
+    prefix = "player_summoner_no_familiar" if familiar_is_away(player) else "player_summoner"
+    return assets[f"{prefix}_attack_{direction}_{frame}"]
 
 
 def load_summoner_animation_assets(

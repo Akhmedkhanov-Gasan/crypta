@@ -1,4 +1,5 @@
 import math
+from acts.act_three.abilities.summoner_runes import familiar_is_away
 
 import pygame
 
@@ -23,7 +24,7 @@ def mining_sprite(player, assets, current_time):
     frames_key = f"{player.subclass}_mining_frames"
     if (
         player.subclass == "summoner"
-        and player.summoner_familiar_active
+        and familiar_is_away(player)
     ):
         frames_key = "summoner_no_familiar_mining_frames"
 

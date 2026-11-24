@@ -223,7 +223,7 @@ def finish(game_state, now):
     trial = game_state.floor.summoner_trial
     trial["completion_origin"] = game_state.floor.player_column, game_state.floor.player_row
     change_phase(trial, "completion", now)
-    add_log_message(game_state.combat_log, "Trial complete. RELEASE FAMILIAR unlocked.", category="progress")
+    add_log_message(game_state.combat_log, "Trial complete. SUMMON FAMILIAR unlocked.", category="progress")
 
 
 def advance_frame(game_state, now):

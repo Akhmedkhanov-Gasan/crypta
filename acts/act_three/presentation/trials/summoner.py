@@ -174,4 +174,4 @@ def draw_completion(context, trial, elapsed):
     layer.blit(halo, halo.get_rect(center=center))
     apparition(layer, "summoner", center, (round(size * 4.4), round(size * 4.4)), 205 * strength, reveal, elapsed, drift=3, spread=release * 12)
     context.view_surface.blit(layer, (0, 0))
-    draw_unlock_banner(context.view_surface, max(0, elapsed - 500), "RELEASE FAMILIAR", (158, 210, 208), (103, 148, 154), (5, 12, 17))
+    draw_unlock_banner(context.view_surface, max(0, elapsed - 500), "SUMMON FAMILIAR", (158, 210, 208), (103, 148, 154), (5, 12, 17))

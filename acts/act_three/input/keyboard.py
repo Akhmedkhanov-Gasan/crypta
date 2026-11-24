@@ -87,7 +87,7 @@ from acts.act_three.abilities.summoner import (
     cancel_summoner_familiar_summon,
     confirm_summoner_familiar_summon,
     release_summoner_familiar,
-    request_summoner_true_form,
+    request_greater_manifestation,
     select_summoner_familiar_summon_direction,
 )
 from acts.act_two.abilities import (
@@ -273,6 +273,22 @@ def handle_act_three_key_event(event, game_state, *, belt_available=False):
         return False
 
     aiming_direction = _act_three_aiming_direction(event)
+    if game_state.player.act_three.summoner_manifestation_aiming:
+        from acts.act_three.abilities.manifestation_targeting import cancel_manifestation_targeting, select_manifestation_target
+
+        if event.key == pygame.K_ESCAPE:
+            cancel_manifestation_targeting(game_state.player)
+            set_summoner_staff_cursor()
+        elif event.key in (pygame.K_f, pygame.K_RETURN, pygame.K_KP_ENTER):
+            if not getattr(event, "repeat", False):
+                if request_greater_manifestation(game_state, pygame.time.get_ticks()):
+                    set_summoner_staff_cursor()
+                    _commit_summoner_turn()
+        elif aiming_direction is not None:
+            floor = game_state.floor
+            valid = select_manifestation_target(game_state, (floor.player_column + aiming_direction[0], floor.player_row + aiming_direction[1]))
+            set_summoner_staff_cursor(valid)
+        return True
     if handle_warlock_aim_key(event, game_state, aiming_direction):
         return True
 
@@ -327,7 +343,9 @@ def handle_act_three_key_event(event, game_state, *, belt_available=False):
             set_summoner_staff_cursor()
             return True
 
-        if event.key == pygame.K_q:
+        if event.key in (pygame.K_q, pygame.K_RETURN, pygame.K_KP_ENTER):
+            if getattr(event, "repeat", False):
+                return True
             summoned = confirm_summoner_familiar_summon(
                 game_state,
                 pygame.time.get_ticks(),
@@ -735,10 +753,13 @@ def handle_act_three_key_event(event, game_state, *, belt_available=False):
         and FLOOR_CONFIGS[game_state.floor_index]["act"] == 3
         and game_state.player.subclass == "summoner"
     ):
-        transformed = request_summoner_true_form(
+        if getattr(event, "repeat", False):
+            return True
+        transformed = request_greater_manifestation(
             game_state,
             pygame.time.get_ticks(),
         )
+        set_summoner_staff_cursor(game_state.player.act_three.summoner_manifestation_aiming)
         if transformed:
             _commit_summoner_turn()
         return True

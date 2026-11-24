@@ -23,17 +23,21 @@ def draw_summoner_familiar_summon_targeting(
     current_time,
 ):
     player = game_state.player
-    if not player.summoner_familiar_summon_aiming:
+    manifestation_aiming = player.act_three.summoner_manifestation_aiming
+    if not player.summoner_familiar_summon_aiming and not manifestation_aiming:
         return
 
-    selected_target = (
-        player.summoner_familiar_summon_target
-    )
+    if manifestation_aiming:
+        from acts.act_three.abilities.manifestation_targeting import manifestation_targets
+
+        selected_target = player.act_three.summoner_manifestation_target
+        valid_targets = manifestation_targets(game_state)
+    else:
+        selected_target = player.summoner_familiar_summon_target
+        valid_targets = summoner_familiar_summon_targets(game_state)
     pulse = 0.5 + 0.5 * math.sin(current_time / 190)
 
-    for target in summoner_familiar_summon_targets(
-        game_state
-    ):
+    for target in (() if selected_target is None else (selected_target,)):
         marker = pygame.Surface(
             (
                 ACT_THREE_TILE_SIZE,
@@ -45,7 +49,7 @@ def draw_summoner_familiar_summon_targeting(
             ACT_THREE_TILE_SIZE // 2,
             ACT_THREE_TILE_SIZE // 2,
         )
-        selected = target == selected_target
+        selected = target in valid_targets
         radius_x = 22 if selected else 17
         radius_y = 13 if selected else 10
 
@@ -124,6 +128,9 @@ def draw_summoner_familiar_summon_targeting(
             camera_x,
             camera_y,
         )
+        if not selected:
+            marker.fill((255, 255, 255), special_flags=pygame.BLEND_RGB_MAX)
+            marker.fill((225, 80, 80, 255), special_flags=pygame.BLEND_RGBA_MULT)
         surface.blit(marker, position)
 
 

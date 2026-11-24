@@ -88,7 +88,7 @@ _ABILITY_DESCRIPTIONS = {
     "act_three_warlock_arcane_burst": "Cast the inherited mage rune ability.",
     "act_three_warlock_demon_form": "Transform into a demon.",
     "summoner_familiar": "Summon or release the familiar.",
-    "summoner_true_form": "Unite with the familiar temporarily.",
+    "summoner_greater_manifestation": "Summon an independent greater spirit.",
 }
 
 
@@ -348,7 +348,7 @@ def _ability_entries(player, accent_color):
         return (
             (
                 "summoner_familiar",
-                "Release Familiar",
+                "Summon Familiar",
                 _ratio(
                     player.summoner_familiar_charge,
                     SUMMONER_FAMILIAR_CHARGES,
@@ -357,8 +357,8 @@ def _ability_entries(player, accent_color):
                 None,
             ),
             (
-                "summoner_true_form",
-                "True Form",
+                "summoner_greater_manifestation",
+                "Greater Manifestation",
                 _ratio(
                     player.summoner_true_form_charge,
                     SUMMONER_TRUE_FORM_CHARGES,
@@ -366,7 +366,7 @@ def _ability_entries(player, accent_color):
                 (91, 224, 238),
                 (
                     "ACTIVE"
-                    if player.summoner_true_form_active
+                    if player.act_three.summoner_manifestation and player.act_three.summoner_manifestation["health"] > 0
                     else None
                 ),
             ),

@@ -43,7 +43,7 @@ def player_attack_warnings(game_state):
     return tuple(
         enemy.attack_targets
         for enemy in floor.enemies
-        if enemy.health > 0
+        if enemy.health > 0 and not enemy.possessed_by_summoner
         and position in enemy.attack_targets
     )
 
@@ -76,7 +76,7 @@ def navigation_target_info(game_state, target):
         (
             candidate
             for candidate in floor.enemies
-            if candidate.health > 0
+            if candidate.health > 0 and not candidate.possessed_by_summoner
             and target in get_enemy_occupied_positions(candidate)
         ),
         None,

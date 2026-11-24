@@ -1,4 +1,5 @@
 from collections import deque
+from copy import copy
 
 from acts.act_three.ai.pursuit import (
     _move_toward_player_with_footprint,
@@ -109,24 +110,39 @@ def _ability_targets(floor, enemy, blocking_positions):
 
 
 def _try_prepare_ability(game_state, enemy, blocking_positions):
-    patterns = _ability_targets(game_state.floor, enemy, blocking_positions)
-    patterns["soul_procession"] = procession_targets(game_state.floor, enemy, blocking_positions)
-    player = (game_state.floor.player_column, game_state.floor.player_row)
+    floor, player = game_state.floor, game_state.player
+    hero = floor.player_column, floor.player_row
+    aim_cells = {hero}
+    if player.summoner_familiar_active and player.summoner_familiar_position is not None:
+        from acts.act_three.abilities.summoner_possession import possession_host
+
+        host = possession_host(game_state)
+        aim_cells.update(get_enemy_occupied_positions(host) if host is not None else (player.summoner_familiar_position,))
+    spirit = player.act_three.summoner_manifestation
+    if spirit is not None and spirit["health"] > 0 and spirit["floor"] == game_state.floor_index:
+        aim_cells.add(tuple(spirit["position"]))
+    footprint = get_enemy_occupied_positions(enemy)
+    aim_cells = sorted(aim_cells, key=lambda cell: (min(abs(cell[0] - origin[0]) + abs(cell[1] - origin[1]) for origin in footprint), cell != hero, cell))
     order = ("lantern_sweep", "soul_lance", "soul_procession", "cinder_nova")
     if enemy.last_attack_mode in order:
         index = order.index(enemy.last_attack_mode) + 1
         order = order[index:] + order[:index]
-    for mode in order:
-        targets = patterns[mode]
-        if player not in targets or mode == enemy.last_attack_mode:
-            continue
-        enemy.prepared_attack_target = "hero"
-        enemy.attack_effect_positions = ()
-        enemy.last_attack_mode = mode
-        prepare_enemy_attack(game_state, enemy, targets, mode)
-        if mode == "soul_procession":
-            add_log_message(game_state.combat_log, "Ghost lanterns converge on the crossing. Step aside!", category="warning")
-        return True
+    for aim in aim_cells:
+        view = copy(floor)
+        view.player_column, view.player_row = aim
+        patterns = _ability_targets(view, enemy, blocking_positions)
+        patterns["soul_procession"] = procession_targets(view, enemy, blocking_positions)
+        for mode in order:
+            targets = patterns[mode]
+            if aim not in targets or mode == enemy.last_attack_mode:
+                continue
+            enemy.prepared_attack_target = "hero"
+            enemy.attack_effect_positions = ()
+            enemy.last_attack_mode = mode
+            prepare_enemy_attack(game_state, enemy, targets, mode)
+            if mode == "soul_procession":
+                add_log_message(game_state.combat_log, "Ghost lanterns converge on the crossing. Step aside!", category="warning")
+            return True
     return False
 
 

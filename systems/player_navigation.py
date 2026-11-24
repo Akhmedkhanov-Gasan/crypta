@@ -44,7 +44,7 @@ def find_player_path(floor, target, *, can_finish=None):
     blocked_positions = {
         position
         for enemy in floor.enemies
-        if enemy.health > 0
+        if enemy.health > 0 and not enemy.possessed_by_summoner
         for position in get_enemy_occupied_positions(enemy)
     }
     blocked_positions.update(

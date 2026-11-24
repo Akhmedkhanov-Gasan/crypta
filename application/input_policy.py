@@ -74,6 +74,7 @@ def continuous_movement_input_available(
         and player.act_three.mining is None
         and player.act_three.consumable_aim_slot is None
         and player.act_three.item_drag is None
+        and not player.act_three.summoner_manifestation_aiming
         and not player.directional_ability_aiming
         and not player.act_two.fire_bomb_aiming
         and player.act_two.scroll_aiming_kind is None

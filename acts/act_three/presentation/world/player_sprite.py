@@ -85,7 +85,7 @@ def select_player_sprite(
     attack_frame_duration,
 ):
     trial = context.floor.summoner_trial
-    if player_state.subclass == "summoner" and trial is not None and trial["active"]:
+    if player_state.subclass == "summoner" and (familiar_is_away(player) or (trial is not None and trial["active"])):
         aliases = {key.replace("player_summoner_no_familiar_", "player_summoner_"): value for key, value in assets.items() if key.startswith("player_summoner_no_familiar_")}
         assets = ChainMap(aliases, assets)
     if player_state.death_elapsed is not None:

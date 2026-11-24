@@ -73,7 +73,7 @@ def handle_rune_menu_event(event, game_state, mouse_position):
             elif event.key == pygame.K_BACKSPACE:
                 _activate("back", game_state, current_time)
             elif event.key in (pygame.K_SPACE, pygame.K_RETURN, pygame.K_KP_ENTER):
-                if menu.page == "choices" and menu.selected_choice is not None and event.key != pygame.K_SPACE:
+                if menu.page == "choices" and menu.selected_choice is not None and (event.key != pygame.K_SPACE or menu.selected_choice == menu.focus):
                     _activate("confirm", game_state, current_time)
                 else:
                     choose_card(game_state, menu.focus, current_time)

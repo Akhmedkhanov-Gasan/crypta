@@ -300,31 +300,29 @@ SUBCLASS_DEFINITIONS = {
         ),
         abilities={
             "q": AbilityDefinition(
-                id="release_familiar",
-                name="RELEASE FAMILIAR",
+                id="summon_familiar",
+                name="SUMMON FAMILIAR",
                 slot="q",
                 icon_asset=(
-                    "act_three_summoner_release_familiar"
+                    "act_three_summoner_summon_familiar"
                 ),
                 charge_required=4.0,
                 description=(
-                    "Release the bonded familiar onto the "
-                    "battlefield or recall it."
+                    "Summon a spiritual familiar that moves and attacks enemies independently. Q recalls it."
                 ),
             ),
             "e": _arcane_burst("summoner"),
             "f": AbilityDefinition(
-                id="true_form",
-                name="TRUE FORM",
+                id="greater_manifestation",
+                name="GREATER MANIFESTATION",
                 slot="f",
                 icon_asset=(
-                    "act_three_summoner_true_form"
+                    "act_three_summoner_greater_manifestation"
                 ),
                 charge_required=8.0,
                 description=(
-                    "Empower the familiar with 8 extra HP and +3 damage. "
-                    "Each attack spends 1 of its own HP; movement and waiting are free. "
-                    "Q alternatives are disabled until the ultimate ends."
+                    "Choose a neighboring cell and confirm with F to summon a mighty independent spirit alongside your familiar. "
+                    "Its attacks deal +3 damage and cost 1 of its own HP. F dismisses it."
                 ),
             ),
         },

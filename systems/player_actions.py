@@ -391,6 +391,11 @@ def try_move_player(
         if enemy.health > 0
     ]
     target_position = (new_column, new_row)
+    if floor.presentation_act == 3:
+        from acts.act_three.abilities.summoner_targeting import totem_blocks_cell
+
+        if totem_blocks_cell(game_state.player, target_position):
+            return False
     player_position = (
         floor.player_column,
         floor.player_row,

@@ -1142,9 +1142,15 @@ def _draw_act_three_world(
         current_time, ACT_THREE_TILE_SIZE,
     )
     if player_subclass == "summoner":
+        from acts.act_three.presentation.summoner.manifestation import draw_manifestation
+
+        draw_manifestation(view_surface, assets, game_state, camera_x, camera_y, current_time)
         from acts.act_three.presentation.summoner.rune_effects import draw_summoner_rune_effects
 
         draw_summoner_rune_effects(view_surface, game_state, player_effect_position, camera_x, camera_y, current_time)
+        from acts.act_three.presentation.summoner.binding_effects import draw_familiar_recall
+
+        draw_familiar_recall(view_surface, game_state, player_effect_position, assets, camera_x, camera_y, current_time)
     active_barrage_shots = []
     for barrage_shot in game_state.player.archer_barrage_shots:
         if barrage_shot.started_at <= 0:

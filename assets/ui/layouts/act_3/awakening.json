@@ -2364,7 +2364,7 @@
                     "width": 40,
                     "height": 40
                   },
-                  "asset_key": "act_three_summoner_release_familiar",
+                  "asset_key": "act_three_summoner_summon_familiar",
                   "opacity": 1
                 },
                 "name": {
@@ -2374,7 +2374,7 @@
                     "width": 108,
                     "height": 13
                   },
-                  "text": "Release familiar",
+                  "text": "Summon familiar",
                   "font": {
                     "family": "Ubuntu Mono",
                     "style": "Medium",
@@ -2405,7 +2405,7 @@
                     "width": 272,
                     "height": 34
                   },
-                  "text": "Release the bonded familiar onto the battlefield or recall it.",
+                  "text": "Summon a spiritual familiar that fights independently. Q recalls it.",
                   "font": {
                     "family": "Ubuntu Mono",
                     "style": "Medium",
@@ -2455,17 +2455,17 @@
                     "width": 40,
                     "height": 40
                   },
-                  "asset_key": "act_three_summoner_true_form",
+                  "asset_key": "act_three_summoner_greater_manifestation",
                   "opacity": 1
                 },
                 "name": {
                   "rect": {
-                    "x": 898,
+                    "x": 862,
                     "y": 560,
-                    "width": 61,
+                    "width": 160,
                     "height": 13
                   },
-                  "text": "True form",
+                  "text": "Greater manifestation",
                   "font": {
                     "family": "Ubuntu Mono",
                     "style": "Medium",
@@ -2496,7 +2496,7 @@
                     "width": 275,
                     "height": 33
                   },
-                  "text": "Empower the released familiar for five of its actions.",
+                  "text": "Summon a mighty independent spirit alongside your familiar.",
                   "font": {
                     "family": "Ubuntu Mono",
                     "style": "Medium",

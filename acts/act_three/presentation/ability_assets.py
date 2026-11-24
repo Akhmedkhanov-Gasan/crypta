@@ -23,13 +23,15 @@ _SUBCLASS_ICONS = {
     "warlock": ("arcane_burst", "curse", "demon_form",
                 "rune_of_fracture", "rune_of_resonance", "rune_of_concentration",
                 "rune_of_spreading_curse", "rune_of_madness", "rune_of_eternal_form", "rune_of_blood_pact"),
-    "summoner": ("arcane_burst", "release_familiar", "true_form",
+    "summoner": ("arcane_burst", "summon_familiar", "greater_manifestation",
                  "rune_of_fracture", "rune_of_resonance", "rune_of_concentration",
-                 "rune_of_spirit_totem", "rune_of_possession", "rune_of_cataclysm", "rune_of_absorption"),
+                 "rune_of_spirit_totem", "rune_of_possession", "rune_of_soul_devourer", "rune_of_absorption"),
 }
 
 
 def ability_icon_filename(subclass, identifier):
+    if subclass == "summoner" and identifier == "summon_familiar":
+        identifier = "release_familiar"
     if subclass == "berserker" and identifier == "rune_of_death_wish":
         identifier = "rune_of_blood_frenzy"
     if identifier == "barrage_zone":

@@ -214,9 +214,9 @@ def damage_player(
             )
 
     if damage_dealt > 0 and player.subclass == "summoner":
-        from acts.act_three.abilities.summoner_runes import absorption_active
+        from acts.act_three.abilities.summoner_runes import summoner_ultimate_active
 
-        if not player.summoner_true_form_active and not absorption_active(player) and is_ability_slot_unlocked(player, "f"):
+        if not summoner_ultimate_active(player) and is_ability_slot_unlocked(player, "f"):
             player.summoner_true_form_charge = min(
                 SUMMONER_TRUE_FORM_CHARGES,
                 player.summoner_true_form_charge + 1,
@@ -627,9 +627,9 @@ def attack_enemy(
             ("q", "f"),
         )
     elif grant_ability_charge and player.subclass == "summoner":
-        from acts.act_three.abilities.summoner_runes import absorption_active, familiar_recharge_requirement
+        from acts.act_three.abilities.summoner_runes import summoner_ultimate_active, familiar_recharge_requirement
 
-        if not player.summoner_true_form_active and not absorption_active(player) and is_ability_slot_unlocked(player, "f"):
+        if not summoner_ultimate_active(player) and is_ability_slot_unlocked(player, "f"):
             player.summoner_true_form_charge = min(
                 SUMMONER_TRUE_FORM_CHARGES,
                 player.summoner_true_form_charge + 1,

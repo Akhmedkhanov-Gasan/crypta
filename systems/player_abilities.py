@@ -8,7 +8,7 @@ from systems.base_abilities import (
 
 from acts.act_three.abilities.summoner import (
     release_summoner_familiar,
-    request_summoner_true_form,
+    request_greater_manifestation,
     resolve_summoner_familiar_turn,
     damage_summoner_familiar,
 )
@@ -83,7 +83,7 @@ __all__ = [
     "cast_directional_ability",
     "cast_mage_arcane_burst",
     "release_summoner_familiar",
-    "request_summoner_true_form",
+    "request_greater_manifestation",
     "resolve_summoner_familiar_turn",
     "damage_summoner_familiar",
     "request_archer_empowered_shot",

@@ -133,6 +133,26 @@ def handle_act_three_pointer_event(
     movement_state,
     movement_available,
 ):
+    if event.type not in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEWHEEL):
+        return False
+    if game_state.player.act_three.summoner_manifestation_aiming:
+        from acts.act_three.abilities.manifestation_targeting import cancel_manifestation_targeting, select_manifestation_target
+
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
+            cancel_manifestation_targeting(game_state.player)
+            set_summoner_staff_cursor()
+        elif event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN):
+            position = window_to_game_position(screen, event.pos)
+            if position is not None:
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and get_act_three_ability_slot_rectangle("f", game_state.player).collidepoint(position):
+                    pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_f))
+                else:
+                    target = get_act_three_cell_from_position(game_state, position)
+                    valid = select_manifestation_target(game_state, target)
+                    set_summoner_staff_cursor(valid)
+                    if valid and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                        pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_f))
+        return True
     from acts.act_three.input.trials.warlock import handle_pointer as handle_curse_pointer
     from acts.act_three.input.trials.summoner import handle_pointer as handle_summoner_pointer
 
@@ -178,6 +198,7 @@ def handle_act_three_pointer_event(
             and not player.archer_piercing_aiming
             and not player.summoner_aiming
             and not player.summoner_familiar_summon_aiming
+            and not player.act_three.summoner_manifestation_aiming
         )
         if handle_inventory_drag(event, game_state, mouse_position, item_input_available):
             return True

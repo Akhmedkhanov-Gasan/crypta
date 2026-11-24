@@ -23,7 +23,14 @@ def apply_rune(game_state, card, current_time=None):
         rune = ABILITY_RUNES_BY_ID.get(card.id)
         if rune is None or rune.subclass != player.subclass or rune.slot != card.slot:
             return False
+        from acts.act_three.abilities.summoner_rune_binding import bind_summoner_rune
+
+        bind_summoner_rune(game_state, rune)
         player.act_three.ability_runes[card.slot] = rune.id
+        if card.id == "rune_of_spirit_totem":
+            from acts.act_three.abilities.summoner_targeting import bind_totem
+
+            bind_totem(game_state, current_time)
         if card.id == "rune_of_eternal_form":
             from acts.act_three.abilities.warlock_runes import bind_eternal_form
 

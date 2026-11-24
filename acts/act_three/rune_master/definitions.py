@@ -38,13 +38,12 @@ BLOOD_PACT_COST_INTERVAL = 3
 BLOOD_PACT_KILL_HEAL_RATIO = 0.3
 DEMON_KILL_HEAL_RATIO = 0.1
 SPIRIT_TOTEM_RANGE = 3
-SPIRIT_TOTEM_PLACEMENT_RANGE = 3
+SPIRIT_TOTEM_PLACEMENT_RANGE = 1
 POSSESSION_RANGE = 4
-POSSESSION_TURNS = 6
-POSSESSION_ELITE_TURNS = 3
-FAMILIAR_DEATH_CHARGES = 6
-CATACLYSM_RADIUS = 2
-CATACLYSM_DAMAGE_MULTIPLIER = 5.0
+POSSESSION_LEASH_RANGE = 3
+POSSESSION_FOLLOW_DISTANCE = 2
+POSSESSION_GUARD_RANGE = 3
+FAMILIAR_DEATH_TURNS = 6
 ABSORPTION_ATTACKS = 6
 ABSORPTION_DAMAGE_MULTIPLIER = 1.75
 ABSORPTION_BLOCK_CHANCE = 0.25
@@ -62,13 +61,13 @@ class AbilityRune:
 
 ABILITY_RUNES = (
     AbilityRune("rune_of_spirit_totem", "summoner", "q", "Rune of Spirit Totem",
-                "Place a stationary familiar totem within 3 cells. It attacks enemies within 3 cells. True Form temporarily replaces the totem."),
+                "Replace the familiar with an immobile spiritual totem on a chosen adjacent cell. It attacks enemies within 3 cells."),
     AbilityRune("rune_of_possession", "summoner", "q", "Rune of Possession",
-                "Possess a visible enemy within 4 cells for 6 actions, or 3 for elites. Uses its attacks and stats. Bosses are immune. Host death causes the familiar-loss penalty; True Form releases it."),
-    AbilityRune("rune_of_cataclysm", "summoner", "f", "Rune of Cataclysm",
-                "F during True Form detonates the familiar within 2 cells for five times its attack damage. Also hurts you. The familiar dies; resummoning requires 12 charges instead of the normal death penalty of 6."),
+                "The familiar permanently binds a visible enemy within 4 cells as an ally until the host dies or you transfer possession. Q selects a new host; Escape cancels selection. Bosses are immune."),
+    AbilityRune("rune_of_soul_devourer", "summoner", "f", "Rune of Soul Devourer",
+                "Each kill grants Greater Manifestation +25% attack damage and restores 90% maximum HP, capped at full health. Each attack costs 1 more HP than the previous one, even when blocked or dodged. The attack cost is paid before healing; a lethal cost cannot be healed."),
     AbilityRune("rune_of_absorption", "summoner", "f", "Rune of Absorption",
-                "Absorb your familiar for 6 attacks: +75% damage, +25 percentage points of block chance and attack range 3. The familiar returns afterward. Q is disabled while empowered."),
+                "Absorb the greater spirit instead of summoning it: 6 attacks with +75% damage, +25 percentage points of block chance and attack range 3. Your familiar remains independent."),
     AbilityRune("rune_of_spreading_curse", "warlock", "q", "Rune of Spreading Curse",
                 "When a cursed enemy dies, its remaining curse transfers to the nearest uncursed enemy within 3 cells."),
     AbilityRune("rune_of_madness", "warlock", "q", "Rune of Madness",
