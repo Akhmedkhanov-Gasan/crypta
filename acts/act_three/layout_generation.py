@@ -6,12 +6,13 @@ from acts.act_three.room_generation import (
     DIRECTION_STEP,
     OPPOSITE_DIRECTION,
     _bounds,
-    _bounds_overlap,
     _compose,
-    _placement_offset,
     _structural_connectors,
     _template_paths,
-    _translated,
+)
+from acts.act_three.room_connections import (
+    extend_layout as _extend,
+    placement_options as _options,
 )
 from acts.act_three.tmx_loader import load_tmx_floor
 from acts.act_three.world_geometry import reachable_cells
@@ -40,39 +41,6 @@ def _validate_template(template):
             raise ValueError(f"Connector is blocked or unreachable: {name}: {connector['name']}")
 
 
-def _options(placements, frontier, templates):
-    options = []
-    for frontier_index, opening in enumerate(frontier):
-        for template in templates:
-            for connector in _structural_connectors(template):
-                if connector["direction"] != OPPOSITE_DIRECTION[opening["direction"]]:
-                    continue
-                if connector["width"] != opening["width"] or connector["width"] != 1:
-                    continue
-                offset = _placement_offset(opening, connector)
-                if any(_bounds_overlap(_bounds(template, offset), _bounds(placed, position)) for placed, position in placements):
-                    continue
-                options.append((frontier_index, template, connector, offset))
-    random.shuffle(options)
-    return options
-
-
-def _extend(placements, frontier, connections, option):
-    index, template, connector, offset = option
-    opening = frontier[index]
-    remaining = frontier[:index] + frontier[index + 1:]
-    remaining.extend(
-        {**item, "position": _translated(item["position"], offset)}
-        for item in _structural_connectors(template)
-        if item is not connector
-    )
-    return (
-        placements + [(template, offset)],
-        remaining,
-        connections + [(opening["position"], _translated(connector["position"], offset))],
-    )
-
-
 def _required_openings(rooms):
     required = Counter()
     for room in rooms:
@@ -84,15 +52,24 @@ def _required_openings(rooms):
 
 
 def _opening_deficits(frontier, required):
-    available = Counter(opening["direction"] for opening in frontier)
+    grouped_openings = Counter(
+        (opening.get("room_origin"), opening["direction"])
+        for opening in frontier
+    )
+    available = Counter(
+        direction
+        for (_, direction), count in grouped_openings.items()
+        if count == 1
+    )
     return {direction: max(0, count - available[direction]) for direction, count in required.items()}
 
 
-def _frontier_after_option(frontier, option):
-    index, template, connector, _ = option
-    return frontier[:index] + frontier[index + 1:] + [
-        item for item in _structural_connectors(template) if item is not connector
-    ]
+def _paired_openings(frontier):
+    groups = {}
+    for opening in frontier:
+        key = opening.get("room_origin"), opening["direction"]
+        groups.setdefault(key, []).append(opening)
+    return [openings for openings in groups.values() if len(openings) > 1]
 
 
 def _seal_boundaries(floor, placements, connections):
@@ -155,10 +132,24 @@ def generate_room_layout(config, trial_path=None):
         _validate_template(template)
     dead_ends = [template for template in templates if len(_structural_connectors(template)) == 1]
     connecting_rooms = [template for template in templates if len(_structural_connectors(template)) > 1]
+    branch_rooms = [
+        room for room in connecting_rooms
+        if len({connector["direction"] for connector in _structural_connectors(room)}) > 1
+    ]
+    featured_rooms = []
+    layout_rooms = []
+    for room in branch_rooms:
+        directions = Counter(connector["direction"] for connector in _structural_connectors(room))
+        if max(directions.values()) > 1:
+            featured_rooms.append(room)
+        else:
+            layout_rooms.append(room)
+    featured_rooms = featured_rooms or branch_rooms
+    layout_rooms = layout_rooms or branch_rooms
     if not connecting_rooms or not dead_ends:
         raise ValueError("Act Three needs connecting rooms and dead ends")
 
-    required_rooms = [exit_room, *required_templates]
+    required_rooms = [entry, exit_room, *required_templates]
     if trial is not None:
         required_rooms.append(trial)
     required_openings = _required_openings(required_rooms)
@@ -172,6 +163,32 @@ def generate_room_layout(config, trial_path=None):
     target_count = config["generated_piece_count"] - 1 - len(required_rooms)
     remaining_attempts = 0
 
+    def resolve_pairs(placements, frontier, connections, adapters_left=6):
+        nonlocal remaining_attempts
+        groups = _paired_openings(frontier)
+        if not groups:
+            yield placements, frontier, connections
+            return
+        if remaining_attempts <= 0 or adapters_left <= 0:
+            return
+        remaining_attempts -= 1
+        candidates_by_group = [[] for _ in groups]
+        for option in _options(placements, frontier, connecting_rooms):
+            state = _extend(placements, frontier, connections, option)
+            matched_positions = {first for first, _ in state[2][len(connections):]}
+            for index, group in enumerate(groups):
+                if {opening["position"] for opening in group} <= matched_positions:
+                    candidates_by_group[index].append(state)
+        candidates = min(candidates_by_group, key=len)
+        candidates.sort(key=lambda state: (
+            len(_paired_openings(state[1])),
+            len(state[1]),
+        ))
+        for state in candidates:
+            if remaining_attempts <= 0:
+                break
+            yield from resolve_pairs(*state, adapters_left - 1)
+
     def finish(placements, frontier, connections, required):
         nonlocal remaining_attempts
         if remaining_attempts <= 0 or len(frontier) < len(required):
@@ -179,9 +196,18 @@ def generate_room_layout(config, trial_path=None):
         remaining_attempts -= 1
 
         if not frontier:
-            floor = _compose(placements, connections)
+            entry_placement = next(placement for placement in placements if placement[0] is entry)
+            ordered_placements = [entry_placement] + [placement for placement in placements if placement is not entry_placement]
+            floor = _compose(ordered_placements, connections)
             _seal_boundaries(floor, placements, connections)
             return floor if _valid_floor(floor) else None
+
+        if _paired_openings(frontier):
+            for state in resolve_pairs(placements, frontier, connections):
+                result = finish(*state, required)
+                if result is not None:
+                    return result
+            return None
 
         if required:
             demands = _required_openings(required)
@@ -224,29 +250,38 @@ def generate_room_layout(config, trial_path=None):
         remaining_attempts -= 1
 
         usage = Counter(template["source_path"] for template, _ in placements)
-        options = _options(placements, frontier, connecting_rooms)
+        options = _options(placements, frontier, layout_rooms)
         needs_branches = any(deficits.values())
 
         def priority(option):
-            next_frontier = _frontier_after_option(frontier, option)
+            next_frontier = _extend(placements, frontier, [], option)[1]
+            independent_openings = Counter(
+                (opening.get("room_origin"), opening["direction"])
+                for opening in next_frontier
+            )
             return (
                 sum(_opening_deficits(next_frontier, required_openings).values()),
-                -len(next_frontier) if needs_branches else 0,
                 usage[option[1]["source_path"]],
+                -sum(count == 1 for count in independent_openings.values()) if needs_branches else 0,
             )
 
         options.sort(key=priority)
         for option in options:
             if remaining_attempts <= 0:
                 break
-            result = search(*_extend(placements, frontier, connections, option), count - 1)
-            if result is not None:
-                return result
+            for state in resolve_pairs(*_extend(placements, frontier, connections, option)):
+                result = search(*state, count - 1)
+                if result is not None:
+                    return result
         return None
 
-    for count in range(target_count, max(-1, target_count - 3), -1):
-        remaining_attempts = 4000
-        result = search([(entry, (0, 0))], _structural_connectors(entry), [], count)
-        if result is not None:
-            return result
+    random.shuffle(featured_rooms)
+    for featured in featured_rooms:
+        for count in range(target_count, max(-1, target_count - 3), -1):
+            for _ in range(4):
+                remaining_attempts = 1000
+                for state in resolve_pairs([(featured, (0, 0))], _structural_connectors(featured), []):
+                    result = search(*state, count)
+                    if result is not None:
+                        return result
     raise ValueError("Cannot assemble Act Three with all room connectors joined; check room shapes and dead-end directions")

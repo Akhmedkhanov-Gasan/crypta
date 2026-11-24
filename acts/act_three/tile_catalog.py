@@ -11,6 +11,23 @@ ENVIRONMENT_OBJECTS_TILESET_PATH = (
 TILED_GID_MASK = 0x0FFFFFFF
 
 
+def tileset_tile_count(root, atlas_size=None):
+    count = max(
+        int(root.get("tilecount", 0)),
+        max((int(tile.get("id", 0)) + 1 for tile in root.findall("tile")), default=0),
+    )
+    if atlas_size is not None:
+        width, height = atlas_size
+        tile_width = int(root.get("tilewidth", 64))
+        tile_height = int(root.get("tileheight", 64))
+        margin = int(root.get("margin", 0))
+        spacing = int(root.get("spacing", 0))
+        columns = max(0, (width - margin * 2 + spacing) // (tile_width + spacing))
+        rows = max(0, (height - margin * 2 + spacing) // (tile_height + spacing))
+        count = max(count, columns * rows)
+    return count
+
+
 @lru_cache(maxsize=1)
 def tileset_catalog():
     paths = sorted([
@@ -24,8 +41,11 @@ def tileset_catalog():
     first_gid = 1
     for path in paths:
         root = resources.load_xml(path).getroot()
-        count = int(root.get("tilecount", 0))
-        count = max(count, max((int(tile.get("id", 0)) + 1 for tile in root.findall("tile")), default=0))
+        image = root.find("image")
+        atlas_size = None
+        if image is not None and image.get("source"):
+            atlas_size = resources.load_image(path.parent / image.get("source")).get_size()
+        count = tileset_tile_count(root, atlas_size)
         if count <= 0:
             raise ValueError(f"Tileset has no tiles: {path}")
         catalog[path.resolve()] = (first_gid, root)

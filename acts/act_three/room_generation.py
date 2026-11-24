@@ -445,7 +445,11 @@ def _structural_connectors(template):
     return [
         connector
         for connector in template["connectors"]
-        if connector.get("name") in structural_names
+        if any(
+            connector.get("name", "") == name
+            or connector.get("name", "").startswith(f"{name}_")
+            for name in structural_names
+        )
     ]
 
 

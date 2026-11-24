@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset version="1.10" tiledversion="1.12.2" name="my_tiles_textured" tilewidth="64" tileheight="64" tilecount="117" columns="9">
- <image source="my_tiles_textured.png" width="576" height="768"/>
+<tileset version="1.10" tiledversion="1.12.2" name="my_tiles_textured" tilewidth="64" tileheight="64" tilecount="135" columns="9">
+ <image source="my_tiles_textured.png" width="576" height="960"/>
  <tile id="0"/>
  <tile id="1"/>
  <tile id="2"/>

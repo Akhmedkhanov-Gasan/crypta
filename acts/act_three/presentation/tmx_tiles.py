@@ -3,7 +3,7 @@ from pathlib import Path
 import pygame
 
 import resource_store as resources
-from acts.act_three.tile_catalog import tileset_catalog
+from acts.act_three.tile_catalog import tileset_catalog, tileset_tile_count
 
 
 def _load_image(path):
@@ -36,7 +36,7 @@ def _load_atlas_tiles(
     margin = int(tileset_root.get("margin", 0))
     spacing = int(tileset_root.get("spacing", 0))
     columns = int(tileset_root.get("columns", 0))
-    tile_count = int(tileset_root.get("tilecount", 0))
+    tile_count = tileset_tile_count(tileset_root, atlas.get_size())
 
     if columns <= 0:
         columns = max(
