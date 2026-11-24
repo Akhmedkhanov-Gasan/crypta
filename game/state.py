@@ -339,6 +339,7 @@ class FloorState(AttributeMapping):
     curse_trial: dict[str, Any] | None = None
     summoner_trial: dict[str, Any] | None = None
     lantern_encounter: dict[str, Any] | None = None
+    rune_trial: dict[str, Any] | None = None
     trial_entrance: tuple[int, int] | None = None
     trial_safe_cells: set[tuple[int, int]] = field(default_factory=set)
     bloody_altar: BloodyAltarState | None = None

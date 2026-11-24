@@ -19,6 +19,7 @@ def tileset_catalog():
     ])
     paths.append(ENVIRONMENT_OBJECTS_TILESET_PATH)
     paths.append(MAP_DIRECTORY / "EnvironmentObjects" / "lantern_warden_room_props" / "lantern_warden_room_props.tsx")
+    paths.extend(sorted(resources.glob_resources(MAP_DIRECTORY / "runes", "*.tsx")))
     catalog = {}
     first_gid = 1
     for path in paths:

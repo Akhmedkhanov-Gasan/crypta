@@ -71,10 +71,7 @@ def open_npc_dialog(game_state, npc, current_time):
     state.npc_dialog_started_at = current_time
     state.npc_dialog_line_index = 0
     if npc["type"] == "rune_master":
-        from acts.act_three.rune_master.runtime import open_menu
-
         state.npc_dialog_phase = "talk"
-        open_menu(game_state, current_time)
     if npc["type"] == "blacksmith":
         game_state.player.act_three.blacksmith_quest["met"] = True
     state.blacksmith_forge_open = npc["type"] == "blacksmith" and game_state.player.act_three.blacksmith_quest.get("completed", False)
@@ -128,6 +125,11 @@ def continue_npc_dialog(game_state, current_time):
         state.npc_dialog_line_index += 1
         return
     state.npc_conversations_completed.add(npc["type"])
+    if npc["type"] == "rune_master":
+        from acts.act_three.quests.rune_master import finish_rune_master_dialogue
+
+        if finish_rune_master_dialogue(game_state, current_time):
+            return
     if npc["type"] == "trader":
         state.trader_tab = "healing"
         return
@@ -162,7 +164,7 @@ def advance_npc_dialog(game_state, current_time):
         state.rune_menu = None
         return
 
-    if npc["type"] == "rune_master":
+    if npc["type"] == "rune_master" and state.rune_menu is not None:
         from acts.act_three.rune_master.runtime import advance_menu
 
         advance_menu(game_state, current_time)

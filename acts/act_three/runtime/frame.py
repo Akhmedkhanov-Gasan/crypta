@@ -30,6 +30,9 @@ def advance_act_three_frame(game_state, current_act, current_time, sounds):
         from acts.act_three.enemies.lantern_warden.encounter import advance_encounter
 
         advance_encounter(game_state, current_time)
+        from acts.act_three.rune_master.trial import advance_trial as advance_rune_trial
+
+        advance_rune_trial(game_state, current_time)
         from acts.act_three.items.drops import advance_monster_loot
 
         advance_monster_loot(game_state, current_time)

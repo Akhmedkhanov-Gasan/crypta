@@ -51,6 +51,7 @@ class ActThreePlayerState:
     ironblood_guard: bool = False
     mining: dict | None = None
     blacksmith_quest: dict[str, bool] = field(default_factory=dict)
+    rune_trial_quest: dict[str, bool] = field(default_factory=dict)
     ability_runes: dict[str, str] = field(default_factory=dict)
     forge_progress: dict[str, dict[str, int]] = field(default_factory=dict)
     inventory_slots: list[str | None] = field(

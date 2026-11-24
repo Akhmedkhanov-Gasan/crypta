@@ -33,6 +33,8 @@ CONSOLE_COMMANDS = (
     "trialwin",
     "lantern",
     "blacksmith",
+    "runemaster",
+    "runetrial",
 )
 
 CONSOLE_HELP = (

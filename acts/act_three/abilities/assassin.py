@@ -199,6 +199,10 @@ def is_valid_assassin_teleport_target(
         return False
     if not game_state.player.teleport_aiming:
         return False
+    from acts.act_three.rune_master.trial import permits_destination
+
+    if not permits_destination(floor, (column, row)):
+        return False
     if not can_move_to(floor.map, column, row):
         return False
     if (column, row) == (floor.player_column, floor.player_row):

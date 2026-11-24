@@ -32,7 +32,10 @@ def _template_paths(directory, spawn_path):
         *resources.glob_resources(directory, "corridor_*.tmx"),
         *resources.glob_resources(directory, "test_room_*.tmx"),
     }
-    return sorted(path for path in paths if path != Path(spawn_path))
+    return sorted(
+        path for path in paths
+        if path != Path(spawn_path) and path.name != "room_rune_trial.tmx"
+    )
 
 
 def _translated(position, offset):
@@ -140,6 +143,7 @@ def _compose(placements, connections):
     curse_trial = None
     summoner_trial = None
     lantern_encounter = None
+    rune_trial = None
     trial_entrance = None
     trial_safe_cells = set()
     open_connectors = []
@@ -149,6 +153,12 @@ def _compose(placements, connections):
             original_offset[0] + normalization[0],
             original_offset[1] + normalization[1],
         )
+        if template.get("rune_trial") is not None:
+            from acts.act_three.rune_master.trial_map import shift_trial
+
+            if rune_trial is not None:
+                raise ValueError("Only one rune trial is supported per floor")
+            rune_trial = shift_trial(template["rune_trial"], offset)
         spawn_regions.append({
             "left": offset[0],
             "top": offset[1],
@@ -328,6 +338,7 @@ def _compose(placements, connections):
         "trial_safe_cells": trial_safe_cells,
         "encounter_zones": encounter_zones,
         "lantern_encounter": lantern_encounter,
+        "rune_trial": rune_trial,
         "spawn_regions": spawn_regions,
         "room_connections": shifted_connections,
         "chests": chests,

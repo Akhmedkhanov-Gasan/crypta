@@ -207,6 +207,10 @@ def is_valid_archer_leap_target(
     floor = game_state.floor
     if player.subclass != "archer" or not player.archer_leap_aiming:
         return False
+    from acts.act_three.rune_master.trial import permits_destination
+
+    if not permits_destination(floor, (column, row)):
+        return False
     if not (0 <= row < len(floor.map)):
         return False
     if not (0 <= column < len(floor.map[0])):

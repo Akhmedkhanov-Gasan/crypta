@@ -3,6 +3,7 @@ from acts.act_three.abilities.progression import is_ability_slot_unlocked
 from acts.act_three.rune_master.state import RuneCard
 from acts.act_three.rune_master.definitions import ABILITY_RUNES, equipped_rune
 from game.rune_catalog import RUNES_BY_ID, runes_for_class
+from acts.act_three.rune_master.access import can_modify_rune
 
 
 ICON_ROOT = "assets/sprites/ui/act_3/skills/abilities"
@@ -30,6 +31,8 @@ def available_abilities(player):
     for slot in ("q", "e", "f"):
         ability = subclass.abilities.get(slot)
         if ability is None or not is_ability_slot_unlocked(player, slot):
+            continue
+        if not can_modify_rune(player, slot):
             continue
         rune = RUNES_BY_ID.get(player.selected_rune_id) if ability.inherited else None
         if rune is not None and rune.player_class != player.player_class:

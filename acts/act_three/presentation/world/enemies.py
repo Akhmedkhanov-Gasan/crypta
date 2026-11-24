@@ -244,6 +244,12 @@ def draw_world_enemies(
             fonts["sidebar_numbers"],
         )
         stun_started_at = stun_visuals.get(id(enemy))
+        rune_trial = floor.rune_trial
+        if rune_trial is not None and enemy.health > 0 and enemy in rune_trial["enemies"]:
+            from acts.act_three.presentation.rune_trial import draw_runebound_aura
+
+            draw_runebound_aura(context.view_surface, enemy_position, ACT_THREE_TILE_SIZE,
+                               current_time, _stable_text_seed(enemy.name), rune_trial["started_at"])
         if enemy.health > 0 and stun_started_at is not None:
             draw_act_three_enemy_stun(
                 context.view_surface,

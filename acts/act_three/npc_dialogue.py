@@ -28,6 +28,10 @@ TRADER_REPLIES = {
 
 def get_npc_dialogue(game_state, npc):
     npc_type = npc["type"]
+    if npc_type == "rune_master":
+        from acts.act_three.quests.rune_master import rune_master_dialogue
+
+        return rune_master_dialogue(game_state)
     if npc_type == "blacksmith":
         from acts.act_three.quests.blacksmith import blacksmith_dialogue
 

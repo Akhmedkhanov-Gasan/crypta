@@ -1673,6 +1673,9 @@ def _draw_act_three_world(
             torch_index,
         )
     draw_trial_lighting(context)
+    from acts.act_three.presentation.rune_trial import draw_rune_trial
+
+    draw_rune_trial(context, current_time)
     visibility_position = (
         _view_position(
             floor.player_column,

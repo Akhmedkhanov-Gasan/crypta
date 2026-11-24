@@ -5,6 +5,8 @@ from acts.act_three.abilities import (
 
 
 ACT_THREE_CONSOLE_HELP = (
+    "runemaster - teleport to the Rune Master (Act III, floor 10)",
+    "runetrial - teleport to the rune trial entrance (Act III, floor 10)",
     "lantern - teleport to the Lantern Warden room entrance (Act III)",
     "blacksmith - teleport to the blacksmith room entrance (Act III, floor 9)",
     "trialwin - complete your trial and preview the unlock effect (repeatable)",
@@ -21,6 +23,14 @@ def execute_act_three_console_command(
     request_debug_jump=None,
 ):
     name = parts[0]
+    if name in ("runemaster", "runetrial"):
+        if len(parts) != 1:
+            return f"Usage: {name}"
+        label = "Rune Master" if name == "runemaster" else "rune trial"
+        result = _teleport_to_room(game_state, "room_rune_trial.tmx", label)
+        if result == f"Teleported to the {label} room entrance." and close_console is not None:
+            close_console()
+        return result
     if name in ("lantern", "blacksmith"):
         if len(parts) != 1:
             return f"Usage: {name}"
@@ -99,6 +109,10 @@ def _teleport_to_room(game_state, room_name, label):
         return "Finish the current interaction first."
     if game_state.floor.trial_safe_cells and (game_state.floor.player_column, game_state.floor.player_row) in game_state.floor.trial_safe_cells:
         return "Leave the class trial before teleporting."
+    from acts.act_three.rune_master.trial import trial_active
+
+    if trial_active(game_state.floor):
+        return "Defeat every rune trial wave before teleporting."
     target_index = next((index for index, config in enumerate(FLOOR_CONFIGS)
                          if config.get("act") == 3 and any(
                              path.endswith(room_name)
@@ -113,8 +127,11 @@ def _teleport_to_room(game_state, room_name, label):
             return f"Could not generate the {label} floor: {error}"
     if room_name == "lantern_warden_room.tmx":
         destination = floor.lantern_encounter["entrance"] if floor.lantern_encounter is not None else None
+    elif room_name == "room_rune_trial.tmx" and label == "rune trial":
+        destination = floor.rune_trial["entrance"] if floor.rune_trial is not None else None
     else:
-        npc = next((npc for npc in floor.act_three_npcs if npc["type"] == "blacksmith"), None)
+        npc_type = "rune_master" if room_name == "room_rune_trial.tmx" else "blacksmith"
+        npc = next((npc for npc in floor.act_three_npcs if npc["type"] == npc_type), None)
         destination = npc.get("room_entrance") if npc is not None else None
     if destination is None:
         return f"The {label} room is missing from this saved floor. Start a new run to regenerate it."
@@ -145,6 +162,10 @@ def _teleport_to_trial(game_state):
 
     if game_state.floor.presentation_act != 3:
         return "This command is only available in Act III."
+    from acts.act_three.rune_master.trial import trial_active
+
+    if trial_active(game_state.floor):
+        return "Defeat every rune trial wave before teleporting."
     if game_state.floor_transition_started_at >= 0:
         return "Wait for the floor transition to finish."
     scene = game_state.act_three.awakening

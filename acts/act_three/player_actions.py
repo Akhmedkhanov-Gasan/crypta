@@ -266,6 +266,10 @@ def resolve_act_three_player_action(
             final_floor_index,
             started_at,
         )
+        if acted:
+            from acts.act_three.rune_master.trial import advance_trial
+
+            advance_trial(game_state, started_at)
 
     return ActThreePlayerActionResult(player_acted=acted)
 

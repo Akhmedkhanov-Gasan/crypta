@@ -14,6 +14,10 @@ from systems.grid_geometry import can_reach_adjacent_cell
 
 
 def place_random_trader(floor):
+    place_random_npc(floor, "trader")
+
+
+def place_random_npc(floor, npc_type):
     regions = [
         region for region in spawn_regions(floor)
         if region["enabled"]
@@ -47,7 +51,7 @@ def place_random_trader(floor):
     available = (reachable & ground) - occupied
     candidates = []
     for position in sorted(available):
-        npc = {"type": "trader", "position": position}
+        npc = {"type": npc_type, "position": position}
         cells = get_npc_cells(npc)
         if not cells <= available or not any(
             all(inside_region(cell, region) for cell in cells) for region in regions
@@ -65,22 +69,24 @@ def place_random_trader(floor):
         )
         if after != reachable - cells:
             continue
-        approaches = (
+        approaches = [
             ((x, y), neighbor)
             for x, y in cells
             for neighbor in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1))
             if neighbor in after
-        )
-        if not any(
+        ]
+        approaches = [neighbor for cell, neighbor in approaches if
             can_reach_adjacent_cell(
                 dungeon_map, neighbor, cell, barriers, target_must_be_walkable=False,
             )
-            for cell, neighbor in approaches
-        ):
+        ]
+        if not approaches:
             continue
+        if npc_type == "rune_master":
+            npc["room_entrance"] = random.choice(sorted(approaches))
         floor.setdefault("npcs", []).append(npc)
         for x, y in cells:
             row = dungeon_map[y]
             dungeon_map[y] = row[:x] + "#" + row[x + 1:]
         return
-    raise ValueError("No reachable position for the Act Three trader.")
+    raise ValueError(f"No reachable position for the Act Three {npc_type}.")

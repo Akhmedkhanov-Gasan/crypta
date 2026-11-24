@@ -327,6 +327,7 @@ def create_floor_state(
         curse_trial=floor.get("curse_trial"),
         summoner_trial=floor.get("summoner_trial"),
         lantern_encounter=floor.get("lantern_encounter"),
+        rune_trial=floor.get("rune_trial"),
         trial_entrance=floor.get("trial_entrance"),
         trial_safe_cells=set(floor.get("trial_safe_cells", ())),
         bloody_altar=bloody_altar,

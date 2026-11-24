@@ -479,7 +479,11 @@ def load_tmx_floor(path):
     from acts.act_three.enemies.lantern_warden.encounter import build_encounter
 
     lantern_encounter = build_encounter(root, tile_size, width, height, by_name, connectors)
+    from acts.act_three.rune_master.trial_map import build_trial as build_rune_trial
+
+    rune_trial = build_rune_trial(by_name, width, height, dungeon_map, connectors)
     return {
+        "rune_trial": rune_trial,
         "lantern_encounter": lantern_encounter,
         "enemy_spawn_mode": map_properties.get("enemy_spawn_mode", "false").lower() == "true",
         "ore_spawn_mode": map_properties.get("ore_spawn_mode", map_properties.get("enemy_spawn_mode", "false")).lower() == "true",

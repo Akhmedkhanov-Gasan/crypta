@@ -32,6 +32,11 @@ def reserved_spawn_positions(floor):
     positions.update(ore["position"] for ore in floor.get("ores", []))
     for npc in floor.get("npcs", []):
         positions.update(get_npc_cells(npc))
+        if npc["type"] == "rune_master" and npc.get("room_entrance") is not None:
+            positions.add(npc["room_entrance"])
+    rune_trial = floor.get("rune_trial")
+    if rune_trial is not None:
+        positions.update((rune_trial["start"], rune_trial["entrance"], rune_trial["door"]))
     altar = floor.get("upgrade_altar")
     if altar is not None:
         positions.update((altar[0] + x, altar[1] + y) for x in range(2) for y in range(2))
