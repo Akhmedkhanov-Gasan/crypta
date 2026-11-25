@@ -3,6 +3,7 @@ import pygame
 from acts.act_one.dev_commands import (
     prepare_act_one_awakening_debug_state,
 )
+from acts.act_two.dev_commands import prepare_class_selection_debug_state
 from game.factories import create_game_state
 
 
@@ -10,7 +11,6 @@ DEBUG_FLOOR_KEYS = (
     pygame.K_F1,
     pygame.K_F2,
     pygame.K_F3,
-    pygame.K_F4,
 )
 
 
@@ -68,26 +68,10 @@ def create_debug_game_state(
                 "Debug jump: choose an Act II class."
             ),
         )
-        game_state.class_selection_open = True
-        game_state.class_transition_started_at = (
-            current_time
-            - class_selection_ready_ms
-        )
-        return game_state
-
-    if event.key == pygame.K_F3:
-        game_state = create_game_state(
-            floor_index=first_act_final_floor,
-            opening_message=(
-                "Debug: choose an Act II class "
-                "to test the Oracle arena."
-            ),
-        )
-        game_state.oracle_debug_mode = True
-        game_state.class_selection_open = True
-        game_state.class_transition_started_at = (
-            current_time
-            - class_selection_ready_ms
+        prepare_class_selection_debug_state(
+            game_state,
+            current_time,
+            class_selection_ready_ms,
         )
         return game_state
 

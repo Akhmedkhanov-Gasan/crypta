@@ -101,6 +101,9 @@ def draw_tooltip(
     scale=1.0,
     above=False,
     opacity=1.0,
+    title_color=None,
+    body_color=(220, 213, 202),
+    panel_renderer=None,
 ):
     if anchor is None or opacity <= 0:
         return
@@ -124,13 +127,13 @@ def draw_tooltip(
     title_surface = title_font.render(
         content.title,
         True,
-        content.accent,
+        content.accent if title_color is None else title_color,
     )
     body_surfaces = [
         body_font.render(
             line,
             True,
-            (220, 213, 202),
+            body_color,
         )
         for line in body_lines
     ]
@@ -183,19 +186,22 @@ def draw_tooltip(
         rectangle.size,
         pygame.SRCALPHA,
     )
-    pygame.draw.rect(
-        panel,
-        (13, 12, 16, 246),
-        panel.get_rect(),
-        border_radius=7,
-    )
-    pygame.draw.rect(
-        panel,
-        (*content.accent, 220),
-        panel.get_rect(),
-        width=2,
-        border_radius=7,
-    )
+    if panel_renderer is None:
+        pygame.draw.rect(
+            panel,
+            (13, 12, 16, 246),
+            panel.get_rect(),
+            border_radius=7,
+        )
+        pygame.draw.rect(
+            panel,
+            (*content.accent, 220),
+            panel.get_rect(),
+            width=2,
+            border_radius=7,
+        )
+    else:
+        panel_renderer(panel, scale, padding, title_surface.get_height())
 
     panel.blit(
         title_surface,

@@ -14,6 +14,7 @@ from acts.act_two.presentation.death_scene import (
     draw_act_two_death_dialogue_overlay,
 )
 from acts.act_two.presentation.hud import draw_act_two_sidebar
+from acts.act_two.presentation.hud_focus import keyboard_focus_rectangle
 from acts.act_two.presentation.player import draw_act_two_player_feedback_overlay
 from acts.act_two.presentation.rune_selection import draw_rune_selection
 from acts.act_two.presentation.trade_window import draw_act_two_trade_window
@@ -123,6 +124,7 @@ class ActTwoInterface:
             player.act_two.stoneflesh_hits,
             player.act_two.bloody_pact_id,
             dragged_consumable_slot=input_state.dragged_consumable_slot,
+            keyboard_focus=keyboard_focus_rectangle(self.hud_layout, player) if game_state.act_two_stats_open else None,
         )
         map_navigation.draw(
             surface,
@@ -146,6 +148,7 @@ class ActTwoInterface:
                 self.trade_layout,
                 self.fonts,
                 mouse_position,
+                keyboard_focus=player.act_two.trade_focus if player.act_two.trade_keyboard_focus else None,
             )
         if game_state.bloody_altar_open:
             draw_bloody_altar_window(

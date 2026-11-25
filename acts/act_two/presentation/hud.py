@@ -32,7 +32,8 @@ from acts.act_two.presentation.stats_tooltips import (
     draw_combat_stat_row_highlight,
     hovered_row_at,
 )
-from presentation.tooltips import draw_tooltip
+from presentation.tooltips.dark import draw_tooltip
+from presentation.tooltips.highlights import draw_selection_highlight
 from acts.act_two.presentation.hud_tooltips import (
     ability_tooltip_content,
     consumable_tooltip_content,
@@ -525,7 +526,10 @@ def draw_act_two_sidebar(
     stoneflesh_hits,
     bloody_pact_id,
     dragged_consumable_slot=None,
+    keyboard_focus=None,
 ):
+    if stats_open and keyboard_focus is not None:
+        mouse_position = keyboard_focus.center
     top_bar_layout = hud_layout["top_bar"]
 
     health_ratio = player_health / max(1, player_max_health)
@@ -788,6 +792,9 @@ def draw_act_two_sidebar(
             )
 
     hovered_consumable_slot = None
+    if stats_open and keyboard_focus is not None:
+        if any(rectangle.collidepoint(keyboard_focus.center) for rectangle in get_act_two_belt_slot_rectangles(hud_layout)):
+            draw_selection_highlight(screen, keyboard_focus)
     if mouse_position is not None and dragged_consumable_slot is None:
         hovered_consumable_slot = next(
             (

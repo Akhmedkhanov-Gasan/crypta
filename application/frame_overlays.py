@@ -140,7 +140,8 @@ def draw_frame_overlays(
         if game_state.floor.presentation_act == 2
         else act_three_fonts["text"]
     )
-    draw_cutscene_skip(screen, cutscene_skip, current_time, skip_font)
+    if not game_state.dialogue.active:
+        draw_cutscene_skip(screen, cutscene_skip, current_time, skip_font)
     dev_console.draw(screen)
 
     if current_act == 1 and game_state.player.health <= 0:

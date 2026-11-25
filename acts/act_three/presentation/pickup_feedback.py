@@ -9,7 +9,8 @@ from presentation.layout import (
     ACT_THREE_VIEW_X,
     ACT_THREE_VIEW_Y,
 )
-from presentation.tooltips import TooltipContent, draw_tooltip
+from presentation.tooltips import TooltipContent
+from presentation.tooltips.dark import draw_tooltip
 
 
 PICKUP_NOTICE_MS = 1250
@@ -27,7 +28,7 @@ def _cell_anchor(floor, position):
     )
 
 
-def draw_pickup_feedback(screen, game_state, window, current_time, *, show_prompt):
+def draw_pickup_feedback(screen, game_state, window, current_time, *, show_prompt, scale=1.0):
     floor = game_state.floor
     items = ground_items_at_player(game_state, current_time)
     notice = window.pickup_notice
@@ -40,19 +41,22 @@ def draw_pickup_feedback(screen, game_state, window, current_time, *, show_promp
                 panel, _, _ = ground_item_window_layout(
                     screen.get_size(), len(items), window.selected,
                     act_three=True,
+                    scale=scale,
                 )
                 x, y = panel.midtop
             else:
                 x, y = _cell_anchor(floor, item.position)
+                x, y = round(x * scale), round(y * scale)
 
             opacity = min(1.0, elapsed / 90, (PICKUP_NOTICE_MS - elapsed) / 280)
-            rise = round(16 * elapsed / PICKUP_NOTICE_MS)
+            rise = round(16 * scale * elapsed / PICKUP_NOTICE_MS)
             draw_tooltip(
                 screen,
                 TooltipContent("Picked up", (item.name,), (222, 188, 123)),
                 (x, y - rise),
                 above=True,
                 opacity=opacity,
+                scale=scale,
             )
             return
 
@@ -60,13 +64,15 @@ def draw_pickup_feedback(screen, game_state, window, current_time, *, show_promp
         return
 
     action, description = (
-        ("[G] Pick up", items[0].name)
+        ("[G] Search items", items[0].name)
         if len(items) == 1
-        else ("[G] Open pile", f"{len(items)} items")
+        else ("[G] Search pile", f"{len(items)} items")
     )
+    x, y = _cell_anchor(floor, (floor.player_column, floor.player_row))
     draw_tooltip(
         screen,
         TooltipContent(action, (description,), (181, 145, 81)),
-        _cell_anchor(floor, (floor.player_column, floor.player_row)),
+        (round(x * scale), round(y * scale)),
         above=True,
+        scale=scale,
     )

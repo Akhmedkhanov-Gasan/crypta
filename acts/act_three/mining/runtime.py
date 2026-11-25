@@ -51,6 +51,7 @@ def start_mining(game_state, target, current_time):
         or game_state.game_won
         or player.act_three.mining is not None
         or game_state.act_three.npc_dialog_position is not None
+        or game_state.act_three.npc_menu_from_console is not None
         or ore is None
         or ore["stage"] >= 3
         or target not in floor.visible_cells

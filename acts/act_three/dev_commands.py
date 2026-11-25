@@ -5,6 +5,8 @@ from acts.act_three.abilities import (
 
 
 ACT_THREE_CONSOLE_HELP = (
+    "trade - open trading without finding the trader (Act III)",
+    "rune - open rune selection without finding the Rune Master (Act III)",
     "runemaster - teleport to the Rune Master (Act III, floor 10)",
     "runetrial - teleport to the rune trial entrance (Act III, floor 10)",
     "lantern - teleport to the Lantern Warden room entrance (Act III)",
@@ -23,6 +25,10 @@ def execute_act_three_console_command(
     request_debug_jump=None,
 ):
     name = parts[0]
+    if name in ("trade", "rune") and game_state.floor.presentation_act == 3:
+        if len(parts) != 1:
+            return f"Usage: {name}"
+        return _open_debug_menu(game_state, name, close_console)
     if name in ("runemaster", "runetrial"):
         if len(parts) != 1:
             return f"Usage: {name}"
@@ -92,6 +98,48 @@ def execute_act_three_console_command(
         f"All {definition.id} abilities unlocked "
         "with unlimited charges."
     )
+
+
+def _open_debug_menu(game_state, name, close_console):
+    import pygame
+
+    from acts.act_three.input.character_panel import can_open_character_panel, set_sidebar_tab
+    from application.input_policy import gameplay_cutscene_active
+
+    state = game_state.act_three
+    if game_state.player.health <= 0 or game_state.game_won:
+        return "This menu is unavailable while the run is over."
+    if get_subclass_definition(game_state.player.subclass) is None:
+        return "Choose an Act III subclass first."
+    if (
+        game_state.floor_transition_started_at >= 0
+        or gameplay_cutscene_active(game_state)
+        or game_state.upgrade_altar_menu_open
+        or state.npc_dialog_position is not None
+        or state.npc_menu_from_console is not None
+        or state.rune_menu is not None
+        or state.trader_tab is not None
+        or game_state.player.act_three.mining is not None
+        or not can_open_character_panel(game_state, True)
+        or game_state.player.act_three.consumable_aim_slot is not None
+    ):
+        return "Finish the current action or close the current window first."
+    set_sidebar_tab(game_state, "closed")
+    state.npc_menu_from_console = "trader" if name == "trade" else "rune_master"
+    state.npc_dialog_floor_index = game_state.floor_index
+    state.npc_dialog_phase = "talk"
+    state.npc_dialog_started_at = pygame.time.get_ticks()
+    state.trader_slot_presses.clear()
+    state.trader_focus = None
+    if name == "trade":
+        state.trader_tab = "healing"
+    else:
+        from acts.act_three.rune_master.runtime import open_menu
+
+        open_menu(game_state, pygame.time.get_ticks())
+    if close_console is not None:
+        close_console()
+    return "Trading opened." if name == "trade" else "Rune selection opened."
 
 
 def _teleport_to_room(game_state, room_name, label):

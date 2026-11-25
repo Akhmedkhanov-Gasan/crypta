@@ -1,4 +1,5 @@
 import pygame
+from acts.act_three.input.journal import handle_journal_pointer
 from acts.act_three.abilities.berserker_runes import spin_duration
 from acts.act_three.abilities.progression import is_ability_slot_unlocked
 from acts.act_three.combat.pacing import player_attack_recovery_active
@@ -135,6 +136,10 @@ def handle_act_three_pointer_event(
 ):
     if event.type not in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEWHEEL):
         return False
+    if handle_journal_pointer(event, game_state, screen, window_to_game_position):
+        movement_state.cancel_auto_move()
+        movement_state.reset_held_movement()
+        return True
     if game_state.player.act_three.summoner_manifestation_aiming:
         from acts.act_three.abilities.manifestation_targeting import cancel_manifestation_targeting, select_manifestation_target
 
@@ -581,6 +586,11 @@ def handle_act_three_pointer_event(
             screen,
             mouse_position,
         )
+        if game_state.sidebar_tab == "journal" and game_mouse_position is not None:
+            from acts.act_three.input.journal import scroll_act_three_journal
+
+            scroll_act_three_journal(game_state, -event.y)
+            return True
         if (
             game_mouse_position is not None
             and get_act_three_log_panel_rect().collidepoint(

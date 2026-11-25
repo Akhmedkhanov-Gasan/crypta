@@ -44,6 +44,7 @@ def open_npc_dialog(game_state, npc, current_time):
     floor = game_state.floor
     if (
         state.npc_dialog_position is not None
+        or state.npc_menu_from_console is not None
         or game_state.player.health <= 0
         or game_state.game_won
     ):
@@ -84,6 +85,18 @@ def open_npc_dialog(game_state, npc, current_time):
 
 def close_npc_dialog(game_state, current_time):
     state = game_state.act_three
+    if state.npc_menu_from_console is not None:
+        state.npc_menu_from_console = None
+        state.trader_tab = None
+        state.trader_focus = None
+        state.trader_slot_presses.clear()
+        state.rune_menu = None
+        state.blacksmith_forge_open = False
+        state.npc_dialog_position = None
+        state.npc_dialog_floor_index = -1
+        state.npc_dialog_phase = "closed"
+        state.npc_dialog_started_at = 0
+        return
     if state.rune_menu is not None:
         state.rune_menu = None
         state.npc_dialog_position = None
@@ -145,6 +158,14 @@ def continue_npc_dialog(game_state, current_time):
 
 def advance_npc_dialog(game_state, current_time):
     state = game_state.act_three
+    if state.npc_menu_from_console is not None:
+        if state.npc_dialog_floor_index != game_state.floor_index or game_state.player.health <= 0 or game_state.game_won:
+            close_npc_dialog(game_state, current_time)
+        elif state.rune_menu is not None:
+            from acts.act_three.rune_master.runtime import advance_menu
+
+            advance_menu(game_state, current_time)
+        return
     if state.npc_dialog_position is None:
         return
 

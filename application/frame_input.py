@@ -103,7 +103,8 @@ def prepare_frame_input(
         movement_profile,
     )
     world_movement_available = continuous_movement_available and not (
-        current_act == 3 and game_state.sidebar_tab == "stats"
+        (current_act == 3 and game_state.sidebar_tab in ("stats", "journal"))
+        or (current_act == 2 and (game_state.act_two_stats_open or game_state.act_two_journal_open))
     )
     held_event = create_held_movement_event(
         movement_state,

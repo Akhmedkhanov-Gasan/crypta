@@ -20,7 +20,8 @@ def ground_item_input_available(game_state):
 
     return (
         game_state.floor.presentation_act in (1, 2, 3)
-        and not (game_state.floor.presentation_act == 3 and game_state.sidebar_tab == "stats")
+        and not (game_state.floor.presentation_act == 3 and game_state.sidebar_tab in ("stats", "journal"))
+        and not (game_state.floor.presentation_act == 2 and (game_state.act_two_stats_open or game_state.act_two_journal_open))
         and player.health > 0
         and not game_state.dialogue.active
         and not game_state.game_won
@@ -34,6 +35,7 @@ def ground_item_input_available(game_state):
         and not game_state.act_three_transition_open
         and not game_state.act_three_debug_class_selection_open
         and not game_state.upgrade_altar_menu_open
+        and game_state.act_three.npc_menu_from_console is None
         and not player.directional_ability_aiming
         and not player.act_two.fire_bomb_aiming
         and player.act_two.scroll_aiming_kind is None
@@ -114,7 +116,7 @@ class GroundItemInput:
             self.seen_position = position
 
             if (
-                floor.presentation_act != 3
+                floor.presentation_act == 1
                 and len(items) > 1
                 and ground_item_rules(game_state).use_window
             ):
@@ -228,6 +230,9 @@ class GroundItemInput:
             ):
                 return False
 
+            if game_state.floor.presentation_act in (2, 3) and getattr(event, "repeat", False):
+                return True
+
             if movement_input_is_locked(movement_state, current_time):
                 return True
 
@@ -245,7 +250,7 @@ class GroundItemInput:
             movement_state.cancel_consumable_drag()
 
             if (
-                len(items) == 1
+                (len(items) == 1 and game_state.floor.presentation_act == 1)
                 or not ground_item_rules(game_state).use_window
             ):
                 self.selected = 0
@@ -266,12 +271,15 @@ class GroundItemInput:
             return True
 
         act_three = game_state.floor.presentation_act == 3
+        act_two = game_state.floor.presentation_act == 2
         if event.type == pygame.KEYDOWN:
             take_keys = (
-                (pygame.K_g, pygame.K_SPACE)
-                if act_three else (pygame.K_g, pygame.K_RETURN, pygame.K_KP_ENTER)
+                (pygame.K_SPACE, pygame.K_RETURN, pygame.K_KP_ENTER)
+                if act_two or act_three else (pygame.K_g, pygame.K_RETURN, pygame.K_KP_ENTER)
             )
-            if event.key == pygame.K_ESCAPE:
+            if event.key == pygame.K_ESCAPE or (
+                (act_two or act_three) and event.key == pygame.K_g and not getattr(event, "repeat", False)
+            ):
                 self.close(game_state)
             elif act_three and event.key == pygame.K_r:
                 if not getattr(event, "repeat", False):

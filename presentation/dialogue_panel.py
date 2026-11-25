@@ -18,12 +18,6 @@ def _act_one_title_font():
     return resources.load_font(str(FONT_ROOT / "AtkinsonHyperlegible-Bold.ttf"), 24)
 
 
-@lru_cache(maxsize=2)
-def _hint_font(act):
-    path = FONT_ROOT / "Pixelify_Sans/PixelifySans-Regular.ttf" if act == 2 else FONT_ROOT / "AtkinsonHyperlegible-Regular.ttf"
-    return resources.load_font(str(path), 17)
-
-
 def draw_fixed_dialogue(screen, title_font, text_font, speaker, text, opacity=1.0, act=2, visible_characters=None):
     if act == 2:
         from acts.act_two.presentation.dialogue_panel import draw_act_two_dialogue
@@ -55,7 +49,5 @@ def draw_fixed_dialogue(screen, title_font, text_font, speaker, text, opacity=1.
         panel.blit(rendered, (round((width - text_font.size(line)[0]) / 2), y))
         remaining = max(0, remaining - len(line) - 1)
         y += line_height
-    hint = _hint_font(act).render("SPACE / CLICK - SKIP TEXT", True, (164, 160, 153))
-    panel.blit(hint, hint.get_rect(midbottom=(width // 2, height - 12)))
     panel.set_alpha(round(255 * max(0, min(1, opacity))))
     screen.blit(panel, panel.get_rect(midbottom=(screen.get_width() // 2, screen.get_height() - 22)))

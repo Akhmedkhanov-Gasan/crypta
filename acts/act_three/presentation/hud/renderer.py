@@ -4,6 +4,7 @@ from acts.act_three.abilities.paladin_runes import effective_dodge_chance
 import pygame
 from acts.act_three.presentation.hud.belt_art import draw_belt_frame, draw_belt_abilities, draw_belt_image
 from acts.act_three.presentation.hud.status_effects import draw_player_statuses
+from acts.act_three.presentation.hud.slot_highlight import draw_slot_highlight
 
 from acts.act_three.equipment import equipment_rank_bonus
 from acts.act_three.items.use import HEALING_ITEMS
@@ -32,6 +33,8 @@ from acts.act_two.presentation.hud_tooltips import (
 )
 from acts.act_three.presentation.hud.geometry import (
     get_character_panel_focus_rectangles,
+    get_act_three_journal_scroll_ratio,
+    get_act_three_journal_scrollbar_rectangles,
     resolve_character_panel_focus,
 )
 from acts.act_three.presentation.hud.layout import (
@@ -44,7 +47,8 @@ from acts.act_three.presentation.hud.tooltips import (
 )
 from game.progression import experience_required_for_level
 from presentation.text import get_event_color, wrap_text
-from presentation.tooltips import TooltipContent, draw_tooltip
+from presentation.tooltips import TooltipContent
+from presentation.tooltips.dark import draw_tooltip
 from presentation.figma_ui import (
     draw_figma_rectangle,
     draw_figma_text,
@@ -534,8 +538,7 @@ def _draw_consumables(
         is_drag_source = moving and drag.from_belt and drag.slot == index
         if moving and not is_drag_source and index < len(stored_items):
             if drag.from_belt or drag.item in TRADER_ITEMS:
-                color = (195, 151, 88) if is_hovered else (113, 86, 57)
-                pygame.draw.rect(screen, color, hitbox, width=2 if is_hovered else 1, border_radius=4)
+                draw_slot_highlight(screen, hitbox, scale=assets.get("hud_render_scale", 1.0), focused=is_hovered)
 
         if item is None or is_drag_source:
             continue
@@ -544,12 +547,9 @@ def _draw_consumables(
             hovered_item = item
 
         if not moving and (is_hovered or player.act_three.consumable_aim_slot == index):
-            pygame.draw.rect(
-                screen,
-                (181, 145, 81),
-                hitbox,
-                width=1,
-                border_radius=4,
+            draw_slot_highlight(
+                screen, hitbox, scale=assets.get("hud_render_scale", 1.0),
+                focused=player.act_three.consumable_aim_slot == index,
             )
 
         icon = belt_sprites.get(item)
@@ -731,6 +731,9 @@ def _draw_character_panel(
     equipment = panel["equipment"]
     for track_name in ("weapon", "armor"):
         draw_panel_row_background(screen, equipment[track_name])
+    for section in ("attributes", "combat_stats"):
+        for row in panel[section]["rows"].values():
+            draw_panel_row_background(screen, row)
 
     confirm_state = "active" if pending_points > 0 else "deactive"
     _blit_asset(
@@ -770,7 +773,6 @@ def _draw_character_panel(
     ranks = preview_player.attribute_ranks
 
     for name, row in panel["attributes"]["rows"].items():
-        draw_panel_row_background(screen, row)
         if player.act_three.pending_attribute_upgrades.get(name, 0) > 0:
             draw_panel_image(screen, assets, "minus_icon", row.get("minus_icon"))
         if can_queue_act_three_attribute_upgrade(player, name):
@@ -860,7 +862,6 @@ def _draw_character_panel(
     }
 
     for name, row in panel["combat_stats"]["rows"].items():
-        draw_panel_row_background(screen, row)
         draw_figma_text(
             screen,
             row["label"],
@@ -931,13 +932,10 @@ def _draw_character_panel(
                 item.name, (item.description, "Shift: drop in front."), (181, 145, 81),
             )
 
-    pygame.draw.rect(
-        screen,
-        (214, 178, 106),
-        rectangles[focus],
-        width=max(1, round(assets.get("hud_render_scale", 1.0))),
-        border_radius=3,
-    )
+    if keyboard_focus and (focus_parts[0] in ("belt", "confirm") or len(focus_parts) == 3):
+        draw_slot_highlight(
+            screen, rectangles[focus], scale=assets.get("hud_render_scale", 1.0), focused=True,
+        )
 
     if tooltip_content is not None:
         draw_tooltip(
@@ -1110,23 +1108,7 @@ def _draw_journal_panel(
         content_height - viewport_rectangle.height,
     )
 
-    maximum_log_offset = max(
-        0,
-        len(game_state.combat_log) - 4,
-    )
-
-    if maximum_log_offset == 0:
-        scroll_ratio = 1.0
-    else:
-        scroll_ratio = 1.0 - (
-            game_state.log_scroll_offset
-            / maximum_log_offset
-        )
-
-    scroll_ratio = max(
-        0.0,
-        min(1.0, scroll_ratio),
-    )
+    scroll_ratio = get_act_three_journal_scroll_ratio(game_state)
 
     content_scroll = round(
         maximum_scroll * scroll_ratio
@@ -1143,29 +1125,7 @@ def _draw_journal_panel(
         ),
     )
 
-    track_rectangle = get_layout_rect(
-        layout,
-        "journal_panel",
-        "scrollbar",
-        "track",
-    )
-    thumb_rectangle = get_layout_rect(
-        layout,
-        "journal_panel",
-        "scrollbar",
-        "thumb",
-    )
-
-    thumb_travel = max(
-        0,
-        track_rectangle.height
-        - thumb_rectangle.height,
-    )
-
-    thumb_rectangle.y = (
-        track_rectangle.y
-        + round(thumb_travel * scroll_ratio)
-    )
+    _, thumb_rectangle = get_act_three_journal_scrollbar_rectangles(layout, scroll_ratio)
 
     _blit_asset(
         screen,

@@ -25,7 +25,10 @@ NEXT_PHASE = {
 
 def open_menu(game_state, current_time):
     game_state.act_three.rune_menu = RuneMenuState(
-        abilities=available_abilities(game_state.player),
+        abilities=available_abilities(
+            game_state.player,
+            ignore_access=game_state.act_three.npc_menu_from_console == "rune_master",
+        ),
         started_at=current_time, opened_at=current_time,
     )
 
@@ -48,7 +51,10 @@ def advance_menu(game_state, current_time):
             if menu.page == "choices" and menu.pending_page == "abilities" and menu.confirming_choice:
                 choice = menu.choices[menu.selected_choice]
                 if apply_rune(game_state, choice, current_time):
-                    menu.abilities = available_abilities(game_state.player)
+                    menu.abilities = available_abilities(
+                        game_state.player,
+                        ignore_access=game_state.act_three.npc_menu_from_console == "rune_master",
+                    )
                 menu.confirming_choice = False
             menu.page = menu.pending_page
         if menu.phase == "idle":

@@ -64,7 +64,5 @@ def draw_dialogue_panel(screen, fonts, speaker_id, speaker_name=None, text="", v
     name = speaker_name if speaker_name is not None else (speaker_id or "").replace("_", " ").upper()
     _draw_dialogue_text(panel, layout["speaker_name"], name, color=SPEAKER_COLORS.get(speaker_id))
     _draw_dialogue_text(panel, layout["dialogue_text"], text, visible_characters)
-    if layout.get("skip_text") is not None:
-        _draw_dialogue_text(panel, layout["skip_text"], close_label or "SPACE / CLICK - SKIP TEXT", color=(142, 139, 133))
     panel.set_alpha(round(255 * max(0, min(1, opacity))))
     screen.blit(panel, (0, 0))

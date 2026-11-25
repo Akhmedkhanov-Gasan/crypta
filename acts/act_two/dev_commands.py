@@ -1,3 +1,15 @@
+def prepare_class_selection_debug_state(game_state, current_time, class_selection_ready_ms):
+    from acts.act_one.dev_commands import prepare_act_one_awakening_debug_state
+    from acts.act_two.class_selection import advance_act_two_awakening
+    from acts.act_two.presentation.awakening_timing import AWAKENING_DIALOGUE
+
+    prepare_act_one_awakening_debug_state(game_state, current_time)
+    game_state.dialogue.track = "act_two_awakening"
+    game_state.dialogue.completed_until = AWAKENING_DIALOGUE[-1][1]
+    game_state.class_transition_started_at = current_time - class_selection_ready_ms - 520
+    advance_act_two_awakening(game_state, current_time)
+
+
 ACT_TWO_CONSOLE_HELP = (
     "seal     - give the trader's guild seal (Act II)",
     "rune     - open rune selection (Act II)",

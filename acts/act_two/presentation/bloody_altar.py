@@ -3,6 +3,8 @@ from pathlib import Path
 
 import pygame
 import resource_store as resources
+from application.directional_input import CHORD_MOVEMENT_KEYS, movement_direction_for_key
+from presentation.directional_focus import move_focus
 
 from acts.act_two.bloody_altar import (
     BLOODY_PACT_ORDER,
@@ -63,9 +65,25 @@ def handle_bloody_altar_event(
     layout,
     mouse_position,
 ):
+    rectangles = get_bloody_altar_option_rectangles(layout)
+    if game_state.bloody_altar_pending_id not in rectangles:
+        available = [name for name in rectangles if bloody_pact_is_available(game_state.player, name)]
+        if available:
+            select_bloody_pact(game_state, available[0])
     if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_ESCAPE:
             cancel_bloody_altar(game_state)
+        elif event.key in CHORD_MOVEMENT_KEYS and game_state.bloody_altar_pending_id is not None:
+            available_rectangles = {
+                name: rectangle for name, rectangle in rectangles.items()
+                if bloody_pact_is_available(game_state.player, name)
+            }
+            if available_rectangles:
+                focus = game_state.bloody_altar_pending_id
+                if focus not in available_rectangles:
+                    focus = next(iter(available_rectangles))
+                selected = move_focus(available_rectangles, focus, movement_direction_for_key(event.key))
+                select_bloody_pact(game_state, selected)
         elif event.key in (
             pygame.K_1,
             pygame.K_2,
@@ -76,7 +94,7 @@ def handle_bloody_altar_event(
                 game_state,
                 BLOODY_PACT_ORDER[event.key - pygame.K_1],
             )
-        elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+        elif event.key in (pygame.K_SPACE, pygame.K_RETURN, pygame.K_KP_ENTER) and not getattr(event, "repeat", False):
             confirm_bloody_pact(game_state)
         return
 

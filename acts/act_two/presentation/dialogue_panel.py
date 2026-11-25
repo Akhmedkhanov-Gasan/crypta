@@ -53,8 +53,6 @@ def draw_act_two_dialogue(screen, speaker, text, opacity=1.0, visible_characters
     panel.blit(background, figma_rect(layout["dialog_background"]["rect"]))
     draw_dialogue_text(panel, layout["speaker_name"], speaker)
     draw_dialogue_text(panel, layout["dialogue_text"], text, visible_characters)
-    if layout.get("skip_text") is not None:
-        draw_dialogue_text(panel, layout["skip_text"], "SPACE / CLICK - SKIP TEXT")
     panel.set_alpha(round(255 * max(0, min(1, opacity))))
     screen.blit(panel, (0, 0))
     return True

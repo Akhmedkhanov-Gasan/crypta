@@ -3,6 +3,7 @@ import pygame
 from acts.act_three.items.inventory import ORE_ITEM_NAMES, get_inventory_slots
 from acts.act_three.items.special import SPECIAL_ITEM_NAMES, SPECIAL_ITEM_DESCRIPTIONS
 from acts.act_three.presentation.hud.panel_art import draw_panel_image
+from acts.act_three.presentation.hud.slot_highlight import draw_slot_highlight
 from acts.act_three.trader_catalog import TRADER_ITEMS, TRADER_SELL_ITEMS
 from presentation.figma_ui import figma_rect
 from presentation.tooltips import TooltipContent
@@ -30,6 +31,7 @@ def draw_inventory(screen, player, assets, panel, mouse_position, focused_slot=N
     hovered_item = None
     drag = player.act_three.item_drag
     moving = drag is not None and drag.moving
+    scale = assets.get("hud_render_scale", 1.0)
 
     for index, name in enumerate(sorted(slots)):
         slot = slots[name]
@@ -44,9 +46,10 @@ def draw_inventory(screen, player, assets, panel, mouse_position, focused_slot=N
         hovered = mouse_position is not None and hitbox.collidepoint(mouse_position)
         if moving and index < len(stored_items) and (not drag.from_belt or item is None):
             if hovered or (drag.from_belt and item is None):
-                color = (195, 151, 88) if hovered else (113, 86, 57)
-                pygame.draw.rect(screen, color, hitbox, width=2 if hovered else 1)
+                draw_slot_highlight(screen, hitbox, scale=scale, focused=hovered)
         if item is None:
+            if (hovered or name == focused_slot) and not moving:
+                draw_slot_highlight(screen, hitbox, scale=scale, focused=name == focused_slot)
             continue
 
         rectangle = figma_rect(slot["icon"])
@@ -61,7 +64,7 @@ def draw_inventory(screen, player, assets, panel, mouse_position, focused_slot=N
 
         if (hovered or name == focused_slot) and not moving:
             hovered_item = item
-            pygame.draw.rect(screen, (181, 145, 81), hitbox, width=1)
+            draw_slot_highlight(screen, hitbox, scale=scale, focused=name == focused_slot)
 
     if moving:
         return None

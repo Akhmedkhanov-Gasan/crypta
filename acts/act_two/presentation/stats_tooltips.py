@@ -1,8 +1,7 @@
-import pygame
-
 from game.attributes import get_attribute_definition
 from presentation.figma_ui import figma_rect
 from presentation.tooltips import TooltipContent
+from presentation.tooltips.highlights import draw_selection_highlight
 
 
 _ATTRIBUTE_ACCENTS = {
@@ -55,6 +54,11 @@ _CLASS_ATTRIBUTE_LINES = {
 
 
 def stat_row_rectangle(row_layout):
+    background = row_layout.get("background")
+    if background is not None:
+        return figma_rect(background["rect"])
+    if "rect" in row_layout:
+        return figma_rect(row_layout["rect"])
     rectangles = [
         figma_rect(row_layout["label"]["rect"]),
         figma_rect(row_layout["value"]["rect"]),
@@ -100,25 +104,9 @@ def draw_stat_row_highlight(
     accent,
 ):
     rectangle = stat_row_rectangle(row_layout)
-
-    highlight = pygame.Surface(
-        rectangle.size,
-        pygame.SRCALPHA,
-    )
-    pygame.draw.rect(
-        highlight,
-        (*accent, 34),
-        highlight.get_rect(),
-        border_radius=4,
-    )
-    pygame.draw.rect(
-        highlight,
-        (*accent, 135),
-        highlight.get_rect(),
-        width=1,
-        border_radius=4,
-    )
-    screen.blit(highlight, rectangle)
+    background = row_layout.get("background") or {}
+    radius = max(0, round(background.get("corner_radius", 3)))
+    draw_selection_highlight(screen, rectangle, radius=radius)
 
 
 def draw_attribute_row_highlight(

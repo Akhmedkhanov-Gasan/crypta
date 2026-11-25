@@ -1,5 +1,3 @@
-import pygame
-
 from acts.act_three.equipment import equipment_rank_bonus
 
 from acts.act_three.abilities import (
@@ -15,6 +13,7 @@ from acts.act_two.presentation.stats_tooltips import (
 )
 from presentation.figma_ui import figma_rect
 from presentation.tooltips import TooltipContent
+from presentation.tooltips.highlights import draw_selection_highlight
 
 
 _PANEL_ACCENTS = {
@@ -69,30 +68,7 @@ def _draw_hitbox_highlight(
     accent,
 ):
     rectangle = figma_rect(hitbox)
-
-    highlight = pygame.Surface(
-        rectangle.size,
-        pygame.SRCALPHA,
-    )
-
-    pygame.draw.rect(
-        highlight,
-        (*accent, 30),
-        highlight.get_rect(),
-        border_radius=4,
-    )
-    pygame.draw.rect(
-        highlight,
-        (*accent, 135),
-        highlight.get_rect(),
-        width=1,
-        border_radius=4,
-    )
-
-    screen.blit(
-        highlight,
-        rectangle,
-    )
+    draw_selection_highlight(screen, rectangle)
 
 
 def get_character_panel_hover(

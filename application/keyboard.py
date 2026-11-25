@@ -103,7 +103,7 @@ class GameplayKeyboardController:
             and not getattr(event, "paladin_sacred_ground_turn", False)
             and not getattr(event, "summoner_turn_commit", False)
             and not getattr(event, "ability_turn_commit", False)
-            and event.key not in (pygame.K_F11, pygame.K_F1, pygame.K_F2, pygame.K_F3, pygame.K_F4)
+            and event.key not in (pygame.K_F11, pygame.K_F1, pygame.K_F2, pygame.K_F3)
             and not game_state.act_three_transition_open
             and not game_state.subclass_selection_open
             and not game_state.act_three_debug_class_selection_open
@@ -141,7 +141,6 @@ class GameplayKeyboardController:
                 pygame.K_F1,
                 pygame.K_F2,
                 pygame.K_F3,
-                pygame.K_F4,
                 pygame.K_BACKQUOTE,
             )
             and not any(

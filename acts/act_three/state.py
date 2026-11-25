@@ -322,6 +322,7 @@ class ActThreeSessionState:
     awakening: AwakeningScene | None = None
     barrage_turn: ArcherBarrageTurnState | None = None
     npc_dialog_position: tuple[int, int] | None = None
+    npc_menu_from_console: str | None = None
     npc_dialog_floor_index: int = -1
     npc_dialog_phase: str = "closed"
     npc_dialog_started_at: int = 0
@@ -340,6 +341,9 @@ class ActThreeSessionState:
     sidebar_tab: str = "closed"
     character_panel_focus: str | None = None
     character_panel_keyboard_focus: bool = False
+    journal_scroll_ratio: float | None = None
+    journal_dragging: bool = False
+    journal_drag_offset: float = 0.0
     log_scroll_offset: int = 0
     enemy_stun_visuals: dict[int, int] = field(
         default_factory=dict,

@@ -82,7 +82,7 @@ class ApplicationEventGate:
             and not (
                 event.type == pygame.KEYDOWN
                 and event.key
-                in (pygame.K_F1, pygame.K_F2, pygame.K_F3, pygame.K_F4)
+                in (pygame.K_F1, pygame.K_F2, pygame.K_F3)
             )
         ):
             return EventGateResult(True, movement_profile)

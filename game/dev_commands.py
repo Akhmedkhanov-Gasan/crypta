@@ -117,19 +117,19 @@ def execute_console_command(
     if result is not None:
         return result
 
-    result = execute_act_two_console_command(
-        game_state,
-        parts,
-        close_console,
-    )
-    if result is not None:
-        return result
-
     result = execute_act_three_console_command(
         game_state,
         parts,
         close_console,
         request_debug_jump,
+    )
+    if result is not None:
+        return result
+
+    result = execute_act_two_console_command(
+        game_state,
+        parts,
+        close_console,
     )
     if result is not None:
         return result

@@ -1309,7 +1309,7 @@
             "rect": {
               "x": 1031,
               "y": 217,
-              "width": 58,
+              "width": 77,
               "height": 14
             },
             "label": {
@@ -1443,13 +1443,15 @@
               "y": 219,
               "width": 11,
               "height": 12
-            }
+            },
+            "minus_icon": null,
+            "plus_icon": null
           },
           "instinct": {
             "rect": {
               "x": 1031,
               "y": 239,
-              "width": 62,
+              "width": 77,
               "height": 14
             },
             "label": {
@@ -1583,7 +1585,9 @@
               "y": 241,
               "width": 11,
               "height": 12
-            }
+            },
+            "minus_icon": null,
+            "plus_icon": null
           },
           "will": {
             "rect": {
@@ -1723,13 +1727,15 @@
               "y": 262,
               "width": 11,
               "height": 12
-            }
+            },
+            "minus_icon": null,
+            "plus_icon": null
           },
           "fortitude": {
             "rect": {
               "x": 1031,
               "y": 281,
-              "width": 47,
+              "width": 77,
               "height": 14
             },
             "label": {
@@ -1863,7 +1869,9 @@
               "y": 283,
               "width": 11,
               "height": 12
-            }
+            },
+            "minus_icon": null,
+            "plus_icon": null
           }
         }
       },

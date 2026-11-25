@@ -85,19 +85,19 @@ def draw_pickup_hint(
     )
 
     text = font.render(
-        "[G] Open pile" if len(items) > 1 else "[G] Pick up",
+        "[G] Search items",
         True,
-        (255, 240, 204),
+        (201, 201, 201),
     )
 
     panel = pygame.Surface(
         (text.get_width() + 20, text.get_height() + 12),
         pygame.SRCALPHA,
     )
-    panel.fill((15, 13, 18, 230))
+    panel.fill((15, 15, 15, 245))
     pygame.draw.rect(
         panel,
-        (173, 143, 92),
+        (80, 80, 80),
         panel.get_rect(),
         width=1,
         border_radius=4,

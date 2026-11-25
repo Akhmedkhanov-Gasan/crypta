@@ -1,6 +1,9 @@
 import pygame
 
 from acts.mage_targeting import post_mage_aim_toggle
+from acts.act_two.input.character_panel import handle_panel_key, set_panel_open
+from application.directional_input import CHORD_MOVEMENT_KEYS, movement_direction_for_key
+from presentation.directional_focus import move_focus
 from presentation.figma_ui import figma_rect
 
 from game.state import GameState
@@ -48,6 +51,25 @@ class ActTwoInterfaceInput:
         self.bloody_altar_layout = bloody_altar_layout
 
     def _handle_trade(self, event, game_state, input_state, sounds, mouse_position):
+        state = game_state.player.act_two
+        rectangles = get_act_two_trade_buy_rectangles(self.trade_layout)
+        if state.trade_focus not in rectangles:
+            state.trade_focus = next(iter(rectangles), None)
+            state.trade_keyboard_focus = True
+        input_state.reset_held_movement()
+        input_state.cancel_auto_move()
+        if event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN):
+            state.trade_keyboard_focus = False
+        if event.type == pygame.KEYDOWN and state.trade_focus is not None:
+            if event.key in CHORD_MOVEMENT_KEYS:
+                state.trade_keyboard_focus = True
+                state.trade_focus = move_focus(rectangles, state.trade_focus, movement_direction_for_key(event.key))
+                return True
+            if event.key in (pygame.K_SPACE, pygame.K_RETURN, pygame.K_KP_ENTER):
+                state.trade_keyboard_focus = True
+                if not getattr(event, "repeat", False) and buy_trader_item(game_state, state.trade_focus):
+                    sounds.play_ui_sound("gold_pickup")
+                return True
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             game_state.trade_screen_open = False
             input_state.reset_held_movement()
@@ -72,6 +94,8 @@ class ActTwoInterfaceInput:
                     ),
                     None,
                 )
+                if clicked_slot is not None:
+                    state.trade_focus = clicked_slot
                 if clicked_slot is not None and buy_trader_item(
                     game_state,
                     clicked_slot,
@@ -82,16 +106,24 @@ class ActTwoInterfaceInput:
     @staticmethod
     def _handle_rune_selection(event, game_state, mouse_position):
         available_runes = runes_for_class(game_state.player.player_class)
+        rectangles = get_rune_selection_card_rectangles(game_state.player.player_class)
+        if game_state.rune_selection_pending_id not in rectangles:
+            game_state.rune_selection_pending_id = next(iter(rectangles), None)
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 cancel_rune_selection(game_state)
+            elif event.key in CHORD_MOVEMENT_KEYS and game_state.rune_selection_pending_id is not None:
+                game_state.rune_selection_pending_id = move_focus(
+                    rectangles, game_state.rune_selection_pending_id, movement_direction_for_key(event.key),
+                )
             elif event.key in (pygame.K_1, pygame.K_2, pygame.K_3):
                 rune_index = event.key - pygame.K_1
                 if rune_index < len(available_runes):
                     game_state.rune_selection_pending_id = available_runes[rune_index].id
             elif (
-                event.key in (pygame.K_RETURN, pygame.K_KP_ENTER)
+                event.key in (pygame.K_SPACE, pygame.K_RETURN, pygame.K_KP_ENTER)
                 and game_state.rune_selection_pending_id is not None
+                and not getattr(event, "repeat", False)
             ):
                 select_rune(game_state, game_state.rune_selection_pending_id)
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
@@ -270,17 +302,19 @@ class ActTwoInterfaceInput:
             None,
         )
         if clicked_button == "stats":
-            game_state.act_two_stats_open = not game_state.act_two_stats_open
-            game_state.act_two_journal_open = False
+            set_panel_open(game_state, not game_state.act_two_stats_open)
+            game_state.player.act_two.interface_keyboard_focus = False
             return True
         if clicked_button == "journal":
-            game_state.act_two_journal_open = not game_state.act_two_journal_open
+            opened = not game_state.act_two_journal_open
+            set_panel_open(game_state, False)
+            game_state.act_two_journal_open = opened
             if game_state.act_two_journal_open:
                 game_state.act_two_journal_scroll = 1.0
             game_state.act_two_stats_open = False
             return True
         if clicked_button == "settings":
-            pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_ESCAPE))
+            pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_ESCAPE, open_pause_menu=True))
             return True
         return False
 
@@ -415,6 +449,25 @@ class ActTwoInterfaceInput:
             )
         if game_state.rune_selection_open:
             return self._handle_rune_selection(event, game_state, mouse_position)
+        if (
+            game_state.player.health > 0
+            and not game_state.game_won
+            and game_state.floor_transition_started_at < 0
+            and not game_state.class_selection_open
+            and not game_state.upgrade_screen_open
+        ):
+            if event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN):
+                game_state.player.act_two.interface_keyboard_focus = False
+            if (
+                event.type == pygame.KEYDOWN
+                and not getattr(event, "open_pause_menu", False)
+                and event.key not in (pygame.K_F11, pygame.K_F1, pygame.K_F2, pygame.K_F3, pygame.K_BACKQUOTE)
+                and handle_panel_key(event, game_state, self.hud_layout)
+            ):
+                input_state.reset_held_movement()
+                input_state.cancel_auto_move()
+                input_state.cancel_consumable_drag()
+                return True
         return (
             self._handle_stats(event, game_state, mouse_position)
             or self._handle_dragged_consumable(

@@ -13,6 +13,8 @@ def dialogue_active(game_state):
 
 def advance_dialogue(game_state, current_time):
     queue = game_state.act_three.dialogue_queue
+    if game_state.act_three.npc_menu_from_console is not None:
+        return
     if not queue or game_state.player.health <= 0 or game_state.floor_transition_started_at >= 0:
         return
     line = queue[0]

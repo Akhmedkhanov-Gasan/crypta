@@ -21,7 +21,7 @@ def icon_paths(owner, identifier, fallback=None):
     return paths + ((str(fallback),) if fallback is not None else ())
 
 
-def available_abilities(player):
+def available_abilities(player, *, ignore_access=False):
     from acts.act_three.presentation.ability_assets import ACT_THREE_ABILITY_ICON_PATHS, ability_icon_key
 
     subclass = get_subclass_definition(player.subclass)
@@ -32,7 +32,7 @@ def available_abilities(player):
         ability = subclass.abilities.get(slot)
         if ability is None or not is_ability_slot_unlocked(player, slot):
             continue
-        if not can_modify_rune(player, slot):
+        if not ignore_access and not can_modify_rune(player, slot):
             continue
         rune = RUNES_BY_ID.get(player.selected_rune_id) if ability.inherited else None
         if rune is not None and rune.player_class != player.player_class:

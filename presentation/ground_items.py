@@ -6,21 +6,24 @@ from acts.ground_items import (
 )
 
 
-def ground_item_window_layout(size, count, selected, *, act_three=False):
-    width = min(520 if act_three else 480, size[0] - 32)
-    row_spacing = 66 if act_three else 42
-    available_rows = max(1, (size[1] - 160) // row_spacing)
+def ground_item_window_layout(size, count, selected, *, act_three=False, scale=1.0):
+    def px(value):
+        return max(1, round(value * scale))
+
+    width = min(px(520 if act_three else 480), size[0] - px(32))
+    row_spacing = px(66 if act_three else 42)
+    available_rows = max(1, (size[1] - px(160)) // row_spacing)
     row_count = min(6 if act_three else 8, available_rows, max(1, count))
-    height = 116 + row_count * row_spacing
+    height = px(116) + row_count * row_spacing
 
     panel = pygame.Rect(0, 0, width, height)
     panel.center = (size[0] // 2, size[1] // 2)
 
     close_button = pygame.Rect(
-        panel.right - 42,
-        panel.top + 12,
-        28,
-        28,
+        panel.right - px(42),
+        panel.top + px(12),
+        px(28),
+        px(28),
     )
 
     selected = max(0, min(selected, max(0, count - 1)))
@@ -30,10 +33,10 @@ def ground_item_window_layout(size, count, selected, *, act_three=False):
         (
             index,
             pygame.Rect(
-                panel.left + 16,
-                panel.top + 54 + row * row_spacing,
-                panel.width - 32,
-                row_spacing - 4,
+                panel.left + px(16),
+                panel.top + px(54) + row * row_spacing,
+                panel.width - px(32),
+                row_spacing - px(4),
             ),
         )
         for row, index in enumerate(
@@ -98,6 +101,8 @@ def draw_ground_item_window(
     sprites,
     fonts,
     current_time,
+    *,
+    scale=1.0,
 ):
     if not window.is_open:
         return
@@ -113,7 +118,20 @@ def draw_ground_item_window(
         len(items),
         selected,
         act_three=act_three,
+        scale=scale,
     )
+
+    if game_state.floor.presentation_act == 2:
+        from acts.act_two.presentation.items.loot_window import draw_loot_window
+
+        draw_loot_window(screen, items, selected, panel, close_button, rows, sprites, fonts)
+        return
+
+    if act_three:
+        from acts.act_three.presentation.items.loot_window import draw_loot_window
+
+        draw_loot_window(screen, items, selected, panel, close_button, rows, sprites, scale=scale)
+        return
 
     shade = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
     shade.fill((0, 0, 0, 130))
@@ -166,15 +184,8 @@ def draw_ground_item_window(
         )
 
         sprite = sprites[item.sprite_name]
-        if act_three:
-            icon_box = pygame.Rect(rect.left + 8, rect.centery - 26, 52, 52)
-            pygame.draw.rect(screen, (22, 18, 23), icon_box, border_radius=4)
-            pygame.draw.rect(screen, (153, 126, 83), icon_box, width=1, border_radius=4)
-            icon_rect = sprite.get_rect().fit(icon_box.inflate(-4, -4))
-            screen.blit(pygame.transform.smoothscale(sprite, icon_rect.size), icon_rect)
-        else:
-            icon = pygame.transform.scale(sprite, (28, 28))
-            screen.blit(icon, (rect.left + 6, rect.top + 5))
+        icon = pygame.transform.scale(sprite, (28, 28))
+        screen.blit(icon, (rect.left + 6, rect.top + 5))
 
         name = fonts["text"].render(
             item.name,
@@ -184,13 +195,13 @@ def draw_ground_item_window(
         screen.blit(
             name,
             (
-                rect.left + (72 if act_three else 44),
+                rect.left + 44,
                 rect.centery - name.get_height() // 2,
             ),
         )
 
-    controls_font = fonts["sidebar_log" if act_three else "log"]
-    take_keys = "Space / G / click: take   R: all" if act_three else "G / Enter / click: take"
+    controls_font = fonts["log"]
+    take_keys = "G / Enter / click: take"
     controls = controls_font.render(
         f"WASD / arrows: select   {take_keys}",
         True,

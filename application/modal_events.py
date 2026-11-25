@@ -88,6 +88,7 @@ class ApplicationModalController:
 
         if event.type == pygame.WINDOWFOCUSLOST:
             game_state.player.act_three.item_drag = None
+            game_state.act_three.journal_dragging = False
             if game_state.act_three.rune_menu is not None:
                 game_state.act_three.rune_menu.pressed = None
             self.movement_state.reset_held_movement()

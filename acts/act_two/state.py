@@ -200,6 +200,10 @@ class RuneRoomState:
 
 @dataclass
 class ActTwoPlayerState:
+    interface_focus: str | None = None
+    interface_keyboard_focus: bool = False
+    trade_focus: str | None = None
+    trade_keyboard_focus: bool = False
     death_score_open: bool = False
     death_dialogue_skipped: bool = False
     death_input_unlock_at: int = 0

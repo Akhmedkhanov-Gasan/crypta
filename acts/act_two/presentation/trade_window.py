@@ -91,6 +91,8 @@ def draw_act_two_trade_window(
     layout,
     fonts,
     mouse_position,
+    *,
+    keyboard_focus=None,
 ):
     background_rectangle = figma_rect(
         layout["background"]
@@ -126,10 +128,8 @@ def draw_act_two_trade_window(
         )
 
         hovered = (
-            mouse_position is not None
-            and buy_rectangle.collidepoint(
-                mouse_position
-            )
+            slot_name == keyboard_focus
+            or (mouse_position is not None and keyboard_focus is None and buy_rectangle.collidepoint(mouse_position))
         )
 
         if hovered:

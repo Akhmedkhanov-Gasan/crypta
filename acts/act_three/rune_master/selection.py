@@ -7,7 +7,8 @@ from acts.act_three.rune_master.access import can_modify_rune
 
 def apply_rune(game_state, card, current_time=None):
     player = game_state.player
-    if card.placeholder or not is_ability_slot_unlocked(player, card.slot) or not can_modify_rune(player, card.slot):
+    console_access = game_state.act_three.npc_menu_from_console == "rune_master"
+    if card.placeholder or not is_ability_slot_unlocked(player, card.slot) or (not console_access and not can_modify_rune(player, card.slot)):
         return False
     if card.slot == "f" and player.act_three.warlock_eternal_bound and card.id != "rune_of_eternal_form":
         add_log_message(game_state.combat_log, "Eternal Form is bound for the rest of this run.", category="warning")

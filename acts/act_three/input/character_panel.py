@@ -1,6 +1,7 @@
 import pygame
 
 from acts.act_three.input.consumables import BELT_SLOTS_BY_KEY
+from acts.act_three.input.journal import handle_journal_key
 from acts.mage_targeting import mage_aiming
 from acts.act_three.items.discard import discard_item
 from acts.act_three.items.inventory import assign_inventory_item_to_belt
@@ -40,8 +41,12 @@ def set_sidebar_tab(game_state, tab):
         clear_act_three_attribute_upgrades(game_state.player)
         game_state.player.act_three.item_drag = None
     game_state.sidebar_tab = tab
+    game_state.act_three.journal_dragging = False
+    game_state.act_three.journal_drag_offset = 0.0
     game_state.act_three.character_panel_focus = None
     game_state.act_three.character_panel_keyboard_focus = tab == "stats"
+    if tab == "journal":
+        game_state.act_three.journal_scroll_ratio = 1.0
 
 
 def confirm_character_panel_upgrades(game_state):
@@ -58,6 +63,8 @@ def activate_character_attribute(game_state, name, action):
 
 
 def handle_character_panel_key(event, game_state, can_open):
+    if handle_journal_key(event, game_state, can_open):
+        return True
     state = game_state.act_three
     panel_open = game_state.sidebar_tab == "stats"
     if event.key == pygame.K_TAB:

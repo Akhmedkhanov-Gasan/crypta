@@ -12,7 +12,6 @@ from acts.act_three.awakening.selection import draw_selection
 from application.frame_overlays import draw_frame_overlays
 from application.ground_items import ground_item_input_available
 from presentation.display import game_viewport, present_game, window_to_game_position
-from presentation.ground_items import draw_ground_item_window
 from settings import BACKGROUND_COLOR, FPS
 
 
@@ -112,15 +111,7 @@ class GameplayRenderer:
                 mouse_position,
                 enabled=continuous_movement_available,
             )
-            if ground_item_input_available(game_state):
-                draw_ground_item_window(
-                    overlay_target,
-                    game_state,
-                    ground_item_window,
-                    self.act_three_gameplay_assets["ground_item_window_sprites"],
-                    self.act_three_fonts,
-                    current_time,
-                )
+            if ground_item_input_available(game_state) and not ground_item_window.is_open:
                 draw_pickup_feedback(
                     overlay_target,
                     game_state,
@@ -183,6 +174,13 @@ class GameplayRenderer:
 
                 native_overlay = lambda target: draw_native_rune_menu(
                     target, game_state, self.act_three_gameplay_assets, current_time, mouse_position,
+                )
+            elif ground_item_window.is_open and ground_item_input_available(game_state) and not self.dev_console.is_open:
+                from acts.act_three.presentation.items.loot_window import draw_native_loot_overlay
+
+                native_overlay = lambda target: draw_native_loot_overlay(
+                    target, game_state, ground_item_window,
+                    self.act_three_gameplay_assets, self.act_three_fonts, current_time,
                 )
             self.native_act_three_hud.present(
                 screen, game_surface, overlay_target, game_state,
