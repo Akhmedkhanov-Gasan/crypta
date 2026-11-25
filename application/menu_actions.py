@@ -48,7 +48,7 @@ def _stop_run_audio(
         act_two_audio_runtime.reset()
     else:
         act_two_audio_runtime.music_attempted = False
-    act_three_audio_runtime.music_attempted = False
+    act_three_audio_runtime.reset()
     return MenuActionState(
         game_state=state.game_state,
         act_one_camera=state.act_one_camera,
@@ -180,7 +180,7 @@ def handle_application_menu_action(
             act_three_audio_runtime.music_attempted
             and pygame.mixer.get_init() is not None
         ):
-            act_three_sounds.set_music_volume(menu_state.music_volume)
+            act_three_audio_runtime.set_music_volume(menu_state.music_volume)
         elif (
             state.act_one_music_attempted
             or menu_runtime.music_playing

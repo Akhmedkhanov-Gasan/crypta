@@ -9,9 +9,9 @@ from game.combat_log import add_log_message
 from presentation.layout import MUSIC_ROOT
 
 
-ACT_ONE_MENU_MUSIC_PATH = MUSIC_ROOT / "act_1_menu.mp3"
-ACT_ONE_MUSIC_PATH = MUSIC_ROOT / "act_1_music.mp3"
-ACT_ONE_WARDEN_MUSIC_PATH = MUSIC_ROOT / "act_1_warden.mp3"
+ACT_ONE_MENU_MUSIC_PATH = MUSIC_ROOT / "act_1" / "act_1_menu.mp3"
+ACT_ONE_MUSIC_PATH = MUSIC_ROOT / "act_1" / "act_1_music.mp3"
+ACT_ONE_WARDEN_MUSIC_PATH = MUSIC_ROOT / "act_1" / "act_1_warden.mp3"
 
 
 def update_act_one_music(

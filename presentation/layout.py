@@ -45,9 +45,8 @@ AUDIO_ROOT = PROJECT_ROOT / "assets" / "audio"
 ACT_ONE_SOUNDS_PATH = AUDIO_ROOT / "sounds_act_1"
 ACT_TWO_SOUNDS_PATH = AUDIO_ROOT / "sounds_act_2"
 MUSIC_ROOT = AUDIO_ROOT / "music"
-ACT_TWO_MENU_MUSIC_PATH = MUSIC_ROOT / "act_2_menu.mp3"
-ACT_TWO_MUSIC_PATH = MUSIC_ROOT / "act_2_music.mp3"
-ACT_THREE_MUSIC_PATH = MUSIC_ROOT / "act_3_music.mp3"
+ACT_TWO_MENU_MUSIC_PATH = MUSIC_ROOT / "act_2" / "act_2_menu.mp3"
+ACT_TWO_MUSIC_PATH = MUSIC_ROOT / "act_2" / "act_2_music.mp3"
 
 ACT_THREE_TILE_SIZE = 72
 ACT_THREE_VIEW_X = 0

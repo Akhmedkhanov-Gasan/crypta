@@ -64,6 +64,7 @@ class ApplicationFrameUpdater:
             and not app_runtime.menu_open
             and not self.loading.completed
         )
+        self.act_three_audio_runtime.set_paused(not scenes_enabled, current_time)
         advance_act_one_scenes(
             game_state,
             current_time,

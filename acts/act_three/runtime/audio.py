@@ -1,20 +1,38 @@
-from dataclasses import dataclass
-
 import pygame
-import resource_store as resources
 
+from acts.act_three.audio.ambience import DungeonAmbience
+from acts.act_three.audio.playlist import ExplorationPlaylist
 from game.combat_log import add_log_message
-from presentation.layout import ACT_THREE_MUSIC_PATH
 
 
-@dataclass
 class ActThreeAudioRuntime:
-    music_attempted: bool = False
+    def __init__(self):
+        self.music_attempted = False
+        self._playlist = None
+        self._ambience = None
+        self._last_update = None
+        self._paused = False
+        self._player = None
 
     def reset(self):
-        if self.music_attempted and pygame.mixer.get_init() is not None:
-            pygame.mixer.music.stop()
-        self.music_attempted = False
+        if self._playlist is not None:
+            self._playlist.stop()
+        if self._ambience is not None:
+            self._ambience.stop()
+        self.__init__()
+
+    def set_music_volume(self, volume):
+        if self._playlist is not None:
+            self._playlist.set_volume(volume)
+
+    def set_paused(self, paused, current_time):
+        if self._paused != paused:
+            if self._playlist is not None:
+                self._playlist.pause(paused)
+            if self._ambience is not None:
+                self._ambience.pause(paused)
+            self._paused = paused
+            self._last_update = current_time
 
     def ensure_music(
         self,
@@ -25,23 +43,43 @@ class ActThreeAudioRuntime:
         act_two_audio_runtime,
         sounds,
     ):
-        if current_act != 3 or self.music_attempted:
+        if current_act != 3:
+            if self.music_attempted:
+                self.reset()
             return act_one_music_attempted
 
-        act_one_music_attempted = False
-        act_two_audio_runtime.music_attempted = False
-        self.music_attempted = True
-        try:
-            if pygame.mixer.get_init() is None:
-                pygame.mixer.init()
-            resources.load_music(str(ACT_THREE_MUSIC_PATH))
-            sounds.set_music_volume(music_volume)
-            pygame.mixer.music.play(-1, fade_ms=1800)
-        except pygame.error as audio_error:
-            add_log_message(
-                game_state.combat_log,
-                f"Act III music unavailable: {audio_error}",
-                category="system",
+        if self._player is not None and self._player is not game_state.player:
+            self.reset()
+        if not self.music_attempted:
+            self.music_attempted = True
+            self._player = game_state.player
+            act_one_music_attempted = False
+            act_two_audio_runtime.music_attempted = False
+            try:
+                if pygame.mixer.get_init() is None:
+                    pygame.mixer.init()
+                pygame.mixer.music.stop()
+                self._playlist = ExplorationPlaylist()
+                self._ambience = DungeonAmbience(game_state.combat_log)
+                if not self._playlist.paths:
+                    add_log_message(game_state.combat_log, "Act III music playlist is empty.", category="system")
+                if not self._ambience.sounds:
+                    add_log_message(game_state.combat_log, "Act III dungeon ambience is empty.", category="system")
+            except (OSError, pygame.error) as error:
+                add_log_message(game_state.combat_log, f"Act III atmosphere unavailable: {error}", category="system")
+
+        now = pygame.time.get_ticks()
+        elapsed = 0 if self._last_update is None else max(0, min(250, now - self._last_update))
+        self._last_update = now
+        if self._paused or pygame.mixer.get_init() is None:
+            return act_one_music_attempted
+        if self._playlist is not None:
+            self._playlist.update(elapsed, music_volume, game_state.combat_log)
+        if self._ambience is not None:
+            self._ambience.update(
+                elapsed,
+                self._playlist is not None and self._playlist.playing and music_volume > 0,
+                sounds.master_volume,
             )
         return act_one_music_attempted
 

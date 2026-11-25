@@ -32,10 +32,6 @@ ASSASSIN_SOUND_FILES = {
         f"assassin_death_{index}.mp3"
         for index in range(1, 5)
     ),
-    "footstep": tuple(
-        f"footstep_{index:02d}.mp3"
-        for index in range(1, 11)
-    ),
     "hurt": tuple(
         f"assassin_hurt_{index}.mp3"
         for index in range(1, 7)
@@ -60,9 +56,13 @@ ASSASSIN_SOUND_FILES = {
 
 
 ASSASSIN_SOUND_DIRECTORIES = {
-    "attack": _ASSASSIN_SOUNDS_PATH / "attack",
+    "attack": (
+        _ASSASSIN_SOUNDS_PATH.parent
+        / "weapons"
+        / "dagger"
+        / "hit"
+    ),
     "death": _ASSASSIN_SOUNDS_PATH / "death",
-    "footstep": _ASSASSIN_SOUNDS_PATH / "footstep",
     "hurt": _ASSASSIN_SOUNDS_PATH / "hurt",
     "invisibility": (
         _ASSASSIN_SOUNDS_PATH
@@ -89,14 +89,13 @@ ASSASSIN_SOUND_DIRECTORIES = {
 
 
 ASSASSIN_SOUND_VOLUMES = {
-    "attack": 0.72,
-    "death": 0.78,
-    "footstep": 1.0,
-    "hurt": 0.70,
-    "invisibility": 0.72,
-    "killing_spree": 0.78,
-    "killing_spree_target": 0.72,
-    "shadow_step": 0.76,
+    "attack": 0.42,
+    "death": 0.52,
+    "hurt": 0.44,
+    "invisibility": 0.36,
+    "killing_spree": 0.44,
+    "killing_spree_target": 0.28,
+    "shadow_step": 0.38,
 }
 
 
@@ -107,7 +106,6 @@ class AssassinSoundBank:
     ):
         self.sounds = sounds
         self.master_volume = 1.0
-        self._last_footstep = None
         self._invisibility_was_active = False
         self._ultimate_target_count = 0
         self._ultimate_started_at = None
@@ -151,19 +149,7 @@ class AssassinSoundBank:
         if not variants:
             return
 
-        choices = variants
-
-        if sound_key == "footstep" and len(variants) > 1:
-            choices = [
-                sound
-                for sound in variants
-                if sound is not self._last_footstep
-            ]
-
-        sound = random.choice(choices)
-
-        if sound_key == "footstep":
-            self._last_footstep = sound
+        sound = random.choice(variants)
 
         channel = sound.play()
         if channel is not None:
@@ -202,8 +188,6 @@ class AssassinSoundBank:
             for event in hero_moves
         ):
             self._play("shadow_step")
-        elif hero_moves:
-            self._play("footstep")
 
         if any(
             event.type is GameEventType.HIT

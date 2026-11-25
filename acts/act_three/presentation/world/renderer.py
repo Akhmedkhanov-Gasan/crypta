@@ -269,7 +269,6 @@ def _draw_act_three_world(
     last_column = context.last_column
     last_row = context.last_row
     tile_assets = context.tile_assets
-    locomotion_pose = context.locomotion_pose
     teleport_origin = context.teleport_origin
     transition_started_at = context.transition_started_at
 
@@ -390,7 +389,7 @@ def _draw_act_three_world(
     shield_charge_active = player_state.shield_charge_active
     shadow_step_active = player_state.shadow_step_active
     player_death_elapsed = player_state.death_elapsed
-    player_sprite, walking_sprite_active = select_player_sprite(
+    player_sprite, _ = select_player_sprite(
         context,
         player_state,
         game_state.player,
@@ -404,7 +403,6 @@ def _draw_act_three_world(
         scene_sprite = awakening_player_sprite(game_state, assets)
         if scene_sprite is not None:
             player_sprite = scene_sprite
-            walking_sprite_active = False
     player_placement = calculate_player_placement(
         context,
         player_state,
@@ -509,18 +507,6 @@ def _draw_act_three_world(
                 player_subclass,
                 shadow_sprite.get_size(),
             ),
-        )
-    if (
-        walking_sprite_active
-        and not game_state.player.ultimate_animation_active
-        and not shield_charge_active
-        and not leap_active
-        and not berserker_spin_active
-        and not shadow_step_active
-    ):
-        player_position = (
-            player_position[0] + locomotion_pose.body_offset[0],
-            player_position[1] + locomotion_pose.body_offset[1],
         )
     player_effect_position = (
         player_position[0],

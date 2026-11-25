@@ -1,13 +1,16 @@
 from dataclasses import dataclass
 from acts.act_three.abilities.summoner_runes import familiar_is_away
-import math
 
-from presentation.movement import sample_movement_travel, smoothstep
-from acts.act_three.movement import ACT_THREE_MOVEMENT_PROFILE
+from presentation.movement import sample_movement_travel
+from acts.act_three.movement import (
+    ACT_THREE_MOVEMENT_PROFILE,
+    player_special_movement_active,
+)
 from acts.act_three.movement_timing import (
     PLAYER_POSE_HOLD_MS,
-    PLAYER_SETTLE_MS,
-    PLAYER_WALK_CYCLE_TILES,
+    PLAYER_WALK_PHASE_PER_STEP,
+    PLAYER_WALK_START_PHASE,
+    player_footfall_delay,
 )
 from acts.act_three.presentation.player_motion import (
     assassin_walk_direction,
@@ -15,16 +18,8 @@ from acts.act_three.presentation.player_motion import (
 
 
 @dataclass(frozen=True)
-class MovementProfile:
-    lift: float
-    lean: float
-    sway: float
-
-
-@dataclass(frozen=True)
 class LocomotionPose:
     position: tuple[int, int]
-    body_offset: tuple[int, int]
     phase: float
     active: bool
 
@@ -40,62 +35,15 @@ class LocomotionState:
     destination: tuple[int, int] | None = None
     started_at: int = -1
     phase_origin: float = 0.0
-    phase_distance: float = 0.0
     step_ms: int = 0
     last_sample_at: int = -1
 
-
-_PROFILES = {
-    "assassin": MovementProfile(0.8, 1.5, 0.5),
-    "berserker": MovementProfile(1.8, 1.0, 0.8),
-    "warlock": MovementProfile(0.5, 0.5, 0.2),
-    "paladin": MovementProfile(1.2, 0.7, 0.4),
-    "archer": MovementProfile(1.0, 1.2, 0.5),
-    "summoner": MovementProfile(0.7, 0.6, 0.3),
-}
 
 _STATE = None
 
 
 def _walk_progress(progress):
-    return progress * 0.85 + smoothstep(progress) * 0.15
-
-
-def _special_movement_active(player):
-    return (
-        player.ultimate_animation_active
-        or any(
-            getattr(player, name, None) is not None
-            for name in (
-                "teleport_camera_origin",
-                "archer_leap_origin",
-                "berserker_crushing_leap_origin",
-                "paladin_shield_charge_origin",
-            )
-        )
-    )
-
-
-def _sample_body_offset(profile, direction, phase, weight):
-    dx, dy = direction
-    direction_length = math.hypot(dx, dy)
-    direction_x = dx / direction_length
-    direction_y = dy / direction_length
-
-    stride = math.sin(math.tau * phase)
-    sway = stride
-
-    offset_x = (
-        direction_x * profile.lean * stride
-        - direction_y * profile.sway * sway
-    )
-    offset_y = (
-        direction_y * profile.lean * stride
-        + direction_x * profile.sway * sway
-        - profile.lift * abs(stride)
-    )
-
-    return round(offset_x * weight), round(offset_y * weight)
+    return progress + 0.3 * progress * (1.0 - progress)
 
 
 def sample_player_locomotion(
@@ -116,7 +64,6 @@ def sample_player_locomotion(
     )
     idle_pose = LocomotionPose(
         position=destination_pixels,
-        body_offset=(0, 0),
         phase=0.0,
         active=False,
     )
@@ -132,7 +79,7 @@ def sample_player_locomotion(
     state = _STATE
     state.last_sample_at = current_time
 
-    if player.health <= 0 or _special_movement_active(player):
+    if player.health <= 0 or player_special_movement_active(player):
         state.token = None
         state.destination = None
         return idle_pose
@@ -160,6 +107,7 @@ def sample_player_locomotion(
         return idle_pose
 
     step_ms = ACT_THREE_MOVEMENT_PROFILE.step_duration_for((dx, dy))
+    travel_ms = player_footfall_delay(step_ms)
 
     token = (
         started_at,
@@ -186,19 +134,16 @@ def sample_player_locomotion(
         )
 
         if continuing:
-            previous_progress = _walk_progress(
-                min(1.0, step_interval / state.step_ms),
+            previous_progress = min(
+                1.0,
+                step_interval / player_footfall_delay(state.step_ms),
             )
             state.phase_origin = (
                 state.phase_origin
-                + state.phase_distance * previous_progress
+                + PLAYER_WALK_PHASE_PER_STEP * previous_progress
             ) % 1.0
         else:
-            state.phase_origin = 0.0
-
-        state.phase_distance = (
-            math.hypot(dx, dy) / PLAYER_WALK_CYCLE_TILES
-        )
+            state.phase_origin = PLAYER_WALK_START_PHASE
         state.token = token
         state.destination = destination
         state.started_at = started_at
@@ -211,13 +156,13 @@ def sample_player_locomotion(
         ),
         destination_pixels,
         elapsed,
-        step_ms,
+        travel_ms,
         easing=_walk_progress,
     )
 
     phase = (
         state.phase_origin
-        + state.phase_distance * travel.eased_progress
+        + PLAYER_WALK_PHASE_PER_STEP * travel.progress
     ) % 1.0
 
     combat_interrupted = (
@@ -229,26 +174,8 @@ def sample_player_locomotion(
         and not combat_interrupted
     )
 
-    profile = _PROFILES.get(
-        player.subclass,
-        _PROFILES["berserker"],
-    )
-    settle_start = step_ms + PLAYER_POSE_HOLD_MS - PLAYER_SETTLE_MS
-    body_weight = 1.0 - smoothstep((elapsed - settle_start) / PLAYER_SETTLE_MS)
-    body_offset = (
-        _sample_body_offset(
-            profile,
-            (dx, dy),
-            phase,
-            body_weight,
-        )
-        if active
-        else (0, 0)
-    )
-
     return LocomotionPose(
         position=travel.position,
-        body_offset=body_offset,
         phase=phase,
         active=active,
     )
