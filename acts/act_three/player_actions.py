@@ -8,6 +8,7 @@ from acts.act_three.environment_objects import get_breakable_environment_object
 from acts.player_abilities import resolve_targeted_player_ability
 from acts.act_three.npcs import get_npc_at, open_npc_dialog
 from acts.act_three.items.use import use_belt_item
+from acts.act_three.items.pickup import resolve_item_pickup
 from acts.act_three.trader_catalog import POTION_HEALING
 from acts.act_three.mining.runtime import start_mining
 from acts.act_three.mining.world import get_ore_at
@@ -84,6 +85,11 @@ def resolve_act_three_player_action(
 ) -> ActThreePlayerActionResult:
     if getattr(event, "ability_turn_commit", False):
         return ActThreePlayerActionResult(player_acted=True)
+
+    if getattr(event, "act_three_pickup_item", None) is not None:
+        return ActThreePlayerActionResult(
+            player_acted=resolve_item_pickup(game_state, event, pygame.time.get_ticks()),
+        )
 
     from acts.act_three.trials.archer import handle_action as handle_piercing_action
     from acts.act_three.trials.summoner import handle_action as handle_summoner_action

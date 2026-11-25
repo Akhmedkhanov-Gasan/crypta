@@ -78,8 +78,18 @@ def _place_room_enemy(floor, region, occupied, reachable, settings):
     frontline = {"goblin", "brute", "sentinel"}
     if not any(enemy["type"] in frontline for enemy in enemies):
         enemy_types = [name for name in enemy_types if name in frontline]
+    minimum_counts = settings.get("minimum_enemy_counts", {})
+    floor_counts = {
+        name: sum(enemy["type"] == name for enemy in floor["enemies"])
+        for name in minimum_counts
+    }
     while enemy_types:
-        enemy_type = random.choices(enemy_types, weights=[weights[name] for name in enemy_types], k=1)[0]
+        needed_types = [
+            name for name in enemy_types
+            if floor_counts.get(name, 0) < minimum_counts.get(name, 0)
+        ]
+        choices = needed_types or enemy_types
+        enemy_type = random.choices(choices, weights=[weights[name] for name in choices], k=1)[0]
         candidates = _candidates(floor, region, enemy_type, occupied, reachable, settings)
         if candidates:
             nearby = [

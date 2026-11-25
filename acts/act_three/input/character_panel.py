@@ -98,6 +98,23 @@ def handle_character_panel_key(event, game_state, can_open):
     state.character_panel_focus = focus
     state.character_panel_keyboard_focus = True
 
+    focus_parts = focus.split(":")
+    if (
+        focus_parts[0] == "attribute"
+        and focus_parts[1] in game_state.player.act_three.pending_attribute_upgrades
+        and game_state.player.attribute_points > 0
+        and event.key in (pygame.K_a, pygame.K_d, pygame.K_LEFT, pygame.K_RIGHT)
+    ):
+        if not getattr(event, "repeat", False):
+            change = (
+                cancel_act_three_attribute_upgrade
+                if event.key in (pygame.K_a, pygame.K_LEFT)
+                else queue_act_three_attribute_upgrade
+            )
+            change(game_state.player, focus_parts[1])
+        state.character_panel_focus = f"attribute:{focus_parts[1]}"
+        return True
+
     if event.key in CHORD_MOVEMENT_KEYS:
         state.character_panel_focus = move_focus(
             rectangles, focus, movement_direction_for_key(event.key),

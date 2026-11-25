@@ -44,6 +44,8 @@ class ItemDragState:
 class ActThreePlayerState:
     environment_attack = None
 
+    level_up_effect_started_at: int = -1
+    level_up_effect_amount: int = 1
     consumable_aim_slot: int | None = None
     item_drag: ItemDragState | None = None
     consumable_aim_target: tuple[int, int] | None = None

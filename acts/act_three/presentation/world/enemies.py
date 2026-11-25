@@ -32,7 +32,7 @@ from acts.act_three.presentation.status_effects import (
     _draw_warlock_curse_aura,
 )
 from acts.act_three.presentation.view import _view_position
-from acts.act_two.presentation.enemies.sentinel import (
+from acts.act_three.presentation.enemies.sentinel import (
     draw_sentinel_status,
 )
 from game.state import EnemyBehaviorState

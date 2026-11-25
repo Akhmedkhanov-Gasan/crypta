@@ -1,3 +1,5 @@
+import pygame
+
 from acts.act_three.presentation.enemies.directional import (
     DIRECTIONAL_FRAME_COUNT,
     action_frame,
@@ -19,6 +21,41 @@ SENTINEL_BLOCK_DURATION_MS = 520
 SENTINEL_BLOCK_FRAME_MS = 150
 SENTINEL_HURT_DURATION_MS = 400
 SENTINEL_DEATH_FRAME_MS = 120
+
+
+def draw_sentinel_status(screen, enemy, position, current_time, tile_size):
+    if enemy.type != "sentinel" or enemy.health <= 0:
+        return
+
+    state = enemy.sentinel
+    blocks = (
+        0
+        if state.shield_broken
+        else enemy.shield_blocks_remaining
+        if state.shield_raised
+        else enemy.shield_durability
+    )
+    center_x = position[0] + tile_size / 2
+    top = round(position[1] - 9)
+    hit_started_at = enemy.hit_animation_started_at
+    if hit_started_at >= 0 and 0 <= current_time - hit_started_at < 1500:
+        for index in range(2):
+            left = round(center_x - 8 + index * 9)
+            rectangle = pygame.Rect(left, top, 7, 4)
+            filled = index < blocks
+            color = (
+                (87, 96, 102)
+                if filled and state.recovery_turns == 0
+                else (58, 64, 69)
+                if filled
+                else (28, 29, 32)
+            )
+            pygame.draw.rect(screen, (10, 11, 14), rectangle.inflate(2, 2))
+            pygame.draw.rect(screen, color, rectangle)
+            if filled:
+                pygame.draw.line(screen, (119, 124, 126), (left + 1, top), (left + 5, top), 1)
+            else:
+                pygame.draw.line(screen, (86, 57, 53), (left + 1, top + 3), (left + 5, top), 1)
 
 
 def _sentinel_attack_direction(enemy):

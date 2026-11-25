@@ -151,11 +151,13 @@ ACT_THREE_ENCOUNTER_SETTINGS = {
     2: {
         "enabled": True,
         "enemy_weights": {
-            "archer": 4,
+            "goblin": 5,
+            "archer": 3,
             "brute": 3,
             "sentinel": 2,
-            "priest": 1,
+            "priest": 3,
         },
+        "minimum_enemy_counts": {"goblin": 6, "priest": 3},
         "min_enemies": 24,
         "max_enemies": 30,
         "minimum_spacing": 2,
@@ -167,7 +169,8 @@ ACT_THREE_ENCOUNTER_SETTINGS = {
     },
     3: {
         "enabled": True,
-        "enemy_weights": {"archer": 3, "brute": 3, "sentinel": 3, "priest": 2},
+        "enemy_weights": {"goblin": 5, "archer": 3, "brute": 3, "sentinel": 3, "priest": 4},
+        "minimum_enemy_counts": {"goblin": 8, "priest": 4},
         "min_enemies": 32,
         "max_enemies": 38,
         "minimum_spacing": 2,

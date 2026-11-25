@@ -26,6 +26,9 @@ from acts.act_three.enemies.catalog import LANTERN_WARDEN_TYPE
 from acts.act_three.presentation.enemies.lantern_warden.lantern_warden_combat import (
     draw_warden_telegraph,
 )
+from acts.act_three.presentation.enemies.telegraphs import (
+    draw_enemy_attack_markers,
+)
 from acts.act_three.presentation.warrior.power_cleave import (
     draw_power_cleave_targeting,
 )
@@ -159,26 +162,7 @@ def draw_world_targeting(
 
 
 def draw_world_attack_markers(context, game_state, current_time):
-    attack_positions = [
-        position
-        for enemy in context.floor.enemies
-        if (
-            enemy.health > 0
-            and enemy.type != LANTERN_WARDEN_TYPE
-            and not (
-                enemy.type == "sentinel"
-                and enemy.prepared_attack_mode == "shield_bash"
-            )
-        )
-        for position in enemy.attack_targets
-    ]
-    _draw_tile_markers(
-        context.view_surface,
-        attack_positions,
-        context.camera_x,
-        context.camera_y,
-        (190, 48, 45),
-    )
+    draw_enemy_attack_markers(context, current_time)
 
     for enemy in context.floor.enemies:
         if (

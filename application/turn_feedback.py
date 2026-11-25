@@ -1,6 +1,7 @@
 import pygame
 
 from game.events import GameEventType
+from acts.act_three.level_feedback import start_level_up_effect
 
 from acts.act_three.presentation.assassin import record_shadow_reflex_feedback
 from acts.act_three.presentation.combat_effects import (
@@ -212,11 +213,16 @@ def present_turn_feedback(
     record_player_death_feedback(game_state, started_at)
     record_shadow_reflex_feedback(game_state, started_at)
 
-    if any(
-        event.type is GameEventType.LEVEL_UP and event.actor == "hero"
+    levels_gained = sum(
+        event.amount or 1
         for event in game_state.events
-    ) and current_act == 2:
-        game_state.player.act_two.level_up_effect_started_at = started_at
+        if event.type is GameEventType.LEVEL_UP and event.actor == "hero"
+    )
+    if levels_gained:
+        if current_act == 2:
+            game_state.player.act_two.level_up_effect_started_at = started_at
+        elif current_act == 3:
+            start_level_up_effect(game_state.player, started_at, levels_gained)
 
     if current_act == 2 and game_state.player.health <= 0:
         remove_enemy_corpses_at_position(

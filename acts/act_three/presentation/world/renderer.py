@@ -3,6 +3,7 @@ from acts.act_three.abilities.berserker_runes import spin_duration
 from acts.act_three.abilities.summoner_runes import familiar_is_away
 
 import pygame
+from acts.act_three.presentation.level_up import draw_level_up_foreground, draw_level_up_ground
 from acts.act_three.combat.pacing import PLAYER_BASIC_ATTACK_DURATION_MS
 
 from acts.act_three.presentation.trials.assassin_effects import draw_trial_seal_effects
@@ -177,6 +178,9 @@ _TOP_VOID_DOUBLE_CORNER_CROP_WIDTH = 24
 
 
 from presentation.control_effects import draw_player_control_effects
+from acts.act_three.presentation.enemies.telegraphs import (
+    draw_enemy_attack_directions,
+)
 from acts.act_three.presentation.animation import (
     _stable_text_seed,
 )
@@ -521,6 +525,9 @@ def _draw_act_three_world(
     player_effect_position = (
         player_position[0],
         player_position[1] + player_sprite.get_height() - ACT_THREE_TILE_SIZE,
+    )
+    draw_level_up_ground(
+        view_surface, game_state.player, player_effect_position, current_time, assets,
     )
     draw_paladin_sacred_ground_cast_effect(
         view_surface,
@@ -1696,6 +1703,7 @@ def _draw_act_three_world(
     lantern_focus = camera_focus(floor, current_time)
     if lantern_focus is not None:
         visibility_position = _view_position(lantern_focus[0], lantern_focus[1], camera_x, camera_y)
+    draw_enemy_attack_directions(context, current_time)
     _draw_fog_of_war(
         view_surface,
         floor,
@@ -1742,6 +1750,11 @@ def _draw_act_three_world(
         player_position,
         player_sprite,
         current_time,
+    )
+
+    draw_level_up_foreground(
+        view_surface, game_state.player, player_effect_position,
+        current_time, fonts["hud_level"], assets,
     )
 
     _draw_player_hit_vignette(

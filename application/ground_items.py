@@ -137,6 +137,7 @@ class GroundItemInput:
         movement_state,
         sounds,
         current_time,
+        take_all=False,
     ):
         if movement_input_is_locked(movement_state, current_time):
             return
@@ -159,11 +160,12 @@ class GroundItemInput:
         event_start = len(game_state.events)
 
         item = items[self.selected]
-        if (
-            pick_up_ground_item(game_state, item, current_time)
-            and game_state.floor.presentation_act == 3
-        ):
-            self.pickup_notice = (game_state.floor, item, current_time)
+        if game_state.floor.presentation_act == 3:
+            from acts.act_three.items.pickup import request_item_pickup
+
+            request_item_pickup(game_state.floor, item, self._record_pickup, take_all)
+            return
+        pick_up_ground_item(game_state, item, current_time)
 
         play_ground_item_events(
             game_state,
@@ -177,7 +179,14 @@ class GroundItemInput:
         else:
             self.selected = min(self.selected, len(remaining) - 1)
 
+    def _record_pickup(self, floor, item, current_time):
+        self.pickup_notice = (floor, item, current_time)
+
     def _take_all(self, game_state, movement_state, sounds, current_time):
+        if game_state.floor.presentation_act == 3:
+            self.selected = 0
+            self._take(game_state, movement_state, sounds, current_time, take_all=True)
+            return
         while True:
             before = len(ground_items_at_player(game_state, current_time))
             if not before:
@@ -199,6 +208,8 @@ class GroundItemInput:
         enabled,
         current_time,
     ):
+        if getattr(event, "act_three_pickup_item", None) is not None:
+            return False
         if event.type not in (
             pygame.KEYDOWN,
             pygame.KEYUP,
@@ -250,7 +261,7 @@ class GroundItemInput:
             movement_state.cancel_consumable_drag()
 
             if (
-                (len(items) == 1 and game_state.floor.presentation_act == 1)
+                len(items) == 1
                 or not ground_item_rules(game_state).use_window
             ):
                 self.selected = 0

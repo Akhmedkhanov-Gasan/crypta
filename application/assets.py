@@ -6,6 +6,7 @@ from acts.act_three.presentation.hud import (
     load_act_three_hud_assets,
 )
 from acts.act_three.presentation.tmx_tiles import load_tmx_tiles
+from acts.act_three.presentation.level_up import load_level_up_assets
 from acts.act_two.assets import (
     load_item_pile_sprite,
     load_pickup_hint_font,
@@ -1045,6 +1046,7 @@ def load_act_three_gameplay_assets():
         ),
     }
     assets.update(load_act_three_hud_assets())
+    assets.update(load_level_up_assets())
     assets.update(
         load_act_three_ability_assets()
     )

@@ -85,7 +85,7 @@ def draw_pickup_hint(
     )
 
     text = font.render(
-        "[G] Search items",
+        "[G] Pick up" if len(items) == 1 else "[G] Search pile",
         True,
         (201, 201, 201),
     )

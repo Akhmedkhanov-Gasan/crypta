@@ -1,3 +1,6 @@
+import pygame
+
+from acts.act_three.level_feedback import start_level_up_effect
 from acts.act_one.dev_commands import (
     ACT_ONE_CONSOLE_HELP,
     execute_act_one_console_command,
@@ -84,6 +87,11 @@ def execute_console_command(
 
         player.level += amount
         player.attribute_points += amount
+
+        if game_state.floor.presentation_act == 3:
+            start_level_up_effect(player, pygame.time.get_ticks(), amount)
+            if close_console is not None:
+                close_console()
 
         return (
             f"Level: {player.level} (+{amount}). "

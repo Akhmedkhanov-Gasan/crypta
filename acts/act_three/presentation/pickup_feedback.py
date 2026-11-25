@@ -64,7 +64,7 @@ def draw_pickup_feedback(screen, game_state, window, current_time, *, show_promp
         return
 
     action, description = (
-        ("[G] Search items", items[0].name)
+        ("[G] Pick up", items[0].name)
         if len(items) == 1
         else ("[G] Search pile", f"{len(items)} items")
     )
