@@ -22,11 +22,7 @@ ASSASSIN_SHADOW_REFLEX_LABEL_MS = 950
 ASSASSIN_SHADOW_REFLEX_LABEL_RISE = 18
 
 ARCHER_BASIC_ATTACK_RANGE = 3
-ARCHER_BASIC_DAMAGE_MIN = 1
-ARCHER_BASIC_DAMAGE_MAX = 2
 ARCHER_EMPOWERED_SHOT_CHARGES = 3
-ARCHER_EMPOWERED_SHOT_DAMAGE_MIN = 3
-ARCHER_EMPOWERED_SHOT_DAMAGE_MAX = 5
 ARCHER_EMPOWERED_SHOT_PROJECTILE_MS = 260
 ARCHER_LEAP_CHARGES = 3
 ARCHER_LEAP_RANGE = 3
@@ -76,8 +72,6 @@ MAGE_ARCANE_BURST_RANGE = 4
 MAGE_ARCANE_BURST_EFFECT_MS = 1000
 
 WARLOCK_BASIC_ATTACK_RANGE = ARCHER_BASIC_ATTACK_RANGE
-WARLOCK_BASIC_DAMAGE_MIN = 1
-WARLOCK_BASIC_DAMAGE_MAX = 2
 WARLOCK_DEMON_FORM_HEALTH_DRAIN = 1
 WARLOCK_DEMON_FORM_DAMAGE_MULTIPLIER = 1.75
 WARLOCK_DEMON_FORM_TRANSFORM_MS = 640
@@ -162,21 +156,25 @@ ACT_THREE_ENCOUNTER_SETTINGS = {
             "sentinel": 2,
             "priest": 1,
         },
-        "min_enemies": 12,
-        "max_enemies": 16,
-        "minimum_spacing": 3,
+        "min_enemies": 24,
+        "max_enemies": 30,
+        "minimum_spacing": 2,
         "minimum_player_distance": 7,
-        "maximum_per_room": 4,
-        "cells_per_enemy": 28,
+        "maximum_per_room": 5,
+        "cells_per_enemy": 16,
+        "min_group_size": 2,
+        "max_group_size": 3,
     },
     3: {
         "enabled": True,
         "enemy_weights": {"archer": 3, "brute": 3, "sentinel": 3, "priest": 2},
-        "min_enemies": 18,
-        "max_enemies": 24,
-        "minimum_spacing": 3,
+        "min_enemies": 32,
+        "max_enemies": 38,
+        "minimum_spacing": 2,
         "minimum_player_distance": 7,
-        "maximum_per_room": 5,
-        "cells_per_enemy": 24,
+        "maximum_per_room": 6,
+        "cells_per_enemy": 14,
+        "min_group_size": 3,
+        "max_group_size": 4,
     },
 }

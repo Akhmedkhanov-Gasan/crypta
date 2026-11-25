@@ -31,6 +31,38 @@ _PANEL_ACCENTS = {
 }
 
 
+def _attribute_tooltip(player, attribute):
+    content = attribute_tooltip_content(
+        attribute,
+        player.attribute_ranks.get(attribute, 0),
+        player.player_class,
+    )
+    extra_lines = {
+        ("archer", "valor"): (
+            "Increases basic shots, Piercing Shot and phantom damage.",
+        ),
+        ("assassin", "instinct"): (
+            "Dodging a direct attack triggers Shadow Reflex.",
+        ),
+        ("paladin", "will"): (
+            "Sacred Ground gains 1 damage on every odd Will rank.",
+        ),
+        ("warlock", "will"): (
+            "Increases basic projectiles before Curse and Demon Form bonuses.",
+        ),
+        ("summoner", "will"): (
+            "Increases your attacks, familiar, totem and greater spirit damage.",
+            "While the familiar is away, your attacks deal 65% damage.",
+            "The familiar and totem use half your magical damage range.",
+        ),
+    }.get((player.subclass, attribute), ())
+    return TooltipContent(
+        title=content.title,
+        lines=(*content.lines, *extra_lines),
+        accent=content.accent,
+    )
+
+
 def _draw_hitbox_highlight(
     screen,
     hitbox,
@@ -221,11 +253,7 @@ def character_panel_tooltip_content(
     category, name = hovered_item
 
     if category == "attribute":
-        return attribute_tooltip_content(
-            name,
-            player.attribute_ranks.get(name, 0),
-            player.player_class,
-        )
+        return _attribute_tooltip(player, name)
 
     if category == "combat_stat":
         return _act_three_combat_tooltip(

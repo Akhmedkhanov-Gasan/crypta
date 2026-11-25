@@ -7,7 +7,7 @@
  <tileset firstgid="9" source="../../my_tiles_textured.tsx"/>
  <tileset firstgid="182" source="../../items.tsx"/>
  <tileset firstgid="350" source="../../torches/torches.tsx"/>
- <tileset firstgid="354" source="../../EnvironmentObjects/lantern_warden_room_props/lantern_warden_room_props.tsx"/>
+ <tileset firstgid="354" source="../../environment_objects/lantern_warden_room_props/lantern_warden_room_props.tsx"/>
  <layer id="1" name="Ground" width="10" height="8">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,

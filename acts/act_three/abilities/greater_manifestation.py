@@ -1,4 +1,5 @@
 from math import ceil
+from acts.act_three.ability_scaling import magical_attack_damage_range
 
 from acts.act_three.settings import SUMMONER_TRUE_FORM_DAMAGE_BONUS, SUMMONER_TRUE_FORM_HEALTH_BONUS
 from game.combat_log import add_log_message
@@ -125,9 +126,10 @@ def take_manifestation_turn(game_state):
         cost = manifestation_attack_cost(spirit)
         spirit["attacks"] += 1
         multiplier = 1 + spirit["souls"] * SOUL_DAMAGE_STEP
+        damage_minimum, damage_maximum = magical_attack_damage_range(player)
         defeated = attack_enemy(game_state, target,
-                                ceil((player.damage_min + SUMMONER_TRUE_FORM_DAMAGE_BONUS) * multiplier),
-                                ceil((player.damage_max + SUMMONER_TRUE_FORM_DAMAGE_BONUS) * multiplier),
+                                ceil((damage_minimum + SUMMONER_TRUE_FORM_DAMAGE_BONUS) * multiplier),
+                                ceil((damage_maximum + SUMMONER_TRUE_FORM_DAMAGE_BONUS) * multiplier),
                                 0.0, attacker_position=origin, grant_ability_charge=False,
                                 attacker_name="greater_manifestation")
         damage_manifestation(game_state, cost, now, feedback=False)

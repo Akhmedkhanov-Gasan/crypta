@@ -4,7 +4,7 @@ The current route contains the Oracle arena after awakening and two generated fl
 
 ## Room templates
 
-Save room templates in `assets/maps/act_3/rooms` or its subdirectories as `room_*.tmx` or `corridor_*.tmx`. The generator discovers nested templates in both loose and packed resources. Keep story rooms in `key_rooms` and configure their paths explicitly. Entry and exit templates are configured separately.
+Save room templates in `assets/maps/act_3/rooms` or its subdirectories as `room_*.tmx` or `corridor_*.tmx`. The generator discovers nested templates in both loose and packed resources. Keep story rooms in `key_rooms` and configure their paths explicitly. Put entry variants in `room_entry` and exit variants in `room_exit`. The generator randomly selects one template from each configured directory and excludes the other variants from the ordinary room pool.
 
 Use finite orthogonal maps with square 64 px tiles and CSV tile layers. Keep the existing rendering layer prefixes. Use the `Ground` layer for floor tiles and `Blocked` or `Collision` for solid collision rectangles. Thin `Barriers` rectangles block movement between cells.
 
@@ -12,8 +12,9 @@ Place point objects in `Connectors`:
 
 - `exit_north`, `exit_south`, `exit_east`, `exit_west`: structural connections on the corresponding outermost cell of the map.
 - Add suffixes to distinguish multiple openings on one side, such as `exit_east_upper` and `exit_east_lower`. Each point remains a separate one-cell opening.
-- `exit_back`: a return gate, temporarily sealed.
-- `exit_up` or `exit_next_floor`: a forward gate. Place it above its walkable approach cell.
+- `exit_up`: the gate to the previous floor, temporarily sealed.
+- `exit_down`: the gate to the next floor. Arrival on that floor uses its `exit_up` approach cell.
+- Legacy `exit_back` and `exit_next_floor` markers remain accepted as aliases for `exit_up` and `exit_down`.
 
 Structural connectors currently support one-cell openings. Each connector and its inward neighbor must be walkable and reachable from the other structural connectors. Rooms are placed without rotation. Every structural opening on a generated floor must be joined to another room. Additional corridor pieces can exceed `generated_piece_count`. If a layout cannot fit, the generator can retry with up to two fewer connecting pieces.
 
@@ -21,7 +22,7 @@ The current generated floors set `allow_dead_ends` to `false`. Ordinary one-entr
 
 Closely spaced paired openings are joined to matching paired openings in a neighboring template. Matching uses grid positions, opposite directions and opening widths. The generator resolves these connections before placing more rooms, and rejects placements that would cover another opening with a wall. Each generated floor starts from a randomly selected paired-opening room, then adds ordinary connecting rooms, the entry and all required rooms. The selected room is retained in the completed floor. Templates whose openings all face one direction serve as matching terminal rooms. Matching neighbors are added beyond the base piece count. Two separate 7x7 dead ends cannot close openings spaced only two or three cells apart.
 
-The entry template needs a `Spawn` point in `Entities`. Keep its `exit_back` approach clear. The exit template needs one forward gate. Map coordinates and object names determine behavior; object colors and visibility do not affect collision.
+Keep all gate markers in `Connectors` and their approach cells clear. The gate direction follows the map boundary, or an explicit `direction` property. Interior gates default to `north`. This describes the wall orientation independently of the floor transition direction. An entry may provide a `Spawn` point in `Entities`; without one, the generator uses the approach to `exit_up`. Each entry needs exactly one `exit_up`, and each exit needs exactly one `exit_down`. Map coordinates and object names determine behavior; object colors and visibility do not affect collision.
 
 ## Enemies
 

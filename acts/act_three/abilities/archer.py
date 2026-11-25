@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from acts.act_three.ability_scaling import archer_shot_damage_range
 
 from game.combat_log import add_log_message
 from acts.act_three.events import GameEvent, GameEventType
@@ -13,8 +14,6 @@ from logic import (
 )
 from acts.act_three.settings import (
     ARCHER_EMPOWERED_SHOT_CHARGES,
-    ARCHER_EMPOWERED_SHOT_DAMAGE_MAX,
-    ARCHER_EMPOWERED_SHOT_DAMAGE_MIN,
     ARCHER_LEAP_CHARGES,
     ARCHER_LEAP_RANGE,
 )
@@ -139,11 +138,12 @@ def perform_archer_empowered_shot(
             data={"kind": "archer_empowered_shot"},
         )
     )
+    damage_minimum, damage_maximum = archer_shot_damage_range(player)
     enemy_was_defeated = attack_enemy(
         game_state,
         hit_enemy,
-        ARCHER_EMPOWERED_SHOT_DAMAGE_MIN,
-        ARCHER_EMPOWERED_SHOT_DAMAGE_MAX,
+        damage_minimum,
+        damage_maximum,
         player.crit_chance,
         attacker_position=origin,
     )

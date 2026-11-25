@@ -2,7 +2,7 @@ import math
 import random
 
 from enemies import ENEMY_TYPES
-from logic import get_enemy_occupied_positions
+from logic import get_enemy_occupied_positions, has_line_of_sight
 from systems.grid_geometry import can_reach_adjacent_cell
 from acts.act_three.spawn_regions import (
     inside_region,
@@ -63,6 +63,41 @@ def _candidates(floor, region, enemy_type, occupied, reachable, settings):
     return candidates
 
 
+def _room_enemies(floor, region):
+    return [enemy for enemy in floor["enemies"] if inside_region(enemy["position"], region)]
+
+
+def _place_room_enemy(floor, region, occupied, reachable, settings):
+    enemies = _room_enemies(floor, region)
+    weights = settings["enemy_weights"]
+    enemy_types = [
+        name for name in weights
+        if not (name == "priest" and any(enemy["type"] == name for enemy in enemies))
+        and not (name == "archer" and sum(enemy["type"] == name for enemy in enemies) >= 2)
+    ]
+    frontline = {"goblin", "brute", "sentinel"}
+    if not any(enemy["type"] in frontline for enemy in enemies):
+        enemy_types = [name for name in enemy_types if name in frontline]
+    while enemy_types:
+        enemy_type = random.choices(enemy_types, weights=[weights[name] for name in enemy_types], k=1)[0]
+        candidates = _candidates(floor, region, enemy_type, occupied, reachable, settings)
+        if candidates:
+            nearby = [
+                position for position in candidates
+                if any(
+                    abs(position[0] - enemy["position"][0]) + abs(position[1] - enemy["position"][1]) <= 4
+                    and has_line_of_sight(floor["map"], *position, *enemy["position"], floor["barriers"])
+                    for enemy in enemies
+                )
+            ]
+            position = random.choice(nearby or candidates)
+            floor["enemies"].append({"position": position, "type": enemy_type, "boss_group": False})
+            occupied.update(enemy_spawn_cells(enemy_type, position))
+            return True
+        enemy_types.remove(enemy_type)
+    return False
+
+
 def populate_act_three_enemies(floor, act_floor):
     occupied = reserved_spawn_positions(floor)
     occupied.update(floor.get("trial_safe_cells", ()))
@@ -85,24 +120,19 @@ def populate_act_three_enemies(floor, act_floor):
         if limit > existing:
             available.append([region, limit - existing])
     remaining = max(0, random.randint(settings["min_enemies"], settings["max_enemies"]) - len(floor["enemies"]))
-    weights = settings["enemy_weights"]
     while remaining and available:
-        index = random.randrange(len(available))
+        room_counts = [len(_room_enemies(floor, region)) for region, _ in available]
+        minimum = min(room_counts)
+        index = random.choice([index for index, count in enumerate(room_counts) if count == minimum])
         region, capacity = available[index]
-        enemy_types = list(weights)
+        group_size = min(remaining, capacity, random.randint(settings["min_group_size"], settings["max_group_size"]))
         placed = False
-        while enemy_types:
-            enemy_type = random.choices(enemy_types, weights=[weights[name] for name in enemy_types], k=1)[0]
-            candidates = _candidates(floor, region, enemy_type, occupied, reachable, settings)
-            if candidates:
-                position = random.choice(candidates)
-                floor["enemies"].append({"position": position, "type": enemy_type, "boss_group": False})
-                occupied.update(enemy_spawn_cells(enemy_type, position))
-                remaining -= 1
-                available[index][1] -= 1
-                placed = True
+        for _ in range(group_size):
+            placed = _place_room_enemy(floor, region, occupied, reachable, settings)
+            if not placed:
                 break
-            enemy_types.remove(enemy_type)
-        if not placed or capacity == 1:
+            remaining -= 1
+            available[index][1] -= 1
+        if not placed or available[index][1] == 0:
             available.pop(index)
     return floor

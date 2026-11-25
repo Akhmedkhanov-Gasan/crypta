@@ -1,3 +1,4 @@
+from acts.act_three.ability_scaling import familiar_damage_range
 from acts.act_three.abilities.summoner_runes import summon_cell_is_free
 from acts.act_three.rune_master.definitions import SPIRIT_TOTEM_PLACEMENT_RANGE, SPIRIT_TOTEM_RANGE
 from game.events import GameEvent, GameEventType
@@ -33,7 +34,8 @@ def take_totem_turn(game_state):
     player.summoner_familiar_attack_target = cell
     game_state.emit(GameEvent(type=GameEventType.ATTACK, actor="familiar", origin=origin,
                               destination=cell, positions=(cell,), data={"kind": "summoner_spirit_totem"}))
-    defeated = attack_enemy(game_state, enemy, player.damage_min, player.damage_max, 0,
+    damage_minimum, damage_maximum = familiar_damage_range(player)
+    defeated = attack_enemy(game_state, enemy, damage_minimum, damage_maximum, 0,
                             attacker_name="familiar", attacker_position=origin, grant_ability_charge=False)
     if enemy.type == "oracle":
         from acts.act_two.enemies.oracle.behavior import resolve_oracle_hit_reaction

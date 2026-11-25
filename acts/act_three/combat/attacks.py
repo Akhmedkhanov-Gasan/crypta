@@ -4,6 +4,7 @@ from math import ceil
 import pygame
 
 from acts.crates import break_crate
+from acts.act_three.ability_scaling import basic_attack_damage_range
 from acts.act_three.events import GameEvent, GameEventType
 from game.state import (
     EnemyState,
@@ -17,11 +18,7 @@ from logic import (
 )
 from acts.act_three.settings import (
     ARCHER_BASIC_ATTACK_RANGE,
-    ARCHER_BASIC_DAMAGE_MAX,
-    ARCHER_BASIC_DAMAGE_MIN,
     WARLOCK_BASIC_ATTACK_RANGE,
-    WARLOCK_BASIC_DAMAGE_MAX,
-    WARLOCK_BASIC_DAMAGE_MIN,
     SUMMONER_ATTACK_RANGE,
     SUMMONER_ATTACK_RANGE_WITHOUT_FAMILIAR,
 )
@@ -188,8 +185,9 @@ def perform_warlock_attack(
             data={"kind": "warlock_orb"},
         )
     )
+    damage_minimum, damage_maximum = basic_attack_damage_range(player)
     enemy_was_defeated = attack_enemy(
-        game_state, hit_enemy, WARLOCK_BASIC_DAMAGE_MIN, WARLOCK_BASIC_DAMAGE_MAX,
+        game_state, hit_enemy, damage_minimum, damage_maximum,
         player.crit_chance, attacker_position=(floor.player_column, floor.player_row),
     )
     if hit_enemy.type == "oracle":
@@ -229,11 +227,12 @@ def perform_archer_attack(
             data={"kind": "archer_basic"},
         )
     )
+    damage_minimum, damage_maximum = basic_attack_damage_range(player)
     enemy_was_defeated = attack_enemy(
         game_state,
         hit_enemy,
-        ARCHER_BASIC_DAMAGE_MIN,
-        ARCHER_BASIC_DAMAGE_MAX,
+        damage_minimum,
+        damage_maximum,
         player.crit_chance,
         attacker_position=(floor.player_column, floor.player_row),
     )
@@ -326,11 +325,12 @@ def perform_summoner_attack(
             },
         )
     )
+    damage_minimum, damage_maximum = basic_attack_damage_range(player)
     enemy_was_defeated = attack_enemy(
         game_state,
         hit_enemy,
-        player.damage_min,
-        player.damage_max,
+        damage_minimum,
+        damage_maximum,
         player.crit_chance,
         attacker_position=(
             floor.player_column,

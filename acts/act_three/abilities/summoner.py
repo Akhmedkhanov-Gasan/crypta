@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from acts.act_three.ability_scaling import familiar_damage_range
 
 from game.combat_log import add_log_message
 from acts.act_three.abilities.progression import is_ability_slot_unlocked
@@ -422,7 +423,8 @@ def resolve_summoner_familiar_turn(game_state: GameState) -> None:
         player.summoner_familiar_attack_target = cells[0]
         game_state.emit(GameEvent(type=GameEventType.ATTACK, actor="familiar", origin=familiar_position,
                                   positions=cells, data={"kind": "summoner_familiar"}))
-        if attack_enemy(game_state, target_enemy, player.damage_min, player.damage_max, 0.0,
+        damage_minimum, damage_maximum = familiar_damage_range(player)
+        if attack_enemy(game_state, target_enemy, damage_minimum, damage_maximum, 0.0,
                         attacker_position=familiar_position, grant_ability_charge=False, attacker_name="familiar"):
             resolve_enemy_defeat(game_state, target_enemy)
         return

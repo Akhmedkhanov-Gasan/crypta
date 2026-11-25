@@ -1,7 +1,7 @@
 import pygame
 
 from acts.act_three.abilities.phantom_retinue import summon_phantom_retinue
-from acts.act_three.settings import ARCHER_BASIC_DAMAGE_MIN, ARCHER_BASIC_DAMAGE_MAX
+from acts.act_three.ability_scaling import basic_attack_damage_range
 from game.events import GameEvent, GameEventType
 from systems.player_combat import attack_enemy, resolve_enemy_defeat
 
@@ -49,6 +49,7 @@ def resolve_archer_barrage_zone_entry(game_state, enemy, previous_position):
 
 
 def resolve_archer_barrage_hits(game_state):
+    damage_minimum, damage_maximum = basic_attack_damage_range(game_state.player)
     pending = tuple(game_state.player.archer_barrage_pending_hits)
     game_state.player.archer_barrage_pending_hits.clear()
     for enemy_id, origin, target in pending:
@@ -60,7 +61,7 @@ def resolve_archer_barrage_hits(game_state):
             origin=origin, positions=(target,), data={"kind": "phantom_retinue"},
         ))
         defeated = attack_enemy(
-            game_state, enemy, ARCHER_BASIC_DAMAGE_MIN, ARCHER_BASIC_DAMAGE_MAX, game_state.player.crit_chance,
+            game_state, enemy, damage_minimum, damage_maximum, game_state.player.crit_chance,
             attacker_position=origin, attacker_name="phantom",
             grant_ability_charge=False, suppress_veil_retrigger=True,
             damage_multiplier=0.25,

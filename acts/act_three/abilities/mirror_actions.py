@@ -1,6 +1,7 @@
 from acts.act_three.abilities.phantom_motion import queue_phantom_attack
 from acts.act_three.rune_master.definitions import MIRROR_DAMAGE_MULTIPLIER
-from acts.act_three.settings import ARCHER_BASIC_DAMAGE_MIN, ARCHER_BASIC_DAMAGE_MAX, ARCHER_BASIC_ATTACK_RANGE
+from acts.act_three.ability_scaling import basic_attack_damage_range
+from acts.act_three.settings import ARCHER_BASIC_ATTACK_RANGE
 from game.events import GameEvent, GameEventType
 from logic import get_enemy_occupied_positions, has_line_of_sight
 from systems.player_combat import attack_enemy, resolve_enemy_defeat
@@ -83,8 +84,9 @@ def advance_mirror_actions(game_state, phantom, current_time):
                           if enemy.health > 0 and target in get_enemy_occupied_positions(enemy)), None)
             if enemy is None:
                 continue
+            damage_minimum, damage_maximum = basic_attack_damage_range(player)
             defeated = attack_enemy(
-                game_state, enemy, ARCHER_BASIC_DAMAGE_MIN, ARCHER_BASIC_DAMAGE_MAX, player.crit_chance,
+                game_state, enemy, damage_minimum, damage_maximum, player.crit_chance,
                 attacker_position=phantom.position, attacker_name="phantom",
                 force_critical=critical, damage_multiplier=MIRROR_DAMAGE_MULTIPLIER,
                 grant_ability_charge=False, suppress_veil_retrigger=True,

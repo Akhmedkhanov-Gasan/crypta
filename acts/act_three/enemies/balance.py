@@ -1,0 +1,118 @@
+from math import ceil
+
+ACT_THREE_ENEMY_OVERRIDES = {
+    "lantern_warden": {
+        "max_health": 220,
+        "aggro_radius": 7,
+        "wander_chance": 0.0,
+        "move_every": 1,
+        "attack_kind": "melee",
+        "attack_range": 1,
+        "retreat_jump_chance": 0.0,
+        "dodge_chance": 0.0,
+        "damage_by_mode": {
+            "melee": ((6, 7), (3, 1)),
+            "lantern_sweep": ((6, 8), (3, 1)),
+            "soul_lance": ((7, 9), (3, 1)),
+            "cinder_nova": ((9, 11), (3, 1)),
+            "soul_procession": ((6, 8), (3, 1)),
+        },
+    },
+    "goblin": {
+        "max_health": 10,
+        "aggro_radius": 6,
+        "damage_by_mode": {"melee": ((3, 4), (75, 25))},
+    },
+    "brute": {
+        "max_health": 20,
+        "aggro_radius": 6,
+        "damage_by_mode": {"cleave": ((5, 6), (80, 20))},
+    },
+    "archer": {
+        "max_health": 10,
+        "aggro_radius": 7,
+        "attack_range": 6,
+        "damage_by_mode": {
+            "ranged": ((3, 4), (75, 25)),
+            "melee": ((2,), (1,)),
+        },
+    },
+    "sentinel": {
+        "max_health": 22,
+        "aggro_radius": 6,
+        "damage_by_mode": {
+            "melee": ((4, 5), (75, 25)),
+            "shield_bash": ((4, 5), (75, 25)),
+        },
+    },
+    "priest": {
+        "max_health": 12,
+        "aggro_radius": 7,
+        "heal_amount": 3,
+        "damage_by_mode": {
+            "magic": ((3, 4), (75, 25)),
+            "melee": ((2,), (1,)),
+        },
+    },
+    "priest_ghost": {
+        "max_health": 10,
+        "aggro_radius": 8,
+        "dodge_chance": 0.6,
+        "damage_by_mode": {
+            "magic": ((4, 5), (75, 25)),
+            "melee": ((2, 3), (75, 25)),
+        },
+    },
+}
+
+LANTERN_WARDEN_EXPERIENCE = 40
+LANTERN_WARDEN_ABILITY_RANGE = 5
+LANTERN_WARDEN_PROCESSION_RANGE = 6
+LANTERN_WARDEN_PROCESSION_ARM_LENGTH = 3
+LANTERN_WARDEN_ATTACK_ORDER = (
+    "lantern_sweep", "soul_lance", "soul_procession", "cinder_nova",
+)
+
+LATER_FLOOR_HEALTH_MULTIPLIER = 1.15
+LATER_FLOOR_DAMAGE_TYPES = frozenset({"brute", "sentinel", "priest_ghost"})
+
+
+def act_three_enemy_config(enemy_type, act_floor, base_config=None):
+    from enemies import ENEMY_TYPES
+
+    config = {
+        **(ENEMY_TYPES[enemy_type] if base_config is None else base_config),
+        **ACT_THREE_ENEMY_OVERRIDES.get(enemy_type, {}),
+    }
+    if (
+        enemy_type not in ACT_THREE_ENEMY_OVERRIDES
+        or act_floor < 3
+    ):
+        return config
+    config["max_health"] = ceil(
+        config["max_health"] * LATER_FLOOR_HEALTH_MULTIPLIER,
+    )
+    if enemy_type in LATER_FLOOR_DAMAGE_TYPES:
+        config["damage_by_mode"] = {
+            mode: (tuple(value + 1 for value in values), weights)
+            for mode, (values, weights) in config["damage_by_mode"].items()
+        }
+    return config
+
+
+def enemy_config_for_spawn(game_state, enemy_type, position):
+    from enemies import ENEMY_TYPES
+    from levels import FLOOR_CONFIGS
+
+    floor = game_state.floor
+    rune_trial = floor.rune_trial
+    if (
+        floor.presentation_act != 3
+        or position in floor.trial_safe_cells
+        or (rune_trial is not None and position in rune_trial["cells"])
+    ):
+        return ENEMY_TYPES[enemy_type]
+    return act_three_enemy_config(
+        enemy_type,
+        FLOOR_CONFIGS[game_state.floor_index]["act_floor"],
+    )

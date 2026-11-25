@@ -160,11 +160,15 @@ def advance_floor_transition(game_state, current_time):
 
         target_passage_id = game_state.floor_transition_target_passage_id
         if target_passage_id is not None:
+            passage_ids = (target_passage_id,)
+            if target_floor.presentation_act == 3 and target_passage_id in ("exit_up", "exit_back"):
+                passage_ids = ("exit_back", "exit_up")
             target_passage = next(
                 (
                     passage
+                    for passage_id in passage_ids
                     for passage in target_floor.passages
-                    if passage.passage_id == target_passage_id
+                    if passage.passage_id == passage_id
                 ),
                 None,
             )

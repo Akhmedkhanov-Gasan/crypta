@@ -4,7 +4,7 @@
   <property name="enemy_spawn_mode" type="bool" value="false"/>
  </properties>
  <tileset firstgid="1" source="../../act3_floor_64.tsx"/>
- <tileset firstgid="9" source="../../EnvironmentObjects/lantern_warden_room_props/lantern_warden_room_props.tsx"/>
+ <tileset firstgid="9" source="../../environment_objects/lantern_warden_room_props/lantern_warden_room_props.tsx"/>
  <tileset firstgid="21" source="../../../../my/assets/astra_assets/enemies/lantern_warden/lantern_warden.tsx"/>
  <tileset firstgid="21" source="../../items.tsx"/>
  <tileset firstgid="189" source="../../my_tiles_textured.tsx"/>

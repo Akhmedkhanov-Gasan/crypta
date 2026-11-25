@@ -1,3 +1,4 @@
+from acts.act_three.ability_scaling import archer_shot_damage_range
 from acts.act_three.rune_master.definitions import SPLITFANG_DAMAGE_MULTIPLIER, SPLITFANG_RANGE
 from logic import get_enemy_occupied_positions, has_line_of_sight
 from systems.player_combat import attack_enemy, resolve_enemy_defeat
@@ -5,9 +6,8 @@ from systems.player_combat import attack_enemy, resolve_enemy_defeat
 
 def splitfang_hits(game_state, impact, excluded, current_time, oracle_hit_reaction,
                    attacker_name, damage_multiplier, critical):
-    from acts.act_three.abilities.archer_piercing_shot import PIERCING_DAMAGE_MIN, PIERCING_DAMAGE_MAX
-
     floor, player = game_state.floor, game_state.player
+    damage_minimum, damage_maximum = archer_shot_damage_range(player)
     candidates = []
     for enemy in floor.enemies:
         if enemy.health <= 0 or id(enemy) in excluded:
@@ -27,7 +27,7 @@ def splitfang_hits(game_state, impact, excluded, current_time, oracle_hit_reacti
             "phantom": attacker_name == "phantom",
         })
         defeated = attack_enemy(
-            game_state, enemy, PIERCING_DAMAGE_MIN, PIERCING_DAMAGE_MAX, player.crit_chance,
+            game_state, enemy, damage_minimum, damage_maximum, player.crit_chance,
             force_critical=critical, attacker_position=impact, attacker_name=attacker_name,
             grant_ability_charge=False, suppress_veil_retrigger=critical,
             damage_multiplier=damage_multiplier * SPLITFANG_DAMAGE_MULTIPLIER,

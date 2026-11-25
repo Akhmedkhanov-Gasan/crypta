@@ -1,6 +1,7 @@
 import random
 
 from enemies import ENEMY_TYPES
+from acts.act_three.enemies.balance import enemy_config_for_spawn
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from game.state import (
@@ -42,7 +43,8 @@ def try_spawn_enemy_after_death(
         return None
 
     spawned_type = spawn_rule["enemy_type"]
-    spawned_config = ENEMY_TYPES[spawned_type]
+    position = defeated_enemy.column, defeated_enemy.row
+    spawned_config = enemy_config_for_spawn(game_state, spawned_type, position)
 
     spawned_enemy = EnemyState.from_config(
         enemy_type=spawned_type,
@@ -112,7 +114,7 @@ def try_spawn_crate_goblin(game_state, crate) -> bool:
         column=crate.column,
         row=crate.row,
         name=_next_enemy_name(game_state, "goblin"),
-        config=ENEMY_TYPES["goblin"],
+        config=enemy_config_for_spawn(game_state, "goblin", (crate.column, crate.row)),
         belongs_to_boss_group=False,
     )
     goblin.is_aggro = True

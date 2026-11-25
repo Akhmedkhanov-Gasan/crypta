@@ -9,6 +9,7 @@ from acts.act_three.room_generation import (
     _compose,
     _structural_connectors,
     _template_paths,
+    _passage_positions,
 )
 from acts.act_three.room_connections import (
     extend_layout as _extend,
@@ -17,6 +18,7 @@ from acts.act_three.room_connections import (
 from acts.act_three.tmx_loader import load_tmx_floor
 from acts.act_three.world_geometry import reachable_cells
 from acts.act_three.loop_generation import connect_openings
+from acts.act_three.floor_templates import select_floor_templates
 
 
 def _validate_template(template):
@@ -47,7 +49,7 @@ def _required_openings(rooms):
     for room in rooms:
         connectors = _structural_connectors(room)
         if len(connectors) != 1:
-            return Counter()
+            continue
         required[OPPOSITE_DIRECTION[connectors[0]["direction"]]] += 1
     return required
 
@@ -96,7 +98,7 @@ def _valid_floor(floor):
     if _structural_connectors(floor):
         return False
     reachable = reachable_cells(floor["map"], floor["player_start"], floor["barriers"])
-    exits = [item for item in floor["connectors"] if item["name"] in ("exit_up", "exit_next_floor")]
+    exits = [item for item in floor["connectors"] if item["name"] in ("exit_down", "exit_next_floor")]
     if not exits:
         return False
     trial_door = floor.get("trial_entrance")
@@ -104,19 +106,23 @@ def _valid_floor(floor):
         if any(position not in reachable and position != trial_door for position in edge):
             return False
     for connector in exits:
-        x, y = connector["position"]
-        if (x, y + 1) not in reachable:
+        positions = _passage_positions(connector)
+        if positions is None or positions[1] not in reachable:
             return False
+    for connector in floor["connectors"]:
+        if connector["name"] in ("exit_up", "exit_back"):
+            positions = _passage_positions(connector)
+            if positions is None or positions[1] not in reachable:
+                return False
     entrance = floor.get("trial_entrance")
     return entrance is None or (entrance[0], entrance[1] + 1) in reachable
 
 
 def generate_room_layout(config, trial_path=None):
     project_root = Path(__file__).resolve().parents[2]
-    entry_path = project_root / config["map_path"]
-    exit_path = project_root / config["exit_map_path"]
-    entry = load_tmx_floor(entry_path)
-    exit_room = load_tmx_floor(exit_path)
+    entry, exit_room = select_floor_templates(config)
+    entry_path = Path(entry["source_path"])
+    exit_path = Path(exit_room["source_path"])
     templates = [
         load_tmx_floor(path)
         for path in _template_paths(project_root / config["room_template_directory"], entry_path)
@@ -159,6 +165,11 @@ def generate_room_layout(config, trial_path=None):
     if trial is not None:
         required_rooms.append(trial)
     required_openings = _required_openings(required_rooms)
+    required_growth = Counter()
+    for room in required_rooms:
+        connectors = _structural_connectors(room)
+        if len(connectors) > 1:
+            required_growth.update(connector["direction"] for connector in connectors)
     maximum_openings = {
         direction: max(
             sum(connector["direction"] == direction for connector in _structural_connectors(room))
@@ -198,11 +209,14 @@ def generate_room_layout(config, trial_path=None):
 
     def finish(placements, frontier, connections, required):
         nonlocal remaining_attempts
-        if remaining_attempts <= 0 or len(frontier) < len(required):
+        minimum_openings = sum(2 - len(_structural_connectors(room)) for room in required)
+        if remaining_attempts <= 0 or len(frontier) < minimum_openings:
             return None
         remaining_attempts -= 1
 
         if not frontier:
+            if required:
+                return None
             entry_placement = next(placement for placement in placements if placement[0] is entry)
             ordered_placements = [entry_placement] + [placement for placement in placements if placement is not entry_placement]
             floor = _compose(ordered_placements, connections)
@@ -224,18 +238,18 @@ def generate_room_layout(config, trial_path=None):
             return None
 
         if required:
+            branching_indices = [
+                index for index, room in enumerate(required)
+                if len(_structural_connectors(room)) > 1
+            ]
             demands = _required_openings(required)
-            if any(_opening_deficits(frontier, demands).values()):
+            if not branching_indices and any(_opening_deficits(frontier, demands).values()):
                 return None
-            if demands:
-                choices = [
-                    (index, _options(placements, frontier, [room]))
-                    for index, room in enumerate(required)
-                ]
-                required_index, options = min(choices, key=lambda choice: len(choice[1]))
-            else:
-                required_index = 0
-                options = _options(placements, frontier, required[:1])
+            choices = [
+                (index, _options(placements, frontier, [required[index]]))
+                for index in (branching_indices or range(len(required)))
+            ]
+            required_index, options = min(choices, key=lambda choice: len(choice[1]))
             next_required = required[:required_index] + required[required_index + 1:]
         else:
             if not allow_dead_ends:
@@ -265,7 +279,10 @@ def generate_room_layout(config, trial_path=None):
         if remaining_attempts <= 0:
             return None
         deficits = _opening_deficits(frontier, required_openings)
-        if any(deficit > count * maximum_openings[direction] for direction, deficit in deficits.items()):
+        if any(
+            deficit > count * maximum_openings[direction] + required_growth[direction]
+            for direction, deficit in deficits.items()
+        ):
             return None
         if count == 0:
             return finish(placements, frontier, connections, required_rooms)

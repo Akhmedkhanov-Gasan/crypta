@@ -32,7 +32,8 @@ def _template_paths(directory, spawn_path):
         path for path in paths
         if path != Path(spawn_path).resolve()
         and path.name.startswith(("room_", "corridor_", "test_room_"))
-        and "key_rooms" not in path.relative_to(directory).parts
+        and not {"key_rooms", "room_entry", "room_exit"}.intersection(path.relative_to(directory).parts)
+        and not path.name.startswith(("room_entry_", "room_exit_"))
         and path.name != "room_rune_trial.tmx"
     )
 
@@ -570,7 +571,7 @@ def _passage_positions(connector):
     name = connector.get("name", "")
     direction = connector.get("direction", "")
 
-    if name in ("exit_up", "exit_next_floor"):
+    if not direction and name in ("exit_up", "exit_down", "exit_back", "exit_next_floor"):
         direction = "north"
 
     step = DIRECTION_STEP.get(direction)
@@ -595,13 +596,15 @@ def attach_act_three_passages(
     for connector in floor.get("connectors", []):
         name = connector.get("name", "")
 
-        if name in ("exit_up", "exit_next_floor"):
+        if name in ("exit_down", "exit_next_floor"):
+            passage_id = "exit_down"
             target_floor_index = (
                 floor_index + 1
                 if floor_index + 1 < floor_count
                 else None
             )
-        elif name == "exit_back":
+        elif name in ("exit_up", "exit_back"):
+            passage_id = "exit_up"
             target_floor_index = None
         else:
             continue
@@ -614,11 +617,11 @@ def attach_act_three_passages(
 
         passages.append(
             {
-                "passage_id": name,
+                "passage_id": passage_id,
                 "wall_position": wall_position,
                 "trigger_position": trigger_position,
                 "target_floor_index": target_floor_index,
-                "target_passage_id": "exit_back" if target_floor_index is not None else None,
+                "target_passage_id": "exit_up" if target_floor_index is not None else None,
                 "requires_clear": False,
             }
         )

@@ -1,5 +1,9 @@
 from collections import deque
 from copy import copy
+from acts.act_three.enemies.balance import (
+    LANTERN_WARDEN_ABILITY_RANGE,
+    LANTERN_WARDEN_ATTACK_ORDER,
+)
 
 from acts.act_three.ai.pursuit import (
     _move_toward_player_with_footprint,
@@ -70,7 +74,7 @@ def _ability_targets(floor, enemy, blocking_positions):
     frontier = deque(footprint)
     while frontier:
         origin = frontier.popleft()
-        if distances[origin] >= 5:
+        if distances[origin] >= LANTERN_WARDEN_ABILITY_RANGE:
             continue
         for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
             target = (origin[0] + dx, origin[1] + dy)
@@ -100,7 +104,7 @@ def _ability_targets(floor, enemy, blocking_positions):
         next_cell = (origin[0] + dx, origin[1] + dy)
         if next_cell in footprint:
             continue
-        for step in range(1, 6):
+        for step in range(1, LANTERN_WARDEN_ABILITY_RANGE + 1):
             target = (origin[0] + dx * step, origin[1] + dy * step)
             previous = (target[0] - dx, target[1] - dy)
             if target in blocking_positions or not can_move_between(floor.map, *previous, *target, floor.barriers):
@@ -123,7 +127,7 @@ def _try_prepare_ability(game_state, enemy, blocking_positions):
         aim_cells.add(tuple(spirit["position"]))
     footprint = get_enemy_occupied_positions(enemy)
     aim_cells = sorted(aim_cells, key=lambda cell: (min(abs(cell[0] - origin[0]) + abs(cell[1] - origin[1]) for origin in footprint), cell != hero, cell))
-    order = ("lantern_sweep", "soul_lance", "soul_procession", "cinder_nova")
+    order = LANTERN_WARDEN_ATTACK_ORDER
     if enemy.last_attack_mode in order:
         index = order.index(enemy.last_attack_mode) + 1
         order = order[index:] + order[:index]

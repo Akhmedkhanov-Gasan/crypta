@@ -1,3 +1,4 @@
+from acts.act_three.ability_scaling import archer_shot_damage_range
 from acts.act_three.abilities.progression import (
     clear_ability_slot_charge,
     is_ability_slot_charged,
@@ -10,8 +11,6 @@ from logic import get_enemy_occupied_positions, has_line_of_sight
 from systems.player_combat import attack_enemy, resolve_enemy_defeat
 
 
-PIERCING_DAMAGE_MIN = 3
-PIERCING_DAMAGE_MAX = 5
 PIERCING_PATH_CELLS = 6
 
 
@@ -142,6 +141,7 @@ def resolve_piercing_hits(game_state, hit_enemies, origin, current_time, oracle_
     if has_ability_rune(player, "rune_of_splitfang_arrow"):
         hit_enemies = hit_enemies[:1]
     first_hit = None
+    damage_minimum, damage_maximum = archer_shot_damage_range(player)
 
     for enemy in hit_enemies:
         if enemy.health <= 0:
@@ -150,8 +150,8 @@ def resolve_piercing_hits(game_state, hit_enemies, origin, current_time, oracle_
         defeated = attack_enemy(
             game_state,
             enemy,
-            PIERCING_DAMAGE_MIN,
-            PIERCING_DAMAGE_MAX,
+            damage_minimum,
+            damage_maximum,
             player.crit_chance,
             force_critical=shot_from_invisibility,
             attacker_position=origin,

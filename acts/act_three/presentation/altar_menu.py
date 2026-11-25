@@ -1,4 +1,5 @@
 import pygame
+from acts.act_three.ability_scaling import basic_attack_damage_range
 
 from game.attributes import player_stat_changes_for_attribute_upgrade
 from game.progression import (
@@ -87,6 +88,7 @@ def _draw_tabs(screen, game_state, fonts, assets):
 
 
 def _attribute_card_data(player):
+    minimum, maximum = basic_attack_damage_range(player)
     changes = {
         name: player_stat_changes_for_attribute_upgrade(
             name,
@@ -97,7 +99,7 @@ def _attribute_card_data(player):
     return {
         "valor": (
             "VALOR",
-            f"DAMAGE  {player.damage_min}-{player.damage_max}",
+            f"PHYSICAL  {player.damage_min}-{player.damage_max}",
             (
                 f"NEXT  +{changes['valor'].damage_min} MIN / "
                 f"+{changes['valor'].damage_max} MAX"
@@ -114,12 +116,20 @@ def _attribute_card_data(player):
         "will": (
             "WILL",
             (
-                f"CRIT  {round(player.crit_chance * 100)}%  /  "
-                f"CRIT DMG  x{player.critical_damage_multiplier:.2f}"
+                f"MAGIC  {minimum}-{maximum}"
+                if player.player_class == "mage"
+                else (
+                    f"CRIT  {round(player.crit_chance * 100)}%  /  "
+                    f"CRIT DMG  x{player.critical_damage_multiplier:.2f}"
+                )
             ),
             (
-                f"NEXT  +{round(changes['will'].crit_chance * 100)}% CRIT  /  "
-                f"+{changes['will'].critical_damage_multiplier:.2f} CRIT DMG"
+                "+1 MAGIC ON ODD WILL RANKS"
+                if player.player_class == "mage"
+                else (
+                    f"NEXT  +{round(changes['will'].crit_chance * 100)}% CRIT  /  "
+                    f"+{changes['will'].critical_damage_multiplier:.2f} CRIT DMG"
+                )
             ),
         ),
         "fortitude": (

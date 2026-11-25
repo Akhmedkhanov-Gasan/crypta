@@ -1,6 +1,10 @@
 import math
 
 import pygame
+from acts.act_three.ability_scaling import (
+    basic_attack_damage_range,
+    summoner_attack_multiplier,
+)
 from acts.act_three.abilities.paladin_runes import effective_dodge_chance
 
 from game.progression import experience_required_for_level
@@ -415,7 +419,12 @@ def _ability_entries(player, accent_color):
 
 
 def _damage_value(player):
-    damage_text = f"{player.damage_min}-{player.damage_max}"
+    minimum, maximum = basic_attack_damage_range(player)
+    if player.subclass == "summoner":
+        multiplier = summoner_attack_multiplier(player)
+        minimum = math.ceil(minimum * multiplier)
+        maximum = math.ceil(maximum * multiplier)
+    damage_text = f"{minimum}-{maximum}"
     bonus_minimum = 0
     bonus_maximum = 0
     if player.subclass == "berserker":
@@ -429,8 +438,8 @@ def _damage_value(player):
             multiplier = BERSERKER_RAGE_INJURED_DAMAGE_MULTIPLIER
         else:
             multiplier = 1.0
-        bonus_minimum = math.ceil(player.damage_min * multiplier) - player.damage_min
-        bonus_maximum = math.ceil(player.damage_max * multiplier) - player.damage_max
+        bonus_minimum = math.ceil(minimum * multiplier) - minimum
+        bonus_maximum = math.ceil(maximum * multiplier) - maximum
     if bonus_maximum > 0:
         bonus = (
             f"+{bonus_minimum}"

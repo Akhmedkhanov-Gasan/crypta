@@ -1,4 +1,5 @@
 import pygame
+from acts.act_three.ability_scaling import paladin_ground_damage_bonus
 
 from acts.act_three.abilities.progression import is_ability_slot_unlocked
 from acts.act_three.combat.stun import apply_act_three_enemy_stun
@@ -94,6 +95,7 @@ def resolve_paladin_sacred_ground(game_state):
     enemies_hit = 0
     now = pygame.time.get_ticks()
     sanctuary = player.act_three.paladin_ultimate_rune == "rune_of_redeeming_sanctuary"
+    damage_bonus = paladin_ground_damage_bonus(player)
     for enemy in tuple(game_state.floor.enemies):
         if player.paladin_sacred_ground_hits <= 0:
             break
@@ -104,8 +106,8 @@ def resolve_paladin_sacred_ground(game_state):
         game_state.emit(GameEvent(type=GameEventType.ATTACK, actor="hero", target=enemy.name,
                                   origin=player.paladin_sacred_ground_anchor, destination=target,
                                   positions=(target,), data={"kind": "paladin_sacred_ground"}))
-        defeated = attack_enemy(game_state, enemy, PALADIN_SACRED_GROUND_DAMAGE_MIN,
-                                PALADIN_SACRED_GROUND_DAMAGE_MAX, player.crit_chance,
+        defeated = attack_enemy(game_state, enemy, PALADIN_SACRED_GROUND_DAMAGE_MIN + damage_bonus,
+                                PALADIN_SACRED_GROUND_DAMAGE_MAX + damage_bonus, player.crit_chance,
                                 attacker_position=player.paladin_sacred_ground_anchor, grant_ability_charge=False)
         if enemy.health < health:
             enemies_hit += 1

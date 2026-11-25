@@ -7,7 +7,7 @@
  <tileset firstgid="169" source="../../act3_floor_64.tsx"/>
  <tileset firstgid="177" source="../../my_tiles_textured.tsx"/>
  <tileset firstgid="350" source="../../torches/torches.tsx"/>
- <tileset firstgid="354" source="../../EnvironmentObjects/environment_objects.tsx"/>
+ <tileset firstgid="354" source="../../environment_objects/environment_objects.tsx"/>
  <layer id="1" name="Ground" width="17" height="15">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -227,10 +227,10 @@
   <object id="47" x="610" y="941" width="215" height="8"/>
  </objectgroup>
  <objectgroup id="11" name="Connectors">
-  <object id="7" name="exit_next_floor" x="223" y="114">
+  <object id="7" name="exit_down" x="223" y="114">
    <point/>
   </object>
-  <object id="8" name="exit_back" x="544.667" y="936.667">
+  <object id="8" name="exit_up" x="544.667" y="936.667">
    <point/>
   </object>
  </objectgroup>

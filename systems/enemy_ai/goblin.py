@@ -1,6 +1,7 @@
 import random
 
 from enemies import ENEMY_TYPES
+from acts.act_three.enemies.balance import enemy_config_for_spawn
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from game.state import (
@@ -443,7 +444,7 @@ def resolve_goblin_summon(
             column=position[0],
             row=position[1],
             name=_next_summoned_goblin_name(game_state),
-            config=ENEMY_TYPES["goblin"],
+            config=enemy_config_for_spawn(game_state, "goblin", position),
             belongs_to_boss_group=False,
         )
         reinforcement.is_summoned = True

@@ -6,6 +6,10 @@ from acts.act_three.combat.paladin import (
     add_paladin_block_chance,
 )
 from acts.act_three.equipment import apply_armor_bonus, apply_weapon_bonus
+from acts.act_three.ability_scaling import (
+    basic_attack_damage_range as act_three_basic_attack_damage_range,
+    summoner_attack_multiplier,
+)
 from acts.act_three.items.drops import drop_from_monster
 from acts.act_two.ability_scaling import (
     mage_basic_attack_damage_bonus,
@@ -464,6 +468,7 @@ def attack_enemy(
         from acts.act_three.abilities.summoner_runes import absorption_damage_multiplier
 
         damage_multiplier *= absorption_damage_multiplier(player)
+        damage_multiplier *= summoner_attack_multiplier(player)
     tower_damage_rounding = False
     if attacker_name == "hero" and player.subclass == "paladin":
         from acts.act_three.abilities.paladin_runes import paladin_attack_multiplier, tower_shield_active
@@ -790,7 +795,7 @@ def resolve_enemy_defeat(
     player.enemies_defeated += 1
 
     current_act = game_state.floor.presentation_act
-    if current_act == 2:
+    if current_act in (2, 3):
         experience_reward = experience_reward_for_enemy(enemy.type)
         levels_gained = grant_experience(player, experience_reward)
         add_log_message(
@@ -815,6 +820,7 @@ def resolve_enemy_defeat(
                 ),
                 category="progress",
             )
+    if current_act == 2:
         if random.random() < ENEMY_GOLD_DROP_CHANCE:
             drop_position = (
                 enemy.column,
@@ -895,6 +901,9 @@ def remove_enemy_corpses_at_position(
 
 
 def basic_attack_damage_range(player) -> tuple[int, int]:
+    if player.subclass is not None:
+        return act_three_basic_attack_damage_range(player)
+
     if player.player_class != "mage":
         return player.damage_min, player.damage_max
 

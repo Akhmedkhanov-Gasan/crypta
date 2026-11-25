@@ -1,3 +1,4 @@
+from acts.act_three.enemies.balance import LANTERN_WARDEN_EXPERIENCE
 from game.attributes import (
     ATTRIBUTE_ORDER,
     MAX_ATTRIBUTE_RANK,
@@ -16,6 +17,7 @@ ENEMY_EXPERIENCE_REWARDS = {
     "sentinel": 3,
     "mimic": 4,
     "oracle": 8,
+    "lantern_warden": LANTERN_WARDEN_EXPERIENCE,
 
 }
 def experience_required_for_level(level: int) -> int:

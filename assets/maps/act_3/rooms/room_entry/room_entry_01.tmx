@@ -3,10 +3,10 @@
  <properties>
   <property name="enemy_spawn_mode" type="bool" value="true"/>
  </properties>
- <tileset firstgid="1" source="../act3_floor_64.tsx"/>
- <tileset firstgid="9" source="../items.tsx"/>
- <tileset firstgid="177" source="../my_tiles_textured.tsx"/>
- <tileset firstgid="285" source="../torches/torches.tsx"/>
+ <tileset firstgid="1" source="../../act3_floor_64.tsx"/>
+ <tileset firstgid="9" source="../../items.tsx"/>
+ <tileset firstgid="177" source="../../my_tiles_textured.tsx"/>
+ <tileset firstgid="350" source="../../torches/torches.tsx"/>
  <layer id="1" name="Ground" width="15" height="10">
   <data encoding="csv">
 0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,
@@ -164,11 +164,11 @@
  <layer id="18" name="Torches" width="15" height="10">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,288,0,0,0,0,0,288,0,0,0,0,
+0,0,0,0,353,0,0,0,0,0,353,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,288,0,0,0,0,288,0,0,0,0,0,
+0,0,0,0,353,0,0,0,0,353,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -184,7 +184,7 @@
   <object id="7" name="exit_north" x="479.333" y="32">
    <point/>
   </object>
-  <object id="8" name="exit_back" x="480.667" y="616.667">
+  <object id="8" name="exit_up" x="480.667" y="616.667">
    <point/>
   </object>
  </objectgroup>

@@ -6,7 +6,7 @@ import resource_store as resources
 
 MAP_DIRECTORY = Path(__file__).resolve().parents[2] / "assets/maps/act_3"
 ENVIRONMENT_OBJECTS_TILESET_PATH = (
-    MAP_DIRECTORY / "EnvironmentObjects" / "environment_objects.tsx"
+    MAP_DIRECTORY / "environment_objects" / "environment_objects.tsx"
 ).resolve()
 TILED_GID_MASK = 0x0FFFFFFF
 
@@ -35,7 +35,7 @@ def tileset_catalog():
         *resources.glob_resources(MAP_DIRECTORY / "torches", "*.tsx"),
     ])
     paths.append(ENVIRONMENT_OBJECTS_TILESET_PATH)
-    paths.append(MAP_DIRECTORY / "EnvironmentObjects" / "lantern_warden_room_props" / "lantern_warden_room_props.tsx")
+    paths.append(MAP_DIRECTORY / "environment_objects" / "lantern_warden_room_props" / "lantern_warden_room_props.tsx")
     paths.extend(sorted(resources.glob_resources(MAP_DIRECTORY / "runes", "*.tsx")))
     catalog = {}
     first_gid = 1
