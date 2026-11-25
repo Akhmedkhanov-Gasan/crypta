@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="7" height="7" tilewidth="64" tileheight="64" infinite="0" nextlayerid="13" nextobjectid="6">
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="7" height="7" tilewidth="64" tileheight="64" infinite="0" nextlayerid="13" nextobjectid="10">
  <properties>
   <property name="enemy_spawn_mode" type="bool" value="true"/>
  </properties>
- <tileset firstgid="1" source="../act3_floor_64.tsx"/>
- <tileset firstgid="9" source="../my_tiles_textured.tsx"/>
- <tileset firstgid="117" source="../torches/torches.tsx"/>
- <tileset firstgid="121" source="../items.tsx"/>
+ <tileset firstgid="1" source="../../act3_floor_64.tsx"/>
+ <tileset firstgid="9" source="../../my_tiles_textured.tsx"/>
+ <tileset firstgid="182" source="../../torches/torches.tsx"/>
+ <tileset firstgid="186" source="../../items.tsx"/>
  <layer id="1" name="Ground" width="7" height="7">
   <data encoding="csv">
 0,0,0,0,0,0,0,
@@ -15,7 +15,7 @@
 0,3,5,2,4,4,0,
 0,4,3,5,3,4,0,
 0,4,7,8,4,3,0,
-0,3,1,6,3,1,0
+0,0,0,6,0,0,0
 </data>
  </layer>
  <layer id="2" name="WallsFront_01" width="7" height="7">
@@ -26,7 +26,18 @@
 0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,
-57,39,39,39,39,39,55
+43,95,41,0,42,95,2147483691
+</data>
+ </layer>
+ <layer id="12" name="GroundDetails_01" width="7" height="7">
+  <data encoding="csv">
+0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,
+0,268,0,0,286,0,0,
+0,0,0,0,0,0,0,
+0,0,223,0,0,0,0,
+0,266,0,0,284,0,0,
+0,0,0,0,0,0,0
 </data>
  </layer>
  <layer id="11" name="WallsBack_02" width="7" height="7">
@@ -37,17 +48,6 @@
 0,0,0,0,0,0,20,
 0,0,0,0,0,0,20,
 0,0,0,0,0,0,20,
-0,0,0,0,0,0,0
-</data>
- </layer>
- <layer id="12" name="GroundDetails_01" width="7" height="7">
-  <data encoding="csv">
-0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,
-0,203,0,0,221,0,0,
-0,0,0,0,0,0,0,
-0,0,158,0,0,0,0,
-0,201,0,0,219,0,0,
 0,0,0,0,0,0,0
 </data>
  </layer>
@@ -65,7 +65,7 @@
  <layer id="4" name="Torches" width="7" height="7">
   <data encoding="csv">
 0,0,0,0,0,0,0,
-0,0,120,0,120,0,0,
+0,0,185,0,185,0,0,
 0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,
@@ -76,7 +76,7 @@
  <layer id="5" name="DecorBack_01" width="7" height="7">
   <data encoding="csv">
 0,0,0,0,0,0,0,
-0,208,210,134,0,179,0,
+0,273,275,199,0,244,0,
 0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,
@@ -92,18 +92,21 @@
 0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,
-0,0,248,0,247,0,0
+0,0,0,0,0,0,0
 </data>
  </layer>
- <objectgroup id="8" name="Barriers"/>
  <objectgroup id="9" name="Blocked">
   <object id="2" x="18.5" y="85" width="399.5" height="26.5"/>
   <object id="3" x="402.5" y="99.5" width="39" height="330.5"/>
-  <object id="4" x="17.5" y="468" width="422" height="31"/>
-  <object id="5" x="19" y="212" width="23" height="270"/>
+  <object id="5" x="19" y="212" width="23" height="216.411"/>
+  <object id="6" x="84.7673" y="402.888" width="82.8186" height="22.8969"/>
+  <object id="7" x="282.07" y="405.324" width="92.562" height="24.3584"/>
  </objectgroup>
  <objectgroup id="10" name="Connectors">
   <object id="1" name="exit_west" x="32" y="170.5">
+   <point/>
+  </object>
+  <object id="9" name="exit_south" x="225.559" y="426.272">
    <point/>
   </object>
  </objectgroup>

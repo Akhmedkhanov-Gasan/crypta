@@ -56,10 +56,12 @@ def extend_layout(placements, frontier, connections, option):
     )
 
 
-def placement_options(placements, frontier, templates):
+def placement_options(placements, frontier, templates, opening_index=None):
     options = []
     seen_placements = set()
     for frontier_index, opening in enumerate(frontier):
+        if opening_index is not None and frontier_index != opening_index:
+            continue
         for template in templates:
             for connector in _structural_connectors(template):
                 if connector["direction"] != OPPOSITE_DIRECTION[opening["direction"]]:

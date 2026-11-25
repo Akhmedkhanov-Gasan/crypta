@@ -88,13 +88,13 @@ def is_file(path):
     return _resource_name(path).casefold() in _archive_index()
 
 
-def glob_resources(directory, pattern):
+def glob_resources(directory, pattern, recursive=False):
     directory = _absolute_path(directory)
 
     if not PACKED:
         return sorted(
             path
-            for path in directory.glob(pattern)
+            for path in (directory.rglob(pattern) if recursive else directory.glob(pattern))
             if path.is_file()
         )
 
@@ -104,7 +104,11 @@ def glob_resources(directory, pattern):
     for entry in _archive_index().values():
         member = PurePosixPath(entry.filename)
 
-        if member.parent.as_posix().casefold() != directory_name:
+        parent_name = member.parent.as_posix().casefold()
+        if recursive:
+            if parent_name != directory_name and not parent_name.startswith(directory_name + "/"):
+                continue
+        elif parent_name != directory_name:
             continue
 
         if fnmatchcase(member.name.casefold(), pattern.casefold()):

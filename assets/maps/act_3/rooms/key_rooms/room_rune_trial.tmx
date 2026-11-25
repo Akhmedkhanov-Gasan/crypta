@@ -3,11 +3,11 @@
  <properties>
   <property name="enemy_spawn_mode" type="bool" value="false"/>
  </properties>
- <tileset firstgid="1" source="../act3_floor_64.tsx"/>
- <tileset firstgid="9" source="../my_tiles_textured.tsx"/>
- <tileset firstgid="182" source="../runes/rune_trial_tileset.tsx"/>
- <tileset firstgid="190" source="../runes/rune_trial_decorations.tsx"/>
- <tileset firstgid="206" source="../items.tsx"/>
+ <tileset firstgid="1" source="../../act3_floor_64.tsx"/>
+ <tileset firstgid="9" source="../../my_tiles_textured.tsx"/>
+ <tileset firstgid="182" source="../../runes/rune_trial_tileset.tsx"/>
+ <tileset firstgid="190" source="../../runes/rune_trial_decorations.tsx"/>
+ <tileset firstgid="206" source="../../items.tsx"/>
  <layer id="2" name="Ground" width="15" height="10">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,

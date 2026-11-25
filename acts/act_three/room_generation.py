@@ -26,15 +26,14 @@ DIRECTION_STEP = {
 
 
 def _template_paths(directory, spawn_path):
-    directory = Path(directory)
-    paths = {
-        *resources.glob_resources(directory, "room_*.tmx"),
-        *resources.glob_resources(directory, "corridor_*.tmx"),
-        *resources.glob_resources(directory, "test_room_*.tmx"),
-    }
+    directory = Path(directory).resolve()
+    paths = resources.glob_resources(directory, "*.tmx", recursive=True)
     return sorted(
         path for path in paths
-        if path != Path(spawn_path) and path.name != "room_rune_trial.tmx"
+        if path != Path(spawn_path).resolve()
+        and path.name.startswith(("room_", "corridor_", "test_room_"))
+        and "key_rooms" not in path.relative_to(directory).parts
+        and path.name != "room_rune_trial.tmx"
     )
 
 

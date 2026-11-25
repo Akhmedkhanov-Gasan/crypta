@@ -16,6 +16,7 @@ from acts.act_three.room_connections import (
 )
 from acts.act_three.tmx_loader import load_tmx_floor
 from acts.act_three.world_geometry import reachable_cells
+from acts.act_three.loop_generation import connect_openings
 
 
 def _validate_template(template):
@@ -130,8 +131,13 @@ def generate_room_layout(config, trial_path=None):
     templates = [template for template in templates if template["source_path"] not in required_sources]
     for template in [entry, exit_room, *templates, *required_templates]:
         _validate_template(template)
-    dead_ends = [template for template in templates if len(_structural_connectors(template)) == 1]
+    allow_dead_ends = config.get("allow_dead_ends", True)
+    dead_ends = [
+        template for template in templates
+        if allow_dead_ends and len(_structural_connectors(template)) == 1
+    ]
     connecting_rooms = [template for template in templates if len(_structural_connectors(template)) > 1]
+    corridors = [template for template in connecting_rooms if len(_structural_connectors(template)) == 2]
     branch_rooms = [
         room for room in connecting_rooms
         if len({connector["direction"] for connector in _structural_connectors(room)}) > 1
@@ -146,8 +152,8 @@ def generate_room_layout(config, trial_path=None):
             layout_rooms.append(room)
     featured_rooms = featured_rooms or branch_rooms
     layout_rooms = layout_rooms or branch_rooms
-    if not connecting_rooms or not dead_ends:
-        raise ValueError("Act Three needs connecting rooms and dead ends")
+    if not connecting_rooms or (allow_dead_ends and not dead_ends):
+        raise ValueError("Act Three has no templates to complete the floor")
 
     required_rooms = [entry, exit_room, *required_templates]
     if trial is not None:
@@ -162,6 +168,7 @@ def generate_room_layout(config, trial_path=None):
     }
     target_count = config["generated_piece_count"] - 1 - len(required_rooms)
     remaining_attempts = 0
+    loop_budget = [0]
 
     def resolve_pairs(placements, frontier, connections, adapters_left=6):
         nonlocal remaining_attempts
@@ -209,6 +216,13 @@ def generate_room_layout(config, trial_path=None):
                     return result
             return None
 
+        if (
+            not allow_dead_ends
+            and all(len(_structural_connectors(room)) == 1 for room in required)
+            and (len(frontier) - len(required)) % 2
+        ):
+            return None
+
         if required:
             demands = _required_openings(required)
             if any(_opening_deficits(frontier, demands).values()):
@@ -224,6 +238,14 @@ def generate_room_layout(config, trial_path=None):
                 options = _options(placements, frontier, required[:1])
             next_required = required[:required_index] + required[required_index + 1:]
         else:
+            if not allow_dead_ends:
+                if len(frontier) % 2:
+                    return None
+                for state in connect_openings(placements, frontier, connections, corridors, loop_budget):
+                    result = finish(*state, required)
+                    if result is not None:
+                        return result
+                return None
             options_by_opening = [[] for _ in frontier]
             for option in _options(placements, frontier, dead_ends):
                 options_by_opening[option[0]].append(option)
@@ -280,8 +302,9 @@ def generate_room_layout(config, trial_path=None):
         for count in range(target_count, max(-1, target_count - 3), -1):
             for _ in range(4):
                 remaining_attempts = 1000
+                loop_budget[0] = 1500
                 for state in resolve_pairs([(featured, (0, 0))], _structural_connectors(featured), []):
                     result = search(*state, count)
                     if result is not None:
                         return result
-    raise ValueError("Cannot assemble Act Three with all room connectors joined; check room shapes and dead-end directions")
+    raise ValueError("Cannot assemble Act Three with all room connectors joined; check room geometry and corridor connections")

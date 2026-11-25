@@ -4,7 +4,7 @@ The current route contains the Oracle arena after awakening and two generated fl
 
 ## Room templates
 
-Save room templates in `assets/maps/act_3/rooms` as `room_*.tmx` or `corridor_*.tmx`. Entry and exit templates are configured separately. The generator prefers unused connecting templates. Templates with exactly one structural connector finish branches. Keep a dead end available for each entrance direction.
+Save room templates in `assets/maps/act_3/rooms` or its subdirectories as `room_*.tmx` or `corridor_*.tmx`. The generator discovers nested templates in both loose and packed resources. Keep story rooms in `key_rooms` and configure their paths explicitly. Entry and exit templates are configured separately.
 
 Use finite orthogonal maps with square 64 px tiles and CSV tile layers. Keep the existing rendering layer prefixes. Use the `Ground` layer for floor tiles and `Blocked` or `Collision` for solid collision rectangles. Thin `Barriers` rectangles block movement between cells.
 
@@ -15,7 +15,9 @@ Place point objects in `Connectors`:
 - `exit_back`: a return gate, temporarily sealed.
 - `exit_up` or `exit_next_floor`: a forward gate. Place it above its walkable approach cell.
 
-Structural connectors currently support one-cell openings. Each connector and its inward neighbor must be walkable and reachable from the other structural connectors. Rooms are placed without rotation. Every structural opening on a generated floor must be joined to another room. Dead ends are added beyond `generated_piece_count`. If a layout cannot fit, the generator can retry with up to two fewer connecting pieces.
+Structural connectors currently support one-cell openings. Each connector and its inward neighbor must be walkable and reachable from the other structural connectors. Rooms are placed without rotation. Every structural opening on a generated floor must be joined to another room. Additional corridor pieces can exceed `generated_piece_count`. If a layout cannot fit, the generator can retry with up to two fewer connecting pieces.
+
+The current generated floors set `allow_dead_ends` to `false`. Ordinary one-entrance templates remain available in `room_dead_end` for later use. Free branches are connected back to the floor with authored two-entrance rooms, L-junctions and straight corridors. Required NPC and trial rooms keep their authored entrances. Paired two-entrance terminal rooms remain usable as short loops.
 
 Closely spaced paired openings are joined to matching paired openings in a neighboring template. Matching uses grid positions, opposite directions and opening widths. The generator resolves these connections before placing more rooms, and rejects placements that would cover another opening with a wall. Each generated floor starts from a randomly selected paired-opening room, then adds ordinary connecting rooms, the entry and all required rooms. The selected room is retained in the completed floor. Templates whose openings all face one direction serve as matching terminal rooms. Matching neighbors are added beyond the base piece count. Two separate 7x7 dead ends cannot close openings spaced only two or three cells apart.
 

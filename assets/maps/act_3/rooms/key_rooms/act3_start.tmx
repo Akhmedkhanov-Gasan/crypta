@@ -3,11 +3,11 @@
  <properties>
   <property name="enemy_spawn_mode" type="bool" value="false"/>
  </properties>
- <tileset firstgid="1" source="../items.tsx"/>
- <tileset firstgid="169" source="../act3_floor_64.tsx"/>
- <tileset firstgid="177" source="../my_tiles_textured.tsx"/>
- <tileset firstgid="350" source="../torches/torches.tsx"/>
- <tileset firstgid="354" source="../EnvironmentObjects/environment_objects.tsx"/>
+ <tileset firstgid="1" source="../../items.tsx"/>
+ <tileset firstgid="169" source="../../act3_floor_64.tsx"/>
+ <tileset firstgid="177" source="../../my_tiles_textured.tsx"/>
+ <tileset firstgid="350" source="../../torches/torches.tsx"/>
+ <tileset firstgid="354" source="../../EnvironmentObjects/environment_objects.tsx"/>
  <layer id="1" name="Ground" width="17" height="15">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -221,9 +221,6 @@
   <object id="65" name="trader" x="930.667" y="225.333">
    <point/>
   </object>
-  <object id="66" name="rune_master" x="793" y="222">
-   <point/>
-  </object>
  </objectgroup>
  <objectgroup id="9" name="Barriers">
   <object id="46" x="269" y="939" width="222" height="15"/>
@@ -246,9 +243,5 @@
   </object>
  </objectgroup>
  <objectgroup id="17" name="Enemies"/>
- <objectgroup id="21" name="Ores">
-  <object id="64" name="black_ores" x="926.167" y="421.333">
-   <point/>
-  </object>
- </objectgroup>
+ <objectgroup id="21" name="Ores"/>
 </map>

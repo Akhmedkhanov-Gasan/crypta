@@ -3,11 +3,11 @@
  <properties>
   <property name="enemy_spawn_mode" type="bool" value="true"/>
  </properties>
- <tileset firstgid="1" source="../act3_floor_64.tsx"/>
- <tileset firstgid="9" source="../my_tiles_textured.tsx"/>
- <tileset firstgid="182" source="../torches/torches.tsx"/>
- <tileset firstgid="186" source="../items.tsx"/>
- <tileset firstgid="354" source="../torches/floor_ember_bowl.tsx"/>
+ <tileset firstgid="1" source="../../act3_floor_64.tsx"/>
+ <tileset firstgid="9" source="../../my_tiles_textured.tsx"/>
+ <tileset firstgid="182" source="../../torches/torches.tsx"/>
+ <tileset firstgid="186" source="../../items.tsx"/>
+ <tileset firstgid="354" source="../../torches/floor_ember_bowl.tsx"/>
  <layer id="1" name="Ground" width="8" height="11">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,
@@ -106,7 +106,7 @@
 0,0,280,0,0,0,0,0,
 0,211,0,0,0,0,0,0,
 0,0,213,0,0,0,0,0,
-0,354,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
 0,0,0,0,213,0,0,0,
 0,236,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,
