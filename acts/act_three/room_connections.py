@@ -11,8 +11,7 @@ from acts.act_three.room_generation import (
 )
 
 
-def _frontier_is_clear(placements, frontier):
-    bounds = [_bounds(template, offset) for template, offset in placements]
+def _frontier_is_clear(bounds, frontier):
     for opening in frontier:
         dx, dy = DIRECTION_STEP[opening["direction"]]
         x = opening["position"][0] + dx
@@ -59,30 +58,31 @@ def extend_layout(placements, frontier, connections, option):
 def placement_options(placements, frontier, templates, opening_index=None):
     options = []
     seen_placements = set()
+    bounds = [_bounds(template, offset) for template, offset in placements]
+    connectors_by_direction = {}
+    for template in templates:
+        for connector in _structural_connectors(template):
+            if connector["width"] == 1:
+                connectors_by_direction.setdefault(connector["direction"], []).append((template, connector))
     for frontier_index, opening in enumerate(frontier):
         if opening_index is not None and frontier_index != opening_index:
             continue
-        for template in templates:
-            for connector in _structural_connectors(template):
-                if connector["direction"] != OPPOSITE_DIRECTION[opening["direction"]]:
-                    continue
-                if connector["width"] != opening["width"] or connector["width"] != 1:
-                    continue
-                offset = _placement_offset(opening, connector)
-                placement_key = template["source_path"], offset
-                if placement_key in seen_placements:
-                    continue
-                candidate_bounds = _bounds(template, offset)
-                if any(
-                    _bounds_overlap(candidate_bounds, _bounds(placed, position))
-                    for placed, position in placements
-                ):
-                    continue
-                option = frontier_index, template, connector, offset
-                next_placements, next_frontier, _ = extend_layout(placements, frontier, [], option)
-                if not _frontier_is_clear(next_placements, next_frontier):
-                    continue
-                seen_placements.add(placement_key)
-                options.append(option)
+        if opening["width"] != 1:
+            continue
+        direction = OPPOSITE_DIRECTION[opening["direction"]]
+        for template, connector in connectors_by_direction.get(direction, ()):
+            offset = _placement_offset(opening, connector)
+            placement_key = template["source_path"], offset
+            if placement_key in seen_placements:
+                continue
+            candidate_bounds = _bounds(template, offset)
+            if any(_bounds_overlap(candidate_bounds, placed_bounds) for placed_bounds in bounds):
+                continue
+            option = frontier_index, template, connector, offset
+            _, next_frontier, _ = extend_layout(placements, frontier, [], option)
+            if not _frontier_is_clear([*bounds, candidate_bounds], next_frontier):
+                continue
+            seen_placements.add(placement_key)
+            options.append(option)
     random.shuffle(options)
     return options

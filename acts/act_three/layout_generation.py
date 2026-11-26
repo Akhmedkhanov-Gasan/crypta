@@ -18,7 +18,11 @@ from acts.act_three.room_connections import (
 from acts.act_three.tmx_loader import load_tmx_floor
 from acts.act_three.world_geometry import reachable_cells
 from acts.act_three.loop_generation import connect_openings
-from acts.act_three.floor_templates import select_floor_templates
+from acts.act_three.floor_templates import floor_template_pairs
+
+
+class LayoutSearchExhausted(ValueError):
+    pass
 
 
 def _validate_template(template):
@@ -120,23 +124,38 @@ def _valid_floor(floor):
 
 def generate_room_layout(config, trial_path=None):
     project_root = Path(__file__).resolve().parents[2]
-    entry, exit_room = select_floor_templates(config)
-    entry_path = Path(entry["source_path"])
-    exit_path = Path(exit_room["source_path"])
-    templates = [
-        load_tmx_floor(path)
-        for path in _template_paths(project_root / config["room_template_directory"], entry_path)
-        if path != exit_path
-    ]
-    trial = load_tmx_floor(project_root / trial_path) if trial_path else None
+    pairs = floor_template_pairs(config)
     required_templates = [
         load_tmx_floor(project_root / path)
         for path in config.get("required_room_paths", ())
     ]
     required_sources = {template["source_path"] for template in required_templates}
+    templates = [
+        load_tmx_floor(path)
+        for path in _template_paths(project_root / config["room_template_directory"], project_root / config["map_path"])
+    ]
     templates = [template for template in templates if template["source_path"] not in required_sources]
-    for template in [entry, exit_room, *templates, *required_templates]:
+    trial = load_tmx_floor(project_root / trial_path) if trial_path else None
+    variants = {room["source_path"]: room for pair in pairs for room in pair}
+    for template in [*variants.values(), *templates, *required_templates]:
         _validate_template(template)
+    failures = []
+    for thorough in (False, True):
+        for entry, exit_room in pairs:
+            try:
+                return _generate_room_layout(
+                    config, trial, entry, exit_room, templates, required_templates,
+                    thorough=thorough,
+                )
+            except LayoutSearchExhausted:
+                if thorough:
+                    failures.append(f"{Path(entry['source_path']).name} / {Path(exit_room['source_path']).name}")
+    raise LayoutSearchExhausted(
+        "Cannot assemble Act Three after searching all entry/exit pairs: " + "; ".join(failures)
+    )
+
+
+def _generate_room_layout(config, trial, entry, exit_room, templates, required_templates, *, thorough=True):
     allow_dead_ends = config.get("allow_dead_ends", True)
     dead_ends = [
         template for template in templates
@@ -315,13 +334,15 @@ def generate_room_layout(config, trial_path=None):
         return None
 
     random.shuffle(featured_rooms)
+    size_variants = 3 if thorough else 1
+    restarts = 4 if thorough else 1
     for featured in featured_rooms:
-        for count in range(target_count, max(-1, target_count - 3), -1):
-            for _ in range(4):
-                remaining_attempts = 1000
-                loop_budget[0] = 1500
+        for count in range(target_count, max(-1, target_count - size_variants), -1):
+            for _ in range(restarts):
+                remaining_attempts = 1000 if thorough else 120
+                loop_budget[0] = 1500 if thorough else 200
                 for state in resolve_pairs([(featured, (0, 0))], _structural_connectors(featured), []):
                     result = search(*state, count)
                     if result is not None:
                         return result
-    raise ValueError("Cannot assemble Act Three with all room connectors joined; check room geometry and corridor connections")
+    raise LayoutSearchExhausted("Cannot assemble Act Three with all room connectors joined; check room geometry and corridor connections")

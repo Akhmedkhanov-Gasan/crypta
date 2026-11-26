@@ -112,11 +112,16 @@ def open_chest(
     player = game_state.player
     act_number = game_state.floor.presentation_act
 
-    has_required_key = (
-        KEY in get_act_two_consumable_slots(player)
-        if act_number == 2
-        else player.key_count > 0
-    )
+    if chest.is_open:
+        return False
+    from acts.act_three.items.keys import has_chest_key, consume_chest_key
+
+    if act_number == 3:
+        has_required_key = has_chest_key(player)
+    elif act_number == 2:
+        has_required_key = KEY in get_act_two_consumable_slots(player)
+    else:
+        has_required_key = player.key_count > 0
     if chest.requires_key and not has_required_key:
         add_log_message(
             game_state.combat_log,
@@ -139,13 +144,24 @@ def open_chest(
         )
     )
     if chest.requires_key:
-        if act_number == 2:
+        if act_number == 3:
+            consume_chest_key(player)
+        elif act_number == 2:
             consume_act_two_key(player)
         else:
             player.key_count -= 1
 
     if awaken_mimic(game_state, chest):
         return True
+
+    if act_number == 3:
+        from acts.act_three.items.drops import place_ground_drop
+
+        if chest.contains != "gold":
+            place_ground_drop(game_state.floor, chest.contains, (chest.column, chest.row), effect_started_at, animate=True)
+            chest.loot_available = False
+            add_log_message(game_state.combat_log, "The chest opens and reveals its contents.", category="loot")
+            return True
 
     if chest["contains"] in ("gold", POTION, FIRE_BOMB, *SCROLLS):
         chest["loot_available"] = True

@@ -9,6 +9,6 @@ SPECIAL_ITEM_NAMES = {
 }
 SPECIAL_ITEM_DESCRIPTIONS = {
     PICKAXE: "Required to mine ore. Keep it in your inventory.",
-    CRYPTA_KEY: "A crypt key. Its lock has yet to be found.",
+    CRYPTA_KEY: "Opens one locked crypt chest. Consumed on use.",
     **{item: "Holds up to 3 keys. Drag a loose key onto the ring." for item in KEYRING_ITEMS},
 }

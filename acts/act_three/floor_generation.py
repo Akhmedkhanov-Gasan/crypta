@@ -72,6 +72,9 @@ def build_act_three_floor(
     if config.get("random_rune_master"):
         place_random_npc(floor, "rune_master")
     populate_act_three_enemies(floor, config["act_floor"])
+    from acts.act_three.chest_generation import populate_act_three_chests
+
+    populate_act_three_chests(floor, config["act_floor"])
     populate_act_three_crates(floor)
     populate_act_three_ores(floor, config["act_floor"])
     return floor

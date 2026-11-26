@@ -57,6 +57,7 @@ def draw_ground_items(
     separate_sources=(),
     *,
     pile_sprites=(),
+    highlight=False,
 ):
     floor = game_state.floor
     grouped = {}
@@ -85,7 +86,12 @@ def draw_ground_items(
                 (tile_size, tile_size),
             )
 
-        screen.blit(
+        draw_sprite = screen.blit
+        if highlight:
+            from acts.act_three.presentation.items.ground_highlight import draw_ground_sprite
+
+            draw_sprite = lambda image, position: draw_ground_sprite(screen, image, position, current_time)
+        draw_sprite(
             sprite,
             (
                 offset[0] + position[0] * tile_size,

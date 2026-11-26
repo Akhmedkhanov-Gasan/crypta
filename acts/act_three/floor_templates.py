@@ -40,3 +40,11 @@ def select_floor_templates(config):
     entries = _load_variants(config, "entry")
     exits = _load_variants(config, "exit")
     return random.choice(entries), random.choice(exits)
+
+
+def floor_template_pairs(config):
+    entries = _load_variants(config, "entry")
+    exits = _load_variants(config, "exit")
+    pairs = [(entry, exit_room) for entry in entries for exit_room in exits]
+    random.shuffle(pairs)
+    return pairs

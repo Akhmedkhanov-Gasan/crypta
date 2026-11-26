@@ -442,20 +442,18 @@ def generate_tmx_room_floor(spawn_path, template_directory, piece_count=2):
 
 
 def _structural_connectors(template):
-    structural_names = {
+    structural_names = (
         "exit_north",
         "exit_south",
         "exit_east",
         "exit_west",
-    }
+    )
+    structural_prefixes = ("exit_north_", "exit_south_", "exit_east_", "exit_west_")
     return [
         connector
         for connector in template["connectors"]
-        if any(
-            connector.get("name", "") == name
-            or connector.get("name", "").startswith(f"{name}_")
-            for name in structural_names
-        )
+        if connector.get("name", "") in structural_names
+        or connector.get("name", "").startswith(structural_prefixes)
     ]
 
 

@@ -67,7 +67,7 @@ def drop_from_environment_object(floor, crate):
     tile_id = (crate.variant & TILED_GID_MASK) - first_gid
     drop_table = ENVIRONMENT_OBJECT_DROPS.get(tile_id)
     if drop_table:
-        _roll_ground_drop(floor, (crate.column, crate.row), drop_table)
+        _roll_ground_drop(floor, (crate.column, crate.row), drop_table, animate=True)
 
 
 def drop_from_monster(game_state, enemy):

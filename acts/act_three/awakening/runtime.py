@@ -128,7 +128,6 @@ def enter_act_three(game_state):
     )
     game_state.player.movement_origin = None
     game_state.player.movement_animation_started_at = 0
-    game_state.player.key_count = 0
     game_state.player_attack_targets.clear()
 
 

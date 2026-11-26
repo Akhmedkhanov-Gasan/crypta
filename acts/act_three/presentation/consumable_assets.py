@@ -40,6 +40,8 @@ def _fit_icon(image):
 
 
 def load_act_three_consumable_assets():
+    from acts.act_three.presentation.world.chests import load_chest_frames
+
     belt_sprites = {}
     ground_sprites = {}
     original_sprites = {}
@@ -96,6 +98,7 @@ def load_act_three_consumable_assets():
     drop_sprites.update(special_ground)
 
     return {
+        "act_three_chest_frames": load_chest_frames(),
         "act_three_special_item_sprites": special_icons,
         "act_three_consumable_belt_sprites": belt_sprites,
         "act_three_consumable_ground_sprites": ground_sprites,

@@ -54,6 +54,7 @@ from acts.act_three.presentation.urn_effects import draw_urn_effect
 from acts.act_three.presentation.world.consumables import draw_consumable_cells
 from acts.act_three.presentation.world.environment_objects import draw_breakable_environment_objects
 from acts.act_three.presentation.world.loot import draw_loot_drops
+from acts.act_three.presentation.world.chests import draw_chests
 from acts.act_three.presentation.ore_ambient import draw_ore_ambient
 from acts.act_three.mining.presentation import (
     draw_mining_feedback,
@@ -301,6 +302,7 @@ def _draw_act_three_world(
     draw_consumable_cells(context, game_state, assets)
     draw_world_ores(context, assets)
     draw_breakable_environment_objects(context, current_time)
+    draw_chests(context, assets["act_three_chest_frames"], current_time)
     draw_world_enemies(
         context,
         game_state,
@@ -316,8 +318,9 @@ def _draw_act_three_world(
         ACT_THREE_TILE_SIZE,
         (-camera_x, -camera_y),
         pile_sprites=assets["act_three_item_pile_sprites"],
+        highlight=True,
     )
-    draw_loot_drops(context, assets["ground_item_sprites"], current_time)
+    draw_loot_drops(context, assets["ground_item_sprites"], current_time, assets["act_three_item_pile_sprites"])
     draw_world_npcs(
         context,
         game_state,

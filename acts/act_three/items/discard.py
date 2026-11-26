@@ -55,6 +55,6 @@ def discard_item(game_state, slot, current_time, *, from_belt=False, target=None
         remove_act_two_consumable(player, slot)
     else:
         slots[slot] = None
-    place_ground_drop(floor, item, target, current_time)
+    place_ground_drop(floor, item, target, current_time, animate=True)
     add_log_message(game_state.combat_log, "Hero drops an item.", category="neutral")
     return True

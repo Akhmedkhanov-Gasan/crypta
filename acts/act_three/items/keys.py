@@ -3,6 +3,35 @@ KEYRING_ITEMS = ("keyring_empty", "keyring_one", "keyring_two", "keyring_three")
 KEYRING_CAPACITY = 3
 
 
+def has_chest_key(player):
+    return (
+        any(item in ("key", CRYPTA_KEY, *KEYRING_ITEMS[1:]) for item in player.act_three.inventory_slots)
+        or any(item in ("key", CRYPTA_KEY) for item in player.act_two.consumable_slots)
+        or player.key_count > 0
+    )
+
+
+def consume_chest_key(player):
+    slots = player.act_three.inventory_slots
+    for index, item in enumerate(slots):
+        if item in KEYRING_ITEMS[1:]:
+            slots[index] = KEYRING_ITEMS[KEYRING_ITEMS.index(item) - 1]
+            return True
+        if item in ("key", CRYPTA_KEY):
+            slots[index] = None
+            return True
+    from acts.act_two.consumables import remove_act_two_consumable
+
+    for index, item in enumerate(player.act_two.consumable_slots):
+        if item in ("key", CRYPTA_KEY):
+            remove_act_two_consumable(player, index)
+            return True
+    if player.key_count > 0:
+        player.key_count -= 1
+        return True
+    return False
+
+
 def store_key_on_ring(slots):
     for index, item in enumerate(slots):
         if item in KEYRING_ITEMS[:-1]:

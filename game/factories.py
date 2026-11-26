@@ -106,6 +106,7 @@ def create_floor_state(
             )
         )
         enemies[-1].movement_bounds = enemy_data.get("movement_bounds")
+        enemies[-1].has_key = enemy_data.get("has_key", False)
 
         if (
                 floor.get("warden_intro", False)
@@ -141,6 +142,8 @@ def create_floor_state(
         len(possible_key_carriers),
     )
 
+    if floor.get("presentation_act") == 3:
+        key_carrier_count = 0
     for key_carrier in random.sample(
         possible_key_carriers,
         key_carrier_count,

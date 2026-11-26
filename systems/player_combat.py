@@ -877,7 +877,14 @@ def resolve_enemy_defeat(
     if not enemy.has_key:
         return
 
-    floor.dropped_keys.append((enemy.column, enemy.row))
+    if floor.presentation_act == 3:
+        import pygame
+        from acts.act_three.items.drops import place_ground_drop
+        from acts.act_three.items.keys import CRYPTA_KEY
+
+        place_ground_drop(floor, CRYPTA_KEY, (enemy.column, enemy.row), pygame.time.get_ticks(), animate=True)
+    else:
+        floor.dropped_keys.append((enemy.column, enemy.row))
     enemy.has_key = False
     add_log_message(
         game_state.combat_log,
