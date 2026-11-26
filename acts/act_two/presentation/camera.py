@@ -1,11 +1,7 @@
 import pygame
 
-from presentation.map_navigation import draw_map_trail
 from presentation.camera import (
     PixelCamera,
-    camera_render_rectangle,
-    camera_world_view_size,
-    change_pixel_camera_zoom,
     draw_pixel_camera_view,
     pixel_camera_screen_to_world,
     update_pixel_camera,
@@ -66,6 +62,7 @@ def update_act_two_camera(
     floor_index,
     current_time,
 ):
+    camera.zoom = 2
     update_pixel_camera(
         camera,
         _map_world_size(dungeon_map),
@@ -74,23 +71,6 @@ def update_act_two_camera(
         floor_index,
         current_time,
         _DEAD_ZONE,
-        constrain_to_world=False,
-    )
-
-
-def change_act_two_camera_zoom(
-    camera,
-    dungeon_map,
-    player_column,
-    player_row,
-    direction,
-):
-    return change_pixel_camera_zoom(
-        camera,
-        direction,
-        _map_world_size(dungeon_map),
-        _VIEWPORT,
-        _player_focus(player_column, player_row),
         constrain_to_world=False,
     )
 
@@ -130,14 +110,6 @@ def draw_act_two_camera_view(screen, world_surface, camera, floor):
         source_origin=(MAP_OFFSET_X, MAP_OFFSET_Y),
         background=BACKGROUND_COLOR,
     )
-    draw_map_trail(
-        screen,
-        floor,
-        (round(camera.x), round(camera.y)),
-        TILE_SIZE,
-        camera.zoom,
-        render_rectangle,
-    )
     _draw_camera_vignette(screen, render_rectangle)
 
 
@@ -152,18 +124,10 @@ def act_two_screen_to_cell(position, camera):
     return world_position[0] // TILE_SIZE, world_position[1] // TILE_SIZE
 
 
-def act_two_camera_zoom_label(camera):
-    render_rectangle = camera_render_rectangle(_VIEWPORT, camera.zoom)
-    view_size = camera_world_view_size(_VIEWPORT, camera.zoom)
-    return f"{camera.zoom}x ({view_size[0]}x{view_size[1]})", render_rectangle
-
-
 __all__ = [
     "ActTwoCamera",
-    "act_two_camera_zoom_label",
     "act_two_screen_to_cell",
     "act_two_world_surface_size",
-    "change_act_two_camera_zoom",
     "draw_act_two_camera_view",
     "update_act_two_camera",
 ]

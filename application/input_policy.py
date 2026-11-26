@@ -21,6 +21,7 @@ def console_input_available(app_runtime, game_state):
         and game_state.floor_transition_started_at < 0
         and not game_state.class_selection_open
         and not game_state.upgrade_screen_open
+        and not game_state.act_two_map_open
         and not game_state.subclass_selection_open
         and not game_state.act_three_transition_open
         and not game_state.act_three_debug_class_selection_open
@@ -65,6 +66,7 @@ def continuous_movement_input_available(
         and not game_state.class_selection_open
         and not game_state.upgrade_screen_open
         and not game_state.rune_selection_open
+        and not game_state.act_two_map_open
         and not game_state.bloody_altar_open
         and not game_state.subclass_selection_open
         and not game_state.act_three_transition_open

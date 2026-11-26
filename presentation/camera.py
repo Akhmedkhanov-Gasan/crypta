@@ -4,9 +4,6 @@ import math
 import pygame
 
 
-PIXEL_CAMERA_ZOOM_LEVELS = (1, 2)
-
-
 @dataclass
 class PixelCamera:
     x: float = 0.0
@@ -74,34 +71,6 @@ def center_pixel_camera(
     camera.y = target_y
     camera.target_x = camera.x
     camera.target_y = camera.y
-
-
-def change_pixel_camera_zoom(
-    camera,
-    direction,
-    world_size,
-    viewport,
-    focus,
-    zoom_levels=PIXEL_CAMERA_ZOOM_LEVELS,
-    constrain_to_world=True,
-):
-    current_index = zoom_levels.index(camera.zoom)
-    next_index = max(
-        0,
-        min(len(zoom_levels) - 1, current_index + direction),
-    )
-    next_zoom = zoom_levels[next_index]
-    if next_zoom == camera.zoom:
-        return False
-    camera.zoom = next_zoom
-    center_pixel_camera(
-        camera,
-        world_size,
-        viewport,
-        focus,
-        constrain_to_world=constrain_to_world,
-    )
-    return True
 
 
 def update_pixel_camera(
@@ -233,12 +202,10 @@ def pixel_camera_screen_to_world(position, camera, viewport):
 
 
 __all__ = [
-    "PIXEL_CAMERA_ZOOM_LEVELS",
     "PixelCamera",
     "camera_render_rectangle",
     "camera_world_view_size",
     "center_pixel_camera",
-    "change_pixel_camera_zoom",
     "draw_pixel_camera_view",
     "pixel_camera_screen_to_world",
     "update_pixel_camera",

@@ -14,6 +14,7 @@ from acts.act_two.presentation.death_scene import (
     draw_act_two_death_dialogue_overlay,
 )
 from acts.act_two.presentation.hud import draw_act_two_sidebar
+from acts.act_two.presentation.cartography import draw_full_map, draw_minimap
 from acts.act_two.presentation.hud_focus import keyboard_focus_rectangle
 from acts.act_two.presentation.player import draw_act_two_player_feedback_overlay
 from acts.act_two.presentation.rune_selection import draw_rune_selection
@@ -48,7 +49,6 @@ class ActTwoInterface:
         surface,
         game_state: GameState,
         camera,
-        map_navigation,
         ground_item_window,
         input_state,
         current_time,
@@ -126,12 +126,10 @@ class ActTwoInterface:
             dragged_consumable_slot=input_state.dragged_consumable_slot,
             keyboard_focus=keyboard_focus_rectangle(self.hud_layout, player) if game_state.act_two_stats_open else None,
         )
-        map_navigation.draw(
-            surface,
-            game_state,
-            mouse_position,
-            enabled=continuous_movement_available,
-        )
+        if player.health > 0 and not game_state.game_won and game_state.floor_transition_started_at < 0:
+            draw_minimap(surface, game_state, self.hud_layout, self.sprites)
+            if game_state.act_two_map_open:
+                draw_full_map(surface, game_state, self.fonts["log"], self.fonts["sidebar_heading"], self.hud_layout, self.sprites)
 
         if game_state.rune_selection_open:
             draw_rune_selection(

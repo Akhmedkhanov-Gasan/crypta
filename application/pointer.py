@@ -5,19 +5,19 @@ from acts.act_one.upgrades import handle_upgrade_pointer_input
 from acts.act_three.input import handle_act_three_pointer_event
 from acts.act_two.input.class_selection import handle_class_selection_pointer
 from acts.act_two.input.pointer import handle_act_two_pointer_event
+from acts.act_two.input.cartography import map_input_available
+from acts.act_two.presentation.cartography import minimap_rectangle
 from presentation.display import window_to_game_position
 
 
 class GameplayPointerController:
     def __init__(
         self,
-        map_navigation,
         act_two_interface_input,
         movement_state,
         act_one_sounds,
         act_two_sounds,
     ):
-        self.map_navigation = map_navigation
         self.act_two_interface_input = act_two_interface_input
         self.movement_state = movement_state
         self.act_one_sounds = act_one_sounds
@@ -61,15 +61,20 @@ class GameplayPointerController:
             pygame.time.get_ticks(),
         ):
             return True
-        if self.map_navigation.handle_event(
-            event,
-            game_state,
-            act_two_camera,
-            mouse_position,
-            enabled=continuous_movement_available and not (
-                current_act == 3 and game_state.sidebar_tab == "stats"
-            ),
+        if (
+            current_act == 2
+            and continuous_movement_available
+            and map_input_available(game_state)
+            and self.movement_state.dragged_consumable_slot is None
+            and mouse_position is not None
+            and minimap_rectangle(self.act_two_interface_input.hud_layout, game_surface.get_size()).collidepoint(mouse_position)
+            and event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEWHEEL)
         ):
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and continuous_movement_available:
+                game_state.act_two_map_open = True
+                self.movement_state.reset_held_movement()
+                self.movement_state.cancel_auto_move()
+                self.movement_state.cancel_consumable_drag()
             return True
         if current_act == 2 and self.act_two_interface_input.handle_event(
             event,

@@ -120,10 +120,6 @@ from acts.act_three.presentation.warrior.power_cleave import (
 from acts.act_three.presentation.world.terrain import (
     draw_world_terrain,
 )
-from acts.act_three.presentation.camera import (
-    act_three_camera_scale,
-)
-from presentation.map_navigation import draw_map_trail
 from presentation.ground_items import draw_ground_items
 from acts.act_three.presentation.tile_layers import (
     draw_fading_foreground_layers,
@@ -259,8 +255,6 @@ def _draw_act_three_world(
     )
 
     floor = context.floor
-    camera_scale = act_three_camera_scale(floor)
-    overview = camera_scale < 1.0
     view_surface = context.view_surface
     view_width = context.view_width
     view_height = context.view_height
@@ -1643,17 +1637,15 @@ def _draw_act_three_world(
         camera_y,
         current_time,
         ACT_THREE_TILE_SIZE,
-        overview=overview,
     )
-    if not overview:
-        draw_lit_atmosphere(
-            view_surface,
-            floor.torches,
-            camera_x,
-            camera_y,
-            current_time,
-            ACT_THREE_TILE_SIZE,
-        )
+    draw_lit_atmosphere(
+        view_surface,
+        floor.torches,
+        camera_x,
+        camera_y,
+        current_time,
+        ACT_THREE_TILE_SIZE,
+    )
     for torch_index, (column, row) in enumerate(floor.torches):
         if (column, row) not in legacy_torches:
             continue
@@ -1702,14 +1694,13 @@ def _draw_act_three_world(
         camera_y,
         visibility_position,
     )
-    if not overview:
-        draw_act_three_color_grading(
-            view_surface,
-            floor.torches,
-            camera_x,
-            camera_y,
-            ACT_THREE_TILE_SIZE,
-        )
+    draw_act_three_color_grading(
+        view_surface,
+        floor.torches,
+        camera_x,
+        camera_y,
+        ACT_THREE_TILE_SIZE,
+    )
 
     draw_trial_detection(context)
     draw_trial_seal_effects(context)
@@ -1761,19 +1752,4 @@ def _draw_act_three_world(
         ACT_THREE_VIEW_HEIGHT,
     )
 
-    if view_surface.get_size() != viewport.size:
-        scale_frame = pygame.transform.scale
-        if camera_scale > 0.5:
-            scale_frame = pygame.transform.smoothscale
-        view_surface = scale_frame(view_surface, viewport.size)
-
     screen.blit(view_surface, viewport)
-
-    draw_map_trail(
-        screen,
-        floor,
-        (camera_x, camera_y),
-        ACT_THREE_TILE_SIZE,
-        camera_scale,
-        viewport,
-    )

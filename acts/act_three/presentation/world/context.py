@@ -13,7 +13,6 @@ from acts.act_three.presentation.berserker import (
     rending_spin_world_position,
 )
 from acts.act_three.presentation.camera import (
-    act_three_view_buffer_size,
     act_three_world_view_size,
     update_act_three_camera,
 )
@@ -111,10 +110,7 @@ def create_world_render_context(
 
     view_size = act_three_world_view_size(floor)
     view_width, view_height = view_size
-    buffer_size = act_three_view_buffer_size(view_size)
-    view_surface = _world_buffer(buffer_size)
-    if view_size != buffer_size:
-        view_surface = view_surface.subsurface(((0, 0), view_size))
+    view_surface = _world_buffer(view_size)
     view_surface.fill((0, 0, 0))
 
     camera_x, camera_y = _camera_position(floor)

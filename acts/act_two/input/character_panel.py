@@ -74,6 +74,22 @@ def handle_panel_key(event, game_state, layout):
     focus = resolve_panel_focus(rectangles, player.act_two.interface_focus)
     player.act_two.interface_focus = focus
     player.act_two.interface_keyboard_focus = True
+    focus_parts = focus.split(":")
+    if (
+        focus_parts[0] == "attribute"
+        and focus_parts[1] in player.act_two.pending_attribute_upgrades
+        and player.attribute_points > 0
+        and event.key in (pygame.K_a, pygame.K_d, pygame.K_LEFT, pygame.K_RIGHT)
+    ):
+        if not getattr(event, "repeat", False):
+            change = (
+                cancel_queued_act_two_attribute_upgrade
+                if event.key in (pygame.K_a, pygame.K_LEFT)
+                else queue_act_two_attribute_upgrade
+            )
+            change(player, focus_parts[1])
+        player.act_two.interface_focus = f"attribute:{focus_parts[1]}"
+        return True
     if event.key in CHORD_MOVEMENT_KEYS:
         player.act_two.interface_focus = move_focus(rectangles, focus, movement_direction_for_key(event.key))
     elif not getattr(event, "repeat", False):

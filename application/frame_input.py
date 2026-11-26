@@ -47,6 +47,15 @@ def prepare_frame_input(
     act_two_sounds,
 ):
     current_act = game_state.floor.presentation_act
+    if (
+        current_act != 2
+        or gameplay_cutscene_active(game_state)
+        or game_state.class_selection_open
+        or game_state.player.health <= 0
+        or game_state.game_won
+        or game_state.floor_transition_started_at >= 0
+    ):
+        game_state.act_two_map_open = False
     console_available = console_input_available(app_runtime, game_state)
     if not console_available:
         dev_console.close()

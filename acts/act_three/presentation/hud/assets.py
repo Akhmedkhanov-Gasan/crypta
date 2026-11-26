@@ -25,7 +25,6 @@ _ART_PATHS = {
         _UI_DIRECTORY / "combat_log_frame.png"
     ),
     "hud_gold_icon": _UI_DIRECTORY / "gold_icon.png",
-    "hud_camera_frame": _UI_DIRECTORY / "camera_frame.png",
     "hud_tabs_frame": _UI_DIRECTORY / "tabs_frame.png",
     "hud_character_panel_frame": (
         _UI_DIRECTORY / "character_panel_frame.png"
@@ -50,7 +49,6 @@ _ART_RECTS = {
         "frame",
     ),
     "hud_gold_icon": ("down_bar", "gold", "icon"),
-    "hud_camera_frame": ("down_bar", "camera", "frame"),
     "hud_tabs_frame": ("right_bar", "tabs", "frame"),
     "hud_character_panel_frame": (
         "right_bar",

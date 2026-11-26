@@ -13,6 +13,8 @@ from acts.act_two.presentation.bosses.oracle_phase_transition import (
     oracle_cutscene_active,
 )
 from acts.act_two.presentation.death_score import handle_act_two_death_event
+from acts.act_two.input.cartography import handle_map_event, map_input_available
+from application.input_policy import continuous_movement_input_available
 from application.directional_input import MOVEMENT_KEYS
 from application.menu_actions import MenuActionState, handle_application_menu_action
 from application.movement_input import release_held_movement
@@ -44,6 +46,7 @@ class ApplicationModalController:
         act_two_sounds,
         act_three_sounds,
         death_score_layout,
+        act_two_hud_layout,
     ):
         self.screen_state = screen_state
         self.game_surface = game_surface
@@ -59,6 +62,7 @@ class ApplicationModalController:
         self.act_two_sounds = act_two_sounds
         self.act_three_sounds = act_three_sounds
         self.death_score_layout = death_score_layout
+        self.act_two_hud_layout = act_two_hud_layout
 
     def handle(
         self,
@@ -209,6 +213,21 @@ class ApplicationModalController:
                 self.act_two_sounds,
                 self.act_three_sounds,
             )
+            return ModalEventResult(True, state)
+        if current_act == 2 and handle_map_event(
+            event,
+            game_state,
+            available=(
+                continuous_movement_input_available(app_runtime, game_state, False, pygame.time.get_ticks())
+                and not state.ground_item_window.is_open
+                and map_input_available(game_state)
+                and self.movement_state.dragged_consumable_slot is None
+            ),
+            mouse_position=self._event_position(event),
+            surface_size=self.game_surface.get_size(),
+            hud_layout=self.act_two_hud_layout,
+        ):
+            self._stop_movement()
             return ModalEventResult(True, state)
         return ModalEventResult(
             game_state.floor_transition_started_at >= 0,

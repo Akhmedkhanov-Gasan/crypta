@@ -2,7 +2,6 @@ import pygame
 from presentation.dev_console import DevConsole
 
 from application.resources import load_application_resources
-from application.map_navigation import MapNavigationController
 from application.bootstrap import begin_application_startup
 from application.debug_shortcuts import (
     create_debug_game_state,
@@ -117,7 +116,6 @@ def run():
     )
     act_two_audio_runtime = ActTwoAudioRuntime()
     act_three_audio_runtime = ActThreeAudioRuntime()
-    map_navigation = MapNavigationController(act_two_hud_layout)
     act_one_world_surface = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
     menu_progress = startup.load(load_progress)
 
@@ -160,7 +158,6 @@ def run():
         act_one_world_surface,
         act_two_renderer,
         act_two_interface,
-        map_navigation,
         cutscene_skip,
         dev_console,
     )
@@ -187,7 +184,6 @@ def run():
         FIRST_ACT_FINAL_FLOOR,
     )
     pointer = GameplayPointerController(
-        map_navigation,
         act_two_interface_input,
         act_two_input_state,
         act_one_sounds,
@@ -213,6 +209,7 @@ def run():
         act_two_sounds,
         act_three_sounds,
         death_score_layout,
+        act_two_hud_layout,
     )
 
     while app_runtime.running:

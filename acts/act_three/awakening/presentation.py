@@ -55,13 +55,12 @@ def _screen_anchor(game_state, position, camera):
             ACT_TWO_VIEW_X + ((position[0] + 0.5) * TILE_SIZE - camera.x) * camera.zoom,
             ACT_TWO_VIEW_Y + ((position[1] + 1) * TILE_SIZE - camera.y) * camera.zoom,
         ), camera.zoom
-    from acts.act_three.presentation.camera import act_three_camera_position, act_three_camera_scale
+    from acts.act_three.presentation.camera import act_three_camera_position
     camera_x, camera_y = act_three_camera_position()
-    scale = act_three_camera_scale(game_state.floor)
     return (
-        ((position[0] + 0.5) * ACT_THREE_TILE_SIZE - camera_x) * scale,
-        ((position[1] + 1) * ACT_THREE_TILE_SIZE - camera_y) * scale,
-    ), scale
+        (position[0] + 0.5) * ACT_THREE_TILE_SIZE - camera_x,
+        (position[1] + 1) * ACT_THREE_TILE_SIZE - camera_y,
+    ), 1.0
 
 
 def _draw_old_man(screen, game_state, camera):

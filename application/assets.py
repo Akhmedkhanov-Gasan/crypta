@@ -895,6 +895,13 @@ def load_act_two_sprites():
         ).convert_alpha()
 
     act_two_hud_directory = ui_directory / "ui_v.0.2"
+    for key, filename in (
+        ("act_two_minimap_frame", "minimap_frame.png"),
+        ("act_two_full_map_frame", "full_map_frame.png"),
+        ("act_two_map_backing", "map_backing.png"),
+        ("act_two_map_floor_texture", "explored_floor_texture.png"),
+    ):
+        sprites[key] = resources.load_image(str(act_two_hud_directory / filename)).convert_alpha()
     sprites.update(
         {
             "act_two_trade_background": resources.load_image(

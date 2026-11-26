@@ -27,7 +27,6 @@ class GameplayRenderer:
     act_one_world_surface: object
     act_two_renderer: object
     act_two_interface: object
-    map_navigation: object
     cutscene_skip: object
     dev_console: object
     native_act_three_hud: NativeActThreeHud = field(default_factory=NativeActThreeHud)
@@ -84,7 +83,6 @@ class GameplayRenderer:
             )
         elif current_act >= 3:
             game_surface.fill(BACKGROUND_COLOR)
-            self.map_navigation.update(game_state, act_two_camera)
             draw_act_three_gameplay(
                 game_surface,
                 game_state,
@@ -105,12 +103,6 @@ class GameplayRenderer:
                 mouse_position=mouse_position,
                 defer_rune_menu=True,
             )
-            self.map_navigation.draw(
-                overlay_target,
-                game_state,
-                mouse_position,
-                enabled=continuous_movement_available,
-            )
             if ground_item_input_available(game_state) and not ground_item_window.is_open:
                 draw_pickup_feedback(
                     overlay_target,
@@ -121,7 +113,6 @@ class GameplayRenderer:
                 )
         else:
             game_surface.fill(BACKGROUND_COLOR)
-            self.map_navigation.update(game_state, act_two_camera)
             oracle_world_frame = self.act_two_renderer.draw_gameplay(
                 game_surface,
                 game_state,
@@ -140,7 +131,6 @@ class GameplayRenderer:
                     game_surface,
                     game_state,
                     act_two_camera,
-                    self.map_navigation,
                     ground_item_window,
                     act_two_input_state,
                     current_time,

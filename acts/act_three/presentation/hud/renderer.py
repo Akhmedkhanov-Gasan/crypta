@@ -1203,26 +1203,6 @@ def draw_act_three_hud(
         layout,
     )
 
-    camera_rectangle = get_layout_rect(
-        layout,
-        "down_bar",
-        "camera",
-        "frame",
-    )
-
-    pygame.draw.rect(
-        screen,
-        (0, 0, 0),
-        camera_rectangle,
-    )
-
-    _blit_asset(
-        screen,
-        assets,
-        "hud_camera_frame",
-        camera_rectangle,
-    )
-
     _draw_tabs(
         screen,
         game_state,

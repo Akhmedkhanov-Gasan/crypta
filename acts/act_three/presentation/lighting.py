@@ -3,7 +3,6 @@ import math
 
 import pygame
 
-from acts.act_three.presentation.camera import act_three_view_buffer_size
 
 _AMBIENT_COLOR = (3, 6, 12, 82)
 _TORCH_LIGHT_RADIUS = 148
@@ -468,20 +467,15 @@ def draw_act_three_lighting(
     camera_y,
     current_time,
     tile_size,
-    *,
-    overview=False,
 ):
     view_size = surface.get_size()
-    buffer_size = act_three_view_buffer_size(view_size)
     surface.blit(
-        _get_ambient_surface(buffer_size),
+        _get_ambient_surface(view_size),
         (0, 0),
         ((0, 0), view_size),
     )
 
-    light_map = _get_light_map_surface(buffer_size)
-    if view_size != buffer_size:
-        light_map = light_map.subsurface(((0, 0), view_size))
+    light_map = _get_light_map_surface(view_size)
     light_map.fill((0, 0, 0))
     barrier_key = tuple(sorted(barriers))
     for torch_index, (column, row) in enumerate(torches):
@@ -543,12 +537,8 @@ def draw_act_three_lighting(
         ):
             continue
 
-        light = (
-            _get_torch_light_surface(light_level)
-            if overview
-            else _get_occluded_torch_light_surface(
-                column, row, light_level, barrier_key, tile_size,
-            )
+        light = _get_occluded_torch_light_surface(
+            column, row, light_level, barrier_key, tile_size,
         )
         light_map.blit(
             light,

@@ -527,6 +527,7 @@ class GameState:
     oracle_debug_mode: bool = False
     act_two_stats_open: bool = False
     act_two_journal_open: bool = False
+    act_two_map_open: bool = False
     act_two_journal_scroll: float = 1.0
     act_two_journal_dragging: bool = False
     act_two_journal_drag_offset: int = 0

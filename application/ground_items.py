@@ -24,6 +24,7 @@ def ground_item_input_available(game_state):
         and not (game_state.floor.presentation_act == 2 and (game_state.act_two_stats_open or game_state.act_two_journal_open))
         and player.health > 0
         and not game_state.dialogue.active
+        and not game_state.act_two_map_open
         and not game_state.game_won
         and game_state.floor_transition_started_at < 0
         and not game_state.class_selection_open

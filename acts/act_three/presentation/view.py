@@ -6,7 +6,6 @@ import pygame
 from acts.act_three.presentation.camera import (
     act_three_camera_position,
     act_three_centered_camera_position,
-    act_three_view_buffer_size,
     act_three_world_view_size,
 )
 from acts.act_three.settings import (
@@ -478,10 +477,7 @@ def _draw_fog_of_war(
     player_position,
 ):
     view_size = view_surface.get_size()
-    buffer_size = act_three_view_buffer_size(view_size)
-    fog = _fog_buffer(buffer_size)
-    if view_size != buffer_size:
-        fog = fog.subsurface(((0, 0), view_size))
+    fog = _fog_buffer(view_size)
     fog.fill((0, 0, 0, 255))
 
     inner_radius = round(
