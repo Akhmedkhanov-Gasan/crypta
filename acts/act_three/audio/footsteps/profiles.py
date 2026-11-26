@@ -27,10 +27,26 @@ FOOTSTEP_PROFILES = {
             for index in range(1, 9)
         ),
     ),
+    "cloth": FootstepProfile(
+        filenames=tuple(
+            f"cloth_{index:02d}.mp3"
+            for index in range(1, 9)
+        ),
+    ),
+    "heavy_armor": FootstepProfile(
+        filenames=tuple(
+            f"heavy_armor_{index:02d}.mp3"
+            for index in range(1, 9)
+        ),
+    ),
 }
 
 
 PLAYER_FOOTSTEP_CATEGORIES = {
     "assassin": "light_leather",
     "archer": "light_leather",
+    "warlock": "cloth",
+    "summoner": "cloth",
+    "paladin": "heavy_armor",
+    "berserker": "heavy_armor",
 }
