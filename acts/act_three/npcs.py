@@ -73,12 +73,15 @@ def open_npc_dialog(game_state, npc, current_time):
     state.npc_dialog_line_index = 0
     if npc["type"] == "rune_master":
         state.npc_dialog_phase = "talk"
-    if npc["type"] == "blacksmith":
+    if npc["type"] == "blacksmith" and game_state.player.act_three.inventory_unlocked:
         game_state.player.act_three.blacksmith_quest["met"] = True
-    state.blacksmith_forge_open = npc["type"] == "blacksmith" and game_state.player.act_three.blacksmith_quest.get("completed", False)
+    state.blacksmith_forge_open = (
+        npc["type"] == "blacksmith" and game_state.player.act_three.inventory_unlocked
+        and game_state.player.act_three.blacksmith_quest.get("completed", False)
+    )
     state.trader_slot_presses.clear()
     state.trader_focus = None
-    if npc["type"] == "trader" and "trader" in state.npc_conversations_completed:
+    if npc["type"] == "trader" and game_state.player.act_three.inventory_unlocked:
         state.trader_tab = "healing"
     return True
 
@@ -144,6 +147,9 @@ def continue_npc_dialog(game_state, current_time):
         if finish_rune_master_dialogue(game_state, current_time):
             return
     if npc["type"] == "trader":
+        from acts.act_three.quests.trader import finish_trader_dialogue
+
+        finish_trader_dialogue(game_state)
         state.trader_tab = "healing"
         return
     if npc["type"] == "blacksmith":

@@ -50,6 +50,7 @@ from acts.act_three.presentation.world.enemies import (
     draw_world_enemies,
 )
 from acts.act_three.presentation.npcs import draw_world_npcs
+from acts.act_three.presentation.urn_effects import draw_urn_effect
 from acts.act_three.presentation.world.consumables import draw_consumable_cells
 from acts.act_three.presentation.world.environment_objects import draw_breakable_environment_objects
 from acts.act_three.presentation.world.loot import draw_loot_drops
@@ -1666,6 +1667,7 @@ def _draw_act_three_world(
             torch_index,
         )
     draw_trial_lighting(context)
+    draw_urn_effect(context, game_state, assets, current_time)
     from acts.act_three.presentation.rune_trial import draw_rune_trial
 
     draw_rune_trial(context, current_time)

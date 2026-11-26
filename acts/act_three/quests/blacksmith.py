@@ -109,6 +109,10 @@ def on_loot_closed(game_state):
 
 def blacksmith_dialogue(game_state):
     player = game_state.player
+    if not player.act_three.inventory_unlocked:
+        return (
+            ("blacksmith", "Improve your gear? Where will you put the ore, in your teeth? Find yourself a pack first. The trader said he had one."),
+        )
     quest = player.act_three.blacksmith_quest
     speaker = player.subclass or "assassin"
     surprise, equipment, tools, danger, delivery = BLACKSMITH_REPLIES.get(speaker, BLACKSMITH_REPLIES["assassin"])
@@ -159,6 +163,8 @@ def blacksmith_dialogue(game_state):
 
 def finish_blacksmith_dialogue(game_state):
     player = game_state.player
+    if not player.act_three.inventory_unlocked:
+        return False
     quest = player.act_three.blacksmith_quest
     if not quest.get("introduced"):
         quest["introduced"] = True

@@ -12,6 +12,10 @@ def draw_panel_image(screen, assets, name, rectangle, alpha=255):
         return
 
     target = figma_rect(rectangle)
+    if name == "equipment_seal":
+        fitted = image.get_rect().fit(target)
+        fitted.center = target.center
+        target = fitted
     if image.get_size() != target.size:
         image = pygame.transform.smoothscale(image, target.size)
     if alpha != 255:

@@ -43,6 +43,11 @@ def load_act_three_consumable_assets():
     belt_sprites = {}
     ground_sprites = {}
     original_sprites = {}
+    quest_root = ASSET_ROOT / "act_3" / "npcs" / "trader" / "quest"
+    for item_id, filename in (("sealed_urn", "sealed_urn.png"), ("broken_urn", "urn_broken .png")):
+        image = resources.load_image(quest_root / filename).convert_alpha()
+        belt_sprites[item_id] = _fit_icon(image)
+        original_sprites[item_id] = image
 
     for item_id in dict.fromkeys((*ACT_THREE_CONSUMABLES, *TRADER_ITEMS)):
         item_art = _load_optional_image(

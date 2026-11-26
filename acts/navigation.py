@@ -114,6 +114,7 @@ def navigation_target_info(game_state, target):
         or crate
         or secret_wall
         or altar
+        or (floor.presentation_act == 3 and target == floor.trader_altar)
         or trial_door
         or piercing_interaction
         or (ore is not None and ore["stage"] < 3)

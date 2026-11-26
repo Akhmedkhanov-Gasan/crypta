@@ -144,6 +144,7 @@ def _compose(placements, connections):
     summoner_trial = None
     lantern_encounter = None
     rune_trial = None
+    trader_altar = None
     trial_entrance = None
     trial_safe_cells = set()
     open_connectors = []
@@ -153,6 +154,10 @@ def _compose(placements, connections):
             original_offset[0] + normalization[0],
             original_offset[1] + normalization[1],
         )
+        if template.get("trader_altar") is not None:
+            if trader_altar is not None:
+                raise ValueError("Only one trader altar is supported per floor")
+            trader_altar = _translated(template["trader_altar"], offset)
         if template.get("rune_trial") is not None:
             from acts.act_three.rune_master.trial_map import shift_trial
 
@@ -339,6 +344,7 @@ def _compose(placements, connections):
         "encounter_zones": encounter_zones,
         "lantern_encounter": lantern_encounter,
         "rune_trial": rune_trial,
+        "trader_altar": trader_altar,
         "spawn_regions": spawn_regions,
         "room_connections": shifted_connections,
         "chests": chests,

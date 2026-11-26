@@ -30,7 +30,7 @@ def activate_belt_slot(player, slot):
     if item_id in TARGETED_ITEMS:
         player.act_three.consumable_aim_slot = slot
         player.act_three.consumable_aim_target = None
-    elif item_id in TRADER_ITEMS:
+    elif item_id in TRADER_ITEMS or item_id == "sealed_urn":
         _post_use(slot)
 
 

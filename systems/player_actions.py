@@ -290,6 +290,11 @@ def _resolve_floor_exit(
     current_floor_config = FLOOR_CONFIGS[
         game_state.floor_index
     ]
+    if current_floor_config["act"] == 3:
+        from acts.act_three.quests.trader import permits_floor_exit
+
+        if not permits_floor_exit(game_state):
+            return False
     target_act = (
         FLOOR_CONFIGS[target_floor_index]["act"]
         if target_floor_index is not None

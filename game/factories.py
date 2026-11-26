@@ -329,6 +329,7 @@ def create_floor_state(
         passages=passages,
         act_one_revisit=act_one_revisit,
         upgrade_altar=floor.get("upgrade_altar"),
+        trader_altar=floor.get("trader_altar"),
         act_three_npcs=floor.get("npcs", []),
         act_three_ores=floor.get("ores", []),
         shadow_step_trial=floor.get("shadow_step_trial"),

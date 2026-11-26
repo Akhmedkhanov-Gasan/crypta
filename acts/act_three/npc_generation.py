@@ -1,4 +1,5 @@
 import random
+from collections import deque
 from pathlib import Path
 
 from acts.act_three.enemies.generation import enemy_spawn_cells
@@ -13,12 +14,40 @@ from acts.act_three.world_geometry import reachable_cells
 from systems.grid_geometry import can_reach_adjacent_cell
 
 
+def _early_trader_regions(floor):
+    regions = spawn_regions(floor)
+    origin = next(index for index, region in enumerate(regions) if inside_region(floor["player_start"], region))
+    links = {index: set() for index in range(len(regions))}
+    for first, second in floor.get("room_connections", ()):
+        left = next(index for index, region in enumerate(regions) if inside_region(first, region))
+        right = next(index for index, region in enumerate(regions) if inside_region(second, region))
+        links[left].add(right)
+        links[right].add(left)
+    distances = {origin: 0}
+    pending = deque([origin])
+    while pending:
+        index = pending.popleft()
+        for neighbor in links[index]:
+            corridor = Path(regions[neighbor].get("source_path", "")).name.startswith("corridor_")
+            distance = distances[index] + (0 if corridor else 1)
+            if distance < distances.get(neighbor, float("inf")):
+                distances[neighbor] = distance
+                pending.append(neighbor)
+    return [
+        region for index, region in enumerate(regions)
+        if index != origin and distances.get(index, float("inf")) <= 2
+        and region["enabled"]
+        and Path(region.get("source_path", "")).name != "room_corner_se_01.tmx"
+        and not Path(region.get("source_path", "")).name.startswith("corridor_")
+    ]
+
+
 def place_random_trader(floor):
-    place_random_npc(floor, "trader")
+    place_random_npc(floor, "trader", regions=_early_trader_regions(floor))
 
 
-def place_random_npc(floor, npc_type):
-    regions = [
+def place_random_npc(floor, npc_type, *, regions=None):
+    regions = regions if regions is not None else [
         region for region in spawn_regions(floor)
         if region["enabled"]
         and not inside_region(floor["player_start"], region)

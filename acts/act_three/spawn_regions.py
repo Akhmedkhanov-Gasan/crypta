@@ -40,6 +40,9 @@ def reserved_spawn_positions(floor):
     altar = floor.get("upgrade_altar")
     if altar is not None:
         positions.update((altar[0] + x, altar[1] + y) for x in range(2) for y in range(2))
+    trader_altar = floor.get("trader_altar")
+    if trader_altar is not None:
+        positions.update((trader_altar[0] + dx, trader_altar[1] + dy) for dx, dy in ((0, 0), (-1, 0), (1, 0), (0, -1), (0, 1)))
     for passage in floor.get("passages", []):
         positions.update((passage["wall_position"], passage["trigger_position"]))
     return positions - {None}

@@ -91,7 +91,7 @@ def _finish_drag(game_state, drag, mouse_position, inventory_open):
 def handle_inventory_drag(event, game_state, mouse_position, movement_available):
     player = game_state.player
     state = player.act_three
-    inventory_open = game_state.sidebar_tab == "stats"
+    inventory_open = game_state.sidebar_tab == "stats" and player.act_three.inventory_unlocked
     drag = state.item_drag
     if drag is not None:
         if mouse_position is None or max(

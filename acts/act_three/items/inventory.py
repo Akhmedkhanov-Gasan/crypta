@@ -1,7 +1,7 @@
 from acts.act_three.items.keys import CRYPTA_KEY, KEYRING_ITEMS, collect_loose_keys, combine_key_and_ring, store_key_on_ring
 
 
-INVENTORY_SLOT_COUNT = 24
+INVENTORY_SLOT_COUNT = 20
 BLACK_ORE_CHUNK = "black_ore_chunk"
 IRON_ORE_CHUNK = "iron_ore_chunk"
 BLOODVEIN_ORE_CHUNK = "bloodvein_ore_chunk"
@@ -17,10 +17,12 @@ def get_inventory_slots(player):
 
 
 def inventory_has_space(player):
-    return any(item is None for item in player.act_three.inventory_slots)
+    return player.act_three.inventory_unlocked and any(item is None for item in player.act_three.inventory_slots)
 
 
 def store_inventory_item(player, item):
+    if not player.act_three.inventory_unlocked:
+        return False
     slots = player.act_three.inventory_slots
     if item in ("key", CRYPTA_KEY):
         item = CRYPTA_KEY
@@ -47,6 +49,8 @@ def remove_inventory_item(player, item):
 
 
 def move_inventory_item_to_belt(player, source_index, belt_index):
+    if not player.act_three.inventory_unlocked:
+        return False
     from acts.act_three.trader_catalog import TRADER_ITEMS
     from acts.act_two.consumables import remove_act_two_consumable, store_act_two_consumable
 
@@ -86,14 +90,16 @@ def assign_inventory_item_to_belt(game_state, source_index, belt_index):
 
 
 def move_belt_item_to_inventory(player, belt_index, target_index):
-    from acts.act_three.trader_catalog import TRADER_ITEMS
+    if not player.act_three.inventory_unlocked:
+        return False
+    from acts.act_three.quests.trader import URN_ITEMS
     from acts.act_two.consumables import remove_act_two_consumable
 
     inventory = player.act_three.inventory_slots
     belt = player.act_two.consumable_slots
     if not 0 <= target_index < len(inventory) or inventory[target_index] is not None:
         return False
-    if not 0 <= belt_index < len(belt) or belt[belt_index] not in TRADER_ITEMS:
+    if not 0 <= belt_index < len(belt) or belt[belt_index] is None or belt[belt_index] in URN_ITEMS:
         return False
     inventory[target_index] = remove_act_two_consumable(player, belt_index)
     return True
@@ -109,6 +115,8 @@ def _rearrange_slots(slots, source_index, target_index):
 
 
 def rearrange_inventory(player, source_index, target_index):
+    if not player.act_three.inventory_unlocked:
+        return False
     if combine_key_and_ring(player.act_three.inventory_slots, source_index, target_index):
         return True
     return _rearrange_slots(player.act_three.inventory_slots, source_index, target_index)

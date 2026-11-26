@@ -26,6 +26,8 @@ SPEAKER_COLORS = {
 def dialogue_portrait(speaker_id):
     if speaker_id == "old_man":
         paths = (ASSET_ROOT / "ui/act_3/awakening/old_man/portrait_old_man.png",)
+    elif speaker_id == "sealed_urn":
+        paths = (ASSET_ROOT / "act_3/npcs/trader/quest/portrait.png",)
     elif speaker_id in SPEAKER_COLORS:
         paths = (ASSET_ROOT / "act_3/player" / speaker_id / "portrait.png",)
     elif speaker_id:

@@ -30,6 +30,9 @@ def discard_item(game_state, slot, current_time, *, from_belt=False, target=None
         return False
 
     item = slots[slot]
+    if item in ("sealed_urn", "broken_urn"):
+        add_log_message(game_state.combat_log, "The vessel must be returned to the trader.", category="quest")
+        return False
     if item == GUILD_SEAL:
         add_log_message(
             game_state.combat_log,

@@ -484,6 +484,7 @@ def load_tmx_floor(path):
     rune_trial = build_rune_trial(by_name, width, height, dungeon_map, connectors)
     return {
         "rune_trial": rune_trial,
+        "trader_altar": next((position for position, _ in by_name.get("trader_altar", [])), None),
         "lantern_encounter": lantern_encounter,
         "enemy_spawn_mode": map_properties.get("enemy_spawn_mode", "false").lower() == "true",
         "ore_spawn_mode": map_properties.get("ore_spawn_mode", map_properties.get("enemy_spawn_mode", "false")).lower() == "true",

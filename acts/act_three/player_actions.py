@@ -181,7 +181,9 @@ def resolve_act_three_player_action(
 
     player = game_state.player
     if event.key == pygame.K_h:
-        acted = try_use_potion(game_state, healing_amount=POTION_HEALING)
+        acted = try_use_potion(
+            game_state, healing_amount=POTION_HEALING if player.act_three.inventory_unlocked else 4,
+        )
         if acted:
             player.potion_effect_started_at = pygame.time.get_ticks()
         return ActThreePlayerActionResult(player_acted=acted)
@@ -214,6 +216,12 @@ def resolve_act_three_player_action(
         target_must_be_walkable=False,
     ):
         return ActThreePlayerActionResult(movement_blocked=True)
+
+    from acts.act_three.quests.trader_urn import interact_with_trader_altar
+
+    altar_result = interact_with_trader_altar(game_state, target, started_at)
+    if altar_result is not None:
+        return ActThreePlayerActionResult(player_acted=altar_result, movement_blocked=not altar_result)
 
     ore = get_ore_at(floor, target)
     if ore is not None and ore["stage"] < 3:

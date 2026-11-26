@@ -190,6 +190,10 @@ def _use_area_item(game_state, item_id, target, current_time):
 def use_belt_item(game_state, slot, target, current_time):
     player = game_state.player
     item_id = belt_item(player, slot)
+    if item_id == "sealed_urn":
+        from acts.act_three.quests.trader_urn import open_urn
+
+        return open_urn(game_state, slot, current_time)
     if item_id not in TRADER_ITEMS:
         return False
     if item_id in HEALING_ITEMS and healing_is_blocked(player):
@@ -198,17 +202,21 @@ def use_belt_item(game_state, slot, target, current_time):
     if item_id in TARGETED_ITEMS and not valid_consumable_target(game_state, item_id, target):
         return False
     if item_id == POTION:
-        if not try_use_potion(game_state, slot, healing_amount=POTION_HEALING):
+        if not try_use_potion(game_state, slot, healing_amount=POTION_HEALING if player.act_three.inventory_unlocked else 4):
             return False
         player.potion_effect_started_at = current_time
         return True
     if item_id in SCROLLS:
         return use_scroll(
             game_state, slot, target, current_time,
-            healing_amount=HEALING_SCROLL_HEALING, impulse_damage=ARCANE_IMPULSE_DAMAGE,
+            healing_amount=HEALING_SCROLL_HEALING if player.act_three.inventory_unlocked else 8,
+            impulse_damage=ARCANE_IMPULSE_DAMAGE if player.act_three.inventory_unlocked else 5,
         )
     if item_id == FIRE_BOMB:
-        return throw_fire_bomb(game_state, slot, target, current_time, impact_damage=FIRE_BOMB_IMPACT)
+        return throw_fire_bomb(
+            game_state, slot, target, current_time,
+            impact_damage=FIRE_BOMB_IMPACT if player.act_three.inventory_unlocked else 3,
+        )
     if item_id in HEALING_ITEMS:
         if healing_consumables_are_blocked(player):
             add_log_message(

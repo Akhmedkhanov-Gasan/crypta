@@ -68,3 +68,23 @@ TRADER_SELL_PRICES = {
     "silverware": 6,
     "burial_relic": 10,
 }
+
+
+def trader_stock(player, tab):
+    if tab == "sell":
+        return tuple(TRADER_SELL_ITEMS)
+    if player.act_three.inventory_unlocked:
+        return TRADER_STOCK[tab]
+    return {
+        "healing": ("potion", "healing_scroll"),
+        "scrolls": ("scroll_of_arcane_impulse", "scroll_of_binding", "healing_scroll", "scroll_of_stoneflesh"),
+        "bombs": ("fire_bomb",),
+    }[tab]
+
+
+def trader_item(player, item_id):
+    if player.act_three.inventory_unlocked:
+        return TRADER_ITEMS[item_id]
+    from acts.act_two.trader_catalog import TRADER_ITEMS as BASIC_ITEMS
+
+    return BASIC_ITEMS.get(item_id, TRADER_ITEMS[item_id])

@@ -12,10 +12,10 @@ from acts.act_three.presentation.trader_effects import (
 )
 from acts.act_three.trader import buy_trader_item, sell_trader_item
 from acts.act_three.trader_catalog import (
-    TRADER_ITEMS,
     TRADER_SELL_ITEMS,
     TRADER_SELL_PRICES,
-    TRADER_STOCK,
+    trader_item,
+    trader_stock,
 )
 from application.directional_input import CHORD_MOVEMENT_KEYS, movement_direction_for_key
 from presentation.dialogue_text import draw_dialogue_text
@@ -62,14 +62,14 @@ def _draw_art(screen, spec):
     return True
 
 
-def _stock_rows(layout, tab):
-    items = TRADER_SELL_ITEMS if tab == "sell" else TRADER_STOCK[tab]
+def _stock_rows(layout, tab, player):
+    items = trader_stock(player, tab)
     return zip(sorted(layout["trade_slots"].items()), items)
 
 
-def _slot_image(assets, slot_name, row, item_id, sell):
+def _slot_image(assets, slot_name, row, item_id, sell, player):
     cache = assets.setdefault("act_three_trader_slot_images", {})
-    cache_key = slot_name, item_id, sell
+    cache_key = slot_name, item_id, sell, player.act_three.inventory_unlocked
     if cache_key in cache:
         return cache[cache_key]
 
@@ -97,7 +97,7 @@ def _slot_image(assets, slot_name, row, item_id, sell):
         if sell:
             price = TRADER_SELL_PRICES[item_id]
         else:
-            item = TRADER_ITEMS[item_id]
+            item = trader_item(player, item_id)
             draw_dialogue_text(surface, local(row["text"]), f"{item.name} — {item.description}")
             price = item.price
         _draw_art(surface, local(row["gold_coin"]))
@@ -138,7 +138,7 @@ def _handle_trader_key(event, game_state, layout):
         state.trader_focus = focus
     elif event.key == pygame.K_SPACE and not getattr(event, "repeat", False):
         state.trader_focus = focus
-        for (slot_name, _), item_id in _stock_rows(layout, state.trader_tab):
+        for (slot_name, _), item_id in _stock_rows(layout, state.trader_tab, game_state.player):
             if slot_name == focus:
                 _activate_slot(game_state, slot_name, item_id)
                 break
@@ -165,7 +165,7 @@ def handle_trader_event(event, game_state, mouse_position):
         if figma_rect(spec["hitbox"]).collidepoint(mouse_position):
             _select_tab(state, tab)
             return True
-    for (slot_name, row), item_id in _stock_rows(layout, state.trader_tab):
+    for (slot_name, row), item_id in _stock_rows(layout, state.trader_tab, game_state.player):
         if figma_rect(row["background"]["rect"]).collidepoint(mouse_position):
             _activate_slot(game_state, slot_name, item_id)
             break
@@ -186,8 +186,11 @@ def draw_trader(screen, game_state, assets, current_time, mouse_position=None):
         _draw_art(screen, spec["active" if name == tab else "inactive"])
         draw_dialogue_text(screen, spec["title"], spec["title"]["text"])
     sell = tab == "sell"
-    items = tuple(TRADER_SELL_ITEMS) if sell else TRADER_STOCK[tab]
-    inventory = get_inventory_slots(game_state.player) if sell else ()
+    items = trader_stock(game_state.player, tab)
+    inventory = (
+        get_inventory_slots(game_state.player) + tuple(game_state.player.act_two.consumable_slots)
+        if sell else ()
+    )
     for index, (slot_name, row) in enumerate(sorted(layout["trade_slots"].items())):
         item_id = items[index] if index < len(items) else None
         rect = figma_rect(row["background"]["rect"])
@@ -200,7 +203,7 @@ def draw_trader(screen, game_state, assets, current_time, mouse_position=None):
         purchased = pressed is not None and pressed[1]
         offset = trader_press_offset(elapsed, purchased)
         rect = rect.move(offset)
-        screen.blit(_slot_image(assets, slot_name, row, item_id, sell), rect)
+        screen.blit(_slot_image(assets, slot_name, row, item_id, sell, game_state.player), rect)
         if sell and item_id is not None:
             text_spec = row["text"]
             text_rect = text_spec["rect"]

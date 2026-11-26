@@ -508,10 +508,12 @@ def _draw_consumables(
     stored_items = get_act_two_consumable_slots(
         player
     )
-    belt_sprites = assets.get(
-        "act_three_consumable_belt_sprites",
-        {},
-    )
+    belt_sprites = {
+        **assets.get("act_three_inventory_sprites", {}),
+        **assets.get("act_three_special_item_sprites", {}),
+        **assets.get("act_three_sell_item_sprites", {}),
+        **assets.get("act_three_consumable_belt_sprites", {}),
+    }
     healing_blocked = (
         healing_consumables_are_blocked(player)
     )
@@ -591,10 +593,32 @@ def _draw_consumables(
     if hovered_item is None:
         return None
 
-    item = TRADER_ITEMS.get(hovered_item)
+    return _belt_tooltip(player, hovered_item, healing_blocked)
+
+
+def _belt_tooltip(player, hovered_item, healing_blocked):
+    from acts.act_three.trader_catalog import TRADER_SELL_ITEMS, trader_item
+    from acts.act_three.items.inventory import ORE_ITEM_NAMES
+    from acts.act_three.items.special import SPECIAL_ITEM_NAMES, SPECIAL_ITEM_DESCRIPTIONS
+
+    if hovered_item is None:
+        return None
+    if hovered_item in ("sealed_urn", "broken_urn"):
+        lines = (
+            ("Deliver it to the abandoned altar. Click or press its belt key to open it.",)
+            if hovered_item == "sealed_urn" else ("Return the empty vessel to the trader.",)
+        )
+        return TooltipContent(hovered_item.replace("_", " ").title(), lines, (150, 104, 168))
+    if hovered_item in TRADER_SELL_ITEMS:
+        return TooltipContent(TRADER_SELL_ITEMS[hovered_item], ("Sell to a trader.",), (181, 145, 81))
+    if hovered_item in ORE_ITEM_NAMES:
+        return TooltipContent(ORE_ITEM_NAMES[hovered_item], ("Crafting material.", "Shift: drop in front."), (176, 139, 214))
+    if hovered_item in SPECIAL_ITEM_NAMES:
+        return TooltipContent(SPECIAL_ITEM_NAMES[hovered_item], (SPECIAL_ITEM_DESCRIPTIONS[hovered_item],), (181, 145, 81))
+    item = trader_item(player, hovered_item) if hovered_item in TRADER_ITEMS else None
     if item is None:
         return consumable_tooltip_content(hovered_item, False)
-    lines = (item.description, "In inventory, select this slot and press Shift to drop.")
+    lines = (item.description, "In the character panel, select this belt slot and press Shift to drop.")
     if healing_blocked and hovered_item in HEALING_ITEMS:
         lines += ("Blood Hunger blocks this item.",)
     return TooltipContent(item.name, lines, (181, 145, 81))
@@ -715,6 +739,9 @@ def _draw_character_panel(
         panel,
         None if keyboard_focus else mouse_position,
     )
+    equipment_unlocked = player.act_three.inventory_unlocked and player.act_three.blacksmith_quest.get("completed", False)
+    if not equipment_unlocked and hovered_item is not None and hovered_item[0] == "equipment":
+        hovered_item = None
     if keyboard_focus and focus_parts[0] not in ("inventory", "belt", "confirm"):
         hovered_item = tuple(focus_parts[:2])
     _blit_asset(
@@ -729,8 +756,9 @@ def _draw_character_panel(
         ),
     )
     equipment = panel["equipment"]
-    for track_name in ("weapon", "armor"):
-        draw_panel_row_background(screen, equipment[track_name])
+    if equipment_unlocked:
+        for track_name in ("weapon", "armor"):
+            draw_panel_row_background(screen, equipment[track_name])
     for section in ("attributes", "combat_stats"):
         for row in panel[section]["rows"].values():
             draw_panel_row_background(screen, row)
@@ -788,23 +816,13 @@ def _draw_character_panel(
             ranks.get(name, 0),
         )
 
-    draw_panel_equipment(screen, assets, equipment)
-
-    draw_figma_text(
-        screen,
-        equipment["heading"]["label"],
-    )
-
-    for track_name in ("weapon", "armor"):
-        track_label = equipment[
-            track_name
-        ].get("label")
-
-        if track_label is not None:
-            draw_figma_text(
-                screen,
-                track_label,
-            )
+    if equipment_unlocked:
+        draw_panel_equipment(screen, assets, equipment)
+        draw_figma_text(screen, equipment["heading"]["label"])
+        for track_name in ("weapon", "armor"):
+            track_label = equipment[track_name].get("label")
+            if track_label is not None:
+                draw_figma_text(screen, track_label)
 
     mastery_rank = getattr(
         player,
@@ -828,18 +846,16 @@ def _draw_character_panel(
         panel["mastery"],
         mastery_rank,
     )
-    _draw_rank_track(
-        screen,
-        assets,
-        equipment["weapon"],
-        weapon_rank,
-    )
-    _draw_rank_track(
-        screen,
-        assets,
-        equipment["armor"],
-        armor_rank,
-    )
+    if equipment_unlocked:
+        _draw_rank_track(screen, assets, equipment["weapon"], weapon_rank)
+        _draw_rank_track(screen, assets, equipment["armor"], armor_rank)
+    else:
+        seal = equipment.get("seal")
+        if seal is None:
+            bounds = figma_rect(equipment["weapon"]["hitbox"]).union(figma_rect(equipment["armor"]["hitbox"]))
+            bounds = bounds.union(figma_rect(equipment["heading"]["rect"]))
+            seal = {"x": bounds.x, "y": bounds.y, "width": bounds.width, "height": bounds.height}
+        draw_panel_image(screen, assets, "equipment_seal", seal)
 
     armor_value = f"{equipment_rank_bonus(armor_rank)}%"
     charge_rate = round(
@@ -926,11 +942,7 @@ def _draw_character_panel(
     if keyboard_focus and focus_parts[0] == "belt":
         slot_index = sorted(belt_slots).index(focus_parts[1])
         item_id = get_act_two_consumable_slots(player)[slot_index]
-        item = TRADER_ITEMS.get(item_id)
-        if item is not None:
-            tooltip_content = TooltipContent(
-                item.name, (item.description, "Shift: drop in front."), (181, 145, 81),
-            )
+        tooltip_content = _belt_tooltip(player, item_id, healing_consumables_are_blocked(player))
 
     if keyboard_focus and (focus_parts[0] in ("belt", "confirm") or len(focus_parts) == 3):
         draw_slot_highlight(

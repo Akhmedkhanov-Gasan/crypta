@@ -14,6 +14,8 @@ def get_character_panel_focus_rectangles(panel, belt_slots, player):
         f"inventory:{name}": figma_rect(slot["hitbox"])
         for name, slot in sorted(panel["inventory"]["slots"].items())
     }
+    if not player.act_three.inventory_unlocked:
+        rectangles.clear()
     rectangles.update({
         f"belt:{name}": figma_rect(slot["hitbox"])
         for name, slot in sorted(belt_slots.items())
@@ -30,7 +32,8 @@ def get_character_panel_focus_rectangles(panel, belt_slots, player):
     })
     rectangles["mastery:mastery"] = figma_rect(panel["mastery"]["hitbox"])
     for name in ("weapon", "armor"):
-        rectangles[f"equipment:{name}"] = figma_rect(panel["equipment"][name]["hitbox"])
+        if player.act_three.inventory_unlocked and player.act_three.blacksmith_quest.get("completed"):
+            rectangles[f"equipment:{name}"] = figma_rect(panel["equipment"][name]["hitbox"])
     rectangles["passive:passive"] = figma_rect(panel["subclass_passive"]["hitbox"])
     if get_pending_attribute_points(player) > 0:
         rectangles["confirm"] = figma_rect(panel["confirm"]["hitbox"])

@@ -156,6 +156,8 @@ def load_act_three_hud_assets():
         "slot_baclground",
         "inventory_decoration",
         "equipment_decoration",
+        "inventory_seal",
+        "equipment_seal",
     ):
         assets[f"hud_panel_{name}"] = resources.load_image(
             str(_UI_DIRECTORY / f"{name}.png")

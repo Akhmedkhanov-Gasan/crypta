@@ -42,6 +42,8 @@ class ItemDragState:
 
 @dataclass
 class ActThreePlayerState:
+    trader_quest: dict = field(default_factory=dict)
+    inventory_unlocked: bool = False
     environment_attack = None
 
     level_up_effect_started_at: int = -1

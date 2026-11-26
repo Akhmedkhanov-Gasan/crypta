@@ -20,6 +20,7 @@ ACT_THREE_FLOORS = (
         "generated_piece_count": 11,
         "trial_room": True,
         "required_room_paths": (
+            "assets/maps/act_3/rooms/room_corner_se_01.tmx",
             "assets/maps/act_3/rooms/key_rooms/lantern_warden_room.tmx",
             "assets/maps/act_3/rooms/key_rooms/blacksmith_room.tmx",
         ),

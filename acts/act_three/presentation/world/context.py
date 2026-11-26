@@ -123,6 +123,11 @@ def create_world_render_context(
     shake_x, shake_y = camera_shake(floor, current_time)
     camera_x += shake_x
     camera_y += shake_y
+    from acts.act_three.presentation.urn_effects import urn_camera_shake
+
+    urn_shake_x, urn_shake_y = urn_camera_shake(floor, current_time)
+    camera_x += urn_shake_x
+    camera_y += urn_shake_y
     teleport_origin = game_state.player.teleport_camera_origin
     transition_started_at = (
         game_state.player.teleport_transition_started_at

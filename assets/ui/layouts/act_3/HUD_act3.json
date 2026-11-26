@@ -707,10 +707,10 @@
         "height": 487
       },
       "close_hitbox": {
-        "x": 1179,
-        "y": 142,
-        "width": 18,
-        "height": 17
+        "x": 1183,
+        "y": 140,
+        "width": 21,
+        "height": 21
       },
       "class_name": {
         "rect": {
@@ -1843,6 +1843,12 @@
             "value": null
           }
         },
+        "seal": {
+          "x": 1013,
+          "y": 372,
+          "width": 180,
+          "height": 202
+        },
         "decorations": [
           {
             "x": 1013,
@@ -1954,6 +1960,12 @@
         }
       },
       "equipment": {
+        "seal": {
+          "x": 1019,
+          "y": 176,
+          "width": 167,
+          "height": 155
+        },
         "decoration": {
           "x": 1011,
           "y": 258,

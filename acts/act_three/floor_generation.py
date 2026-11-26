@@ -21,10 +21,19 @@ def build_act_three_floor(
     if config.get("exit_map_path"):
         from acts.act_three.trials.catalog import trial_map_path
 
-        floor = generate_room_layout(
-            config,
-            trial_map_path(config.get("trial_subclass")) if config.get("trial_room") else None,
-        )
+        for _ in range(12 if config.get("random_trader") else 1):
+            floor = generate_room_layout(
+                config,
+                trial_map_path(config.get("trial_subclass")) if config.get("trial_room") else None,
+            )
+            if config.get("random_trader"):
+                try:
+                    place_random_trader(floor)
+                except ValueError:
+                    continue
+            break
+        else:
+            raise ValueError("Cannot place the trader in the first two rooms of Act Three floor nine.")
     elif config.get("tmx_room_sequence"):
         from acts.act_three.trials.catalog import TRIAL_MAPS, trial_map_path
 
@@ -58,7 +67,7 @@ def build_act_three_floor(
     )
     floor["presentation_act"] = config.get("presentation_act", config["act"])
 
-    if config.get("random_trader"):
+    if config.get("random_trader") and not any(npc["type"] == "trader" for npc in floor.get("npcs", [])):
         place_random_trader(floor)
     if config.get("random_rune_master"):
         place_random_npc(floor, "rune_master")

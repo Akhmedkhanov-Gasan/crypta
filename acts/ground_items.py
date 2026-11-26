@@ -18,6 +18,17 @@ from systems import ground_items as shared_ground_items
 
 
 def _store_act_three_item(player, kind):
+    if not player.act_three.inventory_unlocked:
+        stored = store_act_two_consumable(player, kind)
+        if stored and kind == "monster_parts":
+            from acts.act_three.quests.trader import note_monster_parts
+
+            note_monster_parts(player)
+        if stored and kind == PICKAXE:
+            from acts.act_three.quests.blacksmith import note_pickaxe_pickup
+
+            note_pickaxe_pickup(player)
+        return stored
     if kind in TRADER_ITEMS:
         return store_act_two_consumable(player, kind) or store_inventory_item(player, kind)
     if kind in ORE_ITEM_NAMES or kind in TRADER_SELL_ITEMS or kind in SPECIAL_ITEM_NAMES or kind == "key":

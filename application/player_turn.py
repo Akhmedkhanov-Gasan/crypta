@@ -136,7 +136,9 @@ def _complete_non_act_two_turn(
         update_treasury_trial(game_state)
         if current_act == 3 and game_state.player.health > 0:
             advance_regeneration(game_state)
-            advance_fire_zones(game_state, tick_damage=FIRE_BOMB_TICK)
+            advance_fire_zones(
+                game_state, tick_damage=FIRE_BOMB_TICK if game_state.player.act_three.inventory_unlocked else 2,
+            )
 
     if game_state.player.health > 0:
         if barrage_resume:

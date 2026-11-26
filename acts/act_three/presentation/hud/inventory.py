@@ -12,6 +12,14 @@ from presentation.tooltips import TooltipContent
 def draw_inventory(screen, player, assets, panel, mouse_position, focused_slot=None):
     inventory = panel["inventory"]
     slots = inventory["slots"]
+    if not player.act_three.inventory_unlocked:
+        rectangle = inventory.get("seal") or inventory["rect"]
+        draw_panel_image(screen, assets, "inventory_seal", rectangle)
+        if mouse_position is not None and figma_rect(rectangle).collidepoint(mouse_position):
+            return TooltipContent(
+                "No pack", ("Find the trader and complete his delivery.",), (181, 145, 81),
+            )
+        return None
     draw_panel_image(
         screen,
         assets,

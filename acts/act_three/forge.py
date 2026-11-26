@@ -34,6 +34,8 @@ def forge_progress_fraction(player, upgrade):
 
 
 def can_forge_upgrade(player, upgrade):
+    if not player.act_three.inventory_unlocked:
+        return False
     if upgrade not in FORGE_UPGRADES or not player.act_three.blacksmith_quest.get("completed", False):
         return False
     if forge_rank(player, upgrade) >= IMPLEMENTED_FORGE_RANK:
