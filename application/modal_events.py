@@ -14,6 +14,7 @@ from acts.act_two.presentation.bosses.oracle_phase_transition import (
 )
 from acts.act_two.presentation.death_score import handle_act_two_death_event
 from acts.act_two.input.cartography import handle_map_event, map_input_available
+from acts.act_three.cartography.input import handle_map_event as handle_act_three_map_event
 from application.input_policy import continuous_movement_input_available
 from application.directional_input import MOVEMENT_KEYS
 from application.menu_actions import MenuActionState, handle_application_menu_action
@@ -91,6 +92,7 @@ class ApplicationModalController:
                 return ModalEventResult(True, state)
 
         if event.type == pygame.WINDOWFOCUSLOST:
+            game_state.act_three.map_drag_anchor = None
             game_state.player.act_three.item_drag = None
             game_state.act_three.journal_dragging = False
             if game_state.act_three.rune_menu is not None:
@@ -213,6 +215,20 @@ class ApplicationModalController:
                 self.act_two_sounds,
                 self.act_three_sounds,
             )
+            return ModalEventResult(True, state)
+        if current_act == 3 and handle_act_three_map_event(
+            event,
+            game_state,
+            available=(
+                continuous_movement_input_available(app_runtime, game_state, False, pygame.time.get_ticks())
+                and not state.ground_item_window.is_open
+                and self.movement_state.dragged_consumable_slot is None
+            ),
+            position=self._event_position(event),
+            current_time=pygame.time.get_ticks(),
+        ):
+            if game_state.act_three.map_open:
+                self._stop_movement()
             return ModalEventResult(True, state)
         if current_act == 2 and handle_map_event(
             event,

@@ -23,6 +23,7 @@ from systems.player_abilities import (
     paladin_sacred_ground_impact_ready,
     perform_paladin_sacred_ground,
 )
+from acts.act_three.cartography.lifecycle import advance_map
 
 
 @dataclass(frozen=True)
@@ -47,6 +48,7 @@ def prepare_frame_input(
     act_two_sounds,
 ):
     current_act = game_state.floor.presentation_act
+    advance_map(game_state, pygame.time.get_ticks(), blocked=gameplay_cutscene_active(game_state))
     if (
         current_act != 2
         or gameplay_cutscene_active(game_state)

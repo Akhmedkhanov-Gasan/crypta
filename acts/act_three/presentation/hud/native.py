@@ -6,6 +6,7 @@ from acts.act_three.presentation.hud.renderer import draw_act_three_hud
 from presentation.display import game_viewport, present_game
 from presentation.figma_layout import scale_figma_layout as _scale_layout
 from settings import GAME_HEIGHT, GAME_WIDTH
+from acts.act_three.cartography.renderer import draw_full_map, draw_minimap
 
 
 class NativeActThreeHud:
@@ -61,21 +62,27 @@ class NativeActThreeHud:
 
         from acts.act_three.trials.warlock import is_spirit
 
-        if not game_state.act_three_transition_open and not is_spirit(game_state.floor.curse_trial):
+        prepared = None
+        if not game_state.act_three_transition_open:
             prepared = self._prepare_assets(assets, viewport.size)
             mouse = pygame.mouse.get_pos()
             mouse_position = (
                 (mouse[0] - viewport.x, mouse[1] - viewport.y)
                 if viewport.collidepoint(mouse) else None
             )
-            draw_act_three_hud(
-                target, game_state, fonts, prepared, current_time, mouse_position,
-            )
+            if not is_spirit(game_state.floor.curse_trial):
+                draw_act_three_hud(
+                    target, game_state, fonts, prepared, current_time, mouse_position,
+                )
+            draw_minimap(target, game_state, prepared, current_time)
 
         if foreground.get_size() == target.get_size():
             target.blit(foreground, (0, 0))
         else:
             target.blit(pygame.transform.smoothscale(foreground, target.get_size()), (0, 0))
+
+        if prepared is not None:
+            draw_full_map(target, game_state, prepared, current_time)
 
         if native_overlay is not None:
             native_overlay(target)

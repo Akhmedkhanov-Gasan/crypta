@@ -11,9 +11,30 @@
   "hud": {
     "rect": {
       "x": 4,
-      "y": 8,
+      "y": 0,
       "width": 1276,
-      "height": 704
+      "height": 712
+    }
+  },
+  "cartography": {
+    "asset_directory": "assets/sprites/ui/act_3/map",
+    "minimap": {
+      "frame": {
+        "x": 1100,
+        "y": 0,
+        "width": 180,
+        "height": 135
+      },
+      "asset": "minimap_frame.png"
+    },
+    "full_map": {
+      "frame": {
+        "x": 206,
+        "y": 116,
+        "width": 868,
+        "height": 488
+      },
+      "asset": "full_map_frame.png"
     }
   },
   "journal_panel": {
@@ -417,9 +438,9 @@
     },
     "rect": {
       "x": 26,
-      "y": 8,
+      "y": 586,
       "width": 1240,
-      "height": 704
+      "height": 126
     },
     "combat_log": {
       "rect": {

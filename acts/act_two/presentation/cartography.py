@@ -197,11 +197,11 @@ def draw_full_map(surface, game_state, font, heading_font, hud_layout, sprites):
     close = full_map_close_rectangle(surface.get_size(), hud_layout)
     legend = (
         ("You", PLAYER),
-        ("Stairs up", STAIRS_UP),
-        ("Stairs down", STAIRS_DOWN),
+        ("Up", STAIRS_UP),
+        ("Down", STAIRS_DOWN),
         ("Trader", NPC),
-        ("Blood altar", BLOOD_ALTAR),
-        ("Rune altar", RUNE_ALTAR),
+        ("Blood", BLOOD_ALTAR),
+        ("Runes", RUNE_ALTAR),
     )
     labels = [(font.render(name, True, TEXT), color) for name, color in legend]
     legend_height = max(label.get_height() for label, _ in labels)

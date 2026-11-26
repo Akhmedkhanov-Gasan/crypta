@@ -7,6 +7,7 @@ from acts.act_three.presentation.hud.layout import (
 )
 from presentation.layout import ASSET_ROOT
 from acts.act_three.presentation.hud.status_effects import load_status_assets
+from acts.act_three.cartography.assets import load_map_assets
 
 
 _UI_DIRECTORY = ASSET_ROOT / "ui" / "act_3"
@@ -118,6 +119,7 @@ def load_act_three_hud_assets():
     layout = get_act_three_hud_layout()
 
     assets = {
+        "act_three_map_images": load_map_assets(layout),
         "hud_belt_feedback": {},
         "act_three_hud_layout": layout,
         "hud_status_images": load_status_assets(_UI_DIRECTORY),

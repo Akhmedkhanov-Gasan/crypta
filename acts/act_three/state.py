@@ -316,6 +316,13 @@ class ArcherBarrageTurnState:
 
 @dataclass
 class ActThreeSessionState:
+    map_open: bool = False
+    map_opened_at: int = -1
+    map_closing_at: int = -1
+    map_zoom: float = 1.0
+    map_offset: tuple[float, float] = (0.0, 0.0)
+    map_drag_anchor: tuple[int, int] | None = None
+    map_drag_offset: tuple[float, float] = (0.0, 0.0)
     pending_monster_loot: list[dict] = field(default_factory=list)
     dialogue_queue: list[dict] = field(default_factory=list)
     blacksmith_forge_open: bool = False

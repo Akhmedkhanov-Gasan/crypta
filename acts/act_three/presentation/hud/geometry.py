@@ -179,8 +179,9 @@ def get_act_three_bottom_hud_rectangles(player=None):
         ),
         get_layout_rect(
             layout,
-            "down_bar",
-            "camera",
+            "cartography",
+            "minimap",
+            "frame",
         ),
     )
 
