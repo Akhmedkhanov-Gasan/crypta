@@ -27,7 +27,7 @@ from acts.act_three.presentation.hud.geometry import (
     get_act_three_popup_rectangle as _get_popup_rectangle,
     get_act_three_sidebar_tab_rectangles as _get_sidebar_tab_rectangles,
 )
-from settings import CLASS_ABILITY_KILLS
+from acts.act_two.abilities import ability_charge_required
 from acts.act_three.settings import (
     ARCHER_BARRAGE_ZONE_CHARGES,
     ARCHER_EMPOWERED_SHOT_CHARGES,
@@ -395,7 +395,7 @@ def _ability_entries(player, accent_color):
                 if veil_passive
                 else _ratio(
                     player.ability_kill_charge,
-                    CLASS_ABILITY_KILLS,
+                    ability_charge_required(player),
                 )
             ),
             accent_color,

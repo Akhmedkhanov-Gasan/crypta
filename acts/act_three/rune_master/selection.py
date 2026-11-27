@@ -3,6 +3,7 @@ from acts.act_three.rune_master.definitions import ABILITY_RUNES_BY_ID
 from game.combat_log import add_log_message
 from game.rune_catalog import RUNES_BY_ID
 from acts.act_three.rune_master.access import can_modify_rune
+from acts.act_two.bloody_altar import BROKEN_SEAL, has_bloody_pact
 
 
 def apply_rune(game_state, card, current_time=None):
@@ -14,6 +15,8 @@ def apply_rune(game_state, card, current_time=None):
         add_log_message(game_state.combat_log, "Eternal Form is bound for the rest of this run.", category="warning")
         return False
     if card.slot == "e":
+        if has_bloody_pact(player, BROKEN_SEAL):
+            return False
         rune = RUNES_BY_ID.get(card.id)
         if rune is None or rune.player_class != player.player_class:
             return False

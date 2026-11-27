@@ -19,7 +19,6 @@ from acts.act_three.presentation.hud.panel_art import (
 )
 
 from acts.act_three.abilities import (
-    get_mastery_charge_rate,
     get_passive_definition,
 )
 from acts.act_two.bloody_altar import (
@@ -763,6 +762,9 @@ def _draw_character_panel(
         for row in panel[section]["rows"].values():
             draw_panel_row_background(screen, row)
 
+    for decoration in panel["combat_stats"].get("decorations", ()):
+        draw_panel_image(screen, assets, "inventory_decoration", decoration)
+
     confirm_state = "active" if pending_points > 0 else "deactive"
     _blit_asset(
         screen,
@@ -824,11 +826,6 @@ def _draw_character_panel(
             if track_label is not None:
                 draw_figma_text(screen, track_label)
 
-    mastery_rank = getattr(
-        player,
-        "mastery_rank",
-        0,
-    )
     weapon_rank = getattr(
         player,
         "weapon_rank",
@@ -840,12 +837,6 @@ def _draw_character_panel(
         0,
     )
 
-    _draw_rank_track(
-        screen,
-        assets,
-        panel["mastery"],
-        mastery_rank,
-    )
     if equipment_unlocked:
         _draw_rank_track(screen, assets, equipment["weapon"], weapon_rank)
         _draw_rank_track(screen, assets, equipment["armor"], armor_rank)
@@ -857,10 +848,7 @@ def _draw_character_panel(
             seal = {"x": bounds.x, "y": bounds.y, "width": bounds.width, "height": bounds.height}
         draw_panel_image(screen, assets, "equipment_seal", seal)
 
-    armor_value = f"{equipment_rank_bonus(armor_rank)}%"
-    charge_rate = round(
-        get_mastery_charge_rate(preview_player) * 100
-    )
+    armor_value = f"{equipment_rank_bonus(armor_rank, armor=True)}%"
 
     combat_values = {
         "damage": _damage_value(preview_player),
@@ -874,7 +862,6 @@ def _draw_character_panel(
         "dodge_chance": (
             f"{round(effective_dodge_chance(preview_player) * 100)}%"
         ),
-        "charge_rate": f"{charge_rate}%",
     }
 
     for name, row in panel["combat_stats"]["rows"].items():

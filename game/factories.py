@@ -331,7 +331,6 @@ def create_floor_state(
         has_oracle_gate=floor.get("has_oracle_gate", False),
         passages=passages,
         act_one_revisit=act_one_revisit,
-        upgrade_altar=floor.get("upgrade_altar"),
         trader_altar=floor.get("trader_altar"),
         act_three_npcs=floor.get("npcs", []),
         act_three_ores=floor.get("ores", []),

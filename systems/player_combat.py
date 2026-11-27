@@ -8,7 +8,6 @@ from acts.act_three.combat.paladin import (
 from acts.act_three.equipment import apply_armor_bonus, apply_weapon_bonus
 from acts.act_three.ability_scaling import (
     basic_attack_damage_range as act_three_basic_attack_damage_range,
-    summoner_attack_multiplier,
 )
 from acts.act_three.items.drops import drop_from_monster
 from acts.act_two.ability_scaling import (
@@ -28,9 +27,9 @@ from settings import (
 )
 from acts.act_two.abilities import ability_charge_required
 from acts.act_three.abilities import (
-    charge_ability_slots,
     is_ability_slot_unlocked,
 )
+from acts.act_three.abilities.charges import charge_subclass_abilities
 from acts.act_two.bloody_altar import (
     BLOOD_HUNGER,
     adjusted_outgoing_damage,
@@ -47,6 +46,7 @@ from game.events import GameEvent, GameEventType
 from systems.bleeding import apply_bleed
 from game.healing import healing_is_blocked
 from game.progression import (
+    attribute_points_per_level,
     experience_reward_for_enemy,
     grant_experience,
 )
@@ -63,26 +63,10 @@ from logic import (
     roll_player_damage,
 )
 from acts.act_three.settings import (
-    ARCHER_EMPOWERED_SHOT_CHARGES,
-    ARCHER_BARRAGE_ZONE_CHARGES,
-    ARCHER_LEAP_CHARGES,
-    ASSASSIN_TELEPORT_CHARGES,
-    ASSASSIN_ULTIMATE_CHARGES,
-    BERSERKER_RAGE_CRITICAL_DAMAGE_MULTIPLIER,
-    BERSERKER_RAGE_CRITICAL_HEALTH_RATIO,
-    BERSERKER_CRUSHING_LEAP_CHARGES,
     BERSERKER_LAST_RAGE_CHARGES,
-    BERSERKER_RAGE_INJURED_DAMAGE_MULTIPLIER,
-    BERSERKER_RAGE_INJURED_HEALTH_RATIO,
-    PALADIN_HOLY_HAND_CHARGES,
-    PALADIN_SHIELD_CHARGE_CHARGES,
-    PALADIN_SACRED_GROUND_CHARGES,
-    SUMMONER_FAMILIAR_CHARGES,
     SUMMONER_TRUE_FORM_CHARGES,
-    SUMMONER_TRUE_FORM_DAMAGE_BONUS,
     WARLOCK_CURSE_DAMAGE_MULTIPLIER,
 )
-from settings import CLASS_ABILITY_KILLS
 from systems.enemy_spawning import try_spawn_enemy_after_death
 from systems.mimic import release_mimic_loot
 
@@ -411,76 +395,25 @@ def attack_enemy(
             + damage_bonus
     )
 
-    if (
-        player.subclass == "summoner"
-        and player.summoner_true_form_active
-        and attacker_name == "familiar"
-    ):
-        damage += SUMMONER_TRUE_FORM_DAMAGE_BONUS
-    if enemy.curse_turns > 0:
-        damage = ceil(
-            damage * WARLOCK_CURSE_DAMAGE_MULTIPLIER
-        )
-    if player.subclass == "berserker" and player.health > 0:
-        health_ratio = player.health / player.max_health
-        if (
-            player.berserker_last_rage_hits > 0
-            or health_ratio
-            <= BERSERKER_RAGE_CRITICAL_HEALTH_RATIO
-        ):
-            damage = ceil(
-                damage
-                * BERSERKER_RAGE_CRITICAL_DAMAGE_MULTIPLIER
-            )
-        elif health_ratio <= BERSERKER_RAGE_INJURED_HEALTH_RATIO:
-            damage = ceil(
-                damage
-                * BERSERKER_RAGE_INJURED_DAMAGE_MULTIPLIER
-            )
-    if attacker_name == "hero" and player.subclass == "berserker":
-        from acts.act_three.abilities.berserker_runes import rage_rune_active
-        from acts.act_three.rune_master.definitions import DEATH_WISH_MULTIPLIER
-
-        if rage_rune_active(player, "rune_of_death_wish"):
-            damage = ceil(damage * DEATH_WISH_MULTIPLIER)
     critical_hit = (
         force_critical
         or attack_from_invisibility
         or random.random() < critical_chance
     )
 
-    if critical_hit:
-        damage = ceil(
-            damage
-            * player.critical_damage_multiplier
-        )
-    if attacker_name in ("hero", "phantom"):
-        damage = adjusted_outgoing_damage(
-            player,
-            damage,
-        )
-        damage = apply_weapon_bonus(player, damage)
-    if attacker_name == "hero" and player.subclass == "warlock":
-        from acts.act_three.abilities.warlock_runes import demon_damage_multiplier
+    if player.subclass is not None:
+        from acts.act_three.combat.damage import scaled_attack_damage
 
-        damage_multiplier *= demon_damage_multiplier(player)
-    if attacker_name == "hero" and player.subclass == "summoner":
-        from acts.act_three.abilities.summoner_runes import absorption_damage_multiplier
-
-        damage_multiplier *= absorption_damage_multiplier(player)
-        damage_multiplier *= summoner_attack_multiplier(player)
-    tower_damage_rounding = False
-    if attacker_name == "hero" and player.subclass == "paladin":
-        from acts.act_three.abilities.paladin_runes import paladin_attack_multiplier, tower_shield_active
-
-        tower_damage_rounding = tower_shield_active(player)
-        damage_multiplier *= paladin_attack_multiplier(player)
-    if damage_multiplier != 1.0:
-        if tower_damage_rounding:
-            from acts.act_three.abilities.paladin_runes import round_tower_damage
-
-            damage = round_tower_damage(player, damage * damage_multiplier)
-        else:
+        damage = scaled_attack_damage(player, enemy, damage, critical_hit, attacker_name, damage_multiplier)
+    else:
+        if enemy.curse_turns > 0:
+            damage = ceil(damage * WARLOCK_CURSE_DAMAGE_MULTIPLIER)
+        if critical_hit:
+            damage = ceil(damage * player.critical_damage_multiplier)
+        if attacker_name in ("hero", "phantom"):
+            damage = adjusted_outgoing_damage(player, damage)
+            damage = apply_weapon_bonus(player, damage)
+        if damage_multiplier != 1.0:
             damage = max(1, ceil(damage * damage_multiplier))
     damage = limit_oracle_phase_one_damage(
         enemy,
@@ -577,76 +510,13 @@ def attack_enemy(
             ability_charge_required(player),
             player.ability_kill_charge + 1,
         )
-    elif (
-        grant_ability_charge
-        and player.subclass == "assassin"
-        and not player.ultimate_animation_active
-    ):
-        if not veil_passive:
-            player.ability_kill_charge = min(
-                CLASS_ABILITY_KILLS,
-                player.ability_kill_charge + 1,
-            )
-
-        if is_ability_slot_unlocked(player, "q"):
-            player.teleport_charge = min(
-                ASSASSIN_TELEPORT_CHARGES,
-                player.teleport_charge + 1,
-            )
-        if is_ability_slot_unlocked(player, "f"):
-            player.ultimate_charge = min(
-                ASSASSIN_ULTIMATE_CHARGES,
-                player.ultimate_charge + 1,
-            )
-    elif grant_ability_charge and player.subclass == "archer":
-        charge_ability_slots(player, ("q", "f"))
-    elif grant_ability_charge and player.subclass == "berserker":
-        if is_ability_slot_unlocked(player, "q"):
-            player.berserker_crushing_leap_charge = min(
-                BERSERKER_CRUSHING_LEAP_CHARGES,
-                player.berserker_crushing_leap_charge + 1,
-            )
-        if player.berserker_last_rage_hits <= 0 and is_ability_slot_unlocked(player, "f"):
-            player.berserker_last_rage_charge = min(
-                BERSERKER_LAST_RAGE_CHARGES,
-                player.berserker_last_rage_charge + 1,
-            )
-    elif grant_ability_charge and player.subclass == "paladin":
-        player.paladin_holy_hand_charge = min(
-            PALADIN_HOLY_HAND_CHARGES,
-            player.paladin_holy_hand_charge + 1,
-        )
-        if is_ability_slot_unlocked(player, "q"):
-            player.paladin_shield_charge_charge = min(
-                PALADIN_SHIELD_CHARGE_CHARGES,
-                player.paladin_shield_charge_charge + 1,
-            )
-        if is_ability_slot_unlocked(player, "f"):
-            player.paladin_sacred_ground_charge = min(
-                PALADIN_SACRED_GROUND_CHARGES,
-                player.paladin_sacred_ground_charge + 1,
-            )
-    elif grant_ability_charge and player.subclass == "warlock":
-        charge_ability_slots(
-            player,
-            ("q", "f"),
-        )
-    elif grant_ability_charge and player.subclass == "summoner":
-        from acts.act_three.abilities.summoner_runes import summoner_ultimate_active, familiar_recharge_requirement
-
-        if not summoner_ultimate_active(player) and is_ability_slot_unlocked(player, "f"):
-            player.summoner_true_form_charge = min(
-                SUMMONER_TRUE_FORM_CHARGES,
-                player.summoner_true_form_charge + 1,
-            )
-        if is_ability_slot_unlocked(player, "q"):
-            player.summoner_familiar_charge = min(
-                familiar_recharge_requirement(player),
-                player.summoner_familiar_charge + 1.0,
-            )
+    elif grant_ability_charge and player.subclass is not None and attacker_name == "hero":
+        charge_subclass_abilities(player)
     if (
         grant_ability_charge
-        and player.subclass in ("archer", "berserker", "paladin", "warlock", "summoner")
+        and attacker_name == "hero"
+        and player.subclass is not None
+        and not (player.subclass == "assassin" and player.ultimate_animation_active)
         and player.selected_rune_id not in ("rune_of_the_veil", "rune_of_resonance", "rune_of_impact")
     ):
         player.ability_kill_charge = min(
@@ -783,7 +653,8 @@ def resolve_enemy_defeat(
 
     from acts.act_three.abilities.berserker_runes import record_rage_kill
 
-    record_rage_kill(game_state)
+    if not enemy.is_summoned:
+        record_rage_kill(game_state)
 
     kills = game_state.run_stats.kills_by_type
     kills[enemy.type] = kills.get(enemy.type, 0) + 1
@@ -795,6 +666,10 @@ def resolve_enemy_defeat(
     player.enemies_defeated += 1
 
     current_act = game_state.floor.presentation_act
+    if current_act == 3:
+        from acts.act_three.abilities.unlocks import unlock_ultimate_after_boss
+
+        unlock_ultimate_after_boss(game_state, enemy)
     if current_act in (2, 3):
         experience_reward = experience_reward_for_enemy(enemy.type)
         levels_gained = grant_experience(player, experience_reward)
@@ -816,7 +691,7 @@ def resolve_enemy_defeat(
                 game_state.combat_log,
                 (
                     f"Level {player.level} reached. "
-                    f"Attribute point +{levels_gained}."
+                    f"Attribute points +{levels_gained * attribute_points_per_level(player)}."
                 ),
                 category="progress",
             )
@@ -860,20 +735,6 @@ def resolve_enemy_defeat(
             "The Oracle falls. A passage is revealed.",
             category="quest",
         )
-    if (
-        player.player_class is not None
-        and player.subclass not in (None, "assassin")
-        and player.selected_rune_id not in (
-            "rune_of_the_veil",
-            "rune_of_resonance",
-            "rune_of_impact",
-        )
-    ):
-        player.ability_kill_charge = min(
-            CLASS_ABILITY_KILLS,
-            player.ability_kill_charge + 1,
-        )
-
     if not enemy.has_key:
         return
 

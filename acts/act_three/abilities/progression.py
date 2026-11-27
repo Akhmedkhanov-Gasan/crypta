@@ -13,21 +13,10 @@ DEFAULT_UNLOCKED_ABILITY_SLOTS = frozenset({
     "e",
 })
 
-MASTERY_CHARGE_RATES = (
-    1.0,
-    1.1,
-    1.2,
-    1.3,
-    1.4,
-    1.5,
-)
-
-
 def initialize_act_three_progression(
     player,
     unlock_all=False,
 ):
-    player.mastery_rank = 0
     player.weapon_rank = 0
     player.armor_rank = 0
     player.unlocked_ability_slots = set(
@@ -50,9 +39,6 @@ def is_ability_slot_unlocked(
         return False
     if player.debug_unlimited_abilities or slot == "e":
         return True
-    if slot == "f":
-        return False
-
     return (
         slot in ABILITY_SLOTS
         and slot in player.unlocked_ability_slots
@@ -68,19 +54,12 @@ def unlock_ability_slot(
             f"Unknown ability slot: {slot}"
         )
 
+    if slot in player.unlocked_ability_slots:
+        return
     player.unlocked_ability_slots.add(slot)
+    from acts.act_three.abilities.charges import fill_ability_slot
 
-
-def get_mastery_charge_rate(player):
-    rank = max(
-        0,
-        min(
-            len(MASTERY_CHARGE_RATES) - 1,
-            player.mastery_rank,
-        ),
-    )
-
-    return MASTERY_CHARGE_RATES[rank]
+    fill_ability_slot(player, slot)
 
 
 def get_ability_slot_charge(
@@ -142,8 +121,6 @@ def charge_ability_slots(
     if definition is None:
         return
 
-    charge_gain = get_mastery_charge_rate(player)
-
     for slot in slots:
         if not is_ability_slot_unlocked(player, slot):
             continue
@@ -158,5 +135,5 @@ def charge_ability_slots(
         )
         player.ability_slot_charges[slot] = min(
             ability.charge_required,
-            current_charge + charge_gain,
+            current_charge + 1.0,
         )

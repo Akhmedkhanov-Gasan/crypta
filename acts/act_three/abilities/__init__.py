@@ -3,11 +3,9 @@
 from acts.act_three.abilities.progression import (
     ABILITY_SLOTS,
     DEFAULT_UNLOCKED_ABILITY_SLOTS,
-    MASTERY_CHARGE_RATES,
     charge_ability_slots,
     clear_ability_slot_charge,
     get_ability_slot_charge,
-    get_mastery_charge_rate,
     initialize_act_three_progression,
     is_ability_slot_charged,
     is_ability_slot_unlocked,
@@ -26,11 +24,9 @@ from acts.act_three.abilities.catalog import (
 __all__ = [
     "ABILITY_SLOTS",
     "DEFAULT_UNLOCKED_ABILITY_SLOTS",
-    "MASTERY_CHARGE_RATES",
     "charge_ability_slots",
     "clear_ability_slot_charge",
     "get_ability_slot_charge",
-    "get_mastery_charge_rate",
     "initialize_act_three_progression",
     "is_ability_slot_charged",
     "is_ability_slot_unlocked",

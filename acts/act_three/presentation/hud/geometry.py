@@ -30,7 +30,6 @@ def get_character_panel_focus_rectangles(panel, belt_slots, player):
         f"combat_stat:{name}": stat_row_rectangle(row)
         for name, row in panel["combat_stats"]["rows"].items()
     })
-    rectangles["mastery:mastery"] = figma_rect(panel["mastery"]["hitbox"])
     for name in ("weapon", "armor"):
         if player.act_three.inventory_unlocked and player.act_three.blacksmith_quest.get("completed"):
             rectangles[f"equipment:{name}"] = figma_rect(panel["equipment"][name]["hitbox"])

@@ -107,7 +107,6 @@ class GameplayKeyboardController:
             and not game_state.act_three_transition_open
             and not game_state.subclass_selection_open
             and not game_state.act_three_debug_class_selection_open
-            and not game_state.upgrade_altar_menu_open
             and game_state.player.health > 0
             and not game_state.game_won
             and handle_character_panel_key(

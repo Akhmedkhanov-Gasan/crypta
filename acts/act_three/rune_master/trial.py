@@ -2,10 +2,10 @@ import random
 from math import ceil
 
 from acts.act_three.abilities.progression import is_ability_slot_unlocked
+from acts.act_three.enemies.balance import act_three_enemy_config
 from acts.act_three.dialogue.runtime import queue_dialogue
 from acts.act_three.trials.archer import set_cell
 from acts.act_three.world_geometry import reachable_cells
-from enemies import ENEMY_TYPES
 from game.combat_log import add_log_message
 from game.state import EnemyBehaviorState, EnemyState
 from logic import get_enemy_occupied_positions
@@ -71,14 +71,14 @@ def _spawn_wave(game_state, now):
     spawned = []
     left, top, right, bottom = trial["bounds"]
     for index, (enemy_type, cell) in enumerate(zip(types, candidates)):
-        base = ENEMY_TYPES[enemy_type]
+        base = act_three_enemy_config(enemy_type, 3)
         config = {
             **base,
-            "max_health": ceil(base["max_health"] * (1.5 + trial["wave"] * 0.1)),
+            "max_health": ceil(base["max_health"] * (1.0 + trial["wave"] * 0.08)),
             "aggro_radius": 99,
             "wander_chance": 0.0,
             "damage_by_mode": {
-                mode: (tuple(value + 1 for value in values), weights)
+                mode: (values, weights)
                 for mode, (values, weights) in base["damage_by_mode"].items()
             },
         }

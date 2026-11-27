@@ -1,7 +1,3 @@
-from acts.act_three.altar import (
-    get_upgrade_altar_cells,
-    open_upgrade_altar,
-)
 from acts.act_three.combat.attacks import navigation_attack
 from acts.act_three.environment_objects import get_breakable_environment_object
 from acts.act_three.mining.world import get_ore_at
@@ -89,10 +85,6 @@ def navigation_target_info(game_state, target):
     crate = get_breakable_environment_object(floor, target) is not None
     column, row = target
     secret_wall = floor.map[row][column] == "S"
-    altar = (
-        floor.presentation_act == 3
-        and target in get_upgrade_altar_cells(floor)
-    )
     trial = floor.shadow_step_trial
     from acts.act_three.trials.archer import interaction_cells
 
@@ -113,7 +105,6 @@ def navigation_target_info(game_state, target):
         or chest
         or crate
         or secret_wall
-        or altar
         or (floor.presentation_act == 3 and target == floor.trader_altar)
         or trial_door
         or piercing_interaction
@@ -147,22 +138,6 @@ def navigation_action(game_state, origin, target, has_enemy):
         if trial is not None and trial["phase"] == "closed" and target == trial["door"]:
             if abs(target[0] - origin[0]) + abs(target[1] - origin[1]) != 1:
                 return None
-        if target in get_upgrade_altar_cells(floor):
-            if any(
-                abs(origin[0] - cell[0])
-                + abs(origin[1] - cell[1]) == 1
-                and can_reach_adjacent_cell(
-                    floor.map,
-                    origin,
-                    cell,
-                    floor.barriers,
-                    target_must_be_walkable=False,
-                )
-                for cell in get_upgrade_altar_cells(floor)
-            ):
-                return {"navigation_altar": True}
-            return None
-
         if has_enemy:
             attack = navigation_attack(
                 game_state,
@@ -194,12 +169,6 @@ def navigation_action(game_state, origin, target, has_enemy):
 
 
 def activate_navigation_action(game_state, event):
-    if getattr(event, "navigation_altar", False):
-        return (
-            game_state.floor.presentation_act == 3
-            and open_upgrade_altar(game_state)
-        )
-
     target = getattr(event, "navigation_attack_target", None)
     if target is not None:
         if game_state.floor.presentation_act != 3:

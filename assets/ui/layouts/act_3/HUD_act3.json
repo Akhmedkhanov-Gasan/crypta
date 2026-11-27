@@ -1852,12 +1852,6 @@
             "height": 14
           },
           {
-            "x": 807,
-            "y": 585,
-            "width": 188,
-            "height": 14
-          },
-          {
             "x": 1013,
             "y": 585,
             "width": 180,
@@ -1895,63 +1889,6 @@
           "y": 302,
           "width": 100,
           "height": 28
-        }
-      },
-      "mastery": {
-        "rect": {
-          "x": 823,
-          "y": 352,
-          "width": 162,
-          "height": 24
-        },
-        "frame": {
-          "x": 825,
-          "y": 353,
-          "width": 157,
-          "height": 22
-        },
-        "kind": "mastery",
-        "background": null,
-        "icon": null,
-        "item_icon": null,
-        "label": null,
-        "levels": {
-          "level_01": {
-            "x": 834,
-            "y": 352,
-            "width": 24,
-            "height": 24
-          },
-          "level_02": {
-            "x": 863,
-            "y": 352,
-            "width": 24,
-            "height": 24
-          },
-          "level_03": {
-            "x": 891,
-            "y": 352,
-            "width": 24,
-            "height": 24
-          },
-          "level_04": {
-            "x": 920,
-            "y": 352,
-            "width": 24,
-            "height": 24
-          },
-          "level_05": {
-            "x": 949,
-            "y": 352,
-            "width": 24,
-            "height": 24
-          }
-        },
-        "hitbox": {
-          "x": 823,
-          "y": 352,
-          "width": 162,
-          "height": 24
         }
       },
       "equipment": {
@@ -2315,22 +2252,42 @@
       "combat_stats": {
         "rect": {
           "x": 808,
-          "y": 382,
+          "y": 365,
           "width": 188,
           "height": 123
         },
+        "decorations": [
+          {
+            "x": 811,
+            "y": 346,
+            "width": 180,
+            "height": 14
+          },
+          {
+            "x": 811,
+            "y": 493,
+            "width": 180,
+            "height": 14
+          },
+          {
+            "x": 807,
+            "y": 585,
+            "width": 188,
+            "height": 14
+          }
+        ],
         "rows": {
           "damage": {
             "rect": {
               "x": 812,
-              "y": 383,
+              "y": 366,
               "width": 180,
               "height": 16
             },
             "background": {
               "rect": {
                 "x": 811,
-                "y": 383,
+                "y": 366,
                 "width": 180,
                 "height": 16
               },
@@ -2348,7 +2305,7 @@
             "label": {
               "rect": {
                 "x": 817,
-                "y": 383,
+                "y": 366,
                 "width": 52,
                 "height": 16
               },
@@ -2378,7 +2335,7 @@
             "value": {
               "rect": {
                 "x": 939,
-                "y": 385,
+                "y": 368,
                 "width": 43,
                 "height": 12
               },
@@ -2409,14 +2366,14 @@
           "armor": {
             "rect": {
               "x": 812,
-              "y": 403,
+              "y": 386,
               "width": 180,
               "height": 16
             },
             "background": {
               "rect": {
                 "x": 811,
-                "y": 403,
+                "y": 386,
                 "width": 180,
                 "height": 16
               },
@@ -2434,7 +2391,7 @@
             "label": {
               "rect": {
                 "x": 817,
-                "y": 403,
+                "y": 386,
                 "width": 40,
                 "height": 16
               },
@@ -2464,7 +2421,7 @@
             "value": {
               "rect": {
                 "x": 939,
-                "y": 405,
+                "y": 388,
                 "width": 43,
                 "height": 12
               },
@@ -2495,14 +2452,14 @@
           "critical_chance": {
             "rect": {
               "x": 812,
-              "y": 423,
+              "y": 406,
               "width": 180,
               "height": 16
             },
             "background": {
               "rect": {
                 "x": 811,
-                "y": 423,
+                "y": 406,
                 "width": 180,
                 "height": 16
               },
@@ -2520,7 +2477,7 @@
             "label": {
               "rect": {
                 "x": 817,
-                "y": 423,
+                "y": 406,
                 "width": 94,
                 "height": 16
               },
@@ -2550,7 +2507,7 @@
             "value": {
               "rect": {
                 "x": 949,
-                "y": 425,
+                "y": 408,
                 "width": 27,
                 "height": 12
               },
@@ -2581,14 +2538,14 @@
           "critical_damage": {
             "rect": {
               "x": 812,
-              "y": 443,
+              "y": 426,
               "width": 180,
               "height": 16
             },
             "background": {
               "rect": {
                 "x": 811,
-                "y": 443,
+                "y": 426,
                 "width": 180,
                 "height": 16
               },
@@ -2606,7 +2563,7 @@
             "label": {
               "rect": {
                 "x": 817,
-                "y": 443,
+                "y": 426,
                 "width": 97,
                 "height": 16
               },
@@ -2636,7 +2593,7 @@
             "value": {
               "rect": {
                 "x": 944,
-                "y": 445,
+                "y": 428,
                 "width": 32,
                 "height": 12
               },
@@ -2667,14 +2624,14 @@
           "dodge_chance": {
             "rect": {
               "x": 812,
-              "y": 463,
+              "y": 446,
               "width": 180,
               "height": 16
             },
             "background": {
               "rect": {
                 "x": 811,
-                "y": 463,
+                "y": 446,
                 "width": 180,
                 "height": 16
               },
@@ -2692,7 +2649,7 @@
             "label": {
               "rect": {
                 "x": 817,
-                "y": 463,
+                "y": 446,
                 "width": 89,
                 "height": 16
               },
@@ -2722,97 +2679,11 @@
             "value": {
               "rect": {
                 "x": 947,
-                "y": 465,
+                "y": 448,
                 "width": 30,
                 "height": 13
               },
               "text": "0%",
-              "font": {
-                "family": "Asul",
-                "style": "Regular",
-                "size": 12
-              },
-              "line_height": {
-                "unit": "AUTO"
-              },
-              "letter_spacing": {
-                "unit": "PERCENT",
-                "value": 0
-              },
-              "horizontal_align": "CENTER",
-              "vertical_align": "CENTER",
-              "text_case": "ORIGINAL",
-              "color": {
-                "r": 167,
-                "g": 167,
-                "b": 167,
-                "a": 255
-              }
-            }
-          },
-          "charge_rate": {
-            "rect": {
-              "x": 812,
-              "y": 483,
-              "width": 180,
-              "height": 16
-            },
-            "background": {
-              "rect": {
-                "x": 811,
-                "y": 483,
-                "width": 180,
-                "height": 16
-              },
-              "fill": {
-                "r": 17,
-                "g": 17,
-                "b": 17,
-                "a": 191
-              },
-              "stroke": null,
-              "stroke_weight": 1,
-              "corner_radius": 3,
-              "blur_radius": 0
-            },
-            "label": {
-              "rect": {
-                "x": 817,
-                "y": 483,
-                "width": 73,
-                "height": 16
-              },
-              "text": "Charge rate",
-              "font": {
-                "family": "Asul",
-                "style": "Regular",
-                "size": 14
-              },
-              "line_height": {
-                "unit": "AUTO"
-              },
-              "letter_spacing": {
-                "unit": "PERCENT",
-                "value": 0
-              },
-              "horizontal_align": "CENTER",
-              "vertical_align": "CENTER",
-              "text_case": "ORIGINAL",
-              "color": {
-                "r": 167,
-                "g": 167,
-                "b": 167,
-                "a": 255
-              }
-            },
-            "value": {
-              "rect": {
-                "x": 942,
-                "y": 484,
-                "width": 39,
-                "height": 13
-              },
-              "text": "100%",
               "font": {
                 "family": "Asul",
                 "style": "Regular",

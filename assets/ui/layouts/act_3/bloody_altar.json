@@ -1,0 +1,458 @@
+{
+  "schema_version": 1,
+  "screen": "bloody_altar",
+  "act": 3,
+  "coordinate_space": "frame",
+  "frame": {
+    "name": "act3_bloody_altar",
+    "width": 1280,
+    "height": 720
+  },
+  "bloody_altar_background": {
+    "rect": {
+      "x": 140,
+      "y": 78,
+      "width": 1000,
+      "height": 563
+    },
+    "asset_path": "assets/sprites/ui/act_3/bloody_altar/bloody_altar_background.png",
+    "source_asset_path": "my/assets/original/act_3/ui/bloody_altar/Dark Crimson Ornate UI Frame.png",
+    "opacity": 1
+  },
+  "close_hitbox": {
+    "x": 1031,
+    "y": 145,
+    "width": 40,
+    "height": 40
+  },
+  "close_icon": {
+    "rect": {
+      "x": 1031,
+      "y": 145,
+      "width": 40,
+      "height": 40
+    },
+    "asset_path": "assets/sprites/ui/act_3/bloody_altar/close_icon.png",
+    "source_asset_path": "my/assets/original/act_3/ui/bloody_altar/Ornate Crimson Close Button-3.png",
+    "opacity": 1
+  },
+  "confirm_button": {
+    "hitbox": {
+      "x": 565,
+      "y": 586,
+      "width": 150,
+      "height": 38
+    },
+    "active": {
+      "rect": {
+        "x": 565,
+        "y": 587,
+        "width": 150,
+        "height": 36
+      },
+      "asset_path": "assets/sprites/ui/act_3/bloody_altar/confirm_button_active.png",
+      "source_asset_path": "my/assets/original/act_3/ui/bloody_altar/Ornate Crimson Confirm Button-1.png",
+      "opacity": 1
+    },
+    "inactive": {
+      "rect": {
+        "x": 565,
+        "y": 586,
+        "width": 150,
+        "height": 38
+      },
+      "asset_path": "assets/sprites/ui/act_3/bloody_altar/confirm_button_deactive.png",
+      "source_asset_path": "my/assets/original/act_3/ui/bloody_altar/Disabled Ornate Maroon Confirm Button.png",
+      "opacity": 1
+    }
+  },
+  "return_button": {
+    "hitbox": {
+      "x": 205,
+      "y": 135,
+      "width": 60,
+      "height": 61
+    },
+    "active": {
+      "rect": {
+        "x": 205,
+        "y": 135,
+        "width": 60,
+        "height": 61
+      },
+      "asset_path": "assets/sprites/ui/act_3/bloody_altar/return_button_active.png",
+      "source_asset_path": "my/assets/original/act_3/ui/bloody_altar/Crimson Fantasy Back Button-2.png",
+      "opacity": 1
+    },
+    "inactive": {
+      "rect": {
+        "x": 205,
+        "y": 136,
+        "width": 60,
+        "height": 60
+      },
+      "asset_path": "assets/sprites/ui/act_3/bloody_altar/return_button_deactive.png",
+      "source_asset_path": "my/assets/original/act_3/ui/bloody_altar/ChatGPT Image Nov 27, 2026, 09_31_15 AM.png",
+      "opacity": 1
+    }
+  },
+  "pact_container": {
+    "x": 265,
+    "y": 172,
+    "width": 750,
+    "height": 375
+  },
+  "pacts": {
+    "pact_01": {
+      "rect": {
+        "x": 265,
+        "y": 172,
+        "width": 250,
+        "height": 375
+      },
+      "hitbox": {
+        "x": 265,
+        "y": 172,
+        "width": 250,
+        "height": 375
+      },
+      "background": {
+        "rect": {
+          "x": 275,
+          "y": 185,
+          "width": 230,
+          "height": 349
+        },
+        "asset_path": "assets/sprites/ui/act_3/bloody_altar/pact_background.png",
+        "source_asset_path": "my/assets/original/act_3/ui/bloody_altar/Gothic Crimson Fantasy Card Frame.png",
+        "opacity": 1
+      },
+      "icon": {
+        "x": 330,
+        "y": 225,
+        "width": 120,
+        "height": 120
+      },
+      "name": {
+        "rect": {
+          "x": 303,
+          "y": 345,
+          "width": 174,
+          "height": 32
+        },
+        "text": "name",
+        "font": {
+          "family": "JMH Cthulhumbus Arcade",
+          "style": "Regular",
+          "size": 20
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 135,
+          "g": 16,
+          "b": 16,
+          "a": 255
+        }
+      },
+      "description": {
+        "rect": {
+          "x": 303,
+          "y": 381,
+          "width": 175,
+          "height": 110
+        },
+        "background": {
+          "rect": {
+            "x": 303,
+            "y": 381,
+            "width": 175,
+            "height": 110
+          },
+          "fill": {
+            "r": 107,
+            "g": 32,
+            "b": 32,
+            "a": 115
+          },
+          "stroke": null,
+          "stroke_weight": 1,
+          "corner_radius": 7,
+          "blur_radius": 0
+        },
+        "text": {
+          "rect": {
+            "x": 308,
+            "y": 385,
+            "width": 164,
+            "height": 101
+          },
+          "text": "text text text text text text text text text text text text text text text text text text text text text text text text ",
+          "font": {
+            "family": "Ubuntu Mono",
+            "style": "Regular",
+            "size": 14
+          },
+          "line_height": {
+            "unit": "AUTO"
+          },
+          "letter_spacing": {
+            "unit": "PERCENT",
+            "value": 0
+          },
+          "horizontal_align": "CENTER",
+          "vertical_align": "CENTER",
+          "text_case": "ORIGINAL",
+          "color": {
+            "r": 167,
+            "g": 167,
+            "b": 167,
+            "a": 255
+          }
+        }
+      }
+    },
+    "pact_02": {
+      "rect": {
+        "x": 515,
+        "y": 172,
+        "width": 250,
+        "height": 375
+      },
+      "hitbox": {
+        "x": 515,
+        "y": 172,
+        "width": 250,
+        "height": 375
+      },
+      "background": {
+        "rect": {
+          "x": 525,
+          "y": 185,
+          "width": 230,
+          "height": 349
+        },
+        "asset_path": "assets/sprites/ui/act_3/bloody_altar/pact_background.png",
+        "source_asset_path": "my/assets/original/act_3/ui/bloody_altar/Gothic Crimson Fantasy Card Frame.png",
+        "opacity": 1
+      },
+      "icon": {
+        "x": 580,
+        "y": 225,
+        "width": 120,
+        "height": 120
+      },
+      "name": {
+        "rect": {
+          "x": 553,
+          "y": 345,
+          "width": 174,
+          "height": 32
+        },
+        "text": "name",
+        "font": {
+          "family": "JMH Cthulhumbus Arcade",
+          "style": "Regular",
+          "size": 20
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 135,
+          "g": 16,
+          "b": 16,
+          "a": 255
+        }
+      },
+      "description": {
+        "rect": {
+          "x": 553,
+          "y": 381,
+          "width": 175,
+          "height": 110
+        },
+        "background": {
+          "rect": {
+            "x": 553,
+            "y": 381,
+            "width": 175,
+            "height": 110
+          },
+          "fill": {
+            "r": 107,
+            "g": 32,
+            "b": 32,
+            "a": 115
+          },
+          "stroke": null,
+          "stroke_weight": 1,
+          "corner_radius": 7,
+          "blur_radius": 0
+        },
+        "text": {
+          "rect": {
+            "x": 558,
+            "y": 385,
+            "width": 164,
+            "height": 101
+          },
+          "text": "text text text text text text text text text text text text text text text text text text text text text text text text ",
+          "font": {
+            "family": "Ubuntu Mono",
+            "style": "Regular",
+            "size": 14
+          },
+          "line_height": {
+            "unit": "AUTO"
+          },
+          "letter_spacing": {
+            "unit": "PERCENT",
+            "value": 0
+          },
+          "horizontal_align": "CENTER",
+          "vertical_align": "CENTER",
+          "text_case": "ORIGINAL",
+          "color": {
+            "r": 167,
+            "g": 167,
+            "b": 167,
+            "a": 255
+          }
+        }
+      }
+    },
+    "pact_03": {
+      "rect": {
+        "x": 765,
+        "y": 172,
+        "width": 250,
+        "height": 375
+      },
+      "hitbox": {
+        "x": 765,
+        "y": 172,
+        "width": 250,
+        "height": 375
+      },
+      "background": {
+        "rect": {
+          "x": 775,
+          "y": 185,
+          "width": 230,
+          "height": 349
+        },
+        "asset_path": "assets/sprites/ui/act_3/bloody_altar/pact_background.png",
+        "source_asset_path": "my/assets/original/act_3/ui/bloody_altar/Gothic Crimson Fantasy Card Frame.png",
+        "opacity": 1
+      },
+      "icon": {
+        "x": 830,
+        "y": 225,
+        "width": 120,
+        "height": 120
+      },
+      "name": {
+        "rect": {
+          "x": 803,
+          "y": 345,
+          "width": 174,
+          "height": 32
+        },
+        "text": "name",
+        "font": {
+          "family": "JMH Cthulhumbus Arcade",
+          "style": "Regular",
+          "size": 20
+        },
+        "line_height": {
+          "unit": "AUTO"
+        },
+        "letter_spacing": {
+          "unit": "PERCENT",
+          "value": 0
+        },
+        "horizontal_align": "CENTER",
+        "vertical_align": "CENTER",
+        "text_case": "ORIGINAL",
+        "color": {
+          "r": 135,
+          "g": 16,
+          "b": 16,
+          "a": 255
+        }
+      },
+      "description": {
+        "rect": {
+          "x": 803,
+          "y": 381,
+          "width": 175,
+          "height": 110
+        },
+        "background": {
+          "rect": {
+            "x": 803,
+            "y": 381,
+            "width": 175,
+            "height": 110
+          },
+          "fill": {
+            "r": 107,
+            "g": 32,
+            "b": 32,
+            "a": 115
+          },
+          "stroke": null,
+          "stroke_weight": 1,
+          "corner_radius": 7,
+          "blur_radius": 0
+        },
+        "text": {
+          "rect": {
+            "x": 808,
+            "y": 385,
+            "width": 164,
+            "height": 101
+          },
+          "text": "text text text text text text text text text text text text text text text text text text text text text text text text ",
+          "font": {
+            "family": "Ubuntu Mono",
+            "style": "Regular",
+            "size": 14
+          },
+          "line_height": {
+            "unit": "AUTO"
+          },
+          "letter_spacing": {
+            "unit": "PERCENT",
+            "value": 0
+          },
+          "horizontal_align": "CENTER",
+          "vertical_align": "CENTER",
+          "text_case": "ORIGINAL",
+          "color": {
+            "r": 167,
+            "g": 167,
+            "b": 167,
+            "a": 255
+          }
+        }
+      }
+    }
+  }
+}

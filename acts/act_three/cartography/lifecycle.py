@@ -19,7 +19,6 @@ def map_visible(game_state):
         minimap_visible(game_state)
         and not game_state.subclass_selection_open
         and not game_state.act_three_debug_class_selection_open
-        and not game_state.upgrade_altar_menu_open
         and not game_state.dialogue.active
         and not is_spirit(game_state.floor.curse_trial)
         and not busy(game_state.floor.summoner_trial)

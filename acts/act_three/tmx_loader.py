@@ -358,19 +358,6 @@ def load_tmx_floor(path):
         for column, row in get_npc_cells(npc):
             dungeon_map[row][column] = "#"
 
-    upgrade_altar_markers = by_name.get("upgrade_altar", [])
-    upgrade_altar = (
-        upgrade_altar_markers[0][0]
-        if upgrade_altar_markers
-        else None
-    )
-    if upgrade_altar is not None:
-        altar_column, altar_row = upgrade_altar
-        for row in range(altar_row, altar_row + 2):
-            for column in range(altar_column, altar_column + 2):
-                if 0 <= row < height and 0 <= column < width:
-                    dungeon_map[row][column] = "#"
-
     player_markers = (
         by_name.get("player_spawn")
         or by_name.get("spawn")
@@ -505,7 +492,6 @@ def load_tmx_floor(path):
         "breakable_crates": breakable_crates,
         "potions": potions,
         "torches": torches,
-        "upgrade_altar": upgrade_altar,
         "npcs": npcs,
         "ores": ores,
         "tile_layers": layers,

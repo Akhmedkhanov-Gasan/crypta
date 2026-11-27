@@ -135,7 +135,7 @@ def take_manifestation_turn(game_state):
         damage_manifestation(game_state, cost, now, feedback=False)
         if defeated:
             resolve_enemy_defeat(game_state, target)
-            if spirit["devourer"]:
+            if spirit["devourer"] and not target.is_summoned:
                 spirit["souls"] += 1
                 spirit["soul_at"] = now
                 spirit["soul_origin"] = (target.column, target.row)

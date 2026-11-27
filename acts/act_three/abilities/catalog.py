@@ -1,7 +1,10 @@
 from dataclasses import dataclass
+from acts.act_two.settings import ABILITY_HITS_REQUIRED
 from acts.act_three.settings import (
     BERSERKER_CRUSHING_LEAP_CHARGES,
     BERSERKER_LAST_RAGE_CHARGES,
+    ASSASSIN_TELEPORT_CHARGES,
+    SUMMONER_FAMILIAR_CHARGES,
 )
 
 
@@ -37,7 +40,7 @@ POWER_CLEAVE = AbilityDefinition(
     name="POWER CLEAVE",
     slot="e",
     icon_asset="act_three_power_cleave",
-    charge_required=2.0,
+    charge_required=float(ABILITY_HITS_REQUIRED),
     description=(
         "Sweep three tiles ahead and knock enemies back."
     ),
@@ -49,7 +52,7 @@ INVISIBILITY = AbilityDefinition(
     name="INVISIBILITY",
     slot="e",
     icon_asset="act_three_invisibility",
-    charge_required=2.0,
+    charge_required=float(ABILITY_HITS_REQUIRED),
     description=(
         "Vanish from sight. Your next attack is a "
         "guaranteed critical hit."
@@ -63,7 +66,7 @@ def _arcane_burst(subclass):
         name="ARCANE BURST",
         slot="e",
         icon_asset=f"act_three_{subclass}_arcane_burst",
-        charge_required=2.0,
+        charge_required=float(ABILITY_HITS_REQUIRED),
         description="Detonate a cross at range and scatter enemies outward.",
         inherited=True,
     )
@@ -180,7 +183,7 @@ SUBCLASS_DEFINITIONS = {
                 icon_asset=(
                     "act_three_assassin_shadow_step"
                 ),
-                charge_required=4.0,
+                charge_required=float(ASSASSIN_TELEPORT_CHARGES),
                 description=(
                     "Teleport to a visible unoccupied cell."
                 ),
@@ -266,7 +269,7 @@ SUBCLASS_DEFINITIONS = {
                 charge_required=4.0,
                 description=(
                     "Curse an enemy, increasing the damage "
-                    "it receives for several turns."
+                    "it receives by 50% for six turns."
                 ),
             ),
             "e": _arcane_burst("warlock"),
@@ -306,7 +309,7 @@ SUBCLASS_DEFINITIONS = {
                 icon_asset=(
                     "act_three_summoner_summon_familiar"
                 ),
-                charge_required=4.0,
+                charge_required=float(SUMMONER_FAMILIAR_CHARGES),
                 description=(
                     "Summon a spiritual familiar that moves and attacks enemies independently. Q recalls it."
                 ),

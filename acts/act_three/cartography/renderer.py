@@ -7,7 +7,6 @@ import resource_store as resources
 from acts.act_three.cartography.geometry import close_rectangle, map_content_rectangle, map_rectangle, map_viewport
 from acts.act_three.cartography.lifecycle import map_visible, minimap_visible
 from acts.act_three.cartography.terrain import get_terrain
-from acts.act_three.altar import get_upgrade_altar_cells
 from acts.act_three.npcs import get_npc_cells
 from acts.act_three.presentation.player_locomotion import sample_player_locomotion
 from presentation.layout import ACT_THREE_TILE_SIZE
@@ -18,7 +17,6 @@ _TEXT = (195, 186, 163)
 _PLAYER = (238, 215, 159)
 _UP = (112, 166, 215)
 _DOWN = (196, 82, 78)
-_ALTAR = (190, 144, 125)
 _PANEL_FRAMES = {}
 _FRAME_INTERVAL_MS = 33
 
@@ -142,11 +140,6 @@ def _draw_plan(surface, game_state, viewport, images, current_time, full, render
             sign = -1 if up else 1
             pygame.draw.polygon(surface, color, ((x, y + sign * radius), (x - radius, y - sign * radius), (x + radius, y - sign * radius)))
 
-        if get_upgrade_altar_cells(floor).intersection(floor.explored_cells):
-            x, y = point((floor.upgrade_altar[0] + 0.5, floor.upgrade_altar[1] + 0.5))
-            radius = max(3, round((5 if full else 3) * render_scale))
-            pygame.draw.polygon(surface, _ALTAR, ((x, y - radius), (x + radius, y), (x, y + radius), (x - radius, y)), max(1, round(render_scale)))
-
         x = round(origin[0] + player[0] * cell_size)
         y = round(origin[1] + player[1] * cell_size)
         pulse = (math.sin(current_time / 380) + 1) / 2
@@ -182,7 +175,7 @@ def _draw_sheet_contents(surface, game_state, layout, images, current_time, full
     close = close_rectangle(layout)
     cross = _text("X", round(16 * render_scale))
     surface.blit(cross, cross.get_rect(center=close.center))
-    entries = (("You", None, _PLAYER), ("Up", None, _UP), ("Down", None, _DOWN), ("Trader", "trader", _TEXT), ("Smith", "blacksmith", _TEXT), ("Runes", "rune_master", _TEXT), ("Altar", None, _ALTAR))
+    entries = (("You", None, _PLAYER), ("Up", None, _UP), ("Down", None, _DOWN), ("Trader", "trader", _TEXT), ("Smith", "blacksmith", _TEXT), ("Runes", "rune_master", _TEXT))
     gap = round(18 * render_scale)
     marker_size = round(16 * render_scale)
     labels = [(_text(label, round(16 * render_scale)), icon, color) for label, icon, color in entries]
@@ -194,9 +187,6 @@ def _draw_sheet_contents(surface, game_state, layout, images, current_time, full
         if icon is not None:
             marker = _icon(images[icon], marker_size)
             surface.blit(marker, marker.get_rect(center=center))
-        elif color == _ALTAR:
-            radius = max(2, round(3 * render_scale))
-            pygame.draw.polygon(surface, color, ((center[0], center[1] - radius), (center[0] + radius, center[1]), (center[0], center[1] + radius), (center[0] - radius, center[1])), max(1, round(render_scale)))
         else:
             radius = max(2, round(3 * render_scale))
             sign = 1 if color == _DOWN else -1

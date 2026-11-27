@@ -110,21 +110,12 @@ def close_npc_dialog(game_state, current_time):
     if state.npc_dialog_phase not in ("opening", "talk"):
         return
 
-    frame = NPC_FRAME_COUNT - 1
     state.trader_tab = None
     state.blacksmith_forge_open = False
-    if state.npc_dialog_phase == "opening":
-        frame = min(
-            frame,
-            max(0, current_time - state.npc_dialog_started_at)
-            // NPC_TRANSITION_FRAME_MS,
-        )
-
-    state.npc_dialog_phase = "closing"
-    state.npc_dialog_started_at = (
-        current_time
-        - (NPC_FRAME_COUNT - 1 - frame) * NPC_TRANSITION_FRAME_MS
-    )
+    state.npc_dialog_position = None
+    state.npc_dialog_floor_index = -1
+    state.npc_dialog_phase = "closed"
+    state.npc_dialog_started_at = 0
 
 
 def continue_npc_dialog(game_state, current_time):

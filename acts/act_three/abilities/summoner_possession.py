@@ -4,7 +4,7 @@ import pygame
 
 from acts.act_three.abilities.summoner_runes import familiar_recharge_requirement
 from acts.act_three.combat.creature_attacks import damage_enemy_from_creature
-from acts.act_three.rune_master.definitions import POSSESSION_RANGE
+from acts.act_three.rune_master.definitions import POSSESSION_GUARD_RANGE, POSSESSION_RANGE
 from game.combat_log import add_log_message
 from game.events import GameEvent, GameEventType
 from game.state import EnemyBehaviorState
@@ -42,7 +42,8 @@ def possess_enemy(game_state, target, now):
     player = game_state.player
     if target not in possession_targets(game_state):
         return False
-    if player.act_three.summoner_possession_host is None and (player.act_three.summoner_loss_turns > 0 or (not player.debug_unlimited_abilities and player.summoner_familiar_charge < familiar_recharge_requirement(player))):
+    if player.act_three.summoner_loss_turns > 0 or (not player.debug_unlimited_abilities and player.summoner_familiar_charge < familiar_recharge_requirement(player)):
+        add_log_message(game_state.combat_log, "Possession requires a fully charged Q, including host transfers.", category="warning")
         return False
     host = next(enemy for enemy in game_state.floor.enemies if target in get_enemy_occupied_positions(enemy) and enemy.health > 0)
     release_host(game_state)
@@ -145,6 +146,12 @@ def take_possession_turn(game_state):
         return
     if (host.type in ("priest", "priest_ghost") and host.heal_amount > 0 and host.heal_cooldown <= 0
           and player.health < player.max_health
+          and any(enemy.health > 0 and not enemy.possessed_by_summoner
+                  and any(max(abs(cell[0] - hero[0]), abs(cell[1] - hero[1])) <= POSSESSION_GUARD_RANGE
+                          and cell in floor.visible_cells
+                          and has_line_of_sight(floor.map, *hero, *cell, floor.barriers)
+                          for cell in get_enemy_occupied_positions(enemy))
+                  for enemy in floor.enemies)
           and abs(host.column - floor.player_column) + abs(host.row - floor.player_row) <= host.heal_range
           and has_line_of_sight(floor.map, host.column, host.row, floor.player_column, floor.player_row, floor.barriers)):
         from game.healing import heal_player

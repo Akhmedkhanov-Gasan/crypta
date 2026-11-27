@@ -4,7 +4,7 @@ from acts.act_two.ability_scaling import mage_basic_attack_damage_bonus
 from game.attributes import attribute_stat_changes_for_rank
 
 
-ARCHER_SHOT_DAMAGE_BONUS = 2
+ARCHER_SHOT_DAMAGE_BONUS = 1
 SUMMONER_BOUND_ATTACK_MULTIPLIER = 0.65
 SUMMONER_FAMILIAR_DAMAGE_MULTIPLIER = 0.5
 PALADIN_GROUND_WILL_SCALING = 0.5
@@ -13,6 +13,7 @@ PALADIN_GROUND_WILL_SCALING = 0.5
 def magical_attack_damage_range(player):
     valor = attribute_stat_changes_for_rank(
         "valor", player.attribute_ranks.get("valor", 0),
+        rank_limit=None,
     )
     bonus = mage_basic_attack_damage_bonus(
         player.attribute_ranks.get("will", 0),

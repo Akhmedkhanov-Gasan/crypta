@@ -30,7 +30,7 @@ def _living_oracle_pillar_at(
 
 
 def ability_charge_required(player) -> int:
-    if player.player_class is not None and player.subclass is None:
+    if player.player_class is not None:
         if has_bloody_pact(player, BROKEN_SEAL):
             return 2
         return ABILITY_HITS_REQUIRED

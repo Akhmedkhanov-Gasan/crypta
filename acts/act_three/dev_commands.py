@@ -114,7 +114,6 @@ def _open_debug_menu(game_state, name, close_console):
     if (
         game_state.floor_transition_started_at >= 0
         or gameplay_cutscene_active(game_state)
-        or game_state.upgrade_altar_menu_open
         or state.npc_dialog_position is not None
         or state.npc_menu_from_console is not None
         or state.rune_menu is not None

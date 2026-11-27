@@ -20,6 +20,20 @@ ENEMY_EXPERIENCE_REWARDS = {
     "lantern_warden": LANTERN_WARDEN_EXPERIENCE,
 
 }
+
+
+def attribute_rank_limit(player) -> int | None:
+    return None if getattr(player, "subclass", None) is not None else MAX_ATTRIBUTE_RANK
+
+
+def attribute_points_per_level(player) -> int:
+    if getattr(player, "subclass", None) is not None:
+        from acts.act_three.balance import ATTRIBUTE_POINTS_PER_LEVEL
+
+        return ATTRIBUTE_POINTS_PER_LEVEL
+    return 1
+
+
 def experience_required_for_level(level: int) -> int:
     return 5 + max(0, level - 1) * 2
 
@@ -42,26 +56,30 @@ def grant_experience(player, amount: int) -> int:
             player.level
         )
         player.level += 1
-        player.attribute_points += 1
+        player.attribute_points += attribute_points_per_level(player)
         levels_gained += 1
 
     return levels_gained
 
 
 def can_upgrade_attribute(player, attribute: str) -> bool:
+    rank_limit = attribute_rank_limit(player)
     return (
         attribute in ATTRIBUTE_ORDER
         and attribute in player.attribute_ranks
         and player.attribute_points > 0
-        and player.attribute_ranks[attribute] < MAX_ATTRIBUTE_RANK
+        and (rank_limit is None or player.attribute_ranks[attribute] < rank_limit)
     )
 
 
 def apply_attribute_upgrade(player, attribute: str) -> bool:
     if attribute not in ATTRIBUTE_ORDER:
         return False
+    if getattr(player, "subclass", None) is not None and player.health <= 0:
+        return False
     current_rank = player.attribute_ranks.get(attribute)
-    if current_rank is None or current_rank >= MAX_ATTRIBUTE_RANK:
+    rank_limit = attribute_rank_limit(player)
+    if current_rank is None or (rank_limit is not None and current_rank >= rank_limit):
         return False
 
     apply_player_stat_changes(
@@ -69,7 +87,9 @@ def apply_attribute_upgrade(player, attribute: str) -> bool:
         player_stat_changes_for_attribute_upgrade(
             attribute,
             current_rank,
+            rank_limit=rank_limit,
         ),
+        heal_max_health=rank_limit is not None,
     )
     player.attribute_ranks[attribute] = current_rank + 1
     return True

@@ -31,7 +31,7 @@ def draw_panel_row_background(screen, row):
 
 
 def draw_panel_rank_track(screen, assets, track, current_rank):
-    kind = track.get("kind", "mastery")
+    kind = track.get("kind", "equipment")
     draw_panel_image(screen, assets, f"frame_{kind}", track.get("frame"))
     current_rank = max(0, min(5, int(current_rank)))
 

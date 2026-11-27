@@ -33,7 +33,7 @@ Add a boolean map property named `enemy_spawn_mode`:
 
 Random enemies require reachable Ground cells, free footprints and clearance from the player and connectors. Manual enemies count toward the floor and room limits. Invalid manual enemy placement reports an error instead of moving or removing the enemy.
 
-Initial targets are 12–16 total enemies on the second Act Three map and 18–24 on the third. Space, room limits and map flags can reduce those counts. The arena uses only its authored enemies. Balance lives in `acts/act_three/settings.py` under `ACT_THREE_ENCOUNTER_SETTINGS`.
+Population targets are 24–30 total enemies on the second Act Three map and 32–38 on the third. Space, room limits and map flags can reduce those counts. Rooms allow at most five and six enemies respectively, with one priest and at most two archers. The arena uses only its authored enemies. Population settings live in `acts/act_three/settings.py` under `ACT_THREE_ENCOUNTER_SETTINGS`; enemy stats live in `acts/act_three/enemies/balance.py`.
 
 Use an enemy type as the point name in `Entities` or `Enemies`, or use `enemy` with an `enemy_type` string property. Hand-authored NPCs, ores, chests and potions are retained.
 

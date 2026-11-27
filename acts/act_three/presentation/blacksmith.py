@@ -199,8 +199,8 @@ def draw_blacksmith(screen, game_state, fonts, assets, current_time):
         )
     draw_figma_rectangle(screen, improvement["text_background"])
     bonus_label = "Weapon damage" if selected == "weapon" else "Physical damage reduction"
-    bonus = equipment_rank_bonus(rank)
-    next_bonus = equipment_rank_bonus(rank + 1)
+    bonus = equipment_rank_bonus(rank, armor=selected == "armor")
+    next_bonus = equipment_rank_bonus(rank + 1, armor=selected == "armor")
     recipe = forge_recipe(player, selected)
     work = forge_work(player, selected)
     worked = sum(min(work.get(item, 0), required) for item, required in recipe.items())

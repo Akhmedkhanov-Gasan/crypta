@@ -100,7 +100,7 @@ def resolve_warlock_defeat(game_state, enemy):
     if player.subclass != "warlock":
         return
     _spread_curse(game_state, enemy)
-    if not player.warlock_demon_form_active or player.act_three.warlock_eternal_bound or player.health <= 0:
+    if enemy.is_summoned or not player.warlock_demon_form_active or player.act_three.warlock_eternal_bound or player.health <= 0:
         return
     ratio = BLOOD_PACT_KILL_HEAL_RATIO if player.act_three.warlock_demon_rune == "rune_of_blood_pact" else DEMON_KILL_HEAL_RATIO
     player.act_three.warlock_demon_healing_progress += player.max_health * ratio

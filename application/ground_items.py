@@ -36,7 +36,6 @@ def ground_item_input_available(game_state):
         and not game_state.subclass_selection_open
         and not game_state.act_three_transition_open
         and not game_state.act_three_debug_class_selection_open
-        and not game_state.upgrade_altar_menu_open
         and game_state.act_three.npc_menu_from_console is None
         and not player.directional_ability_aiming
         and not player.act_two.fire_bomb_aiming

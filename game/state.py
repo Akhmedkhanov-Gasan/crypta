@@ -325,7 +325,6 @@ class FloorState(AttributeMapping):
     oracle_death: Any | None = None
     passages: list[PassageState] = field(default_factory=list)
     act_one_revisit: ActOneRevisitState | None = None
-    upgrade_altar: tuple[int, int] | None = None
     trader_altar: tuple[int, int] | None = None
     trader_urn_effect: dict | None = None
     act_three_npcs: list[dict[str, Any]] = field(

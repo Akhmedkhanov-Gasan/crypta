@@ -15,7 +15,6 @@ from acts.act_three.settings import (
     ACT_THREE_FOG_OUTER_RADIUS_TILES,
     ACT_THREE_VISION_RADIUS_TILES,
 )
-from acts.act_three.altar import get_upgrade_altar_cells
 from presentation.layout import (
     ACT_THREE_TILE_SIZE,
     ACT_THREE_VIEW_HEIGHT,
@@ -251,8 +250,7 @@ def _get_act_three_visibility(floor):
     radius_squared = radius ** 2
     map_height = len(floor.map)
     map_width = len(floor.map[0])
-    altar_cells = get_upgrade_altar_cells(floor)
-    transparent_cells = set(altar_cells)
+    transparent_cells = set()
     if floor.crushing_trial is not None:
         transparent_cells.update(rock["cell"] for rock in floor.crushing_trial["rocks"])
     piercing_trial = floor.piercing_trial
@@ -303,9 +301,6 @@ def _get_act_three_visibility(floor):
                 transparent_cells,
             ):
                 visible.add((column, row))
-
-    if visible.intersection(altar_cells):
-        visible.update(altar_cells)
 
     trial = floor.shadow_step_trial
 

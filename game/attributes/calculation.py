@@ -26,18 +26,17 @@ from game.attributes.models import (
 )
 
 
-def normalized_attribute_rank(rank: int) -> int:
-    return max(
-        0,
-        min(MAX_ATTRIBUTE_RANK, rank),
-    )
+def normalized_attribute_rank(rank: int, rank_limit: int | None = MAX_ATTRIBUTE_RANK) -> int:
+    return max(0, rank if rank_limit is None else min(rank_limit, rank))
 
 
 def attribute_stat_changes_for_rank(
     attribute: str,
     rank: int,
+    *,
+    rank_limit: int | None = MAX_ATTRIBUTE_RANK,
 ) -> PlayerStatChanges:
-    rank = normalized_attribute_rank(rank)
+    rank = normalized_attribute_rank(rank, rank_limit)
 
     if attribute == VALOR:
         return PlayerStatChanges(
@@ -93,14 +92,18 @@ def attribute_stat_changes_for_rank(
 def player_stat_changes_for_attribute_upgrade(
     attribute: str,
     current_rank: int,
+    *,
+    rank_limit: int | None = MAX_ATTRIBUTE_RANK,
 ) -> PlayerStatChanges:
     current = attribute_stat_changes_for_rank(
         attribute,
         current_rank,
+        rank_limit=rank_limit,
     )
     upgraded = attribute_stat_changes_for_rank(
         attribute,
         current_rank + 1,
+        rank_limit=rank_limit,
     )
 
     return PlayerStatChanges(

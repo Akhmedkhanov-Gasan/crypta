@@ -21,9 +21,9 @@ SECOND_WIND_RATIO = 0.1
 SECOND_WIND_CAP = 0.4
 DEATH_WISH_MULTIPLIER = 1.35
 DEATH_WISH_EXTRA_HITS = 2
-TOWER_SHIELD_BLOCK_BONUS = 0.35
-TOWER_SHIELD_DAMAGE_MULTIPLIER = 0.8
-TOWER_SHIELD_BLOCK_CAP = 0.85
+TOWER_SHIELD_BLOCK_BONUS = 0.25
+TOWER_SHIELD_DAMAGE_MULTIPLIER = 0.75
+TOWER_SHIELD_BLOCK_CAP = 0.65
 BATTERING_RAM_COLLISION_MULTIPLIER = 0.5
 FERVENT_CRUSADE_HITS = 6
 FERVENT_CRUSADE_DAMAGE_MULTIPLIER = 1.75
@@ -63,7 +63,7 @@ ABILITY_RUNES = (
     AbilityRune("rune_of_spirit_totem", "summoner", "q", "Rune of Spirit Totem",
                 "Replace the familiar with an immobile spiritual totem on a chosen adjacent cell. It attacks enemies within 3 cells."),
     AbilityRune("rune_of_possession", "summoner", "q", "Rune of Possession",
-                "The familiar permanently binds a visible enemy within 4 cells as an ally until the host dies or you transfer possession. Q selects a new host; Escape cancels selection. Bosses are immune."),
+                "Bind a visible enemy within 4 cells until death or transfer. Each binding or transfer costs a fully charged Q. Captured priests heal only while a visible hostile is within 3 cells of you. Bosses are immune."),
     AbilityRune("rune_of_soul_devourer", "summoner", "f", "Rune of Soul Devourer",
                 "Each kill grants Greater Manifestation +25% attack damage and restores 90% maximum HP, capped at full health. Each attack costs 1 more HP than the previous one, even when blocked or dodged. The attack cost is paid before healing; a lethal cost cannot be healed."),
     AbilityRune("rune_of_absorption", "summoner", "f", "Rune of Absorption",
@@ -79,7 +79,7 @@ ABILITY_RUNES = (
     AbilityRune("rune_of_battering_ram", "paladin", "q", "Rune of Battering Ram",
                 "Shield Charge damages and pushes enemies out of its path. Failed pushes deal an extra 50% hit on collision."),
     AbilityRune("rune_of_tower_shield", "paladin", "q", "Rune of Tower Shield",
-                "Passive: gain 35 percentage points of block chance, stacking with Guard and Impact up to 85%. Deal 20% less damage. Replaces Shield Charge."),
+                "Passive: gain 25 percentage points of block chance, stacking with Guard and Impact up to 65%. Deal 25% less damage. Replaces Shield Charge."),
     AbilityRune("rune_of_fervent_crusade", "paladin", "f", "Rune of Fervent Crusade",
                 "Empower your next 6 successful hits for 75% more damage instead of creating a zone. Cannot block or dodge while empowered. Recasting replaces the old effect."),
     AbilityRune("rune_of_redeeming_sanctuary", "paladin", "f", "Rune of Redeeming Sanctuary",

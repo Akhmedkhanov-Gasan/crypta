@@ -1,7 +1,6 @@
 from acts.act_three.equipment import equipment_rank_bonus
 
 from acts.act_three.abilities import (
-    get_mastery_charge_rate,
     get_passive_definition,
 )
 from acts.act_two.presentation.stats_tooltips import (
@@ -22,8 +21,6 @@ _PANEL_ACCENTS = {
     "critical_chance": (190, 151, 69),
     "critical_damage": (156, 95, 161),
     "dodge_chance": (92, 128, 185),
-    "charge_rate": (121, 103, 175),
-    "mastery": (121, 103, 175),
     "weapon": (184, 82, 64),
     "equipment_armor": (151, 151, 151),
     "passive": (156, 95, 161),
@@ -36,6 +33,26 @@ def _attribute_tooltip(player, attribute):
         player.attribute_ranks.get(attribute, 0),
         player.player_class,
     )
+    lines = content.lines
+    if attribute == "instinct":
+        lines = (
+            "Increases critical chance and dodge chance.",
+            "Base gains: 4 and 3 percentage points per rank.",
+            "Gains diminish above 45% critical chance and 35% dodge.",
+        )
+    elif attribute == "will":
+        lines = (
+            "Adds 0.03 critical damage per rank, without a hard cap.",
+            "Base critical chance gain: 1 percentage point per rank.",
+            "Critical chance gains diminish above 45%.",
+            *(line for line in content.lines if "Arcane Burst" in line),
+        )
+    elif attribute == "fortitude":
+        lines = (
+            "Adds 2 maximum HP per rank; this does not heal you.",
+            "Base dodge gain: 1 percentage point per rank.",
+            "Dodge gains diminish above 35%.",
+        )
     extra_lines = {
         ("archer", "valor"): (
             "Increases basic shots, Piercing Shot and phantom damage.",
@@ -57,7 +74,7 @@ def _attribute_tooltip(player, attribute):
     }.get((player.subclass, attribute), ())
     return TooltipContent(
         title=content.title,
-        lines=(*content.lines, *extra_lines),
+        lines=(*lines, "Attribute ranks have no limit in Act III.", *extra_lines),
         accent=content.accent,
     )
 
@@ -95,11 +112,6 @@ def get_character_panel_hover(
         return "combat_stat", hovered_combat_stat
 
     fixed_hitboxes = (
-        (
-            "mastery",
-            "mastery",
-            panel["mastery"]["hitbox"],
-        ),
         (
             "equipment",
             "weapon",
@@ -152,14 +164,6 @@ def draw_character_panel_highlight(
         )
         return
 
-    if category == "mastery":
-        _draw_hitbox_highlight(
-            screen,
-            panel["mastery"]["hitbox"],
-            _PANEL_ACCENTS["mastery"],
-        )
-        return
-
     if category == "equipment":
         accent_name = (
             "weapon"
@@ -192,10 +196,26 @@ def _act_three_combat_tooltip(
         "critical_damage",
         "dodge_chance",
     }:
-        return combat_stat_tooltip_content(
+        content = combat_stat_tooltip_content(
             stat_name,
             value,
             player_class,
+        )
+        replacements = {
+            "critical_chance": (
+                "Gains diminish above 45%, approaching 75% without reaching it.",
+            ),
+            "critical_damage": ("Critical damage has no hard cap in Act III.",),
+            "dodge_chance": (
+                "Gains diminish above 35%, approaching 60% without reaching it.",
+            ),
+        }
+        if stat_name not in replacements:
+            return content
+        return TooltipContent(
+            title=content.title,
+            lines=(*content.lines[:-1], *replacements[stat_name]),
+            accent=content.accent,
         )
 
     if stat_name == "armor":
@@ -207,15 +227,7 @@ def _act_three_combat_tooltip(
             accent=_PANEL_ACCENTS["armor"],
         )
 
-    return TooltipContent(
-        title=f"CHARGE RATE  |  {value}",
-        lines=(
-            "Controls how quickly abilities gain charge.",
-            "Mastery increases charge rate by 10% per rank.",
-            "It does not reduce the charge required to cast an ability.",
-        ),
-        accent=_PANEL_ACCENTS["charge_rate"],
-    )
+    return None
 
 
 def character_panel_tooltip_content(
@@ -236,26 +248,6 @@ def character_panel_tooltip_content(
             name,
             combat_values[name],
             player.player_class,
-        )
-
-    if category == "mastery":
-        mastery_rank = getattr(
-            player,
-            "mastery_rank",
-            0,
-        )
-        charge_rate = round(
-            get_mastery_charge_rate(player) * 100
-        )
-
-        return TooltipContent(
-            title=f"MASTERY  |  RANK {mastery_rank}",
-            lines=(
-                f"Current ability charge rate: {charge_rate}%.",
-                "Each rank increases charge rate by 10%.",
-                "Mastery has a maximum of 5 ranks.",
-            ),
-            accent=_PANEL_ACCENTS["mastery"],
         )
 
     if category == "equipment":
@@ -282,7 +274,7 @@ def character_panel_tooltip_content(
         return TooltipContent(
             title=f"ARMOR  |  RANK {rank}",
             lines=(
-                f"Physical damage reduction: {equipment_rank_bonus(rank)}%.",
+                f"Physical damage reduction: {equipment_rank_bonus(rank, armor=True)}%.",
             ),
             accent=_PANEL_ACCENTS["equipment_armor"],
         )

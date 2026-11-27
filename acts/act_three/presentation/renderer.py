@@ -23,9 +23,6 @@ from acts.act_three.presentation.view import (
     _camera_position,
     _view_position,
 )
-from acts.act_three.presentation.altar_menu import (
-    draw_upgrade_altar_menu,
-)
 from acts.act_three.presentation.npcs import draw_npc_dialog
 from acts.act_three.presentation.trader import draw_trader
 from acts.act_three.presentation.blacksmith import draw_blacksmith
@@ -564,14 +561,6 @@ def draw_act_three_foreground(
     from acts.act_three.presentation.enemies.lantern_warden.encounter import draw_encounter_dialogue
 
     draw_encounter_dialogue(screen, game_state, fonts)
-    if game_state.upgrade_altar_menu_open:
-        draw_upgrade_altar_menu(
-            screen,
-            game_state,
-            fonts,
-            assets,
-        )
-
     if not (
         (defer_rune_menu and game_state.act_three.rune_menu is not None)
         or draw_rune_menu(screen, game_state, assets, current_time, mouse_position)

@@ -362,8 +362,6 @@ class ActTwoRenderer:
         }
         if floor.boss_door is not None:
             positions.add(floor.boss_door)
-        if floor.upgrade_altar is not None:
-            positions.add(floor.upgrade_altar)
         if floor.bloody_altar is not None:
             positions.add((floor.bloody_altar.column, floor.bloody_altar.row))
         if floor.treasury_room is not None:

@@ -2,7 +2,6 @@ from copy import copy
 
 from game.attributes import (
     ATTRIBUTE_ORDER,
-    MAX_ATTRIBUTE_RANK,
 )
 from game.progression import apply_attribute_upgrade
 
@@ -16,7 +15,7 @@ def get_pending_attribute_points(player):
 
 
 def can_queue_act_three_attribute_upgrade(player, attribute):
-    if attribute not in ATTRIBUTE_ORDER:
+    if player.subclass is None or player.health <= 0 or attribute not in ATTRIBUTE_ORDER:
         return False
 
     pending = _pending(player)
@@ -27,9 +26,6 @@ def can_queue_act_three_attribute_upgrade(player, attribute):
     current_rank = player.attribute_ranks.get(attribute)
 
     if current_rank is None:
-        return False
-
-    if current_rank + pending.get(attribute, 0) >= MAX_ATTRIBUTE_RANK:
         return False
 
     return True
@@ -63,6 +59,8 @@ def clear_act_three_attribute_upgrades(player):
 
 
 def confirm_act_three_attribute_upgrades(player):
+    if player.subclass is None or player.health <= 0:
+        return False
     pending = _pending(player)
     selected_points = get_pending_attribute_points(player)
 
@@ -74,9 +72,9 @@ def confirm_act_three_attribute_upgrades(player):
 
     for attribute in ATTRIBUTE_ORDER:
         amount = pending.get(attribute, 0)
-        current_rank = player.attribute_ranks.get(attribute, 0)
-
-        if current_rank + amount > MAX_ATTRIBUTE_RANK:
+        if not isinstance(amount, int) or isinstance(amount, bool) or amount < 0:
+            return False
+        if attribute not in player.attribute_ranks:
             return False
 
     for attribute in ATTRIBUTE_ORDER:
@@ -96,6 +94,7 @@ def get_act_three_attribute_preview(player):
 
     preview = copy(player)
     preview.attribute_ranks = dict(player.attribute_ranks)
+    preview.act_two = copy(player.act_two)
 
     for attribute in ATTRIBUTE_ORDER:
         for _ in range(pending.get(attribute, 0)):

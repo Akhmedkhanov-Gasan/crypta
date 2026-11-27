@@ -19,6 +19,8 @@ from game.attributes.models import (
 def apply_player_stat_changes(
     player,
     changes: PlayerStatChanges,
+    *,
+    heal_max_health: bool = True,
 ) -> None:
     player.max_health = max(
         1,
@@ -28,7 +30,7 @@ def apply_player_stat_changes(
         1,
         min(
             player.max_health,
-            player.health + changes.max_health,
+            player.health + (changes.max_health if heal_max_health else 0),
         ),
     )
     player.damage_min = max(
@@ -39,6 +41,17 @@ def apply_player_stat_changes(
         player.damage_min,
         player.damage_max + changes.damage_max,
     )
+    if getattr(player, "subclass", None) is not None:
+        from acts.act_three.attributes import advance_chance, refresh_glass_heart_penalty
+
+        player.crit_chance = advance_chance(player.crit_chance, changes.crit_chance)
+        player.dodge_chance = advance_chance(player.dodge_chance, changes.dodge_chance, dodge=True)
+        player.critical_damage_multiplier = max(
+            1.0, player.critical_damage_multiplier + changes.critical_damage_multiplier,
+        )
+        if changes.max_health:
+            refresh_glass_heart_penalty(player)
+        return
     player.crit_chance = max(
         0.0,
         min(

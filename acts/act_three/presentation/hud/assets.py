@@ -143,9 +143,7 @@ def load_act_three_hud_assets():
         )
 
     for name in (
-        "frame_mastery",
         "frame_equipment",
-        "level_mastery",
         "level_equipment",
         "icon",
         "sword",

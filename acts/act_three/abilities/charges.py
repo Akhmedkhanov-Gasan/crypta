@@ -1,7 +1,10 @@
 from acts.act_three.abilities.catalog import (
     get_ability_definition,
 )
-from acts.act_three.abilities.progression import is_ability_slot_unlocked
+from acts.act_three.abilities.progression import (
+    charge_ability_slots,
+    is_ability_slot_unlocked,
+)
 from acts.act_two.abilities import (
     ability_charge_required,
 )
@@ -70,6 +73,40 @@ def ability_is_passive(player, slot):
     return slot == "e" and player.selected_rune_id in PASSIVE_RUNES
 
 
+def charge_subclass_abilities(player):
+    if player.subclass == "assassin" and player.ultimate_animation_active:
+        return
+    if player.subclass in ("archer", "warlock"):
+        charge_ability_slots(player, ("q", "f"))
+        return
+    for slot, (field, required) in _SUBCLASS_CHARGES.get(player.subclass, {}).items():
+        if not is_ability_slot_unlocked(player, slot) or ability_is_passive(player, slot):
+            continue
+        if slot == "f" and ability_active(player, slot):
+            continue
+        if player.subclass == "summoner" and slot == "q":
+            if player.act_three.summoner_loss_turns > 0:
+                continue
+            from acts.act_three.abilities.summoner_runes import familiar_recharge_requirement
+
+            required = familiar_recharge_requirement(player)
+        setattr(player, field, min(required, getattr(player, field) + 1.0))
+
+
+def fill_ability_slot(player, slot):
+    if slot == "e":
+        player.ability_kill_charge = ability_charge_required(player)
+        return
+    definition = _SUBCLASS_CHARGES.get(player.subclass, {}).get(slot)
+    if definition is not None:
+        field, required = definition
+        setattr(player, field, required)
+        return
+    ability = get_ability_definition(player.subclass, slot)
+    if ability is not None:
+        player.ability_slot_charges[slot] = ability.charge_required
+
+
 def ability_charge_hint(player, slot):
     if player.subclass == "summoner" and slot == "q":
         from acts.act_three.abilities.summoner_runes import familiar_recharge_requirement
@@ -89,11 +126,11 @@ def ability_charge_hint(player, slot):
     if ability_is_passive(player, slot):
         return "Passive effect. No charge required."
     if player.subclass == "summoner" and slot == "f":
-        return "Charges through successful attacks and incoming damage."
-    if player.subclass == "archer" and slot in ("q", "f"):
-        return "Charges through successful attacks; Mastery increases charge gained."
-    if player.subclass == "warlock" and slot in ("q", "f"):
-        return "Charges through successful attacks; Mastery increases charge gained."
+        return "Gains one charge per successful hit or damaging hit received while inactive."
+    if slot == "e":
+        return f"Requires {ability_charge_required(player)} successful hits."
+    if slot in ("q", "f"):
+        return "Gains one charge per successful hit."
     return "Charges through successful attacks."
 
 

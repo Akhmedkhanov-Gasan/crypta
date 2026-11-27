@@ -45,6 +45,9 @@ def get_act_three_hud_layout():
             "Act III HUD layout must be 1280x720."
         )
 
+    panel = layout["right_bar"]["character_panel"]
+    panel.pop("mastery", None)
+    panel["combat_stats"]["rows"].pop("charge_rate", None)
     return layout
 
 
