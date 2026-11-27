@@ -13,6 +13,11 @@ from game.combat_log import add_log_message
 def interact_with_trader(
     game_state
 ):
+    from acts.act_three.bloody_altar.catalog import services_are_blocked
+
+    if services_are_blocked(game_state.player):
+        add_log_message(game_state.combat_log, "The trader recoils from your altar mark and refuses your business.", category="trade")
+        return True
     game_state.player.act_two.trade_from_console = False
     quest = game_state.act_two_quests.trader_seal
 
@@ -85,6 +90,10 @@ def interact_with_trader(
 
 
 def buy_trader_item(game_state, slot_name):
+    from acts.act_three.bloody_altar.catalog import services_are_blocked
+
+    if services_are_blocked(game_state.player):
+        return False
     quest = game_state.act_two_quests.trader_seal
     console_trade = (
         game_state.floor.presentation_act == 2

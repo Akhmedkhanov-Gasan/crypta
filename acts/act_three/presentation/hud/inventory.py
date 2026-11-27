@@ -5,6 +5,7 @@ from acts.act_three.items.special import SPECIAL_ITEM_NAMES, SPECIAL_ITEM_DESCRI
 from acts.act_three.presentation.hud.panel_art import draw_panel_image
 from acts.act_three.presentation.hud.slot_highlight import draw_slot_highlight
 from acts.act_three.trader_catalog import TRADER_ITEMS, TRADER_SELL_ITEMS
+from acts.act_three.presentation.descriptions.items import consumable_lines
 from presentation.figma_ui import figma_rect
 from presentation.tooltips import TooltipContent
 
@@ -92,7 +93,7 @@ def draw_inventory(screen, player, assets, panel, mouse_position, focused_slot=N
     if item is not None:
         return TooltipContent(
             item.name,
-            (item.description, "Press 1-6 or drag to the belt.", "Shift: drop in front."),
+            (*consumable_lines(player, hovered_item), "Press 1-6 or drag to the belt.", "Shift: drop in front."),
             (181, 145, 81),
         )
     if hovered_item in TRADER_SELL_ITEMS:

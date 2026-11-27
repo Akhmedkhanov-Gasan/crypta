@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from acts.act_three.abilities.blood_magic import pay_skill_health, skill_health_cost
 
 from game.combat_log import add_log_message
 from acts.act_three.events import GameEvent, GameEventType
@@ -82,7 +83,7 @@ def request_warlock_curse(
     if not is_ability_slot_charged(player, "q"):
         add_log_message(
             game_state.combat_log,
-            "Curse is not charged.",
+            f"Curse needs {skill_health_cost(player, 'q')} HP and must leave at least 1 HP.",
         )
         return True
 
@@ -125,6 +126,9 @@ def perform_warlock_curse(
         if enemy.health > 0
         and target in get_enemy_occupied_positions(enemy)
     )
+    if not pay_skill_health(game_state, "q"):
+        player.warlock_curse_target = None
+        return False
     player.facing_direction = direction_toward(
         floor.player_column,
         floor.player_row,
@@ -226,8 +230,11 @@ def request_warlock_demon_form(
     ):
         add_log_message(
             game_state.combat_log,
-            "Demon Form is not charged.",
+            f"Demon Form needs {skill_health_cost(player, 'f')} HP and must leave at least 1 HP.",
         )
+        return False
+
+    if target_active and not pay_skill_health(game_state, "f"):
         return False
 
     player.warlock_demon_form_active = target_active

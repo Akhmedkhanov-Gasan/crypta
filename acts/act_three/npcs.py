@@ -79,9 +79,13 @@ def open_npc_dialog(game_state, npc, current_time):
         npc["type"] == "blacksmith" and game_state.player.act_three.inventory_unlocked
         and game_state.player.act_three.blacksmith_quest.get("completed", False)
     )
+    from acts.act_three.bloody_altar.catalog import services_are_blocked
+
+    if services_are_blocked(game_state.player):
+        state.blacksmith_forge_open = False
     state.trader_slot_presses.clear()
     state.trader_focus = None
-    if npc["type"] == "trader" and game_state.player.act_three.inventory_unlocked:
+    if npc["type"] == "trader" and game_state.player.act_three.inventory_unlocked and not services_are_blocked(game_state.player):
         state.trader_tab = "healing"
     return True
 
@@ -132,6 +136,11 @@ def continue_npc_dialog(game_state, current_time):
         state.npc_dialog_line_index += 1
         return
     state.npc_conversations_completed.add(npc["type"])
+    from acts.act_three.bloody_altar.catalog import services_are_blocked
+
+    if services_are_blocked(game_state.player):
+        close_npc_dialog(game_state, current_time)
+        return
     if npc["type"] == "rune_master":
         from acts.act_three.quests.rune_master import finish_rune_master_dialogue
 

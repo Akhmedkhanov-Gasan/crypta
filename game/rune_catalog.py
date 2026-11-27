@@ -73,7 +73,6 @@ RUNE_DEFINITIONS = (
         original_filename="rune_of the_veil_original.png",
         description=(
             "Passive: critical hits grant 2 turns of invisibility. "
-            "Stealth attacks use your normal critical chance. "
             "Replaces the active invisibility ability."
         ),
     ),
@@ -84,8 +83,8 @@ RUNE_DEFINITIONS = (
         icon_filename="rune_of_fracture.png",
         original_filename="rune_of_fracture_original.png",
         description=(
-            "Arcane Burst strikes a 3x3 area for basic attack damage."
-            "Additional enemy adds 25% damage."
+            "Arcane Burst strikes a 3x3 area for basic attack damage. "
+            "Each additional occupied cell of the same enemy adds 25% damage."
         ),
     ),
     RuneDefinition(

@@ -60,9 +60,11 @@ def resolve_targeted_player_ability(
     player = game_state.player
 
     if player.warlock_curse_target is not None:
+        target = player.warlock_curse_target
+        player.warlock_curse_target = None
         acted = perform_warlock_curse(
             game_state,
-            player.warlock_curse_target,
+            target,
             pygame.time.get_ticks(),
         )
         set_warlock_curse_cursor()

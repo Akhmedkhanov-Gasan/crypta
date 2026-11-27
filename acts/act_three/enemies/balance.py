@@ -73,7 +73,8 @@ LANTERN_WARDEN_ATTACK_ORDER = (
     "lantern_sweep", "soul_lance", "soul_procession", "cinder_nova",
 )
 
-LATER_FLOOR_HEALTH_MULTIPLIER = 1.25
+HEALTH_GROWTH_PER_FLOOR = 0.12
+DAMAGE_GROWTH_INTERVAL = 3
 
 
 def act_three_enemy_config(enemy_type, act_floor, base_config=None):
@@ -90,13 +91,14 @@ def act_three_enemy_config(enemy_type, act_floor, base_config=None):
     ):
         return config
     depth = act_floor - 2
-    config["max_health"] = ceil(config["max_health"] * LATER_FLOOR_HEALTH_MULTIPLIER ** depth)
+    damage_steps = (depth + DAMAGE_GROWTH_INTERVAL - 1) // DAMAGE_GROWTH_INTERVAL
+    config["max_health"] = ceil(config["max_health"] * (1 + HEALTH_GROWTH_PER_FLOOR * depth))
     config["damage_by_mode"] = {
-        mode: (tuple(value + depth for value in values), weights)
+        mode: (tuple(value + damage_steps for value in values), weights)
         for mode, (values, weights) in config["damage_by_mode"].items()
     }
     if "heal_amount" in config:
-        config["heal_amount"] += depth
+        config["heal_amount"] += damage_steps
     return config
 
 

@@ -219,6 +219,12 @@ def resolve_act_three_player_action(
 
     from acts.act_three.quests.trader_urn import interact_with_trader_altar
 
+    from acts.act_three.bloody_altar.runtime import altar_position, open_altar
+
+    if target == altar_position(floor):
+        open_altar(game_state)
+        return ActThreePlayerActionResult(movement_blocked=True)
+
     altar_result = interact_with_trader_altar(game_state, target, started_at)
     if altar_result is not None:
         return ActThreePlayerActionResult(player_acted=altar_result, movement_blocked=not altar_result)

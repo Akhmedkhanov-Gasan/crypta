@@ -8,8 +8,12 @@ def has_first_rune(player):
 
 
 def can_modify_rune(player, slot):
+    from acts.act_three.bloody_altar.catalog import has_pact, services_are_blocked
+
+    if services_are_blocked(player):
+        return False
     if slot == "e":
-        return not has_bloody_pact(player, BROKEN_SEAL) and has_first_rune(player)
+        return not has_bloody_pact(player, BROKEN_SEAL) and not has_pact(player, "shattered_seal") and has_first_rune(player)
     if slot == "q":
         return player.act_three.rune_trial_quest.get("rewarded", False)
     return slot == "f"

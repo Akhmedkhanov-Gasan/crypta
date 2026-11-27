@@ -189,6 +189,7 @@ def perform_warlock_attack(
     enemy_was_defeated = attack_enemy(
         game_state, hit_enemy, damage_minimum, damage_maximum,
         player.crit_chance, attacker_position=(floor.player_column, floor.player_row),
+        basic_attack=True,
     )
     if hit_enemy.type == "oracle":
         oracle_hit_reaction(
@@ -235,6 +236,7 @@ def perform_archer_attack(
         damage_maximum,
         player.crit_chance,
         attacker_position=(floor.player_column, floor.player_row),
+        basic_attack=True,
     )
     if hit_enemy.type == "oracle":
         oracle_hit_reaction(
@@ -336,6 +338,7 @@ def perform_summoner_attack(
             floor.player_column,
             floor.player_row,
         ),
+        basic_attack=True,
     )
     if hit_enemy.type == "oracle":
         oracle_hit_reaction(

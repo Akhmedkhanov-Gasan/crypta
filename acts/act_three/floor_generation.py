@@ -11,6 +11,7 @@ from acts.act_three.tmx_loader import load_tmx_floor
 from acts.act_three.layout_generation import generate_room_layout
 from acts.act_three.mining.generation import populate_act_three_ores
 from acts.act_three.npc_generation import place_random_npc, place_random_trader
+from acts.act_three.bloody_altar.generation import place_random_altar
 
 
 def build_act_three_floor(
@@ -21,19 +22,23 @@ def build_act_three_floor(
     if config.get("exit_map_path"):
         from acts.act_three.trials.catalog import trial_map_path
 
-        for _ in range(12 if config.get("random_trader") else 1):
+        for _ in range(12 if any(config.get(key) for key in ("random_trader", "random_rune_master", "random_bloody_altar")) else 1):
             floor = generate_room_layout(
                 config,
                 trial_map_path(config.get("trial_subclass")) if config.get("trial_room") else None,
             )
-            if config.get("random_trader"):
-                try:
+            try:
+                if config.get("random_trader"):
                     place_random_trader(floor)
-                except ValueError:
-                    continue
+                if config.get("random_rune_master"):
+                    place_random_npc(floor, "rune_master")
+                if config.get("random_bloody_altar"):
+                    place_random_altar(floor)
+            except ValueError:
+                continue
             break
         else:
-            raise ValueError("Cannot place the trader in the first two rooms of Act Three floor nine.")
+            raise ValueError("Cannot place the required Act Three NPCs and altar after 12 layouts.")
     elif config.get("tmx_room_sequence"):
         from acts.act_three.trials.catalog import TRIAL_MAPS, trial_map_path
 
@@ -69,8 +74,10 @@ def build_act_three_floor(
 
     if config.get("random_trader") and not any(npc["type"] == "trader" for npc in floor.get("npcs", [])):
         place_random_trader(floor)
-    if config.get("random_rune_master"):
+    if config.get("random_rune_master") and not any(npc["type"] == "rune_master" for npc in floor.get("npcs", [])):
         place_random_npc(floor, "rune_master")
+    if config.get("random_bloody_altar"):
+        place_random_altar(floor)
     populate_act_three_enemies(floor, config["act_floor"])
     from acts.act_three.chest_generation import populate_act_three_chests
 

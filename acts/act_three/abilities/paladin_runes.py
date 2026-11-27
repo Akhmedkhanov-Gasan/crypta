@@ -15,7 +15,9 @@ def tower_shield_active(player):
 
 
 def effective_dodge_chance(player):
-    return 0.0 if crusade_active(player) else player.dodge_chance
+    from acts.act_three.bloody_altar.catalog import has_pact
+
+    return 0.0 if crusade_active(player) or has_pact(player, "blood_carapace") else player.dodge_chance
 
 
 def paladin_attack_multiplier(player):

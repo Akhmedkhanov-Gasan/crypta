@@ -17,6 +17,7 @@ _TEXT = (195, 186, 163)
 _PLAYER = (238, 215, 159)
 _UP = (112, 166, 215)
 _DOWN = (196, 82, 78)
+_ALTAR = (160, 43, 48)
 _PANEL_FRAMES = {}
 _FRAME_INTERVAL_MS = 33
 
@@ -140,6 +141,14 @@ def _draw_plan(surface, game_state, viewport, images, current_time, full, render
             sign = -1 if up else 1
             pygame.draw.polygon(surface, color, ((x, y + sign * radius), (x - radius, y - sign * radius), (x + radius, y - sign * radius)))
 
+        from acts.act_three.bloody_altar.runtime import altar_position
+
+        altar = altar_position(floor)
+        if altar is not None and altar in floor.explored_cells:
+            x, y = point(altar)
+            radius = max(3, round((5 if full else 3) * render_scale))
+            pygame.draw.polygon(surface, _ALTAR, ((x, y - radius), (x + radius, y), (x, y + radius), (x - radius, y)))
+
         x = round(origin[0] + player[0] * cell_size)
         y = round(origin[1] + player[1] * cell_size)
         pulse = (math.sin(current_time / 380) + 1) / 2
@@ -175,7 +184,7 @@ def _draw_sheet_contents(surface, game_state, layout, images, current_time, full
     close = close_rectangle(layout)
     cross = _text("X", round(16 * render_scale))
     surface.blit(cross, cross.get_rect(center=close.center))
-    entries = (("You", None, _PLAYER), ("Up", None, _UP), ("Down", None, _DOWN), ("Trader", "trader", _TEXT), ("Smith", "blacksmith", _TEXT), ("Runes", "rune_master", _TEXT))
+    entries = (("You", None, _PLAYER), ("Up", None, _UP), ("Down", None, _DOWN), ("Trader", "trader", _TEXT), ("Smith", "blacksmith", _TEXT), ("Runes", "rune_master", _TEXT), ("Altar", None, _ALTAR))
     gap = round(18 * render_scale)
     marker_size = round(16 * render_scale)
     labels = [(_text(label, round(16 * render_scale)), icon, color) for label, icon, color in entries]
@@ -187,6 +196,9 @@ def _draw_sheet_contents(surface, game_state, layout, images, current_time, full
         if icon is not None:
             marker = _icon(images[icon], marker_size)
             surface.blit(marker, marker.get_rect(center=center))
+        elif color == _ALTAR:
+            radius = max(2, round(3 * render_scale))
+            pygame.draw.polygon(surface, color, ((center[0], center[1] - radius), (center[0] + radius, center[1]), (center[0], center[1] + radius), (center[0] - radius, center[1])))
         else:
             radius = max(2, round(3 * render_scale))
             sign = 1 if color == _DOWN else -1

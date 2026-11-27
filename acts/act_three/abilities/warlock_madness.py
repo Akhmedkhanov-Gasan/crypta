@@ -56,7 +56,7 @@ def take_madness_turn(game_state, enemy):
     dealt = 0
     if hero_hit:
         if not try_block_enemy_attack(game_state, enemy.name, origin) and random.random() >= effective_dodge_chance(player):
-            dealt = damage_player(game_state, damage)
+            dealt = damage_player(game_state, damage, is_attack=True)
         if player.health <= 0:
             game_state.emit(GameEvent(type=GameEventType.DEATH, actor="hero", destination=target,
                                       data={"cause": "warlock_madness"}))

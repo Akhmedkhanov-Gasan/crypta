@@ -32,6 +32,7 @@ def ground_item_input_available(game_state):
         and not game_state.upgrade_screen_open
         and not game_state.rune_selection_open
         and not game_state.bloody_altar_open
+        and not game_state.act_three.altar_menu_open
         and not game_state.trade_screen_open
         and not game_state.subclass_selection_open
         and not game_state.act_three_transition_open

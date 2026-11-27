@@ -236,6 +236,9 @@ def _generate_room_layout(config, trial, entry, exit_room, templates, required_t
         if not frontier:
             if required:
                 return None
+            if any(sum(template.get(key) is not None for template, _ in placements) > 1
+                   for key in ("trader_altar", "rune_trial")):
+                return None
             entry_placement = next(placement for placement in placements if placement[0] is entry)
             ordered_placements = [entry_placement] + [placement for placement in placements if placement is not entry_placement]
             floor = _compose(ordered_placements, connections)

@@ -66,6 +66,8 @@ PASSIVE_RUNES = frozenset({"rune_of_the_veil", "rune_of_resonance", "rune_of_imp
 
 
 def ability_is_passive(player, slot):
+    if slot == "f" and player.subclass == "warlock" and player.act_three.warlock_eternal_bound:
+        return True
     if slot == "q" and player.subclass == "paladin":
         from acts.act_three.abilities.paladin_runes import tower_shield_active
 
@@ -108,25 +110,25 @@ def fill_ability_slot(player, slot):
 
 
 def ability_charge_hint(player, slot):
+    if player.subclass == "warlock":
+        from acts.act_three.abilities.blood_magic import skill_health_cost
+
+        cost = skill_health_cost(player, slot)
+        return f"Blood Magic: {cost} HP; no charges. Casting must leave at least 1 HP."
     if player.subclass == "summoner" and slot == "q":
         from acts.act_three.abilities.summoner_runes import familiar_recharge_requirement
 
         if player.act_three.summoner_loss_turns > 0:
             return f"Familiar recovery: {player.act_three.summoner_loss_turns} turns remaining."
         return f"Requires {familiar_recharge_requirement(player)} successful attack charges. Q is disabled during the ultimate."
-    if player.subclass == "warlock" and slot == "f":
-        from acts.act_three.rune_master.definitions import has_ability_rune
-
-        if player.act_three.warlock_eternal_bound:
-            return "Eternal Form is permanent for this run."
-        if has_ability_rune(player, "rune_of_blood_pact"):
-            return "No activation charge required. F reverts; re-entering resets attack escalation."
     if player.debug_unlimited_abilities:
-        return "Unlimited uses enabled by the console."
+        return "Free use."
     if ability_is_passive(player, slot):
         return "Passive effect. No charge required."
     if player.subclass == "summoner" and slot == "f":
         return "Gains one charge per successful hit or damaging hit received while inactive."
+    if player.subclass == "berserker" and slot == "f":
+        return "Gains one charge per successful hit or damaging hit received while Last Rage is inactive."
     if slot == "e":
         return f"Requires {ability_charge_required(player)} successful hits."
     if slot in ("q", "f"):
@@ -157,6 +159,12 @@ def get_act_three_ability_charge_state(
 ):
     if not is_ability_slot_unlocked(player, slot):
         return 0.0, 1.0
+    if player.subclass == "warlock":
+        from acts.act_three.abilities.blood_magic import can_pay_skill
+        from acts.act_three.abilities.warlock_runes import demon_attack_cost
+
+        extra = demon_attack_cost(player) if slot == "e" and not ability_is_passive(player, slot) else 0
+        return (1.0 if can_pay_skill(player, slot, extra) else 0.0), 1.0
     if slot == "q" and player.subclass == "summoner" and player.act_three.summoner_loss_turns > 0:
         return 0.0, 1.0
     if slot == "f" and player.subclass == "warlock":

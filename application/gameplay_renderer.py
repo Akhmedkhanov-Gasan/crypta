@@ -159,6 +159,10 @@ class GameplayRenderer:
             native_overlay = None
             if game_state.subclass_selection_open:
                 native_overlay = lambda target: self._draw_native_subclass_selection(target, screen, game_state)
+            elif game_state.act_three.altar_menu_open:
+                from acts.act_three.bloody_altar.presentation import draw_native_altar_menu
+
+                native_overlay = lambda target: draw_native_altar_menu(target, game_state, current_time)
             elif game_state.act_three.rune_menu is not None:
                 from acts.act_three.rune_master.presentation import draw_native_rune_menu
 

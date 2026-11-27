@@ -1,11 +1,8 @@
 import math
 
 import pygame
-from acts.act_three.ability_scaling import (
-    basic_attack_damage_range,
-    summoner_attack_multiplier,
-)
 from acts.act_three.abilities.paladin_runes import effective_dodge_chance
+from acts.act_three.bloody_altar.effects import critical_multiplier as _critical_multiplier
 
 from game.progression import experience_required_for_level
 from game.rune_catalog import RUNES_BY_ID
@@ -36,10 +33,6 @@ from acts.act_three.settings import (
     ASSASSIN_ULTIMATE_CHARGES,
     BERSERKER_CRUSHING_LEAP_CHARGES,
     BERSERKER_LAST_RAGE_CHARGES,
-    BERSERKER_RAGE_CRITICAL_DAMAGE_MULTIPLIER,
-    BERSERKER_RAGE_CRITICAL_HEALTH_RATIO,
-    BERSERKER_RAGE_INJURED_DAMAGE_MULTIPLIER,
-    BERSERKER_RAGE_INJURED_HEALTH_RATIO,
     PALADIN_HOLY_HAND_CHARGES,
     PALADIN_SHIELD_CHARGE_CHARGES,
     SUMMONER_FAMILIAR_CHARGES,
@@ -419,35 +412,9 @@ def _ability_entries(player, accent_color):
 
 
 def _damage_value(player):
-    minimum, maximum = basic_attack_damage_range(player)
-    if player.subclass == "summoner":
-        multiplier = summoner_attack_multiplier(player)
-        minimum = math.ceil(minimum * multiplier)
-        maximum = math.ceil(maximum * multiplier)
-    damage_text = f"{minimum}-{maximum}"
-    bonus_minimum = 0
-    bonus_maximum = 0
-    if player.subclass == "berserker":
-        health_ratio = player.health / player.max_health
-        if (
-            player.berserker_last_rage_hits > 0
-            or health_ratio <= BERSERKER_RAGE_CRITICAL_HEALTH_RATIO
-        ):
-            multiplier = BERSERKER_RAGE_CRITICAL_DAMAGE_MULTIPLIER
-        elif health_ratio <= BERSERKER_RAGE_INJURED_HEALTH_RATIO:
-            multiplier = BERSERKER_RAGE_INJURED_DAMAGE_MULTIPLIER
-        else:
-            multiplier = 1.0
-        bonus_minimum = math.ceil(minimum * multiplier) - minimum
-        bonus_maximum = math.ceil(maximum * multiplier) - maximum
-    if bonus_maximum > 0:
-        bonus = (
-            f"+{bonus_minimum}"
-            if bonus_minimum == bonus_maximum
-            else f"+{bonus_minimum}-{bonus_maximum}"
-        )
-        damage_text += bonus
-    return damage_text
+    from acts.act_three.presentation.descriptions.combat import current_damage_range, damage_range_text
+
+    return damage_range_text(current_damage_range(player))
 
 
 def _draw_header(screen, player, fonts, assets):
@@ -788,7 +755,7 @@ def _draw_stats_popup(screen, player, fonts, accent_color):
         ("Fortitude", str(ranks.get("fortitude", 0))),
         ("Damage", _damage_value(player)),
         ("Critical chance", f"{round(player.crit_chance * 100)}%"),
-        ("Critical damage", f"{round(player.critical_damage_multiplier * 100)}%"),
+        ("Critical damage", f"{round(_critical_multiplier(player) * 100)}%"),
         ("Dodge chance", f"{round(effective_dodge_chance(player) * 100)}%"),
         ("Gold", str(player.gold_count)),
         ("Keys", str(player.key_count)),

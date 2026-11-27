@@ -1,4 +1,5 @@
 import pygame
+from acts.act_three.presentation.descriptions.abilities import ability_damage_lines
 
 from acts.act_three.abilities import (
     get_ability_definition,
@@ -143,6 +144,7 @@ def ability_tooltip_content(
             rune.description if rune else ability.description,
         )
 
+    description_lines = (*description_lines, *ability_damage_lines(player, slot))
     slot_title = (
         f"{slot.upper()}  |  {title}"
     )
@@ -168,6 +170,22 @@ def ability_tooltip_content(
             ),
             accent=_ABILITY_ACCENT,
         )
+
+    if player.subclass == "warlock":
+        from acts.act_three.abilities.blood_magic import can_pay_skill, skill_health_cost
+        from acts.act_three.abilities.warlock_runes import demon_attack_cost
+        from acts.act_three.bloody_altar.catalog import has_pact
+        from math import ceil
+
+        cost = skill_health_cost(player, slot)
+        extra = demon_attack_cost(player) if slot == "e" else 0
+        cost_lines = (f"Blood Magic: {cost} HP; no charges. Must leave at least 1 HP.",)
+        if extra:
+            cost_lines += (f"Demon Form: +{extra} HP per attack, including this cast.",)
+        if slot == "e" and has_pact(player, "shattered_seal"):
+            cost_lines += (f"Shattered Seal: an additional {max(1, ceil(player.max_health * 0.05))} HP; this sacrifice can kill you.",)
+        state = "READY" if can_pay_skill(player, slot, extra) else "INSUFFICIENT HP"
+        return TooltipContent(f"{slot_title} | {state}", (*description_lines, *cost_lines), _ABILITY_ACCENT)
 
     current_charge, required_charge = (
         _ability_charge(

@@ -2252,20 +2252,20 @@
       "combat_stats": {
         "rect": {
           "x": 808,
-          "y": 365,
+          "y": 375,
           "width": 188,
-          "height": 123
+          "height": 98
         },
         "decorations": [
           {
-            "x": 811,
-            "y": 346,
+            "x": 812,
+            "y": 356,
             "width": 180,
             "height": 14
           },
           {
             "x": 811,
-            "y": 493,
+            "y": 479,
             "width": 180,
             "height": 14
           },
@@ -2280,14 +2280,14 @@
           "damage": {
             "rect": {
               "x": 812,
-              "y": 366,
+              "y": 376,
               "width": 180,
               "height": 16
             },
             "background": {
               "rect": {
                 "x": 811,
-                "y": 366,
+                "y": 376,
                 "width": 180,
                 "height": 16
               },
@@ -2305,7 +2305,7 @@
             "label": {
               "rect": {
                 "x": 817,
-                "y": 366,
+                "y": 376,
                 "width": 52,
                 "height": 16
               },
@@ -2335,7 +2335,7 @@
             "value": {
               "rect": {
                 "x": 939,
-                "y": 368,
+                "y": 378,
                 "width": 43,
                 "height": 12
               },
@@ -2366,14 +2366,14 @@
           "armor": {
             "rect": {
               "x": 812,
-              "y": 386,
+              "y": 396,
               "width": 180,
               "height": 16
             },
             "background": {
               "rect": {
                 "x": 811,
-                "y": 386,
+                "y": 396,
                 "width": 180,
                 "height": 16
               },
@@ -2391,7 +2391,7 @@
             "label": {
               "rect": {
                 "x": 817,
-                "y": 386,
+                "y": 396,
                 "width": 40,
                 "height": 16
               },
@@ -2421,7 +2421,7 @@
             "value": {
               "rect": {
                 "x": 939,
-                "y": 388,
+                "y": 398,
                 "width": 43,
                 "height": 12
               },
@@ -2452,14 +2452,14 @@
           "critical_chance": {
             "rect": {
               "x": 812,
-              "y": 406,
+              "y": 416,
               "width": 180,
               "height": 16
             },
             "background": {
               "rect": {
                 "x": 811,
-                "y": 406,
+                "y": 416,
                 "width": 180,
                 "height": 16
               },
@@ -2477,7 +2477,7 @@
             "label": {
               "rect": {
                 "x": 817,
-                "y": 406,
+                "y": 416,
                 "width": 94,
                 "height": 16
               },
@@ -2507,7 +2507,7 @@
             "value": {
               "rect": {
                 "x": 949,
-                "y": 408,
+                "y": 418,
                 "width": 27,
                 "height": 12
               },
@@ -2538,14 +2538,14 @@
           "critical_damage": {
             "rect": {
               "x": 812,
-              "y": 426,
+              "y": 436,
               "width": 180,
               "height": 16
             },
             "background": {
               "rect": {
                 "x": 811,
-                "y": 426,
+                "y": 436,
                 "width": 180,
                 "height": 16
               },
@@ -2563,7 +2563,7 @@
             "label": {
               "rect": {
                 "x": 817,
-                "y": 426,
+                "y": 436,
                 "width": 97,
                 "height": 16
               },
@@ -2593,7 +2593,7 @@
             "value": {
               "rect": {
                 "x": 944,
-                "y": 428,
+                "y": 438,
                 "width": 32,
                 "height": 12
               },
@@ -2624,14 +2624,14 @@
           "dodge_chance": {
             "rect": {
               "x": 812,
-              "y": 446,
+              "y": 456,
               "width": 180,
               "height": 16
             },
             "background": {
               "rect": {
                 "x": 811,
-                "y": 446,
+                "y": 456,
                 "width": 180,
                 "height": 16
               },
@@ -2649,7 +2649,7 @@
             "label": {
               "rect": {
                 "x": 817,
-                "y": 446,
+                "y": 456,
                 "width": 89,
                 "height": 16
               },
@@ -2679,7 +2679,7 @@
             "value": {
               "rect": {
                 "x": 947,
-                "y": 448,
+                "y": 458,
                 "width": 30,
                 "height": 13
               },

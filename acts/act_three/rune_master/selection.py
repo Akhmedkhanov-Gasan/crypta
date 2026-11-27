@@ -8,6 +8,10 @@ from acts.act_two.bloody_altar import BROKEN_SEAL, has_bloody_pact
 
 def apply_rune(game_state, card, current_time=None):
     player = game_state.player
+    from acts.act_three.bloody_altar.catalog import has_pact, services_are_blocked
+
+    if services_are_blocked(player):
+        return False
     console_access = game_state.act_three.npc_menu_from_console == "rune_master"
     if card.placeholder or not is_ability_slot_unlocked(player, card.slot) or (not console_access and not can_modify_rune(player, card.slot)):
         return False
@@ -15,7 +19,7 @@ def apply_rune(game_state, card, current_time=None):
         add_log_message(game_state.combat_log, "Eternal Form is bound for the rest of this run.", category="warning")
         return False
     if card.slot == "e":
-        if has_bloody_pact(player, BROKEN_SEAL):
+        if has_bloody_pact(player, BROKEN_SEAL) or has_pact(player, "shattered_seal"):
             return False
         rune = RUNES_BY_ID.get(card.id)
         if rune is None or rune.player_class != player.player_class:

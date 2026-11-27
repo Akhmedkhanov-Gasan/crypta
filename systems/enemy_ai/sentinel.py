@@ -232,6 +232,7 @@ def apply_sentinel_knockback(game_state, enemy):
             game_state,
             collision_damage,
             damage_kind="physical",
+            is_attack=True,
         )
         game_state.emit(
             GameEvent(

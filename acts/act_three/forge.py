@@ -34,6 +34,10 @@ def forge_progress_fraction(player, upgrade):
 
 
 def can_forge_upgrade(player, upgrade):
+    from acts.act_three.bloody_altar.catalog import services_are_blocked
+
+    if services_are_blocked(player):
+        return False
     if not player.act_three.inventory_unlocked:
         return False
     if upgrade not in FORGE_UPGRADES or not player.act_three.blacksmith_quest.get("completed", False):

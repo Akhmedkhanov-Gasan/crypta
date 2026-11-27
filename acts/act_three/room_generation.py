@@ -585,6 +585,8 @@ def attach_act_three_passages(
     floor_index,
     floor_count,
 ):
+    from acts.act_three.passages import passage_destination
+
     passages = []
 
     for connector in floor.get("connectors", []):
@@ -592,16 +594,14 @@ def attach_act_three_passages(
 
         if name in ("exit_down", "exit_next_floor"):
             passage_id = "exit_down"
-            target_floor_index = (
-                floor_index + 1
-                if floor_index + 1 < floor_count
-                else None
-            )
         elif name in ("exit_up", "exit_back"):
             passage_id = "exit_up"
-            target_floor_index = None
         else:
             continue
+
+        target_floor_index, target_passage_id = passage_destination(floor_index, passage_id)
+        if target_floor_index is not None and target_floor_index >= floor_count:
+            target_floor_index, target_passage_id = None, None
 
         positions = _passage_positions(connector)
         if positions is None:
@@ -615,7 +615,7 @@ def attach_act_three_passages(
                 "wall_position": wall_position,
                 "trigger_position": trigger_position,
                 "target_floor_index": target_floor_index,
-                "target_passage_id": "exit_up" if target_floor_index is not None else None,
+                "target_passage_id": target_passage_id,
                 "requires_clear": False,
             }
         )

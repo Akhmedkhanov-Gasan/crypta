@@ -297,6 +297,9 @@ def _draw_act_three_world(
     draw_world_ores(context, assets)
     draw_breakable_environment_objects(context, current_time)
     draw_chests(context, assets["act_three_chest_frames"], current_time)
+    from acts.act_three.bloody_altar.presentation import draw_world_altar
+
+    draw_world_altar(context, current_time)
     draw_world_enemies(
         context,
         game_state,

@@ -207,6 +207,8 @@ def resolve_player_turn(
     if current_act == 2 and not player_waited:
         game_state.player.act_two.wait_effect_started_at = -1
     game_state.player_attack_targets = []
+    if current_act == 3 and not barrage_resume:
+        game_state.player.act_three.altar_basic_action = False
 
     result = _resolve_act_action(
         game_state,
@@ -227,6 +229,9 @@ def resolve_player_turn(
         return result
 
     if current_act == 3 and result.player_acted and not barrage_resume:
+        from acts.act_three.bloody_altar.effects import finish_player_action
+
+        finish_player_action(game_state.player)
         if (
             player_waited
             and not stunned_action

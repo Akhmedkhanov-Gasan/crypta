@@ -88,6 +88,7 @@ def _spawn_wave(game_state, now):
             config=config, belongs_to_boss_group=False,
         )
         enemy.is_aggro = True
+        enemy.altar_original_enemy = False
         enemy.behavior_state = EnemyBehaviorState.CHASING
         enemy.goblin_summon_used = True
         enemy.movement_bounds = left, top, right - 1, bottom - 1

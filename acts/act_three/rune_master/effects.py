@@ -44,18 +44,18 @@ def draw_subpixel_card(screen, source, position, alpha, highlighted_source=None,
     screen.blit(image, point)
 
 
-@lru_cache(maxsize=1)
-def _mist_puff():
+@lru_cache(maxsize=8)
+def _mist_puff(color=(140, 100, 172)):
     surface = pygame.Surface((64, 64), pygame.SRCALPHA)
     for y in range(64):
         for x in range(64):
             distance = math.hypot((x - 31.5) / 32, (y - 31.5) / 32)
             alpha = round(40 * max(0, 1 - distance * distance) ** 3)
-            surface.set_at((x, y), (140, 100, 172, alpha))
+            surface.set_at((x, y), (*color, alpha))
     return surface
 
 
-def draw_card_mist(screen, bounds, strength, current_time, seed):
+def draw_card_mist(screen, bounds, strength, current_time, seed, color=(140, 100, 172)):
     if strength <= 0:
         return
     layer = pygame.Surface((bounds.width + 64, bounds.height + 64), pygame.SRCALPHA)
@@ -67,15 +67,15 @@ def draw_card_mist(screen, bounds, strength, current_time, seed):
         y += math.cos(phase * 0.8) * 13
         width = 112 + index % 4 * 8
         height = round(width * 0.68)
-        puff = _scaled_puff(width, height)
+        puff = _scaled_puff(width, height, color)
         layer.blit(puff, puff.get_rect(center=(round(x), round(y))))
     layer.set_alpha(round(255 * strength))
     screen.blit(layer, (bounds.x - 32, bounds.y - 32))
 
 
-@lru_cache(maxsize=8)
-def _scaled_puff(width, height):
-    return pygame.transform.smoothscale(_mist_puff(), (width, height))
+@lru_cache(maxsize=32)
+def _scaled_puff(width, height, color=(140, 100, 172)):
+    return pygame.transform.smoothscale(_mist_puff(color), (width, height))
 
 
 @lru_cache(maxsize=1)

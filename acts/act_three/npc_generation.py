@@ -3,7 +3,7 @@ from collections import deque
 from pathlib import Path
 
 from acts.act_three.enemies.generation import enemy_spawn_cells
-from acts.act_three.npcs import get_npc_cells
+from acts.act_three.npcs import NPC_FOOTPRINTS
 from acts.act_three.spawn_regions import (
     inside_region,
     reserved_spawn_positions,
@@ -46,7 +46,7 @@ def place_random_trader(floor):
     place_random_npc(floor, "trader", regions=_early_trader_regions(floor))
 
 
-def place_random_npc(floor, npc_type, *, regions=None):
+def find_fixture_position(floor, footprint, *, regions=None):
     regions = regions if regions is not None else [
         region for region in spawn_regions(floor)
         if region["enabled"]
@@ -80,19 +80,19 @@ def place_random_npc(floor, npc_type, *, regions=None):
     available = (reachable & ground) - occupied
     candidates = []
     for position in sorted(available):
-        npc = {"type": npc_type, "position": position}
-        cells = get_npc_cells(npc)
+        width, height = footprint
+        cells = {(position[0] + dx, position[1] + dy) for dy in range(height) for dx in range(width)}
         if not cells <= available or not any(
             all(inside_region(cell, region) for cell in cells) for region in regions
         ):
             continue
-        x, y = position
-        if not can_reach_adjacent_cell(dungeon_map, position, (x + 1, y), barriers):
+        if any(not can_reach_adjacent_cell(dungeon_map, cell, neighbor, barriers)
+               for cell in cells for neighbor in ((cell[0] + 1, cell[1]), (cell[0], cell[1] + 1))
+               if neighbor in cells):
             continue
-        candidates.append(npc)
+        candidates.append((position, cells))
     random.shuffle(candidates)
-    for npc in candidates:
-        cells = get_npc_cells(npc)
+    for position, cells in candidates:
         after = reachable_cells(
             dungeon_map, floor["player_start"], barriers, blocked=blocked | cells,
         )
@@ -111,11 +111,22 @@ def place_random_npc(floor, npc_type, *, regions=None):
         ]
         if not approaches:
             continue
-        if npc_type == "rune_master":
-            npc["room_entrance"] = random.choice(sorted(approaches))
-        floor.setdefault("npcs", []).append(npc)
-        for x, y in cells:
-            row = dungeon_map[y]
-            dungeon_map[y] = row[:x] + "#" + row[x + 1:]
-        return
-    raise ValueError(f"No reachable position for the Act Three {npc_type}.")
+        return position, approaches
+    raise ValueError(f"No reachable position for an Act Three fixture of size {footprint}.")
+
+
+def occupy_fixture(floor, position, footprint):
+    width, height = footprint
+    for y in range(position[1], position[1] + height):
+        row = floor["map"][y]
+        floor["map"][y] = row[:position[0]] + "#" * width + row[position[0] + width:]
+
+
+def place_random_npc(floor, npc_type, *, regions=None):
+    footprint = NPC_FOOTPRINTS[npc_type]
+    position, approaches = find_fixture_position(floor, footprint, regions=regions)
+    npc = {"type": npc_type, "position": position}
+    if npc_type == "rune_master":
+        npc["room_entrance"] = random.choice(sorted(approaches))
+    floor.setdefault("npcs", []).append(npc)
+    occupy_fixture(floor, position, footprint)

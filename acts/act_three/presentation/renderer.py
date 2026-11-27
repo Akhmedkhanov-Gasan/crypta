@@ -558,6 +558,12 @@ def draw_act_three_foreground(
 ):
     if game_state.act_three_transition_open:
         return
+    if game_state.act_three.altar_menu_open:
+        from acts.act_three.bloody_altar.presentation import draw_altar_menu
+
+        if not defer_rune_menu:
+            draw_altar_menu(screen, game_state, current_time, mouse_position)
+        return
     from acts.act_three.presentation.enemies.lantern_warden.encounter import draw_encounter_dialogue
 
     draw_encounter_dialogue(screen, game_state, fonts)

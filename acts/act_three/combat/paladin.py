@@ -3,6 +3,10 @@ PALADIN_BLOCK_CHANCE_CAP = 0.40
 
 
 def add_paladin_block_chance(player, rune_chance):
+    from acts.act_three.bloody_altar.catalog import has_pact
+
+    if has_pact(player, "blood_carapace"):
+        return 0.0
     if player.subclass != "paladin":
         return rune_chance
 

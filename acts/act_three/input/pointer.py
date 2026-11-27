@@ -123,6 +123,23 @@ def handle_act_three_pointer_event(
 ):
     if event.type not in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEWHEEL):
         return False
+    if game_state.act_three.altar_menu_open:
+        from acts.act_three.bloody_altar.input import handle_pointer
+
+        position = window_to_game_position(screen, getattr(event, "pos", pygame.mouse.get_pos()))
+        movement_state.cancel_auto_move()
+        movement_state.reset_held_movement()
+        return handle_pointer(event, game_state, position)
+    if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and movement_available:
+        from acts.act_three.bloody_altar.runtime import altar_position, adjacent_to_altar, open_altar
+
+        position = window_to_game_position(screen, event.pos)
+        target = get_act_three_cell_from_position(game_state, position) if position is not None else None
+        if target is not None and target == altar_position(game_state.floor) and adjacent_to_altar(game_state):
+            open_altar(game_state)
+            movement_state.cancel_auto_move()
+            movement_state.reset_held_movement()
+            return True
     if handle_journal_pointer(event, game_state, screen, window_to_game_position):
         movement_state.cancel_auto_move()
         movement_state.reset_held_movement()
@@ -1032,6 +1049,7 @@ def handle_act_three_pointer_event(
                 return True
 
 
+            elif game_state.player.subclass == "warlock":
                 warlock_target_cell = (
                     get_act_three_cell_from_position(
                         game_state,
@@ -1058,6 +1076,7 @@ def handle_act_three_pointer_event(
                     )
                     return True
 
+            elif game_state.player.subclass == "summoner":
                 summoner_target_cell = (
                     get_act_three_cell_from_position(
                         game_state,

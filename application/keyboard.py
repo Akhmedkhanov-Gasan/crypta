@@ -80,6 +80,13 @@ class GameplayKeyboardController:
         continuous_movement_available,
         movement_profile,
     ):
+        if current_act == 3 and game_state.act_three.altar_menu_open:
+            from acts.act_three.bloody_altar.input import handle_key
+
+            self.movement_state.cancel_auto_move()
+            self.movement_state.reset_held_movement()
+            handle_key(event, game_state)
+            return game_state
         barrage_resume = getattr(event, "archer_barrage_resume", False)
         from acts.act_three.trials.summoner import busy as summoner_trial_busy, handle_key as handle_summoner_key
 

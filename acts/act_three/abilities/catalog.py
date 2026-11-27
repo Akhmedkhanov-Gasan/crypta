@@ -226,8 +226,8 @@ SUBCLASS_DEFINITIONS = {
                 ),
                 charge_required=4.0,
                 description=(
-                    "Fire through the first target and hit "
-                    "one additional enemy behind it."
+                    "Pierce enemies along a six-cell line. "
+                    "Damage scales with Valor."
                 ),
             ),
             "e": INVISIBILITY,
@@ -256,8 +256,8 @@ SUBCLASS_DEFINITIONS = {
             name="BLOOD MAGIC",
             icon_asset="act_three_warlock_passive",
             description=(
-                "Successful attacks channel power\n"
-                "into Curse and Demon Form."
+                "Cast skills using HP\n"
+                "instead of charges."
             ),
         ),
         abilities={

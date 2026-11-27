@@ -24,6 +24,8 @@ def hover_warlock_aim(game_state, target):
 
 def cancel_warlock_aim(game_state):
     player = game_state.player
+    player.warlock_attack_target = None
+    player.warlock_curse_target = None
     if player.warlock_curse_aiming:
         cancel_warlock_curse(game_state)
         set_warlock_curse_cursor()
@@ -59,7 +61,11 @@ def handle_warlock_aim_key(event, game_state, direction):
         return False
 
     if player.warlock_attack_target is not None or player.warlock_curse_target is not None:
-        return event.key not in (pygame.K_RETURN, pygame.K_KP_ENTER)
+        if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER) or getattr(event, "navigation_attack_target", None) is not None:
+            return False
+        cancel_warlock_aim(game_state)
+        if event.key == pygame.K_ESCAPE:
+            return True
 
     if warlock_aiming(player):
         confirm_key = pygame.K_q if player.warlock_curse_aiming else pygame.K_r

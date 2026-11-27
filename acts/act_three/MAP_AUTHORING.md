@@ -12,7 +12,7 @@ Place point objects in `Connectors`:
 
 - `exit_north`, `exit_south`, `exit_east`, `exit_west`: structural connections on the corresponding outermost cell of the map.
 - Add suffixes to distinguish multiple openings on one side, such as `exit_east_upper` and `exit_east_lower`. Each point remains a separate one-cell opening.
-- `exit_up`: the gate to the previous floor, temporarily sealed.
+- `exit_up`: the gate to the previous Act III floor. Arrival uses its `exit_down` approach cell. Returning to the awakening room is allowed; the Act II boundary remains sealed.
 - `exit_down`: the gate to the next floor. Arrival on that floor uses its `exit_up` approach cell.
 - Legacy `exit_back` and `exit_next_floor` markers remain accepted as aliases for `exit_up` and `exit_down`.
 

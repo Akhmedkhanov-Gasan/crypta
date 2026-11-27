@@ -1,9 +1,9 @@
 # Act III balance contract
 
 This is the implementation baseline for a difficult Act III, including the
-planned blood-pact system. Numerical settings require playtesting; static
+implemented blood-pact system. Numerical settings require playtesting; static
 analysis does not establish clear rates or prove equal subclass strength.
-The new altar UI and twelve new pacts are not integrated by this change.
+The Figma altar UI, animated world object and twelve new pacts are integrated.
 
 ## Progression
 
@@ -28,7 +28,8 @@ revisiting earlier floors:
   critical chance to approximately 67.1% and dodge to approximately 52.5%.
 - Attribute previews must not mutate real ranks, current health, or pact costs.
 
-E continues to require four successful hits, or two with Broken Seal.
+E continues to require four successful hits, two with Broken Seal, or one
+with its Shattered Seal evolution.
 Passive E runes do not charge. Every successful qualifying hit grants one
 charge to Q and F. There is no mastery progression or charge-rate multiplier.
 Q remains a reward for the subclass trial. F is reserved for defeating the
@@ -97,10 +98,19 @@ These values apply on the first full combat floor, act_floor 2:
 | Priest ghost | 14 | 5-7 magic, 3-4 melee | Dodge reduced from 60% to 35% to reduce miss streaks |
 | Lantern Warden | 260 | 7-8 melee; abilities 7-14 | Existing telegraphs, patterns, and recovery opportunities remain |
 
-At act_floor 3, regular enemies gain x1.25 HP, rounded upward, +1 damage
-for every attack mode, and +1 healing where applicable. For example, a brute
-has 38 HP and deals 8-10 damage. Additional authored future depths repeat
-the x1.25 HP increase and add one more damage/healing per depth.
+Starting at act_floor 3, regular enemy HP grows by 12% of its floor-nine
+baseline per additional floor, rounded upward. Damage and healing increase
+by one at tower floors 10, 13, 16 and so on. The health curve is linear to
+support a long act without exponential damage sponges.
+
+| Tower floor | Brute HP | Brute damage |
+| --- | ---: | --- |
+| 9 | 30 | 7-9 |
+| 10 | 34 | 8-10 |
+| 11, future | 38 | 8-10 |
+| 12, future | 41 | 8-10 |
+| 13, future | 45 | 9-11 |
+
 Lantern Warden is excluded from this automatic regular-enemy depth curve.
 There is no scaling based on the player's attributes, equipment or selected
 pact: investing in a build must produce a real advantage.
@@ -115,7 +125,7 @@ four combat waves use the Act III floor-three baseline, with HP multipliers
 of 1.00, 1.08, 1.16 and 1.24 across the waves. Existing openings and
 intermissions remain. The trial does not use the weak Act I baseline.
 
-## Pact integration requirements
+## Bloody altar
 
 The approved catalogue remains unchanged: Blood Carapace, Final Word,
 Insatiable Edge, Exposed Heart, Lone Prey, Feast of Many, Death's Reprieve,
@@ -123,14 +133,38 @@ Black Tribute, Crimson Rupture, Shattered Seal, Splintered Heart, Endless Hunger
 The last four require their Act II precursor and replace it rather than
 stacking with it. Shattered Seal uses a 5% maximum-HP activation cost.
 
-For the current two combat floors, start with one guaranteed optional altar
-on the first combat floor, offering three distinct weighted choices and
-allowing one accepted new pact or evolution in the act. This remains a
-design starting point, not a newly implemented acquisition system.
+Tower floor 10 contains one guaranteed optional altar in a random reachable
+room position. It offers three distinct weighted choices and allows one
+accepted new pact or evolution in the act. Offers persist across reopening,
+floor changes and saves. Selection and confirmation follow the Rune Master's
+interaction: floating cards, eased illumination, animated button presses,
+mist on reveal, movement to the center, confirmation light and final fade.
+The pact is applied once after the confirmation light, before the final fade.
+Left/right or A/D move keyboard focus; 1/2/3 select a card. Space selects
+the focused card, then confirms it on a second press. Enter confirms the
+selection, or selects the focused card if none is selected. Mouse actions
+require pressing and releasing over the same moving control. Backspace or
+the return button closes the menu; Escape closes it immediately. Input during
+opening and confirmation animations cannot change the selection. The renderer
+uses the Rune Master's motion, subpixel sampling, lighting and button effects
+with crimson mist, and draws at the window's native resolution.
+The object occupies one tile, animates in sixteen frames and dims after use.
+New generation is required for floors already stored without an altar.
+The `altar` developer command opens this UI anywhere in Act III without
+creating or moving a world fixture. In Act II it retains the original altar.
+Internal Act III floor gates work in both directions independently of the
+trader quest, including the awakening room. The Act II boundary and the
+unimplemented next floor remain sealed. Saved gate destinations are refreshed
+when used, and revisits preserve the existing room state.
+
+Common, rare and legendary choices have relative weights 100, 35 and 6.
+Each draw contains at most one legendary. Evolutions enter the pool only
+when the corresponding Act II pact is currently equipped. Ordinary pacts
+retain the inherited Act II pact; evolutions replace their parent.
 Evaluate a second selection only after observing the first set of builds.
 Balance the mandatory route for a character who declines every pact.
 
-Specific interactions to preserve when implementing the new pacts:
+Implemented pact effects and interactions:
 
 - Apply contextual pact damage to the same final multiplier stage, then round
   once. Evaluate Final Word against health before the hit, not after it.
@@ -138,14 +172,25 @@ Specific interactions to preserve when implementing the new pacts:
   with armor, and must not be added to armor percentages.
 - Lone Prey and Feast of Many are mutually exclusive. Evaluate other hostile
   creatures within five cells of the target, excluding the target and allies.
+  Distance uses the maximum axis separation, including diagonal neighbors.
+  Lone Prey grants +40% against isolated targets and -25% against groups;
+  Feast of Many reverses these conditions.
 - Exposed Heart's +0.75 critical multiplier is not lost to the old x2.75 cap.
   Its enemy critical multiplier must apply before defensive reductions.
+  Direct enemy attacks have a 20% chance to deal double damage.
 - Insatiable Edge tracks ordinary player attacks, not companions, counterattacks,
   extra arrows, or bleed ticks. Non-turn-consuming UI actions do not reset it.
+  Each consecutive basic attack grants +15%, capped at +60%; misses and
+  other turn actions reset the chain. Received healing is reduced by 40%.
+- Final Word grants +60% against targets at half HP or below and -30%
+  against healthier targets. Crimson Rupture adds three turns of bleeding
+  at 20% of actual direct hero damage per turn and reduces healing by 60%.
 - Shattered Seal's 5% HP cost rounds upward, bypasses defense and can kill.
   Charge gains must not bypass its HP cost or the lost E rune.
 - Health-sacrifice pacts must retain their percentage cost after future
   maximum-HP gains. Existing Glass Heart already does so in Act III.
+  Splintered Heart grants +75% damage and replaces Glass Heart's 25% maximum
+  HP sacrifice with 40%, without healing the player during replacement.
 - Endless Hunger's 40% life steal uses actual health lost, excluding overkill,
   companions and bleed. Its +50% incoming attack damage remains mandatory;
   all other healing must be rejected through the shared healing rules.
@@ -153,6 +198,10 @@ Specific interactions to preserve when implementing the new pacts:
   kill healing, souls, protection extensions, XP or loot.
 - Death's Reprieve starts charged and needs 15 distinct original-enemy kills
   after use. Changing floors, reloading or waiting must not restore it.
+  It sacrifices 30% maximum HP, leaves the player at 1 HP on lethal damage,
+  charges accessible active abilities and stuns adjacent foes for one turn.
+  Healing is reduced by 50% until recharge. Trial waves, revived ghosts and
+  creatures emerging from crates cannot recharge it.
 - Black Tribute provides +100% damage and permanently disables NPC services
   except the teleport NPC. Already owned equipment and supplies remain usable.
   Preparing before acceptance is an intentional advantage, not an exploit to
@@ -166,8 +215,11 @@ Specific interactions to preserve when implementing the new pacts:
 critical-damage growth, preview isolation, health-sacrifice persistence,
 level rewards and boss-gated F, subclass charge counters, magical scaling above
 rank ten, final damage rounding, companion inheritance, and depth scaling.
-The focused existing rune checks cover their specific mechanics and should
-also be run after authorization.
+`tools/check_act_three_altar.py` covers all twelve pact effects, eligibility,
+rarity and persistent offers, actual E casts for all three base classes,
+NPC service refusal, save roundtrips, mouse/keyboard confirmation, UI and
+animation assets, floor-ten reachability and floor-nine generation for all
+six subclasses. Rendering checks use an offscreen SDL display.
 
 Manual playtests should cover all six subclasses with no pact, the inherited
 Act II pact, an ordinary new pact, and a legendary/evolution offer. Include

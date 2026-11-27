@@ -42,6 +42,14 @@ class ItemDragState:
 
 @dataclass
 class ActThreePlayerState:
+    altar_pact_id: str | None = None
+    altar_health_penalty: int = 0
+    altar_attack_chain: int = 0
+    altar_basic_action: bool = False
+    altar_healing_progress: float = 0.0
+    altar_lifesteal_progress: float = 0.0
+    reprieve_ready: bool = False
+    reprieve_kills: int = 0
     trader_quest: dict = field(default_factory=dict)
     inventory_unlocked: bool = False
     environment_attack = None
@@ -315,6 +323,12 @@ class ArcherBarrageTurnState:
 
 @dataclass
 class ActThreeSessionState:
+    altar_menu_open: bool = False
+    altar_console: dict | None = None
+    altar_motion: RuneMenuState | None = None
+    altar_selected: int | None = None
+    altar_confirming: bool = False
+    altar_hover: str | None = None
     map_open: bool = False
     map_opened_at: int = -1
     map_closing_at: int = -1

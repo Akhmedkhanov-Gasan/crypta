@@ -1915,7 +1915,7 @@
                   "width": 264,
                   "height": 34
                 },
-                "text": "Spend health to cast abilities\nbefore they are charged.",
+                "text": "Cast skills using HP\ninstead of charges.",
                 "font": {
                   "family": "Ubuntu Mono",
                   "style": "Medium",

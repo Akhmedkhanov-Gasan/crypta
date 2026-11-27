@@ -97,6 +97,8 @@ class ApplicationModalController:
             game_state.act_three.journal_dragging = False
             if game_state.act_three.rune_menu is not None:
                 game_state.act_three.rune_menu.pressed = None
+            if game_state.act_three.altar_motion is not None:
+                game_state.act_three.altar_motion.pressed = None
             self.movement_state.reset_held_movement()
             self.movement_state.cancel_auto_move()
             return ModalEventResult(True, state)

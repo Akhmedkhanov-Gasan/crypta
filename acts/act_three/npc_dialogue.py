@@ -28,6 +28,16 @@ TRADER_REPLIES = {
 
 def get_npc_dialogue(game_state, npc):
     npc_type = npc["type"]
+    from acts.act_three.bloody_altar.catalog import services_are_blocked
+
+    if services_are_blocked(game_state.player):
+        refusal = {
+            "trader": "I know that mark. Our bargain is over. Keep your bloodstained gold and leave.",
+            "blacksmith": "That altar's stench is on you. Your weapons will never touch my forge again.",
+            "rune_master": "You traded yourself to the altar. I will neither bind nor change your runes.",
+        }
+        if npc_type in refusal:
+            return ((npc_type, refusal[npc_type]),)
     if npc_type == "trader":
         from acts.act_three.quests.trader import trader_dialogue
 

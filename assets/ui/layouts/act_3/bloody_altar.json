@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "screen": "bloody_altar",
   "act": 3,
   "coordinate_space": "frame",
@@ -66,33 +66,50 @@
       "opacity": 1
     }
   },
-  "return_button": {
-    "hitbox": {
-      "x": 205,
-      "y": 135,
-      "width": 60,
-      "height": 61
+  "specification": {
+    "rect": {
+      "x": 399,
+      "y": 547,
+      "width": 482,
+      "height": 32
     },
-    "active": {
-      "rect": {
-        "x": 205,
-        "y": 135,
-        "width": 60,
-        "height": 61
-      },
-      "asset_path": "assets/sprites/ui/act_3/bloody_altar/return_button_active.png",
-      "source_asset_path": "my/assets/original/act_3/ui/bloody_altar/Crimson Fantasy Back Button-2.png",
+    "text": "Choose your pact. The sacrifice is permanent.",
+    "font": {
+      "family": "JMH Cthulhumbus Arcade",
+      "style": "Regular",
+      "size": 20
+    },
+    "line_height": {
+      "unit": "AUTO"
+    },
+    "letter_spacing": {
+      "unit": "PERCENT",
+      "value": 0
+    },
+    "horizontal_align": "CENTER",
+    "vertical_align": "CENTER",
+    "text_case": "ORIGINAL",
+    "color": {
+      "r": 167,
+      "g": 167,
+      "b": 167,
+      "a": 255
+    }
+  },
+  "rarities": {
+    "common": {
+      "asset_path": "assets/sprites/ui/act_3/bloody_altar/common_rarity.png",
+      "source_asset_path": "my/assets/original/act_3/ui/bloody_altar/common.png",
       "opacity": 1
     },
-    "inactive": {
-      "rect": {
-        "x": 205,
-        "y": 136,
-        "width": 60,
-        "height": 60
-      },
-      "asset_path": "assets/sprites/ui/act_3/bloody_altar/return_button_deactive.png",
-      "source_asset_path": "my/assets/original/act_3/ui/bloody_altar/ChatGPT Image Nov 27, 2026, 09_31_15 AM.png",
+    "rare": {
+      "asset_path": "assets/sprites/ui/act_3/bloody_altar/rare_rarity.png",
+      "source_asset_path": "my/assets/original/act_3/ui/bloody_altar/rare.png",
+      "opacity": 1
+    },
+    "legendary": {
+      "asset_path": "assets/sprites/ui/act_3/bloody_altar/legendary_rarity.png",
+      "source_asset_path": "my/assets/original/act_3/ui/bloody_altar/legendary.png",
       "opacity": 1
     }
   },
@@ -133,6 +150,12 @@
         "width": 120,
         "height": 120
       },
+      "rarity": {
+        "x": 340,
+        "y": 137,
+        "width": 100,
+        "height": 96
+      },
       "name": {
         "rect": {
           "x": 303,
@@ -157,9 +180,9 @@
         "vertical_align": "CENTER",
         "text_case": "ORIGINAL",
         "color": {
-          "r": 135,
-          "g": 16,
-          "b": 16,
+          "r": 167,
+          "g": 167,
+          "b": 167,
           "a": 255
         }
       },
@@ -250,6 +273,12 @@
         "width": 120,
         "height": 120
       },
+      "rarity": {
+        "x": 590,
+        "y": 137,
+        "width": 100,
+        "height": 96
+      },
       "name": {
         "rect": {
           "x": 553,
@@ -274,9 +303,9 @@
         "vertical_align": "CENTER",
         "text_case": "ORIGINAL",
         "color": {
-          "r": 135,
-          "g": 16,
-          "b": 16,
+          "r": 167,
+          "g": 167,
+          "b": 167,
           "a": 255
         }
       },
@@ -367,6 +396,12 @@
         "width": 120,
         "height": 120
       },
+      "rarity": {
+        "x": 840,
+        "y": 137,
+        "width": 100,
+        "height": 96
+      },
       "name": {
         "rect": {
           "x": 803,
@@ -391,9 +426,9 @@
         "vertical_align": "CENTER",
         "text_case": "ORIGINAL",
         "color": {
-          "r": 135,
-          "g": 16,
-          "b": 16,
+          "r": 167,
+          "g": 167,
+          "b": 167,
           "a": 255
         }
       },

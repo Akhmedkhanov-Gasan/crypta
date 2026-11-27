@@ -1,5 +1,6 @@
 import math
 from acts.act_three.abilities.paladin_runes import effective_dodge_chance
+from acts.act_three.bloody_altar.effects import critical_multiplier
 
 import pygame
 from acts.act_three.presentation.hud.belt_art import draw_belt_frame, draw_belt_abilities, draw_belt_image
@@ -617,9 +618,9 @@ def _belt_tooltip(player, hovered_item, healing_blocked):
     item = trader_item(player, hovered_item) if hovered_item in TRADER_ITEMS else None
     if item is None:
         return consumable_tooltip_content(hovered_item, False)
-    lines = (item.description, "In the character panel, select this belt slot and press Shift to drop.")
-    if healing_blocked and hovered_item in HEALING_ITEMS:
-        lines += ("Blood Hunger blocks this item.",)
+    from acts.act_three.presentation.descriptions.items import consumable_lines
+
+    lines = (*consumable_lines(player, hovered_item), "In the character panel, select this belt slot and press Shift to drop.")
     return TooltipContent(item.name, lines, (181, 145, 81))
 
 
@@ -857,7 +858,7 @@ def _draw_character_panel(
             f"{round(preview_player.crit_chance * 100)}%"
         ),
         "critical_damage": (
-            f"x{preview_player.critical_damage_multiplier:.1f}"
+            f"x{critical_multiplier(preview_player):.2f}"
         ),
         "dodge_chance": (
             f"{round(effective_dodge_chance(preview_player) * 100)}%"
@@ -1182,6 +1183,11 @@ def draw_act_three_hud(
     status_tooltip = draw_player_statuses(screen, player, assets, layout, mouse_position)
     if status_tooltip is not None:
         hud_tooltip = status_tooltip
+    if mouse_position is not None and figma_rect(layout["top_bar"]["hp_text"]["rect"]).collidepoint(mouse_position):
+        from acts.act_three.presentation.descriptions.combat import health_lines
+        from acts.act_three.presentation.descriptions.items import healing_lines
+
+        hud_tooltip = TooltipContent("HEALTH", (*health_lines(player), *healing_lines(player)), (139, 74, 89))
     _draw_gold(
         screen,
         player,

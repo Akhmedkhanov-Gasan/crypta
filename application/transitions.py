@@ -137,6 +137,7 @@ def advance_floor_transition(game_state, current_time):
         from game.combat_log import add_log_message
         from game.factories import create_floor_state
 
+        game_state.visited_floors[game_state.floor_index] = game_state.floor
         target_floor = game_state.visited_floors.get(target_index)
 
         if target_floor is None:

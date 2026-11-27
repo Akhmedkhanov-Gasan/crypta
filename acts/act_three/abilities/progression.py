@@ -99,6 +99,11 @@ def is_ability_slot_charged(
     if player.debug_unlimited_abilities:
         return True
 
+    if player.subclass == "warlock":
+        from acts.act_three.abilities.blood_magic import can_pay_skill
+
+        return can_pay_skill(player, slot)
+
     definition = get_subclass_definition(player.subclass)
     if definition is None:
         return False
@@ -117,6 +122,8 @@ def charge_ability_slots(
     player,
     slots,
 ):
+    if player.subclass == "warlock":
+        return
     definition = get_subclass_definition(player.subclass)
     if definition is None:
         return

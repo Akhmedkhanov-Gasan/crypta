@@ -80,15 +80,6 @@ def note_monster_parts(player):
         quest["clutter_pending"] = True
 
 
-def permits_floor_exit(game_state):
-    from game.floor_identity import tower_floor_number
-
-    if tower_floor_number(game_state.floor_index) != 9 or game_state.player.act_three.inventory_unlocked:
-        return True
-    add_log_message(game_state.combat_log, "Find the trader and collect your pack before descending. The way back will seal.", category="quest")
-    return False
-
-
 def queue_clutter_comment(game_state):
     quest = game_state.player.act_three.trader_quest
     if quest.pop("clutter_pending", False):

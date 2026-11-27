@@ -38,6 +38,9 @@ def reserved_spawn_positions(floor):
     if rune_trial is not None:
         positions.update((rune_trial["start"], rune_trial["entrance"], rune_trial["door"]))
     trader_altar = floor.get("trader_altar")
+    bloody_altar = floor.get("act_three_bloody_altar")
+    if bloody_altar is not None:
+        positions.add(tuple(bloody_altar["position"]))
     if trader_altar is not None:
         positions.update((trader_altar[0] + dx, trader_altar[1] + dy) for dx, dy in ((0, 0), (-1, 0), (1, 0), (0, -1), (0, 1)))
     for passage in floor.get("passages", []):

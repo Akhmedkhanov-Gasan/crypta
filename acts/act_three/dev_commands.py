@@ -5,6 +5,7 @@ from acts.act_three.abilities import (
 
 
 ACT_THREE_CONSOLE_HELP = (
+    "altar - open the bloody altar without finding it (Act III)",
     "trade - open trading without finding the trader (Act III)",
     "rune - open rune selection without finding the Rune Master (Act III)",
     "runemaster - teleport to the Rune Master (Act III, floor 10)",
@@ -25,7 +26,7 @@ def execute_act_three_console_command(
     request_debug_jump=None,
 ):
     name = parts[0]
-    if name in ("trade", "rune") and game_state.floor.presentation_act == 3:
+    if name in ("trade", "rune", "altar") and game_state.floor.presentation_act == 3:
         if len(parts) != 1:
             return f"Usage: {name}"
         return _open_debug_menu(game_state, name, close_console)
@@ -107,6 +108,10 @@ def _open_debug_menu(game_state, name, close_console):
     from application.input_policy import gameplay_cutscene_active
 
     state = game_state.act_three
+    from acts.act_three.bloody_altar.catalog import services_are_blocked
+
+    if name != "altar" and services_are_blocked(game_state.player):
+        return "Your altar mark bars all trader and rune-master services."
     if game_state.player.health <= 0 or game_state.game_won:
         return "This menu is unavailable while the run is over."
     if get_subclass_definition(game_state.player.subclass) is None:
@@ -124,6 +129,16 @@ def _open_debug_menu(game_state, name, close_console):
     ):
         return "Finish the current action or close the current window first."
     set_sidebar_tab(game_state, "closed")
+    if name == "altar":
+        from acts.act_three.bloody_altar.runtime import open_altar
+
+        if game_state.player.act_three.altar_pact_id is not None:
+            return "A pact has already been accepted in this run."
+        if not open_altar(game_state, from_console=True):
+            return "The bloody altar is unavailable."
+        if close_console is not None:
+            close_console()
+        return "Act III bloody altar opened."
     state.npc_menu_from_console = "trader" if name == "trade" else "rune_master"
     state.npc_dialog_floor_index = game_state.floor_index
     state.npc_dialog_phase = "talk"

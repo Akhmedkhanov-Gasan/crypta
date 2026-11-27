@@ -85,6 +85,9 @@ def navigation_target_info(game_state, target):
     crate = get_breakable_environment_object(floor, target) is not None
     column, row = target
     secret_wall = floor.map[row][column] == "S"
+    from acts.act_three.bloody_altar.runtime import altar_position
+
+    bloody_altar = floor.presentation_act == 3 and target == altar_position(floor)
     trial = floor.shadow_step_trial
     from acts.act_three.trials.archer import interaction_cells
 
@@ -105,6 +108,7 @@ def navigation_target_info(game_state, target):
         or chest
         or crate
         or secret_wall
+        or bloody_altar
         or (floor.presentation_act == 3 and target == floor.trader_altar)
         or trial_door
         or piercing_interaction

@@ -30,6 +30,7 @@ ACT_THREE_FLOORS = (
         "act_floor": 3,
         "allow_dead_ends": False,
         "random_rune_master": True,
+        "random_bloody_altar": True,
         "required_room_paths": (
             "assets/maps/act_3/rooms/key_rooms/room_rune_trial.tmx",
         ),

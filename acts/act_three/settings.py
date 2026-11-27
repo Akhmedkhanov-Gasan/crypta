@@ -180,4 +180,5 @@ ACT_THREE_ENCOUNTER_SETTINGS = {
         "min_group_size": 3,
         "max_group_size": 4,
     },
+
 }

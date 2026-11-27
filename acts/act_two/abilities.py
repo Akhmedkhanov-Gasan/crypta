@@ -30,6 +30,13 @@ def _living_oracle_pillar_at(
 
 
 def ability_charge_required(player) -> int:
+    if player.subclass == "warlock":
+        return 0
+    if player.subclass is not None:
+        from acts.act_three.bloody_altar.catalog import has_pact
+
+        if has_pact(player, "shattered_seal"):
+            return 1
     if player.player_class is not None:
         if has_bloody_pact(player, BROKEN_SEAL):
             return 2

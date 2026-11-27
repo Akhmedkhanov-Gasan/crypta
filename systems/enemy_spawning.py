@@ -54,6 +54,7 @@ def try_spawn_enemy_after_death(
         config=spawned_config,
         belongs_to_boss_group=defeated_enemy.boss_group,
     )
+    spawned_enemy.altar_original_enemy = False
 
     starts_aggro = spawn_rule.get(
         "starts_aggro",
@@ -118,6 +119,7 @@ def try_spawn_crate_goblin(game_state, crate) -> bool:
         belongs_to_boss_group=False,
     )
     goblin.is_aggro = True
+    goblin.altar_original_enemy = False
     goblin.behavior_state = EnemyBehaviorState.CHASING
     game_state.floor.enemies.append(goblin)
     return True

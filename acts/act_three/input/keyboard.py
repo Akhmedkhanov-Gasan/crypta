@@ -148,6 +148,10 @@ def _commit_summoner_turn():
 
 
 def handle_act_three_key_event(event, game_state, *, belt_available=False):
+    if game_state.act_three.altar_menu_open:
+        from acts.act_three.bloody_altar.input import handle_key
+
+        return handle_key(event, game_state)
     from acts.act_three.trials.summoner import handle_key as handle_summoner_key
 
     if game_state.floor.presentation_act == 3 and handle_summoner_key(event, game_state):

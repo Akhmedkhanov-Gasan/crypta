@@ -6,6 +6,10 @@ from game.combat_log import add_log_message
 
 def buy_trader_item(game_state, item_id):
     player = game_state.player
+    from acts.act_three.bloody_altar.catalog import services_are_blocked
+
+    if services_are_blocked(player):
+        return False
     if not any(item_id in trader_stock(player, tab) for tab in ("healing", "scrolls", "bombs")):
         return False
     item = trader_item(player, item_id)
@@ -28,6 +32,10 @@ def buy_trader_item(game_state, item_id):
 
 
 def sell_trader_item(game_state, item_id):
+    from acts.act_three.bloody_altar.catalog import services_are_blocked
+
+    if services_are_blocked(game_state.player):
+        return False
     if item_id not in TRADER_SELL_ITEMS:
         return False
     price = TRADER_SELL_PRICES[item_id]

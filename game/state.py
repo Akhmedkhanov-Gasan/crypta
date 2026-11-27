@@ -214,6 +214,7 @@ class EnemyState(AttributeMapping):
     defeat_rewards_claimed: bool = False
     treasury_trial_enemy: bool = False
     is_summoned: bool = False
+    altar_original_enemy: bool = True
     trader_urn_enemy: bool = False
     goblin_summon_used: bool = False
     summon_animation_started_at: int = -1
@@ -326,6 +327,7 @@ class FloorState(AttributeMapping):
     passages: list[PassageState] = field(default_factory=list)
     act_one_revisit: ActOneRevisitState | None = None
     trader_altar: tuple[int, int] | None = None
+    act_three_bloody_altar: dict[str, Any] | None = None
     trader_urn_effect: dict | None = None
     act_three_npcs: list[dict[str, Any]] = field(
         default_factory=list

@@ -112,6 +112,15 @@ def request_class_ability(
         return AbilityRequestResult.NOT_READY
 
     required_charge = ability_charge_required(player)
+    if player.subclass == "warlock" and not player.directional_ability_aiming:
+        from acts.act_three.abilities.blood_magic import can_pay_skill, skill_health_cost
+        from acts.act_three.abilities.warlock_runes import demon_attack_cost
+
+        if not can_pay_skill(player, "e", demon_attack_cost(player)):
+            add_log_message(game_state.combat_log,
+                            f"Arcane Burst needs {skill_health_cost(player, 'e') + demon_attack_cost(player)} HP and must leave at least 1 HP.",
+                            category="warning")
+            return AbilityRequestResult.NOT_READY
     if (
         not player.debug_unlimited_abilities
         and player.ability_kill_charge < required_charge
@@ -127,6 +136,10 @@ def request_class_ability(
         return AbilityRequestResult.NOT_READY
 
     if player.player_class == "rogue":
+        from acts.act_three.bloody_altar.effects import pay_seal_cost
+
+        if not pay_seal_cost(game_state):
+            return AbilityRequestResult.NOT_READY
         player.ability_kill_charge = 0
         player.invisibility_turns = rogue_invisibility_duration(
             ROGUE_INVISIBILITY_TURNS,
@@ -298,6 +311,10 @@ def cast_directional_ability(
         player,
         "warrior_rhythm",
     )
+    from acts.act_three.bloody_altar.effects import pay_seal_cost
+
+    if not pay_seal_cost(game_state):
+        return False
     damage_bonus = warrior_cleave_damage_bonus(
         player.attribute_ranks.get("valor", 0),
     )
@@ -334,7 +351,9 @@ def cast_directional_ability(
     player.act_two.ability_effect_kind = "power_cleave"
     player.act_two.ability_effect_aftershock_positions = ()
     aftershock_positions = []
-    if has_bloody_pact(player, BROKEN_SEAL):
+    from acts.act_three.bloody_altar.catalog import has_pact
+
+    if has_bloody_pact(player, BROKEN_SEAL) or has_pact(player, "shattered_seal"):
         player.ability_kill_charge = 0
     else:
         player.ability_kill_charge = min(
@@ -606,9 +625,16 @@ def cast_mage_arcane_burst(
     concentration_active = (
         player.selected_rune_id == "rune_of_concentration"
     )
-    from acts.act_three.abilities.warlock_runes import prepare_demon_attack
+    from acts.act_three.abilities.blood_magic import pay_skill_health
+    from acts.act_three.abilities.warlock_runes import demon_attack_cost, prepare_demon_attack
 
+    if not pay_skill_health(game_state, "e", demon_attack_cost(player)):
+        return False
     if not prepare_demon_attack(game_state):
+        return False
+    from acts.act_three.bloody_altar.effects import pay_seal_cost
+
+    if not pay_seal_cost(game_state):
         return False
     from acts.act_three.abilities.summoner_runes import begin_summoner_attack
 

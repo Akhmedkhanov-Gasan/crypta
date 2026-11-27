@@ -95,6 +95,7 @@ def get_act_three_attribute_preview(player):
     preview = copy(player)
     preview.attribute_ranks = dict(player.attribute_ranks)
     preview.act_two = copy(player.act_two)
+    preview.act_three = copy(player.act_three)
 
     for attribute in ATTRIBUTE_ORDER:
         for _ in range(pending.get(attribute, 0)):

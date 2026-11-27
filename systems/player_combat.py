@@ -86,6 +86,10 @@ def try_block_enemy_attack(
 
     if player.health <= 0:
         return False
+    from acts.act_three.bloody_altar.catalog import has_pact
+
+    if has_pact(player, "blood_carapace"):
+        return False
 
     rune_chance = (
         WARRIOR_IMPACT_BLOCK_CHANCE
@@ -161,8 +165,14 @@ def damage_player(
     game_state: GameState,
     damage: int,
     damage_kind: str = "physical",
+    *,
+    is_attack: bool = False,
 ) -> int:
     player = game_state.player
+    if is_attack:
+        from acts.act_three.bloody_altar.effects import incoming_attack_damage
+
+        damage = incoming_attack_damage(player, damage)
     stoneflesh_applied = (
         damage_kind == "physical"
         and player.act_two.stoneflesh_hits > 0
@@ -191,6 +201,9 @@ def damage_player(
         minimum_health,
         player.health - damage,
     )
+    from acts.act_three.bloody_altar.effects import prevent_death
+
+    prevent_death(game_state)
     damage_dealt = previous_health - player.health
     if stoneflesh_applied and damage_dealt > 0:
         player.act_two.stoneflesh_hits -= 1
@@ -286,8 +299,13 @@ def attack_enemy(
     attacker_name: str = "hero",
     suppress_veil_retrigger: bool = False,
     damage_multiplier: float = 1.0,
+    basic_attack: bool = False,
 ) -> bool:
     player = game_state.player
+    if basic_attack and player.subclass is not None:
+        from acts.act_three.bloody_altar.effects import begin_basic_attack
+
+        begin_basic_attack(player)
     if enemy.possessed_by_summoner and attacker_name in ("hero", "familiar"):
         return False
     veil_passive = (
@@ -324,6 +342,10 @@ def attack_enemy(
         and enemy.sentinel.recovery_turns == 0
     ):
         enemy.shield_blocks_remaining -= 1
+        if basic_attack:
+            from acts.act_three.bloody_altar.effects import basic_attack_failed
+
+            basic_attack_failed(player)
 
         game_state.emit(
             GameEvent(
@@ -364,6 +386,10 @@ def attack_enemy(
         enemy.dodge_chance > 0
         and random.random() < enemy.dodge_chance
     ):
+        if basic_attack:
+            from acts.act_three.bloody_altar.effects import basic_attack_failed
+
+            basic_attack_failed(player)
         game_state.emit(
             GameEvent(
                 type=GameEventType.DODGE,
@@ -404,7 +430,8 @@ def attack_enemy(
     if player.subclass is not None:
         from acts.act_three.combat.damage import scaled_attack_damage
 
-        damage = scaled_attack_damage(player, enemy, damage, critical_hit, attacker_name, damage_multiplier)
+        damage = scaled_attack_damage(player, enemy, damage, critical_hit, attacker_name, damage_multiplier,
+                                      floor=game_state.floor, basic=basic_attack)
     else:
         if enemy.curse_turns > 0:
             damage = ceil(damage * WARLOCK_CURSE_DAMAGE_MULTIPLIER)
@@ -442,6 +469,9 @@ def attack_enemy(
             enemy,
             damage_dealt,
         )
+        from acts.act_three.bloody_altar.effects import on_hero_damage
+
+        on_hero_damage(game_state, enemy, damage_dealt)
 
     if (
         enemy.type == "oracle_pillar"
@@ -477,9 +507,12 @@ def attack_enemy(
             )
 
             if restored_health > 0:
-                player.health += restored_health
+                from game.healing import heal_player
+
+                requested_healing = restored_health
+                restored_health = heal_player(player, requested_healing, source="lifesteal")
                 player.act_two.blood_hunger_healing_progress -= (
-                    restored_health
+                    requested_healing
                 )
 
                 game_state.emit(
@@ -667,8 +700,10 @@ def resolve_enemy_defeat(
 
     current_act = game_state.floor.presentation_act
     if current_act == 3:
+        from acts.act_three.bloody_altar.effects import record_original_kill
         from acts.act_three.abilities.unlocks import unlock_ultimate_after_boss
 
+        record_original_kill(game_state, enemy)
         unlock_ultimate_after_boss(game_state, enemy)
     if current_act in (2, 3):
         experience_reward = experience_reward_for_enemy(enemy.type)
@@ -992,6 +1027,7 @@ def perform_basic_attack(
             damage_maximum,
             player.crit_chance,
             damage_bonus=ambush_damage_bonus,
+            basic_attack=True,
             force_critical=attack_was_from_invisibility,
             suppress_veil_retrigger=(
                 attack_was_from_invisibility

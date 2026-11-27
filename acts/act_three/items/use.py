@@ -197,7 +197,11 @@ def use_belt_item(game_state, slot, target, current_time):
     if item_id not in TRADER_ITEMS:
         return False
     if item_id in HEALING_ITEMS and healing_is_blocked(player):
-        add_log_message(game_state.combat_log, "Last Rage prevents healing until it ends.", category="warning")
+        from acts.act_three.bloody_altar.catalog import has_pact
+
+        message = ("Endless Hunger permits healing only through life steal."
+                   if has_pact(player, "endless_hunger") else "Last Rage prevents healing until it ends.")
+        add_log_message(game_state.combat_log, message, category="warning")
         return False
     if item_id in TARGETED_ITEMS and not valid_consumable_target(game_state, item_id, target):
         return False

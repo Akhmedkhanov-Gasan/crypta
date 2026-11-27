@@ -62,7 +62,11 @@ def try_use_potion(
         return False
 
     if healing_is_blocked(player):
-        add_log_message(game_state.combat_log, "Last Rage prevents healing until it ends.", category="warning")
+        from acts.act_three.bloody_altar.catalog import has_pact
+
+        message = ("Endless Hunger permits healing only through life steal."
+                   if has_pact(player, "endless_hunger") else "Last Rage prevents healing until it ends.")
+        add_log_message(game_state.combat_log, message, category="warning")
         return False
 
     if healing_consumables_are_blocked(player):
@@ -306,11 +310,6 @@ def _resolve_floor_exit(
     current_floor_config = FLOOR_CONFIGS[
         game_state.floor_index
     ]
-    if current_floor_config["act"] == 3:
-        from acts.act_three.quests.trader import permits_floor_exit
-
-        if not permits_floor_exit(game_state):
-            return False
     target_act = (
         FLOOR_CONFIGS[target_floor_index]["act"]
         if target_floor_index is not None
@@ -347,7 +346,7 @@ def _resolve_floor_exit(
         target_floor_index is not None
         and target_floor_index < game_state.floor_index
     )
-    if current_floor_config["act"] == 3 and moving_backward:
+    if current_floor_config["act"] == 3 and target_act not in (None, 3):
         add_log_message(game_state.combat_log, "The way back is sealed for now.", category="warning")
         return False
     bypasses_descent_altar = (
@@ -466,12 +465,22 @@ def try_move_player(
                     )
             return False
 
+        target_index = activated_passage.target_floor_index
+        target_passage_id = activated_passage.target_passage_id
+        if floor.presentation_act == 3 and activated_passage.passage_id in (
+            "exit_up", "exit_back", "exit_down", "exit_next_floor",
+        ):
+            from acts.act_three.passages import passage_destination
+
+            target_index, target_passage_id = passage_destination(game_state.floor_index, activated_passage.passage_id)
+            activated_passage.target_floor_index = target_index
+            activated_passage.target_passage_id = target_passage_id
         player_acted = _resolve_floor_exit(
             game_state,
             first_act_final_floor,
             transition_started_at,
-            activated_passage.target_floor_index,
-            activated_passage.target_passage_id,
+            target_index,
+            target_passage_id,
         )
 
         if game_state.class_selection_open:

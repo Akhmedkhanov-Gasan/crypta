@@ -77,8 +77,8 @@ def _active_statuses(player):
         Status("stun", "Stunned", "You cannot act.", player.stun_turns),
         Status("invisibility", "Invisibility", "Enemies cannot see you.", player.invisibility_turns,
                icon_asset=f"act_three_{player.subclass}_invisibility"),
-        Status("regeneration", "Regeneration", "Restores health over time.", state.regeneration_ticks),
-        Status("stoneflesh", "Stoneflesh", "Reduces incoming physical damage.", player.act_two.stoneflesh_hits, "hits"),
+        Status("regeneration", "Regeneration", "Restores 3 HP per tick before healing modifiers.", state.regeneration_ticks),
+        Status("stoneflesh", "Stoneflesh", "Reduces physical damage by 60%; stacks multiplicatively with armor.", player.act_two.stoneflesh_hits, "hits"),
         Status("last_rage", "Last Rage", rage_description, state.berserker_last_rage_hits, "hits", icon_asset=rage_icon),
         Status("sacred_ground", "Sacred Ground", "Damaging enemy hits remaining. Empty turns do not spend the zone.", state.paladin_sacred_ground_hits, "hits"),
     )
@@ -137,19 +137,31 @@ def _active_statuses(player):
     pact = BLOODY_PACTS_BY_ID.get(player.act_two.bloody_pact_id)
     if pact is not None:
         yield Status(pact.id, pact.name, f"{pact.reward} {pact.sacrifice}")
+    from acts.act_three.bloody_altar.catalog import PACTS_BY_ID
+
+    altar_pact = PACTS_BY_ID.get(player.act_three.altar_pact_id)
+    if altar_pact is not None:
+        description = altar_pact.description
+        if altar_pact.id == "deaths_reprieve":
+            description += " Ready." if player.act_three.reprieve_ready else f" Recharge: {player.act_three.reprieve_kills}/15."
+        elif altar_pact.id == "insatiable_edge":
+            description += f" Current bonus: {player.act_three.altar_attack_chain * 15}%."
+        yield Status(altar_pact.id, altar_pact.name, description)
     passive = get_passive_definition(player.subclass)
     if passive is not None:
-        description = passive.description
-        if player.subclass == "paladin":
-            from acts.act_three.combat.paladin import add_paladin_block_chance
-            from settings import WARRIOR_IMPACT_BLOCK_CHANCE
+        from acts.act_three.presentation.descriptions.abilities import passive_lines
 
-            chance = add_paladin_block_chance(player, WARRIOR_IMPACT_BLOCK_CHANCE if player.selected_rune_id == "rune_of_impact" else 0)
-            description = f"Current total block chance: {chance:.0%}. Includes equipped runes; disabled during Fervent Crusade."
+        description = " ".join(passive_lines(player))
         yield Status(passive.id, passive.name, description, icon_asset=passive.icon_asset)
 
 
 def _icon(assets, custom, key):
+    from acts.act_three.bloody_altar.catalog import PACTS_BY_ID
+
+    if key in PACTS_BY_ID:
+        from acts.act_three.bloody_altar.presentation import get_assets
+
+        return get_assets()[key]
     if key in _ITEM_ICONS:
         return assets.get("act_three_consumable_belt_sprites", {}).get(_ITEM_ICONS[key])
     if key in _ABILITY_ICONS:

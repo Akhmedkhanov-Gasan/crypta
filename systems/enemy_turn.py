@@ -196,6 +196,7 @@ def _apply_sentinel_counter_knockback(
         game_state,
         1,
         damage_kind="physical",
+        is_attack=True,
     )
 
     game_state.emit(
@@ -573,6 +574,7 @@ def resolve_enemy_turn(
                     damage = damage_player(
                         game_state,
                         damage,
+                        is_attack=True,
                         damage_kind=(
                             "magic"
                             if (
