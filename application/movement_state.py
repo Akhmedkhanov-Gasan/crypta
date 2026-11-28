@@ -20,8 +20,18 @@ class MovementInputState:
     auto_move_floor_index: int | None = None
     auto_move_acknowledged_warnings: tuple[object, ...] = ()
     next_auto_move_at: int = 0
+    pointer_move_started_at: int | None = None
+    pointer_move_floor: object | None = None
+    pointer_move_repeating: bool = False
+    pointer_move_camera: object | None = None
+    next_pointer_move_at: int = 0
 
     def reset_held_movement(self):
+        self.pointer_move_started_at = None
+        self.pointer_move_floor = None
+        self.pointer_move_repeating = False
+        self.pointer_move_camera = None
+        self.next_pointer_move_at = 0
         self.resume_held_movement_after_attack = False
         self.held_movement_keys.clear()
         self.held_direction = (0, 0)

@@ -75,6 +75,12 @@ def sync_movement_scope(state, player, floor, profile):
 
 
 def movement_event_is_current(state, event):
+    if getattr(event, "requires_pointer_movement", False) and (
+        state.pointer_move_started_at is None
+        or not state.pointer_move_repeating
+        or not pygame.mouse.get_pressed()[0]
+    ):
+        return False
     revision = getattr(event, "movement_revision", None)
     if revision is not None and revision != state.movement_revision:
         return False

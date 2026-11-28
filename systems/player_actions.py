@@ -127,6 +127,13 @@ def open_chest(
     else:
         has_required_key = player.key_count > 0
     if chest.requires_key and not has_required_key:
+        if act_number == 3:
+            game_state.emit(GameEvent(
+                type=GameEventType.ENVIRONMENT,
+                actor="hero",
+                destination=(chest.column, chest.row),
+                data={"kind": "chest_locked"},
+            ))
         add_log_message(
             game_state.combat_log,
             "The chest is locked.",

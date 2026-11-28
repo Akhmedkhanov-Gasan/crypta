@@ -7,6 +7,7 @@ from acts.ground_items import (
     ground_item_act_input_available,
     ground_item_rules,
     ground_items_at_player,
+    ground_items,
     pick_up_ground_item,
     play_ground_item_events,
     prepare_ground_item_pickup,
@@ -62,6 +63,21 @@ class GroundItemInput:
         self.floor = None
         self.seen_position = None
         self.pickup_notice = None
+        self.pointer_pickup = None
+
+    def click_world_loot(self, game_state, movement_state, target, current_time):
+        if not ground_item_input_available(game_state) or target not in game_state.floor.visible_cells:
+            return False
+        if not any(item.position == target for item in ground_items(game_state, current_time)):
+            return False
+        from acts.navigation import navigation_target_info
+        from application.auto_movement import start_auto_move
+
+        if navigation_target_info(game_state, target)[1]:
+            return False
+        start_auto_move(movement_state, game_state, target)
+        self.pointer_pickup = (game_state.floor, target)
+        return True
 
     def close(self, game_state=None):
         self.is_open = False
@@ -87,6 +103,7 @@ class GroundItemInput:
         sounds=None,
     ):
         if not enabled or not ground_item_input_available(game_state):
+            self.pointer_pickup = None
             self.close(game_state)
             self.floor = None
             self.seen_position = None
@@ -108,6 +125,22 @@ class GroundItemInput:
 
         position = (floor.player_column, floor.player_row)
         items = ground_items_at_player(game_state, current_time)
+
+        if self.pointer_pickup is not None:
+            requested_floor, target = self.pointer_pickup
+            if requested_floor is not floor or (position != target and movement_state.auto_move_target != target):
+                self.pointer_pickup = None
+            elif position == target and not movement_input_is_locked(movement_state, current_time):
+                self.pointer_pickup = None
+                movement_state.cancel_auto_move()
+                movement_state.reset_held_movement()
+                if len(items) > 1 and ground_item_rules(game_state).use_window:
+                    self._open(movement_state)
+                elif items:
+                    self.selected = 0
+                    self._take(game_state, movement_state, sounds, current_time)
+                self.seen_position = position
+                return True
 
         if position != self.seen_position:
             self.close(game_state)

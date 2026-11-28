@@ -6,6 +6,7 @@ from acts.act_three.abilities import (
 
 ACT_THREE_CONSOLE_HELP = (
     "altar - open the bloody altar without finding it (Act III)",
+    "baltar - teleport beside the bloody altar (Act III, floor 10)",
     "trade - open trading without finding the trader (Act III)",
     "rune - open rune selection without finding the Rune Master (Act III)",
     "runemaster - teleport to the Rune Master (Act III, floor 10)",
@@ -30,12 +31,12 @@ def execute_act_three_console_command(
         if len(parts) != 1:
             return f"Usage: {name}"
         return _open_debug_menu(game_state, name, close_console)
-    if name in ("runemaster", "runetrial"):
+    if name in ("runemaster", "runetrial", "baltar"):
         if len(parts) != 1:
             return f"Usage: {name}"
-        label = "Rune Master" if name == "runemaster" else "rune trial"
-        result = _teleport_to_room(game_state, "room_rune_trial.tmx", label)
-        if result == f"Teleported to the {label} room entrance." and close_console is not None:
+        label = "bloody altar" if name == "baltar" else "Rune Master" if name == "runemaster" else "rune trial"
+        result = _teleport_to_room(game_state, None if name == "baltar" else "room_rune_trial.tmx", label)
+        if result.startswith("Teleported to ") and close_console is not None:
             close_console()
         return result
     if name in ("lantern", "blacksmith"):
@@ -167,7 +168,8 @@ def _teleport_to_room(game_state, room_name, label):
         return "Wait for the current scene to finish."
     if game_state.subclass_selection_open or not game_state.player.subclass:
         return "Choose an Act III subclass first."
-    if game_state.player.act_three.mining is not None or game_state.act_three.npc_dialog_position is not None:
+    if (game_state.player.act_three.mining is not None or game_state.act_three.npc_dialog_position is not None
+            or game_state.act_three.altar_menu_open or game_state.act_three.npc_menu_from_console is not None):
         return "Finish the current interaction first."
     if game_state.floor.trial_safe_cells and (game_state.floor.player_column, game_state.floor.player_row) in game_state.floor.trial_safe_cells:
         return "Leave the class trial before teleporting."
@@ -176,9 +178,10 @@ def _teleport_to_room(game_state, room_name, label):
     if trial_active(game_state.floor):
         return "Defeat every rune trial wave before teleporting."
     target_index = next((index for index, config in enumerate(FLOOR_CONFIGS)
-                         if config.get("act") == 3 and any(
-                             path.endswith(room_name)
-                             for path in config.get("required_room_paths", ()))), None)
+                         if config.get("act") == 3 and (
+                             config.get("random_bloody_altar") if room_name is None
+                             else any(path.endswith(room_name) for path in config.get("required_room_paths", ()))
+                         )), None)
     if target_index is None:
         return f"No {label} room is configured."
     floor = game_state.floor if game_state.floor_index == target_index else game_state.visited_floors.get(target_index)
@@ -187,7 +190,11 @@ def _teleport_to_room(game_state, room_name, label):
             floor = create_floor_state(target_index, trial_subclass=game_state.player.subclass)
         except ValueError as error:
             return f"Could not generate the {label} floor: {error}"
-    if room_name == "lantern_warden_room.tmx":
+    if room_name is None:
+        from acts.act_three.bloody_altar.debug import teleport_destination
+
+        destination = teleport_destination(floor, game_state.player)
+    elif room_name == "lantern_warden_room.tmx":
         destination = floor.lantern_encounter["entrance"] if floor.lantern_encounter is not None else None
     elif room_name == "room_rune_trial.tmx" and label == "rune trial":
         destination = floor.rune_trial["entrance"] if floor.rune_trial is not None else None
@@ -196,6 +203,10 @@ def _teleport_to_room(game_state, room_name, label):
         npc = next((npc for npc in floor.act_three_npcs if npc["type"] == npc_type), None)
         destination = npc.get("room_entrance") if npc is not None else None
     if destination is None:
+        if room_name is None:
+            if floor.act_three_bloody_altar is None:
+                return "No bloody altar exists on this saved floor. A newly generated floor 10 is required."
+            return "No free reachable cell beside the bloody altar."
         return f"The {label} room is missing from this saved floor. Start a new run to regenerate it."
     if floor.map[destination[1]][destination[0]] != ".":
         return f"The {label} entrance is blocked."
@@ -215,7 +226,7 @@ def _teleport_to_room(game_state, room_name, label):
     game_state.player.teleport_transition_started_at = 0
     game_state.player_attack_targets = []
     game_state.clear_events()
-    return f"Teleported to the {label} room entrance."
+    return f"Teleported to the {label}." if room_name is None else f"Teleported to the {label} room entrance."
 
 
 def _teleport_to_trial(game_state):

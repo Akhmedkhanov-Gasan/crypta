@@ -8,6 +8,16 @@ from acts.act_three.tile_catalog import (
 CRATE_TILE_IDS = (0, 9, 18, 36)
 
 
+def destruction_sound_kind(variant):
+    first_gid, tileset = tileset_catalog()[ENVIRONMENT_OBJECTS_TILESET_PATH]
+    tile_id = (variant & TILED_GID_MASK) - first_gid
+    tile = tileset.find(f"./tile[@id='{tile_id}']")
+    image = tile.find("image") if tile is not None else None
+    if image is not None and "funerary_pair/" in image.get("source", "").replace("\\", "/"):
+        return "funerary_break"
+    return "crate_break"
+
+
 def get_breakable_environment_object(floor, position):
     return next(
         (crate for crate in floor.breakable_crates

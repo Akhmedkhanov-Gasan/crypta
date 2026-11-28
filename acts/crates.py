@@ -56,6 +56,11 @@ def break_crate(
     )
 
     position = (crate.column, crate.row)
+    sound_data = {}
+    if is_environment_object:
+        from acts.act_three.environment_objects import destruction_sound_kind
+
+        sound_data["sound_kind"] = destruction_sound_kind(crate.variant)
     if is_environment_object or cause in ("fire_bomb", "shield_bash"):
         game_state.emit(
             GameEvent(
@@ -63,7 +68,7 @@ def break_crate(
                 actor="fire" if cause == "fire_bomb" else "hero",
                 origin=position,
                 positions=(position,),
-                data={"kind": "chest_break", "cause": cause},
+                data={"kind": "chest_break", "cause": cause, **sound_data},
             )
         )
     else:

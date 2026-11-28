@@ -28,13 +28,14 @@ def handle_act_one_pointer_input(
     )
 
     if not act_one_hud_contains_position(game_position):
+        target = get_act_one_cell_from_position(camera, game_position)
         start_auto_move(
             movement_state,
             game_state,
-            get_act_one_cell_from_position(
-                camera,
-                game_position,
-            ),
+            target,
         )
+        from application.pointer_movement import begin_pointer_movement
+
+        begin_pointer_movement(movement_state, game_state, target, camera)
 
     return True

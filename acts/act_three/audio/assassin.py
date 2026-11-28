@@ -24,10 +24,6 @@ _ASSASSIN_SOUNDS_PATH = (
 
 
 ASSASSIN_SOUND_FILES = {
-    "attack": tuple(
-        f"assassin_attack_{index:02d}.mp3"
-        for index in range(1, 9)
-    ),
     "death": tuple(
         f"assassin_death_{index}.mp3"
         for index in range(1, 5)
@@ -56,12 +52,6 @@ ASSASSIN_SOUND_FILES = {
 
 
 ASSASSIN_SOUND_DIRECTORIES = {
-    "attack": (
-        _ASSASSIN_SOUNDS_PATH.parent
-        / "weapons"
-        / "dagger"
-        / "hit"
-    ),
     "death": _ASSASSIN_SOUNDS_PATH / "death",
     "hurt": _ASSASSIN_SOUNDS_PATH / "hurt",
     "invisibility": (
@@ -89,7 +79,6 @@ ASSASSIN_SOUND_DIRECTORIES = {
 
 
 ASSASSIN_SOUND_VOLUMES = {
-    "attack": 0.42,
     "death": 0.52,
     "hurt": 0.44,
     "invisibility": 0.36,
@@ -188,17 +177,6 @@ class AssassinSoundBank:
             for event in hero_moves
         ):
             self._play("shadow_step")
-
-        if any(
-            event.type is GameEventType.HIT
-            and event.actor == "hero"
-            and event.target not in (None, "hero", "familiar")
-            and event.amount is not None
-            and event.amount > 0
-            and not event.data.get("blocked", False)
-            for event in events
-        ):
-            self._play("attack")
 
         if any(
             event.type is GameEventType.ABILITY

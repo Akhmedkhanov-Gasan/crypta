@@ -34,7 +34,7 @@ class WarlockSoundBank:
         if not any(
             event.type is GameEventType.ATTACK
             and event.actor == "hero"
-            and event.data.get("kind") == "warlock_orb"
+            and event.data.get("kind") in ("warlock_orb", "environment_attack", "secret_wall")
             for event in events
         ):
             return

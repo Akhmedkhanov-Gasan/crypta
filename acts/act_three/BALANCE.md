@@ -148,10 +148,17 @@ the return button closes the menu; Escape closes it immediately. Input during
 opening and confirmation animations cannot change the selection. The renderer
 uses the Rune Master's motion, subpixel sampling, lighting and button effects
 with crimson mist, and draws at the window's native resolution.
-The object occupies one tile, animates in sixteen frames and dims after use.
+The object occupies one tile and uses a fixed 64 x 64 base with a separate
+64-frame blood/glow/mote overlay. The 3.2-second loop blends adjacent effect
+frames; stone geometry never changes. After use, the base dims and effects stop.
 New generation is required for floors already stored without an altar.
 The `altar` developer command opens this UI anywhere in Act III without
 creating or moving a world fixture. In Act II it retains the original altar.
+The `baltar` developer command teleports to a free adjacent cell beside the
+physical altar on floor 10, reusing the visited floor without changing offers.
+Additional procedural blood ripples, seal glow, rising mist, motes and a ground
+halo make the active altar visible at native sprite size. These effects stop
+after a pact is accepted and never move the stone base.
 Internal Act III floor gates work in both directions independently of the
 trader quest, including the awakening room. The Act II boundary and the
 unimplemented next floor remain sealed. Saved gate destinations are refreshed

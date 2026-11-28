@@ -2,6 +2,7 @@ import pygame
 
 from acts.act_three.audio.ambience import DungeonAmbience
 from acts.act_three.audio.playlist import ExplorationPlaylist
+from acts.act_three.audio.torch import TorchAmbience
 from game.combat_log import add_log_message
 
 
@@ -10,6 +11,7 @@ class ActThreeAudioRuntime:
         self.music_attempted = False
         self._playlist = None
         self._ambience = None
+        self._torch = None
         self._last_update = None
         self._paused = False
         self._player = None
@@ -19,6 +21,8 @@ class ActThreeAudioRuntime:
             self._playlist.stop()
         if self._ambience is not None:
             self._ambience.stop()
+        if self._torch is not None:
+            self._torch.stop()
         self.__init__()
 
     def set_music_volume(self, volume):
@@ -31,6 +35,8 @@ class ActThreeAudioRuntime:
                 self._playlist.pause(paused)
             if self._ambience is not None:
                 self._ambience.pause(paused)
+            if self._torch is not None:
+                self._torch.pause(paused)
             self._paused = paused
             self._last_update = current_time
 
@@ -61,6 +67,7 @@ class ActThreeAudioRuntime:
                 pygame.mixer.music.stop()
                 self._playlist = ExplorationPlaylist()
                 self._ambience = DungeonAmbience(game_state.combat_log)
+                self._torch = TorchAmbience()
                 if not self._playlist.paths:
                     add_log_message(game_state.combat_log, "Act III music playlist is empty.", category="system")
                 if not self._ambience.sounds:
@@ -81,6 +88,8 @@ class ActThreeAudioRuntime:
                 self._playlist is not None and self._playlist.playing and music_volume > 0,
                 sounds.master_volume,
             )
+        if self._torch is not None:
+            self._torch.update(game_state, elapsed, sounds.master_volume)
         return act_one_music_attempted
 
 

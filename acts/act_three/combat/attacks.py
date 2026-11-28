@@ -40,6 +40,14 @@ def attack_breakable_environment_object(game_state, crate, started_at):
     player.attack_animation_started_at = started_at
     player.act_three.environment_attack = (started_at, game_state.floor_index, origin, target)
     game_state.player_attack_targets = [target]
+    game_state.emit(GameEvent(
+        type=GameEventType.ATTACK,
+        actor="hero",
+        origin=origin,
+        destination=target,
+        positions=(target,),
+        data={"kind": "environment_attack", "object_variant": crate.variant},
+    ))
     return True
 
 

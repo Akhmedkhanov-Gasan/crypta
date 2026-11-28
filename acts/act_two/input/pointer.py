@@ -131,10 +131,16 @@ def handle_act_two_pointer_event(
     )
     if adjacent_direction is None:
         start_auto_move(input_state, game_state, target_cell)
+        from application.pointer_movement import begin_pointer_movement
+
+        begin_pointer_movement(input_state, game_state, target_cell, camera)
         return True
 
     input_state.cancel_auto_move()
     input_state.reset_held_movement()
+    from application.pointer_movement import begin_pointer_movement
+
+    begin_pointer_movement(input_state, game_state, target_cell, camera)
     if not movement_input_is_locked(input_state, pygame.time.get_ticks()):
         _post_target_event(
             movement_direction=adjacent_direction,

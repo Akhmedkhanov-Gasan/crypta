@@ -76,6 +76,7 @@ def advance_act_three_frame(game_state, current_act, current_time, sounds):
         advance_summoner_trial(game_state, current_time)
         advance_npc_dialog(game_state, current_time)
         advance_mining(game_state, current_time)
+        sounds.environment.update_mining(game_state, current_time)
         sounds.update(game_state.player, current_time)
 
     if game_state.player.ultimate_animation_active:

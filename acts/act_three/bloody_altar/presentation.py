@@ -6,9 +6,9 @@ import pygame
 import resource_store as resources
 
 from acts.act_three.bloody_altar.catalog import PACTS, PACTS_BY_ID
-from acts.act_three.bloody_altar.runtime import altar_position, menu_altar
+from acts.act_three.bloody_altar.runtime import menu_altar
+from acts.act_three.bloody_altar.world_animation import draw_world_altar, world_frames
 from presentation.figma_ui import _load_figma_font, draw_figma_rectangle, draw_figma_text, figma_rect
-from presentation.layout import ACT_THREE_TILE_SIZE
 from presentation.text import wrap_text
 from presentation.figma_layout import scale_figma_layout
 from acts.act_three.bloody_altar.motion import poses, hitbox
@@ -44,25 +44,6 @@ def get_assets():
         path = f"assets/sprites/ui/act_3/bloody_altar/120/{pact.icon or pact.id}.png"
         images[pact.id] = resources.load_image(path).convert_alpha()
     return images
-
-
-@lru_cache(maxsize=1)
-def world_frames():
-    sheet = resources.load_image("assets/sprites/act_3/environment/bloody_altar/idle_sheet.png").convert_alpha()
-    return tuple(pygame.transform.scale(sheet.subsurface((i % 4 * 64, i // 4 * 64, 64, 64)),
-                                        (ACT_THREE_TILE_SIZE, ACT_THREE_TILE_SIZE)) for i in range(16))
-
-
-def draw_world_altar(context, current_time):
-    position = altar_position(context.floor)
-    if position is None or position not in context.floor.visible_cells:
-        return
-    sprite = world_frames()[current_time // 90 % 16]
-    if context.floor.act_three_bloody_altar["claimed"]:
-        sprite = sprite.copy()
-        sprite.fill((105, 105, 105, 255), special_flags=pygame.BLEND_RGBA_MULT)
-    context.view_surface.blit(sprite, (position[0] * ACT_THREE_TILE_SIZE - context.camera_x,
-                                       position[1] * ACT_THREE_TILE_SIZE - context.camera_y))
 
 
 def _description_spec(spec, text):

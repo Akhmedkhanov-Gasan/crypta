@@ -127,6 +127,18 @@ def prepare_frame_input(
     if held_event is not None:
         pygame.event.post(held_event)
 
+    from application.pointer_movement import create_pointer_movement_event
+
+    pointer_event = create_pointer_movement_event(
+        movement_state, game_state, current_time, world_movement_available,
+        repeat_interval=(
+            PLAYER_STEP_MS if current_act == 3
+            else AUTO_MOVE_INTERVAL_MS
+        ),
+    )
+    if pointer_event is not None:
+        pygame.event.post(pointer_event)
+
     auto_move_event = create_auto_move_event(
         movement_state,
         game_state,
@@ -140,7 +152,9 @@ def prepare_frame_input(
     if current_act == 3:
         update_phantom_travel(
             game_state.player,
-            world_movement_available and bool(movement_state.held_movement_keys),
+            world_movement_available and bool(
+                movement_state.held_movement_keys or movement_state.pointer_move_repeating
+            ),
             current_time,
         )
 

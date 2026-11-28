@@ -30,6 +30,7 @@ CONSOLE_COMMANDS = (
     "seal",
     "rune",
     "altar",
+    "baltar",
     "trade",
     "skills",
     "trial",

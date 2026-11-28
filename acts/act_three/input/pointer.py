@@ -846,6 +846,9 @@ def handle_act_three_pointer_event(
                     game_state,
                     target_cell,
                 )
+                from application.pointer_movement import begin_pointer_movement
+
+                begin_pointer_movement(movement_state, game_state, target_cell)
                 return True
 
             if game_state.player.ultimate_animation_active:

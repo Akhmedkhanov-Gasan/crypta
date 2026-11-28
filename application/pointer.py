@@ -85,6 +85,25 @@ class GameplayPointerController:
             mouse_position,
         ):
             return True
+        if (
+            current_act in (2, 3)
+            and continuous_movement_available
+            and event.type == pygame.MOUSEBUTTONDOWN
+            and event.button == 1
+            and not ground_item_window.is_open
+        ):
+            if current_act == 2:
+                from acts.act_two.presentation.camera import act_two_screen_to_cell
+
+                target = act_two_screen_to_cell(mouse_position, act_two_camera) if mouse_position is not None else None
+            else:
+                from acts.act_three.presentation.hit_testing import get_act_three_cell_from_position
+
+                target = get_act_three_cell_from_position(game_state, mouse_position) if mouse_position is not None else None
+            if target is not None and ground_item_window.click_world_loot(
+                game_state, self.movement_state, target, pygame.time.get_ticks(),
+            ):
+                return True
         if current_act == 3 and handle_act_three_pointer_event(
             event,
             game_state,
